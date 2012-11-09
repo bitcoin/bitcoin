@@ -66,16 +66,16 @@ private:
     CWalletDB *pwalletdbEncryption;
 
     // the current wallet version: clients below this version are not able to load the wallet
-    int nWalletVersion;
+    int nWalletVersion GUARDED_BY(cs_wallet);
 
     // the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
-    int nWalletMaxVersion;
+    int nWalletMaxVersion GUARDED_BY(cs_wallet);
 
 public:
     mutable CCriticalSection cs_wallet ACQUIRED_AFTER(cs_main);
 
-    bool fFileBacked;
-    std::string strWalletFile;
+    const bool fFileBacked;
+    const std::string strWalletFile;
 
     std::set<int64> setKeyPool GUARDED_BY(cs_wallet);
 
@@ -85,19 +85,19 @@ public:
     unsigned int nMasterKeyMaxID GUARDED_BY(cs_wallet);
 
     CWallet()
+      : fFileBacked(false)
     {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
-        fFileBacked = false;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
     }
     CWallet(std::string strWalletFileIn)
+      : fFileBacked(true),
+        strWalletFile(strWalletFileIn)
     {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
-        strWalletFile = strWalletFileIn;
-        fFileBacked = true;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
     }
@@ -110,25 +110,36 @@ public:
     CPubKey vchDefaultKey GUARDED_BY(cs_wallet);
 
     // check whether we are allowed to upgrade (or already support) to the named feature
-    bool CanSupportFeature(enum WalletFeature wf) { return nWalletMaxVersion >= wf; }
+    bool CanSupportFeature(enum WalletFeature wf) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        return nWalletMaxVersion >= wf;
+    }
 
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true) const;
     bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
 
     // keystore implementation
     // Generate a new key
-    CPubKey GenerateNewKey();
+    CPubKey GenerateNewKey() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     // Adds a key to the store, and saves it to disk.
-    bool AddKey(const CKey& key);
+    bool AddKey(const CKey& key) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     // Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key) { return CCryptoKeyStore::AddKey(key); }
 
-    bool LoadMinVersion(int nVersion) { nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion); return true; }
+    bool LoadMinVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion);
+	return true;
+    }
 
     // Adds an encrypted key to the store, and saves it to disk.
     bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     // Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
-    bool LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret) { SetMinVersion(FEATURE_WALLETCRYPT); return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret); }
+    bool LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        SetMinVersion(FEATURE_WALLETCRYPT);
+	return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret);
+    }
     bool AddCScript(const CScript& redeemScript);
     bool LoadCScript(const CScript& redeemScript) { return CCryptoKeyStore::AddCScript(redeemScript); }
 
@@ -259,13 +270,13 @@ public:
     bool SetDefaultKey(const CPubKey &vchPubKey) LOCKS_EXCLUDED(cs_wallet);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
-    bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
+    bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     // change which version we're allowed to upgrade to (note that this does not immediately imply upgrading to that format)
-    bool SetMaxVersion(int nVersion);
+    bool SetMaxVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     // get the current wallet format (the oldest client version guaranteed to understand this wallet)
-    int GetVersion() { return nWalletVersion; }
+    int GetVersion() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { return nWalletVersion; }
 
     /** Address book entry changed.
      * @note called with lock cs_wallet held.

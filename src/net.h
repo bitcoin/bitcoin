@@ -144,17 +144,13 @@ public:
     int nMisbehavior;
 };
 
-
-
-
-
 /** Information about a peer */
 class CNode
 {
 public:
     // socket
     uint64 nServices;
-    SOCKET hSocket;
+    SOCKET hSocket GUARDED_BY(cs_vRecv); // Evidence: CloseSocketDisconnect
     CDataStream vSend GUARDED_BY(cs_vSend);
     CDataStream vRecv GUARDED_BY(cs_vRecv);
     CCriticalSection cs_vSend ACQUIRED_BEFORE(cs_vRecv) ACQUIRED_AFTER(cs_vNodes);
@@ -332,7 +328,7 @@ public:
 
 
 
-    void BeginMessage(const char* pszCommand)
+    void BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSend)
     {
         ENTER_CRITICAL_SECTION(cs_vSend);
         if (nHeaderStart != -1)
@@ -344,7 +340,7 @@ public:
             printf("sending: %s ", pszCommand);
     }
 
-    void AbortMessage()
+    void AbortMessage() UNLOCK_FUNCTION(cs_vSend)
     {
         if (nHeaderStart < 0)
             return;
@@ -357,7 +353,7 @@ public:
             printf("(aborted)\n");
     }
 
-    void EndMessage()
+    void EndMessage() UNLOCK_FUNCTION(cs_vSend)
     {
         if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
         {
@@ -389,7 +385,7 @@ public:
         LEAVE_CRITICAL_SECTION(cs_vSend);
     }
 
-    void EndMessageAbortIfEmpty()
+    void EndMessageAbortIfEmpty() UNLOCK_FUNCTION(cs_vSend)
     {
         if (nHeaderStart < 0)
             return;

@@ -45,7 +45,8 @@ CPubKey CWallet::GenerateNewKey()
 
 bool CWallet::AddKey(const CKey& key)
 {
-    if (!CCryptoKeyStore::AddKey(key))
+    LOCK(cs_KeyStore);
+    if (!CCryptoKeyStore::AddKeyUnlocked(key))
         return false;
     if (!fFileBacked)
         return true;
@@ -1307,6 +1308,7 @@ int CWallet::LoadWallet(bool& fFirstRunRet)
     if (!fFileBacked)
         return false;
     fFirstRunRet = false;
+    LOCK(cs_wallet);
     int nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
     if (nLoadWalletRet == DB_NEED_REWRITE)
     {
@@ -1378,6 +1380,7 @@ bool CWallet::GetTransaction(const uint256 &hashTx, CWalletTx& wtx)
 
 bool CWallet::SetDefaultKey(const CPubKey &vchPubKey)
 {
+    LOCK(cs_wallet);
     if (fFileBacked)
     {
         if (!CWalletDB(strWalletFile).WriteDefaultKey(vchPubKey))

@@ -268,14 +268,14 @@ public:
         // This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
         // changes to the ADDRMAN_ parameters without breaking the on-disk structure.
         {
-            LOCK(cs);
+            CAddrMan *am = const_cast<CAddrMan*>(this);
+            LOCK(am->cs);
             unsigned char nVersion = 0;
             READWRITE(nVersion);
             READWRITE(nKey);
             READWRITE(nNew);
             READWRITE(nTried);
 
-            CAddrMan *am = const_cast<CAddrMan*>(this);
             if (fWrite)
             {
                 int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT;
@@ -399,12 +399,18 @@ public:
     void Check() LOCKS_EXCLUDED(cs)
     {
 #ifdef DEBUG_ADDRMAN
-        {
-            LOCK(cs);
-            int err;
-            if ((err=Check_()))
-                printf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
-        }
+        LOCK(cs);
+	CheckUnlocked();
+#endif
+    }
+
+    // Consistency check
+    void CheckUnlocked() EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+#ifdef DEBUG_ADDRMAN
+        int err;
+        if ((err=Check_()))
+            printf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
 #endif
     }
 
@@ -413,14 +419,18 @@ public:
       LOCKS_EXCLUDED(cs)
     {
         bool fRet = false;
+	int nTriedCopy;
+	int nNewCopy;
         {
             LOCK(cs);
-            Check();
+            CheckUnlocked();
             fRet |= Add_(addr, source, nTimePenalty);
-            Check();
+            CheckUnlocked();
+	    nTriedCopy = nTried;
+	    nNewCopy = nNew;
         }
         if (fRet)
-            printf("Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort().c_str(), source.ToString().c_str(), nTried, nNew);
+            printf("Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort().c_str(), source.ToString().c_str(), nTriedCopy, nNewCopy);
         return fRet;
     }
 
@@ -429,15 +439,19 @@ public:
       LOCKS_EXCLUDED(cs)
     {
         int nAdd = 0;
+	int nTriedCopy;
+	int nNewCopy;
         {
             LOCK(cs);
-            Check();
+            CheckUnlocked();
             for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
                 nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
-            Check();
+            CheckUnlocked();
+	    nTriedCopy = nTried;
+	    nNewCopy = nNew;
         }
         if (nAdd)
-            printf("Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString().c_str(), nTried, nNew);
+            printf("Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString().c_str(), nTriedCopy, nNewCopy);
         return nAdd > 0;
     }
 
@@ -447,9 +461,9 @@ public:
     {
         {
             LOCK(cs);
-            Check();
+            CheckUnlocked();
             Good_(addr, nTime);
-            Check();
+            CheckUnlocked();
         }
     }
 
@@ -459,9 +473,9 @@ public:
     {
         {
             LOCK(cs);
-            Check();
+            CheckUnlocked();
             Attempt_(addr, nTime);
-            Check();
+            CheckUnlocked();
         }
     }
 
@@ -470,12 +484,10 @@ public:
     CAddress Select(int nUnkBias = 50) LOCKS_EXCLUDED(cs)
     {
         CAddress addrRet;
-        {
-            LOCK(cs);
-            Check();
-            addrRet = Select_(nUnkBias);
-            Check();
-        }
+        LOCK(cs);
+        CheckUnlocked();
+        addrRet = Select_(nUnkBias);
+        CheckUnlocked();
         return addrRet;
     }
 
@@ -496,12 +508,10 @@ public:
     void Connected(const CService &addr, int64 nTime = GetAdjustedTime())
       LOCKS_EXCLUDED(cs)
     {
-        {
-            LOCK(cs);
-            Check();
-            Connected_(addr, nTime);
-            Check();
-        }
+        LOCK(cs);
+        CheckUnlocked();
+        Connected_(addr, nTime);
+        CheckUnlocked();
     }
 };
 

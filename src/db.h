@@ -35,10 +35,10 @@ class CDBEnv
 private:
     bool fDetachDB GUARDED_BY(cs_db);
     bool fDbEnvInit GUARDED_BY(cs_db);
-    bool fMockDb GUARDED_BY(cs_db);
+    bool fMockDb;  // constant after initialization
     boost::filesystem::path pathEnv GUARDED_BY(cs_db);
 
-    void EnvShutdown();
+    void EnvShutdown() EXCLUSIVE_LOCKS_REQUIRED(cs_db);
 
 public:
     mutable CCriticalSection cs_db;
@@ -47,15 +47,21 @@ public:
     std::map<std::string, Db*> mapDb GUARDED_BY(cs_db);
 
     CDBEnv();
-    ~CDBEnv();
+    ~CDBEnv() EXCLUSIVE_LOCKS_REQUIRED(cs_db);
     void MakeMock();
     bool IsMock() { return fMockDb; };
-    bool Open(boost::filesystem::path pathEnv_);
-    void Close(); // LOCKS_EXCLUDED(bitdb.cs_db);
+    bool Open(boost::filesystem::path pathEnv_) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
+    void Close() EXCLUSIVE_LOCKS_REQUIRED(cs_db);
     void Flush(bool fShutdown); // LOCKS_EXCLUDED(bitdb.cs_db);
     void CheckpointLSN(std::string strFile);
-    void SetDetach(bool fDetachDB_) { fDetachDB = fDetachDB_; }
-    bool GetDetach() { return fDetachDB; }
+    void SetDetach(bool fDetachDB_) EXCLUSIVE_LOCKS_REQUIRED(cs_db)
+    {
+        fDetachDB = fDetachDB_;
+    }
+    bool GetDetach() EXCLUSIVE_LOCKS_REQUIRED(cs_db)
+    {
+        return fDetachDB;
+    }
 
     void CloseDb(const std::string& strFile); // LOCKS_EXCLUDED(bitdb.cs_db);
 

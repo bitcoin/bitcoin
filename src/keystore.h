@@ -22,18 +22,29 @@ public:
 
     // Add a key to the store.
     virtual bool AddKey(const CKey& key) LOCKS_EXCLUDED(cs_KeyStore) = 0;
+    virtual bool AddKeyUnlocked(const CKey& key) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore) = 0;
 
     // Check whether a key corresponding to a given address is present in the store.
     virtual bool HaveKey(const CKeyID &address) const =0;
+    virtual bool HaveKeyUnlocked(const CKeyID &address) const =0;
     virtual bool GetKey(const CKeyID &address, CKey& keyOut) const =0;
+    virtual bool GetKeyUnlocked(const CKeyID &address, CKey& keyOut) const =0;
     virtual void GetKeys(std::set<CKeyID> &setAddress) const =0;
+    virtual void GetKeysUnlocked(std::set<CKeyID> &setAddress) const =0;
     virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+    virtual bool GetPubKeyUnlocked(const CKeyID &address, CPubKey& vchPubKeyOut) const;
 
     // Support for BIP 0013 : see https://en.bitcoin.it/wiki/BIP_0013
     virtual bool AddCScript(const CScript& redeemScript) LOCKS_EXCLUDED(cs_KeyStore) =0;
+    virtual bool AddCScriptUnlocked(const CScript& redeemScript)
+      EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore) =0;
     virtual bool HaveCScript(const CScriptID &hash) const LOCKS_EXCLUDED(cs_KeyStore) =0;
+    virtual bool HaveCScriptUnlocked(const CScriptID &hash)
+      const EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore) =0;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
       const LOCKS_EXCLUDED(cs_KeyStore) =0;
+    virtual bool GetCScriptUnlocked(const CScriptID &hash, CScript& redeemScriptOut)
+      const EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore) =0;
 
     virtual bool GetSecret(const CKeyID &address, CSecret& vchSecret, bool &fCompressed) const
     {
@@ -57,14 +68,11 @@ protected:
 
 public:
     bool AddKey(const CKey& key);
+    bool AddKeyUnlocked(const CKey& key);
     bool HaveKey(const CKeyID &address) const
     {
-        bool result;
-        {
-            LOCK(cs_KeyStore);
-            result = (mapKeys.count(address) > 0);
-        }
-        return result;
+        LOCK(cs_KeyStore);
+        return (mapKeys.count(address) > 0);
     }
     void GetKeys(std::set<CKeyID> &setAddress) const
     {
@@ -127,21 +135,17 @@ public:
     {
     }
 
-    bool IsCrypted() const
+    bool IsCrypted() const EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore)
     {
         return fUseCrypto;
     }
 
     bool IsLocked() const
     {
+        LOCK(cs_KeyStore);
         if (!IsCrypted())
             return false;
-        bool result;
-        {
-            LOCK(cs_KeyStore);
-            result = vMasterKey.empty();
-        }
-        return result;
+        return vMasterKey.empty();
     }
 
     bool Lock();
@@ -160,7 +164,7 @@ public:
     }
     bool GetKey(const CKeyID &address, CKey& keyOut) const;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
-    void GetKeys(std::set<CKeyID> &setAddress) const
+    void GetKeys(std::set<CKeyID> &setAddress) const EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore)
     {
         if (!IsCrypted())
         {

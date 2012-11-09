@@ -111,7 +111,6 @@ int CWalletDB::LoadWallet(CWallet* pwallet) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs
 
     //// todo: shouldn't we catch exceptions and try to recover and continue?
     {
-        LOCK(pwallet->cs_wallet);
         int nMinVersion = 0;
         if (Read((string)"minversion", nMinVersion))
         {
