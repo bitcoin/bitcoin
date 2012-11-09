@@ -22,7 +22,7 @@ class CAddress;
 class CInv;
 class CNode;
 
-class CBlockIndexWorkComparator;
+struct CBlockIndexWorkComparator;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;

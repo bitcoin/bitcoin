@@ -1820,11 +1820,7 @@ bool SetBestChain(CBlockIndex* pindexNew)
 }
 
 
-<<<<<<< HEAD
-bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-=======
-bool CBlock::AddToBlockIndex(const CDiskBlockPos &pos)
->>>>>>> 16d9d61f99c2e081585e6634d25da3523804eabf
+bool CBlock::AddToBlockIndex(const CDiskBlockPos &pos) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Check for duplicate
     uint256 hash = GetHash();
@@ -2085,9 +2081,6 @@ bool CBlock::AcceptBlock() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     return true;
 }
 
-<<<<<<< HEAD
-bool ProcessBlock(CNode* pfrom, CBlock* pblock)  EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-=======
 bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
 {
     unsigned int nFound = 0;
@@ -2100,8 +2093,7 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
     return (nFound >= nRequired);
 }
 
-bool ProcessBlock(CNode* pfrom, CBlock* pblock)
->>>>>>> 16d9d61f99c2e081585e6634d25da3523804eabf
+bool ProcessBlock(CNode* pfrom, CBlock* pblock)  EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Check for duplicate
     uint256 hash = pblock->GetHash();
@@ -2620,13 +2612,8 @@ void ThreadImport(void *data) {
 // CAlert
 //
 
-<<<<<<< HEAD
-CCriticalSection cs_mapAlerts;
-map<uint256, CAlert> mapAlerts GUARDED_BY(cs_mapAlerts);
-=======
-extern map<uint256, CAlert> mapAlerts;
 extern CCriticalSection cs_mapAlerts;
->>>>>>> 16d9d61f99c2e081585e6634d25da3523804eabf
+extern map<uint256, CAlert> mapAlerts GUARDED_BY(cs_mapAlerts);
 
 string GetWarnings(string strFor)
 {
@@ -2689,11 +2676,7 @@ string GetWarnings(string strFor)
 //
 
 
-<<<<<<< HEAD
-bool static AlreadyHave(CTxDB& txdb, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main) LOCKS_EXCLUDED(mempool.cs)
-=======
-bool static AlreadyHave(const CInv& inv)
->>>>>>> 16d9d61f99c2e081585e6634d25da3523804eabf
+bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main) LOCKS_EXCLUDED(mempool.cs)
 {
     switch (inv.type)
     {
@@ -2726,7 +2709,7 @@ unsigned char pchMessageStart[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
   EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-  LOCKS_EXCLUDED(cs_mapAlerts, cs_vNodes, cs_mapRelay, pfrom->cs_mapRequests)
+  LOCKS_EXCLUDED(cs_mapAlerts, cs_vNodes, cs_mapRelay)
 {
     RandAddSeedPerfmon();
     if (fDebug)
@@ -3723,14 +3706,7 @@ public:
     }
 };
 
-<<<<<<< HEAD
-const char* pszDummy = "\0\0";
-CScript scriptDummy(std::vector<unsigned char>(pszDummy, pszDummy + sizeof(pszDummy)));
-
 CBlock* CreateNewBlock(CReserveKey& reservekey) LOCKS_EXCLUDED(cs_main)
-=======
-CBlock* CreateNewBlock(CReserveKey& reservekey)
->>>>>>> 16d9d61f99c2e081585e6634d25da3523804eabf
 {
 
     // Create new block

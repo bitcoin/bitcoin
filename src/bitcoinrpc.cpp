@@ -105,12 +105,7 @@ int64 AmountFromValue(const Value& value)
     return nAmount;
 }
 
-<<<<<<< HEAD
-
-Value walletlock(const Array& params, bool fHelp) LOCKS_EXCLUDED(cs_nWalletUnlockTime)
-=======
 Value ValueFromAmount(int64 amount)
->>>>>>> 16d9d61f99c2e081585e6634d25da3523804eabf
 {
     return (double)amount / (double)COIN;
 }

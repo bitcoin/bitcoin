@@ -72,36 +72,47 @@ public:
         LOCK(cs_KeyStore);
         return (mapKeys.count(address) > 0);
     }
+    bool HaveKeyUnlocked(const CKeyID &address) const
+    {
+        return (mapKeys.count(address) > 0);
+    }
+
     void GetKeys(std::set<CKeyID> &setAddress) const
     {
+        LOCK(cs_KeyStore);
+	GetKeysUnlocked(setAddress);
+    }
+    void GetKeysUnlocked(std::set<CKeyID> &setAddress) const
+    {
         setAddress.clear();
+        KeyMap::const_iterator mi = mapKeys.begin();
+        while (mi != mapKeys.end())
         {
-            LOCK(cs_KeyStore);
-            KeyMap::const_iterator mi = mapKeys.begin();
-            while (mi != mapKeys.end())
-            {
-                setAddress.insert((*mi).first);
-                mi++;
-            }
+            setAddress.insert((*mi).first);
+            mi++;
         }
     }
     bool GetKey(const CKeyID &address, CKey &keyOut) const
     {
+        LOCK(cs_KeyStore);
+	return GetKeyUnlocked(address, keyOut);
+    }
+    bool GetKeyUnlocked(const CKeyID &address, CKey &keyOut) const
+    {
+        KeyMap::const_iterator mi = mapKeys.find(address);
+        if (mi != mapKeys.end())
         {
-            LOCK(cs_KeyStore);
-            KeyMap::const_iterator mi = mapKeys.find(address);
-            if (mi != mapKeys.end())
-            {
-                keyOut.Reset();
-                keyOut.SetSecret((*mi).second.first, (*mi).second.second);
-                return true;
-            }
+            keyOut.Reset();
+            keyOut.SetSecret((*mi).second.first, (*mi).second.second);
+            return true;
         }
         return false;
     }
     virtual bool AddCScript(const CScript& redeemScript);
+    virtual bool AddCScriptUnlocked(const CScript& redeemScript);
     virtual bool HaveCScript(const CScriptID &hash) const;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const;
+    virtual bool GetCScriptUnlocked(const CScriptID &hash, CScript& redeemScriptOut) const;
 };
 
 typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > CryptedKeyMap;
