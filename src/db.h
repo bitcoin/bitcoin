@@ -31,21 +31,21 @@ bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 class CDBEnv
 {
 private:
-    bool fDetachDB;
-    bool fDbEnvInit;
-    bool fMockDb;
-    boost::filesystem::path pathEnv;
+    bool fDetachDB GUARDED_BY(cs_db);
+    bool fDbEnvInit GUARDED_BY(cs_db);
+    bool fMockDb;  // constant after initialization
+    boost::filesystem::path pathEnv GUARDED_BY(cs_db);
 
-    void EnvShutdown();
+    void EnvShutdown() EXCLUSIVE_LOCKS_REQUIRED(cs_db);
 
 public:
     mutable CCriticalSection cs_db;
-    DbEnv dbenv;
-    std::map<std::string, int> mapFileUseCount;
-    std::map<std::string, Db*> mapDb;
+    DbEnv dbenv GUARDED_BY(cs_db);
+    std::map<std::string, int> mapFileUseCount GUARDED_BY(cs_db);
+    std::map<std::string, Db*> mapDb GUARDED_BY(cs_db);
 
     CDBEnv();
-    ~CDBEnv();
+    ~CDBEnv() EXCLUSIVE_LOCKS_REQUIRED(cs_db);
     void MakeMock();
     bool IsMock() { return fMockDb; };
 
@@ -67,14 +67,20 @@ public:
     typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
     bool Salvage(std::string strFile, bool fAggressive, std::vector<KeyValPair>& vResult);
 
-    bool Open(boost::filesystem::path pathEnv_);
-    void Close();
-    void Flush(bool fShutdown);
+    bool Open(boost::filesystem::path pathEnv_) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
+    void Close() EXCLUSIVE_LOCKS_REQUIRED(cs_db);
+    void Flush(bool fShutdown); // LOCKS_EXCLUDED(bitdb.cs_db);
     void CheckpointLSN(std::string strFile);
-    void SetDetach(bool fDetachDB_) { fDetachDB = fDetachDB_; }
-    bool GetDetach() { return fDetachDB; }
+    void SetDetach(bool fDetachDB_) EXCLUSIVE_LOCKS_REQUIRED(cs_db)
+    {
+        fDetachDB = fDetachDB_;
+    }
+    bool GetDetach() EXCLUSIVE_LOCKS_REQUIRED(cs_db)
+    {
+        return fDetachDB;
+    }
 
-    void CloseDb(const std::string& strFile);
+    void CloseDb(const std::string& strFile); // LOCKS_EXCLUDED(bitdb.cs_db);
     bool RemoveDb(const std::string& strFile);
 
     DbTxn *TxnBegin(int flags=DB_TXN_WRITE_NOSYNC)
@@ -99,7 +105,8 @@ protected:
     DbTxn *activeTxn;
     bool fReadOnly;
 
-    explicit CDB(const char* pszFile, const char* pszMode="r+");
+    explicit CDB(const char* pszFile, const char* pszMode="r+")
+      EXCLUSIVE_LOCKS_REQUIRED(bitdb.cs_db);
     ~CDB() { Close(); }
 public:
     void Flush();
@@ -306,7 +313,8 @@ public:
         return Write(std::string("version"), nVersion);
     }
 
-    bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL);
+    bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL)
+      LOCKS_EXCLUDED(bitdb.cs_db);
 };
 
 

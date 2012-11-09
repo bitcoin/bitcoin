@@ -918,7 +918,7 @@ static string JSONRPCExecBatch(const Array& vReq)
 
 static CCriticalSection cs_THREAD_RPCHANDLER;
 
-void ThreadRPCServer3(void* parg)
+void ThreadRPCServer3(void* parg) LOCKS_EXCLUDED(cs_THREAD_RPCHANDLER)
 {
     // Make this thread recognisable as the RPC handler
     RenameThread("bitcoin-rpchand");

@@ -385,7 +385,7 @@ static bool IsKeyType(string strType)
             strType == "mkey" || strType == "ckey");
 }
 
-DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
+DBErrors CWalletDB::LoadWallet(CWallet* pwallet) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     pwallet->vchDefaultKey = CPubKey();
     int nFileVersion = 0;

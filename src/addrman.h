@@ -169,31 +169,31 @@ private:
     mutable CCriticalSection cs;
 
     // secret key to randomize bucket select with
-    std::vector<unsigned char> nKey;
+    std::vector<unsigned char> nKey GUARDED_BY(cs);
 
     // last used nId
-    int nIdCount;
+    int nIdCount GUARDED_BY(cs);
 
     // table with information about all nIds
-    std::map<int, CAddrInfo> mapInfo;
+    std::map<int, CAddrInfo> mapInfo GUARDED_BY(cs);
 
     // find an nId based on its network address
-    std::map<CNetAddr, int> mapAddr;
+    std::map<CNetAddr, int> mapAddr GUARDED_BY(cs);
 
     // randomly-ordered vector of all nIds
-    std::vector<int> vRandom;
+    std::vector<int> vRandom GUARDED_BY(cs);
 
     // number of "tried" entries
-    int nTried;
+    int nTried GUARDED_BY(cs);
 
     // list of "tried" buckets
-    std::vector<std::vector<int> > vvTried;
+    std::vector<std::vector<int> > vvTried GUARDED_BY(cs);
 
     // number of (unique) "new" entries
-    int nNew;
+    int nNew GUARDED_BY(cs);
 
     // list of "new" buckets
-    std::vector<std::set<int> > vvNew;
+    std::vector<std::set<int> > vvNew GUARDED_BY(cs);
 
 protected:
 
@@ -202,7 +202,7 @@ protected:
 
     // find an entry, creating it if necessary.
     // nTime and nServices of found node is updated, if necessary.
-    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = NULL);
+    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = NULL) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Swap two elements in vRandom.
     void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2);
@@ -213,24 +213,25 @@ protected:
     // Remove an element from a "new" bucket.
     // This is the only place where actual deletes occur.
     // They are never deleted while in the "tried" table, only possibly evicted back to the "new" table.
-    int ShrinkNew(int nUBucket);
+    int ShrinkNew(int nUBucket) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Move an entry from the "new" table(s) to the "tried" table
     // @pre vvUnkown[nOrigin].count(nId) != 0
-    void MakeTried(CAddrInfo& info, int nId, int nOrigin);
+    void MakeTried(CAddrInfo& info, int nId, int nOrigin) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Mark an entry "good", possibly moving it from "new" to "tried".
-    void Good_(const CService &addr, int64 nTime);
+    void Good_(const CService &addr, int64 nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Add an entry to the "new" table.
-    bool Add_(const CAddress &addr, const CNetAddr& source, int64 nTimePenalty);
+    bool Add_(const CAddress &addr, const CNetAddr& source, int64 nTimePenalty)
+      EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Mark an entry as attempted to connect.
-    void Attempt_(const CService &addr, int64 nTime);
+    void Attempt_(const CService &addr, int64 nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Select an address to connect to.
     // nUnkBias determines how much to favor new addresses over tried ones (min=0, max=100)
-    CAddress Select_(int nUnkBias);
+    CAddress Select_(int nUnkBias) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 #ifdef DEBUG_ADDRMAN
     // Perform consistency check. Returns an error code or zero.
@@ -268,14 +269,14 @@ public:
         // This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
         // changes to the ADDRMAN_ parameters without breaking the on-disk structure.
         {
-            LOCK(cs);
+            CAddrMan *am = const_cast<CAddrMan*>(this);
+            LOCK(am->cs);
             unsigned char nVersion = 0;
             READWRITE(nVersion);
             READWRITE(nKey);
             READWRITE(nNew);
             READWRITE(nTried);
 
-            CAddrMan *am = const_cast<CAddrMan*>(this);
             if (fWrite)
             {
                 int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT;
@@ -396,87 +397,103 @@ public:
     }
 
     // Consistency check
-    void Check()
+    void Check() LOCKS_EXCLUDED(cs)
     {
 #ifdef DEBUG_ADDRMAN
-        {
-            LOCK(cs);
-            int err;
-            if ((err=Check_()))
-                printf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
-        }
+        LOCK(cs);
+	CheckUnlocked();
+#endif
+    }
+
+    // Consistency check
+    void CheckUnlocked() EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+#ifdef DEBUG_ADDRMAN
+        int err;
+        if ((err=Check_()))
+            printf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
 #endif
     }
 
     // Add a single address.
     bool Add(const CAddress &addr, const CNetAddr& source, int64 nTimePenalty = 0)
+      LOCKS_EXCLUDED(cs)
     {
         bool fRet = false;
+	int nTriedCopy;
+	int nNewCopy;
         {
             LOCK(cs);
-            Check();
+            CheckUnlocked();
             fRet |= Add_(addr, source, nTimePenalty);
-            Check();
+            CheckUnlocked();
+	    nTriedCopy = nTried;
+	    nNewCopy = nNew;
         }
         if (fRet)
-            printf("Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort().c_str(), source.ToString().c_str(), nTried, nNew);
+            printf("Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort().c_str(), source.ToString().c_str(), nTriedCopy, nNewCopy);
         return fRet;
     }
 
     // Add multiple addresses.
     bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64 nTimePenalty = 0)
+      LOCKS_EXCLUDED(cs)
     {
         int nAdd = 0;
+	int nTriedCopy;
+	int nNewCopy;
         {
             LOCK(cs);
-            Check();
+            CheckUnlocked();
             for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
                 nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
-            Check();
+            CheckUnlocked();
+	    nTriedCopy = nTried;
+	    nNewCopy = nNew;
         }
         if (nAdd)
-            printf("Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString().c_str(), nTried, nNew);
+            printf("Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString().c_str(), nTriedCopy, nNewCopy);
         return nAdd > 0;
     }
 
     // Mark an entry as accessible.
     void Good(const CService &addr, int64 nTime = GetAdjustedTime())
+      LOCKS_EXCLUDED(cs)
     {
         {
             LOCK(cs);
-            Check();
+            CheckUnlocked();
             Good_(addr, nTime);
-            Check();
+            CheckUnlocked();
         }
     }
 
     // Mark an entry as connection attempted to.
     void Attempt(const CService &addr, int64 nTime = GetAdjustedTime())
+      LOCKS_EXCLUDED(cs)
     {
         {
             LOCK(cs);
-            Check();
+            CheckUnlocked();
             Attempt_(addr, nTime);
-            Check();
+            CheckUnlocked();
         }
     }
 
     // Choose an address to connect to.
     // nUnkBias determines how much "new" entries are favored over "tried" ones (0-100).
-    CAddress Select(int nUnkBias = 50)
+    CAddress Select(int nUnkBias = 50) LOCKS_EXCLUDED(cs)
     {
         CAddress addrRet;
-        {
-            LOCK(cs);
-            Check();
-            addrRet = Select_(nUnkBias);
-            Check();
-        }
+        LOCK(cs);
+        CheckUnlocked();
+        addrRet = Select_(nUnkBias);
+        CheckUnlocked();
         return addrRet;
     }
 
     // Return a bunch of addresses, selected at random.
-    std::vector<CAddress> GetAddr()
+    std::vector<CAddress> GetAddr() LOCKS_EXCLUDED(cs)
     {
         Check();
         std::vector<CAddress> vAddr;
@@ -490,13 +507,12 @@ public:
 
     // Mark an entry as currently-connected-to.
     void Connected(const CService &addr, int64 nTime = GetAdjustedTime())
+      LOCKS_EXCLUDED(cs)
     {
-        {
-            LOCK(cs);
-            Check();
-            Connected_(addr, nTime);
-            Check();
-        }
+        LOCK(cs);
+        CheckUnlocked();
+        Connected_(addr, nTime);
+        CheckUnlocked();
     }
 };
 

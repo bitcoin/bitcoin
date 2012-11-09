@@ -105,6 +105,7 @@ bool CDBEnv::Open(boost::filesystem::path pathEnv_)
 
 void CDBEnv::MakeMock()
 {
+    LOCK(cs_db);
     if (fDbEnvInit)
         throw runtime_error("CDBEnv::MakeMock(): already initialized");
 
@@ -222,7 +223,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
         nFlags |= DB_CREATE;
 
     {
-        LOCK(bitdb.cs_db);
+      // LOCK(bitdb.cs_db);
         if (!bitdb.Open(GetDataDir()))
             throw runtime_error("env open failed");
 
@@ -436,43 +437,42 @@ void CDBEnv::Flush(bool fShutdown)
     int64 nStart = GetTimeMillis();
     // Flush log data to the actual data file
     //  on all files that are not in use
+    LOCK(cs_db);
     printf("Flush(%s)%s\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started");
     if (!fDbEnvInit)
         return;
+    
+    map<string, int>::iterator mi = mapFileUseCount.begin();
+    while (mi != mapFileUseCount.end())
     {
-        LOCK(cs_db);
-        map<string, int>::iterator mi = mapFileUseCount.begin();
-        while (mi != mapFileUseCount.end())
+        string strFile = (*mi).first;
+        int nRefCount = (*mi).second;
+        printf("%s refcount=%d\n", strFile.c_str(), nRefCount);
+        if (nRefCount == 0)
         {
-            string strFile = (*mi).first;
-            int nRefCount = (*mi).second;
-            printf("%s refcount=%d\n", strFile.c_str(), nRefCount);
-            if (nRefCount == 0)
-            {
-                // Move log data to the dat file
-                CloseDb(strFile);
-                printf("%s checkpoint\n", strFile.c_str());
-                dbenv.txn_checkpoint(0, 0, 0);
-                if (!IsChainFile(strFile) || fDetachDB) {
-                    printf("%s detach\n", strFile.c_str());
-                    if (!fMockDb)
-                        dbenv.lsn_reset(strFile.c_str(), 0);
-                }
-                printf("%s closed\n", strFile.c_str());
-                mapFileUseCount.erase(mi++);
+            // Move log data to the dat file
+            CloseDb(strFile);
+            printf("%s checkpoint\n", strFile.c_str());
+            dbenv.txn_checkpoint(0, 0, 0);
+            if (!IsChainFile(strFile) || fDetachDB) {
+                printf("%s detach\n", strFile.c_str());
+                if (!fMockDb)
+                    dbenv.lsn_reset(strFile.c_str(), 0);
             }
-            else
-                mi++;
+            printf("%s closed\n", strFile.c_str());
+            mapFileUseCount.erase(mi++);
         }
-        printf("DBFlush(%s)%s ended %15"PRI64d"ms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started", GetTimeMillis() - nStart);
-        if (fShutdown)
+        else
+            mi++;
+    }
+    printf("DBFlush(%s)%s ended %15"PRI64d"ms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started", GetTimeMillis() - nStart);
+    if (fShutdown)
+    {
+        char** listp;
+        if (mapFileUseCount.empty())
         {
-            char** listp;
-            if (mapFileUseCount.empty())
-            {
-                dbenv.log_archive(&listp, DB_ARCH_REMOVE);
-                Close();
-            }
+            dbenv.log_archive(&listp, DB_ARCH_REMOVE);
+            Close();
         }
     }
 }

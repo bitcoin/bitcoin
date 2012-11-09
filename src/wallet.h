@@ -73,78 +73,91 @@ private:
     CWalletDB *pwalletdbEncryption;
 
     // the current wallet version: clients below this version are not able to load the wallet
-    int nWalletVersion;
+    int nWalletVersion GUARDED_BY(cs_wallet);
 
     // the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
-    int nWalletMaxVersion;
+    int nWalletMaxVersion GUARDED_BY(cs_wallet);
 
 public:
-    mutable CCriticalSection cs_wallet;
+    mutable CCriticalSection cs_wallet ACQUIRED_AFTER(cs_main);
 
-    bool fFileBacked;
-    std::string strWalletFile;
+    const bool fFileBacked;
+    const std::string strWalletFile;
 
-    std::set<int64> setKeyPool;
+    std::set<int64> setKeyPool GUARDED_BY(cs_wallet);
 
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
-    MasterKeyMap mapMasterKeys;
-    unsigned int nMasterKeyMaxID;
+    MasterKeyMap mapMasterKeys GUARDED_BY(cs_wallet);
+    unsigned int nMasterKeyMaxID GUARDED_BY(cs_wallet);
 
     CWallet()
+      : fFileBacked(false)
     {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
-        fFileBacked = false;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
         nOrderPosNext = 0;
     }
     CWallet(std::string strWalletFileIn)
+      : fFileBacked(true),
+        strWalletFile(strWalletFileIn)
     {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
-        strWalletFile = strWalletFileIn;
-        fFileBacked = true;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
         nOrderPosNext = 0;
     }
 
-    std::map<uint256, CWalletTx> mapWallet;
+    std::map<uint256, CWalletTx> mapWallet GUARDED_BY(cs_wallet);
     int64 nOrderPosNext;
-    std::map<uint256, int> mapRequestCount;
+    std::map<uint256, int> mapRequestCount GUARDED_BY(cs_wallet);
 
-    std::map<CTxDestination, std::string> mapAddressBook;
+    std::map<CTxDestination, std::string> mapAddressBook GUARDED_BY(cs_wallet);
 
-    CPubKey vchDefaultKey;
+    CPubKey vchDefaultKey GUARDED_BY(cs_wallet);
 
     // check whether we are allowed to upgrade (or already support) to the named feature
-    bool CanSupportFeature(enum WalletFeature wf) { return nWalletMaxVersion >= wf; }
+    bool CanSupportFeature(enum WalletFeature wf) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        return nWalletMaxVersion >= wf;
+    }
 
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true) const;
     bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
 
     // keystore implementation
     // Generate a new key
-    CPubKey GenerateNewKey();
+    CPubKey GenerateNewKey() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     // Adds a key to the store, and saves it to disk.
-    bool AddKey(const CKey& key);
+    bool AddKey(const CKey& key) LOCKS_EXCLUDED(cs_KeyStore);
+    bool AddKeyUnlocked(const CKey& key) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     // Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key) { return CCryptoKeyStore::AddKey(key); }
 
-    bool LoadMinVersion(int nVersion) { nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion); return true; }
+    bool LoadMinVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion);
+	return true;
+    }
 
     // Adds an encrypted key to the store, and saves it to disk.
     bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     // Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
-    bool LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret) { SetMinVersion(FEATURE_WALLETCRYPT); return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret); }
+    bool LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        SetMinVersion(FEATURE_WALLETCRYPT);
+	return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret);
+    }
     bool AddCScript(const CScript& redeemScript);
     bool LoadCScript(const CScript& redeemScript) { return CCryptoKeyStore::AddCScript(redeemScript); }
 
     bool Unlock(const SecureString& strWalletPassphrase);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
-    bool EncryptWallet(const SecureString& strWalletPassphrase);
+    bool EncryptWallet(const SecureString& strWalletPassphrase)
+      EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     /** Increment the next transaction order id
         @return next transaction order id
@@ -177,21 +190,21 @@ public:
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
     std::string SendMoneyToDestination(const CTxDestination &address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
 
-    bool NewKeyPool();
-    bool TopUpKeyPool();
-    int64 AddReserveKey(const CKeyPool& keypool);
-    void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
+    bool NewKeyPool() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool TopUpKeyPool() LOCKS_EXCLUDED(cs_wallet);
+    int64 AddReserveKey(const CKeyPool& keypool) LOCKS_EXCLUDED(cs_main, cs_wallet);
+    void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool) LOCKS_EXCLUDED(cs_wallet);
     void KeepKey(int64 nIndex);
-    void ReturnKey(int64 nIndex);
-    bool GetKeyFromPool(CPubKey &key, bool fAllowReuse=true);
+    void ReturnKey(int64 nIndex) LOCKS_EXCLUDED(cs_wallet);
+    bool GetKeyFromPool(CPubKey &key, bool fAllowReuse=true) LOCKS_EXCLUDED(cs_wallet);
     int64 GetOldestKeyPoolTime();
     void GetAllReserveKeys(std::set<CKeyID>& setAddress);
 
     std::set< std::set<CTxDestination> > GetAddressGroupings();
     std::map<CTxDestination, int64> GetAddressBalances();
 
-    bool IsMine(const CTxIn& txin) const;
-    int64 GetDebit(const CTxIn& txin) const;
+    bool IsMine(const CTxIn& txin) const LOCKS_EXCLUDED(cs_wallet);
+    int64 GetDebit(const CTxIn& txin) const LOCKS_EXCLUDED(cs_wallet);
     bool IsMine(const CTxOut& txout) const
     {
         return ::IsMine(*this, txout.scriptPubKey);
@@ -255,17 +268,17 @@ public:
     }
     void SetBestChain(const CBlockLocator& loc);
 
-    DBErrors LoadWallet(bool& fFirstRunRet);
+    DBErrors LoadWallet(bool& fFirstRunRet) LOCKS_EXCLUDED(cs_wallet);
 
-    bool SetAddressBookName(const CTxDestination& address, const std::string& strName);
+    bool SetAddressBookName(const CTxDestination& address, const std::string& strName) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool DelAddressBookName(const CTxDestination& address);
+    bool DelAddressBookName(const CTxDestination& address)  EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    void UpdatedTransaction(const uint256 &hashTx);
+    void UpdatedTransaction(const uint256 &hashTx) LOCKS_EXCLUDED(cs_wallet);
 
-    void PrintWallet(const CBlock& block);
+    void PrintWallet(const CBlock& block) LOCKS_EXCLUDED(cs_wallet);
 
-    void Inventory(const uint256 &hash)
+    void Inventory(const uint256 &hash) LOCKS_EXCLUDED(cs_wallet)
     {
         {
             LOCK(cs_wallet);
@@ -275,23 +288,26 @@ public:
         }
     }
 
-    int GetKeyPoolSize()
+    int GetKeyPoolSize() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         return setKeyPool.size();
     }
 
-    bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
+    bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx) LOCKS_EXCLUDED(cs_wallet);
 
-    bool SetDefaultKey(const CPubKey &vchPubKey);
+    bool SetDefaultKey(const CPubKey &vchPubKey) LOCKS_EXCLUDED(cs_wallet);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
-    bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
+    bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     // change which version we're allowed to upgrade to (note that this does not immediately imply upgrading to that format)
-    bool SetMaxVersion(int nVersion);
+    bool SetMaxVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     // get the current wallet format (the oldest client version guaranteed to understand this wallet)
-    int GetVersion() { return nWalletVersion; }
+    int GetVersion() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        return nWalletVersion;
+    }
 
     /** Address book entry changed.
      * @note called with lock cs_wallet held.
@@ -602,7 +618,7 @@ public:
     void GetAmounts(std::list<std::pair<CTxDestination, int64> >& listReceived,
                     std::list<std::pair<CTxDestination, int64> >& listSent, int64& nFee, std::string& strSentAccount) const;
 
-    void GetAccountAmounts(const std::string& strAccount, int64& nReceived,
+    void GetAccountAmounts(const std::string& strAccount, int64& nReceived, 
                            int64& nSent, int64& nFee) const;
 
     bool IsFromMe() const
@@ -659,6 +675,7 @@ public:
     int GetRequestCount() const;
 
     void AddSupportingTransactions();
+
     bool AcceptWalletTransaction(bool fCheckInputs=true);
     void RelayWalletTransaction();
 };

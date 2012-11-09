@@ -21,18 +21,27 @@ public:
     virtual ~CKeyStore() {}
 
     // Add a key to the store.
-    virtual bool AddKey(const CKey& key) =0;
+    virtual bool AddKey(const CKey& key) LOCKS_EXCLUDED(cs_KeyStore) = 0;
+    virtual bool AddKeyUnlocked(const CKey& key) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore) = 0;
 
     // Check whether a key corresponding to a given address is present in the store.
     virtual bool HaveKey(const CKeyID &address) const =0;
+    virtual bool HaveKeyUnlocked(const CKeyID &address) const =0;
     virtual bool GetKey(const CKeyID &address, CKey& keyOut) const =0;
+    virtual bool GetKeyUnlocked(const CKeyID &address, CKey& keyOut) const =0;
     virtual void GetKeys(std::set<CKeyID> &setAddress) const =0;
+    virtual void GetKeysUnlocked(std::set<CKeyID> &setAddress) const =0;
     virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
 
     // Support for BIP 0013 : see https://en.bitcoin.it/wiki/BIP_0013
-    virtual bool AddCScript(const CScript& redeemScript) =0;
-    virtual bool HaveCScript(const CScriptID &hash) const =0;
-    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const =0;
+    virtual bool AddCScript(const CScript& redeemScript) LOCKS_EXCLUDED(cs_KeyStore) =0;
+    virtual bool AddCScriptUnlocked(const CScript& redeemScript)
+      EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore) =0;
+    virtual bool HaveCScript(const CScriptID &hash) const LOCKS_EXCLUDED(cs_KeyStore) =0;
+    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
+      const LOCKS_EXCLUDED(cs_KeyStore) =0;
+    virtual bool GetCScriptUnlocked(const CScriptID &hash, CScript& redeemScriptOut)
+      const EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore) =0;
 
     virtual bool GetSecret(const CKeyID &address, CSecret& vchSecret, bool &fCompressed) const
     {
@@ -51,50 +60,58 @@ typedef std::map<CScriptID, CScript > ScriptMap;
 class CBasicKeyStore : public CKeyStore
 {
 protected:
-    KeyMap mapKeys;
-    ScriptMap mapScripts;
+    KeyMap mapKeys GUARDED_BY(cs_KeyStore);
+    ScriptMap mapScripts GUARDED_BY(cs_KeyStore);
 
 public:
     bool AddKey(const CKey& key);
+    bool AddKeyUnlocked(const CKey& key);
     bool HaveKey(const CKeyID &address) const
     {
-        bool result;
-        {
-            LOCK(cs_KeyStore);
-            result = (mapKeys.count(address) > 0);
-        }
-        return result;
+        LOCK(cs_KeyStore);
+        return (mapKeys.count(address) > 0);
     }
+    bool HaveKeyUnlocked(const CKeyID &address) const
+    {
+        return (mapKeys.count(address) > 0);
+    }
+
     void GetKeys(std::set<CKeyID> &setAddress) const
     {
+        LOCK(cs_KeyStore);
+	GetKeysUnlocked(setAddress);
+    }
+    void GetKeysUnlocked(std::set<CKeyID> &setAddress) const
+    {
         setAddress.clear();
+        KeyMap::const_iterator mi = mapKeys.begin();
+        while (mi != mapKeys.end())
         {
-            LOCK(cs_KeyStore);
-            KeyMap::const_iterator mi = mapKeys.begin();
-            while (mi != mapKeys.end())
-            {
-                setAddress.insert((*mi).first);
-                mi++;
-            }
+            setAddress.insert((*mi).first);
+            mi++;
         }
     }
     bool GetKey(const CKeyID &address, CKey &keyOut) const
     {
+        LOCK(cs_KeyStore);
+	return GetKeyUnlocked(address, keyOut);
+    }
+    bool GetKeyUnlocked(const CKeyID &address, CKey &keyOut) const
+    {
+        KeyMap::const_iterator mi = mapKeys.find(address);
+        if (mi != mapKeys.end())
         {
-            LOCK(cs_KeyStore);
-            KeyMap::const_iterator mi = mapKeys.find(address);
-            if (mi != mapKeys.end())
-            {
-                keyOut.Reset();
-                keyOut.SetSecret((*mi).second.first, (*mi).second.second);
-                return true;
-            }
+            keyOut.Reset();
+            keyOut.SetSecret((*mi).second.first, (*mi).second.second);
+            return true;
         }
         return false;
     }
     virtual bool AddCScript(const CScript& redeemScript);
+    virtual bool AddCScriptUnlocked(const CScript& redeemScript);
     virtual bool HaveCScript(const CScriptID &hash) const;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const;
+    virtual bool GetCScriptUnlocked(const CScriptID &hash, CScript& redeemScriptOut) const;
 };
 
 typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > CryptedKeyMap;
@@ -105,13 +122,13 @@ typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > Crypt
 class CCryptoKeyStore : public CBasicKeyStore
 {
 private:
-    CryptedKeyMap mapCryptedKeys;
+    CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
 
-    CKeyingMaterial vMasterKey;
+    CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
 
     // if fUseCrypto is true, mapKeys must be empty
     // if fUseCrypto is false, vMasterKey must be empty
-    bool fUseCrypto;
+    bool fUseCrypto GUARDED_BY(cs_KeyStore);
 
 protected:
     bool SetCrypted();
@@ -126,21 +143,17 @@ public:
     {
     }
 
-    bool IsCrypted() const
+    bool IsCrypted() const EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore)
     {
         return fUseCrypto;
     }
 
     bool IsLocked() const
     {
+        LOCK(cs_KeyStore);
         if (!IsCrypted())
             return false;
-        bool result;
-        {
-            LOCK(cs_KeyStore);
-            result = vMasterKey.empty();
-        }
-        return result;
+        return vMasterKey.empty();
     }
 
     bool Lock();
@@ -159,7 +172,7 @@ public:
     }
     bool GetKey(const CKeyID &address, CKey& keyOut) const;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
-    void GetKeys(std::set<CKeyID> &setAddress) const
+    void GetKeys(std::set<CKeyID> &setAddress) const EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore)
     {
         if (!IsCrypted())
         {

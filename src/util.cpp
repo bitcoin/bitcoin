@@ -210,7 +210,14 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
     else if (!fPrintToDebugger)
     {
         // print to debug.log
-        static FILE* fileout = NULL;
+
+        // This routine may be called by global destructors during shutdown.
+        // Since the order of destruction of static/global objects is undefined,
+        // allocate mutexDebugLog on the heap the first time this routine
+        // is called to avoid crashes during shutdown.
+        static boost::mutex* mutexDebugLog = NULL;
+        if (mutexDebugLog == NULL) mutexDebugLog = new boost::mutex();
+        static FILE* fileout GUARDED_BY(*mutexDebugLog) = NULL;
 
         if (!fileout)
         {
@@ -221,13 +228,6 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         if (fileout)
         {
             static bool fStartedNewLine = true;
-
-            // This routine may be called by global destructors during shutdown.
-            // Since the order of destruction of static/global objects is undefined,
-            // allocate mutexDebugLog on the heap the first time this routine
-            // is called to avoid crashes during shutdown.
-            static boost::mutex* mutexDebugLog = NULL;
-            if (mutexDebugLog == NULL) mutexDebugLog = new boost::mutex();
             boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
 
             // reopen the log file, if requested

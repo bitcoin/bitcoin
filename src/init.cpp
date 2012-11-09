@@ -407,6 +407,7 @@ bool AppInit2()
     else
         fDebugNet = GetBoolArg("-debugnet");
 
+    LOCK(bitdb.cs_db);
     bitdb.SetDetach(GetBoolArg("-detachdb", false));
 
 #if !defined(WIN32) && !defined(QT_GUI)
@@ -744,6 +745,7 @@ bool AppInit2()
     if (GetBoolArg("-upgradewallet", fFirstRun))
     {
         int nMaxVersion = GetArg("-upgradewallet", 0);
+	LOCK(pwalletMain->cs_wallet);
         if (nMaxVersion == 0) // the -upgradewallet without argument case
         {
             printf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
@@ -766,6 +768,7 @@ bool AppInit2()
         if (!pwalletMain->GetKeyFromPool(newDefaultKey, false))
             strErrors << _("Cannot initialize keypool") << "\n";
         pwalletMain->SetDefaultKey(newDefaultKey);
+	LOCK(pwalletMain->cs_wallet);
         if (!pwalletMain->SetAddressBookName(pwalletMain->vchDefaultKey.GetID(), ""))
             strErrors << _("Cannot write default address") << "\n";
     }

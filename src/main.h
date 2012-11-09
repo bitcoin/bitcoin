@@ -22,7 +22,7 @@ class CAddress;
 class CInv;
 class CNode;
 
-class CBlockIndexWorkComparator;
+struct CBlockIndexWorkComparator;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
@@ -68,8 +68,8 @@ extern CScript COINBASE_FLAGS;
 
 
 extern CCriticalSection cs_main;
-extern std::map<uint256, CBlockIndex*> mapBlockIndex;
-extern std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid;
+extern std::map<uint256, CBlockIndex*> mapBlockIndex GUARDED_BY(cs_main);
+extern std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid GUARDED_BY(cs_main);
 extern uint256 hashGenesisBlock;
 extern CBlockIndex* pindexGenesisBlock;
 extern int nBestHeight;
@@ -85,7 +85,7 @@ extern double dHashesPerSec;
 extern int64 nHPSTimerStart;
 extern int64 nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
-extern std::set<CWallet*> setpwalletRegistered;
+extern std::set<CWallet*> setpwalletRegistered GUARDED_BY(cs_setpwalletRegistered);
 extern unsigned char pchMessageStart[4];
 extern bool fImporting;
 extern unsigned int nCoinCacheSize;
@@ -1774,9 +1774,9 @@ public:
 class CTxMemPool
 {
 public:
-    mutable CCriticalSection cs;
-    std::map<uint256, CTransaction> mapTx;
-    std::map<COutPoint, CInPoint> mapNextTx;
+    mutable CCriticalSection cs ACQUIRED_AFTER(cs_main);
+    std::map<uint256, CTransaction> mapTx GUARDED_BY(cs);
+    std::map<COutPoint, CInPoint> mapNextTx GUARDED_BY(cs);
 
     bool accept(CTransaction &tx, bool fCheckInputs, bool* pfMissingInputs);
     bool addUnchecked(const uint256& hash, CTransaction &tx);

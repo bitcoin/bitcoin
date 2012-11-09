@@ -99,11 +99,11 @@ extern uint64 nLocalHostNonce;
 extern boost::array<int, THREAD_MAX> vnThreadsRunning;
 extern CAddrMan addrman;
 
-extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
-extern std::map<CInv, CDataStream> mapRelay;
-extern std::deque<std::pair<int64, CInv> > vRelayExpiration;
+extern std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
 extern CCriticalSection cs_mapRelay;
+extern std::map<CInv, CDataStream> mapRelay GUARDED_BY(cs_mapRelay);
+extern std::deque<std::pair<int64, CInv> > vRelayExpiration;
 extern std::map<CInv, int64> mapAlreadyAskedFor;
 
 
@@ -125,20 +125,16 @@ public:
     int nMisbehavior;
 };
 
-
-
-
-
 /** Information about a peer */
 class CNode
 {
 public:
     // socket
     uint64 nServices;
-    SOCKET hSocket;
-    CDataStream vSend;
-    CDataStream vRecv;
-    CCriticalSection cs_vSend;
+    SOCKET hSocket;   // Only accessed by network thread
+    CDataStream vSend GUARDED_BY(cs_vSend);
+    CDataStream vRecv GUARDED_BY(cs_vRecv);
+    CCriticalSection cs_vSend ACQUIRED_BEFORE(cs_vRecv) ACQUIRED_AFTER(cs_vNodes);
     CCriticalSection cs_vRecv;
     int64 nLastSend;
     int64 nLastRecv;
@@ -163,7 +159,7 @@ protected:
 
     // Denial-of-service detection/prevention
     // Key is IP address, value is banned-until-time
-    static std::map<CNetAddr, int64> setBanned;
+    static std::map<CNetAddr, int64> setBanned GUARDED_BY(cs_setBanned);
     static CCriticalSection cs_setBanned;
     int nMisbehavior;
 
@@ -311,7 +307,7 @@ public:
 
 
 
-    void BeginMessage(const char* pszCommand)
+    void BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSend)
     {
         ENTER_CRITICAL_SECTION(cs_vSend);
         if (nHeaderStart != -1)
@@ -323,7 +319,7 @@ public:
             printf("sending: %s ", pszCommand);
     }
 
-    void AbortMessage()
+    void AbortMessage() UNLOCK_FUNCTION(cs_vSend)
     {
         if (nHeaderStart < 0)
             return;
@@ -336,7 +332,7 @@ public:
             printf("(aborted)\n");
     }
 
-    void EndMessage()
+    void EndMessage() UNLOCK_FUNCTION(cs_vSend)
     {
         if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
         {
@@ -368,7 +364,7 @@ public:
         LEAVE_CRITICAL_SECTION(cs_vSend);
     }
 
-    void EndMessageAbortIfEmpty()
+    void EndMessageAbortIfEmpty() UNLOCK_FUNCTION(cs_vSend)
     {
         if (nHeaderStart < 0)
             return;
@@ -546,7 +542,7 @@ public:
     bool IsSubscribed(unsigned int nChannel);
     void Subscribe(unsigned int nChannel, unsigned int nHops=0);
     void CancelSubscribe(unsigned int nChannel);
-    void CloseSocketDisconnect();
+    void CloseSocketDisconnect() EXCLUSIVE_LOCKS_REQUIRED(cs_vRecv);
     void Cleanup();
 
 
