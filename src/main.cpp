@@ -2018,51 +2018,50 @@ bool CBlock::AcceptBlock(CDiskBlockPos *dbp)
     CBlockIndex* pindexPrev = NULL;
     int nHeight = 0;
     if (hash != hashGenesisBlock) {
+        map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashPrevBlock);
+        if (mi == mapBlockIndex.end())
+            return DoS(10, error("AcceptBlock() : prev block not found"));
+        pindexPrev = (*mi).second;
+        nHeight = pindexPrev->nHeight+1;
 
-    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashPrevBlock);
-    if (mi == mapBlockIndex.end())
-        return DoS(10, error("AcceptBlock() : prev block not found"));
-    pindexPrev = (*mi).second;
-    nHeight = pindexPrev->nHeight+1;
+        // Check proof of work
+        if (nBits != GetNextWorkRequired(pindexPrev, this))
+            return DoS(100, error("AcceptBlock() : incorrect proof of work"));
 
-    // Check proof of work
-    if (nBits != GetNextWorkRequired(pindexPrev, this))
-        return DoS(100, error("AcceptBlock() : incorrect proof of work"));
+        // Check timestamp against prev
+        if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
+            return error("AcceptBlock() : block's timestamp is too early");
 
-    // Check timestamp against prev
-    if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
-        return error("AcceptBlock() : block's timestamp is too early");
+        // Check that all transactions are finalized
+        BOOST_FOREACH(const CTransaction& tx, vtx)
+            if (!tx.IsFinal(nHeight, GetBlockTime()))
+                return DoS(10, error("AcceptBlock() : contains a non-final transaction"));
 
-    // Check that all transactions are finalized
-    BOOST_FOREACH(const CTransaction& tx, vtx)
-        if (!tx.IsFinal(nHeight, GetBlockTime()))
-            return DoS(10, error("AcceptBlock() : contains a non-final transaction"));
+        // Check that the block chain matches the known block chain up to a checkpoint
+        if (!Checkpoints::CheckBlock(nHeight, hash))
+            return DoS(100, error("AcceptBlock() : rejected by checkpoint lock-in at %d", nHeight));
 
-    // Check that the block chain matches the known block chain up to a checkpoint
-    if (!Checkpoints::CheckBlock(nHeight, hash))
-        return DoS(100, error("AcceptBlock() : rejected by checkpoint lock-in at %d", nHeight));
-
-    // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (nVersion < 2)
-    {
-        if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000)) ||
-            (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 75, 100)))
+        // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
+        if (nVersion < 2)
         {
-            return error("AcceptBlock() : rejected nVersion=1 block");
+            if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000)) ||
+                (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 75, 100)))
+            {
+                return error("AcceptBlock() : rejected nVersion=1 block");
+            }
         }
-    }
-    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
-    if (nVersion >= 2)
-    {
-        // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-        if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000)) ||
-            (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 51, 100)))
+        // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
+        if (nVersion >= 2)
         {
-            CScript expect = CScript() << nHeight;
-            if (!std::equal(expect.begin(), expect.end(), vtx[0].vin[0].scriptSig.begin()))
-                return DoS(100, error("AcceptBlock() : block height mismatch in coinbase"));
+            // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
+            if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000)) ||
+                (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 51, 100)))
+            {
+                CScript expect = CScript() << nHeight;
+                if (!std::equal(expect.begin(), expect.end(), vtx[0].vin[0].scriptSig.begin()))
+                    return DoS(100, error("AcceptBlock() : block height mismatch in coinbase"));
+            }
         }
-    }
     }
 
     // Write block to history file
