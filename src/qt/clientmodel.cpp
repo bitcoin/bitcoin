@@ -101,9 +101,13 @@ bool ClientModel::inInitialBlockDownload() const
     return IsInitialBlockDownload();
 }
 
-bool ClientModel::isImporting() const
+enum BlockSource ClientModel::getBlockSource() const
 {
-    return fImporting;
+    if (fReindex)
+        return BLOCK_SOURCE_REINDEX;
+    if (fImporting)
+        return BLOCK_SOURCE_DISK;
+    return BLOCK_SOURCE_NETWORK;
 }
 
 int ClientModel::getNumBlocksOfPeers() const
