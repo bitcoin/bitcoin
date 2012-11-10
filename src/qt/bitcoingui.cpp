@@ -505,8 +505,10 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     case BLOCK_SOURCE_NONE:
     case BLOCK_SOURCE_NETWORK:
         importText = tr("Synchronizing with network...");
+        break;
     case BLOCK_SOURCE_DISK:
         importText = tr("Importing blocks from disk...");
+        break;
     case BLOCK_SOURCE_REINDEX:
         importText = tr("Reindexing blocks on disk...");
     }
