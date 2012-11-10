@@ -107,33 +107,61 @@ class CTxUndo;
 class CCoinsView;
 class CCoinsViewCache;
 
+/** Register a wallet to receive updates from core */
 void RegisterWallet(CWallet* pwalletIn);
+/** Unregister a wallet from core */
 void UnregisterWallet(CWallet* pwalletIn);
+/** Push an updated transaction to all registered wallets */
 void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false);
+/** Process an incoming block */
 bool ProcessBlock(CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp = NULL);
+/** Check whether enough disk space is available for an incoming block */
 bool CheckDiskSpace(uint64 nAdditionalBytes=0);
+/** Open a block file (blk?????.dat) */
 FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+/** Open an undo file (rev?????.dat) */
 FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+/** Import blocks from an external file */
 bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp = NULL);
+/** Load the block tree and coins database from disk */
 bool LoadBlockIndex();
+/** Print the loaded block tree */
 void PrintBlockTree();
+/** Find a block by height in the currently-connected chain */
 CBlockIndex* FindBlockByHeight(int nHeight);
+/** Process protocol messages received from a given node */
 bool ProcessMessages(CNode* pfrom);
+/** Send queued protocol messages to be sent to a give node */
 bool SendMessages(CNode* pto, bool fSendTrickle);
+/** Run the importer thread, which deals with reindexing, loading bootstrap.dat, and whatever is passed to -loadblock */
 void ThreadImport(void *parg);
+/** Run the miner threads */
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
+/** Generate a new block, without valid proof-of-work */
 CBlock* CreateNewBlock(CReserveKey& reservekey);
+/** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
+/** Do mining precalculation */
 void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
+/** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
+/** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
+/** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
+/** Get the number of active peers */
 int GetNumBlocksOfPeers();
+/** Check whether we are doin an inital block download (synchronizing from disk or network) */
 bool IsInitialBlockDownload();
+/** Format a string that describes several potential problems detected by the core */
 std::string GetWarnings(std::string strFor);
+/** Retrieve a transaction (from memory pool, or from disk, if possible) */
 bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
+/** Connect/disconnect blocks until pindexNew is the new tip of the active block chain */
 bool SetBestChain(CBlockIndex* pindexNew);
+/** Find the best known block, and make it the tip of the block chain */
 bool ConnectBestBlock();
+/** Create a new block index entry for a given block hash */
 CBlockIndex * InsertBlockIndex(uint256 hash);
 
 
