@@ -29,7 +29,7 @@ extern const std::string CLIENT_DATE;
 // ppcoin version - intended for display purpose ONLY
 #define PPCOIN_VERSION_MAJOR       0
 #define PPCOIN_VERSION_MINOR       2
-#define PPCOIN_VERSION_REVISION    1
+#define PPCOIN_VERSION_REVISION    2
 #define PPCOIN_VERSION_BUILD       0
 
 //

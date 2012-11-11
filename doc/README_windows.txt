@@ -1,4 +1,4 @@
-PPCoin 0.2.1 BETA
+PPCoin 0.2.2 BETA
 
 Copyright (c) 2011-2012 PPCoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
@@ -35,11 +35,11 @@ but allowing incoming connections helps the PPCoin network.
 Upgrade
 -------
 All you existing coins/transactions should be intact with the upgrade.
-To upgrade from 0.2.0, first backup wallet
+To upgrade from 0.2, first backup wallet
 ppcoind backupwallet <destination_backup_file>
 Then shutdown ppcoind by
 ppcoind stop
-Start up the new ppcoind (0.2.1).
+Start up the new ppcoind (0.2.2).
 
 
 See the documentation/wiki at the ppcoin website:
