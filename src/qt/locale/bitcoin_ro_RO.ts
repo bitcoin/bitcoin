@@ -419,12 +419,7 @@ Sunteţi sigur că doriţi să criptaţi portofelul electronic?</translation>
         <translation>Ultimul bloc primit a fost generat %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="633"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Această tranzacţie depăşeşte limita.  Puteţi iniţia tranzacţia platind un comision de %1, de care vor beneficia nodurile care procesează tranzacţia şi ajută la menţinerea reţelei.  Acceptaţi plata comisionului?</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="667"/>
+        <location filename="../bitcoingui.cpp" line="665"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -433,27 +428,27 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="792"/>
+        <location filename="../bitcoingui.cpp" line="790"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Portofelul electronic este &lt;b&gt;criptat&lt;/b&gt; iar in momentul de faţă este &lt;b&gt;deblocat&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="800"/>
+        <location filename="../bitcoingui.cpp" line="798"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Portofelul electronic este &lt;b&gt;criptat&lt;/b&gt; iar in momentul de faţă este &lt;b&gt;blocat&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="823"/>
+        <location filename="../bitcoingui.cpp" line="821"/>
         <source>Wallet Data (*.dat)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="826"/>
+        <location filename="../bitcoingui.cpp" line="824"/>
         <source>Backup Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="826"/>
+        <location filename="../bitcoingui.cpp" line="824"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -522,12 +517,17 @@ Address: %4
         <translation>&amp;Trimiteţi Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="665"/>
+        <location filename="../bitcoingui.cpp" line="632"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="663"/>
         <source>Sent transaction</source>
         <translation>Tranzacţie expediată</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="666"/>
+        <location filename="../bitcoingui.cpp" line="664"/>
         <source>Incoming transaction</source>
         <translation>Tranzacţie recepţionată</translation>
     </message>
@@ -542,7 +542,7 @@ Address: %4
         <translation>Părăsiţi aplicaţia</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="823"/>
+        <location filename="../bitcoingui.cpp" line="821"/>
         <source>Backup Wallet</source>
         <translation>Backup portofelul electronic</translation>
     </message>
@@ -611,7 +611,7 @@ Address: %4
         <translation>&amp;Ajutor</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="638"/>
+        <location filename="../bitcoingui.cpp" line="636"/>
         <source>Sending...</source>
         <translation>Expediază...</translation>
     </message>
@@ -1184,8 +1184,8 @@ Address: %4
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Adresa către care se va face plata  (de exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
@@ -1738,11 +1738,6 @@ Address: %4
         <translation>versiunea Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="8"/>
-        <source>Error: Wallet locked, unable to create transaction  </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Invalid amount</source>
         <translation type="unfinished"></translation>
@@ -2108,11 +2103,6 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
-        <source>Error: Transaction creation failed  </source>
-        <translation>Eroare: Tranyacţia nu a putut fi iniţiată </translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
         <source>Insufficient funds</source>
         <translation>Fonduri insuficiente</translation>
@@ -2123,6 +2113,26 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Transmitere...</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="8"/>
+        <source>Error: Wallet locked, unable to create transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="9"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <source>Error: Transaction creation failed.</source>
+        <translation type="unfinished">Eroare: Tranyacţia nu a putut fi iniţiată.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="14"/>
+        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation type="unfinished">Eroare: Tranyacţia a fost respinsă.  Acesta poate fi rezultatul cheltuirii prealabile a unei sume de bitcoin din portofelul electronic, ca în cazul folosirii unei copii a fisierului wallet.dat, în care s-au efectuat tranzacţii neînregistrate în fisierul curent.</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="112"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
@@ -2131,16 +2141,6 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <location filename="../bitcoinstrings.cpp" line="57"/>
         <source>Connect through socks4 proxy</source>
         <translation>Conectează prin proxy SOCKS4</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation>Această tranzacţie depăşeşte limita.  Puteţi iniţia tranzacţia platind un comision de %1, de care vor beneficia nodurile care procesează tranzacţia şi ajută la menţinerea reţelei.  Acceptaţi plata comisionului?</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="14"/>
-        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Eroare: Tranyacţia a fost respinsă.  Acesta poate fi rezultatul cheltuirii prealabile a unei sume de bitcoin din portofelul electronic, ca în cazul folosirii unei copii a fisierului wallet.dat, în care s-au efectuat tranzacţii neînregistrate în fisierul curent.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>

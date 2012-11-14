@@ -334,7 +334,7 @@ Er du sikker på at du ønsker at kryptere din tegnebog?</translation>
         <translation>&amp;Modtag coins</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="665"/>
+        <location filename="../bitcoingui.cpp" line="663"/>
         <source>Sent transaction</source>
         <translation>Afsendt transaktion</translation>
     </message>
@@ -419,12 +419,17 @@ Er du sikker på at du ønsker at kryptere din tegnebog?</translation>
         <translation>Afslut program</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="666"/>
+        <location filename="../bitcoingui.cpp" line="632"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="664"/>
         <source>Incoming transaction</source>
         <translation>Indgående transaktion</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="667"/>
+        <location filename="../bitcoingui.cpp" line="665"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -437,7 +442,7 @@ Adresse: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="792"/>
+        <location filename="../bitcoingui.cpp" line="790"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Tegnebog er &lt;b&gt;krypteret&lt;/b&gt; og i øjeblikket &lt;b&gt;ulåst&lt;/b&gt;</translation>
     </message>
@@ -447,7 +452,7 @@ Adresse: %4
         <translation>&amp;Hjælp</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="800"/>
+        <location filename="../bitcoingui.cpp" line="798"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Tegnebog er &lt;b&gt;krypteret&lt;/b&gt; og i øjeblikket &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
@@ -600,32 +605,27 @@ Adresse: %4
         <translation>Sidst modtagne blok blev genereret %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="633"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Denne transaktion er over størrelsesbegrænsningen.  Du kan stadig sende den for et gebyr på %1 som går til de noder der behandler din transaktion, og som hjælper med at støtte netværket.  Ønsker du at betale gebyret?</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="638"/>
+        <location filename="../bitcoingui.cpp" line="636"/>
         <source>Sending...</source>
         <translation>Sender...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="823"/>
+        <location filename="../bitcoingui.cpp" line="821"/>
         <source>Backup Wallet</source>
         <translation>Backup tegnebog</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="823"/>
+        <location filename="../bitcoingui.cpp" line="821"/>
         <source>Wallet Data (*.dat)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="826"/>
+        <location filename="../bitcoingui.cpp" line="824"/>
         <source>Backup Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="826"/>
+        <location filename="../bitcoingui.cpp" line="824"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1187,6 +1187,11 @@ Adresse: %4
         <translation>&amp;Etiket:</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="93"/>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
         <source>Choose address from address book</source>
         <translation>Vælg adresse fra adressebog</translation>
@@ -1205,11 +1210,6 @@ Adresse: %4
         <location filename="../forms/sendcoinsentry.ui" line="113"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Adresse som betalingen skal sendes til  (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="137"/>
@@ -1789,6 +1789,26 @@ Adresse: %4
 </translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="8"/>
+        <source>Error: Wallet locked, unable to create transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="9"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <source>Error: Transaction creation failed.</source>
+        <translation type="unfinished">Fejl: Oprettelse af transaktionen mislykkedes.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="14"/>
+        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation type="unfinished">Fejl: Transaktionen blev afvist. Dette kan ske hvis nogle af dine coins i din tegnebog allerede var brugt, som hvis du brugte en kopi af wallet.dat og dine coins er blevet brugt i kopien, men ikke er markeret som brugt her.</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>An error occurred while setting up the RPC port %u for listening: %s</source>
         <translation type="unfinished"></translation>
@@ -1868,11 +1888,6 @@ Adresse: %4
         <source>Start minimized</source>
         <translation>Start minimeret
 </translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="8"/>
-        <source>Error: Wallet locked, unable to create transaction  </source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="21"/>
@@ -2039,11 +2054,6 @@ SSL-indstillinger: (se Bitcoin Wiki for SSL opsætningsinstruktioner)</translati
         <translation>Ugyldigt beløb for -paytxfee=&lt;amount&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
-        <source>Error: Transaction creation failed  </source>
-        <translation>Fejl: Oprettelse af transaktionen mislykkedes  </translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="13"/>
         <source>Sending...</source>
         <translation>Sender...</translation>
@@ -2092,11 +2102,6 @@ SSL-indstillinger: (se Bitcoin Wiki for SSL opsætningsinstruktioner)</translati
         <location filename="../bitcoinstrings.cpp" line="114"/>
         <source>Error loading addr.dat</source>
         <translation>Fejl ved indlæsning af addr.dat</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation>Denne transaktion er over størrelsesbegrænsningen.  Du kan stadig sende den for et gebyr på %1 som går til de noder der behandler din transaktion, og som hjælper med at støtte netværket.  Ønsker du at betale gebyret?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="45"/>
@@ -2178,11 +2183,6 @@ SSL-indstillinger: (se Bitcoin Wiki for SSL opsætningsinstruktioner)</translati
         <source>Server certificate file (default: server.cert)</source>
         <translation>Servercertifikat-fil (standard: server.cert)
 </translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="14"/>
-        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Fejl: Transaktionen blev afvist. Dette kan ske hvis nogle af dine coins i din tegnebog allerede var brugt, som hvis du brugte en kopi af wallet.dat og dine coins er blevet brugt i kopien, men ikke er markeret som brugt her.</translation>
     </message>
 </context>
 </TS>

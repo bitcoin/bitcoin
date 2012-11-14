@@ -370,7 +370,7 @@ Bent u er zeker van uw dat u uw portemonnee wilt versleutelen?</translation>
         <translation>Verstuur munten naar een bitcoin-adres</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="638"/>
+        <location filename="../bitcoingui.cpp" line="636"/>
         <source>Sending...</source>
         <translation>Versturen...</translation>
     </message>
@@ -430,12 +430,17 @@ Bent u er zeker van uw dat u uw portemonnee wilt versleutelen?</translation>
         <translation>&amp;Hulp</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="826"/>
+        <location filename="../bitcoingui.cpp" line="632"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="824"/>
         <source>Backup Failed</source>
         <translation>Backup Mislukt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="826"/>
+        <location filename="../bitcoingui.cpp" line="824"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>Er is een fout opgetreden bij het wegschrijven van de portemonnee-data naar de nieuwe locatie.</translation>
     </message>
@@ -504,22 +509,17 @@ Bent u er zeker van uw dat u uw portemonnee wilt versleutelen?</translation>
         <translation>&amp;Onderteken Bericht</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="633"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Deze transactie overschrijdt de groottelimiet. Om de transactie alsnog te versturen kunt u transactiekosten betalen van %1. Deze transactiekosten gaan naar de nodes die uw transactie verwerken en het helpt op deze manier bij het ondersteunen van het netwerk. Wilt u de transactiekosten betalen?</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="665"/>
+        <location filename="../bitcoingui.cpp" line="663"/>
         <source>Sent transaction</source>
         <translation>Verzonden transactie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="666"/>
+        <location filename="../bitcoingui.cpp" line="664"/>
         <source>Incoming transaction</source>
         <translation>Binnenkomende transactie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="667"/>
+        <location filename="../bitcoingui.cpp" line="665"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -537,12 +537,12 @@ Adres: %4
         <translation>&amp;Over %1</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="792"/>
+        <location filename="../bitcoingui.cpp" line="790"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Portemonnee is &lt;b&gt;versleuteld&lt;/b&gt; en momenteel &lt;b&gt;geopend&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="800"/>
+        <location filename="../bitcoingui.cpp" line="798"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Portemonnee is &lt;b&gt;versleuteld&lt;/b&gt; en momenteel &lt;b&gt;gesloten&lt;/b&gt;</translation>
     </message>
@@ -621,7 +621,7 @@ Adres: %4
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="823"/>
+        <location filename="../bitcoingui.cpp" line="821"/>
         <source>Backup Wallet</source>
         <translation>Backup Portemonnee</translation>
     </message>
@@ -631,7 +631,7 @@ Adres: %4
         <translation>Actie-werkbalk</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="823"/>
+        <location filename="../bitcoingui.cpp" line="821"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Portemonnee-data (*.dat)</translation>
     </message>
@@ -1167,6 +1167,11 @@ Adres: %4
         <translation>&amp;Label:</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="93"/>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
         <source>Choose address from address book</source>
         <translation>Kies adres uit adresboek</translation>
@@ -1211,11 +1216,6 @@ Adres: %4
         <location filename="../sendcoinsentry.cpp" line="26"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>Vul een label in voor dit adres om het toe te voegen aan uw adresboek</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Het adres waaraan u wilt betalen  (bijv. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="25"/>
@@ -1722,6 +1722,26 @@ Adres: %4
 </translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="8"/>
+        <source>Error: Wallet locked, unable to create transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="9"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <source>Error: Transaction creation failed.</source>
+        <translation type="unfinished">Fout: Aanmaak transactie mislukt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="14"/>
+        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation type="unfinished">Fout: De transactie was afgewezen. Dit kan gebeuren als u eerder uitgegeven munten opnieuw wilt versturen, zoals wanneer u een kopie van uw portemonneebestand (wallet.dat) heeft gebruikt en in de kopie deze munten zijn uitgegeven, maar in de huidige portemonnee deze nog niet als zodanig zijn gemarkeerd.</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Stuur commando naar -server of bitcoind
@@ -1926,21 +1946,6 @@ Adres: %4
         <translation>Toon extra debuggingsinformatie</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation>Fout: Deze transactie heeft transactiekosten nodig van tenminste %s, vanwege zijn grootte, ingewikkeldheid, of het gebruik van onlangs ontvangen munten </translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
-        <source>Error: Transaction creation failed  </source>
-        <translation>Fout: Aanmaak transactie mislukt</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="14"/>
-        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Fout: De transactie was afgewezen. Dit kan gebeuren als u eerder uitgegeven munten opnieuw wilt versturen, zoals wanneer u een kopie van uw wallet.dat heeft gebruikt en in de kopie deze munten zijn gemarkeerd als uitgegeven, maar in de huidige nog niet.</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="13"/>
         <source>Sending...</source>
         <translation>Aan het versturen...</translation>
@@ -2075,11 +2080,6 @@ Als het bestand niet bestaat, maak het dan aan, met een alleen-lezen-permissie.<
         <location filename="../bitcoinstrings.cpp" line="123"/>
         <source>Cannot initialize keypool</source>
         <translation>Kan sleutel-pool niet initialiseren</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="8"/>
-        <source>Error: Wallet locked, unable to create transaction  </source>
-        <translation>Fout: Portemonnee gesloten, transactie maken niet mogelijk </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>

@@ -5,14 +5,14 @@
 #else
 #define UNUSED
 #endif
-static const char UNUSED *bitcoin_strings[] = {QT_TRANSLATE_NOOP("bitcoin-core", "Error: Wallet locked, unable to create transaction  "),
+static const char UNUSED *bitcoin_strings[] = {QT_TRANSLATE_NOOP("bitcoin-core", "Error: Wallet locked, unable to create transaction."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: This transaction requires a transaction fee of at least %s because of "
-"its amount, complexity, or use of recently received funds  "),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error: Transaction creation failed  "),
+"its amount, complexity, or use of recently received funds."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: Transaction creation failed."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Sending..."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error: The transaction was rejected.  This might happen if some of the coins "
+"Error: The transaction was rejected. This might happen if some of the coins "
 "in your wallet were already spent, such as if you used a copy of wallet.dat "
 "and coins were spent in the copy but not marked as spent here."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount"),
