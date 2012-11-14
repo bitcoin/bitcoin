@@ -28,9 +28,9 @@ CClientUIInterface uiInterface;
 
 // Used to pass flags to the Bind() function
 enum BindFlags {
-    BF_NONE = 0,
-    BF_EXPLICIT = 1,
-    BF_REPORT_ERROR = 2
+    BF_NONE         = 0,
+    BF_EXPLICIT     = (1U << 0),
+    BF_REPORT_ERROR = (1U << 1)
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -220,7 +220,7 @@ bool static InitWarning(const std::string &str)
 }
 
 
-bool static Bind(const CService &addr, int flags) {
+bool static Bind(const CService &addr, unsigned int flags) {
     if (!(flags & BF_EXPLICIT) && IsLimited(addr))
         return false;
     std::string strError;
