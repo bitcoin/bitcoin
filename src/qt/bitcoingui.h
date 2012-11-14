@@ -170,4 +170,4 @@ private slots:
     void showNormalIfMinimized();
 };
 
-#endif
+#endif // BITCOINGUI_H

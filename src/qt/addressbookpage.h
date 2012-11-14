@@ -69,4 +69,4 @@ private slots:
     void onEditAction();
 };
 
-#endif // ADDRESSBOOKDIALOG_H
+#endif // ADDRESSBOOKPAGE_H
