@@ -3096,7 +3096,7 @@ public:
 
 CBlock* CreateNewBlock(CReserveKey& reservekey)
 {
-    CBlockIndex* pindexPrev = pindexBest;
+    CBlockIndex* pindexPrev;
 
     // Create new block
     auto_ptr<CBlock> pblock(new CBlock());
@@ -3118,6 +3118,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapTransactions)
     {
+        pindexPrev = pindexBest;
         CTxDB txdb("r");
 
         // Priority order to process transactions
