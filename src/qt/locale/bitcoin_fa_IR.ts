@@ -479,11 +479,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <source>Last received block was generated %1.</source>
         <translation>بلاک دریافت شده قبلی به میزان %1 تولید شده است</translation>
     </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="616"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>تراکنش بیشتر از محدودیتهای شماست. شما می توانید همچنان با هزینه %1 آن را ارسال کنید که این هزینه به گره هایی که تراکنش را برایتان انجام می دهد تعلق می گیرد و به حمایت از شبکه کمک می کند. آیا شما می خواهید این هزینه را پرداخت کنید؟</translation>
-    </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="516"/>
         <source>%n second(s) ago</source>
@@ -564,22 +559,27 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>در حال روزآمد سازی..</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="621"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="619"/>
         <source>Sending...</source>
         <translation>در حال ارسال...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="648"/>
+        <location filename="../bitcoingui.cpp" line="646"/>
         <source>Sent transaction</source>
         <translation>ارسال تراکنش</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="649"/>
+        <location filename="../bitcoingui.cpp" line="647"/>
         <source>Incoming transaction</source>
         <translation>تراکنش دریافتی</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="650"/>
+        <location filename="../bitcoingui.cpp" line="648"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -589,33 +589,33 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="775"/>
+        <location filename="../bitcoingui.cpp" line="773"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>wallet رمزگذاری شد و در حال حاضر از حالت قفل در آمده است</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="783"/>
+        <location filename="../bitcoingui.cpp" line="781"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>wallet رمزگذاری شد و در حال حاضر قفل است</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Backup Wallet</source>
         <translation>گرفتن نسخه پیشتیبان از Wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Wallet Data (*.dat)</source>
         <translation>داده های Wallet  
 (*.dat)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>Backup Failed</source>
         <translation>عملیات گرفتن نسخه پیشتیبان انجام نشد</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>در هنگام ذخیره داده های wallet به نسخه جدید خطایی ایجاد شده است</translation>
     </message>
@@ -1159,8 +1159,8 @@ Address: %4
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>آدرس برای ارسال وجه به (برای مثال 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
@@ -1777,11 +1777,6 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>ciphers  قابل قبول (پیش فرض: default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>قفل دایرکتوری داده ها %s قابل دریافت نیست. احتمال این وجود دارد که Bitcoin در حال اجرا باشد</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="89"/>
         <source>Invalid -proxy address</source>
         <translation type="unfinished"></translation>
@@ -1920,6 +1915,11 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <location filename="../bitcoinstrings.cpp" line="21"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>حافظه بانک داده را به مگابایت تنظیم کنید (پیش فرض: 25)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="76"/>

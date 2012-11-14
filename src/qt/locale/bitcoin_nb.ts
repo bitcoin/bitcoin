@@ -329,7 +329,7 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
         <translation>&amp;Adressebok</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="621"/>
+        <location filename="../bitcoingui.cpp" line="619"/>
         <source>Sending...</source>
         <translation>Sender...</translation>
     </message>
@@ -426,12 +426,12 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
         <translation>Verktøylinje for faner</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Backup Wallet</source>
         <translation>Sikkerhetskopiér Lommebok</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Lommeboksdata (*.dat)</translation>
     </message>
@@ -495,22 +495,17 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="616"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Denne transaksjonen overstiger størrelsesbegrensningen.  Du kan likevel sende den med et gebyr på %1, som går til nodene som prosesserer transaksjonen din og støtter nettverket.  Vil du betale gebyret?</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="648"/>
+        <location filename="../bitcoingui.cpp" line="646"/>
         <source>Sent transaction</source>
         <translation>Sendt transaksjon</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="649"/>
+        <location filename="../bitcoingui.cpp" line="647"/>
         <source>Incoming transaction</source>
         <translation>Innkommende transaksjon</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="650"/>
+        <location filename="../bitcoingui.cpp" line="648"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -528,12 +523,12 @@ Adresse: %4
         <translation>&amp;Avslutt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="775"/>
+        <location filename="../bitcoingui.cpp" line="773"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;ulåst&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="783"/>
+        <location filename="../bitcoingui.cpp" line="781"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
@@ -578,12 +573,17 @@ Adresse: %4
         <translation>Lastet ned %1 av %2 blokker med transaksjonshistorikk.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>Backup Failed</source>
         <translation>Sikkerhetskopiering feilet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>En feil oppstod ved lagring av lommebok til nytt sted</translation>
     </message>
@@ -1166,8 +1166,8 @@ Adresse: %4
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Adressen betalingen skal sendes til  (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
@@ -1683,11 +1683,6 @@ Adresse: %4
         <translation>Bruk:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>Kunne ikke låse datamappen %s.  Bitcoin kjører sannsynligvis allerede.</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
         <source>Error loading blkindex.dat</source>
         <translation>Feil ved lasting av blkindex.dat</translation>
@@ -2044,6 +2039,11 @@ SSL innstillinger: (se Bitcoin Wiki for instruksjoner om SSL oppsett)</translati
         <location filename="../bitcoinstrings.cpp" line="71"/>
         <source>This help message</source>
         <translation>Denne hjelpemeldingen</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="86"/>

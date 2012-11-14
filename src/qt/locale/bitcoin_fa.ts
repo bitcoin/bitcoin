@@ -363,17 +363,12 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>خرین بلوک در یافت شده  تولید شده بود %1 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="616"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>این معامله از اندازه محدوده بیشتر است. شما می توانید آد را با دستمزد 1% بفرستید که شامل گره معامله شما می باشد و به شبکه های اینترنتی کمک خواهد کردو آیا شما می خواهید این پول پر داخت%1</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="238"/>
         <source>Quit application</source>
         <translation>خروج از برنامه </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="648"/>
+        <location filename="../bitcoingui.cpp" line="646"/>
         <source>Sent transaction</source>
         <translation>معامله ارسال شده</translation>
     </message>
@@ -398,7 +393,7 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>در یافت سکه</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="783"/>
+        <location filename="../bitcoingui.cpp" line="781"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>زمایش شبکه</translation>
     </message>
@@ -529,7 +524,12 @@ Are you sure you wish to encrypt your wallet?</source>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="650"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="648"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -541,17 +541,17 @@ Address: %4
 آدرس %4</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Backup Wallet</source>
         <translation>نسخه پیشتیبان از wallet  </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Wallet Data (*.dat)</source>
         <translation>داده wallet   (*.DAT)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>Backup Failed</source>
         <translation>عملیات پیشتیبان گیری انجام نشد</translation>
     </message>
@@ -608,22 +608,22 @@ Address: %4
         <translation>ابتلا به بالا</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="649"/>
+        <location filename="../bitcoingui.cpp" line="647"/>
         <source>Incoming transaction</source>
         <translation>معامله در یافت شده</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="775"/>
+        <location filename="../bitcoingui.cpp" line="773"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>زمایش شبکهه</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>در زمان انتقال داده  wallet  به محل جدید خطا روی داد</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="621"/>
+        <location filename="../bitcoingui.cpp" line="619"/>
         <source>Sending...</source>
         <translation>ارسال...</translation>
     </message>
@@ -1161,8 +1161,8 @@ Address: %4
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>آدرس برای ارسال پر داخت  (bijvoorbeeld: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
@@ -1666,6 +1666,11 @@ Address: %4
         <translation>پیام کمکی</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Loading addresses...</source>
         <translation>بار گیری آدرس ها</translation>
@@ -1904,11 +1909,6 @@ Address: %4
         <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>Connect only to the specified node</source>
         <translation>ارتباط فقط به گره خاص</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>رمز گشایی دایرکتور داده ها امکان پذیر نیست. شاید بیت کویین در حال فعال می باشد%s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>

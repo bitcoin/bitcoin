@@ -314,7 +314,7 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>顯示收款位址的列表</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Backup Wallet</source>
         <translation>錢包備份</translation>
     </message>
@@ -400,7 +400,7 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>變更密碼</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="621"/>
+        <location filename="../bitcoingui.cpp" line="619"/>
         <source>Sending...</source>
         <translation>付出中...</translation>
     </message>
@@ -493,27 +493,27 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>最近收到的區塊產生於 %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="616"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>這筆交易的資料大小超過限制了. 你還是可以付出 %1 的費用來傳送. 這筆費用會付給處理該筆交易的節點, 並幫助維持整個網路. 你願意支付這項費用嗎?</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="218"/>
         <source>Prove you control an address</source>
         <translation>證明你控制一個位址</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="648"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation>這筆交易的資料大小超過限制了. 你還是可以付出 %1 的費用來傳送. 這筆費用會付給處理該筆交易的節點, 並幫助維持整個網路. 你願意支付這項費用嗎?</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="646"/>
         <source>Sent transaction</source>
         <translation>付款交易</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="649"/>
+        <location filename="../bitcoingui.cpp" line="647"/>
         <source>Incoming transaction</source>
         <translation>收款交易</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="650"/>
+        <location filename="../bitcoingui.cpp" line="648"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -525,12 +525,12 @@ Address: %4
 位址: %4</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="775"/>
+        <location filename="../bitcoingui.cpp" line="773"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且正&lt;b&gt;解鎖中&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="783"/>
+        <location filename="../bitcoingui.cpp" line="781"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且正&lt;b&gt;上鎖中&lt;/b&gt;</translation>
     </message>
@@ -592,17 +592,17 @@ Address: %4
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Wallet Data (*.dat)</source>
         <translation>錢包資料檔 (*.dat)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>儲存錢包資料到新的地方時發生錯誤</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>Backup Failed</source>
         <translation>備份失敗</translation>
     </message>
@@ -1138,6 +1138,11 @@ Address: %4
         <translation>標記:</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="93"/>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>付款的目標位址 (比如說 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsentry.ui" line="120"/>
         <source>Paste address from clipboard</source>
         <translation>從剪貼簿貼上位址</translation>
@@ -1167,11 +1172,6 @@ Address: %4
         <location filename="../sendcoinsentry.cpp" line="26"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>給這個位址輸入一個標記, 並加到位址簿中</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>付款的目標位址 (比如說 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
@@ -1645,11 +1645,6 @@ Address: %4
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>無法鎖定資料目錄 %s. 也許位元幣已經在執行了.</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Loading addresses...</source>
         <translation>載入位址中...</translation>
@@ -1897,6 +1892,11 @@ SSL 選項: (SSL 設定程序請見 Bitcoin Wiki)
         <location filename="../bitcoinstrings.cpp" line="76"/>
         <source>Error loading addr.dat</source>
         <translation>載入 addr.dat 失敗</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
+        <translation>無法鎖定資料目錄 %s. 也許位元幣已經在執行了.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>

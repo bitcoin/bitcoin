@@ -413,32 +413,37 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>&amp;Adressbuch</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="775"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="773"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Brieftasche ist &lt;b&gt;verschlüsselt&lt;/b&gt; und aktuell &lt;b&gt;entsperrt&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="783"/>
+        <location filename="../bitcoingui.cpp" line="781"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Brieftasche ist &lt;b&gt;verschlüsselt&lt;/b&gt; und aktuell &lt;b&gt;gesperrt&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Backup Wallet</source>
         <translation>Brieftasche sichern</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Brieftaschendaten (*.dat)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>Backup Failed</source>
         <translation>Sicherung der Brieftasche fehlgeschlagen</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>Fehler beim Abspeichern der Sicherungskopie der Brieftasche.</translation>
     </message>
@@ -545,27 +550,22 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Der letzte empfangene Block wurde %1 generiert.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="616"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Die Transaktion übersteigt das Größenlimit. Sie können sie trotzdem senden, wenn Sie eine zusätzliche Transaktionsgebühr in Höhe von %1 zahlen. Diese wird an die Knoten verteilt, die Ihre Transaktion bearbeiten und unterstützt damit das Bitcoin-Netzwerk.&lt;br&gt;&lt;br&gt;Möchten Sie die Gebühr bezahlen?</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="259"/>
         <source>&amp;Change Passphrase</source>
         <translation>Passphrase &amp;ändern...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="648"/>
+        <location filename="../bitcoingui.cpp" line="646"/>
         <source>Sent transaction</source>
         <translation>Gesendete Transaktion</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="649"/>
+        <location filename="../bitcoingui.cpp" line="647"/>
         <source>Incoming transaction</source>
         <translation>Eingehende Transaktion</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="650"/>
+        <location filename="../bitcoingui.cpp" line="648"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -621,7 +621,7 @@ Adresse: %4</translation>
         <translation>bitcoin-qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="621"/>
+        <location filename="../bitcoingui.cpp" line="619"/>
         <source>Sending...</source>
         <translation>Transaktionsgebühr bestätigen</translation>
     </message>
@@ -1164,8 +1164,8 @@ Adresse: %4</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Die Zahlungsadresse der Überweisung (z.B. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
@@ -1898,6 +1898,11 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
 SSL Einstellungen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="79"/>
         <source>Loading wallet...</source>
         <translation>Lade Brieftasche...</translation>
@@ -1956,11 +1961,6 @@ SSL Einstellungen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</trans
         <location filename="../bitcoinstrings.cpp" line="84"/>
         <source>Cannot downgrade wallet</source>
         <translation>Brieftasche kann nicht auf eine ältere Version herabgestuft werden</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>Datenverzeichnis %s kann nicht gesperrt werden. Evtl. wurde Bitcoin bereits gestartet.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="86"/>

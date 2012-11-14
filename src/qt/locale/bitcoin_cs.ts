@@ -405,7 +405,7 @@ Jsi si jistý, že chceš peněženku zašifrovat?</translation>
         <translation>Po&amp;depiš zprávu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="649"/>
+        <location filename="../bitcoingui.cpp" line="647"/>
         <source>Incoming transaction</source>
         <translation>Příchozí transakce</translation>
     </message>
@@ -420,7 +420,7 @@ Jsi si jistý, že chceš peněženku zašifrovat?</translation>
         <translation>Zašifruj nebo dešifruj peněženku</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="783"/>
+        <location filename="../bitcoingui.cpp" line="781"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Peněženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálně &lt;b&gt;zamčená&lt;/b&gt;</translation>
     </message>
@@ -435,12 +435,12 @@ Jsi si jistý, že chceš peněženku zašifrovat?</translation>
         <translation>Změň &amp;heslo</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Backup Wallet</source>
         <translation>Záloha peněženky</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="806"/>
+        <location filename="../bitcoingui.cpp" line="804"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Data peněženky (*.dat)</translation>
     </message>
@@ -469,11 +469,6 @@ Jsi si jistý, že chceš peněženku zašifrovat?</translation>
         <translation>Aktuální</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="616"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Tahle transakce přesahuje velikostní limit.  I tak ji ale můžeš poslat, pokud za ni zaplatíš poplatek %1, který půjde uzlům, které tvou transakci zpracují, a navíc tak podpoříš síť.  Chceš zaplatit poplatek?</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="316"/>
         <source>Actions toolbar</source>
         <translation>Panel akcí</translation>
@@ -494,12 +489,12 @@ Jsi si jistý, že chceš peněženku zašifrovat?</translation>
         <translation>Prokaž vlastnictví adresy</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="648"/>
+        <location filename="../bitcoingui.cpp" line="646"/>
         <source>Sent transaction</source>
         <translation>Odeslané transakce</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="650"/>
+        <location filename="../bitcoingui.cpp" line="648"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -598,22 +593,27 @@ Adresa: %4
         <translation>Poslední stažený blok byl vygenerován %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="621"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="619"/>
         <source>Sending...</source>
         <translation>Posílám...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="775"/>
+        <location filename="../bitcoingui.cpp" line="773"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Peněženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálně &lt;b&gt;odemčená&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>Backup Failed</source>
         <translation>Zálohování selhalo</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>Při ukládání peněženky na nové místo se přihodila nějaká chyba.</translation>
     </message>
@@ -1176,8 +1176,8 @@ Adresa: %4
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Adresa příjemce  (např. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
@@ -1720,6 +1720,11 @@ Adresa: %4
         <translation>Akceptovatelné šifry (výchozí: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="80"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Chyba při načítání wallet.dat: peněženka je poškozená</translation>
@@ -1758,11 +1763,6 @@ Adresa: %4
         <location filename="../bitcoinstrings.cpp" line="42"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Akceptovat příkazy z příkazové řádky a přes JSON-RPC</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>Nedaří se mi získat zámek na datový adresář %s. Bitcoin pravděpodobně už jednou běží.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
