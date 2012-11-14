@@ -3461,7 +3461,6 @@ public:
 
 CBlock* CreateNewBlock(CReserveKey& reservekey)
 {
-
     // Create new block
     auto_ptr<CBlock> pblock(new CBlock());
     if (!pblock.get())

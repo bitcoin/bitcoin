@@ -24,8 +24,8 @@ bool CCrypter::SetKeyFromPassphrase(const SecureString& strKeyData, const std::v
 
     if (i != (int)WALLET_CRYPTO_KEY_SIZE)
     {
-        memset(&chKey, 0, sizeof chKey);
-        memset(&chIV, 0, sizeof chIV);
+        OPENSSL_cleanse(chKey, sizeof(chKey));
+        OPENSSL_cleanse(chIV, sizeof(chIV));
         return false;
     }
 
