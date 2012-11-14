@@ -340,7 +340,12 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>显示比特币的相关信息</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="616"/>
+        <location filename="../bitcoingui.cpp" line="582"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation>该笔交易的数据量超限.您可以选择支付 %1 交易费， 交易费将支付给处理该笔交易的网络节点，有助于维持比特币网络的运行.  您愿意支付交易费用吗？</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="614"/>
         <source>Incoming transaction</source>
         <translation>流入交易</translation>
     </message>
@@ -483,7 +488,7 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>最新收到的区块产生于 %1。</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="617"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -496,12 +501,12 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="711"/>
+        <location filename="../bitcoingui.cpp" line="709"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>钱包已被&lt;b&gt;加密&lt;/b&gt;，当前为&lt;b&gt;解锁&lt;/b&gt;状态</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="719"/>
+        <location filename="../bitcoingui.cpp" line="717"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>钱包已被&lt;b&gt;加密&lt;/b&gt;，当前为&lt;b&gt;锁定&lt;/b&gt;状态</translation>
     </message>
@@ -523,17 +528,12 @@ Address: %4
         <translation>bitcoin-qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="583"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>该笔交易的数据量超限.您可以选择支付 %1 交易费， 交易费将支付给处理该笔交易的网络节点，有助于维持比特币网络的运行.  您愿意支付交易费用吗？</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="588"/>
+        <location filename="../bitcoingui.cpp" line="586"/>
         <source>Sending...</source>
         <translation>发送中</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="615"/>
+        <location filename="../bitcoingui.cpp" line="613"/>
         <source>Sent transaction</source>
         <translation>已发送交易</translation>
     </message>
@@ -916,6 +916,11 @@ Address: %4
         <translation>&amp;标签：</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="93"/>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>付款地址  (例如: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsentry.ui" line="120"/>
         <source>Paste address from clipboard</source>
         <translation>从剪贴板粘贴地址</translation>
@@ -945,11 +950,6 @@ Address: %4
         <location filename="../sendcoinsentry.cpp" line="26"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>为这个地址输入一个标签，以便将它添加到您的地址簿</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>付款地址  (例如: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
@@ -1445,11 +1445,6 @@ Address: %4
         <translation>每个连接的最大发送缓存，&lt;n&gt;*1000 字节(缺省：10000)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="64"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>无法给数据目录 %s 加锁。比特币进程可能已在运行。</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="77"/>
         <source>Rescanning...</source>
         <translation>正在重新扫描...</translation>
@@ -1806,6 +1801,11 @@ SSL 选项: (SSL 安装教程具体见比特币维基百科)
 </source>
         <translation>该帮助信息
 </translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="64"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
+        <translation>无法给数据目录 %s 加锁。比特币进程可能已在运行。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>

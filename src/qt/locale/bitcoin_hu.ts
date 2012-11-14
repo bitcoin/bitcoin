@@ -379,11 +379,6 @@ Biztosan kódolni akarod a tárcát?</translation>
         <translation>Tárcakódoló jelszó megváltoztatása</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="583"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Ez a tranzakció túllépi a mérethatárt,  de %1 tranzakciós díj ellenében így is elküldheted. Ezt a plusz összeget a tranzakcióidat feldolgozó csomópontok kapják,  így magát a hálózatot támogatod vele. Hajlandó vagy megfizetni a díjat?</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="236"/>
         <source>&amp;Export...</source>
         <translation>&amp;Exportálás...</translation>
@@ -509,17 +504,22 @@ Biztosan kódolni akarod a tárcát?</translation>
         <translation>Az utolsóként kapott blokk generálva: %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="615"/>
+        <location filename="../bitcoingui.cpp" line="582"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation>Ez a tranzakció túllépi a mérethatárt,  de %1 tranzakciós díj ellenében így is elküldheted. Ezt a plusz összeget a tranzakcióidat feldolgozó csomópontok kapják,  így magát a hálózatot támogatod vele. Hajlandó vagy megfizetni a díjat?</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="613"/>
         <source>Sent transaction</source>
         <translation>Tranzakció elküldve.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="616"/>
+        <location filename="../bitcoingui.cpp" line="614"/>
         <source>Incoming transaction</source>
         <translation>Beérkező tranzakció</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="617"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -532,17 +532,17 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="711"/>
+        <location filename="../bitcoingui.cpp" line="709"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Tárca &lt;b&gt;kódolva&lt;/b&gt; és jelenleg &lt;b&gt;nyitva&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="719"/>
+        <location filename="../bitcoingui.cpp" line="717"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Tárca &lt;b&gt;kódolva&lt;/b&gt; és jelenleg &lt;b&gt;zárva&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="588"/>
+        <location filename="../bitcoingui.cpp" line="586"/>
         <source>Sending...</source>
         <translation>Küldés...</translation>
     </message>
@@ -942,6 +942,11 @@ Cím: %4
         <translation>&amp;Címke:</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="93"/>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Címzett címe  (pl.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L )</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
         <source>Choose address from address book</source>
         <translation>Válassz egy címet a címjegyzékből</translation>
@@ -955,11 +960,6 @@ Cím: %4
         <location filename="../forms/sendcoinsentry.ui" line="29"/>
         <source>A&amp;mount:</source>
         <translation>Összeg:</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Címzett címe  (pl.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L )</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="113"/>
@@ -1498,11 +1498,6 @@ Cím: %4
         <translation>A %d port nem elérhető ezen a gépen.  A Bitcoin valószínűleg fut már.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="64"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>Az %s adatkönyvtár nem zárható.  A Bitcoin valószínűleg fut már.</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="71"/>
         <source>Loading wallet...</source>
         <translation>Tárca betöltése...</translation>
@@ -1806,6 +1801,11 @@ SSL-opciók: (lásd a Bitcoin Wiki SSL-beállítási instrukcióit)</translation
 </source>
         <translation>Ez a súgó-üzenet
 </translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="64"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
+        <translation>Az %s adatkönyvtár nem zárható.  A Bitcoin valószínűleg fut már.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>

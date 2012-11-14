@@ -465,11 +465,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>&amp;Mudar frase de segurança</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="583"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>&amp;Help</source>
         <translation>&amp;Ajuda</translation>
@@ -485,17 +480,22 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Carregados %1 de %2 blocos do histórico de transações.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="615"/>
+        <location filename="../bitcoingui.cpp" line="582"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="613"/>
         <source>Sent transaction</source>
         <translation>Sent transaction</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="616"/>
+        <location filename="../bitcoingui.cpp" line="614"/>
         <source>Incoming transaction</source>
         <translation>Incoming transaction</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="617"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -507,12 +507,12 @@ Tipo: %3
 Endereço: %4</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="711"/>
+        <location filename="../bitcoingui.cpp" line="709"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="719"/>
+        <location filename="../bitcoingui.cpp" line="717"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
@@ -540,7 +540,7 @@ Endereço: %4</translation>
         <translation>Atualizado</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="588"/>
+        <location filename="../bitcoingui.cpp" line="586"/>
         <source>Sending...</source>
         <translation>Sending...</translation>
     </message>
@@ -934,6 +934,11 @@ Endereço: %4</translation>
         <translation>&amp;Label:</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="93"/>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
         <source>Choose address from address book</source>
         <translation>Choose address from address book</translation>
@@ -962,11 +967,6 @@ Endereço: %4</translation>
         <location filename="../forms/sendcoinsentry.ui" line="42"/>
         <source>Pay &amp;To:</source>
         <translation>Pay &amp;To:</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1417,11 +1417,6 @@ Endereço: %4</translation>
         <translation>Usage:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="64"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="71"/>
         <source>Loading wallet...</source>
         <translation>Loading wallet...</translation>
@@ -1803,6 +1798,11 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)
 </source>
         <translation>This help message
 </translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="64"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>

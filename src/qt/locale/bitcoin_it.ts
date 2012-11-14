@@ -500,22 +500,22 @@ Si è sicuri di voler cifrare il portamonete?</translation>
         <translation>L&apos;ultimo blocco ricevuto è stato generato %1</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="583"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
+        <location filename="../bitcoingui.cpp" line="582"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
         <translation>Questa transazione è superiore al limite di dimensione. È comunque possibile inviarla con una commissione di %1, che va ai nodi che processano la tua transazione e contribuisce a sostenere la rete. Vuoi pagare la commissione?</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="615"/>
+        <location filename="../bitcoingui.cpp" line="613"/>
         <source>Sent transaction</source>
         <translation>Transazione inviata</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="616"/>
+        <location filename="../bitcoingui.cpp" line="614"/>
         <source>Incoming transaction</source>
         <translation>Transazione ricevuta</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="617"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -529,17 +529,17 @@ Indirizzo: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="711"/>
+        <location filename="../bitcoingui.cpp" line="709"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Il portamonete è &lt;b&gt;cifrato&lt;/b&gt; e attualmente &lt;b&gt;sbloccato&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="719"/>
+        <location filename="../bitcoingui.cpp" line="717"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Il portamonete è &lt;b&gt;cifrato&lt;/b&gt; e attualmente &lt;b&gt;bloccato&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="588"/>
+        <location filename="../bitcoingui.cpp" line="586"/>
         <source>Sending...</source>
         <translation>Invio...</translation>
     </message>
@@ -943,11 +943,6 @@ Indirizzo: %4
         <translation>&amp;Etichetta</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>L&apos;indirizzo del beneficiario cui inviare il pagamento (ad esempio 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
         <source>Choose address from address book</source>
         <translation>Scegli l&apos;indirizzo dalla rubrica</translation>
@@ -971,6 +966,11 @@ Indirizzo: %4
         <location filename="../forms/sendcoinsentry.ui" line="42"/>
         <source>Pay &amp;To:</source>
         <translation>Paga &amp;a:</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="93"/>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>L&apos;indirizzo del beneficiario cui inviare il pagamento (ad esempio 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="137"/>
@@ -1426,11 +1426,6 @@ Indirizzo: %4
         <translation>Versione di Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="64"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>Non è possibile ottenere i dati sulla directory %s. Probabilmente Bitcoin è già in esecuzione.</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Loading addresses...</source>
         <translation>Caricamento indirizzi...</translation>
@@ -1811,6 +1806,11 @@ Opzioni SSL: (vedi il wiki di Bitcoin per le istruzioni di configurazione SSL)
 </source>
         <translation>Questo messaggio di aiuto
 </translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="64"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
+        <translation>Non è possibile ottenere i dati sulla directory %s. Probabilmente Bitcoin è già in esecuzione.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>

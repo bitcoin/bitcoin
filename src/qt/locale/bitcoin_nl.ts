@@ -300,7 +300,12 @@ Bent u er zeker van uw dat u uw portemonnee wilt versleutelen?</translation>
         <translation>&amp;Wijzig Wachtwoord</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="588"/>
+        <location filename="../bitcoingui.cpp" line="582"/>
+        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <translation>Deze transactie overschrijdt de groottelimiet. Om de transactie alsnog te versturen kunt u transactiekosten betalen van %1. Deze transactiekosten gaan naar de nodes die uw transactie verwerken en het helpt op deze manier bij het ondersteunen van het netwerk. Wilt u de transactiekosten betalen?</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="586"/>
         <source>Sending...</source>
         <translation>Versturen...</translation>
     </message>
@@ -476,27 +481,22 @@ Bent u er zeker van uw dat u uw portemonnee wilt versleutelen?</translation>
         <translation>Programma afsluiten</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="583"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Deze transactie overschrijdt de groottelimiet. Om de transactie alsnog te versturen kunt u transactiekosten betalen van %1. Deze transactiekosten gaan naar de nodes die uw transactie verwerken en het helpt op deze manier bij het ondersteunen van het netwerk. Wilt u de transactiekosten betalen?</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="226"/>
         <source>Show information about Bitcoin</source>
         <translation>Laat informatie zien over Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="615"/>
+        <location filename="../bitcoingui.cpp" line="613"/>
         <source>Sent transaction</source>
         <translation>Verzonden transactie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="616"/>
+        <location filename="../bitcoingui.cpp" line="614"/>
         <source>Incoming transaction</source>
         <translation>Binnenkomende transactie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="617"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -524,12 +524,12 @@ Adres: %4
         <translation>Versleutel of ontsleutel portemonnee</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="711"/>
+        <location filename="../bitcoingui.cpp" line="709"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Portemonnee is &lt;b&gt;versleuteld&lt;/b&gt; en momenteel &lt;b&gt;geopend&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="719"/>
+        <location filename="../bitcoingui.cpp" line="717"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Portemonnee is &lt;b&gt;versleuteld&lt;/b&gt; en momenteel &lt;b&gt;gesloten&lt;/b&gt;</translation>
     </message>
@@ -949,7 +949,7 @@ Adres: %4
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Het adres waaraan u wilt betalen  (bijv. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -1466,11 +1466,6 @@ Adres: %4
         <translation>Waarschuwing: Weinig schijfruimte over</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="64"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>Kan geen lock op de datamap %s verkrijgen. Bitcoin draait vermoedelijk reeds.</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="69"/>
         <source>Loading block index...</source>
         <translation>Blokindex aan het laden...</translation>
@@ -1817,6 +1812,11 @@ SSL opties: (zie de Bitcoin wiki voor SSL instructies)
 </source>
         <translation>Dit helpbericht
 </translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="64"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
+        <translation>Kan geen lock op de datamap %s verkrijgen. Bitcoin draait vermoedelijk reeds.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>

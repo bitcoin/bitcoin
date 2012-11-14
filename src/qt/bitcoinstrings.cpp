@@ -62,7 +62,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "@STRENGTH)\n"),
 QT_TRANSLATE_NOOP("bitcoin-core", "This help message\n"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Cannot obtain a lock on data directory %s.  Bitcoin is probably already "
+"Cannot obtain a lock on data directory %s. Bitcoin is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Loading addresses..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading addr.dat      \n"),
