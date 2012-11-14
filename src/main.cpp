@@ -3260,7 +3260,7 @@ uint64 nLastBlockSize = 0;
 
 CBlock* CreateNewBlock(CReserveKey& reservekey)
 {
-    CBlockIndex* pindexPrev = pindexBest;
+    CBlockIndex* pindexPrev;
 
     // Create new block
     auto_ptr<CBlock> pblock(new CBlock());
@@ -3281,6 +3281,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
     int64 nFees = 0;
     {
         LOCK2(cs_main, mempool.cs);
+        pindexPrev = pindexBest;
         CTxDB txdb("r");
 
         // Priority order to process transactions

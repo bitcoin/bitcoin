@@ -17,6 +17,8 @@
 
 #include <string>
 #include <vector>
+#include <openssl/crypto.h> // for OPENSSL_cleanse()
+
 #include "bignum.h"
 #include "key.h"
 
@@ -189,7 +191,7 @@ protected:
     {
         // zero the memory, as it may contain sensitive data
         if (!vchData.empty())
-            memset(&vchData[0], 0, vchData.size());
+            OPENSSL_cleanse(&vchData[0], vchData.size());
     }
 
     void SetData(int nVersionIn, const void* pdata, size_t nSize)
@@ -220,7 +222,7 @@ public:
         vchData.resize(vchTemp.size() - 1);
         if (!vchData.empty())
             memcpy(&vchData[0], &vchTemp[1], vchData.size());
-        memset(&vchTemp[0], 0, vchTemp.size());
+        OPENSSL_cleanse(&vchTemp[0], vchData.size());
         return true;
     }
 
