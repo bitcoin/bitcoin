@@ -40,6 +40,7 @@ unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError=REF(std::string()));
 void StartNode(void* parg);
 bool StopNode();
+void SocketSendData(CNode *pnode);
 
 enum
 {
@@ -362,6 +363,10 @@ public:
         if (fDebug) {
             printf("(%d bytes)\n", nSize);
         }
+
+        // If write queue empty, attempt "optimistic write"
+        if (nHeaderStart == 0)
+            SocketSendData(this);
 
         nHeaderStart = -1;
         nMessageStart = -1;

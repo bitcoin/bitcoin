@@ -782,14 +782,18 @@ void ThreadSocketHandler2(void* parg)
             {
                 if (pnode->hSocket == INVALID_SOCKET)
                     continue;
-                FD_SET(pnode->hSocket, &fdsetRecv);
-                FD_SET(pnode->hSocket, &fdsetError);
-                hSocketMax = max(hSocketMax, pnode->hSocket);
-                have_fds = true;
                 {
                     TRY_LOCK(pnode->cs_vSend, lockSend);
-                    if (lockSend && !pnode->vSend.empty())
-                        FD_SET(pnode->hSocket, &fdsetSend);
+                    if (lockSend) {
+                        // do not read, if draining write queue
+                        if (!pnode->vSend.empty())
+                            FD_SET(pnode->hSocket, &fdsetSend);
+                        else
+                            FD_SET(pnode->hSocket, &fdsetRecv);
+                        FD_SET(pnode->hSocket, &fdsetError);
+                        hSocketMax = max(hSocketMax, pnode->hSocket);
+                        have_fds = true;
+                    }
                 }
             }
         }
