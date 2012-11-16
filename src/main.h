@@ -174,6 +174,11 @@ CBlockIndex * InsertBlockIndex(uint256 hash);
 
 
 
+static inline std::string BlockHashStr(const uint256& hash)
+{
+    return hash.ToString();
+}
+
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
 class CDiskBlockPos
@@ -1255,9 +1260,9 @@ public:
     void print() const
     {
         printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu")\n",
-            GetHash().ToString().substr(0,20).c_str(),
+            BlockHashStr(GetHash()).c_str(),
             nVersion,
-            hashPrevBlock.ToString().substr(0,20).c_str(),
+            BlockHashStr(hashPrevBlock).c_str(),
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             nTime, nBits, nNonce,
             vtx.size());
@@ -1568,7 +1573,7 @@ public:
         return strprintf("CBlockIndex(pprev=%p, pnext=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
             pprev, pnext, nHeight,
             hashMerkleRoot.ToString().substr(0,10).c_str(),
-            GetBlockHash().ToString().substr(0,20).c_str());
+            BlockHashStr(GetBlockHash()).c_str());
     }
 
     void print() const
@@ -1649,7 +1654,7 @@ public:
         str += CBlockIndex::ToString();
         str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
             GetBlockHash().ToString().c_str(),
-            hashPrev.ToString().substr(0,20).c_str());
+            BlockHashStr(hashPrev).c_str());
         return str;
     }
 
