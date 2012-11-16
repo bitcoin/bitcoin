@@ -218,10 +218,14 @@ static const CRPCCommand vRPCCommands[] =
     { "listreceivedbyaddress",  &listreceivedbyaddress,  false,  false },
     { "listreceivedbyaccount",  &listreceivedbyaccount,  false,  false },
     { "backupwallet",           &backupwallet,           true,   false },
-    { "keypoolrefill",          &keypoolrefill,          true,   false },
-    { "walletpassphrase",       &walletpassphrase,       true,   false },
-    { "walletpassphrasechange", &walletpassphrasechange, false,  false },
-    { "walletlock",             &walletlock,             true,   false },
+    { "keypoolrefill",          &refillkeypool,          true,   false },  // deprecated
+    { "refillkeypool",          &refillkeypool,          true,   false },
+    { "walletpassphrase",       &unlockwallet,           true,   false },  // deprecated
+    { "unlockwallet",           &unlockwallet,           true,   false },
+    { "walletpassphrasechange", &setpassphrase,          false,  false },  // deprecated
+    { "setpassphrase",          &setpassphrase,          false,  false },
+    { "walletlock",             &lockwallet,             true,   false },  // deprecated
+    { "lockwallet",             &lockwallet,             true,   false },
     { "encryptwallet",          &encryptwallet,          false,  false },
     { "validateaddress",        &validateaddress,        true,   false },
     { "getbalance",             &getbalance,             false,  false },
