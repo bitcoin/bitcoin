@@ -149,7 +149,7 @@ public:
     /** Increment the next transaction order id
         @return next transaction order id
      */
-    int64 IncOrderPosNext();
+    int64 IncOrderPosNext(CWalletDB *pwalletdb = NULL);
 
     typedef std::pair<CWalletTx*, CAccountingEntry*> TxPair;
     typedef std::multimap<int64, TxPair > TxItems;
