@@ -1484,7 +1484,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     }
 
     if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
-        return false;
+        return error("ConnectBlock() : coinbase pays too much (actual=%lld vs limit=%lld)", (long long)vtx[0].GetValueOut(), (long long)GetBlockValue(pindex->nHeight, nFees));
 
     if (fJustCheck)
         return true;
