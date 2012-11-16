@@ -82,4 +82,4 @@ signals:
     void verifyMessage(QString addr);
 };
 
-#endif // ADDRESSBOOKPAGE_H
+#endif // ADDRESSBOOKDIALOG_H

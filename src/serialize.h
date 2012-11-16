@@ -14,8 +14,6 @@
 #include <cstring>
 #include <cstdio>
 
-#include <openssl/crypto.h> // for OPENSSL_cleanse()
-
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>

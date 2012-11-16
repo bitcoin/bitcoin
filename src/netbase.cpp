@@ -548,7 +548,7 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
 
 void CNetAddr::Init()
 {
-    memset(ip, 0, sizeof(ip));
+    memset(ip, 0, 16);
 }
 
 void CNetAddr::SetIP(const CNetAddr& ipIn)

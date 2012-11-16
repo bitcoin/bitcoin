@@ -1,7 +1,7 @@
 #ifndef MACDOCKICONHANDLER_H
 #define MACDOCKICONHANDLER_H
 
-#include <QObject>
+#include <QtCore/QObject>
 
 class QMenu;
 class QIcon;

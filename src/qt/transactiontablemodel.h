@@ -81,4 +81,5 @@ public slots:
     friend class TransactionTablePriv;
 };
 
-#endif // TRANSACTIONTABLEMODEL_H
+#endif
+

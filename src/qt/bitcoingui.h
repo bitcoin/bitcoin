@@ -176,4 +176,4 @@ private slots:
     void toggleHidden();
 };
 
-#endif // BITCOINGUI_H
+#endif
