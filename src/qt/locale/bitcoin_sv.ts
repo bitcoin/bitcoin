@@ -581,12 +581,12 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Senast mottagna block genererades %1.</translation>
     </message>
     <message>
-        <location line="+58"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <location line="+59"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Transaktionen överskrider storleksgränsen.  Du kan dock fortfarande skicka den mot en kostnad av %1. Denna avgift går till noderna som behandlar din transaktion och bidrar till nätverket.  Vill du betala denna avgift?</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Confirm transaction fee</source>
         <translation>Bekräfta överföringsavgift</translation>
     </message>
@@ -1391,7 +1391,7 @@ Adress: %4
     </message>
     <message>
         <location line="+18"/>
-        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Adressen som betalningen skall skickas till  (t.ex. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -2220,17 +2220,7 @@ Adress: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Fel: Transaktionen avslogs. Detta kan hända om några av mynten i plånboken redan spenderats, t.ex om du använt en kopia av wallet.dat och mynt spenderades i kopian men inte markerats som spenderas här.</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds.</source>
-        <translation>Fel: Denna transaktion kräver en transaktionsavgift på minst %s på grund av dess storlek, komplexitet, eller användning av senast mottagna bitcoins  </translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+13"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Lyssna på JSON-RPC-anslutningar på &lt;port&gt; (förvalt: 8332 eller testnet: 18332)</translation>
     </message>
@@ -2255,17 +2245,7 @@ Adress: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
-        <source>Error: Transaction creation failed.</source>
-        <translation>Fel: Transaktionen gick inte att skapa.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error: Wallet locked, unable to create transaction.</source>
-        <translation>Fel: Plånboken är låst, det går ej att skapa en transaktion  </translation>
-    </message>
-    <message>
-        <location line="+10"/>
+        <location line="+32"/>
         <source>Importing blockchain data file.</source>
         <translation>Importerar blockkedjans datafil.</translation>
     </message>
@@ -2290,7 +2270,17 @@ Adress: %4
         <translation>Acceptera anslutningar utifrån (standard: 1 om ingen -proxy eller -connect)</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-42"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>Fel: Transaktionen avslogs.  Detta kan hända om några av mynten i plånboken redan spenderats, t.ex om du använt en kopia av wallet.dat och mynt spenderades i kopian men inte markerats som spenderas här.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation>Fel: Denna transaktion kräver en transaktionsavgift på minst %s på grund av dess storlek, komplexitet, eller användning av senast mottagna bitcoins  </translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
         <translation>Sätt den maximala storleken av hög-prioriterade/låg-avgifts transaktioner i byte (standard: 27000)</translation>
     </message>
@@ -2325,7 +2315,17 @@ Adress: %4
         <translation>Hitta egen IP-adress (standard: 1 under lyssning och utan -externalip)</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation>Fel: Transaktionen gick inte att skapa  </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Wallet locked, unable to create transaction  </source>
+        <translation>Fel: Plånboken är låst, det går ej att skapa en transaktion  </translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Misslyckades att lyssna på någon port. Använd -listen=0 om du vill detta.</translation>
     </message>

@@ -583,12 +583,12 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>El último bloque recibido fue generado %1.</translation>
     </message>
     <message>
-        <location line="+58"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
-        <translation>Esta transacción supera el límite. Puede seguir enviándola incluyendo una comisión de %1 que se va a repartir entre los nodos que procesan su transacción y ayudan a mantener la red. ¿Desea pagar esa tarifa?</translation>
+        <location line="+59"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
+        <translation>Esta transacción supera el límite de tamaño. Puede no obstante enviarla incluyendo una comisión de %1 para los nodos que procesan su transacción y ayudan a mantener la red. ¿Desea pagar esa tarifa?</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Confirm transaction fee</source>
         <translation>Confirme la tarifa de la transacción</translation>
     </message>
@@ -1393,7 +1393,7 @@ Dirección: %4
     </message>
     <message>
         <location line="+18"/>
-        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>La dirección donde enviar el pago (ej. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -2227,17 +2227,7 @@ Dirección: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Error: transacción rechazada. Puede haber ocurrido si alguna de las monedas ya estaba gastada o si ha usado una copia de wallet.dat y las monedas se gastaron en la copia pero no se han marcado así aquí.</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds.</source>
-        <translation>Error: esta transacción está sujeta a una tarifa de %s, bien por su cantidad, complejidad, o por el uso de fondos recientemente recibidos  </translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+13"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Escuchar conexiones JSON-RPC en &lt;puerto&gt; (predeterminado: 8332 o testnet:18332)</translation>
     </message>
@@ -2263,17 +2253,7 @@ Dirección: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
-        <source>Error: Transaction creation failed.</source>
-        <translation>Error: ha fallado la creación de la transacción.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error: Wallet locked, unable to create transaction.</source>
-        <translation>Error: monedero bloqueado. Bitcoin es incapaz de crear la transacción  </translation>
-    </message>
-    <message>
-        <location line="+10"/>
+        <location line="+32"/>
         <source>Importing blockchain data file.</source>
         <translation>Importando fichero de datos de cadena de bloques.</translation>
     </message>
@@ -2300,7 +2280,17 @@ Dirección: %4
         <translation>Aceptar conexiones desde el exterior (predeterminado: 1 si no -proxy o -connect)</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-42"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>Error: la transacción fue rechazada. Esto puede pasar si alguna de las monedas ya estaba gastada o si ha usado una copia de wallet.dat y las monedas se gastaron en la copia pero no se han marcado como gastadas aquí.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation>Error: esta transacción está sujeta a una tarifa de %s, bien por su cantidad, complejidad, o por el uso de fondos recientemente recibidos  </translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
         <translation>Establecer el tamaño máximo de las transacciones de alta prioridad/comisión baja en bytes (predeterminado:27000)</translation>
     </message>
@@ -2335,7 +2325,17 @@ Dirección: %4
         <translation>Descubrir dirección IP propia (predeterminado: 1 al escuchar sin -externalip)</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation>Error: no se ha podido crear la transacción</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Wallet locked, unable to create transaction  </source>
+        <translation>Error: monedero bloqueado. Bitcoin es incapaz de crear la transacción  </translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Ha fallado la escucha en todos los puertos. Use -listen=0 si desea esto.</translation>
     </message>

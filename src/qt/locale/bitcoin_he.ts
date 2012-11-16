@@ -580,12 +580,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>הבלוק האחרון שהתקבל נוצר ב-%1.</translation>
     </message>
     <message>
-        <location line="+58"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <location line="+59"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>הפעולה הזאת חורגת מהמגבלה.  ניתן לשלוח אותה תמורת עמלה בסך %1, שמגיעה לצמתים שמעבדים את הפעולה ועוזרת לתמוך ברשת.  האם אתה מעוניין לשלם את העמלה?</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Confirm transaction fee</source>
         <translation>אשר עמלת פעולה</translation>
     </message>
@@ -1389,7 +1389,7 @@ Address: %4
     </message>
     <message>
         <location line="+18"/>
-        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>הכתובת אליה יישלח התשלום  (למשל 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -2218,17 +2218,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>שגיאה: הפעולה נדחתה. זה עשוי לקרות עם חלק מהמטבעות בארנק שלך כבר נוצלו, למשל אם השתמשת בעותק של wallet.dat ומטבעות נוצלו בעותק אך לא סומנו כמנוצלות כאן.</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds.</source>
-        <translation>שגיאה: הפעולה דורשת עמלת פעולה של לפחות %s מפאת הכמות, המורכבות, או השימוש בכספים שהתקבלו לאחרונה</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+13"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>האזן לחיבורי JSON-RPC ב- &lt;port&gt; (ברירת מחדל: 8332 או רשת בדיקה: 18332)</translation>
     </message>
@@ -2253,17 +2243,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
-        <source>Error: Transaction creation failed.</source>
-        <translation>שגיאה: יצירת הפעולה נכשלה.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error: Wallet locked, unable to create transaction.</source>
-        <translation>שגיאה: הארנק נעול, לא ניתן ליצור פעולה</translation>
-    </message>
-    <message>
-        <location line="+10"/>
+        <location line="+32"/>
         <source>Importing blockchain data file.</source>
         <translation>מייבא את קובץ הנתונים של שרשרת הבלוקים.</translation>
     </message>
@@ -2288,7 +2268,17 @@ Address: %4
         <translation>קבל חיבורים מבחוץ (ברירת מחדל: 1 ללא -proxy או -connect)</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-42"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>שגיאה: הפעולה נדחתה.  זה עשוי לקרות אם חלק מהמטבעות בארנק שלך כבר נוצלו, למשל אם השתמשת בעותק של הקובץ wallet.dat ומטבעות נוצלו בהעתק אך לא סומנו כמנוצלות כאן.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation>שגיאה: הפעולה דורשת עמלת פעולה של לפחות %s מפאת הכמות, המורכבות, או השימוש בכספים שהתקבלו לאחרונה</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
         <translation>קבע גודל מקסימלי עבור פעולות עדיפות גבוהה/עמלה נמוכה בבתים (ברירת מחדל: 27000)</translation>
     </message>
@@ -2323,7 +2313,17 @@ Address: %4
         <translation>גלה את כתובת ה-IP העצמית (ברירת מחדל: 1 כשמאזינים וללא -externalip)</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation>שגיאה: יצירת הפעולה נכשלה  </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Wallet locked, unable to create transaction  </source>
+        <translation>שגיאה: הארנק נעול, לא ניתן ליצור פעולה</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>האזנה נכשלה בכל פורט. השתמש ב- -listen=0 אם ברצונך בכך.</translation>
     </message>

@@ -576,12 +576,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>بلاک دریافت شده قبلی به میزان %1 تولید شده است</translation>
     </message>
     <message>
-        <location line="+58"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <location line="+59"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>تراکنش بیشتر از محدودیتهای شماست. شما می توانید همچنان با هزینه %1 آن را ارسال کنید که این هزینه به گره هایی که تراکنش را برایتان انجام می دهد تعلق می گیرد و به حمایت از شبکه کمک می کند. آیا شما می خواهید این هزینه را پرداخت کنید؟</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Confirm transaction fee</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1385,7 +1385,7 @@ Address: %4
     </message>
     <message>
         <location line="+18"/>
-        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>آدرس برای ارسال وجه به (برای مثال 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -2213,17 +2213,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>خطا: تراکنش تایید نشد. این خطا ممکن است به این دلیل اتفاق بیافتد که سکه های wallet شما خرج شده باشند مثلا اگر wallet.dat را مپی کرده باشید و سکه های شما در آن کپی استفاده شده باشند اما در اینجا نمایش داده نشده اند.</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds.</source>
-        <translation>خطا: تراکنش نیازمند پرداخت هزینه به میران حداقل %s است به علت هزینه، دشواری عملیات یا استفاده از وجوه دریافت شده اخیر</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+13"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>ارتباطاتِ JSON-RPC  را در &lt;port&gt;  گوش کنید (پیش فرض:8332)</translation>
     </message>
@@ -2248,17 +2238,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
-        <source>Error: Transaction creation failed.</source>
-        <translation>خطا: ایجاد تراکنش امکان پذیر نیست</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error: Wallet locked, unable to create transaction.</source>
-        <translation>خطا: wallet قفل شده است، ایجاد تراکنش امکان پذیر نیست</translation>
-    </message>
-    <message>
-        <location line="+10"/>
+        <location line="+32"/>
         <source>Importing blockchain data file.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2283,7 +2263,17 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-42"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>خطا: تراکنش تایید نشد. این خطا ممکن است به این دلیل اتفاق بیافتد که سکه های wallet شما خرج شده باشند مثلا اگر wallet.dat را مپی کرده باشید و سکه های شما در آن کپی استفاده شده باشند اما در اینجا نمایش داده نشده اند.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation>خطا: تراکنش نیازمند پرداخت هزینه به میران حداقل %s است به علت هزینه، دشواری عملیات یا استفاده از وجوه دریافت شده اخیر</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2318,7 +2308,17 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation>خطا: ایجاد تراکنش امکان پذیر نیست</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Wallet locked, unable to create transaction  </source>
+        <translation>خطا: wallet قفل شده است، ایجاد تراکنش امکان پذیر نیست</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished"></translation>
     </message>

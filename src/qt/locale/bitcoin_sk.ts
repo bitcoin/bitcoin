@@ -581,12 +581,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Posledný prijatý blok bol generovaný %1.</translation>
     </message>
     <message>
-        <location line="+58"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <location line="+59"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Veľkosť tejto transakcie prekračuje limit. Stále ju však môžete odoslať za poplatok %1 ktorý bude pripísaný uzlu spracúvajúcemu vašu transakciu. Chcete zaplatiť poplatok?</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Confirm transaction fee</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1390,7 +1390,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <location line="+18"/>
-        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Adresa pre odoslanie platby je (napr. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -2224,17 +2224,7 @@ Adresa: %4</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Chyba: Transakcia bola odmietnutá. Toto sa môže stať ak niektoré z mincí vo vašej peňaženke boli už utratené, napríklad ak používaš kópiu wallet.dat a mince označené v druhej kópií neboli označené ako utratené v tejto.</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds.</source>
-        <translation>Veľkosť tejto transakcie prekračuje limit. Stále ju však môžete odoslať za poplatok %1 ktorý bude pripísaný uzlu spracúvajúcemu vašu transakciu. Chcete zaplatiť poplatok?</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+13"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Počúvať JSON-RPC spojeniam na &lt;port&gt; (predvolené: 8332 or testnet: 18332)</translation>
     </message>
@@ -2259,17 +2249,7 @@ Adresa: %4</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
-        <source>Error: Transaction creation failed.</source>
-        <translation>Chyba: Zlyhalo vytvorenie transakcie.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error: Wallet locked, unable to create transaction.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+10"/>
+        <location line="+32"/>
         <source>Importing blockchain data file.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2294,7 +2274,17 @@ Adresa: %4</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-42"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>Chyba: Transakcia bola odmietnutá. Toto sa môže stať ak niektoré z mincí vo vašej peňaženke boli už utratené, napríklad ak používaš kópiu wallet.dat a mince označené v druhej kópií neboli označené ako utratené v tejto.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation>Veľkosť tejto transakcie prekračuje limit. Stále ju však môžete odoslať za poplatok %1 ktorý bude pripísaný uzlu spracúvajúcemu vašu transakciu. Chcete zaplatiť poplatok?</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2329,7 +2319,17 @@ Adresa: %4</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation>Chyba: Zlyhalo vytvorenie transakcie</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Wallet locked, unable to create transaction  </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished"></translation>
     </message>

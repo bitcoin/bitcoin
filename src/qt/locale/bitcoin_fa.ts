@@ -571,12 +571,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>خرین بلوک در یافت شده  تولید شده بود %1 </translation>
     </message>
     <message>
-        <location line="+58"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <location line="+59"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>این معامله از اندازه محدوده بیشتر است. شما می توانید آد را با دستمزد 1% بفرستید که شامل گره معامله شما می باشد و به شبکه های اینترنتی کمک خواهد کردو آیا شما می خواهید این پول پر داخت%1</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Confirm transaction fee</source>
         <translation>هزینه تراکنش را تایید کنید</translation>
     </message>
@@ -1380,7 +1380,7 @@ Address: %4
     </message>
     <message>
         <location line="+18"/>
-        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>آدرس برای ارسال پر داخت  (bijvoorbeeld: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -2208,17 +2208,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>خطا: تراکنش تایید نشد. این پیام زمانی روی می دهد که مقداری از سکه های WALLET شما استفاده شده اند برای مثال اگر شما از WALLET.DAT استفاده کرده اید، ممکن است سکه ها استفاده شده باشند اما در اینجا نمایش داده نشوند</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds.</source>
-        <translation>خطا: این تراکنش نیازمند هزینه تراکنش به مبلغ حداقل %s است به علت میزان وجه، دشواری، یا استفاده از وجوه دریافتی اخیر</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+13"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>( 8332پیش فرض :) &amp;lt;poort&amp;gt; JSON-RPC شنوایی برای ارتباطات</translation>
     </message>
@@ -2243,17 +2233,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
-        <source>Error: Transaction creation failed.</source>
-        <translation>خطا: ایجاد تراکنش انجام نشد</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error: Wallet locked, unable to create transaction.</source>
-        <translation>خطا: Wallet  قفل شده است. ایجاد تراکنش امکان پذیر نیست</translation>
-    </message>
-    <message>
-        <location line="+10"/>
+        <location line="+32"/>
         <source>Importing blockchain data file.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2278,7 +2258,17 @@ Address: %4
         <translation>پذیرش اتصالات از بیرون (پیش فرض:1 بدون پراکسی یا اتصال)</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-42"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>خطا . معامله رد شد.این هنگامی که سکه ها در والت شما هنوز ارسال شده اند ولی شما کپی والت استفاده می کنید و سکه ها روی کپی فرستاده شده اند و به عنوان ارسال شنه مشخص نشده اتفاقی می افتد.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation>خطا: این تراکنش نیازمند هزینه تراکنش به مبلغ حداقل %s است به علت میزان وجه، دشواری، یا استفاده از وجوه دریافتی اخیر</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
         <translation>حجم حداکثر تراکنشهای با/کم اهمیت را به بایت تنظیم کنید (پیش فرض:27000)</translation>
     </message>
@@ -2313,7 +2303,17 @@ Address: %4
         <translation>آدرس آی.پی. خود را شناسایی کنید (پیش فرض:1 در زمان when listening وno -externalip)</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation>خطا ایجاد معامله اشتباه است</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Wallet locked, unable to create transaction  </source>
+        <translation>خطا: Wallet  قفل شده است. ایجاد تراکنش امکان پذیر نیست</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>شنیدن هر گونه درگاه انجام پذیر نیست. ازlisten=0  برای اینکار استفاده کیند.</translation>
     </message>

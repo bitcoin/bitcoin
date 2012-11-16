@@ -575,14 +575,14 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Το τελευταίο μπλοκ που ελήφθη %1.</translation>
     </message>
     <message>
-        <location line="+58"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <location line="+59"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Η συναλλαγή ξεπερνάει το όριο.
 Μπορεί να ολοκληρωθεί με μια αμοιβή των %1, η οποία αποδίδεται στους κόμβους που επεξεργάζονται τις συναλλαγές και βοηθούν στην υποστήριξη του δικτύου.
 Θέλετε να συνεχίσετε;</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Confirm transaction fee</source>
         <translation>Επιβεβαίωση αμοιβής συναλλαγής</translation>
     </message>
@@ -1387,7 +1387,7 @@ Address: %4
     </message>
     <message>
         <location line="+18"/>
-        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Η διεύθυνση γι&apos; αποστολή πληρωμής
 (π.χ. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
@@ -2217,17 +2217,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Σφάλμα: Η συναλλαγή απερρίφθη. Αυτό ενδέχεται να συμβαίνει αν κάποια από τα νομίσματα έχουν ήδη ξοδευθεί, όπως αν χρησιμοποιήσατε αντίγραφο του wallet.dat και τα νομίσματα ξοδεύθηκαν εκεί.</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds.</source>
-        <translation>Σφάλμα: Αυτή η συναλλαγή απαιτεί αμοιβή συναλλαγής τουλάχιστον %s λόγω του μεγέθους, πολυπλοκότητας ή της χρήσης πρόσφατης παραλαβής κεφαλαίου</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+13"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Εισερχόμενες συνδέσεις JSON-RPC στη θύρα &lt;port&gt; (προεπιλογή: 8332 or testnet: 18332)</translation>
     </message>
@@ -2252,17 +2242,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
-        <source>Error: Transaction creation failed.</source>
-        <translation>Σφάλμα: Η δημιουργία της συναλλαγής απέτυχε</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error: Wallet locked, unable to create transaction.</source>
-        <translation>Σφάλμα: το πορτοφόλι είναι κλειδωμένο, δεν μπορεί να δημιουργηθεί συναλλαγή</translation>
-    </message>
-    <message>
-        <location line="+10"/>
+        <location line="+32"/>
         <source>Importing blockchain data file.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2287,7 +2267,18 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-42"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>Σφάλμα: Η συναλλαγή απορρίφθηκε.
+Αυτό ίσως οφείλεται στο ότι τα νομίσματά σας έχουν ήδη ξοδευτεί, π.χ. με την αντιγραφή του wallet.dat σε άλλο σύστημα και την χρήση τους εκεί, χωρίς η συναλλαγή να έχει καταγραφεί στο παρόν σύστημα.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation>Σφάλμα: Αυτή η συναλλαγή απαιτεί αμοιβή συναλλαγής τουλάχιστον %s λόγω του μεγέθους, πολυπλοκότητας ή της χρήσης πρόσφατης παραλαβής κεφαλαίου</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2322,7 +2313,17 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation>Σφάλμα: Η δημιουργία της συναλλαγής απέτυχε</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Wallet locked, unable to create transaction  </source>
+        <translation>Σφάλμα: το πορτοφόλι είναι κλειδωμένο, δεν μπορεί να δημιουργηθεί συναλλαγή</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished"></translation>
     </message>

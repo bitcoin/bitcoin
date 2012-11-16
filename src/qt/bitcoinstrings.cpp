@@ -32,12 +32,12 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error initializing database environment %s! To recover, BACKUP THAT "
 "DIRECTORY, then remove everything from it except for wallet.dat."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error: The transaction was rejected. This might happen if some of the coins "
+"Error: The transaction was rejected.  This might happen if some of the coins "
 "in your wallet were already spent, such as if you used a copy of wallet.dat "
 "and coins were spent in the copy but not marked as spent here."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: This transaction requires a transaction fee of at least %s because of "
-"its amount, complexity, or use of recently received funds."),
+"its amount, complexity, or use of recently received funds  "),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Execute command when the best block changes (%s in cmd is replaced by block "
 "hash)"),
@@ -98,8 +98,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat: Wallet corrupted"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat: Wallet requires newer version of Bitcoin"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error: Transaction creation failed."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error: Wallet locked, unable to create transaction."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: Transaction creation failed  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: Wallet locked, unable to create transaction  "),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: could not start node"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Fee per KB to add to transactions you send"),
