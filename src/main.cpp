@@ -719,7 +719,7 @@ bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs,
         // are the actual inputs available?
         if (!tx.HaveInputs(view))
             return error("CTxMemPool::accept() : inputs already spent");
- 
+
         // Bring the best block into scope
         view.GetBestBlock();
 
@@ -1338,7 +1338,7 @@ bool CTransaction::CheckInputs(CCoinsViewCache &inputs, enum CheckSig_mode csmod
 
         // While checking, GetBestBlock() refers to the parent block.
         // This is also true for mempool checks.
-        int nSpendHeight = inputs.GetBestBlock()->nHeight + 1; 
+        int nSpendHeight = inputs.GetBestBlock()->nHeight + 1;
         int64 nValueIn = 0;
         int64 nFees = 0;
         for (unsigned int i = 0; i < vin.size(); i++)
@@ -1899,8 +1899,8 @@ bool FindBlockPos(CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeigh
             if (file) {
                 printf("Pre-allocating up to position 0x%x in blk%05u.dat\n", nNewChunks * BLOCKFILE_CHUNK_SIZE, pos.nFile);
                 AllocateFileRange(file, pos.nPos, nNewChunks * BLOCKFILE_CHUNK_SIZE - pos.nPos);
+                fclose(file);
             }
-            fclose(file);
         }
     }
 
@@ -1941,8 +1941,8 @@ bool FindUndoPos(int nFile, CDiskBlockPos &pos, unsigned int nAddSize)
         if (file) {
             printf("Pre-allocating up to position 0x%x in rev%05u.dat\n", nNewChunks * UNDOFILE_CHUNK_SIZE, pos.nFile);
             AllocateFileRange(file, pos.nPos, nNewChunks * UNDOFILE_CHUNK_SIZE - pos.nPos);
+            fclose(file);
         }
-        fclose(file);
     }
 
     return true;

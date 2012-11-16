@@ -733,7 +733,6 @@ public:
 
     bool WriteToDisk(CDiskBlockPos &pos)
     {
-
         // Open history file to append
         CAutoFile fileout = CAutoFile(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
         if (!fileout)
@@ -746,7 +745,7 @@ public:
         // Write undo data
         long fileOutPos = ftell(fileout);
         if (fileOutPos < 0)
-            return error("CBlock::WriteToDisk() : ftell failed");
+            return error("CBlockUndo::WriteToDisk() : ftell failed");
         pos.nPos = (unsigned int)fileOutPos;
         fileout << *this;
 
@@ -757,7 +756,6 @@ public:
 
         return true;
     }
-
 };
 
 /** pruned version of CTransaction: only retains metadata and unspent transaction outputs
@@ -1872,7 +1870,7 @@ public:
     virtual bool GetStats(CCoinsStats &stats);
 
     // As we use CCoinsViews polymorphically, have a virtual destructor
-    virtual ~CCoinsView() {};
+    virtual ~CCoinsView() {}
 };
 
 /** CCoinsView backed by another CCoinsView */
