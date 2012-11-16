@@ -134,4 +134,10 @@ class CInv
         uint256 hash;
 };
 
+enum
+{
+    MSG_TX = 1,
+    MSG_BLOCK,
+};
+
 #endif // __INCLUDED_PROTOCOL_H__
