@@ -45,7 +45,7 @@
      <item>
       <widget class="QPushButton" name="addressBookButton">
        <property name="toolTip">
-        <string>Choose adress from address book</string>
+        <string>Choose address from address book</string>
        </property>
        <property name="text">
         <string/>

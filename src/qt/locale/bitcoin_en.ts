@@ -265,7 +265,7 @@ Are you sure you wish to encrypt your wallet?</source>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="160"/>
-        <source>Wallet passphrase was succesfully changed.</source>
+        <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -765,7 +765,7 @@ Address: %4
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="48"/>
-        <source>Choose adress from address book</source>
+        <source>Choose address from address book</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
