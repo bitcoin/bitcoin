@@ -1610,7 +1610,7 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsViewCache &view, bool fJust
     }
 
     if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
-        return error("ConnectBlock() : coinbase pays too much (actual=%"PRI64u" vs limit=%"PRI64u")", vtx[0].GetValueOut(), GetBlockValue(pindex->nHeight, nFees));
+        return error("ConnectBlock() : coinbase pays too much (actual=%"PRI64d" vs limit=%"PRI64d")", vtx[0].GetValueOut(), GetBlockValue(pindex->nHeight, nFees));
 
     if (fJustCheck)
         return true;
