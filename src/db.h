@@ -37,6 +37,7 @@ private:
     bool fDbEnvInit;
     bool fMockDb;
     boost::filesystem::path pathEnv;
+    std::string strPath;
 
     void EnvShutdown();
 
