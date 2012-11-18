@@ -33,6 +33,7 @@ class CDBEnv
 private:
     bool fDbEnvInit;
     bool fMockDb;
+    std::string strPath;
 
     void EnvShutdown();
 
