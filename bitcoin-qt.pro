@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = bitcoin-qt
-VERSION = 0.7.1
+VERSION = 0.7.2
 INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd

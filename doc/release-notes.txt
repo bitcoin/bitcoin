@@ -3,7 +3,7 @@ release time)
 
 Building this from
 
-	$ git shortlog --no-merges v0.7.0..
+	$ git shortlog --no-merges 8a17087..
 
 How to Upgrade
 --------------
@@ -32,42 +32,20 @@ shutdown much slower. Note that the "wallet.dat" file is always
 detached, and versions prior to 0.6.0 detached all databases
 at shutdown.
 
-New features
-------------
-
-* Added a boolean argument to the RPC 'stop' command, if true sets
-  -detachdb to create standalone database .dat files before shutting down.
-
-* -salvagewallet command-line option, which moves any existing wallet.dat
-  to wallet.{timestamp}.dat and then attempts to salvage public/private
-  keys and master encryption keys (if the wallet is encrypted) into
-  a new wallet.dat. This should only be used if your wallet becomes
-  corrupted, and is not intended to replace regular wallet backups.
-
-* Import $DataDir/bootstrap.dat automatically, if it exists.
-
-Dependency changes
-------------------
-
-* Qt 4.8.2 for Windows builds
-
-* openssl 1.0.1c
-
 Bug fixes
 ---------
 
-* When running -testnet, use RPC port 18332 by default.
+* Prevent RPC 'move' from deadlocking. This was caused by trying to lock the
+  database twice.
 
-* Better detection and handling of corrupt wallet.dat and blkindex.dat files.
-  Previous versions would crash with a DB_RUNRECOVERY exception, this
-  version detects most problems and tells you how to recover if it
-  cannot recover itself.
+* Fix use-after-free problems in initialization and shutdown, the latter of
+  which caused Bitcoin-Qt to crash on Windows when exiting.
 
-* Fixed an uninitialized variable bug that could cause transactions to
-  be reported out of order.
+* Correct library linking so building on Windows natively works.
 
-* Fixed a bug that could cause occasional crashes on exit.
+* Avoid a race condition and out-of-bounds read in block creation/mining code.
 
-* Warn the user that they need to create fresh wallet backups after they
-  encrypt their wallet.
+* Improve platform compatibility quirks, including fix for 100% CPU utilization
+  on FreeBSD 9.
 
+* A few minor corrections to error handling, and updated translations.
