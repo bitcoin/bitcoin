@@ -38,11 +38,13 @@ void CDBEnv::EnvShutdown()
     if (ret != 0)
         printf("EnvShutdown exception: %s (%d)\n", DbEnv::strerror(ret), ret);
     if (!fMockDb)
-        DbEnv(0).remove(GetDataDir().string().c_str(), 0);
+        DbEnv(0).remove(strPath.c_str(), 0);
 }
 
 CDBEnv::CDBEnv() : dbenv(DB_CXX_NO_EXCEPTIONS)
 {
+    fDbEnvInit = false;
+    fMockDb = false;
 }
 
 CDBEnv::~CDBEnv()
@@ -63,6 +65,7 @@ bool CDBEnv::Open(const boost::filesystem::path& path)
     if (fShutdown)
         return false;
 
+    strPath = path.string();
     filesystem::path pathLogDir = path / "database";
     filesystem::create_directory(pathLogDir);
     filesystem::path pathErrorFile = path / "db.log";
@@ -83,7 +86,7 @@ bool CDBEnv::Open(const boost::filesystem::path& path)
     dbenv.set_flags(DB_AUTO_COMMIT, 1);
     dbenv.set_flags(DB_TXN_WRITE_NOSYNC, 1);
     dbenv.log_set_config(DB_LOG_AUTO_REMOVE, 1);
-    int ret = dbenv.open(path.string().c_str(),
+    int ret = dbenv.open(strPath.c_str(),
                      DB_CREATE     |
                      DB_INIT_LOCK  |
                      DB_INIT_LOG   |
