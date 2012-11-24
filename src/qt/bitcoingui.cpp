@@ -261,9 +261,8 @@ void BitcoinGUI::createActions()
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet..."), this);
     encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your wallet"));
     encryptWalletAction->setCheckable(true);
-    importPrivateKeyAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Import Private Key..."), this);
+    importPrivateKeyAction = new QAction(QIcon(":/icons/key"), tr("&Import Private Key..."), this);
     importPrivateKeyAction->setStatusTip(tr("Import Private Key into your wallet"));
-    importPrivateKeyAction->setCheckable(true);
     backupWalletAction = new QAction(QIcon(":/icons/filesave"), tr("&Backup Wallet..."), this);
     backupWalletAction->setStatusTip(tr("Backup wallet to another location"));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Passphrase..."), this);

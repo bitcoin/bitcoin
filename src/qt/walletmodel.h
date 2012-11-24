@@ -5,6 +5,8 @@
 
 #include "allocators.h" /* for SecureString */
 
+using namespace std;
+
 class OptionsModel;
 class AddressTableModel;
 class TransactionTableModel;
@@ -107,6 +109,8 @@ public:
     };
 
     UnlockContext requestUnlock();
+
+    bool ImportPrivateKey(string keyString, string label);
 
 private:
     CWallet *wallet;

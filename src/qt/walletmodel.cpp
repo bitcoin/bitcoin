@@ -374,3 +374,39 @@ void WalletModel::UnlockContext::CopyFrom(const UnlockContext& rhs)
     *this = rhs;
     rhs.relock = false;
 }
+
+
+bool WalletModel::ImportPrivateKey(string keyString, string label)
+{
+    CBitcoinSecret vchSecret;
+    bool fGood = vchSecret.SetString(keyString);
+
+    if (!fGood) {
+        //TODO
+        //this should never happen as is prevalidated!
+        // Just need to log error
+        return false;
+    }
+
+    CKey key;
+    bool fCompressed;
+    CSecret secret = vchSecret.GetSecret(fCompressed);
+    key.SetSecret(secret, fCompressed);
+    CKeyID vchAddress = key.GetPubKey().GetID();
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+
+        wallet->MarkDirty();
+        wallet->SetAddressBookName(vchAddress, label);
+
+        if (!wallet->AddKey(key)){
+            //TODO
+            //Handle error.
+            return false;
+        }
+        //update GUI with progress?
+        wallet->ScanForWalletTransactions(pindexGenesisBlock, true);
+        wallet->ReacceptWalletTransactions();
+    }
+    return true;
+}
