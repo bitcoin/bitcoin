@@ -70,8 +70,8 @@ signals:
     void numBlocksChanged(int count, int countOfPeers);
     void alertsChanged(const QString &warnings);
 
-    //! Asynchronous error notification
-    void error(const QString &title, const QString &message, bool modal);
+    //! Asynchronous message notification
+    void message(const QString &title, const QString &message, bool modal, unsigned int style);
 
 public slots:
     void updateTimer();
