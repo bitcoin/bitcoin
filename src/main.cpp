@@ -2182,9 +2182,7 @@ FILE* OpenDiskFile(const CDiskBlockPos &pos, const char *prefix, bool fReadOnly)
         return NULL;
     boost::filesystem::path path = GetDataDir() / "blocks" / strprintf("%s%05u.dat", prefix, pos.nFile);
     boost::filesystem::create_directories(path.parent_path());
-    FILE* file = fopen(path.string().c_str(), "rb+");
-    if (!file && !fReadOnly)
-        file = fopen(path.string().c_str(), "wb+");
+    FILE* file = fopen(path.string().c_str(), fReadOnly ? "rb" : "wb+");
     if (!file) {
         printf("Unable to open file %s\n", path.string().c_str());
         return NULL;
