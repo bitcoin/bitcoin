@@ -749,7 +749,7 @@ bool CWalletTx::WriteToDisk()
 int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
 {
     int ret = 0;
-
+    int blockNumber=0;
     CBlockIndex* pindex = pindexStart;
     {
         LOCK(cs_wallet);
@@ -763,6 +763,9 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
                     ret++;
             }
             pindex = pindex->pnext;
+            if(blockNumber%1000==0)
+                NotifyChainBlocksScanned(this, blockNumber);
+            blockNumber++;
         }
     }
     return ret;

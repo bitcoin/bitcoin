@@ -1,6 +1,7 @@
 #include "importprivatekeydialog.h"
 #include "ui_importprivatekeydialog.h"
 #include "walletmodel.h"
+#include "progressdialog.h"
 #include "base58.h"
  #include <QValidator>
 #include "version.h"
@@ -63,8 +64,15 @@ void ImportPrivateKeyDialog::on_buttonBox_accepted()
     string strLabel = ui->addressLabelEdit->text().toStdString();
 
     //TODO handle errors returned.
+    ProgressDialog prgdlg(this);
+    prgdlg.setModal (true );
+    prgdlg.show();
+    prgdlg.raise();
+    prgdlg.activateWindow();
+    connect(model, SIGNAL(ScanWalletTransactionsProgress(int)), &prgdlg, SLOT(UpdateProgress(int)));
     model->ImportPrivateKey(strSecret,strLabel);
-
+    disconnect(model, SIGNAL(ScanWalletTransactionsProgress(int)), &prgdlg, SLOT(UpdateProgress(int)));
+    prgdlg.hide();
     close();
 }
 

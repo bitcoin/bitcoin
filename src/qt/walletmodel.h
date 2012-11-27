@@ -111,6 +111,7 @@ public:
     UnlockContext requestUnlock();
 
     bool ImportPrivateKey(string keyString, string label);
+    void EmitBlocksScanned(const int blockNumber);
 
 private:
     CWallet *wallet;
@@ -136,6 +137,7 @@ private:
     void unsubscribeFromCoreSignals();
     void checkBalanceChanged();
 
+
 signals:
     // Signal that balance in wallet changed
     void balanceChanged(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
@@ -153,6 +155,8 @@ signals:
 
     // Asynchronous error notification
     void error(const QString &title, const QString &message, bool modal);
+
+    void ScanWalletTransactionsProgress(int blockcount);
 
 public slots:
     /* Wallet status might have changed */
