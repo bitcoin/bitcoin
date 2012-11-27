@@ -105,8 +105,10 @@ private:
     void createMenuBar();
     /** Create the toolbars */
     void createToolBars();
-    /** Create system tray (notification) icon */
+    /** Create system tray icon and notification */
     void createTrayIcon();
+    /** Create system tray menu (or setup the dock menu) */
+    void createTrayIconMenu();
 
 public slots:
     /** Set number of connections shown in the UI */
