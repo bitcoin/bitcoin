@@ -1510,10 +1510,14 @@ void static FlushBlockFile()
     posOld.nPos = 0;
 
     FILE *fileOld = OpenBlockFile(posOld);
-    FileCommit(fileOld);
-    fclose(fileOld);
+    if (fileOld)
+    {
+        FileCommit(fileOld);
+        fclose(fileOld);
+    }
 
     fileOld = OpenUndoFile(posOld);
+    assert(fileOld);
     FileCommit(fileOld);
     fclose(fileOld);
 }
@@ -1721,7 +1725,9 @@ bool SetBestChain(CBlockIndex* pindexNew)
     // Make sure it's successfully written to disk before changing memory structure
     bool fIsInitialDownload = IsInitialBlockDownload();
     if (!fIsInitialDownload || view.GetCacheSize()>5000) {
-        FlushBlockFile();
+        if (!fImporting)
+            // Importing is read-only, so don't flush block file
+            FlushBlockFile();
         pblocktree->Sync();
         if (!view.Flush())
             return false;
