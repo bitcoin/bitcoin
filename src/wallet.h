@@ -303,7 +303,7 @@ public:
      */
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
 
-    /** 1 sec has passed during scanning for scanforwallettransactions.
+    /** 100 blocks scanned during scanforwallettransactions.
      * @note called with lock cs_wallet held.
      */
     boost::signals2::signal<void (CWallet *wallet, const int blockNumber)> NotifyChainBlocksScanned;

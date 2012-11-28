@@ -262,7 +262,8 @@ void BitcoinGUI::createActions()
     encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your wallet"));
     encryptWalletAction->setCheckable(true);
     importPrivateKeyAction = new QAction(QIcon(":/icons/key"), tr("&Import Private Key..."), this);
-    importPrivateKeyAction->setStatusTip(tr("Import Private Key into your wallet"));
+    importPrivateKeyAction->setStatusTip(tr("Import private key into wallet."));
+    importPrivateKeyAction->setEnabled(true);
     backupWalletAction = new QAction(QIcon(":/icons/filesave"), tr("&Backup Wallet..."), this);
     backupWalletAction->setStatusTip(tr("Backup wallet to another location"));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Passphrase..."), this);
@@ -818,7 +819,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
         changePassphraseAction->setEnabled(false);
         encryptWalletAction->setEnabled(true);
 
-        importPrivateKeyAction->setEnabled(true);
+
         break;
     case WalletModel::Unlocked:
         labelEncryptionIcon->show();
@@ -827,7 +828,6 @@ void BitcoinGUI::setEncryptionStatus(int status)
         encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
-        importPrivateKeyAction->setEnabled(true);
         break;
     case WalletModel::Locked:
         labelEncryptionIcon->show();
@@ -837,7 +837,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
         changePassphraseAction->setEnabled(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
 
-        importPrivateKeyAction->setEnabled(false);
+
         break;
     }
 }

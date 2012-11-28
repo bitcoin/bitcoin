@@ -3,7 +3,8 @@
 #include "walletmodel.h"
 #include "progressdialog.h"
 #include "base58.h"
- #include <QValidator>
+#include <QValidator>
+#include <QMessageBox>
 #include "version.h"
 using namespace std;
 
@@ -59,12 +60,22 @@ ImportPrivateKeyDialog::~ImportPrivateKeyDialog()
 
 void ImportPrivateKeyDialog::on_buttonBox_accepted()
 {
+    WalletModel::UnlockContext ctx(model->requestUnlock());
+    if(!ctx.isValid())
+    {
+        QMessageBox::critical(this, windowTitle(),
+            tr("Could not unlock wallet. Key not imported."),
+            QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+
     //Import the key...
     string strSecret = ui->privateKeyEdit1->text().toStdString();
     string strLabel = ui->addressLabelEdit->text().toStdString();
 
     //TODO handle errors returned.
     ProgressDialog prgdlg(this);
+    prgdlg.setMax(model->getNumBlocks());
     prgdlg.setModal (true );
     prgdlg.show();
     prgdlg.raise();
@@ -81,4 +92,9 @@ void ImportPrivateKeyDialog::on_privateKeyEdit1_textChanged(const QString &arg1)
     //TODO - check if wallet encrypted and locked
     ui->buttonBox->setEnabled(
         ui->privateKeyEdit1->hasAcceptableInput ());
+}
+
+void ImportPrivateKeyDialog::on_cancelButton_accepted()
+{
+    close();
 }

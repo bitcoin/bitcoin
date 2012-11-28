@@ -385,11 +385,14 @@ static void NotifyChainBlocksScanned(WalletModel *walletmodel, CWallet *wallet, 
 
 void WalletModel::EmitBlocksScanned(int blockNumber)
 {
-    if (blockNumber==0)
-        blockNumber=1;
+//    if (blockNumber==0)
+//      blockNumber=1;
+    emit ScanWalletTransactionsProgress(blockNumber);
+}
 
-    int percent=blockNumber*100/nBestHeight;
-    emit ScanWalletTransactionsProgress(percent);
+int WalletModel::getNumBlocks()
+{
+    return nBestHeight;
 }
 
 bool WalletModel::ImportPrivateKey(string keyString, string label)

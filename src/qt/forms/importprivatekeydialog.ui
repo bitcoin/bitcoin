@@ -70,7 +70,7 @@
    <item>
     <widget class="QLabel" name="warningLabel">
      <property name="text">
-      <string>Enter the private key and a label to import key into wallet. This process can take a minute or 2 to complete.</string>
+      <string>Enter the private key and a label to import key into wallet. This process can take a few minutes to complete.</string>
      </property>
      <property name="textFormat">
       <enum>Qt::RichText</enum>
@@ -148,7 +148,7 @@
       </widget>
      </item>
      <item row="0" column="5">
-      <widget class="QDialogButtonBox" name="buttonBox_2">
+      <widget class="QDialogButtonBox" name="cancelButton">
        <property name="standardButtons">
         <set>QDialogButtonBox::Cancel</set>
        </property>

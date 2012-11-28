@@ -763,7 +763,8 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
                     ret++;
             }
             pindex = pindex->pnext;
-            if(blockNumber%1000==0)
+            if(blockNumber%100==0 ||
+               (blockNumber%10==0 && blockNumber>150000))
                 NotifyChainBlocksScanned(this, blockNumber);
             blockNumber++;
         }

@@ -112,6 +112,7 @@ public:
 
     bool ImportPrivateKey(string keyString, string label);
     void EmitBlocksScanned(const int blockNumber);
+    int getNumBlocks();
 
 private:
     CWallet *wallet;

@@ -13,7 +13,13 @@ ProgressDialog::~ProgressDialog()
     delete ui;
 }
 
-void ProgressDialog::UpdateProgress(int percent)
+void ProgressDialog::UpdateProgress(int v)
 {
-    ui->progressBar->setValue(percent);
+    ui->progressBar->setValue(v);
 }
+
+void ProgressDialog::setMax(int m)
+{
+    ui->progressBar->setMaximum(m);
+}
+

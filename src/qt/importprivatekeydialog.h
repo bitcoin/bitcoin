@@ -41,6 +41,8 @@ private slots:
 
 
     void on_privateKeyEdit1_textChanged(const QString &arg1);
+
+    void on_cancelButton_accepted();
 };
 
 #endif // IMPORTPRIVATEKEYDIALOG_H
