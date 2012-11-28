@@ -120,8 +120,14 @@ public slots:
     */
     void setEncryptionStatus(int status);
 
-    /** Notify the user of an error in the network or transaction handling code. */
-    void error(const QString &title, const QString &message, bool modal);
+    /** Notify the user of an event from the core network or transaction handling code.
+       @param[in] title     the message box / notification title
+       @param[in] message   the displayed text
+       @param[in] modal     true to use a message box, false to use a notification
+       @param[in] style     style definitions (icon and used buttons - buttons only for message boxes)
+                            @see CClientUIInterface::MessageBoxFlags
+    */
+    void message(const QString &title, const QString &message, bool modal, unsigned int style);
     /** Asks the user whether to pay the transaction fee or to cancel the transaction.
        It is currently not possible to pass a return value to another thread through
        BlockingQueuedConnection, so an indirected pointer is used.

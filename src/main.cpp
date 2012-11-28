@@ -998,21 +998,16 @@ CBlockIndex* FindBlockByHeight(int nHeight)
     return pblockindex;
 }
 
-bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions)
+bool CBlock::ReadFromDisk(const CBlockIndex* pindex)
 {
-    if (!fReadTransactions)
-    {
-        *this = pindex->GetBlockHeader();
-        return true;
-    }
-    if (!ReadFromDisk(pindex->GetBlockPos(), fReadTransactions))
+    if (!ReadFromDisk(pindex->GetBlockPos()))
         return false;
     if (GetHash() != pindex->GetBlockHash())
         return error("CBlock::ReadFromDisk() : GetHash() doesn't match index");
     return true;
 }
 
-uint256 static GetOrphanRoot(const CBlock* pblock)
+uint256 static GetOrphanRoot(const CBlockHeader* pblock)
 {
     // Work back to the first block in the orphan chain
     while (mapOrphanBlocks.count(pblock->hashPrevBlock))
@@ -1059,7 +1054,7 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
     return bnResult.GetCompact();
 }
 
-unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlock *pblock)
+unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
     unsigned int nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
 
@@ -1198,7 +1193,7 @@ bool ConnectBestBlock() {
             pindexNewBest = *it;
         }
 
-        if (pindexNewBest == pindexBest)
+        if (pindexNewBest == pindexBest || (pindexBest && pindexNewBest->bnChainWork == pindexBest->bnChainWork))
             return true; // nothing to do
 
         // check ancestry
@@ -1233,7 +1228,7 @@ bool ConnectBestBlock() {
     } while(true);
 }
 
-void CBlock::UpdateTime(const CBlockIndex* pindexPrev)
+void CBlockHeader::UpdateTime(const CBlockIndex* pindexPrev)
 {
     nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
 
@@ -2202,10 +2197,10 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
     if (nFreeBytesAvailable < nMinDiskSpace + nAdditionalBytes)
     {
         fShutdown = true;
-        string strMessage = _("Warning: Disk space is low!");
+        string strMessage = _("Error: Disk space is low!");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
-        uiInterface.ThreadSafeMessageBox(strMessage, "Bitcoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
+        uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_ERROR);
         StartShutdown();
         return false;
     }
@@ -3072,6 +3067,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 pindex = pindex->pnext;
         }
 
+        // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
         vector<CBlock> vHeaders;
         int nLimit = 2000;
         printf("getheaders %d to %s\n", (pindex ? pindex->nHeight : -1), BlockHashStr(hashStop).c_str());
@@ -3685,7 +3681,6 @@ public:
 
 CBlock* CreateNewBlock(CReserveKey& reservekey)
 {
-
     // Create new block
     auto_ptr<CBlock> pblock(new CBlock());
     if (!pblock.get())
