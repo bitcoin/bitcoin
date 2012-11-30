@@ -1704,9 +1704,11 @@ bool SetBestChain(CBlockIndex* pindexNew)
         if (!viewTemp.Flush())
             return error("SetBestBlock() : Cache flush failed after disconnect");
 
-        // Queue memory transactions to resurrect
+        // Queue memory transactions to resurrect.
+        // We only do this for blocks after the last checkpoint (reorganisation before that
+        // point should only happen with -reindex/-loadblock, or a misbehaving peer.
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
-            if (!tx.IsCoinBase())
+            if (!tx.IsCoinBase() && pindex->nHeight > Checkpoints::GetTotalBlocksEstimate())
                 vResurrect.push_back(tx);
     }
 
