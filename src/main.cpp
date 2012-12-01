@@ -42,6 +42,7 @@ set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid; // may contain 
 int64 nTimeBestReceived = 0;
 bool fImporting = false;
 bool fReindex = false;
+bool fBenchmark = false;
 unsigned int nCoinCacheSize = 5000;
 
 CMedianFilter<int> cPeerBlockCounts(5, 0); // Amount of blocks that other nodes claim to have
@@ -1586,12 +1587,16 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsViewCache &view, bool fJust
 
     CBlockUndo blockundo;
 
+    int64 nStart = GetTimeMicros();
     int64 nFees = 0;
+    int nInputs = 0;
     unsigned int nSigOps = 0;
     for (unsigned int i=0; i<vtx.size(); i++)
     {
+
         const CTransaction &tx = vtx[i];
 
+        nInputs += tx.vin.size();
         nSigOps += tx.GetLegacySigOpCount();
         if (nSigOps > MAX_BLOCK_SIGOPS)
             return DoS(100, error("ConnectBlock() : too many sigops"));
@@ -1622,7 +1627,11 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsViewCache &view, bool fJust
             return error("ConnectBlock() : UpdateInputs failed");
         if (!tx.IsCoinBase())
             blockundo.vtxundo.push_back(txundo);
+
     }
+    int64 nTime = GetTimeMicros() - nStart;
+    if (fBenchmark)
+        printf("- Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin)\n", (unsigned)vtx.size(), 0.001 * nTime, 0.001 * nTime / vtx.size(), nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs-1));
 
     if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
         return error("ConnectBlock() : coinbase pays too much (actual=%"PRI64d" vs limit=%"PRI64d")", vtx[0].GetValueOut(), GetBlockValue(pindex->nHeight, nFees));
@@ -1720,8 +1729,11 @@ bool SetBestChain(CBlockIndex* pindexNew)
         CBlock block;
         if (!block.ReadFromDisk(pindex))
             return error("SetBestBlock() : ReadFromDisk for disconnect failed");
+        int64 nStart = GetTimeMicros();
         if (!block.DisconnectBlock(pindex, view))
             return error("SetBestBlock() : DisconnectBlock %s failed", BlockHashStr(pindex->GetBlockHash()).c_str());
+        if (fBenchmark)
+            printf("- Disconnect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
         // Queue memory transactions to resurrect
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
@@ -1735,11 +1747,14 @@ bool SetBestChain(CBlockIndex* pindexNew)
         CBlock block;
         if (!block.ReadFromDisk(pindex))
             return error("SetBestBlock() : ReadFromDisk for connect failed");
+        int64 nStart = GetTimeMicros();
         if (!block.ConnectBlock(pindex, view)) {
             InvalidChainFound(pindexNew);
             InvalidBlockFound(pindex);
             return error("SetBestBlock() : ConnectBlock %s failed", BlockHashStr(pindex->GetBlockHash()).c_str());
         }
+        if (fBenchmark)
+            printf("- Connect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001); 
 
         // Queue memory transactions to delete
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
@@ -1747,8 +1762,13 @@ bool SetBestChain(CBlockIndex* pindexNew)
     }
 
     // Flush changes to global coin state
+    int64 nStart = GetTimeMicros();
+    int nModified = view.GetCacheSize();
     if (!view.Flush())
         return error("SetBestBlock() : unable to modify coin state");
+    int64 nTime = GetTimeMicros() - nStart;
+    if (fBenchmark)
+        printf("- Flush %i transactions: %.2fms (%.4fms/tx)\n", nModified, 0.001 * nTime, 0.001 * nTime / nModified);
 
     // Make sure it's successfully written to disk before changing memory structure
     bool fIsInitialDownload = IsInitialBlockDownload();
