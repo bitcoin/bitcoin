@@ -53,6 +53,8 @@ inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONE
 static const int COINBASE_MATURITY = 100;
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+/** Maximum number of script-checking threads allowed */
+static const int MAX_SCRIPTCHECK_THREADS = 16;
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
 #else
@@ -90,6 +92,7 @@ extern unsigned char pchMessageStart[4];
 extern bool fImporting;
 extern bool fReindex;
 extern bool fBenchmark;
+extern int nScriptCheckThreads;
 extern unsigned int nCoinCacheSize;
 
 // Settings
@@ -107,6 +110,7 @@ class CCoins;
 class CTxUndo;
 class CCoinsView;
 class CCoinsViewCache;
+class CScriptCheck;
 
 /** Register a wallet to receive updates from core */
 void RegisterWallet(CWallet* pwalletIn);
@@ -136,6 +140,10 @@ bool ProcessMessages(CNode* pfrom);
 bool SendMessages(CNode* pto, bool fSendTrickle);
 /** Run the importer thread, which deals with reindexing, loading bootstrap.dat, and whatever is passed to -loadblock */
 void ThreadImport(void *parg);
+/** Run an instance of the script checking thread */
+void ThreadScriptCheck(void* parg);
+/** Stop the script checking threads */
+void ThreadScriptCheckQuit();
 /** Run the miner threads */
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
 /** Generate a new block, without valid proof-of-work */
@@ -633,8 +641,11 @@ public:
     bool HaveInputs(CCoinsViewCache &view) const;
 
     // Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
-    // This does not modify the UTXO set
-    bool CheckInputs(CCoinsViewCache &view, bool fScriptChecks = true, unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC) const;
+    // This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
+    // instead of being performed inline.
+    bool CheckInputs(CCoinsViewCache &view, bool fScriptChecks = true,
+                     unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC,
+                     std::vector<CScriptCheck> *pvChecks = NULL) const;
 
     // Apply the effects of this transaction on the UTXO set represented by view
     bool UpdateCoins(CCoinsViewCache &view, CTxUndo &txundo, int nHeight, const uint256 &txhash) const;
