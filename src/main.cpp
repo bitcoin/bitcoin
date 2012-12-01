@@ -772,7 +772,7 @@ bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs,
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!tx.CheckInputs(view, CS_ALWAYS, SCRIPT_VERIFY_P2SH))
+        if (!tx.CheckInputs(view, true, SCRIPT_VERIFY_P2SH))
         {
             return error("CTxMemPool::accept() : ConnectInputs failed %s", hash.ToString().substr(0,10).c_str());
         }
@@ -1360,7 +1360,7 @@ bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned in
     return CScriptCheck(txFrom, txTo, nIn, flags, nHashType)();
 }
 
-bool CTransaction::CheckInputs(CCoinsViewCache &inputs, enum CheckSig_mode csmode, unsigned int flags) const
+bool CTransaction::CheckInputs(CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags) const
 {
     if (!IsCoinBase())
     {
@@ -1410,8 +1410,7 @@ bool CTransaction::CheckInputs(CCoinsViewCache &inputs, enum CheckSig_mode csmod
         // Skip ECDSA signature verification when connecting blocks
         // before the last block chain checkpoint. This is safe because block merkle hashes are
         // still computed and checked, and any change will be caught at the next checkpoint.
-        if (csmode == CS_ALWAYS ||
-            (csmode == CS_AFTER_CHECKPOINT && inputs.GetBestBlock()->nHeight >= Checkpoints::GetTotalBlocksEstimate())) {
+        if (fScriptChecks) {
             for (unsigned int i = 0; i < vin.size(); i++) {
                 const COutPoint &prevout = vin[i].prevout;
                 const CCoins &coins = inputs.GetCoins(prevout.hash);
@@ -1577,6 +1576,8 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsViewCache &view, bool fJust
     // verify that the view's current state corresponds to the previous block
     assert(pindex->pprev == view.GetBestBlock());
 
+    bool fScriptChecks = pindex->nHeight >= Checkpoints::GetTotalBlocksEstimate();
+
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.
     // If such overwrites are allowed, coinbases and transactions depending upon those
@@ -1637,7 +1638,7 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsViewCache &view, bool fJust
 
             nFees += tx.GetValueIn(view)-tx.GetValueOut();
 
-            if (!tx.CheckInputs(view, CS_AFTER_CHECKPOINT, fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE))
+            if (!tx.CheckInputs(view, fScriptChecks, fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE))
                 return false;
         }
 
@@ -3924,7 +3925,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
-            if (!tx.CheckInputs(viewTemp, CS_ALWAYS, SCRIPT_VERIFY_P2SH))
+            if (!tx.CheckInputs(viewTemp, true, SCRIPT_VERIFY_P2SH))
                 continue;
 
             CTxUndo txundo;
