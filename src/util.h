@@ -330,6 +330,12 @@ inline int64 GetTimeMillis()
             boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_milliseconds();
 }
 
+inline int64 GetTimeMicros()
+{
+    return (boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time()) -
+            boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_microseconds();
+}
+
 inline std::string DateTimeStrFormat(const char* pszFormat, int64 nTime)
 {
     time_t n = nTime;
