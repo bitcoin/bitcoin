@@ -1535,9 +1535,7 @@ void static FlushBlockFile()
 {
     LOCK(cs_LastBlockFile);
 
-    CDiskBlockPos posOld;
-    posOld.nFile = nLastBlockFile;
-    posOld.nPos = 0;
+    CDiskBlockPos posOld(nLastBlockFile, 0);
 
     FILE *fileOld = OpenBlockFile(posOld);
     FileCommit(fileOld);

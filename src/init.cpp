@@ -346,9 +346,7 @@ void ThreadImport(void *data) {
         CImportingNow imp;
         int nFile = 0;
         while (!fShutdown) {
-            CDiskBlockPos pos;
-            pos.nFile = nFile;
-            pos.nPos = 0;
+            CDiskBlockPos pos(nFile, 0);
             FILE *file = OpenBlockFile(pos, true);
             if (!file)
                 break;
