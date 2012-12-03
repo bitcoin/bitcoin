@@ -189,7 +189,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
             }
             return TransactionCreationFailed;
         }
-        if(!uiInterface.ThreadSafeAskFee(nFeeRequired, tr("Sending...").toStdString()))
+        if(!uiInterface.ThreadSafeAskFee(nFeeRequired))
         {
             return Aborted;
         }
