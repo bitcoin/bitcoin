@@ -46,11 +46,11 @@ public slots:
 private:
     QWidget *parent;
     enum Mode {
-        None,        /**< Ignore informational notifications, and show a modal pop-up dialog for Critical notifications. */
-        Freedesktop, /**< Use DBus org.freedesktop.Notifications */
-        QSystemTray, /**< Use QSystemTray::showMessage */
+        None,           /**< Ignore informational notifications, and show a modal pop-up dialog for Critical notifications. */
+        Freedesktop,    /**< Use DBus org.freedesktop.Notifications */
+        QSystemTray,    /**< Use QSystemTray::showMessage */
         Growl12,        /**< Use the Growl 1.2 notification system (Mac only) */
-        Growl13        /**< Use the Growl 1.3 notification system (Mac only) */
+        Growl13         /**< Use the Growl 1.3 notification system (Mac only) */
     };
     QString programName;
     Mode mode;
