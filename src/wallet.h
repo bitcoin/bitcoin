@@ -17,6 +17,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "walletdb.h"
+#include "json/json_spirit_value.h"
 
 class CAccountingEntry;
 class CWalletTx;
@@ -679,6 +680,7 @@ public:
     void AddSupportingTransactions();
     bool AcceptWalletTransaction(bool fCheckInputs=true);
     void RelayWalletTransaction();
+    void GetJSON(json_spirit::Object& entry) const;
 };
 
 

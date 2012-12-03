@@ -9,6 +9,7 @@
 #include "ui_interface.h"
 #include "base58.h"
 
+using namespace json_spirit;
 using namespace std;
 
 
@@ -839,6 +840,25 @@ void CWalletTx::RelayWalletTransaction()
             RelayMessage(CInv(MSG_TX, hash), (CTransaction)*this);
         }
     }
+}
+
+void CWalletTx::GetJSON(Object& entry) const
+{
+    int confirms = GetDepthInMainChain();
+    entry.push_back(Pair("confirmations", confirms));
+    if (IsCoinBase())
+        entry.push_back(Pair("generated", true));
+    if (confirms)
+    {
+        entry.push_back(Pair("blockhash", hashBlock.GetHex()));
+        entry.push_back(Pair("blockindex", nIndex));
+        entry.push_back(Pair("blocktime", (boost::int64_t)(mapBlockIndex[hashBlock]->nTime)));
+    }
+    entry.push_back(Pair("txid", GetHash().GetHex()));
+    entry.push_back(Pair("time", (boost::int64_t)GetTxTime()));
+    entry.push_back(Pair("timereceived", (boost::int64_t)nTimeReceived));
+    BOOST_FOREACH(const PAIRTYPE(string,string)& item, mapValue)
+        entry.push_back(Pair(item.first, item.second));
 }
 
 void CWallet::ResendWalletTransactions()
