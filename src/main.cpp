@@ -1667,7 +1667,9 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsViewCache &view, bool fJust
 
 bool SetBestChain(CBlockIndex* pindexNew)
 {
-    CCoinsViewCache &view = *pcoinsTip;
+    // All modifications to the coin state will be done in this cache.
+    // Only when all have succeeded, we push it to pcoinsTip.
+    CCoinsViewCache view(*pcoinsTip, true);
 
     // special case for attaching the genesis block
     // note that no ConnectBlock is called, so its coinbase output is non-spendable
@@ -1720,11 +1722,8 @@ bool SetBestChain(CBlockIndex* pindexNew)
         CBlock block;
         if (!block.ReadFromDisk(pindex))
             return error("SetBestBlock() : ReadFromDisk for disconnect failed");
-        CCoinsViewCache viewTemp(view, true);
-        if (!block.DisconnectBlock(pindex, viewTemp))
+        if (!block.DisconnectBlock(pindex, view))
             return error("SetBestBlock() : DisconnectBlock %s failed", BlockHashStr(pindex->GetBlockHash()).c_str());
-        if (!viewTemp.Flush())
-            return error("SetBestBlock() : Cache flush failed after disconnect");
 
         // Queue memory transactions to resurrect
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
@@ -1738,26 +1737,27 @@ bool SetBestChain(CBlockIndex* pindexNew)
         CBlock block;
         if (!block.ReadFromDisk(pindex))
             return error("SetBestBlock() : ReadFromDisk for connect failed");
-        CCoinsViewCache viewTemp(view, true);
-        if (!block.ConnectBlock(pindex, viewTemp)) {
+        if (!block.ConnectBlock(pindex, view)) {
             InvalidChainFound(pindexNew);
             InvalidBlockFound(pindex);
             return error("SetBestBlock() : ConnectBlock %s failed", BlockHashStr(pindex->GetBlockHash()).c_str());
         }
-        if (!viewTemp.Flush())
-            return error("SetBestBlock() : Cache flush failed after connect");
 
         // Queue memory transactions to delete
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
             vDelete.push_back(tx);
     }
 
+    // Flush changes to global coin state
+    if (!view.Flush())
+        return error("SetBestBlock() : unable to modify coin state");
+
     // Make sure it's successfully written to disk before changing memory structure
     bool fIsInitialDownload = IsInitialBlockDownload();
-    if (!fIsInitialDownload || view.GetCacheSize() > nCoinCacheSize) {
+    if (!fIsInitialDownload || pcoinsTip->GetCacheSize() > nCoinCacheSize) {
         FlushBlockFile();
         pblocktree->Sync();
-        if (!view.Flush())
+        if (!pcoinsTip->Flush())
             return false;
     }
 
