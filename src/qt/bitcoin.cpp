@@ -45,7 +45,6 @@ static void ThreadSafeMessageBox(const std::string& message, const std::string& 
                                    modal ? GUIUtil::blockingGUIThreadConnection() : Qt::QueuedConnection,
                                    Q_ARG(QString, QString::fromStdString(caption)),
                                    Q_ARG(QString, QString::fromStdString(message)),
-                                   Q_ARG(bool, modal),
                                    Q_ARG(unsigned int, style));
     }
     else
