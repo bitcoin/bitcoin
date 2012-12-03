@@ -785,18 +785,6 @@ Value createmultisig(const Array& params, bool fHelp)
     return result;
 }
 
-
-struct tallyitem
-{
-    int64 nAmount;
-    int nConf;
-    tallyitem()
-    {
-        nAmount = 0;
-        nConf = std::numeric_limits<int>::max();
-    }
-};
-
 Value ListReceived(const Array& params, bool fByAccounts)
 {
     // Minimum confirmations

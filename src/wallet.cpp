@@ -12,6 +12,11 @@
 using namespace json_spirit;
 using namespace std;
 
+tallyitem::tallyitem()
+{
+    nAmount = 0;
+    nConf = std::numeric_limits<int>::max();
+}
 
 //////////////////////////////////////////////////////////////////////////////
 //

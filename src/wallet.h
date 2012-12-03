@@ -857,6 +857,13 @@ private:
     std::vector<char> _ssExtra;
 };
 
+struct tallyitem
+{
+    int64 nAmount;
+    int nConf;
+    tallyitem();
+};
+
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
 #endif
