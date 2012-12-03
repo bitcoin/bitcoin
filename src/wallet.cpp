@@ -842,6 +842,7 @@ void CWalletTx::RelayWalletTransaction()
     }
 }
 
+// TODO: Write unit tests
 void CWalletTx::GetJSON(Object& entry) const
 {
     int confirms = GetDepthInMainChain();
@@ -911,6 +912,22 @@ void CWallet::ResendWalletTransactions()
 // Actions
 //
 
+void CAccountingEntry::GetJSON(const string& strAccount, Array& ret) const
+{
+    bool fAllAccounts = (strAccount == string("*"));
+
+    if (fAllAccounts || strAccount == strAccount)
+    {
+        Object entry;
+        entry.push_back(Pair("account", strAccount));
+        entry.push_back(Pair("category", "move"));
+        entry.push_back(Pair("time", (boost::int64_t)nTime));
+        entry.push_back(Pair("amount", ValueFromAmount(nCreditDebit)));
+        entry.push_back(Pair("otheraccount", strOtherAccount));
+        entry.push_back(Pair("comment", strComment));
+        ret.push_back(entry);
+    }
+}
 
 int64 CWallet::GetBalance() const
 {

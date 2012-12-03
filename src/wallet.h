@@ -35,6 +35,10 @@ enum WalletFeature
     FEATURE_LATEST = 60000
 };
 
+inline json_spirit::Value ValueFromAmount(int64 amount)
+{
+    return (double)amount / (double)COIN;
+}
 
 /** A key pool entry */
 class CKeyPool
@@ -802,6 +806,8 @@ public:
         strComment.clear();
         nOrderPos = -1;
     }
+
+    void GetJSON(const std::string& strAccount, json_spirit::Array& ret) const;
 
     IMPLEMENT_SERIALIZE
     (
