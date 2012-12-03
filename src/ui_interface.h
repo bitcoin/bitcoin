@@ -71,7 +71,7 @@ public:
     boost::signals2::signal<void (const std::string& message, const std::string& caption, unsigned int style)> ThreadSafeMessageBox;
 
     /** Ask the user whether they want to pay a fee or not. */
-    boost::signals2::signal<bool (int64 nFeeRequired, const std::string& strCaption), boost::signals2::last_value<bool> > ThreadSafeAskFee;
+    boost::signals2::signal<bool (int64 nFeeRequired), boost::signals2::last_value<bool> > ThreadSafeAskFee;
 
     /** Handle a URL passed at the command line. */
     boost::signals2::signal<void (const std::string& strURI)> ThreadSafeHandleURI;
