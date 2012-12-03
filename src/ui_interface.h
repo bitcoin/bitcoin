@@ -62,7 +62,7 @@ public:
         MODAL               = 0x10000000U,
 
         /** Predefined combinations for certain default usage cases */
-        MSG_INFORMATION = (ICON_INFORMATION | BTN_OK),
+        MSG_INFORMATION = ICON_INFORMATION,
         MSG_WARNING = (ICON_WARNING | BTN_OK | MODAL),
         MSG_ERROR = (ICON_ERROR | BTN_OK | MODAL)
     };
