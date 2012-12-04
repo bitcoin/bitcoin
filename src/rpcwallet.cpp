@@ -6,6 +6,8 @@
 #include <boost/assign/list_of.hpp>
 
 #include "wallet.h"
+// TODO: Remove this include after removing all dependencies
+// NOTE: DO NOT ADD NEW DEPENDENCIES ON CWalletDB!
 #include "walletdb.h"
 #include "bitcoinrpc.h"
 #include "init.h"
@@ -19,6 +21,7 @@ using namespace json_spirit;
 int64 nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
+// TODO: Move to rpchelpers.cpp
 std::string HelpRequiringPassphrase()
 {
     return pwalletMain->IsCrypted()
@@ -26,12 +29,14 @@ std::string HelpRequiringPassphrase()
         : "";
 }
 
+// TODO: Move to rpchelpers.cpp
 void EnsureWalletIsUnlocked()
 {
     if (pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 }
 
+// TODO: Move to rpchelpers.cpp
 void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
@@ -51,6 +56,7 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
         entry.push_back(Pair(item.first, item.second));
 }
 
+// TODO: Move to rpchelpers.cpp
 string AccountFromValue(const Value& value)
 {
     string strAccount = value.get_str();
@@ -118,7 +124,7 @@ Value getnewaddress(const Array& params, bool fHelp)
     return CBitcoinAddress(keyID).ToString();
 }
 
-
+// TODO: Move to CBitcoinAddress::GetAccountAddress(const std::string strAccount, const bool bForceNew)
 CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
     CWalletDB walletdb(pwalletMain->strWalletFile);
@@ -236,6 +242,7 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 
     // Find all addresses that have the given account
     Array ret;
+    // TODO: Move bulk to std::vector<string> CWallet::GetAddressesByAccount(const std::string strAccount)
     BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, string)& item, pwalletMain->mapAddressBook)
     {
         const CBitcoinAddress& address = item.first;
@@ -394,6 +401,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
     scriptPubKey.SetDestination(address.Get());
+    // TODO: Should look like if (!pwalletMain->IsMyAddress(address))
     if (!IsMine(*pwalletMain,scriptPubKey))
         return (double)0.0;
 
@@ -402,6 +410,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     if (params.size() > 1)
         nMinDepth = params[1].get_int();
 
+    // TODO: Replace whole block with return ValueFromAmount(pwalletMain->GetAddressTally(nMinDepth))
     // Tally
     int64 nAmount = 0;
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
@@ -419,7 +428,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     return  ValueFromAmount(nAmount);
 }
 
-
+// TODO: Move to set<CTxDestination> CWallet::GetAccountAddresses(const std::string strAccount)
 void GetAccountAddresses(string strAccount, set<CTxDestination>& setAddress)
 {
     BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& item, pwalletMain->mapAddressBook)
@@ -448,6 +457,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
     set<CTxDestination> setAddress;
     GetAccountAddresses(strAccount, setAddress);
 
+    // TODO: Replace whole block with return ValueFromAmount(pwalletMain->GetAccountTally(strAccount, nMinDepth))
     // Tally
     int64 nAmount = 0;
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
@@ -468,7 +478,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
     return (double)nAmount / (double)COIN;
 }
 
-
+// TODO: Move to int64 CWallet::GetAccountBalance(const string& strAccount, const int nMinDepth)
 int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinDepth)
 {
     int64 nBalance = 0;
@@ -494,6 +504,7 @@ int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinD
     return nBalance;
 }
 
+// TODO: Move to int64 CWallet::GetAccountBalance(const string& strAccount, const int nMinDepth)
 int64 GetAccountBalance(const string& strAccount, int nMinDepth)
 {
     CWalletDB walletdb(pwalletMain->strWalletFile);
@@ -517,6 +528,7 @@ Value getbalance(const Array& params, bool fHelp)
         nMinDepth = params[1].get_int();
 
     if (params[0].get_str() == "*") {
+    	// TODO: Why is there a "different way" if both "should always return the same number"?
         // Calculate total balance a different way from GetBalance()
         // (GetBalance() sums up all unspent TxOuts)
         // getbalance and getbalance '*' should always return the same number.
@@ -569,6 +581,7 @@ Value movecmd(const Array& params, bool fHelp)
     if (params.size() > 4)
         strComment = params[4].get_str();
 
+    // TODO: replace block with pwalletMain->MoveBalance(string from, string to, int64 amount, unused, string comment)
     CWalletDB walletdb(pwalletMain->strWalletFile);
     if (!walletdb.TxnBegin())
         throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
@@ -808,7 +821,7 @@ Value createmultisig(const Array& params, bool fHelp)
     return result;
 }
 
-
+// TODO: Move to wallet.h
 struct tallyitem
 {
     int64 nAmount;
@@ -820,6 +833,7 @@ struct tallyitem
     }
 };
 
+// TODO: Move bulk to std::vector<std::map<std::string, std::object> > CWallet::ListReceived
 Value ListReceived(const Array& params, bool fByAccounts)
 {
     // Minimum confirmations
@@ -941,6 +955,7 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
     return ListReceived(params, true);
 }
 
+// TODO: std::vector<> CWalletTx::(const string& strAccount, int nMinDepth, bool fLong)
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
     int64 nFee;
@@ -1002,6 +1017,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     }
 }
 
+// TODO: Move to rpchelpers.cpp
 void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Array& ret)
 {
     bool fAllAccounts = (strAccount == string("*"));
@@ -1041,6 +1057,7 @@ Value listtransactions(const Array& params, bool fHelp)
     if (nFrom < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
 
+    // TODO: return ArrayFromVector(pwalletMain->GetTxList(string strAccount, int ncount, int nfrom);
     Array ret;
 
     std::list<CAccountingEntry> acentries;
@@ -1088,6 +1105,7 @@ Value listaccounts(const Array& params, bool fHelp)
     if (params.size() > 0)
         nMinDepth = params[0].get_int();
 
+    // TODO: return ObjectFromMap(pwalletMain->GetAccountList(int nMindepth);
     map<string, int64> mapAccountBalances;
     BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
         if (IsMine(*pwalletMain, entry.first)) // This address belongs to me
@@ -1156,7 +1174,7 @@ Value listsinceblock(const Array& params, bool fHelp)
     int depth = pindex ? (1 + nBestHeight - pindex->nHeight) : -1;
 
     Array transactions;
-
+    // TODO: transactions = ArrayFromVector(std::vector<tx?> CWallet->GetTransactionList(int nDepth)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); it++)
     {
         CWalletTx tx = (*it).second;
@@ -1257,7 +1275,7 @@ Value keypoolrefill(const Array& params, bool fHelp)
     return Value::null;
 }
 
-
+// TODO: CWallet::ThreadTopUpKeyPool
 void ThreadTopUpKeyPool(void* parg)
 {
     // Make this thread recognisable as the key-topping-up thread
