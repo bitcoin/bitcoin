@@ -8,13 +8,25 @@ Debian
 -------
 
 First, make sure that the required packages for Qt4 development of your
-distribution are installed, for Debian and Ubuntu these are:
+distribution are installed, these are
+
+::
+
+for Debian and Ubuntu  <= 11.10 :
 
 ::
 
     apt-get install qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev \
         libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev \
         libssl-dev libdb4.8++-dev
+
+for Ubuntu >= 12.04 (please read the 'Berkely DB version warning' below):
+
+::
+
+    apt-get install qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev \
+        libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev \
+        libssl-dev libdb++-dev libminiupnpc-dev
 
 then execute the following:
 
