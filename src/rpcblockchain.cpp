@@ -9,6 +9,7 @@
 using namespace json_spirit;
 using namespace std;
 
+// TODO: move to rpchelpers.cpp
 double GetDifficulty(const CBlockIndex* blockindex)
 {
     // Floating point number that is a multiple of the minimum difficulty,
@@ -40,7 +41,7 @@ double GetDifficulty(const CBlockIndex* blockindex)
     return dDiff;
 }
 
-
+// TODO: move to rpchelpers.cpp
 Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
 {
     Object result;
