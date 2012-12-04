@@ -17,6 +17,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "walletdb.h"
+#include "json/json_spirit_value.h"
 
 class CAccountingEntry;
 class CWalletTx;
@@ -34,6 +35,10 @@ enum WalletFeature
     FEATURE_LATEST = 60000
 };
 
+inline json_spirit::Value ValueFromAmount(int64 amount)
+{
+    return (double)amount / (double)COIN;
+}
 
 /** A key pool entry */
 class CKeyPool
@@ -679,6 +684,7 @@ public:
     void AddSupportingTransactions();
     bool AcceptWalletTransaction(bool fCheckInputs=true);
     void RelayWalletTransaction();
+    void GetJSON(json_spirit::Object& entry) const;
 };
 
 
@@ -801,6 +807,8 @@ public:
         nOrderPos = -1;
     }
 
+    void GetJSON(const std::string& strAccount, json_spirit::Array& ret) const;
+
     IMPLEMENT_SERIALIZE
     (
         CAccountingEntry& me = *const_cast<CAccountingEntry*>(this);
@@ -847,6 +855,13 @@ public:
 
 private:
     std::vector<char> _ssExtra;
+};
+
+struct tallyitem
+{
+    int64 nAmount;
+    int nConf;
+    tallyitem();
 };
 
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);

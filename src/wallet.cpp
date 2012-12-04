@@ -9,8 +9,14 @@
 #include "ui_interface.h"
 #include "base58.h"
 
+using namespace json_spirit;
 using namespace std;
 
+tallyitem::tallyitem()
+{
+    nAmount = 0;
+    nConf = std::numeric_limits<int>::max();
+}
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -841,6 +847,26 @@ void CWalletTx::RelayWalletTransaction()
     }
 }
 
+// TODO: Write unit tests
+void CWalletTx::GetJSON(Object& entry) const
+{
+    int confirms = GetDepthInMainChain();
+    entry.push_back(Pair("confirmations", confirms));
+    if (IsCoinBase())
+        entry.push_back(Pair("generated", true));
+    if (confirms)
+    {
+        entry.push_back(Pair("blockhash", hashBlock.GetHex()));
+        entry.push_back(Pair("blockindex", nIndex));
+        entry.push_back(Pair("blocktime", (boost::int64_t)(mapBlockIndex[hashBlock]->nTime)));
+    }
+    entry.push_back(Pair("txid", GetHash().GetHex()));
+    entry.push_back(Pair("time", (boost::int64_t)GetTxTime()));
+    entry.push_back(Pair("timereceived", (boost::int64_t)nTimeReceived));
+    BOOST_FOREACH(const PAIRTYPE(string,string)& item, mapValue)
+        entry.push_back(Pair(item.first, item.second));
+}
+
 void CWallet::ResendWalletTransactions()
 {
     // Do this infrequently and randomly to avoid giving away
@@ -891,6 +917,22 @@ void CWallet::ResendWalletTransactions()
 // Actions
 //
 
+void CAccountingEntry::GetJSON(const string& strAccount, Array& ret) const
+{
+    bool fAllAccounts = (strAccount == string("*"));
+
+    if (fAllAccounts || strAccount == strAccount)
+    {
+        Object entry;
+        entry.push_back(Pair("account", strAccount));
+        entry.push_back(Pair("category", "move"));
+        entry.push_back(Pair("time", (boost::int64_t)nTime));
+        entry.push_back(Pair("amount", ValueFromAmount(nCreditDebit)));
+        entry.push_back(Pair("otheraccount", strOtherAccount));
+        entry.push_back(Pair("comment", strComment));
+        ret.push_back(entry);
+    }
+}
 
 int64 CWallet::GetBalance() const
 {
