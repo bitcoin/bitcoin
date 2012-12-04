@@ -28,25 +28,6 @@ void EnsureWalletIsUnlocked()
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 }
 
-void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
-{
-    int confirms = wtx.GetDepthInMainChain();
-    entry.push_back(Pair("confirmations", confirms));
-    if (wtx.IsCoinBase())
-        entry.push_back(Pair("generated", true));
-    if (confirms)
-    {
-        entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
-        entry.push_back(Pair("blockindex", wtx.nIndex));
-        entry.push_back(Pair("blocktime", (boost::int64_t)(mapBlockIndex[wtx.hashBlock]->nTime)));
-    }
-    entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
-    entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
-    entry.push_back(Pair("timereceived", (boost::int64_t)wtx.nTimeReceived));
-    BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
-        entry.push_back(Pair(item.first, item.second));
-}
-
 string AccountFromValue(const Value& value)
 {
     string strAccount = value.get_str();
@@ -960,7 +941,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             if (fLong)
-                WalletTxToJSON(wtx, entry);
+                wtx.GetJSON(entry);
             ret.push_back(entry);
         }
     }
@@ -991,27 +972,10 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                     entry.push_back(Pair("category", "receive"));
                 entry.push_back(Pair("amount", ValueFromAmount(r.second)));
                 if (fLong)
-                    WalletTxToJSON(wtx, entry);
+                    wtx.GetJSON(entry);
                 ret.push_back(entry);
             }
         }
-    }
-}
-
-void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Array& ret)
-{
-    bool fAllAccounts = (strAccount == string("*"));
-
-    if (fAllAccounts || acentry.strAccount == strAccount)
-    {
-        Object entry;
-        entry.push_back(Pair("account", acentry.strAccount));
-        entry.push_back(Pair("category", "move"));
-        entry.push_back(Pair("time", (boost::int64_t)acentry.nTime));
-        entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
-        entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
-        entry.push_back(Pair("comment", acentry.strComment));
-        ret.push_back(entry);
     }
 }
 
@@ -1050,7 +1014,7 @@ Value listtransactions(const Array& params, bool fHelp)
             ListTransactions(*pwtx, strAccount, 0, true, ret);
         CAccountingEntry *const pacentry = (*it).second.second;
         if (pacentry != 0)
-            AcentryToJSON(*pacentry, strAccount, ret);
+            pacentry->GetJSON(strAccount, ret);
 
         if ((int)ret.size() >= (nCount+nFrom)) break;
     }
@@ -1210,7 +1174,7 @@ Value gettransaction(const Array& params, bool fHelp)
     if (wtx.IsFromMe())
         entry.push_back(Pair("fee", ValueFromAmount(nFee)));
 
-    WalletTxToJSON(wtx, entry);
+    wtx.GetJSON(entry);
 
     Array details;
     ListTransactions(wtx, "*", 0, false, details);
