@@ -1917,6 +1917,7 @@ bool FindBlockPos(CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeigh
             nLastBlockFile = pos.nFile;
             infoLastBlockFile.SetNull();
             pblocktree->ReadBlockFileInfo(nLastBlockFile, infoLastBlockFile);
+            fUpdatedLast = true;
         }
     } else {
         while (infoLastBlockFile.nSize + nAddSize >= MAX_BLOCKFILE_SIZE) {
