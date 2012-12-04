@@ -22,6 +22,7 @@ using namespace json_spirit;
 // Utilities: convert hex-encoded Values
 // (throws error if not hex).
 //
+// TODO: move to rpchelpers.cpp
 uint256 ParseHashV(const Value& v, string strName)
 {
     string strHex;
@@ -33,10 +34,14 @@ uint256 ParseHashV(const Value& v, string strName)
     result.SetHex(strHex);
     return result;
 }
+
+// TODO: move to rpchelpers.cpp
 uint256 ParseHashO(const Object& o, string strKey)
 {
     return ParseHashV(find_value(o, strKey), strKey);
 }
+
+// TODO: move to rpchelpers.cpp
 vector<unsigned char> ParseHexV(const Value& v, string strName)
 {
     string strHex;
@@ -46,11 +51,14 @@ vector<unsigned char> ParseHexV(const Value& v, string strName)
         throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
     return ParseHex(strHex);
 }
+
+// TODO: move to rpchelpers.cpp
 vector<unsigned char> ParseHexO(const Object& o, string strKey)
 {
     return ParseHexV(find_value(o, strKey), strKey);
 }
 
+// TODO: move to rpchelpers.cpp
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out)
 {
     txnouttype type;
@@ -75,6 +83,7 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out)
     out.push_back(Pair("addresses", a));
 }
 
+// TODO: move to rpchelpers.cpp
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 {
     entry.push_back(Pair("txid", tx.GetHash().GetHex()));

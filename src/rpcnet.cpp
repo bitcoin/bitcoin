@@ -19,6 +19,7 @@ Value getconnectioncount(const Array& params, bool fHelp)
     return (int)vNodes.size();
 }
 
+// TODO: move to rpchelpers.cpp
 static void CopyNodeStats(std::vector<CNodeStats>& vstats)
 {
     vstats.clear();
