@@ -1826,3 +1826,31 @@ bool CWallet::SetAccount(const CBitcoinAddress address, const std::string strAcc
 
     return SetAddressBookName(dest, strAccount);
 }
+
+bool CWallet::IsMyAddress(const CBitcoinAddress& address) const
+{
+    CScript scriptPubKey;
+    scriptPubKey.SetDestination(address.Get());
+    return ::IsMine(*this, scriptPubKey);
+}
+
+int64 CWallet::GetAddressTally(const CBitcoinAddress address, int nMinDepth)
+{
+    if (!IsMyAddress(address))
+        return 0;
+
+    int64 nAmount = 0;
+    CScript scriptPubKey;
+    scriptPubKey.SetDestination(address.Get());
+    for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        const CWalletTx& wtx = (*it).second;
+        if (wtx.IsCoinBase() || !wtx.IsFinal())
+            continue;
+
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+            if (txout.scriptPubKey == scriptPubKey && wtx.GetDepthInMainChain() >= nMinDepth)
+                nAmount += txout.nValue;
+    }
+    return nAmount;
+}
