@@ -1723,9 +1723,11 @@ bool SetBestChain(CBlockIndex* pindexNew)
         if (!block.DisconnectBlock(pindex, view))
             return error("SetBestBlock() : DisconnectBlock %s failed", BlockHashStr(pindex->GetBlockHash()).c_str());
 
-        // Queue memory transactions to resurrect
+        // Queue memory transactions to resurrect.
+        // We only do this for blocks after the last checkpoint (reorganisation before that
+        // point should only happen with -reindex/-loadblock, or a misbehaving peer.
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
-            if (!tx.IsCoinBase())
+            if (!tx.IsCoinBase() && pindex->nHeight > Checkpoints::GetTotalBlocksEstimate())
                 vResurrect.push_back(tx);
     }
 
@@ -1774,7 +1776,7 @@ bool SetBestChain(CBlockIndex* pindexNew)
 
     // Resurrect memory transactions that were in the disconnected branch
     BOOST_FOREACH(CTransaction& tx, vResurrect)
-        tx.AcceptToMemoryPool(false);
+        tx.AcceptToMemoryPool();
 
     // Delete redundant memory transactions that are in the connected branch
     BOOST_FOREACH(CTransaction& tx, vDelete) {
