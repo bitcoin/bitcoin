@@ -1804,3 +1804,58 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts)
     }
 }
 
+CBitcoinAddress CWallet::GetAccountAddress(const std::string strAccount, bool bForceNew=false)
+{
+    CWalletDB walletdb(strWalletFile);
+    CAccount account;
+    walletdb.ReadAccount(strAccount, account);
+    bool bKeyUsed = false;
+
+    // Check if the current key has been used
+    if (account.vchPubKey.IsValid())
+    {
+        CScript scriptPubKey;
+        scriptPubKey.SetDestination(account.vchPubKey.GetID());
+        // TODO: Is this IsValid() check really necessary here?
+        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin();
+             it != mapWallet.end() && account.vchPubKey.IsValid() && !bKeyUsed;
+             ++it)
+        {
+            //const CWalletTx& wtx = (*it).second;
+            BOOST_FOREACH(const CTxOut& txout, (*it).second.vout)
+                if (txout.scriptPubKey == scriptPubKey)
+                {
+                    bKeyUsed = true;
+                    break;
+                }
+        }
+    }
+
+    // Generate a new key
+    if (!account.vchPubKey.IsValid() || bForceNew || bKeyUsed)
+    {
+    	// Caller must check validity to detect keypool depletion
+        if (!GetKeyFromPool(account.vchPubKey, false))
+        	return CBitcoinAddress();
+
+        // TODO: Do something with the return code
+        SetAddressBookName(account.vchPubKey.GetID(), strAccount);
+        walletdb.WriteAccount(strAccount, account);
+    }
+
+    return CBitcoinAddress(account.vchPubKey.GetID());
+}
+
+bool CWallet::SetAccount(const CBitcoinAddress address, const std::string strAccount)
+{
+    // Detect when changing the account of an address that is the 'unused current key' of another account:
+    CTxDestination dest = address.Get();
+	if (mapAddressBook.count(dest))
+    {
+        string strOldAccount = mapAddressBook[dest];
+        if (address == GetAccountAddress(strOldAccount, false) && !GetAccountAddress(strOldAccount, true).IsValid())
+            return false;
+    }
+
+    return SetAddressBookName(dest, strAccount);
+}
