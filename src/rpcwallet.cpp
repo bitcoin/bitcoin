@@ -48,7 +48,7 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
     entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
     entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
     entry.push_back(Pair("timereceived", (boost::int64_t)wtx.nTimeReceived));
-    BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
+    BOOST_FOREACH(const PAIRTYPE(string, string)& item, wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
 }
 
@@ -90,8 +90,6 @@ Value getinfo(const Array& params, bool fHelp)
     return obj;
 }
 
-
-
 Value getnewaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -120,45 +118,6 @@ Value getnewaddress(const Array& params, bool fHelp)
     return CBitcoinAddress(keyID).ToString();
 }
 
-// TODO: Move to CBitcoinAddress::GetAccountAddress(const std::string strAccount, const bool bForceNew)
-CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
-{
-    CWalletDB walletdb(pwalletMain->strWalletFile);
-
-    CAccount account;
-    walletdb.ReadAccount(strAccount, account);
-
-    bool bKeyUsed = false;
-
-    // Check if the current key has been used
-    if (account.vchPubKey.IsValid())
-    {
-        CScript scriptPubKey;
-        scriptPubKey.SetDestination(account.vchPubKey.GetID());
-        for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
-             it != pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
-             ++it)
-        {
-            const CWalletTx& wtx = (*it).second;
-            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                if (txout.scriptPubKey == scriptPubKey)
-                    bKeyUsed = true;
-        }
-    }
-
-    // Generate a new key
-    if (!account.vchPubKey.IsValid() || bForceNew || bKeyUsed)
-    {
-        if (!pwalletMain->GetKeyFromPool(account.vchPubKey, false))
-            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-
-        pwalletMain->SetAddressBookName(account.vchPubKey.GetID(), strAccount);
-        walletdb.WriteAccount(strAccount, account);
-    }
-
-    return CBitcoinAddress(account.vchPubKey.GetID());
-}
-
 Value getaccountaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -168,45 +127,31 @@ Value getaccountaddress(const Array& params, bool fHelp)
 
     // Parse the account first so we don't generate a key if there's an error
     string strAccount = AccountFromValue(params[0]);
-
-    Value ret;
-
-    ret = GetAccountAddress(strAccount).ToString();
-
-    return ret;
+    CBitcoinAddress address = pwalletMain->GetAccountAddress(strAccount, false);
+    if (address.IsValid())
+    	return address.ToString();
+    throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
 }
-
-
 
 Value setaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "setaccount <bitcoinaddress> <account>\n"
-            "Sets the account associated with the given address.");
+            "setaccount <bitcoinaddress> [account]\n"
+            "Sets the address's account to [account] or \"\".");
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
 
-
     string strAccount;
     if (params.size() > 1)
         strAccount = AccountFromValue(params[1]);
 
-    // Detect when changing the account of an address that is the 'unused current key' of another account:
-    if (pwalletMain->mapAddressBook.count(address.Get()))
-    {
-        string strOldAccount = pwalletMain->mapAddressBook[address.Get()];
-        if (address == GetAccountAddress(strOldAccount))
-            GetAccountAddress(strOldAccount, true);
-    }
-
-    pwalletMain->SetAddressBookName(address.Get(), strAccount);
-
+    // TODO: Use the return code for something
+    pwalletMain->SetAccount(address, strAccount);
     return Value::null;
 }
-
 
 Value getaccount(const Array& params, bool fHelp)
 {
@@ -225,7 +170,6 @@ Value getaccount(const Array& params, bool fHelp)
         strAccount = (*mi).second;
     return strAccount;
 }
-
 
 Value getaddressesbyaccount(const Array& params, bool fHelp)
 {
@@ -398,7 +342,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
     scriptPubKey.SetDestination(address.Get());
     // TODO: Should look like if (!pwalletMain->IsMyAddress(address))
-    if (!IsMine(*pwalletMain,scriptPubKey))
+    if (!IsMine(*pwalletMain, scriptPubKey))
         return (double)0.0;
 
     // Minimum confirmations
@@ -416,9 +360,8 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-            if (txout.scriptPubKey == scriptPubKey)
-                if (wtx.GetDepthInMainChain() >= nMinDepth)
-                    nAmount += txout.nValue;
+            if (txout.scriptPubKey == scriptPubKey && wtx.GetDepthInMainChain() >= nMinDepth)
+                nAmount += txout.nValue;
     }
 
     return  ValueFromAmount(nAmount);

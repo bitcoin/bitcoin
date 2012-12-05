@@ -283,6 +283,8 @@ public:
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
 
     bool SetDefaultKey(const CPubKey &vchPubKey);
+    CBitcoinAddress GetAccountAddress(const std::string strAccount, bool bForceNew);
+    bool SetAccount(const CBitcoinAddress address, const std::string strAccount);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
     bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
