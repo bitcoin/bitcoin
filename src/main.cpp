@@ -1538,12 +1538,16 @@ void static FlushBlockFile()
     CDiskBlockPos posOld(nLastBlockFile, 0);
 
     FILE *fileOld = OpenBlockFile(posOld);
-    FileCommit(fileOld);
-    fclose(fileOld);
+    if (fileOld) {
+        FileCommit(fileOld);
+        fclose(fileOld);
+    }
 
     fileOld = OpenUndoFile(posOld);
-    FileCommit(fileOld);
-    fclose(fileOld);
+    if (fileOld) {
+        FileCommit(fileOld);
+        fclose(fileOld);
+    }
 }
 
 bool FindUndoPos(int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
