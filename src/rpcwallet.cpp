@@ -168,10 +168,13 @@ Value getaccount(const Array& params, bool fHelp)
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
 
+    // TODO: Exception if !pwalletMain->IsMyAddress(address)?
     string strAccount;
+    // TODO: std::string CWallet::GetAccount(const CBitcoinAddress& address)
     map<CTxDestination, string>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
     if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.empty())
         strAccount = (*mi).second;
+    // TODO: Exception if account not found?
     return strAccount;
 }
 
@@ -185,6 +188,7 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
     string strAccount = AccountFromValue(params[0]);
 
     // Find all addresses that have the given account
+    // TODO: return VectorToArray(pwalletMain->GetAddressesByAccount(strAccount));
     Array ret;
     // TODO: Move bulk to std::vector<string> CWallet::GetAddressesByAccount(const std::string strAccount)
     BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, string)& item, pwalletMain->mapAddressBook)
@@ -212,6 +216,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     // Amount
     int64 nAmount = AmountFromValue(params[1]);
 
+    // TODO: string strError = pwalletMain->SendToAddress(address, nAmount, comment, commentto);
     // Wallet comments
     CWalletTx wtx;
     if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
@@ -390,7 +395,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             CTxDestination address;
-            if (ExtractDestination(txout.scriptPubKey, address) && pwalletMain->IsMyAddress(address) && setAddress.count(address))
+            if (ExtractDestination(txout.scriptPubKey, address) && pwalletMain->IsMine(address) && setAddress.count(address))
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
                     nAmount += txout.nValue;
         }
@@ -783,7 +788,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             CTxDestination address;
-            if (!ExtractDestination(txout.scriptPubKey, address) || !pwalletMain->IsMyAddress(address))
+            if (!ExtractDestination(txout.scriptPubKey, address) || !pwalletMain->IsMine(address))
                 continue;
 
             tallyitem& item = mapTally[address];
@@ -1029,7 +1034,7 @@ Value listaccounts(const Array& params, bool fHelp)
     // TODO: return ObjectFromMap(pwalletMain->GetAccountList(int nMindepth);
     map<string, int64> mapAccountBalances;
     BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
-        if (pwalletMain->IsMyAddress(CBitcoinAddress(entry.first))) // This address belongs to me
+        if (pwalletMain->IsMine(CBitcoinAddress(entry.first))) // This address belongs to me
             mapAccountBalances[entry.second] = 0;
     }
 
@@ -1428,7 +1433,7 @@ Value validateaddress(const Array& params, bool fHelp)
         CTxDestination dest = address.Get();
         string currentAddress = address.ToString();
         ret.push_back(Pair("address", currentAddress));
-        bool fMine = pwalletMain->IsMyAddress(address);
+        bool fMine = pwalletMain->IsMine(address);
         ret.push_back(Pair("ismine", fMine));
         if (fMine) {
             Object detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
