@@ -1801,9 +1801,9 @@ CBitcoinAddress CWallet::GetAccountAddress(const std::string strAccount, bool bF
     // Generate a new key
     if (!account.vchPubKey.IsValid() || bForceNew || bKeyUsed)
     {
-    	// Caller must check validity to detect keypool depletion
+        // Caller must check validity to detect keypool depletion
         if (!GetKeyFromPool(account.vchPubKey, false))
-        	return CBitcoinAddress();
+            return CBitcoinAddress();
 
         // TODO: Do something with the return code
         SetAddressBookName(account.vchPubKey.GetID(), strAccount);
@@ -1817,7 +1817,7 @@ bool CWallet::SetAccount(const CBitcoinAddress address, const std::string strAcc
 {
     // Detect when changing the account of an address that is the 'unused current key' of another account:
     CTxDestination dest = address.Get();
-	if (mapAddressBook.count(dest))
+    if (mapAddressBook.count(dest))
     {
         string strOldAccount = mapAddressBook[dest];
         if (address == GetAccountAddress(strOldAccount, false) && !GetAccountAddress(strOldAccount, true).IsValid())
@@ -1827,7 +1827,7 @@ bool CWallet::SetAccount(const CBitcoinAddress address, const std::string strAcc
     return SetAddressBookName(dest, strAccount);
 }
 
-bool CWallet::IsMyAddress(const CBitcoinAddress& address) const
+bool CWallet::IsMine(const CBitcoinAddress& address) const
 {
     CScript scriptPubKey;
     scriptPubKey.SetDestination(address.Get());
@@ -1836,7 +1836,7 @@ bool CWallet::IsMyAddress(const CBitcoinAddress& address) const
 
 int64 CWallet::GetAddressTally(const CBitcoinAddress address, int nMinDepth)
 {
-    if (!IsMyAddress(address))
+    if (!IsMine(address))
         return 0;
 
     int64 nAmount = 0;
