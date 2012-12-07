@@ -1882,16 +1882,14 @@ int64 CWallet::GetAccountBalance(const string& strAccount, int nMinDepth)
     return nBalance;
 }
 
-// TODO: Move to set<CTxDestination> CWallet::GetAccountAddresses(const std::string strAccount)
 std::set<CTxDestination> CWallet::GetAccountAddresses(std::string strAccount)
 {
 	set<CTxDestination> setRet;
     BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& item, mapAddressBook)
     {
-        const CTxDestination& address = item.first;
-        const string& strName = item.second;
-        if (strName == strAccount)
-            setRet.insert(address);
+        if (item.second == strAccount)
+        	// push address into set
+            setRet.insert(item.first);
     }
     return setRet;
 }
