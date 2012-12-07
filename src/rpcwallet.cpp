@@ -404,40 +404,6 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
     return (double)nAmount / (double)COIN;
 }
 
-// TODO: Move to int64 CWallet::GetAccountBalance(const string& strAccount, const int nMinDepth)
-int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinDepth)
-{
-    int64 nBalance = 0;
-
-    // Tally wallet transactions
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
-    {
-        const CWalletTx& wtx = (*it).second;
-        if (!wtx.IsFinal())
-            continue;
-
-        int64 nReceived, nSent, nFee;
-        wtx.GetAccountAmounts(strAccount, nReceived, nSent, nFee);
-
-        if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth)
-            nBalance += nReceived;
-        nBalance -= nSent + nFee;
-    }
-
-    // Tally internal accounting entries
-    nBalance += walletdb.GetAccountCreditDebit(strAccount);
-
-    return nBalance;
-}
-
-// TODO: Move to int64 CWallet::GetAccountBalance(const string& strAccount, const int nMinDepth)
-int64 GetAccountBalance(const string& strAccount, int nMinDepth)
-{
-    CWalletDB walletdb(pwalletMain->strWalletFile);
-    return GetAccountBalance(walletdb, strAccount, nMinDepth);
-}
-
-
 Value getbalance(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
@@ -484,11 +450,10 @@ Value getbalance(const Array& params, bool fHelp)
 
     string strAccount = AccountFromValue(params[0]);
 
-    int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
+    int64 nBalance = pwalletMain->GetAccountBalance(strAccount, nMinDepth);
 
     return ValueFromAmount(nBalance);
 }
-
 
 Value movecmd(const Array& params, bool fHelp)
 {
@@ -540,7 +505,6 @@ Value movecmd(const Array& params, bool fHelp)
     return true;
 }
 
-
 Value sendfrom(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 6)
@@ -568,7 +532,7 @@ Value sendfrom(const Array& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     // Check funds
-    int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
+    int64 nBalance = pwalletMain->GetAccountBalance(strAccount, nMinDepth);
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -579,7 +543,6 @@ Value sendfrom(const Array& params, bool fHelp)
 
     return wtx.GetHash().GetHex();
 }
-
 
 Value sendmany(const Array& params, bool fHelp)
 {
@@ -625,7 +588,7 @@ Value sendmany(const Array& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     // Check funds
-    int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
+    int64 nBalance = pwalletMain->GetAccountBalance(strAccount, nMinDepth);
     if (totalAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -1167,7 +1130,6 @@ Value gettransaction(const Array& params, bool fHelp)
     return entry;
 }
 
-
 Value backupwallet(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -1181,7 +1143,6 @@ Value backupwallet(const Array& params, bool fHelp)
 
     return Value::null;
 }
-
 
 Value keypoolrefill(const Array& params, bool fHelp)
 {
@@ -1292,7 +1253,6 @@ Value walletpassphrase(const Array& params, bool fHelp)
     return Value::null;
 }
 
-
 Value walletpassphrasechange(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
@@ -1325,7 +1285,6 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
     return Value::null;
 }
 
-
 Value walletlock(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
@@ -1347,7 +1306,6 @@ Value walletlock(const Array& params, bool fHelp)
 
     return Value::null;
 }
-
 
 Value encryptwallet(const Array& params, bool fHelp)
 {
