@@ -1854,3 +1854,30 @@ int64 CWallet::GetAddressTally(const CBitcoinAddress address, int nMinDepth)
     }
     return nAmount;
 }
+
+int64 CWallet::GetAccountBalance(const string& strAccount, int nMinDepth)
+{
+	CWalletDB walletdb(strWalletFile);
+    int64 nBalance = 0;
+    // Moved out of loop to avoid some unneeded operations
+    int64 nReceived, nSent, nFee;
+
+    // Tally wallet transactions
+    for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        const CWalletTx& wtx = (*it).second;
+        if (!wtx.IsFinal())
+            continue;
+
+        wtx.GetAccountAmounts(strAccount, nReceived, nSent, nFee);
+
+        if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth)
+            nBalance += nReceived;
+        nBalance -= nSent + nFee;
+    }
+
+    // Tally internal accounting entries
+    nBalance += walletdb.GetAccountCreditDebit(strAccount);
+
+    return nBalance;
+}

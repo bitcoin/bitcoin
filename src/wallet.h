@@ -286,6 +286,7 @@ public:
     bool SetDefaultKey(const CPubKey &vchPubKey);
     CBitcoinAddress GetAccountAddress(const std::string strAccount, bool bForceNew);
     bool SetAccount(const CBitcoinAddress address, const std::string strAccount);
+    int64 GetAccountBalance(const std::string& strAccount, int nMinDepth);
     int64 GetAddressTally(const CBitcoinAddress address, int nMinDepth);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
