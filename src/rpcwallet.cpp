@@ -354,18 +354,6 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     return ValueFromAmount(pwalletMain->GetAddressTally(address, nMinDepth));
 }
 
-// TODO: Move to set<CTxDestination> CWallet::GetAccountAddresses(const std::string strAccount)
-void GetAccountAddresses(string strAccount, set<CTxDestination>& setAddress)
-{
-    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& item, pwalletMain->mapAddressBook)
-    {
-        const CTxDestination& address = item.first;
-        const string& strName = item.second;
-        if (strName == strAccount)
-            setAddress.insert(address);
-    }
-}
-
 Value getreceivedbyaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
@@ -380,8 +368,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 
     // Get the set of pub keys assigned to account
     string strAccount = AccountFromValue(params[0]);
-    set<CTxDestination> setAddress;
-    GetAccountAddresses(strAccount, setAddress);
+    set<CTxDestination> setAddress = pwalletMain->GetAccountAddresses(strAccount);
 
     // TODO: Replace whole block with return ValueFromAmount(pwalletMain->GetAccountTally(strAccount, nMinDepth))
     // Tally
