@@ -188,16 +188,11 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
     string strAccount = AccountFromValue(params[0]);
 
     // Find all addresses that have the given account
-    // TODO: return VectorToArray(pwalletMain->GetAddressesByAccount(strAccount));
+    // TODO: use vectors instead of sets?
+    std::set<CTxDestination> setAddress = pwalletMain->GetAccountAddresses(strAccount);
     Array ret;
-    // TODO: Move bulk to std::vector<string> CWallet::GetAddressesByAccount(const std::string strAccount)
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, string)& item, pwalletMain->mapAddressBook)
-    {
-        const CBitcoinAddress& address = item.first;
-        const string& strName = item.second;
-        if (strName == strAccount)
-            ret.push_back(address.ToString());
-    }
+    BOOST_FOREACH(const CTxDestination& item, setAddress)
+    	ret.push_back(CBitcoinAddress(item).ToString());
     return ret;
 }
 
