@@ -32,6 +32,7 @@ enum
     SCRIPT_VERIFY_NONE      = 0,
     SCRIPT_VERIFY_P2SH      = (1U << 0),
     SCRIPT_VERIFY_STRICTENC = (1U << 1),
+    SCRIPT_VERIFY_NOCACHE   = (1U << 2),
 };
 
 enum txnouttype
