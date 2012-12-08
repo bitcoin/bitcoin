@@ -126,19 +126,45 @@ static const unsigned char secp256k1_a2[] =   { 0x01, 0x14, 0xca, 0x50, 0xf7, 0x
 static const unsigned char secp256k1_beta[] = { 0x7a, 0xe9, 0x6a, 0x2b, 0x65, 0x7c, 0x07, 0x10, 0x6e, 0x64, 0x47, 0x9e, 0xac, 0x34, 0x34, 0xe9, 0x9c, 0xf0, 0x49, 0x75, 0x12, 0xf5, 0x89, 0x95, 0xc1, 0x39, 0x6c, 0x28, 0x71, 0x95, 0x01, 0xee };
 
 struct CSecp256k1Consts {
+    BIGNUM* bnn;
+    BIGNUM* bnp;
     BIGNUM* bna1b2;
     BIGNUM* bnb1m;
     BIGNUM* bna2;
     BIGNUM* bnbeta;
+    EC_POINT* Glam;
 
     CSecp256k1Consts() {
+        EC_KEY *pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
+        const EC_GROUP *group = EC_KEY_get0_group(pkey);
+        const EC_POINT *G = EC_GROUP_get0_generator(group);
+        BN_CTX *ctx = BN_CTX_new();
+        BN_CTX_start(ctx);
+        BIGNUM *bnx = BN_CTX_get(ctx);
+        BIGNUM *bny = BN_CTX_get(ctx);
+
+        bnp = BN_new();
+        bnn = BN_new();
+        EC_GROUP_get_curve_GFp(group, bnp, NULL, NULL, ctx);
+        EC_GROUP_get_order(group, bnn, ctx);
         bna1b2 = BN_bin2bn(secp256k1_a1b2, sizeof(secp256k1_a1b2), NULL);
         bnb1m  = BN_bin2bn(secp256k1_b1m,  sizeof(secp256k1_b1m),  NULL);
         bna2   = BN_bin2bn(secp256k1_a2,   sizeof(secp256k1_a2),   NULL);
         bnbeta = BN_bin2bn(secp256k1_beta, sizeof(secp256k1_beta), NULL);
+        EC_POINT_get_affine_coordinates_GFp(group, G, bnx, bny, ctx);
+        BN_mod_mul(bnx, bnx, bnbeta, bnp, ctx);
+        Glam = EC_POINT_new(group);
+        EC_POINT_set_affine_coordinates_GFp(group, Glam, bnx, bny, ctx);
+
+        BN_CTX_end(ctx);
+        BN_CTX_free(ctx);
+        EC_KEY_free(pkey);
     }
 
     ~CSecp256k1Consts() {
+        EC_POINT_free(Glam);
+        BN_free(bnn);
+        BN_free(bnp);
         BN_free(bna1b2);
         BN_free(bnb1m);
         BN_free(bna2);
@@ -183,16 +209,12 @@ bool static secp256k1Verify(const unsigned char hash[32], const unsigned char *d
     bool rslt = false;;
     const EC_GROUP *group = EC_KEY_get0_group(pkey);
     const EC_POINT *Y = EC_KEY_get0_public_key(pkey);
-    const EC_POINT *G = EC_GROUP_get0_generator(group);
-    EC_POINT *Glam = EC_POINT_new(group);
     EC_POINT *Ylam = EC_POINT_new(group);
     EC_POINT *R = EC_POINT_new(group);
     const EC_POINT *Points[3];
     BN_CTX *ctx = BN_CTX_new();
     const BIGNUM *bnexps[3];
     BN_CTX_start(ctx);
-    BIGNUM *bnp = BN_CTX_get(ctx);
-    BIGNUM *bnn = BN_CTX_get(ctx);
     BIGNUM *bnx = BN_CTX_get(ctx);
     BIGNUM *bny = BN_CTX_get(ctx);
     BIGNUM *bnk = BN_CTX_get(ctx);
@@ -208,42 +230,35 @@ bool static secp256k1Verify(const unsigned char hash[32], const unsigned char *d
     if (sig == NULL)
         goto done;
 
-    EC_GROUP_get_curve_GFp(group, bnp, NULL, NULL, ctx);
-    EC_GROUP_get_order(group, bnn, ctx);
-
-    if (BN_is_zero(sig->r) || BN_is_negative(sig->r) || BN_ucmp(sig->r, bnn) >= 0
-        || BN_is_zero(sig->s) || BN_is_negative(sig->s) || BN_ucmp(sig->s, bnn) >= 0)
+    if (BN_is_zero(sig->r) || BN_is_negative(sig->r) || BN_ucmp(sig->r, secp256k1Consts.bnn) >= 0
+        || BN_is_zero(sig->s) || BN_is_negative(sig->s) || BN_ucmp(sig->s, secp256k1Consts.bnn) >= 0)
         goto done;
 
-    EC_POINT_get_affine_coordinates_GFp(group, G, bnx, bny, ctx);
-    BN_mod_mul(bnx, bnx, secp256k1Consts.bnbeta, bnp, ctx);
-    EC_POINT_set_affine_coordinates_GFp(group, Glam, bnx, bny, ctx);
     EC_POINT_get_affine_coordinates_GFp(group, Y, bnx, bny, ctx);
-    BN_mod_mul(bnx, bnx, secp256k1Consts.bnbeta, bnp, ctx);
+    BN_mod_mul(bnx, bnx, secp256k1Consts.bnbeta, secp256k1Consts.bnp, ctx);
     EC_POINT_set_affine_coordinates_GFp(group, Ylam, bnx, bny, ctx);
 
-    Points[0] = Glam;
+    Points[0] = secp256k1Consts.Glam;
     Points[1] = Y;
     Points[2] = Ylam;
 
-    BN_mod_inverse(bnsinv, sig->s, bnn, ctx);
-    BN_mod_mul(bnk, bnh, bnsinv, bnn, ctx);
-    secp256k1Splitk(bnk1, bnk2, bnk, bnn, ctx);
+    BN_mod_inverse(bnsinv, sig->s, secp256k1Consts.bnn, ctx);
+    BN_mod_mul(bnk, bnh, bnsinv, secp256k1Consts.bnn, ctx);
+    secp256k1Splitk(bnk1, bnk2, bnk, secp256k1Consts.bnn, ctx);
     bnexps[0] = bnk2;
-    BN_mod_mul(bnk, sig->r, bnsinv, bnn, ctx);
-    secp256k1Splitk(bnk1a, bnk2a, bnk, bnn, ctx);
+    BN_mod_mul(bnk, sig->r, bnsinv, secp256k1Consts.bnn, ctx);
+    secp256k1Splitk(bnk1a, bnk2a, bnk, secp256k1Consts.bnn, ctx);
     bnexps[1] = bnk1a;
     bnexps[2] = bnk2a;
 
     EC_POINTs_mul(group, R, bnk1, 3, Points, bnexps, ctx);
     EC_POINT_get_affine_coordinates_GFp(group, R, bnx, NULL, ctx);
-    BN_mod(bnx, bnx, bnn, ctx);
+    BN_mod(bnx, bnx, secp256k1Consts.bnn, ctx);
     rslt = (BN_cmp(bnx, sig->r) == 0);
 
 done:
     if (sig)
         ECDSA_SIG_free(sig);
-    EC_POINT_free(Glam);
     EC_POINT_free(Ylam);
     EC_POINT_free(R);
     BN_CTX_end(ctx);
