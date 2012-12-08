@@ -1770,3 +1770,126 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
             NotifyTransactionChanged(this, hashTx, CT_UPDATED);
     }
 }
+
+CBitcoinAddress CWallet::GetAccountAddress(const std::string strAccount, bool bForceNew=false)
+{
+    CWalletDB walletdb(strWalletFile);
+    CAccount account;
+    walletdb.ReadAccount(strAccount, account);
+    bool bKeyUsed = false;
+
+    // Check if the current key has been used
+    if (account.vchPubKey.IsValid())
+    {
+        CScript scriptPubKey;
+        scriptPubKey.SetDestination(account.vchPubKey.GetID());
+        // TODO: Is this IsValid() check really necessary here?
+        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin();
+             it != mapWallet.end() && account.vchPubKey.IsValid() && !bKeyUsed;
+             ++it)
+        {
+            //const CWalletTx& wtx = (*it).second;
+            BOOST_FOREACH(const CTxOut& txout, (*it).second.vout)
+                if (txout.scriptPubKey == scriptPubKey)
+                {
+                    bKeyUsed = true;
+                    break;
+                }
+        }
+    }
+
+    // Generate a new key
+    if (!account.vchPubKey.IsValid() || bForceNew || bKeyUsed)
+    {
+        // Caller must check validity to detect keypool depletion
+        if (!GetKeyFromPool(account.vchPubKey, false))
+            return CBitcoinAddress();
+
+        // TODO: Do something with the return code
+        SetAddressBookName(account.vchPubKey.GetID(), strAccount);
+        walletdb.WriteAccount(strAccount, account);
+    }
+
+    return CBitcoinAddress(account.vchPubKey.GetID());
+}
+
+bool CWallet::SetAccount(const CBitcoinAddress address, const std::string strAccount)
+{
+    // Detect when changing the account of an address that is the 'unused current key' of another account:
+    CTxDestination dest = address.Get();
+    if (mapAddressBook.count(dest))
+    {
+        string strOldAccount = mapAddressBook[dest];
+        if (address == GetAccountAddress(strOldAccount, false) && !GetAccountAddress(strOldAccount, true).IsValid())
+            return false;
+    }
+
+    return SetAddressBookName(dest, strAccount);
+}
+
+bool CWallet::IsMine(const CBitcoinAddress& address) const
+{
+    CScript scriptPubKey;
+    scriptPubKey.SetDestination(address.Get());
+    return ::IsMine(*this, scriptPubKey);
+}
+
+int64 CWallet::GetAddressTally(const CBitcoinAddress address, int nMinDepth)
+{
+    if (!IsMine(address))
+        return 0;
+
+    int64 nAmount = 0;
+    CScript scriptPubKey;
+    scriptPubKey.SetDestination(address.Get());
+    for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        const CWalletTx& wtx = (*it).second;
+        if (wtx.IsCoinBase() || !wtx.IsFinal())
+            continue;
+
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+            if (txout.scriptPubKey == scriptPubKey && wtx.GetDepthInMainChain() >= nMinDepth)
+                nAmount += txout.nValue;
+    }
+    return nAmount;
+}
+
+int64 CWallet::GetAccountBalance(const string& strAccount, int nMinDepth)
+{
+	CWalletDB walletdb(strWalletFile);
+    int64 nBalance = 0;
+    // Moved out of loop to avoid some unneeded operations
+    int64 nReceived, nSent, nFee;
+
+    // Tally wallet transactions
+    for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        const CWalletTx& wtx = (*it).second;
+        if (!wtx.IsFinal())
+            continue;
+
+        wtx.GetAccountAmounts(strAccount, nReceived, nSent, nFee);
+
+        if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth)
+            nBalance += nReceived;
+        nBalance -= nSent + nFee;
+    }
+
+    // Tally internal accounting entries
+    nBalance += walletdb.GetAccountCreditDebit(strAccount);
+
+    return nBalance;
+}
+
+std::set<CTxDestination> CWallet::GetAccountAddresses(std::string strAccount)
+{
+	set<CTxDestination> setRet;
+    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& item, mapAddressBook)
+    {
+        if (item.second == strAccount)
+        	// push address into set
+            setRet.insert(item.first);
+    }
+    return setRet;
+}

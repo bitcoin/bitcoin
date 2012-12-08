@@ -196,6 +196,7 @@ public:
     {
         return ::IsMine(*this, txout.scriptPubKey);
     }
+    bool IsMine(const CBitcoinAddress& address) const;
     int64 GetCredit(const CTxOut& txout) const
     {
         if (!MoneyRange(txout.nValue))
@@ -283,6 +284,11 @@ public:
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
 
     bool SetDefaultKey(const CPubKey &vchPubKey);
+    CBitcoinAddress GetAccountAddress(const std::string strAccount, bool bForceNew);
+    bool SetAccount(const CBitcoinAddress address, const std::string strAccount);
+    int64 GetAccountBalance(const std::string& strAccount, int nMinDepth);
+    int64 GetAddressTally(const CBitcoinAddress address, int nMinDepth);
+    std::set<CTxDestination> GetAccountAddresses(std::string strAccount);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
     bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
