@@ -188,7 +188,7 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
     std::set<CTxDestination> setAddress = pwalletMain->GetAccountAddresses(strAccount);
     Array ret;
     BOOST_FOREACH(const CTxDestination& item, setAddress)
-    	ret.push_back(CBitcoinAddress(item).ToString());
+        ret.push_back(CBitcoinAddress(item).ToString());
     return ret;
 }
 
