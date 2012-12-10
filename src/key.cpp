@@ -158,6 +158,16 @@ private:
         BN_mul(bnt2, bnc2, bna1b2, ctx);
         BN_sub(bnk2, bnt1, bnt2);
 
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+        // verify k == k1 + lambda*k2
+        BIGNUM *bnt = BN_new();
+        BN_mul(bnt, bnk2, bnlambda, ctx);
+        BN_add(bnt, bnt, bnk1);
+        BN_nnmod(bnt, bnt, order, ctx);
+        assert(BN_cmp(bnk, bnt) == 0);
+        BN_free(bnt);
+#endif
+
         BN_CTX_end(ctx);
     }
 
@@ -173,6 +183,14 @@ private:
         BN_mod_mul(x, x, bnbeta, bnp, ctx);
         // construct p2 as (x',y)
         EC_POINT_set_affine_coordinates_GFp(group, p2, x, y, ctx);
+
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+        // verify p2 == lambda*p
+        EC_POINT *t = EC_POINT_new(group);
+        ::EC_POINT_mul(group, t, NULL, p, bnlambda, ctx);
+        assert(EC_POINT_cmp(group, t, p2, ctx) == 0);
+        EC_POINT_free(t);
+#endif
 
         BN_CTX_end(ctx);
     }
@@ -268,6 +286,10 @@ int static secp256k1_ecdsa_do_verify(const unsigned char hash[32], const ECDSA_S
     const EC_GROUP *group;
     const EC_POINT *pub_key;
     EC_POINT *point = NULL;
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+    EC_POINT *point2 = NULL;
+    BIGNUM *order2 = NULL;
+#endif
     BIGNUM *m, *u2, *u1, *X;
     const BIGNUM *order;
     BN_CTX *ctx = NULL;
@@ -287,8 +309,14 @@ int static secp256k1_ecdsa_do_verify(const unsigned char hash[32], const ECDSA_S
     if (!X)
         goto err;
 
-    // identical to: BIGNUM *order = BN_CTX_get(ctx); EC_GROUP_get_order(group, order, ctx);
     order = secp256k1math.get_order();
+
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+    // verify order == group.order
+    order2 = BN_CTX_get(ctx);
+    assert(EC_GROUP_get_order(group, order2, ctx));
+    assert(BN_cmp(order, order2) == 0);
+#endif
 
     // sanity checks
     if (BN_is_zero(sig->r) || BN_is_negative(sig->r) || BN_ucmp(sig->r, order) >= 0
@@ -316,9 +344,16 @@ int static secp256k1_ecdsa_do_verify(const unsigned char hash[32], const ECDSA_S
         goto err;
 
     // calculate point = u1*G + u2*pub_key
-    // identical to: EC_POINT_mul(group, point, u1, pub_key, u2, ctx)
     if (!secp256k1math.EC_POINT_mul(group, point, u1, pub_key, u2, ctx))
         goto err;
+
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+    // verify point == u1*G + u2*pub_key
+    assert((point2 = EC_POINT_new(group)));
+    assert(EC_POINT_mul(group, point2, u1, pub_key, u2, ctx));
+    assert(EC_POINT_cmp(group, point, point2, ctx) == 0);
+    EC_POINT_free(point2);
+#endif
 
     // extract X coordinate from result point
     if (!EC_POINT_get_affine_coordinates_GFp(group, point, X, NULL, ctx))
@@ -597,6 +632,11 @@ bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSig)
     const unsigned char *ptr = &vchSig[0];
     ECDSA_SIG *sig = d2i_ECDSA_SIG(NULL, &ptr, vchSig.size());
     bool ret = (secp256k1_ecdsa_do_verify((unsigned char*)&hash, sig, pkey) == 1);
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+    int fuzzpos = rand() % 256;
+    hash += ((uint256)1) << fuzzpos;
+    secp256k1_ecdsa_do_verify((unsigned char*)&hash, sig, pkey);
+#endif
     ECDSA_SIG_free(sig);
     return ret;
 }
