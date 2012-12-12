@@ -3,6 +3,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include <deque>
+#include <set>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -23,6 +24,7 @@
 #include "leveldb/slice.h"
 #include "port/port.h"
 #include "util/logging.h"
+#include "util/mutexlock.h"
 #include "util/posix_logger.h"
 
 namespace leveldb {
@@ -90,18 +92,75 @@ class PosixRandomAccessFile: public RandomAccessFile {
   }
 };
 
+// Helper class to limit mmap file usage so that we do not end up
+// running out virtual memory or running into kernel performance
+// problems for very large databases.
+class MmapLimiter {
+ public:
+  // Up to 1000 mmaps for 64-bit binaries; none for smaller pointer sizes.
+  MmapLimiter() {
+    SetAllowed(sizeof(void*) >= 8 ? 1000 : 0);
+  }
+
+  // If another mmap slot is available, acquire it and return true.
+  // Else return false.
+  bool Acquire() {
+    if (GetAllowed() <= 0) {
+      return false;
+    }
+    MutexLock l(&mu_);
+    intptr_t x = GetAllowed();
+    if (x <= 0) {
+      return false;
+    } else {
+      SetAllowed(x - 1);
+      return true;
+    }
+  }
+
+  // Release a slot acquired by a previous call to Acquire() that returned true.
+  void Release() {
+    MutexLock l(&mu_);
+    SetAllowed(GetAllowed() + 1);
+  }
+
+ private:
+  port::Mutex mu_;
+  port::AtomicPointer allowed_;
+
+  intptr_t GetAllowed() const {
+    return reinterpret_cast<intptr_t>(allowed_.Acquire_Load());
+  }
+
+  // REQUIRES: mu_ must be held
+  void SetAllowed(intptr_t v) {
+    allowed_.Release_Store(reinterpret_cast<void*>(v));
+  }
+
+  MmapLimiter(const MmapLimiter&);
+  void operator=(const MmapLimiter&);
+};
+
 // mmap() based random-access
 class PosixMmapReadableFile: public RandomAccessFile {
  private:
   std::string filename_;
   void* mmapped_region_;
   size_t length_;
+  MmapLimiter* limiter_;
 
  public:
   // base[0,length-1] contains the mmapped contents of the file.
-  PosixMmapReadableFile(const std::string& fname, void* base, size_t length)
-      : filename_(fname), mmapped_region_(base), length_(length) { }
-  virtual ~PosixMmapReadableFile() { munmap(mmapped_region_, length_); }
+  PosixMmapReadableFile(const std::string& fname, void* base, size_t length,
+                        MmapLimiter* limiter)
+      : filename_(fname), mmapped_region_(base), length_(length),
+        limiter_(limiter) {
+  }
+
+  virtual ~PosixMmapReadableFile() {
+    munmap(mmapped_region_, length_);
+    limiter_->Release();
+  }
 
   virtual Status Read(uint64_t offset, size_t n, Slice* result,
                       char* scratch) const {
@@ -300,6 +359,25 @@ static int LockOrUnlock(int fd, bool lock) {
 class PosixFileLock : public FileLock {
  public:
   int fd_;
+  std::string name_;
+};
+
+// Set of locked files.  We keep a separate set instead of just
+// relying on fcntrl(F_SETLK) since fcntl(F_SETLK) does not provide
+// any protection against multiple uses from the same process.
+class PosixLockTable {
+ private:
+  port::Mutex mu_;
+  std::set<std::string> locked_files_;
+ public:
+  bool Insert(const std::string& fname) {
+    MutexLock l(&mu_);
+    return locked_files_.insert(fname).second;
+  }
+  void Remove(const std::string& fname) {
+    MutexLock l(&mu_);
+    locked_files_.erase(fname);
+  }
 };
 
 class PosixEnv : public Env {
@@ -329,19 +407,21 @@ class PosixEnv : public Env {
     int fd = open(fname.c_str(), O_RDONLY);
     if (fd < 0) {
       s = IOError(fname, errno);
-    } else if (sizeof(void*) >= 8) {
-      // Use mmap when virtual address-space is plentiful.
+    } else if (mmap_limit_.Acquire()) {
       uint64_t size;
       s = GetFileSize(fname, &size);
       if (s.ok()) {
         void* base = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
         if (base != MAP_FAILED) {
-          *result = new PosixMmapReadableFile(fname, base, size);
+          *result = new PosixMmapReadableFile(fname, base, size, &mmap_limit_);
         } else {
           s = IOError(fname, errno);
         }
       }
       close(fd);
+      if (!s.ok()) {
+        mmap_limit_.Release();
+      }
     } else {
       *result = new PosixRandomAccessFile(fname, fd);
     }
@@ -430,12 +510,17 @@ class PosixEnv : public Env {
     int fd = open(fname.c_str(), O_RDWR | O_CREAT, 0644);
     if (fd < 0) {
       result = IOError(fname, errno);
+    } else if (!locks_.Insert(fname)) {
+      close(fd);
+      result = Status::IOError("lock " + fname, "already held by process");
     } else if (LockOrUnlock(fd, true) == -1) {
       result = IOError("lock " + fname, errno);
       close(fd);
+      locks_.Remove(fname);
     } else {
       PosixFileLock* my_lock = new PosixFileLock;
       my_lock->fd_ = fd;
+      my_lock->name_ = fname;
       *lock = my_lock;
     }
     return result;
@@ -447,6 +532,7 @@ class PosixEnv : public Env {
     if (LockOrUnlock(my_lock->fd_, false) == -1) {
       result = IOError("unlock", errno);
     }
+    locks_.Remove(my_lock->name_);
     close(my_lock->fd_);
     delete my_lock;
     return result;
@@ -523,6 +609,9 @@ class PosixEnv : public Env {
   struct BGItem { void* arg; void (*function)(void*); };
   typedef std::deque<BGItem> BGQueue;
   BGQueue queue_;
+
+  PosixLockTable locks_;
+  MmapLimiter mmap_limit_;
 };
 
 PosixEnv::PosixEnv() : page_size_(getpagesize()),
