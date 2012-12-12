@@ -1942,6 +1942,15 @@ bool FindBlockPos(CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeigh
         unsigned int nOldChunks = (pos.nPos + BLOCKFILE_CHUNK_SIZE - 1) / BLOCKFILE_CHUNK_SIZE;
         unsigned int nNewChunks = (infoLastBlockFile.nSize + BLOCKFILE_CHUNK_SIZE - 1) / BLOCKFILE_CHUNK_SIZE;
         if (nNewChunks > nOldChunks) {
+#ifdef WIN32
+            if (CheckDiskSpace(MAX_BLOCKFILE_SIZE)) {
+                // Windows directly needs the maximum size of a blockfile to allocate disk space as a single contignous chunk
+                if (AllocateFileRangeWin(GetBlockFile(pos), MAX_BLOCKFILE_SIZE))
+                    printf("FindBlockPos() : Pre-allocated %u bytes for new block file %s\n", MAX_BLOCKFILE_SIZE, GetBlockFile(pos).c_str());
+                else
+                    return error("FindBlockPos() : Failed to create new undo file");
+            }
+#else
             if (CheckDiskSpace(nNewChunks * BLOCKFILE_CHUNK_SIZE - pos.nPos)) {
                 FILE *file = OpenBlockFile(pos);
                 if (file) {
@@ -1950,6 +1959,7 @@ bool FindBlockPos(CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeigh
                     fclose(file);
                 }
             }
+#endif
             else
                 return error("FindBlockPos() : out of disk space");
         }
@@ -1988,6 +1998,15 @@ bool FindUndoPos(int nFile, CDiskBlockPos &pos, unsigned int nAddSize)
     unsigned int nOldChunks = (pos.nPos + UNDOFILE_CHUNK_SIZE - 1) / UNDOFILE_CHUNK_SIZE;
     unsigned int nNewChunks = (nNewSize + UNDOFILE_CHUNK_SIZE - 1) / UNDOFILE_CHUNK_SIZE;
     if (nNewChunks > nOldChunks) {
+#ifdef WIN32
+        if (CheckDiskSpace(MAX_BLOCKFILE_SIZE)) {
+            // Windows directly needs the maximum size of a blockfile to allocate disk space as a single contignous chunk
+            if (AllocateFileRangeWin(GetUndoFile(pos), MAX_BLOCKFILE_SIZE))
+                printf("FindUndoPos() : Pre-allocated %u bytes for new undo file %s\n", MAX_BLOCKFILE_SIZE, GetUndoFile(pos).c_str());
+            else
+                return error("FindUndoPos() : Failed to create new undo file");
+        }
+#else
         if (CheckDiskSpace(nNewChunks * UNDOFILE_CHUNK_SIZE - pos.nPos)) {
             FILE *file = OpenUndoFile(pos);
             if (file) {
@@ -1996,6 +2015,7 @@ bool FindUndoPos(int nFile, CDiskBlockPos &pos, unsigned int nAddSize)
                 fclose(file);
             }
         }
+#endif
         else
             return error("FindUndoPos() : out of disk space");
     }
@@ -2294,8 +2314,40 @@ FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly) {
     return OpenDiskFile(pos, "blk", fReadOnly);
 }
 
-FILE *OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
+FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
     return OpenDiskFile(pos, "rev", fReadOnly);
+}
+
+const std::string& GetDiskFile(const CDiskBlockPos &pos, const char *prefix, bool fIsUndoFile)
+{
+    if (pos.IsNull())
+        printf("GetDiskFile() : Error, pos.IsNull() was true\n");
+
+    static std::string strPathCached[2];
+    static int nFileCached[2] = {-1, -1};
+    int nFileCur = pos.nFile;
+
+    if (nFileCached[fIsUndoFile] == nFileCur)
+        return strPathCached[fIsUndoFile];
+    else {
+        boost::filesystem::path pathDiskFile = GetDataDir() / "blocks" / strprintf("%s%05u.dat", prefix, nFileCur);
+        boost::filesystem::create_directories(pathDiskFile.parent_path());
+
+        strPathCached[fIsUndoFile] = pathDiskFile.string();
+        nFileCached[fIsUndoFile] = nFileCur;
+    }
+
+    return strPathCached[fIsUndoFile];
+}
+
+const std::string& GetBlockFile(const CDiskBlockPos &pos)
+{
+    return GetDiskFile(pos, "blk", false);
+}
+
+const std::string& GetUndoFile(const CDiskBlockPos &pos)
+{
+    return GetDiskFile(pos, "rev", true);
 }
 
 CBlockIndex * InsertBlockIndex(uint256 hash)

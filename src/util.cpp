@@ -1151,6 +1151,35 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
     }
 }
 
+#ifdef WIN32
+bool AllocateFileRangeWin(const std::string& strFile, unsigned int nLength)
+{
+    boost::filesystem::path pathFile = strFile;
+    HANDLE hFile;
+
+    // only pre-allocate disk space, if the file does not yet exist
+    if (!boost::filesystem::exists(pathFile)) {
+        // get handle for new file
+        hFile = CreateFileA(pathFile.string().c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+            return false;
+
+        // no need to check for errors in that block, as this function is allowed to fail anyway
+        LARGE_INTEGER nFileSize;
+        nFileSize.u.LowPart = nLength; // LowPart allows up to 4095MB
+        nFileSize.u.HighPart = 0; // HighPart starts with 4096MB
+        SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN);
+        SetEndOfFile(hFile);
+        SetFilePointer(hFile, 0, 0, FILE_BEGIN);
+        FlushFileBuffers(hFile);
+        CloseHandle(hFile);
+    }
+
+    // true only signals the file already existed or we created it
+    return true;
+}
+#endif
+
 void ShrinkDebugFile()
 {
     // Scroll debug.log if it's getting too big
