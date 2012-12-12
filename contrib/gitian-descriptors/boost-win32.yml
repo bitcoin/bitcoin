@@ -1,11 +1,11 @@
 ---
 name: "boost"
 suites:
-- "lucid"
+- "precise"
 architectures:
 - "i386"
 packages: 
-- "mingw32"
+- "mingw-w64"
 - "faketime"
 - "zip"
 reference_datetime: "2011-01-30 00:00:00"
@@ -17,10 +17,10 @@ script: |
   mkdir -p $TMPDIR/bin/$GBUILD_BITS $TMPDIR/include
   tar xjf boost_1_50_0.tar.bz2
   cd boost_1_50_0
-  echo "using gcc : 4.4 : i586-mingw32msvc-g++
+  echo "using gcc : 4.6 : i686-w64-mingw32-g++
         :
-        <rc>i586-mingw32msvc-windres
-        <archiver>i586-mingw32msvc-ar
+        <rc>i686-w64-mingw32-windres
+        <archiver>i686-w64-mingw32-ar
         <cxxflags>-frandom-seed=boost1
   ;" > user-config.jam
   ./bootstrap.sh --without-icu
@@ -34,5 +34,5 @@ script: |
   cd $TMPDIR
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
-  zip -r boost-win32-1.50.0-gitian2.zip *
-  cp boost-win32-1.50.0-gitian2.zip $OUTDIR
+  zip -r boost-w64-win32-1.50.0-gitian2.zip *
+  cp boost-w64-win32-1.50.0-gitian2.zip $OUTDIR
