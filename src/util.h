@@ -197,6 +197,9 @@ bool WildcardMatch(const std::string& str, const std::string& mask);
 void FileCommit(FILE *fileout);
 int GetFilesize(FILE* file);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
+#ifdef WIN32
+bool AllocateFileRangeWin(const std::string& strFile, unsigned int nLength);
+#endif
 bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);

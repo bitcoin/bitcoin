@@ -117,11 +117,15 @@ void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* 
 /** Process an incoming block */
 bool ProcessBlock(CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp = NULL);
 /** Check whether enough disk space is available for an incoming block */
-bool CheckDiskSpace(uint64 nAdditionalBytes=0);
+bool CheckDiskSpace(uint64 nAdditionalBytes = 0);
 /** Open a block file (blk?????.dat) */
 FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Open an undo file (rev?????.dat) */
 FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+/** Get full path for the block file referenced by pos */
+const std::string& GetBlockFile(const CDiskBlockPos &pos);
+/** Get full path for the undo file referenced by pos */
+const std::string& GetUndoFile(const CDiskBlockPos &pos);
 /** Import blocks from an external file */
 bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp = NULL);
 /** Load the block tree and coins database from disk */
