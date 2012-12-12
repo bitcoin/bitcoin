@@ -89,6 +89,7 @@ extern std::set<CWallet*> setpwalletRegistered;
 extern unsigned char pchMessageStart[4];
 extern bool fImporting;
 extern bool fReindex;
+extern bool fBenchmark;
 extern unsigned int nCoinCacheSize;
 
 // Settings
