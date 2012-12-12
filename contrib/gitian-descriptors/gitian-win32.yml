@@ -16,7 +16,7 @@ remotes:
   "dir": "bitcoin"
 files:
 - "qt-w64-win32-4.8.3-gitian-r1.zip"
-- "boost-w64-win32-1.50.0-gitian2.zip"
+- "boost-w64-win32-1.52.0-gitian.zip"
 - "bitcoin-deps-w64-win32-0.0.5.zip"
 script: |
   #
@@ -26,10 +26,10 @@ script: |
   cd $HOME/build/
   export PATH=$PATH:$HOME/qt/bin/
   #
-  mkdir boost_1_50_0
-  cd boost_1_50_0
+  mkdir boost_1_52_0
+  cd boost_1_52_0
   mkdir -p stage/lib
-  unzip ../boost-w64-win32-1.50.0-gitian2.zip
+  unzip ../boost-w64-win32-1.52.0-gitian.zip
   cd bin/$GBUILD_BITS
   for lib in *; do
     i686-w64-mingw32-ar rc ../../stage/lib/libboost_${lib}-mt-s.a $lib/*.o
@@ -51,7 +51,7 @@ script: |
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_50_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_50_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1c OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1c/include QRENCODE_LIB_PATH=$HOME/build/qrencode-3.2.0/.libs QRENCODE_INCLUDE_PATH=$HOME/build/qrencode-3.2.0 USE_QRCODE=1 INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin QMAKE_LFLAGS=-frandom-seed=bitcoin USE_BUILD_INFO=1
+  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_52_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_52_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1c OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1c/include QRENCODE_LIB_PATH=$HOME/build/qrencode-3.2.0/.libs QRENCODE_INCLUDE_PATH=$HOME/build/qrencode-3.2.0 USE_QRCODE=1 INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin QMAKE_LFLAGS=-frandom-seed=bitcoin USE_BUILD_INFO=1
   make $MAKEOPTS
   cp release/bitcoin-qt.exe $OUTDIR/
   #
