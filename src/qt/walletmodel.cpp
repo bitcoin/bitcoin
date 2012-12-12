@@ -374,3 +374,62 @@ void WalletModel::UnlockContext::CopyFrom(const UnlockContext& rhs)
     *this = rhs;
     rhs.relock = false;
 }
+
+static void NotifyChainBlocksScanned(WalletModel *walletmodel, CWallet *wallet, const int blockNumber)
+{
+    OutputDebugStringF("NotifyChainBlocksScanned %i\n", blockNumber);
+    //callback progress dialog to update!
+    walletmodel->EmitBlocksScanned(blockNumber);
+}
+
+
+void WalletModel::EmitBlocksScanned(int blockNumber)
+{
+//    if (blockNumber==0)
+//      blockNumber=1;
+    emit ScanWalletTransactionsProgress(blockNumber);
+}
+
+int WalletModel::getNumBlocks()
+{
+    return nBestHeight;
+}
+
+bool WalletModel::ImportPrivateKey(string keyString, string label)
+{
+    OutputDebugStringF("Private Key Importing\n");
+    wallet->NotifyChainBlocksScanned.connect(boost::bind(&NotifyChainBlocksScanned, this, _1, _2));
+    CBitcoinSecret vchSecret;
+    bool fGood = vchSecret.SetString(keyString);
+
+    if (!fGood) {
+        OutputDebugStringF("Invalid key passed to ImportPrivateKey\n");
+        wallet->NotifyChainBlocksScanned.disconnect(boost::bind(&NotifyChainBlocksScanned, this, _1, _2));
+        return false;
+    }
+
+    CKey key;
+    bool fCompressed;
+    CSecret secret = vchSecret.GetSecret(fCompressed);
+    key.SetSecret(secret, fCompressed);
+    CKeyID vchAddress = key.GetPubKey().GetID();
+
+
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+
+        wallet->MarkDirty();
+        wallet->SetAddressBookName(vchAddress, label);
+
+        if (!wallet->AddKey(key)){
+            OutputDebugStringF("Error whilst ImportPrivateKey\n");
+            wallet->NotifyChainBlocksScanned.disconnect(boost::bind(&NotifyChainBlocksScanned, this, _1, _2));
+            return false;
+        }
+        //update GUI with progress?
+        wallet->ScanForWalletTransactions(pindexGenesisBlock, true);
+        wallet->ReacceptWalletTransactions();
+    }
+    wallet->NotifyChainBlocksScanned.disconnect(boost::bind(&NotifyChainBlocksScanned, this, _1, _2));
+    return true;
+}

@@ -197,7 +197,9 @@ HEADERS += src/qt/bitcoingui.h \
     src/netbase.h \
     src/clientversion.h \
     src/txdb.h \
-    src/leveldb.h
+    src/leveldb.h \
+    src/qt/importprivatekeydialog.h \
+    src/qt/progressdialog.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -259,7 +261,9 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/rpcconsole.cpp \
     src/noui.cpp \
     src/leveldb.cpp \
-    src/txdb.cpp
+    src/txdb.cpp \
+    src/qt/importprivatekeydialog.cpp \
+    src/qt/progressdialog.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
@@ -275,7 +279,9 @@ FORMS += \
     src/qt/forms/sendcoinsentry.ui \
     src/qt/forms/askpassphrasedialog.ui \
     src/qt/forms/rpcconsole.ui \
-    src/qt/forms/optionsdialog.ui
+    src/qt/forms/optionsdialog.ui \
+    src/qt/forms/importprivatekeydialog.ui \
+    src/qt/forms/progressdialog.ui
 
 contains(USE_QRCODE, 1) {
 HEADERS += src/qt/qrcodedialog.h

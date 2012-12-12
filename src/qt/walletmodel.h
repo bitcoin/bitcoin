@@ -5,6 +5,8 @@
 
 #include "allocators.h" /* for SecureString */
 
+using namespace std;
+
 class OptionsModel;
 class AddressTableModel;
 class TransactionTableModel;
@@ -108,6 +110,10 @@ public:
 
     UnlockContext requestUnlock();
 
+    bool ImportPrivateKey(string keyString, string label);
+    void EmitBlocksScanned(const int blockNumber);
+    int getNumBlocks();
+
 private:
     CWallet *wallet;
 
@@ -132,6 +138,7 @@ private:
     void unsubscribeFromCoreSignals();
     void checkBalanceChanged();
 
+
 signals:
     // Signal that balance in wallet changed
     void balanceChanged(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
@@ -149,6 +156,8 @@ signals:
 
     // Asynchronous message notification
     void message(const QString &title, const QString &message, unsigned int style);
+
+    void ScanWalletTransactionsProgress(int blockcount);
 
 public slots:
     /* Wallet status might have changed */
