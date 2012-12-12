@@ -97,7 +97,7 @@ DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 # TODO: If this fails, try adding a ranlib libleveldb.a && ranlib libmemenv.a
 leveldb/libleveldb.a:
 	cd leveldb && $(MAKE) libleveldb.a libmemenv.a && cd ..
-obj/leveldb.o: leveldb/libleveldb.lib
+obj/leveldb.o: leveldb/libleveldb.a
 
 obj/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
