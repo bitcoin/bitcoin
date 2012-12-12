@@ -408,7 +408,7 @@ The optional <code>FilterPolicy</code> mechanism can be used to reduce
 the number of disk reads substantially.
 <pre>
    leveldb::Options options;
-   options.filter_policy = NewBloomFilter(10);
+   options.filter_policy = NewBloomFilterPolicy(10);
    leveldb::DB* db;
    leveldb::DB::Open(options, "/tmp/testdb", &amp;db);
    ... use the database ...
@@ -420,7 +420,7 @@ The preceding code associates a
 based filtering policy with the database.  Bloom filter based
 filtering relies on keeping some number of bits of data in memory per
 key (in this case 10 bits per key since that is the argument we passed
-to NewBloomFilter).  This filter will reduce the number of unnecessary
+to NewBloomFilterPolicy).  This filter will reduce the number of unnecessary
 disk reads needed for <code>Get()</code> calls by a factor of
 approximately a 100.  Increasing the bits per key will lead to a
 larger reduction at the cost of more memory usage.  We recommend that
@@ -430,7 +430,7 @@ lot of random reads set a filter policy.
 If you are using a custom comparator, you should ensure that the filter
 policy you are using is compatible with your comparator.  For example,
 consider a comparator that ignores trailing spaces when comparing keys.
-<code>NewBloomFilter</code> must not be used with such a comparator.
+<code>NewBloomFilterPolicy</code> must not be used with such a comparator.
 Instead, the application should provide a custom filter policy that
 also ignores trailing spaces.  For example:
 <pre>
@@ -438,7 +438,7 @@ also ignores trailing spaces.  For example:
    private:
     FilterPolicy* builtin_policy_;
    public:
-    CustomFilterPolicy() : builtin_policy_(NewBloomFilter(10)) { }
+    CustomFilterPolicy() : builtin_policy_(NewBloomFilterPolicy(10)) { }
     ~CustomFilterPolicy() { delete builtin_policy_; }
 
     const char* Name() const { return "IgnoreTrailingSpacesFilter"; }

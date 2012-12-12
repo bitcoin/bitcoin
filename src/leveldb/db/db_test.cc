@@ -1442,6 +1442,12 @@ TEST(DBTest, DBOpen_Options) {
   db = NULL;
 }
 
+TEST(DBTest, Locking) {
+  DB* db2 = NULL;
+  Status s = DB::Open(CurrentOptions(), dbname_, &db2);
+  ASSERT_TRUE(!s.ok()) << "Locking did not prevent re-opening db";
+}
+
 // Check that number of files does not grow when we are out of space
 TEST(DBTest, NoSpace) {
   Options options = CurrentOptions();

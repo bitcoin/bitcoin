@@ -221,6 +221,11 @@ class WritableFileImpl : public WritableFile {
   FileState* file_;
 };
 
+class NoOpLogger : public Logger {
+ public:
+  virtual void Logv(const char* format, va_list ap) { }
+};
+
 class InMemoryEnv : public EnvWrapper {
  public:
   explicit InMemoryEnv(Env* base_env) : EnvWrapper(base_env) { }
@@ -355,6 +360,11 @@ class InMemoryEnv : public EnvWrapper {
 
   virtual Status GetTestDirectory(std::string* path) {
     *path = "/test";
+    return Status::OK();
+  }
+
+  virtual Status NewLogger(const std::string& fname, Logger** result) {
+    *result = new NoOpLogger;
     return Status::OK();
   }
 
