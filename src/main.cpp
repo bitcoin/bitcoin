@@ -1240,9 +1240,12 @@ bool ConnectBestBlock() {
 
             if (pindexTest->pprev == NULL || pindexTest->pnext != NULL) {
                 reverse(vAttach.begin(), vAttach.end());
-                BOOST_FOREACH(CBlockIndex *pindexSwitch, vAttach)
+                BOOST_FOREACH(CBlockIndex *pindexSwitch, vAttach) {
+                    if (fRequestShutdown)
+                        break;
                     if (!SetBestChain(pindexSwitch))
                         return false;
+                }
                 return true;
             }
             pindexTest = pindexTest->pprev;
@@ -1897,6 +1900,7 @@ bool FindBlockPos(CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeigh
             nLastBlockFile = pos.nFile;
             infoLastBlockFile.SetNull();
             pblocktree->ReadBlockFileInfo(nLastBlockFile, infoLastBlockFile);
+            fUpdatedLast = true;
         }
     } else {
         while (infoLastBlockFile.nSize + nAddSize >= MAX_BLOCKFILE_SIZE) {
@@ -2556,7 +2560,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
             }
         }
         uint64 nRewind = blkdat.GetPos();
-        while (blkdat.good() && !blkdat.eof() && !fShutdown) {
+        while (blkdat.good() && !blkdat.eof() && !fRequestShutdown) {
             blkdat.SetPos(nRewind);
             nRewind++; // start one byte further next time, in case of failure
             blkdat.SetLimit(); // remove former limit
