@@ -119,15 +119,15 @@ case "$TARGET_OS" in
         PLATFORM_EXTRALIBS="-lboost_system-mt-s -lboost_filesystem-mt-s -lboost_thread_win32-mt-s"
         CROSS_COMPILE=true
         ;;
-  NATIVE_WINDOWS)
+    NATIVE_WINDOWS)
         PLATFORM=OS_WINDOWS
         COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_WINDOWS -DLEVELDB_PLATFORM_WINDOWS -DBOOST_THREAD_USE_LIB"
         PLATFORM_CXXFLAGS=""
         PLATFORM_LDFLAGS=""
         PLATFORM_SHARED_CFLAGS=""
         PLATFORM_SOURCES="port/port_win.cc util/env_boost.cc util/win_logger.cc"
-		PLATFORM_EXTRALIBS="-lboost_system-mgw45-mt-s-1_50 -lboost_filesystem-mgw45-mt-s-1_50 -lboost_thread-mgw45-mt-s-1_50 -lboost_chrono-mgw45-mt-s-1_50"
-        CROSS_COMPILE=true	
+        PLATFORM_EXTRALIBS="-lboost_system-mgw45-mt-s-1_50 -lboost_filesystem-mgw45-mt-s-1_50 -lboost_thread-mgw45-mt-s-1_50 -lboost_chrono-mgw45-mt-s-1_50"
+        CROSS_COMPILE=true
 	    ;;
     *)
         echo "Unknown platform!" >&2
