@@ -93,8 +93,26 @@ class CondVar {
   
 };
 
-typedef void* OnceType;
-#define LEVELDB_ONCE_INIT 0
+class OnceType {
+public:
+//    OnceType() : init_(false) {}
+    OnceType(const OnceType &once) : init_(once.init_) {}
+    OnceType(bool f) : init_(f) {}
+    void InitOnce(void (*initializer)()) {
+        mutex_.Lock();
+        if (!init_) {
+            init_ = true;
+            initializer();
+        }
+        mutex_.Unlock();
+    }
+
+private:
+    bool init_;
+    Mutex mutex_;
+};
+
+#define LEVELDB_ONCE_INIT false
 extern void InitOnce(port::OnceType*, void (*initializer)());
 
 // Storage for a lock-free pointer
