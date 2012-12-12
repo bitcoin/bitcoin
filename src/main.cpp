@@ -605,7 +605,7 @@ int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
     if (nMinFee < nBaseFee)
     {
         BOOST_FOREACH(const CTxOut& txout, vout)
-            if (txout.nValue < CENT)
+            if (txout.nValue < COIN_DUST)
                 nMinFee = nBaseFee;
     }
 
