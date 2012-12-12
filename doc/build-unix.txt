@@ -36,8 +36,8 @@ turned off by default.  Set USE_UPNP to a different value to control this:
  USE_UPNP=0    (the default) UPnP support turned off by default at runtime
  USE_UPNP=1    UPnP support turned on by default at runtime
 
-IPv6 support may be enabled by setting:
- USE_IPV6=1    Enable IPv6 support
+IPv6 support may be disabled by setting:
+ USE_IPV6=0    Disable IPv6 support
 
 Licenses of statically linked libraries:
  Berkeley DB   New BSD license with additional requirement that linked
