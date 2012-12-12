@@ -137,7 +137,11 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case MinimizeToTray:
             return QVariant(fMinimizeToTray);
         case MapPortUPnP:
+#ifdef USE_UPNP
             return settings.value("fUseUPnP", GetBoolArg("-upnp", true));
+#else
+            return QVariant(false);
+#endif
         case MinimizeOnClose:
             return QVariant(fMinimizeOnClose);
         case ProxyUse: {
