@@ -123,13 +123,8 @@ AtomicPointer::AtomicPointer(void* v) {
   Release_Store(v);
 }
 
-BOOL CALLBACK InitHandleFunction (PINIT_ONCE InitOnce, PVOID func, PVOID *lpContext) {
-  ((void (*)())func)();
-  return true;
-}
-
 void InitOnce(OnceType* once, void (*initializer)()) {
-  InitOnceExecuteOnce((PINIT_ONCE)once, InitHandleFunction, initializer, NULL);
+  once->InitOnce(initializer);
 }
 
 void* AtomicPointer::Acquire_Load() const {
