@@ -28,6 +28,7 @@
   be true on entry:
      *errptr == NULL
      *errptr points to a malloc()ed null-terminated error message
+       (On Windows, *errptr must have been malloc()-ed by this library.)
   On success, a leveldb routine leaves *errptr unchanged.
   On failure, leveldb frees the old value of *errptr and
   set *errptr to a malloc()ed error message.
@@ -267,6 +268,21 @@ extern void leveldb_cache_destroy(leveldb_cache_t* cache);
 
 extern leveldb_env_t* leveldb_create_default_env();
 extern void leveldb_env_destroy(leveldb_env_t*);
+
+/* Utility */
+
+/* Calls free(ptr).
+   REQUIRES: ptr was malloc()-ed and returned by one of the routines
+   in this file.  Note that in certain cases (typically on Windows), you
+   may need to call this routine instead of free(ptr) to dispose of
+   malloc()-ed memory returned by this library. */
+extern void leveldb_free(void* ptr);
+
+/* Return the major version number for this release. */
+extern int leveldb_major_version();
+
+/* Return the minor version number for this release. */
+extern int leveldb_minor_version();
 
 #ifdef __cplusplus
 }  /* end extern "C" */

@@ -865,7 +865,7 @@ Status VersionSet::Recover() {
         if (edit.has_comparator_ &&
             edit.comparator_ != icmp_.user_comparator()->Name()) {
           s = Status::InvalidArgument(
-              edit.comparator_ + "does not match existing comparator ",
+              edit.comparator_ + " does not match existing comparator ",
               icmp_.user_comparator()->Name());
         }
       }

@@ -162,8 +162,8 @@ class Block::Iter : public Iterator {
   }
 
   virtual void Seek(const Slice& target) {
-    // Binary search in restart array to find the first restart point
-    // with a key >= target
+    // Binary search in restart array to find the last restart point
+    // with a key < target
     uint32_t left = 0;
     uint32_t right = num_restarts_ - 1;
     while (left < right) {
