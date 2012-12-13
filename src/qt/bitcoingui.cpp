@@ -534,7 +534,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 
         progressBarLabel->setText(importText);
         progressBarLabel->setVisible(true);
-        progressBar->setFormat(tr("~%n block(s) remaining", "", nRemainingBlocks));
+        progressBar->setFormat(tr("~%1 block(s) remaining (%2% done)").arg(nRemainingBlocks).arg(nPercentageDone, 0, 'f', 2));
         progressBar->setMaximum(nTotalBlocks);
         progressBar->setValue(count);
         progressBar->setVisible(true);
