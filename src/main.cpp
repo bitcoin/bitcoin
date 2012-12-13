@@ -1187,11 +1187,11 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
     }
     printf("InvalidChainFound: invalid block=%s  height=%d  work=%s  date=%s\n",
       BlockHashStr(pindexNew->GetBlockHash()).c_str(), pindexNew->nHeight,
-      pindexNew->bnChainWork.ToString().c_str(), DateTimeStrFormat("%x %H:%M:%S",
+      pindexNew->bnChainWork.ToString().c_str(), DateTimeStrFormat("%Y-%m-%dT%H:%M:%S",
       pindexNew->GetBlockTime()).c_str());
     printf("InvalidChainFound:  current best=%s  height=%d  work=%s  date=%s\n",
       BlockHashStr(hashBestChain).c_str(), nBestHeight, bnBestChainWork.ToString().c_str(),
-      DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()).c_str());
+      DateTimeStrFormat("%Y-%m-%dT%H:%M:%S", pindexBest->GetBlockTime()).c_str());
     if (pindexBest && bnBestInvalidWork > bnBestChainWork + pindexBest->GetBlockWork() * 6)
         printf("InvalidChainFound: Warning: Displayed transactions may not be correct! You may need to upgrade, or other nodes may need to upgrade.\n");
 }
@@ -1828,7 +1828,7 @@ bool SetBestChain(CBlockIndex* pindexNew)
     nTransactionsUpdated++;
     printf("SetBestChain: new best=%s  height=%d  work=%s  tx=%lu  date=%s\n",
       BlockHashStr(hashBestChain).c_str(), nBestHeight, bnBestChainWork.ToString().c_str(), (unsigned long)pindexNew->nChainTx,
-      DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()).c_str());
+      DateTimeStrFormat("%Y-%m-%dT%H:%M:%S", pindexBest->GetBlockTime()).c_str());
 
     // Check the version of the last 100 blocks to see if we need to upgrade:
     if (!fIsInitialDownload)
@@ -2375,7 +2375,7 @@ bool static LoadBlockIndexDB()
     }
     printf("LoadBlockIndex(): hashBestChain=%s  height=%d date=%s\n",
         BlockHashStr(hashBestChain).c_str(), nBestHeight,
-        DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()).c_str());
+        DateTimeStrFormat("%Y-%m-%dT%H:%M:%S", pindexBest->GetBlockTime()).c_str());
 
     // Verify blocks in the best chain
     int nCheckLevel = GetArg("-checklevel", 1);
@@ -2538,7 +2538,7 @@ void PrintBlockTree()
         printf("%d (blk%05u.dat:0x%x)  %s  tx %"PRIszu"",
             pindex->nHeight,
             pindex->GetBlockPos().nFile, pindex->GetBlockPos().nPos,
-            DateTimeStrFormat("%x %H:%M:%S", block.GetBlockTime()).c_str(),
+            DateTimeStrFormat("%Y-%m-%dT%H:%M:%S", block.GetBlockTime()).c_str(),
             block.vtx.size());
 
         PrintWallets(block);
