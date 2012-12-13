@@ -127,6 +127,16 @@ case "$TARGET_OS" in
         # man ld: +h internal_name
         PLATFORM_SHARED_LDFLAGS="-shared -Wl,+h -Wl,"
         ;;
+    OS_WINDOWS_CROSSCOMPILE | NATIVE_WINDOWS)
+        PLATFORM=OS_WINDOWS
+        COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_WINDOWS -DLEVELDB_PLATFORM_WINDOWS"
+        PLATFORM_SHARED_CFLAGS=""
+        PLATFORM_SOURCES="util/env_win.cc"
+        PLATFORM_CXXFLAGS="-std=c++0x"
+        PLATFORM_LIBS="-lshlwapi -ldbghelp"
+        PORT_FILE=port/port_win.cc
+        CROSS_COMPILE=true
+        ;;
     *)
         echo "Unknown platform!" >&2
         exit 1
