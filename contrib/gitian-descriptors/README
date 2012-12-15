@@ -23,15 +23,15 @@ Once you've got the right hardware and software:
     mkdir gitian-builder/inputs
     cd gitian-builder/inputs
     # Inputs for Linux and Win32:
-    wget -O miniupnpc-1.6.tar.gz 'http://miniupnp.tuxfamily.org/files/download.php?file=miniupnpc-1.6.tar.gz'
-    wget 'http://fukuchi.org/works/qrencode/qrencode-3.2.0.tar.bz2'
+    wget 'http://miniupnp.tuxfamily.org/files/download.php?file=miniupnpc-1.6.tar.gz' -O miniupnpc-1.6.tar.gz
+    wget 'http://fukuchi.org/works/qrencode/qrencode-3.4.2.tar.bz2'
     # Inputs for Win32: (Linux has packages for these)
-    wget 'https://downloads.sourceforge.net/project/boost/boost/1.50.0/boost_1_50_0.tar.bz2'
-    wget 'http://www.openssl.org/source/openssl-1.0.1c.tar.gz'
+    wget 'https://sourceforge.net/projects/boost/files/boost/1.53.0/boost_1_53_0.tar.bz2/download'
+    wget 'https://www.openssl.org/source/openssl-1.0.1e.tar.gz'
     wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
-    wget 'https://downloads.sourceforge.net/project/libpng/zlib/1.2.6/zlib-1.2.6.tar.gz'
-    wget 'https://downloads.sourceforge.net/project/libpng/libpng15/older-releases/1.5.9/libpng-1.5.9.tar.gz'
-    wget 'http://releases.qt-project.org/qt4/source/qt-everywhere-opensource-src-4.8.3.tar.gz'
+    wget 'https://sourceforge.net/projects/libpng/files/zlib/1.2.6/zlib-1.2.6.tar.gz/download'
+    wget 'https://sourceforge.net/projects/libpng/files/libpng15/older-releases/1.5.9/libpng-1.5.9.tar.gz/download'
+    wget 'https://releases.qt-project.org/qt4/source/qt-everywhere-opensource-src-4.8.4.tar.gz'
     cd ../..
 
     cd gitian-builder

@@ -21,7 +21,7 @@ USE_UPNP:=-
 USE_IPV6:=1
 
 DEPSDIR?=/usr/local
-BOOST_SUFFIX?=-mgw46-mt-sd-1_52
+BOOST_SUFFIX?=-mgw44-mt-s-1_53
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
@@ -38,7 +38,6 @@ LIBS= \
  -l boost_filesystem$(BOOST_SUFFIX) \
  -l boost_program_options$(BOOST_SUFFIX) \
  -l boost_thread$(BOOST_SUFFIX) \
- -l boost_chrono$(BOOST_SUFFIX) \
  -l db_cxx \
  -l ssl \
  -l crypto
