@@ -144,6 +144,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/compat.h \
     src/sync.h \
     src/util.h \
+    src/hash.h \
     src/uint256.h \
     src/serialize.h \
     src/main.h \
