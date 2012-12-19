@@ -283,7 +283,6 @@ Value getblocktemplate(const Array& params, bool fHelp)
     Array transactions;
     map<uint256, int64_t> setTxIndex;
     int i = 0;
-    CCoinsViewCache &view = *pcoinsTip;
     BOOST_FOREACH (CTransaction& tx, pblock->vtx)
     {
         uint256 txHash = tx.GetHash();
@@ -308,13 +307,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
         }
         entry.push_back(Pair("depends", deps));
 
-        int64_t nSigOps = tx.GetLegacySigOpCount();
-        if (tx.HaveInputs(view))
-        {
-            entry.push_back(Pair("fee", (int64_t)(tx.GetValueIn(view) - tx.GetValueOut())));
-            nSigOps += tx.GetP2SHSigOpCount(view);
-        }
-        entry.push_back(Pair("sigops", nSigOps));
+        entry.push_back(Pair("fee", pblocktemplate->vTxFees[&tx - pblock->vtx.data()]));
+        entry.push_back(Pair("sigops", pblocktemplate->vTxSigOps[&tx - pblock->vtx.data()]));
 
         transactions.push_back(entry);
     }
