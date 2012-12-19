@@ -103,7 +103,7 @@ Value getwork(const Array& params, bool fHelp)
 
     typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
-    static vector<CBlock*> vNewBlock;
+    static vector<CBlockTemplate*> vNewBlockTemplate;
     static CReserveKey reservekey(pwalletMain);
 
     if (params.size() == 0)
@@ -112,7 +112,7 @@ Value getwork(const Array& params, bool fHelp)
         static unsigned int nTransactionsUpdatedLast;
         static CBlockIndex* pindexPrev;
         static int64 nStart;
-        static CBlock* pblock;
+        static CBlockTemplate* pblocktemplate;
         if (pindexPrev != pindexBest ||
             (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 60))
         {
@@ -120,9 +120,9 @@ Value getwork(const Array& params, bool fHelp)
             {
                 // Deallocate old blocks since they're obsolete now
                 mapNewBlock.clear();
-                BOOST_FOREACH(CBlock* pblock, vNewBlock)
-                    delete pblock;
-                vNewBlock.clear();
+                BOOST_FOREACH(CBlockTemplate* pblocktemplate, vNewBlockTemplate)
+                    delete pblocktemplate;
+                vNewBlockTemplate.clear();
             }
 
             // Clear pindexPrev so future getworks make a new block, despite any failures from here on
@@ -134,14 +134,15 @@ Value getwork(const Array& params, bool fHelp)
             nStart = GetTime();
 
             // Create new block
-            pblock = CreateNewBlock(reservekey);
-            if (!pblock)
+            pblocktemplate = CreateNewBlock(reservekey);
+            if (!pblocktemplate)
                 throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
-            vNewBlock.push_back(pblock);
+            vNewBlockTemplate.push_back(pblocktemplate);
 
             // Need to update only after we know CreateNewBlock succeeded
             pindexPrev = pindexPrevNew;
         }
+        CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
         // Update nTime
         pblock->UpdateTime(pindexPrev);
@@ -248,7 +249,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     static unsigned int nTransactionsUpdatedLast;
     static CBlockIndex* pindexPrev;
     static int64 nStart;
-    static CBlock* pblock;
+    static CBlockTemplate* pblocktemplate;
     if (pindexPrev != pindexBest ||
         (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 5))
     {
@@ -261,18 +262,19 @@ Value getblocktemplate(const Array& params, bool fHelp)
         nStart = GetTime();
 
         // Create new block
-        if(pblock)
+        if(pblocktemplate)
         {
-            delete pblock;
-            pblock = NULL;
+            delete pblocktemplate;
+            pblocktemplate = NULL;
         }
-        pblock = CreateNewBlock(reservekey);
-        if (!pblock)
+        pblocktemplate = CreateNewBlock(reservekey);
+        if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
         // Need to update only after we know CreateNewBlock succeeded
         pindexPrev = pindexPrevNew;
     }
+    CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
     // Update nTime
     pblock->UpdateTime(pindexPrev);
