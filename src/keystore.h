@@ -56,6 +56,7 @@ protected:
 
 public:
     bool AddKey(const CKey& key);
+    bool AddKey(const CKeyID& address);
     bool HaveKey(const CKeyID &address) const
     {
         bool result;
@@ -147,6 +148,7 @@ public:
 
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     bool AddKey(const CKey& key);
+    bool AddKey(const CKeyID& address);
     bool HaveKey(const CKeyID &address) const
     {
         {
