@@ -368,6 +368,16 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 return false;
             }
         }
+        else if (strType == "address")
+        {
+            CKeyID address;
+            ssKey >> address;
+            if (!pwallet->LoadAddress(address))
+            {
+                strErr = "Error reading wallet database: LoadKey failed on address";
+                return false;
+            }
+        }
         else if (strType == "orderposnext")
         {
             ssValue >> pwallet->nOrderPosNext;
