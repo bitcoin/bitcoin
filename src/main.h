@@ -108,6 +108,8 @@ class CTxUndo;
 class CCoinsView;
 class CCoinsViewCache;
 
+struct CBlockTemplate;
+
 /** Register a wallet to receive updates from core */
 void RegisterWallet(CWallet* pwalletIn);
 /** Unregister a wallet from core */
@@ -139,7 +141,7 @@ void ThreadImport(void *parg);
 /** Run the miner threads */
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
 /** Generate a new block, without valid proof-of-work */
-CBlock* CreateNewBlock(CReserveKey& reservekey);
+CBlockTemplate* CreateNewBlock(CReserveKey& reservekey);
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 /** Do mining precalculation */
@@ -1974,5 +1976,12 @@ extern CCoinsViewCache *pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
+
+struct CBlockTemplate
+{
+    CBlock block;
+    std::vector<int64_t> vTxFees;
+    std::vector<int64_t> vTxSigOps;
+};
 
 #endif
