@@ -26,6 +26,16 @@ bool CBasicKeyStore::AddKey(const CKey& key)
     return true;
 }
 
+bool CBasicKeyStore::AddKey(const CKeyID& address)
+{
+    // The key is watch-only. We don't have the secret.
+    {
+        LOCK(cs_KeyStore);
+        mapKeys[address] = make_pair(CSecret(), false);
+    }
+    return true;
+}
+
 bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
 {
     {
@@ -139,6 +149,24 @@ bool CCryptoKeyStore::AddKey(const CKey& key)
     return true;
 }
 
+bool CCryptoKeyStore::AddKey(const CKeyID& address)
+{
+    // The key is watch-only. We don't have the secret.
+    {
+        LOCK(cs_KeyStore);
+        if (!IsCrypted())
+            return CBasicKeyStore::AddKey(address);
+			
+        if (IsLocked())
+            return false;
+				
+        if (!SetCrypted())
+            return false;
+			
+        mapCryptedKeys[address] = make_pair(CPubKey(), std::vector<unsigned char>());
+    }
+    return true;
+}
 
 bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
 {

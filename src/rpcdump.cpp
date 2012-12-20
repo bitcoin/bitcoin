@@ -77,6 +77,46 @@ Value importprivkey(const Array& params, bool fHelp)
     return Value::null;
 }
 
+Value importaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 3)
+        throw runtime_error(
+            "importaddress <bitcoinaddress> [label] [rescan=true]\n"
+            "Adds an address that can be watched as if it were in your wallet but cannot be used to spend.");
+
+    CKeyID vchAddress;
+    CBitcoinAddress address(params[0].get_str());
+    if (!address.GetKeyID(vchAddress)) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+	
+    string strLabel = "";
+    if (params.size() > 1)
+        strLabel = params[1].get_str();
+	
+    // Whether to perform rescan after import
+    bool fRescan = true;
+    if (params.size() > 2)
+        fRescan = params[2].get_bool();
+	
+    {
+        LOCK2(cs_main, pwalletMain->cs_wallet);
+			
+        pwalletMain->MarkDirty();
+        pwalletMain->SetAddressBookName(vchAddress, strLabel);
+			
+        if (!pwalletMain->AddAddress(vchAddress))
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
+			
+        if (fRescan)
+        {
+            pwalletMain->ScanForWalletTransactions(pindexGenesisBlock, true);
+            pwalletMain->ReacceptWalletTransactions();
+        }
+    }
+	
+    return Value::null;
+}
+
+
 Value dumpprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
