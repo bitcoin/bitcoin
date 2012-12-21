@@ -90,11 +90,11 @@ OBJS= \
 
 all: bitcoind.exe
 
-LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a -lshlwapi -ldbghelp
+LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a -lshlwapi
 DEFS += -I"$(CURDIR)/leveldb/include"
 DEFS += -I"$(CURDIR)/leveldb/helpers"
 leveldb/libleveldb.a:
-	@echo "Building LevelDB ..." && cd leveldb && CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ TARGET_OS=OS_WINDOWS_CROSSCOMPILE" $(MAKE) libleveldb.a libmemenv.a && i686-w64-mingw32-ranlib libleveldb.a && i686-w64-mingw32-ranlib libmemenv.a && cd ..
+	@echo "Building LevelDB ..." && cd leveldb && CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ TARGET_OS=OS_WINDOWS_CROSSCOMPILE $(MAKE) libleveldb.a libmemenv.a && i686-w64-mingw32-ranlib libleveldb.a && i686-w64-mingw32-ranlib libmemenv.a && cd ..
 obj/leveldb.o: leveldb/libleveldb.a
 
 obj/build.h: FORCE
@@ -123,5 +123,6 @@ clean:
 	-rm -f obj-test/*.o
 	-rm -f test_bitcoin.exe
 	-rm -f obj/build.h
+	cd leveldb && TARGET_OS=OS_WINDOWS_CROSSCOMPILE $(MAKE) clean && cd ..
 
 FORCE:
