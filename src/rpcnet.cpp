@@ -8,7 +8,7 @@
 using namespace json_spirit;
 using namespace std;
 
-Value getconnectioncount(const Array& params, bool fHelp)
+Value getconnectioncount(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -32,7 +32,7 @@ static void CopyNodeStats(std::vector<CNodeStats>& vstats)
     }
 }
 
-Value getpeerinfo(const Array& params, bool fHelp)
+Value getpeerinfo(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(

@@ -90,6 +90,14 @@ void UnregisterWallet(CWallet* pwalletIn)
     }
 }
 
+void UnregisterAllWallets()
+{
+    {
+        LOCK(cs_setpwalletRegistered);
+        setpwalletRegistered.clear();
+    }
+}
+
 // check whether the passed transaction is from us
 bool static IsFromMe(CTransaction& tx)
 {

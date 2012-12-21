@@ -136,12 +136,13 @@ string CRPCTable::help(string strCommand) const
             continue;
         if (strCommand != "" && strMethod != strCommand)
             continue;
+        
         try
         {
             Array params;
             rpcfn_type pfn = pcmd->actor;
             if (setDone.insert(pfn).second)
-                (*pfn)(params, true);
+                (*pfn)(NULL, params, true);
         }
         catch (std::exception& e)
         {
@@ -159,7 +160,7 @@ string CRPCTable::help(string strCommand) const
     return strRet;
 }
 
-Value help(const Array& params, bool fHelp)
+Value help(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -174,7 +175,7 @@ Value help(const Array& params, bool fHelp)
 }
 
 
-Value stop(const Array& params, bool fHelp)
+Value stop(CWallet* pWallet, const Array& params, bool fHelp)
 {
     // Accept the deprecated and ignored 'detach´ boolean argument
     if (fHelp || params.size() > 1)
@@ -194,68 +195,70 @@ Value stop(const Array& params, bool fHelp)
 
 
 static const CRPCCommand vRPCCommands[] =
-{ //  name                      function                 safemd  unlocked
-  //  ------------------------  -----------------------  ------  --------
-    { "help",                   &help,                   true,   true },
-    { "stop",                   &stop,                   true,   true },
-    { "getblockcount",          &getblockcount,          true,   false },
-    { "getconnectioncount",     &getconnectioncount,     true,   false },
-    { "getpeerinfo",            &getpeerinfo,            true,   false },
-    { "getdifficulty",          &getdifficulty,          true,   false },
-    { "getgenerate",            &getgenerate,            true,   false },
-    { "setgenerate",            &setgenerate,            true,   false },
-    { "gethashespersec",        &gethashespersec,        true,   false },
-    { "getinfo",                &getinfo,                true,   false },
-    { "getmininginfo",          &getmininginfo,          true,   false },
-    { "getnewaddress",          &getnewaddress,          true,   false },
-    { "getaccountaddress",      &getaccountaddress,      true,   false },
-    { "setaccount",             &setaccount,             true,   false },
-    { "getaccount",             &getaccount,             false,  false },
-    { "getaddressesbyaccount",  &getaddressesbyaccount,  true,   false },
-    { "sendtoaddress",          &sendtoaddress,          false,  false },
-    { "getreceivedbyaddress",   &getreceivedbyaddress,   false,  false },
-    { "getreceivedbyaccount",   &getreceivedbyaccount,   false,  false },
-    { "listreceivedbyaddress",  &listreceivedbyaddress,  false,  false },
-    { "listreceivedbyaccount",  &listreceivedbyaccount,  false,  false },
-    { "backupwallet",           &backupwallet,           true,   false },
-    { "keypoolrefill",          &keypoolrefill,          true,   false },
-    { "walletpassphrase",       &walletpassphrase,       true,   false },
-    { "walletpassphrasechange", &walletpassphrasechange, false,  false },
-    { "walletlock",             &walletlock,             true,   false },
-    { "encryptwallet",          &encryptwallet,          false,  false },
-    { "validateaddress",        &validateaddress,        true,   false },
-    { "getbalance",             &getbalance,             false,  false },
-    { "move",                   &movecmd,                false,  false },
-    { "sendfrom",               &sendfrom,               false,  false },
-    { "sendmany",               &sendmany,               false,  false },
-    { "addmultisigaddress",     &addmultisigaddress,     false,  false },
-    { "createmultisig",         &createmultisig,         true,   true  },
-    { "getrawmempool",          &getrawmempool,          true,   false },
-    { "getblock",               &getblock,               false,  false },
-    { "getblockhash",           &getblockhash,           false,  false },
-    { "gettransaction",         &gettransaction,         false,  false },
-    { "listtransactions",       &listtransactions,       false,  false },
-    { "listaddressgroupings",   &listaddressgroupings,   false,  false },
-    { "signmessage",            &signmessage,            false,  false },
-    { "verifymessage",          &verifymessage,          false,  false },
-    { "getwork",                &getwork,                true,   false },
-    { "listaccounts",           &listaccounts,           false,  false },
-    { "settxfee",               &settxfee,               false,  false },
-    { "getblocktemplate",       &getblocktemplate,       true,   false },
-    { "submitblock",            &submitblock,            false,  false },
-    { "listsinceblock",         &listsinceblock,         false,  false },
-    { "dumpprivkey",            &dumpprivkey,            false,  false },
-    { "importprivkey",          &importprivkey,          false,  false },
-    { "listunspent",            &listunspent,            false,  false },
-    { "getrawtransaction",      &getrawtransaction,      false,  false },
-    { "createrawtransaction",   &createrawtransaction,   false,  false },
-    { "decoderawtransaction",   &decoderawtransaction,   false,  false },
-    { "signrawtransaction",     &signrawtransaction,     false,  false },
-    { "sendrawtransaction",     &sendrawtransaction,     false,  false },
-    { "gettxoutsetinfo",        &gettxoutsetinfo,        true,   false },
-    { "gettxout",               &gettxout,               true,   false },
-    { "lockunspent",            &lockunspent,            false,  false },
-    { "listlockunspent",        &listlockunspent,        false,  false },
+{ //  name                      function                 safemd  unlocked  isWalletFn
+  //  ------------------------  -----------------------  ------  --------  ----------
+    { "help",                   &help,                   true,   true,     false },
+    { "stop",                   &stop,                   true,   true,     false },
+    { "getblockcount",          &getblockcount,          true,   false,    false },
+    { "getconnectioncount",     &getconnectioncount,     true,   false,    false },
+    { "getpeerinfo",            &getpeerinfo,            true,   false,    false },
+    { "getdifficulty",          &getdifficulty,          true,   false,    false },
+    { "getgenerate",            &getgenerate,            true,   false,    false },
+    { "setgenerate",            &setgenerate,            true,   false,    false },
+    { "gethashespersec",        &gethashespersec,        true,   false,    false },
+    { "getinfo",                &getinfo,                true,   false,    true  },
+    { "getmininginfo",          &getmininginfo,          true,   false,    false },
+    { "getnewaddress",          &getnewaddress,          true,   false,    true  },
+    { "getaccountaddress",      &getaccountaddress,      true,   false,    true  },
+    { "setaccount",             &setaccount,             true,   false,    true  },
+    { "getaccount",             &getaccount,             false,  false,    true  },
+    { "getaddressesbyaccount",  &getaddressesbyaccount,  true,   false,    true  },
+    { "sendtoaddress",          &sendtoaddress,          false,  false,    true  },
+    { "getreceivedbyaddress",   &getreceivedbyaddress,   false,  false,    true  },
+    { "getreceivedbyaccount",   &getreceivedbyaccount,   false,  false,    true  },
+    { "listreceivedbyaddress",  &listreceivedbyaddress,  false,  false,    true  },
+    { "listreceivedbyaccount",  &listreceivedbyaccount,  false,  false,    true  },
+    { "backupwallet",           &backupwallet,           true,   false,    true  },
+    { "keypoolrefill",          &keypoolrefill,          true,   false,    true  },
+    { "walletpassphrase",       &walletpassphrase,       true,   false,    true  },
+    { "walletpassphrasechange", &walletpassphrasechange, false,  false,    true  },
+    { "walletlock",             &walletlock,             true,   false,    true  },
+    { "encryptwallet",          &encryptwallet,          false,  false,    true  },
+    { "validateaddress",        &validateaddress,        true,   false,    true  },
+    { "getbalance",             &getbalance,             false,  false,    true  },
+    { "move",                   &movecmd,                false,  false,    true  },
+    { "sendfrom",               &sendfrom,               false,  false,    true  },
+    { "sendmany",               &sendmany,               false,  false,    true  },
+    { "addmultisigaddress",     &addmultisigaddress,     false,  false,    true  },
+    { "createmultisig",         &createmultisig,         true,   true,     true  },
+    { "getrawmempool",          &getrawmempool,          true,   false,    false },
+    { "getblock",               &getblock,               false,  false,    false },
+    { "getblockhash",           &getblockhash,           false,  false,    false },
+    { "gettransaction",         &gettransaction,         false,  false,    true  },
+    { "listtransactions",       &listtransactions,       false,  false,    true  },
+    { "listaddressgroupings",   &listaddressgroupings,   false,  false,    true  },
+    { "signmessage",            &signmessage,            false,  false,    true  },
+    { "verifymessage",          &verifymessage,          false,  false,    false },
+    { "getwork",                &getwork,                true,   false,    true  },
+    { "listaccounts",           &listaccounts,           false,  false,    false },
+    { "settxfee",               &settxfee,               false,  false,    false },
+    { "getblocktemplate",       &getblocktemplate,       true,   false,    false },
+    { "submitblock",            &submitblock,            false,  false,    false },
+    { "listsinceblock",         &listsinceblock,         false,  false,    true  },
+    { "dumpprivkey",            &dumpprivkey,            false,  false,    true  },
+    { "importprivkey",          &importprivkey,          false,  false,    true  },
+    { "listunspent",            &listunspent,            false,  false,    true  },
+    { "getrawtransaction",      &getrawtransaction,      false,  false,    false },
+    { "createrawtransaction",   &createrawtransaction,   false,  false,    false },
+    { "decoderawtransaction",   &decoderawtransaction,   false,  false,    false },
+    { "signrawtransaction",     &signrawtransaction,     false,  false,    true  },
+    { "sendrawtransaction",     &sendrawtransaction,     false,  false,    false },
+    { "gettxoutsetinfo",        &gettxoutsetinfo,        true,   false,    false },
+    { "gettxout",               &gettxout,               true,   false,    false },
+    { "lockunspent",            &lockunspent,            false,  false,    true  },
+    { "listlockunspent",        &listlockunspent,        false,  false,    true  },
+    { "listwallets",            &listwallets,            true,   true,     false },
+    { "usewallet",              &usewallet,              true,   true,     false }
 };
 
 CRPCTable::CRPCTable()
@@ -1052,7 +1055,7 @@ void ThreadRPCServer3(void* parg)
     }
 }
 
-json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_spirit::Array &params) const
+json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_spirit::Array &params, CWallet* pWallet) const
 {
     // Find method
     const CRPCCommand *pcmd = tableRPC[strMethod];
@@ -1065,16 +1068,19 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
         !pcmd->okSafeMode)
         throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, string("Safe mode: ") + strWarning);
 
+    if (!pWallet) pWallet = pwalletMain;
+    
     try
     {
         // Execute
         Value result;
         {
-            if (pcmd->unlocked)
-                result = pcmd->actor(params, false);
+            if (pcmd->unlocked) {
+                result = pcmd->actor(pWallet, params, false);
+            }
             else {
                 LOCK2(cs_main, pwalletMain->cs_wallet);
-                result = pcmd->actor(params, false);
+                result = pcmd->actor(pWallet, params, false);
             }
         }
         return result;

@@ -311,6 +311,21 @@ public:
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
 };
 
+/** A CWalletMap associates wallets with names and automatically deallocates them upon destruction.
+ */
+typedef std::map<std::string, CWallet*> wallet_map;
+class CWalletMap
+{
+public:
+    wallet_map wallets;
+
+    ~CWalletMap()
+    {
+        BOOST_FOREACH(const wallet_map::value_type& item, wallets)
+            delete item.second;
+    }
+};
+
 /** A key allocated from the key pool. */
 class CReserveKey
 {
