@@ -20,9 +20,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <io.h>
-#include <dbghelp.h>
 #include <algorithm>
-#pragma comment(lib,"DbgHelp.lib")
 
 #ifdef max
 #undef max
@@ -908,18 +906,34 @@ uint64_t Win32Env::NowMicros()
     return (uint64_t)(GetTickCount64()*1000);
 }
 
-Status Win32Env::CreateDir( const std::string& dirname )
+static Status CreateDirInner( const std::string& dirname )
 {
     Status sRet;
+    DWORD attr = ::GetFileAttributes(dirname.c_str());
+    if (attr == INVALID_FILE_ATTRIBUTES) { // doesn't exist:
+      std::size_t slash = dirname.find_last_of("\\");
+      if (slash != std::string::npos){
+	sRet = CreateDirInner(dirname.substr(0, slash));
+	if (!sRet.ok()) return sRet;
+      }
+      BOOL result = ::CreateDirectory(dirname.c_str(), NULL);
+      if (result == FALSE) {
+	sRet = Status::IOError(dirname, "Could not create directory.");
+	return sRet;
+      }
+    }
+    return sRet;
+}
+
+Status Win32Env::CreateDir( const std::string& dirname )
+{
     std::string path = dirname;
     if(path[path.length() - 1] != '\\'){
         path += '\\';
     }
     ModifyPath(path);
-    if(!::MakeSureDirectoryPathExists( path.c_str() ) ){
-        sRet = Status::IOError(dirname, "Could not create directory.");
-    }
-    return sRet;
+
+    return CreateDirInner(path);
 }
 
 Status Win32Env::DeleteDir( const std::string& dirname )
