@@ -37,7 +37,7 @@ namespace leveldb {
 namespace port {
 
 Mutex::Mutex() :
-    cs_(nullptr) {
+    cs_(NULL) {
   assert(!cs_);
   cs_ = static_cast<void *>(new CRITICAL_SECTION());
   ::InitializeCriticalSection(static_cast<CRITICAL_SECTION *>(cs_));
@@ -48,7 +48,7 @@ Mutex::~Mutex() {
   assert(cs_);
   ::DeleteCriticalSection(static_cast<CRITICAL_SECTION *>(cs_));
   delete static_cast<CRITICAL_SECTION *>(cs_);
-  cs_ = nullptr;
+  cs_ = NULL;
   assert(!cs_);
 }
 
@@ -128,7 +128,7 @@ void InitOnce(OnceType* once, void (*initializer)()) {
 }
 
 void* AtomicPointer::Acquire_Load() const {
-  void * p = nullptr;
+  void * p = NULL;
   InterlockedExchangePointer(&p, rep_);
   return p;
 }
