@@ -619,7 +619,7 @@ bool AppInit2()
         if (nTransactionFee > 0.25 * COIN)
             InitWarning(_("Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
     }
-
+    
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
     std::string strDataDir = GetDataDir().string();
@@ -884,15 +884,18 @@ bool AppInit2()
 
     // ********************************************************* Step 8: load wallets
 
+    // Get wallet names
+    typedef map<string, string> string_map;
+    string_map mapWalletFiles;
+    mapWalletFiles["default"] = "wallet.dat";
+    BOOST_FOREACH(const string& strWalletName, mapMultiArgs["-usewallet"])
+        mapWalletFiles[strWalletName] = strWalletName + ".dat";    
+    
     // TODO: Encapsulate wallet better
     uiInterface.InitMessage(_("Loading wallets..."));
     printf("Loading wallets...\n");
     nStart = GetTimeMillis();
-    // TODO: Load wallet names and file names from config file.
-    typedef map<string, string> string_map;
-    string_map mapWalletFiles;
-    mapWalletFiles["default"] = "wallet.dat";
-    mapWalletFiles["custom"] = "wallet2.dat";
+        
     // TODO: Make the wallet loads more tolerant. Load all wallets possible.
     pWalletMap = new CWalletMap();
     BOOST_FOREACH(const string_map::value_type& mapWalletFile, mapWalletFiles)
