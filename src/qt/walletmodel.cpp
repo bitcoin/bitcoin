@@ -25,6 +25,11 @@ qint64 WalletModel::getBalance() const
     return wallet->GetBalance();
 }
 
+qint64 WalletModel::getStake() const
+{
+    return wallet->GetStake();
+}
+
 qint64 WalletModel::getUnconfirmedBalance() const
 {
     return wallet->GetUnconfirmedBalance();
@@ -48,7 +53,7 @@ void WalletModel::update()
     EncryptionStatus newEncryptionStatus = getEncryptionStatus();
 
     if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance)
-        emit balanceChanged(newBalance, newUnconfirmedBalance);
+        emit balanceChanged(newBalance, getStake(), newUnconfirmedBalance);
 
     if(cachedNumTransactions != newNumTransactions)
         emit numTransactionsChanged(newNumTransactions);
