@@ -69,23 +69,34 @@ Value getinfo(CWallet* pWallet, const Array& params, bool fHelp)
     proxyType proxy;
     GetProxy(NET_IPV4, proxy);
 
-    // TODO: List each wallet
     Object obj;
     obj.push_back(Pair("version",       (int)CLIENT_VERSION));
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
-    obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
-    obj.push_back(Pair("balance",       ValueFromAmount(pWallet->GetBalance())));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("testnet",       fTestNet));
-    obj.push_back(Pair("keypoololdest", (boost::int64_t)pWallet->GetOldestKeyPoolTime()));
-    obj.push_back(Pair("keypoolsize",   pWallet->GetKeyPoolSize()));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
-    if (pWallet->IsCrypted())
-        obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    
+    // List wallets
+    Array arrayWallets;
+    BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->wallets)
+    {
+        Object objWallet;
+        objWallet.push_back(Pair("name",          item.first));
+        objWallet.push_back(Pair("walletversion", item.second->GetVersion()));
+        objWallet.push_back(Pair("balance",       ValueFromAmount(item.second->GetBalance())));
+        objWallet.push_back(Pair("keypoololdest", (boost::int64_t)item.second->GetOldestKeyPoolTime()));
+        objWallet.push_back(Pair("keypoolsize",   item.second->GetKeyPoolSize()));
+        if (item.second->IsCrypted())
+            objWallet.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
+        
+        arrayWallets.push_back(objWallet);
+    }
+    
+    obj.push_back(Pair("wallets", arrayWallets));
     return obj;
 }
 
