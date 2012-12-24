@@ -136,7 +136,6 @@ string CRPCTable::help(string strCommand) const
             continue;
         if (strCommand != "" && strMethod != strCommand)
             continue;
-        
         try
         {
             Array params;
