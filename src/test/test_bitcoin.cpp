@@ -8,6 +8,7 @@
 #include "wallet.h"
 #include "util.h"
 
+CWalletMap* pWalletMap;
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
 
@@ -32,12 +33,15 @@ struct TestingSetup {
         bool fFirstRun;
         pwalletMain = new CWallet("wallet.dat");
         pwalletMain->LoadWallet(fFirstRun);
+        pWalletMap = new CWalletMap();
+        pWalletMap->wallets["default"] = pwalletMain;
         RegisterWallet(pwalletMain);
     }
     ~TestingSetup()
     {
-        delete pwalletMain;
+        delete pWalletMap;
         pwalletMain = NULL;
+        pWalletMap = NULL;
         delete pcoinsTip;
         delete pcoinsdbview;
         delete pblocktree;
