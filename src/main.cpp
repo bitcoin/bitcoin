@@ -1712,10 +1712,10 @@ bool CTransaction::CheckProofOfStake(unsigned int nBits, uint256& hashProofOfSta
     CTransaction txPrev;
     CTxIndex txindex;
     if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
-        return false;  // previous transaction not in main chain
+        return fDebug? error("CheckProofOfStake() : read txPrev failed") : false;  // previous transaction not in main chain
     txdb.Close();
-    if (nTime < txPrev.nTime)
-        return false;  // Transaction timestamp violation
+    if (nTime < txPrev.nTime)  // Transaction timestamp violation
+        return fDebug? error("CheckProofOfStake() : nTime violation") : false;
 
     // Verify signature
     if (!VerifySignature(txPrev, *this, 0, true, 0))
@@ -1724,9 +1724,9 @@ bool CTransaction::CheckProofOfStake(unsigned int nBits, uint256& hashProofOfSta
     // Read block header
     CBlock block;
     if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-        return false; // unable to read block of previous transaction
+        return fDebug? error("CheckProofOfStake() : read block failed") : false; // unable to read block of previous transaction
     if (block.GetBlockTime() + nStakeMinAge > nTime)
-        return false; // only count coins meeting min age requirement
+        return fDebug? error("CheckProofOfStake() : min age violation") : false; // only count coins meeting min age requirement
 
     int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
     CBigNum bnCoinDay = CBigNum(nValueIn) * min(nTime-txPrev.nTime, (unsigned int)STAKE_MAX_AGE) / COIN / (24 * 60 * 60);
