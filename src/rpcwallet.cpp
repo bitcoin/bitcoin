@@ -28,7 +28,7 @@ std::string HelpRequiringPassphrase(CWallet* pWallet)
 
 void EnsureWalletIsUnlocked(CWallet* pWallet)
 {
-    if (pWallet || pWallet->IsLocked())
+    if (pWallet && pWallet->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 }
 
