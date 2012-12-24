@@ -1619,9 +1619,16 @@ Value usewallet(CWallet* pWallet, const Array& params, bool fHelp)
     string strWalletName = params[0].get_str();
     wallet_map::iterator it = pWalletMap->wallets.find(strWalletName);
     if (it == pWalletMap->wallets.end())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, wallet not found.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, string("Wallet ") + strWalletName + " not found.");
     
     string strMethod = params[1].get_str();
+    const CRPCCommand *pcmd = tableRPC[strMethod];
+    if (!pcmd)
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, string("Method ") + strMethod + " not found.");
+    
+    if (!pcmd->isWalletFn)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, string("Method ") + strMethod + " is not a wallet method.");
+    
     vector<string> vstrParams;
     for (unsigned int i = 2; i < params.size(); i++)
         vstrParams.push_back(params[i].get_str());
