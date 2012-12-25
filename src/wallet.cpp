@@ -1804,7 +1804,7 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts)
     }
 }
 
-CBitcoinAddress CWallet::GetAccountAddress(const std::string strAccount, bool bForceNew=false)
+CTxDestination CWallet::GetAccountAddress(const std::string strAccount, bool bForceNew=false)
 {
     CWalletDB walletdb(strWalletFile);
     CAccount account;
@@ -1836,24 +1836,23 @@ CBitcoinAddress CWallet::GetAccountAddress(const std::string strAccount, bool bF
     {
         // Caller must check validity to detect keypool depletion
         if (!GetKeyFromPool(account.vchPubKey, false))
-            return CBitcoinAddress();
+            return CTxDestination();
 
         // TODO: Do something with the return code
         SetAddressBookName(account.vchPubKey.GetID(), strAccount);
         walletdb.WriteAccount(strAccount, account);
     }
 
-    return CBitcoinAddress(account.vchPubKey.GetID());
+    return CTxDestination(account.vchPubKey.GetID());
 }
 
-bool CWallet::SetAccount(const CBitcoinAddress address, const std::string strAccount)
+bool CWallet::SetAccount(const CTxDestination& dest, const std::string strAccount)
 {
     // Detect when changing the account of an address that is the 'unused current key' of another account:
-    CTxDestination dest = address.Get();
     if (mapAddressBook.count(dest))
     {
         string strOldAccount = mapAddressBook[dest];
-        if (address == GetAccountAddress(strOldAccount, false) && !GetAccountAddress(strOldAccount, true).IsValid())
+        if (dest == GetAccountAddress(strOldAccount, false) && !CBitcoinAddress(GetAccountAddress(strOldAccount, true)).IsValid())
             return false;
     }
 
@@ -1867,14 +1866,14 @@ bool CWallet::IsMine(const CBitcoinAddress& address) const
     return ::IsMine(*this, scriptPubKey);
 }
 
-int64 CWallet::GetAddressTally(const CBitcoinAddress address, int nMinDepth)
+int64 CWallet::GetAddressTally(const CTxDestination& dest, int nMinDepth)
 {
-    if (!IsMine(address))
+    if (!IsMine(CBitcoinAddress(dest)))
         return 0;
 
     int64 nAmount = 0;
     CScript scriptPubKey;
-    scriptPubKey.SetDestination(address.Get());
+    scriptPubKey.SetDestination(dest);
     for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
