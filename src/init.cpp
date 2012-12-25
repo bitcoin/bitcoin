@@ -393,9 +393,10 @@ void ThreadImport(void *data) {
     vnThreadsRunning[THREAD_IMPORT]--;
 }
 
-bool LoadWallet(const string& strName, const string& strFile, std::ostringstream& strErrors, int64 nStart)
+bool LoadWallet(const string& strName, const string& strFile, std::ostringstream& strErrors)
 {
     printf("Loading wallet \"%s\" from %s...\n", strName.c_str(), strFile.c_str());
+    int64 nStart = GetTimeMillis();
     bool fFirstRun = true;
     CWallet* pwallet = new CWallet(strFile);
     pWalletMap->wallets[strName] = pwallet;
@@ -883,23 +884,22 @@ bool AppInit2()
     }
 
     // ********************************************************* Step 8: load wallets
-
+    
+    // TODO: Encapsulate wallet better
+    uiInterface.InitMessage(_("Loading wallets..."));
+    printf("Loading wallets...\n");
+        
     // Get wallet names
     typedef map<string, string> string_map;
     string_map mapWalletFiles;
     mapWalletFiles["default"] = "wallet.dat";
     BOOST_FOREACH(const string& strWalletName, mapMultiArgs["-usewallet"])
         mapWalletFiles[strWalletName] = strWalletName + ".dat";    
-    
-    // TODO: Encapsulate wallet better
-    uiInterface.InitMessage(_("Loading wallets..."));
-    printf("Loading wallets...\n");
-    nStart = GetTimeMillis();
-        
+
     // TODO: Make the wallet loads more tolerant. Load all wallets possible.
     pWalletMap = new CWalletMap();
     BOOST_FOREACH(const string_map::value_type& mapWalletFile, mapWalletFiles)
-    if (!LoadWallet(mapWalletFile.first, mapWalletFile.second, strErrors, nStart))
+    if (!LoadWallet(mapWalletFile.first, mapWalletFile.second, strErrors))
         return false;
     
     // ********************************************************* Step 9: import blocks
