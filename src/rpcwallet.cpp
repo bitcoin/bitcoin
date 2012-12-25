@@ -127,7 +127,7 @@ Value getaccountaddress(const Array& params, bool fHelp)
 
     // Parse the account first so we don't generate a key if there's an error
     string strAccount = AccountFromValue(params[0]);
-    CBitcoinAddress address = pwalletMain->GetAccountAddress(strAccount, false);
+    CBitcoinAddress address = CBitcoinAddress(pwalletMain->GetAccountAddress(strAccount, false));
     if (address.IsValid())
     	return address.ToString();
     throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
@@ -149,7 +149,7 @@ Value setaccount(const Array& params, bool fHelp)
         strAccount = AccountFromValue(params[1]);
 
     // TODO: Use the return code for something
-    pwalletMain->SetAccount(address, strAccount);
+    pwalletMain->SetAccount(address.Get(), strAccount);
     return Value::null;
 }
 
@@ -342,7 +342,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     if (params.size() > 1)
         nMinDepth = params[1].get_int();
 
-    return ValueFromAmount(pwalletMain->GetAddressTally(address, nMinDepth));
+    return ValueFromAmount(pwalletMain->GetAddressTally(address.Get(), nMinDepth));
 }
 
 Value getreceivedbyaccount(const Array& params, bool fHelp)
@@ -398,7 +398,6 @@ Value getbalance(const Array& params, bool fHelp)
         nMinDepth = params[1].get_int();
 
     if (params[0].get_str() == "*") {
-    	// TODO: Why is there a "different way" if both "should always return the same number"?
         // Calculate total balance a different way from GetBalance()
         // (GetBalance() sums up all unspent TxOuts)
         // getbalance and getbalance '*' should always return the same number.
