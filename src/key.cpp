@@ -130,7 +130,7 @@ private:
     BIGNUM* bna2;
     BIGNUM* bnbeta;
     BIGNUM* bnlambda;
-    EC_POINT* Glam;
+    EC_POINT* G128; // G * 2^128
 
     // Split a secp256k1 exponent k into two smaller ones k1 and k2 such that for any point Y,
     // k*Y = k1*Y + k2*Y', where Y' = lambda*Y is very fast
@@ -205,11 +205,9 @@ public:
 
         EC_KEY *pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
         const EC_GROUP *group = EC_KEY_get0_group(pkey);
-        const EC_POINT *G = EC_GROUP_get0_generator(group);
         BN_CTX *ctx = BN_CTX_new();
         BN_CTX_start(ctx);
-        BIGNUM *bnx = BN_CTX_get(ctx);
-        BIGNUM *bny = BN_CTX_get(ctx);
+        BIGNUM *bn128 = BN_CTX_get(ctx);
 
         bnp = BN_new();
         order = BN_new();
@@ -220,10 +218,11 @@ public:
         bna2     = BN_bin2bn(a2,     sizeof(a2),     NULL);
         bnbeta   = BN_bin2bn(beta,   sizeof(beta),   NULL);
         bnlambda = BN_bin2bn(lambda, sizeof(lambda), NULL);
-        EC_POINT_get_affine_coordinates_GFp(group, G, bnx, bny, ctx);
-        BN_mod_mul(bnx, bnx, bnbeta, bnp, ctx);
-        Glam = EC_POINT_new(group);
-        EC_POINT_set_affine_coordinates_GFp(group, Glam, bnx, bny, ctx);
+
+        BN_one(bn128);
+        BN_lshift(bn128, bn128, 128);
+        G128 = EC_POINT_new(group);
+        ::EC_POINT_mul(group, G128, bn128, NULL, NULL, ctx);
 
         BN_CTX_end(ctx);
         BN_CTX_free(ctx);
@@ -231,7 +230,7 @@ public:
     }
 
     ~CSecp256k1Math() {
-        EC_POINT_free(Glam);
+        EC_POINT_free(G128);
         BN_free(order);
         BN_free(bnp);
         BN_free(bna1b2);
@@ -250,15 +249,17 @@ public:
         BIGNUM *mb = BN_CTX_get(ctx);
         EC_POINT *qlam = EC_POINT_new(group);
 
-        // rewrite n*G as na*G + nb*Glam, where na and nb are small, and Glam = lambda*G is precomputed
-        splitk(na, nb, n, ctx); // split n
+        // rewrite n*G as na*G + nb*G128, where na and nb are small, and G128 = G*2^128 is precomputed
+        BN_copy(na, n);
+        BN_mask_bits(na, 128);
+        BN_rshift(nb, n, 128);
 
         // rewrite m*q as ma*q + mb*qlam, where ma and mb are small, and qlam = lambda*q is efficiently computable
         splitk(ma, mb, m, ctx); // split m
         mullambda(group, qlam, q, ctx); // calculate qlam = lamda*Q
 
-        // the actual calculation now becomes: r = nb*Glam + ma*q + mb*qlam + na*G, where [na,nb,ma,mb] are small
-        const EC_POINT *points[3] = {Glam, q,  qlam};
+        // the actual calculation now becomes: r = nb*G128 + ma*q + mb*qlam + na*G, where [na,nb,ma,mb] are small
+        const EC_POINT *points[3] = {G128, q,  qlam};
         const BIGNUM   *exps[3]   = {nb,   ma, mb};
         int ret = EC_POINTs_mul(group, r, na, 3, points, exps, ctx); // the exponent na to G is passed separately
 
