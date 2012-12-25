@@ -1078,7 +1078,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
                 result = pcmd->actor(pWallet, params, false);
             }
             else {
-                LOCK2(cs_main, pwalletMain->cs_wallet);
+                LOCK2(cs_main, pWallet->cs_wallet);
                 result = pcmd->actor(pWallet, params, false);
             }
         }
