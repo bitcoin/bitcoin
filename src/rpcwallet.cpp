@@ -74,29 +74,13 @@ Value getinfo(CWallet* pWallet, const Array& params, bool fHelp)
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
+    obj.push_back(Pair("wallets",       (int)pWalletMap->wallets.size()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("testnet",       fTestNet));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
-    
-    // List wallets
-    Array arrayWallets;
-    BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->wallets)
-    {
-        Object objWallet;
-        objWallet.push_back(Pair("name",          item.first));
-        objWallet.push_back(Pair("walletversion", item.second->GetVersion()));
-        objWallet.push_back(Pair("balance",       ValueFromAmount(item.second->GetBalance())));
-        objWallet.push_back(Pair("keypoololdest", (boost::int64_t)item.second->GetOldestKeyPoolTime()));
-        objWallet.push_back(Pair("keypoolsize",   item.second->GetKeyPoolSize()));
-        if (item.second->IsCrypted())
-            objWallet.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
-        
-        arrayWallets.push_back(objWallet);
-    }
-    
-    obj.push_back(Pair("wallets", arrayWallets));
+
     return obj;
 }
 
@@ -1601,12 +1585,21 @@ Value listwallets(CWallet* pWallet, const Array& params, bool fHelp)
             "listwallets\n"
             "Returns list of wallets.");
     
-    Array ret;
-    
+    Array arrayWallets;
     BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->wallets)
-        ret.push_back(item.first);
+    {
+        Object objWallet;
+        objWallet.push_back(Pair("name",          item.first));
+        objWallet.push_back(Pair("balance",       ValueFromAmount(item.second->GetBalance())));
+        if (item.second->IsCrypted())
+            objWallet.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));        
+        objWallet.push_back(Pair("walletversion", item.second->GetVersion()));
+        objWallet.push_back(Pair("keypoolsize",   item.second->GetKeyPoolSize()));
+        objWallet.push_back(Pair("keypoololdest", (boost::int64_t)item.second->GetOldestKeyPoolTime()));
+        arrayWallets.push_back(objWallet);
+    }
     
-    return ret;
+    return arrayWallets;
 }
 
 Value usewallet(CWallet* pWallet, const Array& params, bool fHelp)
