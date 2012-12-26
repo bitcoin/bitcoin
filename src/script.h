@@ -32,9 +32,10 @@ enum
 enum
 {
     SCRIPT_VERIFY_NONE      = 0,
-    SCRIPT_VERIFY_P2SH      = (1U << 0),
-    SCRIPT_VERIFY_STRICTENC = (1U << 1),
-    SCRIPT_VERIFY_NOCACHE   = (1U << 2),
+    SCRIPT_VERIFY_P2SH      = (1U << 0), // evaluate P2SH (BIP16) subscripts
+    SCRIPT_VERIFY_STRICTENC = (1U << 1), // enforce strict conformance to DER and SEC2 for signatures and pubkeys
+    SCRIPT_VERIFY_EVEN_S    = (1U << 2), // enforce even S values in signatures (depends on STRICTENC)
+    SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
 };
 
 enum txnouttype
@@ -665,8 +666,8 @@ public:
     }
 };
 
-bool IsCanonicalPubKey(const std::vector<unsigned char> &vchPubKey);
-bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig);
+bool IsCanonicalPubKey(const std::vector<unsigned char> &vchPubKey, unsigned int flags);
+bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig, unsigned int flags);
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);

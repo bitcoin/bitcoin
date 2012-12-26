@@ -194,9 +194,26 @@ public:
     }
 
     bool Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) {
+        vchSig.clear();
+        ECDSA_SIG *sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
+        if (sig == NULL)
+            return false;
+        if (BN_is_odd(sig->s)) {
+            // enforce even S values, by negating the value (modulo the order) if odd
+            BN_CTX *ctx = BN_CTX_new();
+            BN_CTX_start(ctx);
+            const EC_GROUP *group = EC_KEY_get0_group(pkey);
+            BIGNUM *order = BN_CTX_get(ctx);
+            EC_GROUP_get_order(group, order, ctx);
+            BN_sub(sig->s, order, sig->s);
+            BN_CTX_end(ctx);
+            BN_CTX_free(ctx);
+        }
         unsigned int nSize = ECDSA_size(pkey);
         vchSig.resize(nSize); // Make sure it is big enough
-        assert(ECDSA_sign(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], &nSize, pkey));
+        unsigned char *pos = &vchSig[0];
+        nSize = i2d_ECDSA_SIG(sig, &pos);
+        ECDSA_SIG_free(sig);
         vchSig.resize(nSize); // Shrink to fit actual size
         return true;
     }
