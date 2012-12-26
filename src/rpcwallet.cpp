@@ -16,9 +16,6 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
-int64 nWalletUnlockTime;
-static CCriticalSection cs_nWalletUnlockTime;
-
 std::string HelpRequiringPassphrase(CWallet* pWallet)
 {
     return (pWallet && pWallet->IsCrypted())
@@ -1275,44 +1272,11 @@ struct CleanWalletPassphraseParams
 void ThreadCleanWalletPassphrase(void* parg)
 {
     // Make this thread recognisable as the wallet relocking thread
+    // TODO: Give threads for different wallets distinct names.
     RenameThread("bitcoin-lock-wa");
-
+    
     CleanWalletPassphraseParams* pParams = (CleanWalletPassphraseParams*)parg;
-    int64 nMyWakeTime = GetTimeMillis() + *(pParams->pnSleepTime) * 1000;
-
-    ENTER_CRITICAL_SECTION(cs_nWalletUnlockTime);
-
-    if (nWalletUnlockTime == 0)
-    {
-        nWalletUnlockTime = nMyWakeTime;
-
-        do
-        {
-            if (nWalletUnlockTime==0)
-                break;
-            int64 nToSleep = nWalletUnlockTime - GetTimeMillis();
-            if (nToSleep <= 0)
-                break;
-
-            LEAVE_CRITICAL_SECTION(cs_nWalletUnlockTime);
-            Sleep(nToSleep);
-            ENTER_CRITICAL_SECTION(cs_nWalletUnlockTime);
-
-        } while(1);
-
-        if (nWalletUnlockTime)
-        {
-            nWalletUnlockTime = 0;
-            pParams->pWallet->Lock();
-        }
-    }
-    else
-    {
-        if (nWalletUnlockTime < nMyWakeTime)
-            nWalletUnlockTime = nMyWakeTime;
-    }
-
-    LEAVE_CRITICAL_SECTION(cs_nWalletUnlockTime);
+    pParams->pWallet->SleepThenLock(GetTimeMillis() + *(pParams->pnSleepTime) * 1000);
 
     delete pParams->pnSleepTime;
     delete pParams;
@@ -1398,11 +1362,7 @@ Value walletlock(CWallet* pWallet, const Array& params, bool fHelp)
     if (!pWallet->IsCrypted())
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletlock was called.");
 
-    {
-        LOCK(cs_nWalletUnlockTime);
-        pWallet->Lock();
-        nWalletUnlockTime = 0;
-    }
+    pWallet->Lock();
 
     return Value::null;
 }
@@ -1592,7 +1552,7 @@ Value listwallets(CWallet* pWallet, const Array& params, bool fHelp)
         objWallet.push_back(Pair("name",          item.first));
         objWallet.push_back(Pair("balance",       ValueFromAmount(item.second->GetBalance())));
         if (item.second->IsCrypted())
-            objWallet.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));        
+            objWallet.push_back(Pair("unlocked_until", (boost::int64_t)item.second->GetLockTime() / 1000));        
         objWallet.push_back(Pair("walletversion", item.second->GetVersion()));
         objWallet.push_back(Pair("keypoolsize",   item.second->GetKeyPoolSize()));
         objWallet.push_back(Pair("keypoololdest", (boost::int64_t)item.second->GetOldestKeyPoolTime()));

@@ -114,6 +114,9 @@ private:
     bool fUseCrypto;
 
 protected:
+    mutable CCriticalSection cs_nLockTime;
+    int64 nLockTime; 
+    
     bool SetCrypted();
 
     // will encrypt previously unencrypted keys
@@ -122,7 +125,7 @@ protected:
     bool Unlock(const CKeyingMaterial& vMasterKeyIn);
 
 public:
-    CCryptoKeyStore() : fUseCrypto(false)
+    CCryptoKeyStore() : fUseCrypto(false), nLockTime(0)
     {
     }
 
@@ -144,6 +147,9 @@ public:
     }
 
     bool Lock();
+    void SleepThenLock(int64 nMyWakeTime);
+    int64 GetLockTime() const { return nLockTime; }
+    CCriticalSection& GetLockTimeCriticalSection() { return cs_nLockTime; }
 
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     bool AddKey(const CKey& key);
