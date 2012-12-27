@@ -1859,16 +1859,9 @@ bool CWallet::SetAccount(const CTxDestination& dest, const std::string strAccoun
     return SetAddressBookName(dest, strAccount);
 }
 
-bool CWallet::IsMine(const CBitcoinAddress& address) const
-{
-    CScript scriptPubKey;
-    scriptPubKey.SetDestination(address.Get());
-    return ::IsMine(*this, scriptPubKey);
-}
-
 int64 CWallet::GetAddressTally(const CTxDestination& dest, int nMinDepth)
 {
-    if (!IsMine(CBitcoinAddress(dest)))
+    if (!IsMine(dest))
         return 0;
 
     int64 nAmount = 0;

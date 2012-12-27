@@ -978,7 +978,7 @@ Value listaccounts(const Array& params, bool fHelp)
     // TODO: return ObjectFromMap(pwalletMain->GetAccountList(int nMindepth);
     map<string, int64> mapAccountBalances;
     BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
-        if (pwalletMain->IsMine(CBitcoinAddress(entry.first))) // This address belongs to me
+        if (pwalletMain->IsMine(entry.first)) // This address belongs to me
             mapAccountBalances[entry.second] = 0;
     }
 
@@ -1372,7 +1372,7 @@ Value validateaddress(const Array& params, bool fHelp)
         CTxDestination dest = address.Get();
         string currentAddress = address.ToString();
         ret.push_back(Pair("address", currentAddress));
-        bool fMine = pwalletMain->IsMine(address);
+        bool fMine = pwalletMain->IsMine(dest);
         ret.push_back(Pair("ismine", fMine));
         if (fMine) {
             Object detail = boost::apply_visitor(DescribeAddressVisitor(), dest);

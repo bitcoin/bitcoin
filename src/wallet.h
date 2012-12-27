@@ -203,7 +203,10 @@ public:
     {
         return ::IsMine(*this, txout.scriptPubKey);
     }
-    bool IsMine(const CBitcoinAddress& address) const;
+    bool IsMine(const CTxDestination& dest) const
+    {
+    	return ::IsMine(*this, dest);
+    }
     int64 GetCredit(const CTxOut& txout) const
     {
         if (!MoneyRange(txout.nValue))
