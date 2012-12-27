@@ -6,9 +6,7 @@
 #include <boost/assign/list_of.hpp>
 
 #include "wallet.h"
-// TODO: Remove this include after removing all dependencies
-// NOTE: DO NOT ADD NEW DEPENDENCIES ON CWalletDB!
-#include "walletdb.h"
+// NOTE: Do NOT add dependencies on walletdb.h!
 #include "bitcoinrpc.h"
 #include "init.h"
 #include "base58.h"
@@ -453,36 +451,8 @@ Value movecmd(const Array& params, bool fHelp)
     if (params.size() > 4)
         strComment = params[4].get_str();
 
-    // TODO: replace block with pwalletMain->MoveBalance(string from, string to, int64 amount, unused, string comment)
-    CWalletDB walletdb(pwalletMain->strWalletFile);
-    if (!walletdb.TxnBegin())
-        throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
-
-    int64 nNow = GetAdjustedTime();
-
-    // Debit
-    CAccountingEntry debit;
-    debit.nOrderPos = pwalletMain->IncOrderPosNext(&walletdb);
-    debit.strAccount = strFrom;
-    debit.nCreditDebit = -nAmount;
-    debit.nTime = nNow;
-    debit.strOtherAccount = strTo;
-    debit.strComment = strComment;
-    walletdb.WriteAccountingEntry(debit);
-
-    // Credit
-    CAccountingEntry credit;
-    credit.nOrderPos = pwalletMain->IncOrderPosNext(&walletdb);
-    credit.strAccount = strTo;
-    credit.nCreditDebit = nAmount;
-    credit.nTime = nNow;
-    credit.strOtherAccount = strFrom;
-    credit.strComment = strComment;
-    walletdb.WriteAccountingEntry(credit);
-
-    if (!walletdb.TxnCommit())
-        throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
-
+    if (!pwalletMain->MoveBalance(strFrom, strTo, nAmount, strComment))
+    	throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
     return true;
 }
 
@@ -1004,7 +974,7 @@ Value listaccounts(const Array& params, bool fHelp)
     }
 
     list<CAccountingEntry> acentries;
-    CWalletDB(pwalletMain->strWalletFile).ListAccountCreditDebit("*", acentries);
+    pwalletMain->ListAccountCreditDebit("*", acentries);
     BOOST_FOREACH(const CAccountingEntry& entry, acentries)
         mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
 

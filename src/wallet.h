@@ -299,7 +299,11 @@ public:
     int64 GetAccountBalance(const std::string& strAccount, int nMinDepth);
     int64 GetAddressTally(const CTxDestination& dest, int nMinDepth);
     std::set<CTxDestination> GetAccountAddresses(std::string strAccount);
-
+    void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& entries)
+    {
+        CWalletDB(strWalletFile).ListAccountCreditDebit(strAccount, entries);
+    }
+    bool MoveBalance(const std::string& strFrom, const std::string& strTo, const int64 nAmount, const std::string& strComment);
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
     bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
 

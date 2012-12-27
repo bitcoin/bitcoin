@@ -1918,3 +1918,36 @@ std::set<CTxDestination> CWallet::GetAccountAddresses(std::string strAccount)
     }
     return setRet;
 }
+
+bool CWallet::MoveBalance(const std::string& strFrom, const std::string& strTo, const int64 nAmount, const std::string& strComment)
+{
+    CWalletDB walletdb(strWalletFile);
+    if (!walletdb.TxnBegin())
+        return false;
+
+    int64 nNow = GetAdjustedTime();
+
+    // Debit
+    CAccountingEntry debit;
+    debit.nOrderPos = IncOrderPosNext(&walletdb);
+    debit.strAccount = strFrom;
+    debit.nCreditDebit = -nAmount;
+    debit.nTime = nNow;
+    debit.strOtherAccount = strTo;
+    debit.strComment = strComment;
+    walletdb.WriteAccountingEntry(debit);
+
+    // Credit
+    CAccountingEntry credit;
+    credit.nOrderPos = IncOrderPosNext(&walletdb);
+    credit.strAccount = strTo;
+    credit.nCreditDebit = nAmount;
+    credit.nTime = nNow;
+    credit.strOtherAccount = strFrom;
+    credit.strComment = strComment;
+    walletdb.WriteAccountingEntry(credit);
+
+    if (!walletdb.TxnCommit())
+        return false;
+    return true;
+}
