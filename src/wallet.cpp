@@ -1897,8 +1897,11 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
     printf("%s", strErrors.str().c_str());
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     
-    this->wallets[strName] = pWallet;
-    RegisterWallet(pWallet);
+    {
+        LOCK(cs_WalletMap);
+        this->wallets[strName] = pWallet;
+        RegisterWallet(pWallet);
+    }
     
     CBlockIndex *pindexRescan = pindexBest;
     if (fRescan)
@@ -1927,24 +1930,33 @@ bool CWalletMap::UnloadWallet(const std::string& strName)
     CWallet* pWallet = GetWallet(strName);
     if (!pWallet) return false;
     
-    UnregisterWallet(pWallet);
-    wallets.erase(strName);
-    delete pWallet;
+    {
+        LOCK(cs_WalletMap);
+        UnregisterWallet(pWallet);
+        wallets.erase(strName);
+        delete pWallet;
+    }
     return true;
 }
 
 void CWalletMap::UnloadAllWallets()
 {
-    UnregisterAllWallets();
-    BOOST_FOREACH(const wallet_map::value_type& item, wallets)
-        delete item.second;
-    wallets.clear();
+    {
+        LOCK(cs_WalletMap);
+        UnregisterAllWallets();
+        BOOST_FOREACH(const wallet_map::value_type& item, wallets)
+            delete item.second;
+        wallets.clear();
+    }
 }
 
 CWallet* CWalletMap::GetWallet(const string& strName)
 {
-    if (!wallets.count(strName)) return NULL;
-    return wallets[strName];
+    {
+        LOCK(cs_WalletMap);
+        if (!wallets.count(strName)) return NULL;
+        return wallets[strName];
+    }
 }
 
 bool CWalletMap::IsValidName(const string& strName)

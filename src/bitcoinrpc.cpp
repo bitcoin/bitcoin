@@ -1076,6 +1076,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
         // Execute
         Value result;
         {
+            LOCK(pWalletMap->cs_WalletMap);
             if (pcmd->unlocked) {
                 result = pcmd->actor(pWallet, params, false);
             }

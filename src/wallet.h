@@ -321,6 +321,7 @@ typedef std::map<std::string, CWallet*> wallet_map;
 class CWalletMap
 {
 public:
+    mutable CCriticalSection cs_WalletMap;
     wallet_map wallets;
 
     ~CWalletMap() { UnloadAllWallets(); }
