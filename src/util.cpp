@@ -944,12 +944,31 @@ bool WildcardMatch(const string& str, const string& mask)
     return WildcardMatch(str.c_str(), mask.c_str());
 }
 
-
-
-
-
-
-
+vector<string> GetFilesAtPath(const boost::filesystem::path& _path, unsigned int flags)
+{
+    vector<string> vstrFiles;
+    if (!boost::filesystem::exists(_path))
+        throw runtime_error("Path does not exist.");
+    
+    if ((flags & file_option_flags::REGULAR_FILES) && boost::filesystem::is_regular_file(_path))
+    {
+        vstrFiles.push_back(_path.filename().string());
+        return vstrFiles;
+    }
+    if (boost::filesystem::is_directory(_path))
+    {
+        vector<boost::filesystem::path> vPaths;
+        copy(boost::filesystem::directory_iterator(_path), boost::filesystem::directory_iterator(), back_inserter(vPaths));
+        BOOST_FOREACH(const boost::filesystem::path& pFile, vPaths)
+        {
+            if (((flags & file_option_flags::REGULAR_FILES) && boost::filesystem::is_regular_file(pFile)) ||
+                ((flags & file_option_flags::DIRECTORIES) && boost::filesystem::is_directory(pFile)))
+                vstrFiles.push_back(pFile.filename().string());
+        }
+        return vstrFiles;
+    }
+    throw runtime_error("Path exists but is neither a regular file nor a directory.");
+}
 
 static std::string FormatException(std::exception* pex, const char* pszThread)
 {

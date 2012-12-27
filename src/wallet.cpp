@@ -1822,7 +1822,7 @@ bool static InitWarning(const std::string &str)
 bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, bool fRescan, bool fUpgrade, int nMaxVersion)
 {
     // Check that the wallet name is valid
-    if (!this->IsValidName(strName)) {
+    if (!CWalletMap::IsValidName(strName)) {
         strErrors << _("Wallet name may only contain letters, numbers, and underscores.");
         return false;
     }
@@ -1950,4 +1950,17 @@ CWallet* CWalletMap::GetWallet(const string& strName)
 bool CWalletMap::IsValidName(const string& strName)
 {
     return boost::regex_match(strName, WALLET_NAME_REGEX);
+}
+
+vector<string> CWalletMap::GetWalletsAtPath(const boost::filesystem::path& pathWallets)
+{
+    vector<string> vstrFiles = GetFilesAtPath(pathWallets, file_option_flags::REGULAR_FILES);
+    vector<string> vstrNames;
+    boost::cmatch match;
+    BOOST_FOREACH(const string& strFile, vstrFiles)
+    {
+        if (boost::regex_match(strFile.c_str(), match, WALLET_FILE_REGEX))
+            vstrNames.push_back(string(match[1].first, match[1].second));
+    }
+    return vstrNames;
 }

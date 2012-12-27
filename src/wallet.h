@@ -316,6 +316,7 @@ public:
 /** A CWalletMap associates wallets with names and automatically deallocates them upon destruction.
  */
 const boost::regex WALLET_NAME_REGEX("[a-zA-Z0-9_]*");
+const boost::regex WALLET_FILE_REGEX("wallet-([a-zA-Z0-9_]+)\\.dat");
 typedef std::map<std::string, CWallet*> wallet_map;
 class CWalletMap
 {
@@ -332,7 +333,8 @@ public:
     CWallet* GetWallet(const std::string& strName);
     CWallet* GetDefaultWallet() { return GetWallet(""); }
     
-    bool IsValidName(const std::string& strName);
+    static bool IsValidName(const std::string& strName);
+    static std::vector<std::string> GetWalletsAtPath(const boost::filesystem::path& pathWallets);
 };
 
 /** A key allocated from the key pool. */

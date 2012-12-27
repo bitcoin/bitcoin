@@ -392,6 +392,81 @@ void ThreadImport(void *data) {
     vnThreadsRunning[THREAD_IMPORT]--;
 }
 
+bool LoadWallets(ostringstream& strErrors)
+{
+    pWalletMap = new CWalletMap();
+    
+    // Get wallet names from -usewallet parameters
+    set<string> setWalletNames;
+    BOOST_FOREACH(const string& name, mapMultiArgs["-usewallet"])
+    {
+        if (name.size() == 0) continue;
+        if (!CWalletMap::IsValidName(name))
+        {
+            printf("Invalid wallet name in -usewallet: %s\n", name.c_str());
+            strErrors << "Invalid wallet name in -usewallet: " << name << "\n";
+        }
+        else
+            setWalletNames.insert(name);
+    }
+    
+    // If there are no -usewallet parameters, get wallet names from files in data directory
+    if (mapMultiArgs["-usewallet"].size() == 0)
+    {
+        try
+        {
+            vector<string> v = CWalletMap::GetWalletsAtPath(GetDataDir());
+            copy(v.begin(), v.end(), inserter(setWalletNames, setWalletNames.end()));
+        }
+        catch (const std::exception& e)
+        {
+            printf("Error looking for wallets from data directory: %s\n", e.what());
+            strErrors << "Error looking for wallets from data directory: " << e.what() << endl;
+        }
+    }
+    
+    // If there are -nousewallet parameters, remove those wallets from our set
+    BOOST_FOREACH(const string& name, mapMultiArgs["-nousewallet"])
+    {
+        if (name.size() == 0) continue;
+        if (!CWalletMap::IsValidName(name))
+        {
+            printf("Invalid wallet name in -nousewallet: %s\n", name.c_str());
+            strErrors << "Invalid wallet name in -nousewallet: " << name << "\n";
+        }
+        else
+            setWalletNames.erase(name);
+    }
+    
+    // Get additional parameters
+    bool fRescan = GetBoolArg("-rescan");
+    bool fUpgrade = GetBoolArg("-upgradewallet");
+    int nMaxVersion = GetArg("-upgradewallet", 0);
+    
+    // Always require a default wallet
+    ostringstream ossErrors;
+    if (!pWalletMap->LoadWallet("", ossErrors, fRescan, fUpgrade, nMaxVersion))
+    {
+        printf("Failed to load default wallet: %s\nExiting...\n", ossErrors.str().c_str());
+        return false;
+    }
+    
+    // Be tolerant on nondefault wallets. Just report errors but don't die.
+    BOOST_FOREACH(const string& strWalletName, setWalletNames)
+    {
+        ostringstream strLoadErrors;
+        if (!pWalletMap->LoadWallet(strWalletName, strLoadErrors, fRescan, fUpgrade, nMaxVersion))
+        {
+            strErrors << strLoadErrors.str();
+            printf("Error loading wallet %s: %s\n", strWalletName.c_str(), strLoadErrors.str().c_str());
+        }
+    }
+    
+    // TODO: remove dependency on a global variable named pwalletMain in the rest of the app.
+    pwalletMain = pWalletMap->GetDefaultWallet();
+    return true;
+}
+
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
  */
@@ -797,49 +872,7 @@ bool AppInit2()
     
     uiInterface.InitMessage(_("Loading wallets..."));
     printf("Loading wallets...\n");
-
-    pWalletMap = new CWalletMap();
-
-    // Get wallet names
-    set<string> vstrWalletNames;
-    BOOST_FOREACH(const string& strWalletName, mapMultiArgs["-usewallet"])
-    {
-        if (strWalletName.size() == 0) continue;
-        if (!pWalletMap->IsValidName(strWalletName))
-        {
-            printf("Invalid wallet name: %s\n", strWalletName.c_str());
-            strErrors << "Invalid wallet name: " << strWalletName << "\n";
-        }
-        else
-            vstrWalletNames.insert(strWalletName);
-    }
-
-    // Get parameters
-    bool fRescan = GetBoolArg("-rescan");
-    bool fUpgrade = GetBoolArg("-upgradewallet");
-    int nMaxVersion = GetArg("-upgradewallet", 0);
-        
-    // Always require a default wallet
-    ostringstream ossErrors;
-    if (!pWalletMap->LoadWallet("", ossErrors, fRescan, fUpgrade, nMaxVersion))
-    {
-        printf("Failed to load default wallet: %s\nExiting...\n", ossErrors.str().c_str());
-        return false;
-    }
-    
-    // Be tolerant on nondefault wallets. Just report errors but don't die.
-    BOOST_FOREACH(const string& strWalletName, vstrWalletNames)
-    {
-        ostringstream strLoadErrors;
-        if (!pWalletMap->LoadWallet(strWalletName, strLoadErrors, fRescan, fUpgrade, nMaxVersion))
-        {
-            strErrors << strLoadErrors.str();
-            printf("Error loading wallet %s: %s\n", strWalletName.c_str(), strLoadErrors.str().c_str());
-        }
-    }
-    
-    // TODO: remove dependency on a global variable named pwalletMain in the rest of the app.
-    pwalletMain = pWalletMap->GetDefaultWallet();
+    if (!LoadWallets(strErrors)) return false;
     
     // ********************************************************* Step 9: import blocks
 
