@@ -257,7 +257,9 @@ static const CRPCCommand vRPCCommands[] =
     { "lockunspent",            &lockunspent,            false,  false,    true  },
     { "listlockunspent",        &listlockunspent,        false,  false,    true  },
     { "listwallets",            &listwallets,            true,   true,     false },
-    { "usewallet",              &usewallet,              true,   true,     false }
+    { "usewallet",              &usewallet,              false,  true,     false },
+    { "loadwallet",             &loadwallet,             false,  true,     false },
+    { "unloadwallet",           &unloadwallet,           false,  true,     false }
 };
 
 CRPCTable::CRPCTable()
@@ -1225,6 +1227,9 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "lockunspent"            && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "lockunspent"            && n > 1) ConvertTo<Array>(params[1]);
     if (strMethod == "importprivkey"          && n > 2) ConvertTo<bool>(params[2]);
+    if (strMethod == "loadwallet"             && n > 1) ConvertTo<bool>(params[1]);
+    if (strMethod == "loadwallet"             && n > 2) ConvertTo<bool>(params[2]);
+    if (strMethod == "loadwallet"             && n > 3) ConvertTo<boost::int64_t>(params[3]);
 
     return params;
 }

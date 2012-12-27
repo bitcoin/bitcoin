@@ -324,6 +324,12 @@ public:
         BOOST_FOREACH(const wallet_map::value_type& item, wallets)
             delete item.second;
     }
+    
+    bool LoadWallet(const std::string& strName, const std::string& strFile, std::ostringstream& strErrors, bool fRescan = false, bool fUpgrade = false, int nMaxVersion = 0);
+    bool UnloadWallet(const std::string& strName);
+    
+    // Returns NULL if wallet not found.
+    CWallet* GetWallet(const std::string& strName);
 };
 
 /** A key allocated from the key pool. */

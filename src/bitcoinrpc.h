@@ -172,6 +172,8 @@ extern json_spirit::Value backupwallet(CWallet* pWallet, const json_spirit::Arra
 extern json_spirit::Value keypoolrefill(CWallet* pWallet, const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listwallets(CWallet* pWallet, const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value usewallet(CWallet* pWallet, const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value loadwallet(CWallet* pWallet, const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value unloadwallet(CWallet* pWallet, const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value walletpassphrase(CWallet* pWallet, const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value walletpassphrasechange(CWallet* pWallet, const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value walletlock(CWallet* pWallet, const json_spirit::Array& params, bool fHelp);

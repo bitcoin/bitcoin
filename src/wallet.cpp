@@ -1804,3 +1804,119 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts)
     }
 }
 
+// TODO: Remove these functions
+bool static InitError(const std::string &str)
+{
+    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_ERROR);
+    return false;
+}
+
+bool static InitWarning(const std::string &str)
+{
+    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING);
+    return true;
+}
+
+// TODO: Remove dependencies for I/O on printf to debug.log, InitError, and InitWarning
+bool CWalletMap::LoadWallet(const string& strName, const string& strFile, ostringstream& strErrors, bool fRescan, bool fUpgrade, int nMaxVersion)
+{
+    printf("Loading wallet \"%s\" from %s...\n", strName.c_str(), strFile.c_str());
+    int64 nStart = GetTimeMillis();
+    bool fFirstRun = true;
+    CWallet* pWallet = new CWallet(strFile);
+    this->wallets[strName] = pWallet;
+    DBErrors nLoadWalletRet = pWallet->LoadWallet(fFirstRun);
+    if (nLoadWalletRet != DB_LOAD_OK)
+    {
+        if (nLoadWalletRet == DB_CORRUPT)
+            strErrors << _("Error loading ") << strFile << _(": Wallet corrupted") << "\n";
+        else if (nLoadWalletRet == DB_NONCRITICAL_ERROR)
+        {
+            string msg(_("Warning: error reading "));
+            msg += strFile + _("! All keys read correctly, but transaction data"
+                               " or address book entries might be missing or incorrect.");
+            InitWarning(msg);
+        }
+        else if (nLoadWalletRet == DB_TOO_NEW)
+            strErrors << _("Error loading ") << strFile << _(": Wallet requires newer version of Bitcoin") << "\n";
+        else if (nLoadWalletRet == DB_NEED_REWRITE)
+        {
+            strErrors << _("Wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
+            printf("%s", strErrors.str().c_str());
+            return InitError(strErrors.str());
+        }
+        else
+            strErrors << _("Error loading ") << strFile << "\n";
+    }
+    
+    if (fFirstRun || fUpgrade)
+    {
+        if (nMaxVersion == 0) // the -upgradewallet without argument case
+        {
+            printf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
+            nMaxVersion = CLIENT_VERSION;
+            pWallet->SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
+        }
+        else
+            printf("Allowing wallet upgrade up to %i\n", nMaxVersion);
+        if (nMaxVersion < pWallet->GetVersion())
+            strErrors << _("Cannot downgrade wallet") << "\n";
+        pWallet->SetMaxVersion(nMaxVersion);
+    }
+    
+    if (fFirstRun)
+    {
+        // Create new keyUser and set as default key
+        RandAddSeedPerfmon();
+        
+        CPubKey newDefaultKey;
+        if (!pWallet->GetKeyFromPool(newDefaultKey, false))
+            strErrors << _("Cannot initialize keypool") << "\n";
+        pWallet->SetDefaultKey(newDefaultKey);
+        if (!pWallet->SetAddressBookName(pWallet->vchDefaultKey.GetID(), ""))
+            strErrors << _("Cannot write default address") << "\n";
+    }
+    
+    printf("%s", strErrors.str().c_str());
+    printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+    
+    RegisterWallet(pWallet);
+    
+    CBlockIndex *pindexRescan = pindexBest;
+    if (fRescan)
+        pindexRescan = pindexGenesisBlock;
+    else
+    {
+        CWalletDB walletdb(strFile);
+        CBlockLocator locator;
+        if (walletdb.ReadBestBlock(locator))
+            pindexRescan = locator.GetBlockIndex();
+    }
+    if (pindexBest && pindexBest != pindexRescan)
+    {
+        uiInterface.InitMessage(_("Rescanning..."));
+        printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
+        nStart = GetTimeMillis();
+        pWallet->ScanForWalletTransactions(pindexRescan, true);
+        printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+    }
+    
+    return true;
+}
+
+bool CWalletMap::UnloadWallet(const std::string& strName)
+{
+    CWallet* pWallet = GetWallet(strName);
+    if (!pWallet) return false;
+    
+    UnregisterWallet(pWallet);
+    wallets.erase(strName);
+    delete pWallet;
+    return true;
+}
+
+CWallet* CWalletMap::GetWallet(const string& strName)
+{
+    if (!wallets.count(strName)) return NULL;
+    return wallets[strName];
+}

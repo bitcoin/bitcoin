@@ -1572,7 +1572,7 @@ Value usewallet(CWallet* pWallet, const Array& params, bool fHelp)
     string strWalletName = params[0].get_str();
     wallet_map::iterator it = pWalletMap->wallets.find(strWalletName);
     if (it == pWalletMap->wallets.end())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, string("Wallet ") + strWalletName + " not found.");
+        throw JSONRPCError(RPC_WALLET_ERROR, string("Wallet ") + strWalletName + " not found.");
     
     string strMethod = params[1].get_str();
     const CRPCCommand *pcmd = tableRPC[strMethod];
@@ -1588,3 +1588,50 @@ Value usewallet(CWallet* pWallet, const Array& params, bool fHelp)
 
     return tableRPC.execute(strMethod, RPCConvertValues(strMethod, vstrParams), it->second);
 }
+
+Value loadwallet(CWallet* pWallet, const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 4)
+        throw runtime_error(
+            "loadwallet <walletname> [rescan=false] [upgradewallet=false] [maxversion=(latest)]\n"
+            "Loads a wallet.");
+    
+    string strWalletName = params[0].get_str();
+    
+    if (pWalletMap->GetWallet(strWalletName))
+        throw JSONRPCError(RPC_WALLET_ERROR, string("Wallet ") + strWalletName + " is already loaded.");
+    
+    string strWalletFile = strWalletName + ".dat";
+    ostringstream strErrors;
+    bool fRescan = (params.size() > 1) ? params[1].get_bool() : false;
+    bool fUpgrade = (params.size() > 2) ? params[2].get_bool() : false;
+    int nMaxVersion = (params.size() > 3) ? params[3].get_int() : 0;
+    
+    if (!pWalletMap->LoadWallet(strWalletName, strWalletFile, strErrors, fRescan, fUpgrade, nMaxVersion))
+        throw JSONRPCError(RPC_WALLET_ERROR, string("Load failed: ") + strErrors.str());
+    
+    return string("Wallet ") + strWalletName + " loaded.";
+}
+
+Value unloadwallet(CWallet* pWallet, const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "unloadwallet <walletname>\n"
+            "Unloads a wallet.");
+    
+    string strWalletName = params[0].get_str();
+    
+    if (strWalletName == "default")
+        throw JSONRPCError(RPC_WALLET_ERROR, "Default wallet cannot be unloaded.");    
+    if (!pWalletMap->UnloadWallet(strWalletName))
+        throw JSONRPCError(RPC_WALLET_ERROR, string("Wallet ") + strWalletName + " not loaded.");
+    
+    return string("Wallet ") + strWalletName + " unloaded.";
+}
+
+
+
+
+
+

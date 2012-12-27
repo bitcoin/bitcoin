@@ -393,95 +393,6 @@ void ThreadImport(void *data) {
     vnThreadsRunning[THREAD_IMPORT]--;
 }
 
-bool LoadWallet(const string& strName, const string& strFile, std::ostringstream& strErrors)
-{
-    printf("Loading wallet \"%s\" from %s...\n", strName.c_str(), strFile.c_str());
-    int64 nStart = GetTimeMillis();
-    bool fFirstRun = true;
-    CWallet* pwallet = new CWallet(strFile);
-    pWalletMap->wallets[strName] = pwallet;
-    // TODO: get rid of pwalletMain
-    if (strName == "default") pwalletMain = pwallet;
-    DBErrors nLoadWalletRet = pwallet->LoadWallet(fFirstRun);
-    if (nLoadWalletRet != DB_LOAD_OK)
-    {
-        if (nLoadWalletRet == DB_CORRUPT)
-            strErrors << _("Error loading ") << strFile << _(": Wallet corrupted") << "\n";
-        else if (nLoadWalletRet == DB_NONCRITICAL_ERROR)
-        {
-            string msg(_("Warning: error reading "));
-            msg += strFile + _("! All keys read correctly, but transaction data"
-                               " or address book entries might be missing or incorrect.");
-            InitWarning(msg);
-        }
-        else if (nLoadWalletRet == DB_TOO_NEW)
-            strErrors << _("Error loading ") << strFile << _(": Wallet requires newer version of Bitcoin") << "\n";
-        else if (nLoadWalletRet == DB_NEED_REWRITE)
-        {
-            strErrors << _("Wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
-            printf("%s", strErrors.str().c_str());
-            return InitError(strErrors.str());
-        }
-        else
-            strErrors << _("Error loading ") << strFile << "\n";
-    }
-    
-    if (GetBoolArg("-upgradewallet", fFirstRun))
-    {
-        int nMaxVersion = GetArg("-upgradewallet", 0);
-        if (nMaxVersion == 0) // the -upgradewallet without argument case
-        {
-            printf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
-            nMaxVersion = CLIENT_VERSION;
-            pwallet->SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
-        }
-        else
-            printf("Allowing wallet upgrade up to %i\n", nMaxVersion);
-        if (nMaxVersion < pwallet->GetVersion())
-            strErrors << _("Cannot downgrade wallet") << "\n";
-        pwallet->SetMaxVersion(nMaxVersion);
-    }
-    
-    if (fFirstRun)
-    {
-        // Create new keyUser and set as default key
-        RandAddSeedPerfmon();
-        
-        CPubKey newDefaultKey;
-        if (!pwallet->GetKeyFromPool(newDefaultKey, false))
-            strErrors << _("Cannot initialize keypool") << "\n";
-        pwallet->SetDefaultKey(newDefaultKey);
-        if (!pwallet->SetAddressBookName(pwallet->vchDefaultKey.GetID(), ""))
-            strErrors << _("Cannot write default address") << "\n";
-    }
-    
-    printf("%s", strErrors.str().c_str());
-    printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
-    
-    RegisterWallet(pwallet);
-    
-    CBlockIndex *pindexRescan = pindexBest;
-    if (GetBoolArg("-rescan"))
-        pindexRescan = pindexGenesisBlock;
-    else
-    {
-        CWalletDB walletdb(strFile);
-        CBlockLocator locator;
-        if (walletdb.ReadBestBlock(locator))
-            pindexRescan = locator.GetBlockIndex();
-    }
-    if (pindexBest && pindexBest != pindexRescan)
-    {
-        uiInterface.InitMessage(_("Rescanning..."));
-        printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
-        nStart = GetTimeMillis();
-        pwallet->ScanForWalletTransactions(pindexRescan, true);
-        printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
-    }
-
-    return true;
-}
-
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
  */
@@ -885,7 +796,6 @@ bool AppInit2()
 
     // ********************************************************* Step 8: load wallets
     
-    // TODO: Encapsulate wallet better
     uiInterface.InitMessage(_("Loading wallets..."));
     printf("Loading wallets...\n");
         
@@ -896,11 +806,19 @@ bool AppInit2()
     BOOST_FOREACH(const string& strWalletName, mapMultiArgs["-usewallet"])
         mapWalletFiles[strWalletName] = strWalletName + ".dat";    
 
+    // Get parameters
+    bool fRescan = GetBoolArg("-rescan");
+    bool fUpgrade = GetBoolArg("-upgradewallet");
+    int nMaxVersion = GetArg("-upgradewallet", 0);
+    
     // TODO: Make the wallet loads more tolerant. Load all wallets possible.
+    // TODO: Clean up I/O
     pWalletMap = new CWalletMap();
     BOOST_FOREACH(const string_map::value_type& mapWalletFile, mapWalletFiles)
-    if (!LoadWallet(mapWalletFile.first, mapWalletFile.second, strErrors))
+    if (!pWalletMap->LoadWallet(mapWalletFile.first, mapWalletFile.second, strErrors, fRescan, fUpgrade, nMaxVersion))
         return false;
+    
+    pwalletMain = pWalletMap->GetWallet("default");
     
     // ********************************************************* Step 9: import blocks
 
