@@ -1545,21 +1545,20 @@ Value listwallets(CWallet* pWallet, const Array& params, bool fHelp)
             "listwallets\n"
             "Returns list of wallets.");
     
-    Array arrayWallets;
+    Object obj;
     BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->wallets)
     {
         Object objWallet;
-        objWallet.push_back(Pair("name",          item.first));
         objWallet.push_back(Pair("balance",       ValueFromAmount(item.second->GetBalance())));
         if (item.second->IsCrypted())
             objWallet.push_back(Pair("unlocked_until", (boost::int64_t)item.second->GetLockTime() / 1000));        
         objWallet.push_back(Pair("walletversion", item.second->GetVersion()));
         objWallet.push_back(Pair("keypoolsize",   item.second->GetKeyPoolSize()));
         objWallet.push_back(Pair("keypoololdest", (boost::int64_t)item.second->GetOldestKeyPoolTime()));
-        arrayWallets.push_back(objWallet);
+        obj.push_back(Pair(item.first, objWallet));
     }
     
-    return arrayWallets;
+    return obj;
 }
 
 Value usewallet(CWallet* pWallet, const Array& params, bool fHelp)
@@ -1601,13 +1600,12 @@ Value loadwallet(CWallet* pWallet, const Array& params, bool fHelp)
     if (pWalletMap->GetWallet(strWalletName))
         throw JSONRPCError(RPC_WALLET_ERROR, string("Wallet ") + strWalletName + " is already loaded.");
     
-    string strWalletFile = strWalletName + ".dat";
     ostringstream strErrors;
     bool fRescan = (params.size() > 1) ? params[1].get_bool() : false;
     bool fUpgrade = (params.size() > 2) ? params[2].get_bool() : false;
     int nMaxVersion = (params.size() > 3) ? params[3].get_int() : 0;
     
-    if (!pWalletMap->LoadWallet(strWalletName, strWalletFile, strErrors, fRescan, fUpgrade, nMaxVersion))
+    if (!pWalletMap->LoadWallet(strWalletName, strErrors, fRescan, fUpgrade, nMaxVersion))
         throw JSONRPCError(RPC_WALLET_ERROR, string("Load failed: ") + strErrors.str());
     
     return string("Wallet ") + strWalletName + " loaded.";
@@ -1622,10 +1620,10 @@ Value unloadwallet(CWallet* pWallet, const Array& params, bool fHelp)
     
     string strWalletName = params[0].get_str();
     
-    if (strWalletName == "default")
+    if (strWalletName.size() == 0)
         throw JSONRPCError(RPC_WALLET_ERROR, "Default wallet cannot be unloaded.");    
     if (!pWalletMap->UnloadWallet(strWalletName))
-        throw JSONRPCError(RPC_WALLET_ERROR, string("Wallet ") + strWalletName + " not loaded.");
+        throw JSONRPCError(RPC_WALLET_ERROR, string("No wallet named ") + strWalletName + " is currently loaded.");
     
     return string("Wallet ") + strWalletName + " unloaded.";
 }

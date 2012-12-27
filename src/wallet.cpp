@@ -1818,18 +1818,35 @@ bool static InitWarning(const std::string &str)
 }
 
 // TODO: Remove dependencies for I/O on printf to debug.log, InitError, and InitWarning
-bool CWalletMap::LoadWallet(const string& strName, const string& strFile, ostringstream& strErrors, bool fRescan, bool fUpgrade, int nMaxVersion)
+// TODO: Fix error handling.
+bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, bool fRescan, bool fUpgrade, int nMaxVersion)
 {
+    // Check that the wallet name is valid
+    if (!this->IsValidName(strName)) {
+        strErrors << _("Wallet name may only contain letters, numbers, and underscores.");
+        return false;
+    }
+    
+    // Wallet file name for wallet foo will be wallet-foo.dat
+    // The empty string is reserved for the default wallet whose file is wallet.dat
+    string strFile = "wallet";
+    if (strName.size() > 0)
+        strFile += "-" + strName;
+    strFile += ".dat";
+    
     printf("Loading wallet \"%s\" from %s...\n", strName.c_str(), strFile.c_str());
     int64 nStart = GetTimeMillis();
     bool fFirstRun = true;
     CWallet* pWallet = new CWallet(strFile);
-    this->wallets[strName] = pWallet;
     DBErrors nLoadWalletRet = pWallet->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DB_LOAD_OK)
     {
         if (nLoadWalletRet == DB_CORRUPT)
+        {
             strErrors << _("Error loading ") << strFile << _(": Wallet corrupted") << "\n";
+            delete pWallet;
+            return false;
+        }
         else if (nLoadWalletRet == DB_NONCRITICAL_ERROR)
         {
             string msg(_("Warning: error reading "));
@@ -1880,6 +1897,7 @@ bool CWalletMap::LoadWallet(const string& strName, const string& strFile, ostrin
     printf("%s", strErrors.str().c_str());
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     
+    this->wallets[strName] = pWallet;
     RegisterWallet(pWallet);
     
     CBlockIndex *pindexRescan = pindexBest;
@@ -1915,8 +1933,21 @@ bool CWalletMap::UnloadWallet(const std::string& strName)
     return true;
 }
 
+void CWalletMap::UnloadAllWallets()
+{
+    UnregisterAllWallets();
+    BOOST_FOREACH(const wallet_map::value_type& item, wallets)
+        delete item.second;
+    wallets.clear();
+}
+
 CWallet* CWalletMap::GetWallet(const string& strName)
 {
     if (!wallets.count(strName)) return NULL;
     return wallets[strName];
+}
+
+bool CWalletMap::IsValidName(const string& strName)
+{
+    return boost::regex_match(strName, WALLET_NAME_REGEX);
 }

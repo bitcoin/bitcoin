@@ -20,6 +20,7 @@ LIBS= \
  -l boost_filesystem-mgw45-mt-s-1_50 \
  -l boost_program_options-mgw45-mt-s-1_50 \
  -l boost_thread-mgw45-mt-s-1_50 \
+ -l boost_regex-mgw45-mt-s-1_50 \
  -l boost_chrono-mgw45-mt-s-1_50 \
  -l db_cxx \
  -l ssl \

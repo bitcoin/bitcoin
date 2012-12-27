@@ -10,6 +10,8 @@
 
 #include <stdlib.h>
 
+#include <boost/regex.hpp>
+
 #include "main.h"
 #include "key.h"
 #include "keystore.h"
@@ -313,23 +315,24 @@ public:
 
 /** A CWalletMap associates wallets with names and automatically deallocates them upon destruction.
  */
+const boost::regex WALLET_NAME_REGEX("[a-zA-Z0-9_]*");
 typedef std::map<std::string, CWallet*> wallet_map;
 class CWalletMap
 {
 public:
     wallet_map wallets;
 
-    ~CWalletMap()
-    {
-        BOOST_FOREACH(const wallet_map::value_type& item, wallets)
-            delete item.second;
-    }
+    ~CWalletMap() { UnloadAllWallets(); }
     
-    bool LoadWallet(const std::string& strName, const std::string& strFile, std::ostringstream& strErrors, bool fRescan = false, bool fUpgrade = false, int nMaxVersion = 0);
+    bool LoadWallet(const std::string& strName, std::ostringstream& strErrors, bool fRescan = false, bool fUpgrade = false, int nMaxVersion = 0);
     bool UnloadWallet(const std::string& strName);
+    void UnloadAllWallets();
     
     // Returns NULL if wallet not found.
     CWallet* GetWallet(const std::string& strName);
+    CWallet* GetDefaultWallet() { return GetWallet(""); }
+    
+    bool IsValidName(const std::string& strName);
 };
 
 /** A key allocated from the key pool. */
