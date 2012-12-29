@@ -1569,9 +1569,9 @@ Value usewallet(CWallet* pWallet, const Array& params, bool fHelp)
             "Selects which wallet to use.");
     
     string strWalletName = params[0].get_str();
-    wallet_map::iterator it = pWalletMap->wallets.find(strWalletName);
-    if (it == pWalletMap->wallets.end())
-        throw JSONRPCError(RPC_WALLET_ERROR, string("Wallet ") + strWalletName + " not found.");
+    pWallet = pWalletMap->GetWallet(strWalletName);
+    if (!pWallet)
+        throw JSONRPCError(RPC_WALLET_ERROR, string("Wallet ") + strWalletName + " not loaded.");
     
     string strMethod = params[1].get_str();
     const CRPCCommand *pcmd = tableRPC[strMethod];
@@ -1585,7 +1585,7 @@ Value usewallet(CWallet* pWallet, const Array& params, bool fHelp)
     for (unsigned int i = 2; i < params.size(); i++)
         vstrParams.push_back(params[i].get_str());
 
-    return tableRPC.execute(strMethod, RPCConvertValues(strMethod, vstrParams), it->second);
+    return tableRPC.execute(strMethod, RPCConvertValues(strMethod, vstrParams), pWallet);
 }
 
 Value loadwallet(CWallet* pWallet, const Array& params, bool fHelp)
@@ -1627,9 +1627,3 @@ Value unloadwallet(CWallet* pWallet, const Array& params, bool fHelp)
     
     return string("Wallet ") + strWalletName + " unloaded.";
 }
-
-
-
-
-
-
