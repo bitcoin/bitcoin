@@ -1627,9 +1627,3 @@ Value unloadwallet(CWallet* pWallet, const Array& params, bool fHelp)
     
     return string("Wallet ") + strWalletName + " unloaded.";
 }
-
-
-
-
-
-
