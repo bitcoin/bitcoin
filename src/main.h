@@ -746,7 +746,7 @@ public:
         READWRITE(vtxundo);
     )
 
-    bool WriteToDisk(CDiskBlockPos &pos)
+    bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock)
     {
         // Open history file to append
         CAutoFile fileout = CAutoFile(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
@@ -764,6 +764,12 @@ public:
         pos.nPos = (unsigned int)fileOutPos;
         fileout << *this;
 
+        // calculate & write checksum
+        CHashWriter hasher(SER_GETHASH, PROTOCOL_VERSION);
+        hasher << hashBlock;
+        hasher << *this;
+        fileout << hasher.GetHash();
+
         // Flush stdio buffers and commit to disk before returning
         fflush(fileout);
         if (!IsInitialBlockDownload())
@@ -771,6 +777,44 @@ public:
 
         return true;
     }
+
+    bool ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock)
+    {
+        // Open history file to read
+        CAutoFile filein = CAutoFile(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
+        if (!filein)
+            return error("CBlockUndo::ReadFromDisk() : OpenBlockFile failed");
+
+        // Read block
+        uint256 hashChecksum;
+        try {
+            filein >> *this;
+        }
+        catch (std::exception &e) {
+            return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+        }
+
+        // for compatibility with pre-release code that didn't write checksums to undo data
+        // TODO: replace by a simply 'filein >> hashChecksum' in the above try block
+        try {
+            filein >> hashChecksum;
+        } catch (std::exception &e) {
+            hashChecksum = 0;
+        }
+        uint32_t hashInit = hashChecksum.Get64(0) & 0xFFFFFFFFUL;
+        if (hashChecksum == 0 || memcmp(&hashInit, pchMessageStart, 4) == 0)
+            return true;
+
+        // Verify checksum
+        CHashWriter hasher(SER_GETHASH, PROTOCOL_VERSION);
+        hasher << hashBlock;
+        hasher << *this;
+        if (hashChecksum != hasher.GetHash())
+            return error("CBlockUndo::ReadFromDisk() : checksum mismatch");
+
+        return true;
+    }
+
 };
 
 /** pruned version of CTransaction: only retains metadata and unspent transaction outputs
