@@ -1305,8 +1305,11 @@ public:
     }
 
 
-    // Undo the effects of this block (with given index) on the UTXO set represented by coins
-    bool DisconnectBlock(CBlockIndex *pindex, CCoinsViewCache &coins);
+    /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
+     *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
+     *  will be true if no problems were found. Otherwise, the return value will be false in case
+     *  of problems. Note that in any case, coins may be modified. */
+    bool DisconnectBlock(CBlockIndex *pindex, CCoinsViewCache &coins, bool *pfClean = NULL);
 
     // Apply the effects of this block (with given index) on the UTXO set represented by coins
     bool ConnectBlock(CBlockIndex *pindex, CCoinsViewCache &coins, bool fJustCheck=false);
