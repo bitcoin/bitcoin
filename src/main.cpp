@@ -1474,19 +1474,11 @@ bool CBlock::DisconnectBlock(CBlockIndex *pindex, CCoinsViewCache &view, bool *p
     bool fClean = true;
 
     CBlockUndo blockUndo;
-    {
-        CDiskBlockPos pos = pindex->GetUndoPos();
-        if (pos.IsNull())
-            return error("DisconnectBlock() : no undo data available");
-        CAutoFile fileUndo(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
-        if (!fileUndo)
-            return error("DisconnectBlock() : cannot open undo file");
-        try {
-            fileUndo >> blockUndo;
-        } catch(std::exception &e) {
-            return error("DisconnectBlock() : deserialize or I/O error reading udno data");
-        }
-    }
+    CDiskBlockPos pos = pindex->GetUndoPos();
+    if (pos.IsNull())
+        return error("DisconnectBlock() : no undo data available");
+    if (!blockUndo.ReadFromDisk(pos, pindex->pprev->GetBlockHash()))
+        return error("DisconnectBlock() : failure reading undo data");
 
     if (blockUndo.vtxundo.size() + 1 != vtx.size())
         return error("DisconnectBlock() : block and undo data inconsistent");
@@ -1670,9 +1662,9 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsViewCache &view, bool fJust
     {
         if (pindex->GetUndoPos().IsNull()) {
             CDiskBlockPos pos;
-            if (!FindUndoPos(pindex->nFile, pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 8))
+            if (!FindUndoPos(pindex->nFile, pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 40))
                 return error("ConnectBlock() : FindUndoPos failed");
-            if (!blockundo.WriteToDisk(pos))
+            if (!blockundo.WriteToDisk(pos, pindex->pprev->GetBlockHash()))
                 return error("ConnectBlock() : CBlockUndo::WriteToDisk failed");
 
             // update nUndoPos in block index
