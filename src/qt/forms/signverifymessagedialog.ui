@@ -148,7 +148,7 @@
             <string>Sign the message to prove you own this Bitcoin address</string>
            </property>
            <property name="text">
-            <string>&amp;Sign Message</string>
+            <string>Sign &amp;Message</string>
            </property>
            <property name="icon">
             <iconset resource="../bitcoin.qrc">
@@ -294,7 +294,7 @@
             <string>Verify the message to ensure it was signed with the specified Bitcoin address</string>
            </property>
            <property name="text">
-            <string>&amp;Verify Message</string>
+            <string>Verify &amp;Message</string>
            </property>
            <property name="icon">
             <iconset resource="../bitcoin.qrc">
