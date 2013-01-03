@@ -2388,35 +2388,76 @@ bool static LoadBlockIndexDB()
         BlockHashStr(hashBestChain).c_str(), nBestHeight,
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", pindexBest->GetBlockTime()).c_str());
 
+    return true;
+}
+
+bool VerifyDB() {
+    if (pindexBest == NULL || pindexBest->pprev == NULL)
+        return true;
+
     // Verify blocks in the best chain
-    int nCheckLevel = GetArg("-checklevel", 1);
+    int nCheckLevel = GetArg("-checklevel", 3);
     int nCheckDepth = GetArg( "-checkblocks", 2500);
     if (nCheckDepth == 0)
         nCheckDepth = 1000000000; // suffices until the year 19000
     if (nCheckDepth > nBestHeight)
         nCheckDepth = nBestHeight;
+    nCheckLevel = std::max(0, std::min(4, nCheckLevel));
     printf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
-    CBlockIndex* pindexFork = NULL;
+    CCoinsViewCache coins(*pcoinsTip, true);
+    CBlockIndex* pindexState = pindexBest;
+    CBlockIndex* pindexFailure = NULL;
+    int nGoodTransactions = 0;
     for (CBlockIndex* pindex = pindexBest; pindex && pindex->pprev; pindex = pindex->pprev)
     {
         if (fRequestShutdown || pindex->nHeight < nBestHeight-nCheckDepth)
             break;
         CBlock block;
+        // check level 0: read from disk
         if (!block.ReadFromDisk(pindex))
-            return error("LoadBlockIndex() : block.ReadFromDisk failed");
+            return error("VerifyDB() : *** block.ReadFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
         // check level 1: verify block validity
-        if (nCheckLevel>0 && !block.CheckBlock())
-        {
-            printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
-            pindexFork = pindex->pprev;
+        if (nCheckLevel >= 1 && !block.CheckBlock())
+            return error("VerifyDB() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+        // check level 2: verify undo validity
+        if (nCheckLevel >= 2 && pindex) {
+            CBlockUndo undo;
+            CDiskBlockPos pos = pindex->GetUndoPos();
+            if (!pos.IsNull()) {
+                if (!undo.ReadFromDisk(pos, pindex->pprev->GetBlockHash()))
+                    return error("VerifyDB() : *** found bad undo data at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+            }
         }
-        // TODO: stronger verifications
+        // check level 3: check for inconsistencies during memory-only disconnect of tip blocks
+        if (nCheckLevel >= 3 && pindex == pindexState && (coins.GetCacheSize() + pcoinsTip->GetCacheSize()) <= 2*nCoinCacheSize + 32000) {
+            bool fClean = true;
+            if (!block.DisconnectBlock(pindex, coins, &fClean))
+                return error("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+            pindexState = pindex->pprev;
+            if (!fClean) {
+                nGoodTransactions = 0;
+                pindexFailure = pindex;
+            } else
+                nGoodTransactions += block.vtx.size();
+        }
     }
-    if (pindexFork && !fRequestShutdown)
-    {
-        // TODO: reorg back
-        return error("LoadBlockIndex(): chain database corrupted");
+    if (pindexFailure)
+        return error("VerifyDB() : *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", pindexBest->nHeight - pindexFailure->nHeight + 1, nGoodTransactions);
+
+    // check level 4: try reconnecting blocks
+    if (nCheckLevel >= 4) {
+        CBlockIndex *pindex = pindexState;
+        while (pindex != pindexBest && !fRequestShutdown) {
+             pindex = pindex->pnext;
+             CBlock block;
+             if (!block.ReadFromDisk(pindex))
+                 return error("VerifyDB() : *** block.ReadFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+             if (!block.ConnectBlock(pindex, coins))
+                 return error("VerifyDB() : *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+        }
     }
+
+    printf("No coin database inconsistencies in last %i blocks (%i transactions)\n", pindexBest->nHeight - pindexState->nHeight, nGoodTransactions);
 
     return true;
 }
