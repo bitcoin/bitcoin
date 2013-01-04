@@ -307,8 +307,9 @@ Value getblocktemplate(const Array& params, bool fHelp)
         }
         entry.push_back(Pair("depends", deps));
 
-        entry.push_back(Pair("fee", pblocktemplate->vTxFees[&tx - pblock->vtx.data()]));
-        entry.push_back(Pair("sigops", pblocktemplate->vTxSigOps[&tx - pblock->vtx.data()]));
+        int index_in_template = &tx - pblock->vtx.data();
+        entry.push_back(Pair("fee", pblocktemplate->vTxFees[index_in_template]));
+        entry.push_back(Pair("sigops", pblocktemplate->vTxSigOps[index_in_template]));
 
         transactions.push_back(entry);
     }
