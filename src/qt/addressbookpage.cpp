@@ -361,7 +361,7 @@ void AddressBookPage::contextualMenu(const QPoint &point)
     }
 }
 
-void AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int end)
+void AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int /*end*/)
 {
     QModelIndex idx = proxyModel->mapFromSource(model->index(begin, AddressTableModel::Address, parent));
     if(idx.isValid() && (idx.data(Qt::EditRole).toString() == newAddressToSelect))
