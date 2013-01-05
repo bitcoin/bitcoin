@@ -36,6 +36,7 @@ private slots:
     void disableSaveButtons();
     /* set apply button and OK button state (enabled / disabled) */
     void setSaveButtonState(bool fState);
+    void on_resetButton_clicked();
     void on_okButton_clicked();
     void on_cancelButton_clicked();
     void on_applyButton_clicked();
