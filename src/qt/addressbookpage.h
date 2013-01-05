@@ -75,7 +75,7 @@ private slots:
     void onEditAction();
 
     /** New entry/entries were added to address table */
-    void selectNewAddress(const QModelIndex &parent, int begin, int end);
+    void selectNewAddress(const QModelIndex &parent, int begin, int /*end*/);
 
 signals:
     void signMessage(QString addr);
