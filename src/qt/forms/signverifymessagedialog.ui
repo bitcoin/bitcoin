@@ -105,6 +105,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QLabel" name="signatureLabel_SM">
+         <property name="text">
+          <string>Signature</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2_SM">
          <property name="spacing">
           <number>0</number>
