@@ -113,6 +113,14 @@ static void handleRunawayException(std::exception *e)
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
+    // Command-line options take precedence:
+    ParseParameters(argc, argv);
+
+    if(GetBoolArg("-testnet")) // Separate message queue name for testnet
+        strBitcoinURIQueueName = BITCOINURI_QUEUE_NAME_TESTNET;
+    else
+        strBitcoinURIQueueName = BITCOINURI_QUEUE_NAME_MAINNET;
+
     // Do this early as we don't want to bother initializing if we are just calling IPC
     ipcScanRelay(argc, argv);
 
@@ -125,9 +133,6 @@ int main(int argc, char *argv[])
 
     // Install global event filter that makes sure that long tooltips can be word-wrapped
     app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
-
-    // Command-line options take precedence:
-    ParseParameters(argc, argv);
 
     // ... then bitcoin.conf:
     if (!boost::filesystem::is_directory(GetDataDir(false)))
