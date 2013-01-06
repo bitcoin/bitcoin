@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/d/Python27/python
 '''
 Extract _("...") strings for translation and convert to Qt4 stringdefs so that
-they can be picked up by Qt linguist. Assumes Python is installed in /usr/bin/.
+they can be picked up by Qt linguist. Assumes Python is installed in D:\Python27\.
 '''
 from subprocess import Popen, PIPE
 import glob

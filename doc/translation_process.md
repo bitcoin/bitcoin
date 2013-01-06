@@ -39,8 +39,11 @@ so make sure that utility is installed (ie, `apt-get install gettext` on
 Ubuntu/Debian):
 
     python share/qt/extract_strings_qt.py
+    or (for Windows in a MinGW Shell)
+    share/qt/extract_strings_qt_winpy
+
     lupdate bitcoin-qt.pro -no-obsolete -locations relative -ts src/qt/locale/bitcoin_en.ts
-    
+
 ##### Handling of plurals in the source file
 
 When new plurals are added to the source file, it's important to do the following steps:
