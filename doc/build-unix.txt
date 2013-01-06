@@ -25,8 +25,9 @@ Dependencies
  Library     Purpose           Description
  -------     -------           -----------
  libssl      SSL Support       Secure communications
- libdb4.8    Berkeley DB       Blockchain & wallet storage
+ libdb4.8    Berkeley DB       Wallet storage
  libboost    Boost             C++ Library
+ libleveldb  Key-Value DB      Blockchain storage
  miniupnpc   UPnP Support      Optional firewall-jumping support
 
 miniupnpc may be used for UPnP port mapping.  It can be downloaded from
@@ -50,6 +51,7 @@ Versions used in this release:
  OpenSSL       1.0.1c
  Berkeley DB   4.8.30.NC
  Boost         1.37
+ leveldb       To be decided - FIXME
  miniupnpc     1.6
 
 Dependency Build Instructions: Ubuntu & Debian
@@ -57,6 +59,7 @@ Dependency Build Instructions: Ubuntu & Debian
 Build requirements:
  sudo apt-get install build-essential
  sudo apt-get install libssl-dev
+ sudo apt-get install libleveldb-dev
 
 for Ubuntu 12.04:
  sudo apt-get install libboost-all-dev
@@ -84,7 +87,7 @@ Note: If you just want to install bitcoind on Gentoo, you can add the Bitcoin
       overlay and use your package manager:
           layman -a bitcoin && emerge bitcoind
 
-emerge -av1 --noreplace boost glib openssl sys-libs/db:4.8
+emerge -av1 --noreplace boost glib openssl sys-libs/db:4.8 dev-db/leveldb
 
 Take the following steps to build (no UPnP support):
  cd ${BITCOIN_DIR}/src
