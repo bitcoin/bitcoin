@@ -5,6 +5,8 @@
 #ifndef BITCOIN_WALLET_H
 #define BITCOIN_WALLET_H
 
+#include "walletdb.h"
+
 #include <string>
 #include <vector>
 
@@ -16,12 +18,12 @@
 #include "script.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "walletdb.h"
 
 class CAccountingEntry;
 class CWalletTx;
 class CReserveKey;
 class COutput;
+class CWalletDB;
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
