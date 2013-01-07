@@ -1231,6 +1231,15 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "loadwallet"             && n > 1) ConvertTo<bool>(params[1]);
     if (strMethod == "loadwallet"             && n > 2) ConvertTo<bool>(params[2]);
     if (strMethod == "loadwallet"             && n > 3) ConvertTo<boost::int64_t>(params[3]);
+    if (strMethod == "usewallet"              && n > 3)
+    {
+        vector<string> subStrParams;
+        for (unsigned int i = 3; i < strParams.size(); i++)
+            subStrParams.push_back(strParams[i]);
+        
+        Array subParams = RPCConvertValues(strParams[2], subStrParams);
+        params.insert(params.begin(), strParams.begin(), strParams.begin() + 2);
+    }
 
     return params;
 }
