@@ -59,6 +59,12 @@ class SpecialEnv : public EnvWrapper {
   // Simulate non-writable file system while this pointer is non-NULL
   port::AtomicPointer non_writable_;
 
+  // Force sync of manifest files to fail while this pointer is non-NULL
+  port::AtomicPointer manifest_sync_error_;
+
+  // Force write to manifest files to fail while this pointer is non-NULL
+  port::AtomicPointer manifest_write_error_;
+
   bool count_random_reads_;
   AtomicCounter random_read_counter_;
 
@@ -69,6 +75,8 @@ class SpecialEnv : public EnvWrapper {
     no_space_.Release_Store(NULL);
     non_writable_.Release_Store(NULL);
     count_random_reads_ = false;
+    manifest_sync_error_.Release_Store(NULL);
+    manifest_write_error_.Release_Store(NULL);
   }
 
   Status NewWritableFile(const std::string& f, WritableFile** r) {
@@ -100,6 +108,30 @@ class SpecialEnv : public EnvWrapper {
         return base_->Sync();
       }
     };
+    class ManifestFile : public WritableFile {
+     private:
+      SpecialEnv* env_;
+      WritableFile* base_;
+     public:
+      ManifestFile(SpecialEnv* env, WritableFile* b) : env_(env), base_(b) { }
+      ~ManifestFile() { delete base_; }
+      Status Append(const Slice& data) {
+        if (env_->manifest_write_error_.Acquire_Load() != NULL) {
+          return Status::IOError("simulated writer error");
+        } else {
+          return base_->Append(data);
+        }
+      }
+      Status Close() { return base_->Close(); }
+      Status Flush() { return base_->Flush(); }
+      Status Sync() {
+        if (env_->manifest_sync_error_.Acquire_Load() != NULL) {
+          return Status::IOError("simulated sync error");
+        } else {
+          return base_->Sync();
+        }
+      }
+    };
 
     if (non_writable_.Acquire_Load() != NULL) {
       return Status::IOError("simulated write error");
@@ -109,6 +141,8 @@ class SpecialEnv : public EnvWrapper {
     if (s.ok()) {
       if (strstr(f.c_str(), ".sst") != NULL) {
         *r = new SSTableFile(this, *r);
+      } else if (strstr(f.c_str(), "MANIFEST") != NULL) {
+        *r = new ManifestFile(this, *r);
       }
     }
     return s;
@@ -1490,6 +1524,47 @@ TEST(DBTest, NonWritableFileSystem) {
   }
   ASSERT_GT(errors, 0);
   env_->non_writable_.Release_Store(NULL);
+}
+
+TEST(DBTest, ManifestWriteError) {
+  // Test for the following problem:
+  // (a) Compaction produces file F
+  // (b) Log record containing F is written to MANIFEST file, but Sync() fails
+  // (c) GC deletes F
+  // (d) After reopening DB, reads fail since deleted F is named in log record
+
+  // We iterate twice.  In the second iteration, everything is the
+  // same except the log record never makes it to the MANIFEST file.
+  for (int iter = 0; iter < 2; iter++) {
+    port::AtomicPointer* error_type = (iter == 0)
+        ? &env_->manifest_sync_error_
+        : &env_->manifest_write_error_;
+
+    // Insert foo=>bar mapping
+    Options options = CurrentOptions();
+    options.env = env_;
+    options.create_if_missing = true;
+    options.error_if_exists = false;
+    DestroyAndReopen(&options);
+    ASSERT_OK(Put("foo", "bar"));
+    ASSERT_EQ("bar", Get("foo"));
+
+    // Memtable compaction (will succeed)
+    dbfull()->TEST_CompactMemTable();
+    ASSERT_EQ("bar", Get("foo"));
+    const int last = config::kMaxMemCompactLevel;
+    ASSERT_EQ(NumTableFilesAtLevel(last), 1);   // foo=>bar is now in last level
+
+    // Merging compaction (will fail)
+    error_type->Release_Store(env_);
+    dbfull()->TEST_CompactRange(last, NULL, NULL);  // Should fail
+    ASSERT_EQ("bar", Get("foo"));
+
+    // Recovery: should not lose data
+    error_type->Release_Store(NULL);
+    Reopen(&options);
+    ASSERT_EQ("bar", Get("foo"));
+  }
 }
 
 TEST(DBTest, FilesDeletedAfterCompaction) {
