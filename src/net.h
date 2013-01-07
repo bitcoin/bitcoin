@@ -45,6 +45,17 @@ void StartNode(boost::thread_group& threadGroup);
 bool StopNode();
 void SocketSendData(CNode *pnode);
 
+//
+// Handlers that require registration
+//
+typedef bool (*ProcessMessagesHandler)(CNode* pfrom);
+typedef bool (*SendMessagesHandler)(CNode* pto, bool fSendTrickle);
+typedef void (*StartShutdownHandler)();
+
+void SetProcessMessagesHandler(ProcessMessagesHandler handler);
+void SetSendMessagesHandler(SendMessagesHandler handler);
+void SetStartShutdownHandler(StartShutdownHandler handler);
+
 enum
 {
     LOCAL_NONE,   // unknown
