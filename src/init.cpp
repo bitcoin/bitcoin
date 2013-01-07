@@ -45,6 +45,7 @@ enum BindFlags {
     BF_REPORT_ERROR = (1U << 1)
 };
 
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shutdown
@@ -99,6 +100,7 @@ void Shutdown()
     StopRPCThreads();
     ShutdownRPCMining();
     bitdb.Flush(false);
+    GenerateBitcoins(false, NULL);
     StopNode();
     {
         LOCK(cs_main);
