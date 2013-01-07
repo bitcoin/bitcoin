@@ -1178,6 +1178,18 @@ void ConvertTo(Value& value, bool fAllowNull=false)
 Array RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
 {
     Array params;
+
+    if (strMethod == "usewallet" && strParams.size() > 2)
+    {
+        vector<string> subStrParams;
+        for (unsigned int i = 2; i < strParams.size(); i++)
+            subStrParams.push_back(strParams[i]);
+
+        params = RPCConvertValues(strParams[1], subStrParams);
+        params.insert(params.begin(), strParams.begin(), strParams.begin() + 2);
+        return params;
+    }
+
     BOOST_FOREACH(const std::string &param, strParams)
         params.push_back(param);
 

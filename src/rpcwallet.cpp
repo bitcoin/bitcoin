@@ -1580,12 +1580,12 @@ Value usewallet(CWallet* pWallet, const Array& params, bool fHelp)
     
     if (!pcmd->isWalletFn)
         throw JSONRPCError(RPC_INVALID_PARAMETER, string("Method ") + strMethod + " is not a wallet method.");
-    
-    vector<string> vstrParams;
-    for (unsigned int i = 2; i < params.size(); i++)
-        vstrParams.push_back(params[i].get_str());
 
-    return tableRPC.execute(strMethod, RPCConvertValues(strMethod, vstrParams), pWallet);
+    Array subParams;
+    for (unsigned int i = 2; i < params.size(); i++)
+        subParams.push_back(params[i]);
+        
+    return tableRPC.execute(strMethod, subParams, pWallet);
 }
 
 Value loadwallet(CWallet* pWallet, const Array& params, bool fHelp)
