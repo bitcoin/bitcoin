@@ -84,6 +84,7 @@ OBJS= \
     obj/init.o \
     obj/bitcoind.o \
     obj/keystore.o \
+    obj/core.o \
     obj/main.o \
     obj/net.o \
     obj/protocol.o \
