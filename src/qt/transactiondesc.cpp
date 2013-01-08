@@ -12,7 +12,7 @@
 
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 {
-    if (!wtx.IsFinal())
+    if (!IsFinalTx(wtx))
     {
         if (wtx.nLockTime < LOCKTIME_THRESHOLD)
             return tr("Open for %n more block(s)", "", wtx.nLockTime - nBestHeight + 1);
@@ -186,7 +186,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                     strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, nValue) + "<br>";
                 }
 
-                int64 nTxFee = nDebit - wtx.GetValueOut();
+                int64 nTxFee = nDebit - GetValueOut(wtx);
                 if (nTxFee > 0)
                     strHTML += "<b>" + tr("Transaction fee") + ":</b> " + BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, -nTxFee) + "<br>";
             }
