@@ -5,6 +5,7 @@
 
 #include "init.h"
 #include "main.h"
+#include "core.h"
 #include "txdb.h"
 #include "walletdb.h"
 #include "bitcoinrpc.h"

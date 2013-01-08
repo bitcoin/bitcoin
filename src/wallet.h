@@ -641,7 +641,7 @@ public:
     bool IsConfirmed() const
     {
         // Quick answer in most cases
-        if (!IsFinal())
+        if (!IsFinalTx(*this))
             return false;
         if (GetDepthInMainChain() >= 1)
             return true;
@@ -658,7 +658,7 @@ public:
         {
             const CMerkleTx* ptx = vWorkQueue[i];
 
-            if (!ptx->IsFinal())
+            if (!IsFinalTx(*ptx))
                 return false;
             if (ptx->GetDepthInMainChain() >= 1)
                 continue;

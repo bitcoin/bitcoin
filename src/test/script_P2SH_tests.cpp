@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(sign)
         txFrom.vout[i+4].scriptPubKey = standardScripts[i];
         txFrom.vout[i+4].nValue = COIN;
     }
-    BOOST_CHECK(txFrom.IsStandard());
+    BOOST_CHECK(IsStandardTx(txFrom));
 
     CTransaction txTo[8]; // Spending transactions
     for (int i = 0; i < 8; i++)
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(set)
         txFrom.vout[i].scriptPubKey = outer[i];
         txFrom.vout[i].nValue = CENT;
     }
-    BOOST_CHECK(txFrom.IsStandard());
+    BOOST_CHECK(IsStandardTx(txFrom));
 
     CTransaction txTo[4]; // Spending transactions
     for (int i = 0; i < 4; i++)
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(set)
     for (int i = 0; i < 4; i++)
     {
         BOOST_CHECK_MESSAGE(SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
-        BOOST_CHECK_MESSAGE(txTo[i].IsStandard(), strprintf("txTo[%d].IsStandard", i));
+        BOOST_CHECK_MESSAGE(IsStandardTx(txTo[i]), strprintf("txTo[%d].IsStandard", i));
     }
 }
 
@@ -305,15 +305,15 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txTo.vin[2].prevout.hash = txFrom.GetHash();
     BOOST_CHECK(SignSignature(keystore, txFrom, txTo, 2));
 
-    BOOST_CHECK(txTo.AreInputsStandard(coins));
-    BOOST_CHECK_EQUAL(txTo.GetP2SHSigOpCount(coins), 1U);
+    BOOST_CHECK(::AreInputsStandard(txTo, coins));
+    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txTo, coins), 1U);
 
     // Make sure adding crap to the scriptSigs makes them non-standard:
     for (int i = 0; i < 3; i++)
     {
         CScript t = txTo.vin[i].scriptSig;
         txTo.vin[i].scriptSig = (CScript() << 11) + t;
-        BOOST_CHECK(!txTo.AreInputsStandard(coins));
+        BOOST_CHECK(!::AreInputsStandard(txTo, coins));
         txTo.vin[i].scriptSig = t;
     }
 
@@ -329,11 +329,11 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd.vin[1].prevout.hash = txFrom.GetHash();
     txToNonStd.vin[1].scriptSig << OP_0 << Serialize(oneOfEleven);
 
-    BOOST_CHECK(!txToNonStd.AreInputsStandard(coins));
-    BOOST_CHECK_EQUAL(txToNonStd.GetP2SHSigOpCount(coins), 11U);
+    BOOST_CHECK(!::AreInputsStandard(txToNonStd, coins));
+    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txToNonStd, coins), 11U);
 
     txToNonStd.vin[0].scriptSig.clear();
-    BOOST_CHECK(!txToNonStd.AreInputsStandard(coins));
+    BOOST_CHECK(!::AreInputsStandard(txToNonStd, coins));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
