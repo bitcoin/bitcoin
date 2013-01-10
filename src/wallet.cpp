@@ -1844,12 +1844,31 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
     if (strName.size() > 0)
         strFile += "-" + strName;
     strFile += ".dat";
-    
+
     printf("Loading wallet \"%s\" from %s...\n", strName.c_str(), strFile.c_str());
     int64 nStart = GetTimeMillis();
     bool fFirstRun = true;
-    CWallet* pWallet = new CWallet(strFile);
-    DBErrors nLoadWalletRet = pWallet->LoadWallet(fFirstRun);
+    CWallet* pWallet;
+    DBErrors nLoadWalletRet;
+
+    try
+    {
+        pWallet = new CWallet(strFile);
+        nLoadWalletRet = pWallet->LoadWallet(fFirstRun);
+    }
+    catch (const exception& e)
+    {
+        LEAVE_CRITICAL_SECTION(cs_WalletMap);
+        strErrors << _("Critical error loading wallet \"") << strName << "\" " << _("from ") << strFile << ": " << e.what();
+        return false;
+    }
+    catch (...)
+    {
+        LEAVE_CRITICAL_SECTION(cs_WalletMap);
+        strErrors << _("Critical error loading wallet \"") << strName << "\" " << _("from ") << strFile;
+        return false;
+    }
+
     if (nLoadWalletRet != DB_LOAD_OK)
     {
         if (nLoadWalletRet == DB_CORRUPT)
