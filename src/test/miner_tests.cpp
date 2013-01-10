@@ -49,19 +49,20 @@ struct {
 BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
     CReserveKey reservekey(pwalletMain);
-    CBlock *pblock;
+    CBlockTemplate *pblocktemplate;
     CTransaction tx;
     CScript script;
     uint256 hash;
 
     // Simple block creation, nothing special yet:
-    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
 
     // We can't make transactions until we have inputs
     // Therefore, load 100 blocks :)
     std::vector<CTransaction*>txFirst;
     for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
     {
+        CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         pblock->nVersion = 1;
         pblock->nTime = pindexBest->GetMedianTimePast()+1;
         pblock->vtx[0].vin[0].scriptSig = CScript();
@@ -75,10 +76,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         assert(ProcessBlock(NULL, pblock));
         pblock->hashPrevBlock = pblock->GetHash();
     }
-    delete pblock;
+    delete pblocktemplate;
 
     // Just to make sure we can still make simple blocks
-    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
 
     // block sigops > limit: 1000 CHECKMULTISIG + 1
     tx.vin.resize(1);
@@ -95,8 +96,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         mempool.addUnchecked(hash, tx);
         tx.vin[0].prevout.hash = hash;
     }
-    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
-    delete pblock;
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    delete pblocktemplate;
     mempool.clear();
 
     // block size > limit
@@ -115,15 +116,15 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         mempool.addUnchecked(hash, tx);
         tx.vin[0].prevout.hash = hash;
     }
-    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
-    delete pblock;
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    delete pblocktemplate;
     mempool.clear();
 
     // orphan in mempool
     hash = tx.GetHash();
     mempool.addUnchecked(hash, tx);
-    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
-    delete pblock;
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    delete pblocktemplate;
     mempool.clear();
 
     // child with higher priority than parent
@@ -140,8 +141,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vout[0].nValue = 5900000000LL;
     hash = tx.GetHash();
     mempool.addUnchecked(hash, tx);
-    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
-    delete pblock;
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    delete pblocktemplate;
     mempool.clear();
 
     // coinbase in mempool
@@ -151,8 +152,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vout[0].nValue = 0;
     hash = tx.GetHash();
     mempool.addUnchecked(hash, tx);
-    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
-    delete pblock;
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    delete pblocktemplate;
     mempool.clear();
 
     // invalid (pre-p2sh) txn in mempool
@@ -169,8 +170,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vout[0].nValue -= 1000000;
     hash = tx.GetHash();
     mempool.addUnchecked(hash,tx);
-    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
-    delete pblock;
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    delete pblocktemplate;
     mempool.clear();
 
     // double spend txn pair in mempool
@@ -183,18 +184,18 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vout[0].scriptPubKey = CScript() << OP_2;
     hash = tx.GetHash();
     mempool.addUnchecked(hash, tx);
-    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
-    delete pblock;
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    delete pblocktemplate;
     mempool.clear();
 
     // subsidy changing
     int nHeight = pindexBest->nHeight;
     pindexBest->nHeight = 209999;
-    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
-    delete pblock;
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    delete pblocktemplate;
     pindexBest->nHeight = 210000;
-    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
-    delete pblock;
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    delete pblocktemplate;
     pindexBest->nHeight = nHeight;
 }
 
