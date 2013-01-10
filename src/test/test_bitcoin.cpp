@@ -30,12 +30,10 @@ struct TestingSetup {
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
         LoadBlockIndex();
-        bool fFirstRun;
-        pwalletMain = new CWallet("wallet.dat");
-        pwalletMain->LoadWallet(fFirstRun);
         pWalletMap = new CWalletMap();
-        pWalletMap->wallets["default"] = pwalletMain;
-        RegisterWallet(pwalletMain);
+        std::ostringstream ossErrors;
+        pWalletMap->LoadWallet("", ossErrors);
+        pwalletMain = pWalletMap->GetDefaultWallet();
     }
     ~TestingSetup()
     {
