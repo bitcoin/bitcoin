@@ -142,6 +142,16 @@ void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* 
     }
 }
 
+// Add wallet transactions that aren't already in a block to mapTransactions
+void ReacceptWalletTransactions()
+{
+    {
+        LOCK(cs_setpwalletRegistered);
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+        pwallet->ReacceptWalletTransactions();
+    }
+}
+
 // notify wallets about a new best chain
 void static SetBestChain(const CBlockLocator& loc)
 {
@@ -191,8 +201,6 @@ void static ResendWalletTransactions()
             pwallet->ResendWalletTransactions();
     }
 }
-
-
 
 
 

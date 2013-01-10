@@ -938,8 +938,7 @@ bool AppInit2()
         return InitError(strErrors.str());
 
      // Add wallet transactions that aren't already in a block to mapTransactions
-    BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->GetWalletMap())
-        item.second->ReacceptWalletTransactions();
+    ReacceptWalletTransactions();
 
 #if !defined(QT_GUI)
     // Loop until process is exit()ed from shutdown() function,
