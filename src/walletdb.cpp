@@ -481,6 +481,31 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     return result;
 }
 
+
+void CWalletDB::UnloadWallet(CWallet* pwallet)
+{
+    if (!pwallet || !pwallet->fFileBacked)
+        return;
+    while (!fShutdown)
+    {
+        {
+            LOCK(bitdb.cs_db);
+            if (!bitdb.mapFileUseCount.count(pwallet->strWalletFile) || bitdb.mapFileUseCount[pwallet->strWalletFile] == 0)
+            {
+                // Flush log data to the dat file
+                bitdb.CloseDb(pwallet->strWalletFile);
+                printf("%s checkpoint\n", pwallet->strWalletFile.c_str());
+                printf("%s detach\n", pwallet->strWalletFile.c_str());
+                bitdb.CheckpointLSN(pwallet->strWalletFile);
+                printf("%s closed\n", pwallet->strWalletFile.c_str());
+                bitdb.mapFileUseCount.erase(pwallet->strWalletFile);
+                return;
+            }
+        }
+        Sleep(100);
+    }
+}
+
 void ThreadFlushWalletDB(void* parg)
 {
     // Make this thread recognisable as the wallet flushing thread

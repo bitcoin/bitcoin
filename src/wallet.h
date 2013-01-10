@@ -113,6 +113,8 @@ public:
         nOrderPosNext = 0;
     }
 
+    ~CWallet() { CWalletDB::UnloadWallet(this); }
+    
     std::map<uint256, CWalletTx> mapWallet;
     int64 nOrderPosNext;
     std::map<uint256, int> mapRequestCount;
