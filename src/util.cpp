@@ -952,7 +952,11 @@ vector<string> GetFilesAtPath(const boost::filesystem::path& _path, unsigned int
     
     if ((flags & file_option_flags::REGULAR_FILES) && boost::filesystem::is_regular_file(_path))
     {
+#if defined (BOOST_FILESYSTEM_VERSION) && BOOST_FILESYSTEM_VERSION == 3
         vstrFiles.push_back(_path.filename().string());
+#else
+        vstrFiles.push_back(_path.filename());
+#endif
         return vstrFiles;
     }
     if (boost::filesystem::is_directory(_path))
@@ -963,7 +967,11 @@ vector<string> GetFilesAtPath(const boost::filesystem::path& _path, unsigned int
         {
             if (((flags & file_option_flags::REGULAR_FILES) && boost::filesystem::is_regular_file(pFile)) ||
                 ((flags & file_option_flags::DIRECTORIES) && boost::filesystem::is_directory(pFile)))
+#if defined (BOOST_FILESYSTEM_VERSION) && BOOST_FILESYSTEM_VERSION == 3
                 vstrFiles.push_back(pFile.filename().string());
+#else
+                vstrFiles.push_back(pFile.filename());
+#endif
         }
         return vstrFiles;
     }
