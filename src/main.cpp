@@ -3446,13 +3446,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     else if (strCommand == "mempool")
     {
         std::vector<uint256> vtxid;
+        LOCK2(mempool.cs, pfrom->cs_filter);
         mempool.queryHashes(vtxid);
         vector<CInv> vInv;
-        for (unsigned int i = 0; i < vtxid.size(); i++) {
-            CInv inv(MSG_TX, vtxid[i]);
-            vInv.push_back(inv);
-            if (i == (MAX_INV_SZ - 1))
-                    break;
+        BOOST_FOREACH(uint256& hash, vtxid) {
+            CInv inv(MSG_TX, hash);
+            if ((pfrom->pfilter && pfrom->pfilter->IsRelevantAndUpdate(mempool.lookup(hash), hash)) ||
+               (!pfrom->pfilter))
+                vInv.push_back(inv);
+            if (vInv.size() == MAX_INV_SZ)
+                break;
         }
         if (vInv.size() > 0)
             pfrom->PushMessage("inv", vInv);
