@@ -71,7 +71,7 @@ Value getinfo(CWallet* pWallet, const Array& params, bool fHelp)
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
-    obj.push_back(Pair("wallets",       (int)pWalletMap->wallets.size()));
+    obj.push_back(Pair("wallets",       pWalletMap->GetWalletCount()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("testnet",       fTestNet));
@@ -1546,7 +1546,7 @@ Value listwallets(CWallet* pWallet, const Array& params, bool fHelp)
             "Returns list of wallets.");
     
     Object obj;
-    BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->wallets)
+    BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->GetWalletMap())
     {
         Object objWallet;
         objWallet.push_back(Pair("balance",       ValueFromAmount(item.second->GetBalance())));

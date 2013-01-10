@@ -1822,8 +1822,19 @@ bool static InitWarning(const std::string &str)
 bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, bool fRescan, bool fUpgrade, int nMaxVersion)
 {
     // Check that the wallet name is valid
-    if (!CWalletMap::IsValidName(strName)) {
+    if (!CWalletMap::IsValidName(strName))
+    {
         strErrors << _("Wallet name may only contain letters, numbers, and underscores.");
+        return false;
+    }
+
+    ENTER_CRITICAL_SECTION(cs_WalletMap);
+
+    // Check that wallet is not already loaded
+    if (wallets.count(strName) > 0)
+    {
+        LEAVE_CRITICAL_SECTION(cs_WalletMap);
+        strErrors << _("A wallet with that name is already loaded.");
         return false;
     }
     
@@ -1843,6 +1854,7 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
     {
         if (nLoadWalletRet == DB_CORRUPT)
         {
+            LEAVE_CRITICAL_SECTION(cs_WalletMap);
             strErrors << _("Error loading ") << strFile << _(": Wallet corrupted") << "\n";
             delete pWallet;
             return false;
@@ -1858,6 +1870,7 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
             strErrors << _("Error loading ") << strFile << _(": Wallet requires newer version of Bitcoin") << "\n";
         else if (nLoadWalletRet == DB_NEED_REWRITE)
         {
+            LEAVE_CRITICAL_SECTION(cs_WalletMap);
             strErrors << _("Wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
             printf("%s", strErrors.str().c_str());
             return InitError(strErrors.str());
@@ -1897,12 +1910,11 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
     printf("%s", strErrors.str().c_str());
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     
-    {
-        LOCK(cs_WalletMap);
-        this->wallets[strName] = pWallet;
-        RegisterWallet(pWallet);
-    }
-    
+    this->wallets[strName] = pWallet;
+    RegisterWallet(pWallet);
+
+    LEAVE_CRITICAL_SECTION(cs_WalletMap);
+
     CBlockIndex *pindexRescan = pindexBest;
     if (fRescan)
         pindexRescan = pindexGenesisBlock;
@@ -1927,15 +1939,18 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
 
 bool CWalletMap::UnloadWallet(const std::string& strName)
 {
-    CWallet* pWallet = GetWallet(strName);
-    if (!pWallet) return false;
-    
+    CWallet* pWallet;
     {
         LOCK(cs_WalletMap);
-        UnregisterWallet(pWallet);
-        wallets.erase(strName);
-        delete pWallet;
+        if (!wallets.count(strName)) return false;
+        pWallet = wallets[strName];
+        {
+            LOCK(pWallet->cs_wallet);
+            UnregisterWallet(pWallet);
+            wallets.erase(strName);
+        }
     }
+    delete pWallet;
     return true;
 }
 
@@ -1943,10 +1958,23 @@ void CWalletMap::UnloadAllWallets()
 {
     {
         LOCK(cs_WalletMap);
-        UnregisterAllWallets();
+        vector<string> vstrNames;
+        vector<CWallet*> vpWallets;
         BOOST_FOREACH(const wallet_map::value_type& item, wallets)
-            delete item.second;
-        wallets.clear();
+        {
+            vstrNames.push_back(item.first);
+            vpWallets.push_back(item.second);
+        }
+            
+        for (unsigned int i = 0; i < vstrNames.size(); i++)
+        {
+            {
+                LOCK(vpWallets[i]->cs_wallet);
+                UnregisterWallet(vpWallets[i]);
+                wallets.erase(vstrNames[i]);
+            }
+            delete vpWallets[i];
+        }
     }
 }
 
@@ -1959,9 +1987,12 @@ CWallet* CWalletMap::GetWallet(const string& strName)
     }
 }
 
+const boost::regex CWalletMap::WALLET_NAME_REGEX("[a-zA-Z0-9_]*");
+const boost::regex CWalletMap::WALLET_FILE_REGEX("wallet-([a-zA-Z0-9_]+)\\.dat");
+
 bool CWalletMap::IsValidName(const string& strName)
 {
-    return boost::regex_match(strName, WALLET_NAME_REGEX);
+    return boost::regex_match(strName, CWalletMap::WALLET_NAME_REGEX);
 }
 
 vector<string> CWalletMap::GetWalletsAtPath(const boost::filesystem::path& pathWallets)
@@ -1971,7 +2002,7 @@ vector<string> CWalletMap::GetWalletsAtPath(const boost::filesystem::path& pathW
     boost::cmatch match;
     BOOST_FOREACH(const string& strFile, vstrFiles)
     {
-        if (boost::regex_match(strFile.c_str(), match, WALLET_FILE_REGEX))
+        if (boost::regex_match(strFile.c_str(), match, CWalletMap::WALLET_FILE_REGEX))
             vstrNames.push_back(string(match[1].first, match[1].second));
     }
     return vstrNames;

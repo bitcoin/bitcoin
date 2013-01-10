@@ -915,7 +915,7 @@ bool AppInit2()
     printf("mapBlockIndex.size() = %"PRIszu"\n",   mapBlockIndex.size());
     printf("nBestHeight = %d\n",                   nBestHeight);
     
-    BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->wallets)
+    BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->GetWalletMap())
     {
         printf("Setting properties for wallet \"%s\"...\n", item.first.c_str());
         printf("  setKeyPool.size() = %"PRIszu"\n",      item.second->setKeyPool.size());
@@ -938,7 +938,7 @@ bool AppInit2()
         return InitError(strErrors.str());
 
      // Add wallet transactions that aren't already in a block to mapTransactions
-    BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->wallets)
+    BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->GetWalletMap())
         item.second->ReacceptWalletTransactions();
 
 #if !defined(QT_GUI)

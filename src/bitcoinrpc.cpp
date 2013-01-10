@@ -256,10 +256,10 @@ static const CRPCCommand vRPCCommands[] =
     { "gettxout",               &gettxout,               true,   false,    true  },
     { "lockunspent",            &lockunspent,            false,  false,    true  },
     { "listlockunspent",        &listlockunspent,        false,  false,    true  },
-    { "listwallets",            &listwallets,            true,   true,     false },
+    { "listwallets",            &listwallets,            true,   false,    false },
     { "usewallet",              &usewallet,              false,  true,     false },
-    { "loadwallet",             &loadwallet,             false,  true,     false },
-    { "unloadwallet",           &unloadwallet,           false,  true,     false }
+    { "loadwallet",             &loadwallet,             false,  false,    false },
+    { "unloadwallet",           &unloadwallet,           false,  false,    false }
 };
 
 CRPCTable::CRPCTable()
@@ -1069,18 +1069,17 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
         !pcmd->okSafeMode)
         throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, string("Safe mode: ") + strWarning);
 
-    if (!pWallet) pWallet = pwalletMain;
+    if (!pWallet) pWallet = pWalletMap->GetDefaultWallet();
     
     try
     {
         // Execute
         Value result;
         {
-            LOCK(pWalletMap->cs_WalletMap);
-            if (pcmd->unlocked) {
+            if (pcmd->unlocked)
                 result = pcmd->actor(pWallet, params, false);
-            }
             else {
+                if (!pWallet) throw JSONRPCError(RPC_WALLET_ERROR, "No default wallet loaded.");
                 LOCK2(cs_main, pWallet->cs_wallet);
                 result = pcmd->actor(pWallet, params, false);
             }
