@@ -119,7 +119,7 @@ void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* 
 /** Process an incoming block */
 bool ProcessBlock(CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp = NULL);
 /** Check whether enough disk space is available for an incoming block */
-bool CheckDiskSpace(uint64 nAdditionalBytes=0);
+bool CheckDiskSpace(uint64 nAdditionalBytes = 0);
 /** Open a block file (blk?????.dat) */
 FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Open an undo file (rev?????.dat) */
@@ -441,7 +441,7 @@ enum CheckSig_mode
 };
 
 /** The basic transaction that is broadcasted on the network and contained in
- * blocks.  A transaction can contain multiple inputs and outputs.
+ * blocks. A transaction can contain multiple inputs and outputs.
  */
 class CTransaction
 {
@@ -548,13 +548,11 @@ public:
     /** Check for standard transaction types
         @param[in] mapInputs	Map of previous transactions that have outputs we're spending
         @return True if all inputs (scriptSigs) use only standard transaction forms
-        @see CTransaction::FetchInputs
     */
     bool AreInputsStandard(CCoinsViewCache& mapInputs) const;
 
     /** Count ECDSA signature operations the old-fashioned (pre-0.6) way
         @return number of sigops this transaction's outputs will produce when spent
-        @see CTransaction::FetchInputs
     */
     unsigned int GetLegacySigOpCount() const;
 
@@ -562,7 +560,6 @@ public:
 
         @param[in] mapInputs	Map of previous transactions that have outputs we're spending
         @return maximum number of sigops required to validate this transaction's inputs
-        @see CTransaction::FetchInputs
      */
     unsigned int GetP2SHSigOpCount(CCoinsViewCache& mapInputs) const;
 
@@ -587,7 +584,6 @@ public:
 
         @param[in] mapInputs	Map of previous transactions that have outputs we're spending
         @return	Sum of value of all inputs (scriptSigs)
-        @see CTransaction::FetchInputs
      */
     int64 GetValueIn(CCoinsViewCache& mapInputs) const;
 
@@ -818,7 +814,6 @@ public:
 
         return true;
     }
-
 };
 
 /** pruned version of CTransaction: only retains metadata and unspent transaction outputs
@@ -1278,7 +1273,6 @@ public:
         }
         return hash;
     }
-
 
     bool WriteToDisk(CDiskBlockPos &pos)
     {
