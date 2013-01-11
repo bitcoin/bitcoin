@@ -37,9 +37,15 @@ static bool noui_ThreadSafeAskFee(int64 /*nFeeRequired*/)
     return true;
 }
 
+static void noui_InitMessage(const std::string &message)
+{
+    printf("init message: %s\n", message.c_str());
+}
+
 void noui_connect()
 {
     // Connect bitcoind signal handlers
     uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
     uiInterface.ThreadSafeAskFee.connect(noui_ThreadSafeAskFee);
+    uiInterface.InitMessage.connect(noui_InitMessage);
 }

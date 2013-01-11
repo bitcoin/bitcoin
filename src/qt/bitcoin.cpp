@@ -86,6 +86,7 @@ static void InitMessage(const std::string &message)
         splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(255,255,200));
         QApplication::instance()->processEvents();
     }
+    printf("init message: %s\n", message.c_str());
 }
 
 static void QueueShutdown()
