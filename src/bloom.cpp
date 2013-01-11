@@ -15,7 +15,7 @@ using namespace std;
 
 static const unsigned char bit_mask[8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 
-CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn) :
+CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn) :
 // The ideal size for a bloom filter with a given number of elements and false positive rate is:
 // - nElements * log(fp rate) / ln(2)^2
 // We ignore filter parameters which will create a bloom filter larger than the protocol limits
@@ -24,7 +24,8 @@ vData(min((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)), MAX_BLOOM
 // Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
 // See http://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
 nHashFuncs(min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
-nTweak(nTweakIn)
+nTweak(nTweakIn),
+nFlags(nFlagsIn)
 {
 }
 
@@ -114,7 +115,16 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx, const uint256& ha
             if (data.size() != 0 && contains(data))
             {
                 fFound = true;
-                insert(COutPoint(hash, i));
+                if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
+                    insert(COutPoint(hash, i));
+                else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
+                {
+                    txnouttype type;
+                    vector<vector<unsigned char> > vSolutions;
+                    if (Solver(txout.scriptPubKey, type, vSolutions) &&
+                            (type == TX_PUBKEY || type == TX_MULTISIG))
+                        insert(COutPoint(hash, i));
+                }
                 break;
             }
         }
