@@ -1567,25 +1567,38 @@ Value usewallet(CWallet* pWallet, const Array& params, bool fHelp)
         throw runtime_error(
             "usewallet <walletname> <method> [params]\n"
             "Selects which wallet to use.");
-    
+
+    boost::shared_ptr<CWallet> spWallet;
     string strWalletName = params[0].get_str();
-    pWallet = pWalletMap->GetWallet(strWalletName);
-    if (!pWallet)
-        throw JSONRPCError(RPC_WALLET_ERROR, string("Wallet ") + strWalletName + " not loaded.");
-    
+    try 
+    {
+        spWallet = pWalletMap->GetWallet(strWalletName);
+    }
+    catch (const CWalletManagerException& e)
+    {
+        switch (e.type)
+        {
+            case CWalletManagerException::WALLET_NOT_LOADED:
+                throw JSONRPCError(RPC_WALLET_ERROR, string("Wallet ") + strWalletName + " not loaded.");
+
+            default:
+                throw JSONRPCError(RPC_WALLET_ERROR, "Unknown wallet error.");
+        }
+    }
+
     string strMethod = params[1].get_str();
     const CRPCCommand *pcmd = tableRPC[strMethod];
     if (!pcmd)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, string("Method ") + strMethod + " not found.");
-    
+
     if (!pcmd->isWalletFn)
         throw JSONRPCError(RPC_INVALID_PARAMETER, string("Method ") + strMethod + " is not a wallet method.");
 
     Array subParams;
     for (unsigned int i = 2; i < params.size(); i++)
         subParams.push_back(params[i]);
-        
-    return tableRPC.execute(strMethod, subParams, pWallet);
+
+    return tableRPC.execute(strMethod, subParams, spWallet.get());
 }
 
 Value loadwallet(CWallet* pWallet, const Array& params, bool fHelp)
@@ -1594,20 +1607,20 @@ Value loadwallet(CWallet* pWallet, const Array& params, bool fHelp)
         throw runtime_error(
             "loadwallet <walletname> [rescan=false] [upgradewallet=false] [maxversion=(latest)]\n"
             "Loads a wallet.");
-    
+
     string strWalletName = params[0].get_str();
-    
-    if (pWalletMap->GetWallet(strWalletName))
+
+    if (pWalletMap->HaveWallet(strWalletName))
         throw JSONRPCError(RPC_WALLET_ERROR, string("Wallet ") + strWalletName + " is already loaded.");
-    
+
     ostringstream strErrors;
     bool fRescan = (params.size() > 1) ? params[1].get_bool() : false;
     bool fUpgrade = (params.size() > 2) ? params[2].get_bool() : false;
     int nMaxVersion = (params.size() > 3) ? params[3].get_int() : 0;
-    
+
     if (!pWalletMap->LoadWallet(strWalletName, strErrors, fRescan, fUpgrade, nMaxVersion))
         throw JSONRPCError(RPC_WALLET_ERROR, string("Load failed: ") + strErrors.str());
-    
+
     return string("Wallet ") + strWalletName + " loaded.";
 }
 
@@ -1617,13 +1630,13 @@ Value unloadwallet(CWallet* pWallet, const Array& params, bool fHelp)
         throw runtime_error(
             "unloadwallet <walletname>\n"
             "Unloads a wallet.");
-    
+
     string strWalletName = params[0].get_str();
-    
+
     if (strWalletName.size() == 0)
         throw JSONRPCError(RPC_WALLET_ERROR, "Default wallet cannot be unloaded.");    
     if (!pWalletMap->UnloadWallet(strWalletName))
         throw JSONRPCError(RPC_WALLET_ERROR, string("No wallet named ") + strWalletName + " is currently loaded.");
-    
+
     return string("Wallet ") + strWalletName + " unloaded.";
 }

@@ -10,8 +10,6 @@
 
 #include <stdlib.h>
 
-#include <boost/regex.hpp>
-
 #include "main.h"
 #include "key.h"
 #include "keystore.h"
@@ -19,6 +17,11 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "walletdb.h"
+
+#include <stdexcept>
+
+#include <boost/shared_ptr.hpp>
+#include <boost/regex.hpp>
 
 class CAccountingEntry;
 class CWalletTx;
@@ -315,9 +318,22 @@ public:
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
 };
 
+class CWalletManagerException : public std::runtime_error
+{
+public:
+    enum ErrorType
+    {
+        WALLET_NOT_LOADED,
+        UNKNOWN_ERROR
+    };
+    ErrorType type;
+
+    CWalletManagerException(ErrorType _type, const char* message) : std::runtime_error(message), type(_type)  { }
+};
+
 /** A CWalletMap associates wallets with names and automatically deallocates them upon destruction.
  */
-typedef std::map<std::string, CWallet*> wallet_map;
+typedef std::map<std::string, boost::shared_ptr<CWallet> > wallet_map;
 class CWalletMap
 {
 protected:
@@ -334,11 +350,13 @@ public:
     bool UnloadWallet(const std::string& strName);
     void UnloadAllWallets();
     
-    // Returns NULL if wallet not found.
-    CWallet* GetWallet(const std::string& strName);
-    CWallet* GetDefaultWallet() { return GetWallet(""); }
+    // GetWallet and GetDefaultWallet throw a CWalletManagerException if the wallet is not found.
+    boost::shared_ptr<CWallet> GetWallet(const std::string& strName);
+    boost::shared_ptr<CWallet> GetDefaultWallet() { return GetWallet(""); }
+    
     int GetWalletCount() { return wallets.size(); }
     wallet_map GetWalletMap() { return wallets; }
+    bool HaveWallet(const std::string& strName) { return (wallets.count(strName) > 0); }
 
     static bool IsValidName(const std::string& strName);
     static std::vector<std::string> GetWalletsAtPath(const boost::filesystem::path& pathWallets);

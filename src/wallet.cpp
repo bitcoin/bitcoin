@@ -1929,7 +1929,8 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
     printf("%s", strErrors.str().c_str());
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     
-    this->wallets[strName] = pWallet;
+    boost::shared_ptr<CWallet> spWallet(pWallet);
+    this->wallets[strName] = spWallet;
     RegisterWallet(pWallet);
 
     LEAVE_CRITICAL_SECTION(cs_WalletMap);
@@ -1958,18 +1959,17 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
 
 bool CWalletMap::UnloadWallet(const std::string& strName)
 {
-    CWallet* pWallet;
     {
         LOCK(cs_WalletMap);
         if (!wallets.count(strName)) return false;
-        pWallet = wallets[strName];
+        boost::shared_ptr<CWallet> spWallet(wallets[strName]);
+        CWallet* pWallet = spWallet.get();
         {
             LOCK(pWallet->cs_wallet);
             UnregisterWallet(pWallet);
             wallets.erase(strName);
         }
     }
-    delete pWallet;
     return true;
 }
 
@@ -1978,7 +1978,7 @@ void CWalletMap::UnloadAllWallets()
     {
         LOCK(cs_WalletMap);
         vector<string> vstrNames;
-        vector<CWallet*> vpWallets;
+        vector<boost::shared_ptr<CWallet> > vpWallets;
         BOOST_FOREACH(const wallet_map::value_type& item, wallets)
         {
             vstrNames.push_back(item.first);
@@ -1987,21 +1987,23 @@ void CWalletMap::UnloadAllWallets()
             
         for (unsigned int i = 0; i < vstrNames.size(); i++)
         {
+            CWallet* pWallet = vpWallets[i].get();
             {
-                LOCK(vpWallets[i]->cs_wallet);
-                UnregisterWallet(vpWallets[i]);
+                LOCK(pWallet->cs_wallet);
+                UnregisterWallet(pWallet);
                 wallets.erase(vstrNames[i]);
             }
-            delete vpWallets[i];
         }
     }
 }
 
-CWallet* CWalletMap::GetWallet(const string& strName)
+boost::shared_ptr<CWallet> CWalletMap::GetWallet(const string& strName)
 {
     {
         LOCK(cs_WalletMap);
-        if (!wallets.count(strName)) return NULL;
+        if (!wallets.count(strName))
+            throw CWalletManagerException(CWalletManagerException::WALLET_NOT_LOADED,
+                                          "CWalletMap::GetWallet() - Wallet not loaded.");
         return wallets[strName];
     }
 }

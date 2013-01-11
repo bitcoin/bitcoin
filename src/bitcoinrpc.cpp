@@ -1069,7 +1069,17 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
         !pcmd->okSafeMode)
         throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, string("Safe mode: ") + strWarning);
 
-    if (!pWallet) pWallet = pWalletMap->GetDefaultWallet();
+    if (!pWallet)
+    {
+        try
+        {
+            pWallet = pWalletMap->GetDefaultWallet().get();
+        }
+        catch (const std::exception& e)
+        {
+            throw JSONRPCError(RPC_WALLET_ERROR, e.what());
+        }
+    }
     
     try
     {

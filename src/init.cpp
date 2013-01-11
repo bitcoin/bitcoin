@@ -463,7 +463,7 @@ bool LoadWallets(ostringstream& strErrors)
     }
     
     // TODO: remove dependency on a global variable named pwalletMain in the rest of the app.
-    pwalletMain = pWalletMap->GetDefaultWallet();
+    pwalletMain = pWalletMap->GetDefaultWallet().get();
     return true;
 }
 

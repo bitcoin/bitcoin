@@ -33,7 +33,7 @@ struct TestingSetup {
         pWalletMap = new CWalletMap();
         std::ostringstream ossErrors;
         pWalletMap->LoadWallet("", ossErrors);
-        pwalletMain = pWalletMap->GetDefaultWallet();
+        pwalletMain = pWalletMap->GetDefaultWallet().get();
     }
     ~TestingSetup()
     {
