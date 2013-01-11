@@ -25,7 +25,7 @@
 using namespace std;
 using namespace boost;
 
-CWalletMap* pWalletMap;
+CWalletManager* pWalletManager;
 CClientUIInterface uiInterface;
 
 // Used to pass flags to the Bind() function
@@ -97,7 +97,7 @@ void Shutdown(void* parg)
         }
         bitdb.Flush(true);
         boost::filesystem::remove(GetPidFile());
-        delete pWalletMap;
+        delete pWalletManager;
         NewThread(ExitTimeout, NULL);
         Sleep(50);
         printf("Bitcoin exited\n\n");
@@ -393,14 +393,14 @@ void ThreadImport(void *data) {
 
 bool LoadWallets(ostringstream& strErrors)
 {
-    pWalletMap = new CWalletMap();
+    pWalletManager = new CWalletManager();
     
     // Get wallet names from -usewallet parameters
     set<string> setWalletNames;
     BOOST_FOREACH(const string& name, mapMultiArgs["-usewallet"])
     {
         if (name.size() == 0) continue;
-        if (!CWalletMap::IsValidName(name))
+        if (!CWalletManager::IsValidName(name))
         {
             printf("Invalid wallet name in -usewallet: %s\n", name.c_str());
             strErrors << "Invalid wallet name in -usewallet: " << name << "\n";
@@ -414,7 +414,7 @@ bool LoadWallets(ostringstream& strErrors)
     {
         try
         {
-            vector<string> v = CWalletMap::GetWalletsAtPath(GetDataDir());
+            vector<string> v = CWalletManager::GetWalletsAtPath(GetDataDir());
             copy(v.begin(), v.end(), inserter(setWalletNames, setWalletNames.end()));
         }
         catch (const std::exception& e)
@@ -428,7 +428,7 @@ bool LoadWallets(ostringstream& strErrors)
     BOOST_FOREACH(const string& name, mapMultiArgs["-nousewallet"])
     {
         if (name.size() == 0) continue;
-        if (!CWalletMap::IsValidName(name))
+        if (!CWalletManager::IsValidName(name))
         {
             printf("Invalid wallet name in -nousewallet: %s\n", name.c_str());
             strErrors << "Invalid wallet name in -nousewallet: " << name << "\n";
@@ -444,7 +444,7 @@ bool LoadWallets(ostringstream& strErrors)
     
     // Always require a default wallet
     ostringstream ossErrors;
-    if (!pWalletMap->LoadWallet("", ossErrors, fRescan, fUpgrade, nMaxVersion))
+    if (!pWalletManager->LoadWallet("", ossErrors, fRescan, fUpgrade, nMaxVersion))
     {
         printf("Failed to load default wallet: %s\nExiting...\n", ossErrors.str().c_str());
         return false;
@@ -454,7 +454,7 @@ bool LoadWallets(ostringstream& strErrors)
     BOOST_FOREACH(const string& strWalletName, setWalletNames)
     {
         ostringstream strLoadErrors;
-        if (!pWalletMap->LoadWallet(strWalletName, strLoadErrors, fRescan, fUpgrade, nMaxVersion))
+        if (!pWalletManager->LoadWallet(strWalletName, strLoadErrors, fRescan, fUpgrade, nMaxVersion))
         {
             strErrors << strLoadErrors.str();
             printf("Error loading wallet %s: %s\n", strWalletName.c_str(), strLoadErrors.str().c_str());
@@ -912,7 +912,7 @@ bool AppInit2()
     printf("mapBlockIndex.size() = %"PRIszu"\n",   mapBlockIndex.size());
     printf("nBestHeight = %d\n",                   nBestHeight);
     
-    BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->GetWalletMap())
+    BOOST_FOREACH(const wallet_map::value_type& item, pWalletManager->GetWalletMap())
     {
         printf("Setting properties for wallet \"%s\"...\n", item.first.c_str());
         printf("  setKeyPool.size() = %"PRIszu"\n",      item.second->setKeyPool.size());

@@ -71,7 +71,7 @@ Value getinfo(CWallet* pWallet, const Array& params, bool fHelp)
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
-    obj.push_back(Pair("wallets",       pWalletMap->GetWalletCount()));
+    obj.push_back(Pair("wallets",       pWalletManager->GetWalletCount()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("testnet",       fTestNet));
@@ -1546,7 +1546,7 @@ Value listwallets(CWallet* pWallet, const Array& params, bool fHelp)
             "Returns list of wallets.");
     
     Object obj;
-    BOOST_FOREACH(const wallet_map::value_type& item, pWalletMap->GetWalletMap())
+    BOOST_FOREACH(const wallet_map::value_type& item, pWalletManager->GetWalletMap())
     {
         Object objWallet;
         objWallet.push_back(Pair("balance",       ValueFromAmount(item.second->GetBalance())));
@@ -1572,7 +1572,7 @@ Value usewallet(CWallet* pWallet, const Array& params, bool fHelp)
     string strWalletName = params[0].get_str();
     try 
     {
-        spWallet = pWalletMap->GetWallet(strWalletName);
+        spWallet = pWalletManager->GetWallet(strWalletName);
     }
     catch (const CWalletManagerException& e)
     {
@@ -1610,7 +1610,7 @@ Value loadwallet(CWallet* pWallet, const Array& params, bool fHelp)
 
     string strWalletName = params[0].get_str();
 
-    if (pWalletMap->HaveWallet(strWalletName))
+    if (pWalletManager->HaveWallet(strWalletName))
         throw JSONRPCError(RPC_WALLET_ERROR, string("Wallet ") + strWalletName + " is already loaded.");
 
     ostringstream strErrors;
@@ -1618,7 +1618,7 @@ Value loadwallet(CWallet* pWallet, const Array& params, bool fHelp)
     bool fUpgrade = (params.size() > 2) ? params[2].get_bool() : false;
     int nMaxVersion = (params.size() > 3) ? params[3].get_int() : 0;
 
-    if (!pWalletMap->LoadWallet(strWalletName, strErrors, fRescan, fUpgrade, nMaxVersion))
+    if (!pWalletManager->LoadWallet(strWalletName, strErrors, fRescan, fUpgrade, nMaxVersion))
         throw JSONRPCError(RPC_WALLET_ERROR, string("Load failed: ") + strErrors.str());
 
     return string("Wallet ") + strWalletName + " loaded.";
@@ -1635,7 +1635,7 @@ Value unloadwallet(CWallet* pWallet, const Array& params, bool fHelp)
 
     if (strWalletName.size() == 0)
         throw JSONRPCError(RPC_WALLET_ERROR, "Default wallet cannot be unloaded.");    
-    if (!pWalletMap->UnloadWallet(strWalletName))
+    if (!pWalletManager->UnloadWallet(strWalletName))
         throw JSONRPCError(RPC_WALLET_ERROR, string("No wallet named ") + strWalletName + " is currently loaded.");
 
     return string("Wallet ") + strWalletName + " unloaded.";

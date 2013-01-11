@@ -331,20 +331,20 @@ public:
     CWalletManagerException(ErrorType _type, const char* message) : std::runtime_error(message), type(_type)  { }
 };
 
-/** A CWalletMap associates wallets with names and automatically deallocates them upon destruction.
+/** A CWalletManager handles loading, unloading, allocation, deallocation, and synchronization of wallet objects.
  */
 typedef std::map<std::string, boost::shared_ptr<CWallet> > wallet_map;
-class CWalletMap
+class CWalletManager
 {
 protected:
     static const boost::regex WALLET_NAME_REGEX;
     static const boost::regex WALLET_FILE_REGEX;
 
-    mutable CCriticalSection cs_WalletMap;
+    mutable CCriticalSection cs_WalletManager;
     wallet_map wallets;
     
 public:
-    ~CWalletMap() { UnloadAllWallets(); }
+    ~CWalletManager() { UnloadAllWallets(); }
     
     bool LoadWallet(const std::string& strName, std::ostringstream& strErrors, bool fRescan = false, bool fUpgrade = false, int nMaxVersion = 0);
     bool UnloadWallet(const std::string& strName);

@@ -4216,7 +4216,7 @@ void static BitcoinMiner(CWallet *pwallet)
                     boost::shared_ptr<CWallet> spWallet;
                     try
                     {
-                        spWallet = pWalletMap->GetDefaultWallet();
+                        spWallet = pWalletManager->GetDefaultWallet();
                     }
                     catch (...)
                     {

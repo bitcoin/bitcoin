@@ -8,7 +8,7 @@
 #include "wallet.h"
 #include "util.h"
 
-CWalletMap* pWalletMap;
+CWalletManager* pWalletManager;
 CClientUIInterface uiInterface;
 
 extern bool fPrintToConsole;
@@ -29,14 +29,14 @@ struct TestingSetup {
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
         LoadBlockIndex();
-        pWalletMap = new CWalletMap();
+        pWalletManager = new CWalletManager();
         std::ostringstream ossErrors;
-        pWalletMap->LoadWallet("", ossErrors);
+        pWalletManager->LoadWallet("", ossErrors);
     }
     ~TestingSetup()
     {
-        delete pWalletMap;
-        pWalletMap = NULL;
+        delete pWalletManager;
+        pWalletManager = NULL;
         delete pcoinsTip;
         delete pcoinsdbview;
         delete pblocktree;

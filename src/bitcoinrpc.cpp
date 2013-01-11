@@ -1074,7 +1074,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
     {
         try
         {
-            spWallet = pWalletMap->GetDefaultWallet();
+            spWallet = pWalletManager->GetDefaultWallet();
             pWallet = spWallet.get();
         }
         catch (const CWalletManagerException& e)

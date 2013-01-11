@@ -45,7 +45,7 @@ Value setgenerate(CWallet* pWallet, const Array& params, bool fHelp)
 
     try
     {
-        GenerateBitcoins(fGenerate, pWalletMap->GetDefaultWallet().get());
+        GenerateBitcoins(fGenerate, pWalletManager->GetDefaultWallet().get());
     }
     catch (const CWalletManagerException& e)
     {
@@ -117,7 +117,7 @@ Value getwork(CWallet* pWallet, const Array& params, bool fHelp)
     boost::shared_ptr<CWallet> spWallet;
     try
     {
-        spWallet = pWalletMap->GetDefaultWallet();
+        spWallet = pWalletManager->GetDefaultWallet();
     }
     catch (const CWalletManagerException& e)
     {
@@ -201,7 +201,7 @@ Value getwork(CWallet* pWallet, const Array& params, bool fHelp)
         boost::shared_ptr<CWallet> spWallet;
         try
         {
-            spWallet = pWalletMap->GetDefaultWallet();
+            spWallet = pWalletManager->GetDefaultWallet();
         }
         catch (const CWalletManagerException& e)
         {
@@ -277,7 +277,7 @@ Value getblocktemplate(CWallet* pWallet, const Array& params, bool fHelp)
     boost::shared_ptr<CWallet> spWallet;
     try
     {
-        spWallet = pWalletMap->GetDefaultWallet();
+        spWallet = pWalletManager->GetDefaultWallet();
     }
     catch (const CWalletManagerException& e)
     {

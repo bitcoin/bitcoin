@@ -14,7 +14,7 @@ GetResults(CWalletDB& walletdb, std::map<int64, CAccountingEntry>& results)
     std::list<CAccountingEntry> aes;
 
     results.clear();
-    BOOST_CHECK(walletdb.ReorderTransactions(pWalletMap->GetDefaultWallet().get()) == DB_LOAD_OK);
+    BOOST_CHECK(walletdb.ReorderTransactions(pWalletManager->GetDefaultWallet().get()) == DB_LOAD_OK);
     walletdb.ListAccountCreditDebit("", aes);
     BOOST_FOREACH(CAccountingEntry& ae, aes)
     {
@@ -24,7 +24,7 @@ GetResults(CWalletDB& walletdb, std::map<int64, CAccountingEntry>& results)
 
 BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 {
-    CWalletDB walletdb(pWalletMap->GetDefaultWallet()->strWalletFile);
+    CWalletDB walletdb(pWalletManager->GetDefaultWallet()->strWalletFile);
     std::vector<CWalletTx*> vpwtx;
     CWalletTx wtx;
     CAccountingEntry ae;
@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     walletdb.WriteAccountingEntry(ae);
 
     wtx.mapValue["comment"] = "z";
-    pWalletMap->GetDefaultWallet()->AddToWallet(wtx);
-    vpwtx.push_back(&pWalletMap->GetDefaultWallet()->mapWallet[wtx.GetHash()]);
+    pWalletManager->GetDefaultWallet()->AddToWallet(wtx);
+    vpwtx.push_back(&pWalletManager->GetDefaultWallet()->mapWallet[wtx.GetHash()]);
     vpwtx[0]->nTimeReceived = (unsigned int)1333333335;
     vpwtx[0]->nOrderPos = -1;
 
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     GetResults(walletdb, results);
 
-    BOOST_CHECK(pWalletMap->GetDefaultWallet()->nOrderPosNext == 3);
+    BOOST_CHECK(pWalletManager->GetDefaultWallet()->nOrderPosNext == 3);
     BOOST_CHECK(2 == results.size());
     BOOST_CHECK(results[0].nTime == 1333333333);
     BOOST_CHECK(results[0].strComment.empty());
@@ -60,13 +60,13 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     ae.nTime = 1333333330;
     ae.strOtherAccount = "d";
-    ae.nOrderPos = pWalletMap->GetDefaultWallet()->IncOrderPosNext();
+    ae.nOrderPos = pWalletManager->GetDefaultWallet()->IncOrderPosNext();
     walletdb.WriteAccountingEntry(ae);
 
     GetResults(walletdb, results);
 
     BOOST_CHECK(results.size() == 3);
-    BOOST_CHECK(pWalletMap->GetDefaultWallet()->nOrderPosNext == 4);
+    BOOST_CHECK(pWalletManager->GetDefaultWallet()->nOrderPosNext == 4);
     BOOST_CHECK(results[0].nTime == 1333333333);
     BOOST_CHECK(1 == vpwtx[0]->nOrderPos);
     BOOST_CHECK(results[2].nTime == 1333333336);
@@ -76,21 +76,21 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     wtx.mapValue["comment"] = "y";
     --wtx.nLockTime;  // Just to change the hash :)
-    pWalletMap->GetDefaultWallet()->AddToWallet(wtx);
-    vpwtx.push_back(&pWalletMap->GetDefaultWallet()->mapWallet[wtx.GetHash()]);
+    pWalletManager->GetDefaultWallet()->AddToWallet(wtx);
+    vpwtx.push_back(&pWalletManager->GetDefaultWallet()->mapWallet[wtx.GetHash()]);
     vpwtx[1]->nTimeReceived = (unsigned int)1333333336;
 
     wtx.mapValue["comment"] = "x";
     --wtx.nLockTime;  // Just to change the hash :)
-    pWalletMap->GetDefaultWallet()->AddToWallet(wtx);
-    vpwtx.push_back(&pWalletMap->GetDefaultWallet()->mapWallet[wtx.GetHash()]);
+    pWalletManager->GetDefaultWallet()->AddToWallet(wtx);
+    vpwtx.push_back(&pWalletManager->GetDefaultWallet()->mapWallet[wtx.GetHash()]);
     vpwtx[2]->nTimeReceived = (unsigned int)1333333329;
     vpwtx[2]->nOrderPos = -1;
 
     GetResults(walletdb, results);
 
     BOOST_CHECK(results.size() == 3);
-    BOOST_CHECK(pWalletMap->GetDefaultWallet()->nOrderPosNext == 6);
+    BOOST_CHECK(pWalletManager->GetDefaultWallet()->nOrderPosNext == 6);
     BOOST_CHECK(0 == vpwtx[2]->nOrderPos);
     BOOST_CHECK(results[1].nTime == 1333333333);
     BOOST_CHECK(2 == vpwtx[0]->nOrderPos);
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     GetResults(walletdb, results);
 
     BOOST_CHECK(results.size() == 4);
-    BOOST_CHECK(pWalletMap->GetDefaultWallet()->nOrderPosNext == 7);
+    BOOST_CHECK(pWalletManager->GetDefaultWallet()->nOrderPosNext == 7);
     BOOST_CHECK(0 == vpwtx[2]->nOrderPos);
     BOOST_CHECK(results[1].nTime == 1333333333);
     BOOST_CHECK(2 == vpwtx[0]->nOrderPos);

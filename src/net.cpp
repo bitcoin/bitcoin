@@ -1933,10 +1933,11 @@ void StartNode(void* parg)
     // Generate coins in the background
     try
     {
-        GenerateBitcoins(GetBoolArg("-gen", false), pWalletMap->GetDefaultWallet().get());
+        GenerateBitcoins(GetBoolArg("-gen", false), pWalletManager->GetDefaultWallet().get());
     }
-    catch (...)
+    catch (const CWalletManagerException& e)
     {
+        printf("StartNode() Error: %s\n", e.what());
     }
 }
 

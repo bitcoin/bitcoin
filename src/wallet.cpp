@@ -1819,21 +1819,21 @@ bool static InitWarning(const std::string &str)
 
 // TODO: Remove dependencies for I/O on printf to debug.log, InitError, and InitWarning
 // TODO: Fix error handling.
-bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, bool fRescan, bool fUpgrade, int nMaxVersion)
+bool CWalletManager::LoadWallet(const string& strName, ostringstream& strErrors, bool fRescan, bool fUpgrade, int nMaxVersion)
 {
     // Check that the wallet name is valid
-    if (!CWalletMap::IsValidName(strName))
+    if (!CWalletManager::IsValidName(strName))
     {
         strErrors << _("Wallet name may only contain letters, numbers, and underscores.");
         return false;
     }
 
-    ENTER_CRITICAL_SECTION(cs_WalletMap);
+    ENTER_CRITICAL_SECTION(cs_WalletManager);
 
     // Check that wallet is not already loaded
     if (wallets.count(strName) > 0)
     {
-        LEAVE_CRITICAL_SECTION(cs_WalletMap);
+        LEAVE_CRITICAL_SECTION(cs_WalletManager);
         strErrors << _("A wallet with that name is already loaded.");
         return false;
     }
@@ -1858,13 +1858,13 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
     }
     catch (const exception& e)
     {
-        LEAVE_CRITICAL_SECTION(cs_WalletMap);
+        LEAVE_CRITICAL_SECTION(cs_WalletManager);
         strErrors << _("Critical error loading wallet \"") << strName << "\" " << _("from ") << strFile << ": " << e.what();
         return false;
     }
     catch (...)
     {
-        LEAVE_CRITICAL_SECTION(cs_WalletMap);
+        LEAVE_CRITICAL_SECTION(cs_WalletManager);
         strErrors << _("Critical error loading wallet \"") << strName << "\" " << _("from ") << strFile;
         return false;
     }
@@ -1873,7 +1873,7 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
     {
         if (nLoadWalletRet == DB_CORRUPT)
         {
-            LEAVE_CRITICAL_SECTION(cs_WalletMap);
+            LEAVE_CRITICAL_SECTION(cs_WalletManager);
             strErrors << _("Error loading ") << strFile << _(": Wallet corrupted") << "\n";
             delete pWallet;
             return false;
@@ -1889,7 +1889,7 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
             strErrors << _("Error loading ") << strFile << _(": Wallet requires newer version of Bitcoin") << "\n";
         else if (nLoadWalletRet == DB_NEED_REWRITE)
         {
-            LEAVE_CRITICAL_SECTION(cs_WalletMap);
+            LEAVE_CRITICAL_SECTION(cs_WalletManager);
             strErrors << _("Wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
             printf("%s", strErrors.str().c_str());
             return InitError(strErrors.str());
@@ -1933,7 +1933,7 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
     this->wallets[strName] = spWallet;
     RegisterWallet(pWallet);
 
-    LEAVE_CRITICAL_SECTION(cs_WalletMap);
+    LEAVE_CRITICAL_SECTION(cs_WalletManager);
 
     CBlockIndex *pindexRescan = pindexBest;
     if (fRescan)
@@ -1957,10 +1957,10 @@ bool CWalletMap::LoadWallet(const string& strName, ostringstream& strErrors, boo
     return true;
 }
 
-bool CWalletMap::UnloadWallet(const std::string& strName)
+bool CWalletManager::UnloadWallet(const std::string& strName)
 {
     {
-        LOCK(cs_WalletMap);
+        LOCK(cs_WalletManager);
         if (!wallets.count(strName)) return false;
         boost::shared_ptr<CWallet> spWallet(wallets[strName]);
         CWallet* pWallet = spWallet.get();
@@ -1973,10 +1973,10 @@ bool CWalletMap::UnloadWallet(const std::string& strName)
     return true;
 }
 
-void CWalletMap::UnloadAllWallets()
+void CWalletManager::UnloadAllWallets()
 {
     {
-        LOCK(cs_WalletMap);
+        LOCK(cs_WalletManager);
         vector<string> vstrNames;
         vector<boost::shared_ptr<CWallet> > vpWallets;
         BOOST_FOREACH(const wallet_map::value_type& item, wallets)
@@ -1997,33 +1997,33 @@ void CWalletMap::UnloadAllWallets()
     }
 }
 
-boost::shared_ptr<CWallet> CWalletMap::GetWallet(const string& strName)
+boost::shared_ptr<CWallet> CWalletManager::GetWallet(const string& strName)
 {
     {
-        LOCK(cs_WalletMap);
+        LOCK(cs_WalletManager);
         if (!wallets.count(strName))
             throw CWalletManagerException(CWalletManagerException::WALLET_NOT_LOADED,
-                                          "CWalletMap::GetWallet() - Wallet not loaded.");
+                                          "CWalletManager::GetWallet() - Wallet not loaded.");
         return wallets[strName];
     }
 }
 
-const boost::regex CWalletMap::WALLET_NAME_REGEX("[a-zA-Z0-9_]*");
-const boost::regex CWalletMap::WALLET_FILE_REGEX("wallet-([a-zA-Z0-9_]+)\\.dat");
+const boost::regex CWalletManager::WALLET_NAME_REGEX("[a-zA-Z0-9_]*");
+const boost::regex CWalletManager::WALLET_FILE_REGEX("wallet-([a-zA-Z0-9_]+)\\.dat");
 
-bool CWalletMap::IsValidName(const string& strName)
+bool CWalletManager::IsValidName(const string& strName)
 {
-    return boost::regex_match(strName, CWalletMap::WALLET_NAME_REGEX);
+    return boost::regex_match(strName, CWalletManager::WALLET_NAME_REGEX);
 }
 
-vector<string> CWalletMap::GetWalletsAtPath(const boost::filesystem::path& pathWallets)
+vector<string> CWalletManager::GetWalletsAtPath(const boost::filesystem::path& pathWallets)
 {
     vector<string> vstrFiles = GetFilesAtPath(pathWallets, file_option_flags::REGULAR_FILES);
     vector<string> vstrNames;
     boost::cmatch match;
     BOOST_FOREACH(const string& strFile, vstrFiles)
     {
-        if (boost::regex_match(strFile.c_str(), match, CWalletMap::WALLET_FILE_REGEX))
+        if (boost::regex_match(strFile.c_str(), match, CWalletManager::WALLET_FILE_REGEX))
             vstrNames.push_back(string(match[1].first, match[1].second));
     }
     return vstrNames;
