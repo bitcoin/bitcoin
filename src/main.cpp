@@ -4212,9 +4212,18 @@ void static BitcoinMiner(CWallet *pwallet)
                     // Found a solution
                     pblock->nNonce = ByteReverse(nNonceFound);
                     assert(hash == pblock->GetHash());
-
+                    
+                    boost::shared_ptr<CWallet> spWallet;
+                    try
+                    {
+                        spWallet = pWalletMap->GetDefaultWallet();
+                    }
+                    catch (...)
+                    {
+                        break;
+                    }
                     SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                    CheckWork(pblock.get(), *pwalletMain, reservekey);
+                    CheckWork(pblock.get(), *spWallet, reservekey);
                     SetThreadPriority(THREAD_PRIORITY_LOWEST);
                     break;
                 }

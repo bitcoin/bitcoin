@@ -9,7 +9,6 @@
 #include "util.h"
 
 CWalletMap* pWalletMap;
-CWallet* pwalletMain;
 CClientUIInterface uiInterface;
 
 extern bool fPrintToConsole;
@@ -33,12 +32,10 @@ struct TestingSetup {
         pWalletMap = new CWalletMap();
         std::ostringstream ossErrors;
         pWalletMap->LoadWallet("", ossErrors);
-        pwalletMain = pWalletMap->GetDefaultWallet().get();
     }
     ~TestingSetup()
     {
         delete pWalletMap;
-        pwalletMain = NULL;
         pWalletMap = NULL;
         delete pcoinsTip;
         delete pcoinsdbview;

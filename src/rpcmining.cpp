@@ -43,7 +43,15 @@ Value setgenerate(CWallet* pWallet, const Array& params, bool fHelp)
     }
     mapArgs["-gen"] = (fGenerate ? "1" : "0");
 
-    GenerateBitcoins(fGenerate, pwalletMain);
+    try
+    {
+        GenerateBitcoins(fGenerate, pWalletMap->GetDefaultWallet().get());
+    }
+    catch (const CWalletManagerException& e)
+    {
+        throw JSONRPCError(RPC_WALLET_ERROR, "No default wallet is loaded.");
+    }
+
     return Value::null;
 }
 
@@ -104,7 +112,19 @@ Value getwork(CWallet* pWallet, const Array& params, bool fHelp)
     typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
     static vector<CBlock*> vNewBlock;
-    static CReserveKey reservekey(pwalletMain);
+    
+    // Get default wallet
+    boost::shared_ptr<CWallet> spWallet;
+    try
+    {
+        spWallet = pWalletMap->GetDefaultWallet();
+    }
+    catch (const CWalletManagerException& e)
+    {
+        throw JSONRPCError(RPC_WALLET_ERROR, "No default wallet is loaded.");
+    }
+
+    static CReserveKey reservekey(spWallet.get());
 
     if (params.size() == 0)
     {
@@ -177,6 +197,17 @@ Value getwork(CWallet* pWallet, const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
         CBlock* pdata = (CBlock*)&vchData[0];
 
+        // Get default wallet
+        boost::shared_ptr<CWallet> spWallet;
+        try
+        {
+            spWallet = pWalletMap->GetDefaultWallet();
+        }
+        catch (const CWalletManagerException& e)
+        {
+            throw JSONRPCError(RPC_WALLET_ERROR, "No default wallet is loaded.");
+        }
+
         // Byte reverse
         for (int i = 0; i < 128/4; i++)
             ((unsigned int*)pdata)[i] = ByteReverse(((unsigned int*)pdata)[i]);
@@ -191,7 +222,7 @@ Value getwork(CWallet* pWallet, const Array& params, bool fHelp)
         pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
-        return CheckWork(pblock, *pwalletMain, reservekey);
+        return CheckWork(pblock, *spWallet, reservekey);
     }
 }
 
@@ -242,7 +273,18 @@ Value getblocktemplate(CWallet* pWallet, const Array& params, bool fHelp)
     if (IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
 
-    static CReserveKey reservekey(pwalletMain);
+    // Get default wallet
+    boost::shared_ptr<CWallet> spWallet;
+    try
+    {
+        spWallet = pWalletMap->GetDefaultWallet();
+    }
+    catch (const CWalletManagerException& e)
+    {
+        throw JSONRPCError(RPC_WALLET_ERROR, "No default wallet is loaded.");
+    }
+
+    static CReserveKey reservekey(spWallet.get());
 
     // Update block
     static unsigned int nTransactionsUpdatedLast;

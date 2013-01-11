@@ -1931,7 +1931,13 @@ void StartNode(void* parg)
         printf("Error; NewThread(ThreadDumpAddress) failed\n");
 
     // Generate coins in the background
-    GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain);
+    try
+    {
+        GenerateBitcoins(GetBoolArg("-gen", false), pWalletMap->GetDefaultWallet().get());
+    }
+    catch (...)
+    {
+    }
 }
 
 bool StopNode()

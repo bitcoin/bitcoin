@@ -1069,15 +1069,17 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
         !pcmd->okSafeMode)
         throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, string("Safe mode: ") + strWarning);
 
+    boost::shared_ptr<CWallet> spWallet;
     if (!pWallet)
     {
         try
         {
-            pWallet = pWalletMap->GetDefaultWallet().get();
+            spWallet = pWalletMap->GetDefaultWallet();
+            pWallet = spWallet.get();
         }
-        catch (const std::exception& e)
+        catch (const CWalletManagerException& e)
         {
-            throw JSONRPCError(RPC_WALLET_ERROR, e.what());
+            throw JSONRPCError(RPC_WALLET_ERROR, "No default wallet is loaded.");
         }
     }
     
@@ -1089,7 +1091,6 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
             if (pcmd->unlocked)
                 result = pcmd->actor(pWallet, params, false);
             else {
-                if (!pWallet) throw JSONRPCError(RPC_WALLET_ERROR, "No default wallet loaded.");
                 LOCK2(cs_main, pWallet->cs_wallet);
                 result = pcmd->actor(pWallet, params, false);
             }

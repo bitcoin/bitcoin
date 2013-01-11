@@ -2,7 +2,7 @@
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "init.h" // for pwalletMain
+#include "init.h" // for pWalletMap
 #include "base58.h"
 #include "util.h"
 #include "bitcoinrpc.h"
@@ -35,30 +35,30 @@ BOOST_AUTO_TEST_CASE(rpc_addmultisig)
 
     Value v;
     CBitcoinAddress address;
-    BOOST_CHECK_NO_THROW(v = addmultisig(pwalletMain, createArgs(1, address1Hex), false));
+    BOOST_CHECK_NO_THROW(v = addmultisig(pWalletMap->GetDefaultWallet().get(), createArgs(1, address1Hex), false));
     address.SetString(v.get_str());
     BOOST_CHECK(address.IsValid() && address.IsScript());
 
-    BOOST_CHECK_NO_THROW(v = addmultisig(pwalletMain, createArgs(1, address1Hex, address2Hex), false));
+    BOOST_CHECK_NO_THROW(v = addmultisig(pWalletMap->GetDefaultWallet().get(), createArgs(1, address1Hex, address2Hex), false));
     address.SetString(v.get_str());
     BOOST_CHECK(address.IsValid() && address.IsScript());
 
-    BOOST_CHECK_NO_THROW(v = addmultisig(pwalletMain, createArgs(2, address1Hex, address2Hex), false));
+    BOOST_CHECK_NO_THROW(v = addmultisig(pWalletMap->GetDefaultWallet().get(), createArgs(2, address1Hex, address2Hex), false));
     address.SetString(v.get_str());
     BOOST_CHECK(address.IsValid() && address.IsScript());
 
-    BOOST_CHECK_THROW(addmultisig(pwalletMain, createArgs(0), false), runtime_error);
-    BOOST_CHECK_THROW(addmultisig(pwalletMain, createArgs(1), false), runtime_error);
-    BOOST_CHECK_THROW(addmultisig(pwalletMain, createArgs(2, address1Hex), false), runtime_error);
+    BOOST_CHECK_THROW(addmultisig(pWalletMap->GetDefaultWallet().get(), createArgs(0), false), runtime_error);
+    BOOST_CHECK_THROW(addmultisig(pWalletMap->GetDefaultWallet().get(), createArgs(1), false), runtime_error);
+    BOOST_CHECK_THROW(addmultisig(pWalletMap->GetDefaultWallet().get(), createArgs(2, address1Hex), false), runtime_error);
 
-    BOOST_CHECK_THROW(addmultisig(pwalletMain, createArgs(1, ""), false), runtime_error);
-    BOOST_CHECK_THROW(addmultisig(pwalletMain, createArgs(1, "NotAValidPubkey"), false), runtime_error);
+    BOOST_CHECK_THROW(addmultisig(pWalletMap->GetDefaultWallet().get(), createArgs(1, ""), false), runtime_error);
+    BOOST_CHECK_THROW(addmultisig(pWalletMap->GetDefaultWallet().get(), createArgs(1, "NotAValidPubkey"), false), runtime_error);
 
     string short1(address1Hex, address1Hex+sizeof(address1Hex)-2); // last byte missing
-    BOOST_CHECK_THROW(addmultisig(pwalletMain, createArgs(2, short1.c_str()), false), runtime_error);
+    BOOST_CHECK_THROW(addmultisig(pWalletMap->GetDefaultWallet().get(), createArgs(2, short1.c_str()), false), runtime_error);
 
     string short2(address1Hex+1, address1Hex+sizeof(address1Hex)); // first byte missing
-    BOOST_CHECK_THROW(addmultisig(pwalletMain, createArgs(2, short2.c_str()), false), runtime_error);
+    BOOST_CHECK_THROW(addmultisig(pWalletMap->GetDefaultWallet().get(), createArgs(2, short2.c_str()), false), runtime_error);
 }
 
 static Value CallRPC(string args)
@@ -71,7 +71,7 @@ static Value CallRPC(string args)
 
     rpcfn_type method = tableRPC[strMethod]->actor;
     try {
-        Value result = (*method)(pwalletMain, params, false);
+        Value result = (*method)(pWalletMap->GetDefaultWallet().get(), params, false);
         return result;
     }
     catch (Object& objError)

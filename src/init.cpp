@@ -26,7 +26,6 @@ using namespace std;
 using namespace boost;
 
 CWalletMap* pWalletMap;
-CWallet* pwalletMain;
 CClientUIInterface uiInterface;
 
 // Used to pass flags to the Bind() function
@@ -462,8 +461,6 @@ bool LoadWallets(ostringstream& strErrors)
         }
     }
     
-    // TODO: remove dependency on a global variable named pwalletMain in the rest of the app.
-    pwalletMain = pWalletMap->GetDefaultWallet().get();
     return true;
 }
 
