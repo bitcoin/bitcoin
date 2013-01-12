@@ -85,7 +85,8 @@ OBJS= \
     obj/walletdb.o \
     obj/noui.o \
     obj/leveldb.o \
-    obj/txdb.o
+    obj/txdb.o \
+    obj/timer.o
 
 all: bitcoind.exe
 

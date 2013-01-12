@@ -100,7 +100,8 @@ OBJS= \
     obj/walletdb.o \
     obj/noui.o \
     obj/leveldb.o \
-    obj/txdb.o
+    obj/txdb.o \
+    obj/timer.o
 
 ifndef USE_UPNP
 	override USE_UPNP = -

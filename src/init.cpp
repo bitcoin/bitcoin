@@ -10,6 +10,7 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include "timer.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -98,6 +99,7 @@ void Shutdown(void* parg)
         bitdb.Flush(true);
         boost::filesystem::remove(GetPidFile());
         delete pWalletManager;
+        TimerThread::StopTimer(); // for walletpassphrase unlock
         NewThread(ExitTimeout, NULL);
         Sleep(50);
         printf("Bitcoin exited\n\n");
@@ -869,8 +871,10 @@ bool AppInit2()
     
     uiInterface.InitMessage(_("Loading wallets..."));
     printf("Loading wallets...\n");
+
+    TimerThread::StartTimer(); // for walletpassphrase unlock
     if (!LoadWallets(strErrors)) return false;
-    
+
     // ********************************************************* Step 9: import blocks
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
