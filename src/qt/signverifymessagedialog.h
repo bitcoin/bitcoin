@@ -20,8 +20,8 @@ public:
     ~SignVerifyMessageDialog();
 
     void setModel(WalletModel *model);
-    void setAddress_SM(QString address);
-    void setAddress_VM(QString address);
+    void setAddress_SM(const QString &address);
+    void setAddress_VM(const QString &address);
 
     void showTab_SM(bool fShow);
     void showTab_VM(bool fShow);
