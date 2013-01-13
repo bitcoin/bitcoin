@@ -17,12 +17,15 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "walletdb.h"
+#include "timer.h"
 
 #include <stdexcept>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/regex.hpp>
+#include <boost/thread.hpp>
 
+class CWallet;
 class CAccountingEntry;
 class CWalletTx;
 class CReserveKey;
@@ -39,6 +42,15 @@ enum WalletFeature
     FEATURE_LATEST = 60000
 };
 
+class CWalletLockJob : public CTimerJob
+{
+private:
+    CWallet* pWallet;
+    
+public:
+    void SetWallet(CWallet* _pWallet) { pWallet = _pWallet; }
+    void Run();
+};
 
 /** A key pool entry */
 class CKeyPool
@@ -76,6 +88,11 @@ private:
     bool SelectCoins(int64 nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
 
     CWalletDB *pwalletdbEncryption;
+    
+    // for the lock timer
+    CWalletLockJob lockJob;
+    int64 nLockTime;
+    std::string strLockTime;
 
     // the current wallet version: clients below this version are not able to load the wallet
     int nWalletVersion;
@@ -98,6 +115,9 @@ public:
 
     CWallet()
     {
+        lockJob.SetWallet(this);
+        nLockTime = 0;
+        strLockTime = "Locked";
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
         fFileBacked = false;
@@ -107,6 +127,9 @@ public:
     }
     CWallet(std::string strWalletFileIn)
     {
+        lockJob.SetWallet(this);
+        nLockTime = 0;
+        strLockTime = "Locked";
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
         strWalletFile = strWalletFileIn;
@@ -316,6 +339,13 @@ public:
      * @note called with lock cs_wallet held.
      */
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
+    
+    // If the wallet is unlocked, schedule a job to lock it again after a number of seconds
+    bool TimedLock(int64 seconds);
+    
+    int64 GetLockTime() const { return nLockTime; }
+    std::string GetStringLockTime() { return strLockTime; }
+    void ResetLockTime() { nLockTime = 0; strLockTime = "Locked"; }
 };
 
 class CWalletManagerException : public std::runtime_error

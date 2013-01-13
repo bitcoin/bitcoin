@@ -11,7 +11,6 @@
 
 using namespace std;
 
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // mapWallet
@@ -1706,6 +1705,35 @@ set< set<CTxDestination> > CWallet::GetAddressGroupings()
     }
 
     return ret;
+}
+
+bool CWallet::TimedLock(int64 seconds)
+{
+    if (IsLocked())
+    {
+        ResetLockTime();
+        return false;
+    }
+    
+    time_t rawtime;
+    struct tm* timeinfo;
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    
+    char buffer[80];
+    strftime(buffer ,80, "%Y-%m-%d %H:%M:%S", timeinfo);
+    strLockTime = buffer;
+    nLockTime = mktime(timeinfo);
+    
+    lockJob.Schedule(boost::posix_time::seconds(seconds));
+    return true;
+}
+
+void CWalletLockJob::Run()
+{
+    printf("---------CWalletLockJob::Run() called------------\n");
+    pWallet->ResetLockTime();
+    pWallet->Lock();
 }
 
 CPubKey CReserveKey::GetReservedKey()

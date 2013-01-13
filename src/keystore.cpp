@@ -77,53 +77,12 @@ bool CCryptoKeyStore::Lock()
 {
     if (!SetCrypted())
         return false;
-
     {
         LOCK(cs_KeyStore);
         vMasterKey.clear();
     }
-
     NotifyStatusChanged(this);
-    nLockTime = 0;
-        
     return true;
-}
-
-void CCryptoKeyStore::SleepThenLock(int64 nMyWakeTime)
-{
-    ENTER_CRITICAL_SECTION(cs_nLockTime);
-    
-    if (nLockTime == 0)
-    {
-        nLockTime = nMyWakeTime;
-        
-        do
-        {
-            if (nLockTime == 0)
-                break;
-            int64 nToSleep = nLockTime - GetTimeMillis();
-            if (nToSleep <= 0)
-                break;
-            
-            LEAVE_CRITICAL_SECTION(cs_nLockTime);
-            Sleep(nToSleep);
-            ENTER_CRITICAL_SECTION(cs_nLockTime);
-            
-        } while(1);
-        
-        if (nLockTime)
-        {
-            nLockTime = 0;
-            Lock();
-        }
-    }
-    else
-    {
-        if (nLockTime < nMyWakeTime)
-            nLockTime = nMyWakeTime;
-    }
-    
-    LEAVE_CRITICAL_SECTION(cs_nLockTime);
 }
 
 bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)

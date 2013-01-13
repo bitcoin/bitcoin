@@ -1260,28 +1260,6 @@ void ThreadTopUpKeyPool(void* parg)
     pWallet->TopUpKeyPool();
 }
 
-struct CleanWalletPassphraseParams
-{
-    CWallet* pWallet;
-    int64* pnSleepTime;
-    
-    CleanWalletPassphraseParams(CWallet* _pWallet, int64* _pnSleepTime) :
-        pWallet(_pWallet), pnSleepTime(_pnSleepTime) { }
-};
-
-void ThreadCleanWalletPassphrase(void* parg)
-{
-    // Make this thread recognisable as the wallet relocking thread
-    // TODO: Give threads for different wallets distinct names.
-    RenameThread("bitcoin-lock-wa");
-    
-    CleanWalletPassphraseParams* pParams = (CleanWalletPassphraseParams*)parg;
-    pParams->pWallet->SleepThenLock(GetTimeMillis() + *(pParams->pnSleepTime) * 1000);
-
-    delete pParams->pnSleepTime;
-    delete pParams;
-}
-
 Value walletpassphrase(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
@@ -1311,11 +1289,7 @@ Value walletpassphrase(CWallet* pWallet, const Array& params, bool fHelp)
             "walletpassphrase <passphrase> <timeout>\n"
             "Stores the wallet decryption key in memory for <timeout> seconds.");
 
-    NewThread(ThreadTopUpKeyPool, pWallet);
-    int64* pnSleepTime = new int64(params[1].get_int64());
-    CleanWalletPassphraseParams* pcwpp = new CleanWalletPassphraseParams(pWallet, pnSleepTime);
-    NewThread(ThreadCleanWalletPassphrase, pcwpp);
-
+    pWallet->TimedLock(params[1].get_int64());
     return Value::null;
 }
 
@@ -1551,7 +1525,8 @@ Value listwallets(CWallet* pWallet, const Array& params, bool fHelp)
         Object objWallet;
         objWallet.push_back(Pair("balance",       ValueFromAmount(item.second->GetBalance())));
         if (item.second->IsCrypted())
-            objWallet.push_back(Pair("unlocked_until", (boost::int64_t)item.second->GetLockTime() / 1000));        
+            objWallet.push_back(Pair("unlocked_until", item.second->GetStringLockTime()));
+                                     //(boost::int64_t)item.second->GetLockTime() / 1000));
         objWallet.push_back(Pair("walletversion", item.second->GetVersion()));
         objWallet.push_back(Pair("keypoolsize",   item.second->GetKeyPoolSize()));
         objWallet.push_back(Pair("keypoololdest", (boost::int64_t)item.second->GetOldestKeyPoolTime()));
