@@ -1715,15 +1715,14 @@ bool CWallet::TimedLock(int64 seconds)
         return false;
     }
     
-    time_t rawtime;
-    struct tm* timeinfo;
-    time(&rawtime);
-    timeinfo = localtime(&rawtime);
+    time_t rawtime = time(NULL) + seconds;
+    rawtime += seconds;
+    nLockTime = rawtime;
+    struct tm* timeinfo = gmtime(&rawtime);
     
     char buffer[80];
-    strftime(buffer ,80, "%Y-%m-%d %H:%M:%S", timeinfo);
+    strftime(buffer ,80, "%Y-%m-%d %H:%M:%S (UTC)", timeinfo);
     strLockTime = buffer;
-    nLockTime = mktime(timeinfo);
     
     lockJob.Schedule(boost::posix_time::seconds(seconds));
     return true;
