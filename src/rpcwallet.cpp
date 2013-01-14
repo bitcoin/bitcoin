@@ -1524,9 +1524,12 @@ Value listwallets(CWallet* pWallet, const Array& params, bool fHelp)
     {
         Object objWallet;
         objWallet.push_back(Pair("balance",       ValueFromAmount(item.second->GetBalance())));
+        objWallet.push_back(Pair("encrypted",     item.second->IsCrypted()));
         if (item.second->IsCrypted())
-            objWallet.push_back(Pair("unlocked_until", item.second->GetStringLockTime()));
-                                     //(boost::int64_t)item.second->GetLockTime() / 1000));
+        {
+            objWallet.push_back(Pair("unlocked_until",  (boost::int64_t)item.second->GetLockTime()));
+            objWallet.push_back(Pair("unlocked_until_pretty", item.second->GetStringLockTime()));
+        }
         objWallet.push_back(Pair("walletversion", item.second->GetVersion()));
         objWallet.push_back(Pair("keypoolsize",   item.second->GetKeyPoolSize()));
         objWallet.push_back(Pair("keypoololdest", (boost::int64_t)item.second->GetOldestKeyPoolTime()));

@@ -345,7 +345,7 @@ public:
     
     int64 GetLockTime() const { return nLockTime; }
     std::string GetStringLockTime() { return strLockTime; }
-    void ResetLockTime() { nLockTime = 0; strLockTime = "Locked"; }
+    void ResetLockTime() { nLockTime = 0; if (IsCrypted()) strLockTime = "Locked"; }
 };
 
 class CWalletManagerException : public std::runtime_error

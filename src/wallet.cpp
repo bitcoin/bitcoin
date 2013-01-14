@@ -1732,8 +1732,8 @@ bool CWallet::TimedLock(int64 seconds)
 void CWalletLockJob::Run()
 {
     printf("---------CWalletLockJob::Run() called------------\n");
-    pWallet->ResetLockTime();
     pWallet->Lock();
+    pWallet->ResetLockTime();
 }
 
 CPubKey CReserveKey::GetReservedKey()
