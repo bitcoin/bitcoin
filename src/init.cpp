@@ -581,9 +581,9 @@ bool AppInit2()
 
     int64 nStart;
 
-    // ********************************************************* Step 5: verify database integrity
+    // ********************************************************* Step 5: verify wallet database integrity
 
-    uiInterface.InitMessage(_("Verifying database integrity..."));
+    uiInterface.InitMessage(_("Verifying wallet integrity..."));
 
     if (!bitdb.Open(GetDataDir()))
     {
@@ -779,10 +779,12 @@ bool AppInit2()
         pblocktree->WriteReindexing(true);
 
     if (!LoadBlockIndex())
-        return InitError(_("Error loading block/coin databases"));
+        return InitError(_("Error loading block database"));
+
+    uiInterface.InitMessage(_("Verifying block database integrity..."));
 
     if (!VerifyDB())
-        return InitError(_("Corrupted database detected. Please restart the client with -reindex."));
+        return InitError(_("Corrupted block database detected. Please restart the client with -reindex."));
 
     // as LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill bitcoin-qt during the last operation. If so, exit.
