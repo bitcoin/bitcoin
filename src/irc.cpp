@@ -248,7 +248,6 @@ void ThreadIRCSeed2(void* parg)
         if (!RecvUntil(hSocket, "Found your hostname", "using your IP address instead", "Couldn't look up your hostname", "ignoring hostname"))
         {
             closesocket(hSocket);
-            hSocket = INVALID_SOCKET;
             nErrorWait = nErrorWait * 11 / 10;
             if (Wait(nErrorWait += 60))
                 continue;
@@ -273,7 +272,6 @@ void ThreadIRCSeed2(void* parg)
         if (nRet != 1)
         {
             closesocket(hSocket);
-            hSocket = INVALID_SOCKET;
             if (nRet == 2)
             {
                 printf("IRC name already in use\n");
@@ -362,7 +360,6 @@ void ThreadIRCSeed2(void* parg)
             }
         }
         closesocket(hSocket);
-        hSocket = INVALID_SOCKET;
 
         if (GetTime() - nStart > 20 * 60)
         {
