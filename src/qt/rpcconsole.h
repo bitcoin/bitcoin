@@ -7,6 +7,7 @@ namespace Ui {
     class RPCConsole;
 }
 class ClientModel;
+class WalletModel;
 
 /** Local Bitcoin RPC console. */
 class RPCConsole: public QDialog
@@ -18,6 +19,7 @@ public:
     ~RPCConsole();
 
     void setClientModel(ClientModel *model);
+    void setWalletModel(WalletModel *model);
 
     enum MessageClass {
         MC_ERROR,
@@ -49,6 +51,9 @@ public slots:
     void browseHistory(int offset);
     /** Scroll console view to end */
     void scrollToEnd();
+    /** Set number of unique transaction IDs in wallet */
+    void setNumUniqueTxIds(int count);
+
 signals:
     // For RPC command executor
     void stopExecutor();
@@ -57,6 +62,7 @@ signals:
 private:
     Ui::RPCConsole *ui;
     ClientModel *clientModel;
+    WalletModel *walletModel;
     QStringList history;
     int historyPtr;
 

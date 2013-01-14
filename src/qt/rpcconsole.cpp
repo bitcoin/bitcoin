@@ -2,6 +2,7 @@
 #include "ui_rpcconsole.h"
 
 #include "clientmodel.h"
+#include "walletmodel.h"
 #include "bitcoinrpc.h"
 #include "guiutil.h"
 
@@ -187,6 +188,8 @@ void RPCExecutor::request(const QString &command)
 RPCConsole::RPCConsole(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RPCConsole),
+    clientModel(0),
+    walletModel(0),
     historyPtr(0)
 {
     ui->setupUi(this);
@@ -269,6 +272,17 @@ void RPCConsole::setClientModel(ClientModel *model)
 
         setNumConnections(model->getNumConnections());
         ui->isTestNet->setChecked(model->isTestNet());
+    }
+}
+
+void RPCConsole::setWalletModel(WalletModel *model)
+{
+    this->walletModel = model;
+    if(model)
+    {
+        // Subscribe to numTransactionsChanged() signal from wallet and provide initial value
+        connect(model, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumUniqueTxIds(int)));
+        setNumUniqueTxIds(model->getNumTransactions());
     }
 }
 
@@ -430,4 +444,9 @@ void RPCConsole::on_showCLOptionsButton_clicked()
 {
     GUIUtil::HelpMessageBox help;
     help.exec();
+}
+
+void RPCConsole::setNumUniqueTxIds(int count)
+{
+    ui->numUniqueTxIds->setText(QString::number(count));
 }
