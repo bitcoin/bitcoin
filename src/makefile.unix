@@ -1,5 +1,5 @@
 # Copyright (c) 2009-2010 Satoshi Nakamoto
-# Copyright (c) 2011 The PPCoin developers
+# Copyright (c) 2011-2012 The PPCoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -107,7 +107,8 @@ OBJS= \
     obj/util.o \
     obj/wallet.o \
     obj/walletdb.o \
-    obj/noui.o
+    obj/noui.o \
+    obj/kernel.o
 
 
 all: ppcoind

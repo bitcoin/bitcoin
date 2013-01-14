@@ -9,6 +9,7 @@
 #include "net.h"
 #include "init.h"
 #include "ui_interface.h"
+#include "kernel.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -1846,6 +1847,13 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
             return error("AddToBlockIndex() : hashProofOfStake not found in map");
         pindexNew->hashProofOfStake = mapProofOfStake[hash];
     }
+
+    // ppcoin: compute stake modifier
+    uint64 nStakeModifier = 0;
+    bool fGeneratedStakeModifier = false;
+    if (!ComputeNextStakeModifier(pindexNew->pprev, nStakeModifier, fGeneratedStakeModifier))
+        return error("AddToBlockIndex() : ComputeNextStakeModifier() failed");
+    pindexNew->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
 
     CTxDB txdb;
     if (!txdb.TxnBegin())

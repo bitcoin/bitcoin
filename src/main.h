@@ -1169,10 +1169,10 @@ public:
     {
         BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
         BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
-        BLOCK_STAKE_MODIFIER = (1 << 2), // computed stake modifier
+        BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
     };
 
-    uint64 nStakeModifier; // stake modifier for coins in this block
+    uint64 nStakeModifier; // hash modifier for proof-of-stake
 
     // proof-of-stake specific fields
     COutPoint prevoutStake;
@@ -1357,21 +1357,16 @@ public:
         return true;
     }
 
-    bool HasStakeModifier() const
+    bool GeneratedStakeModifier() const
     {
         return (nFlags & BLOCK_STAKE_MODIFIER);
     }
 
-    bool GetStakeModifier(uint64& nModifier) const
-    {
-        nModifier = nStakeModifier;
-        return (nFlags & BLOCK_STAKE_MODIFIER);
-    }
-
-    void SetStakeModifier(uint64 nModifier)
+    void SetStakeModifier(uint64 nModifier, bool fGeneratedStakeModifier)
     {
         nStakeModifier = nModifier;
-        nFlags |= BLOCK_STAKE_MODIFIER;
+        if (fGeneratedStakeModifier)
+            nFlags |= BLOCK_STAKE_MODIFIER;
     }
 
     std::string ToString() const
@@ -1379,7 +1374,7 @@ public:
         return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifier=%016"PRI64x", hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
             pprev, pnext, nFile, nBlockPos, nHeight,
             FormatMoney(nMint).c_str(), FormatMoney(nMoneySupply).c_str(),
-            HasStakeModifier() ? "MDFR" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW",
+            GeneratedStakeModifier() ? "MOD" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW",
             nStakeModifier, hashProofOfStake.ToString().c_str(),
             prevoutStake.ToString().c_str(), nStakeTime,
             hashMerkleRoot.ToString().substr(0,10).c_str(),
