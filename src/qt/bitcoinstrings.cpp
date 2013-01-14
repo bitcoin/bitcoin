@@ -31,6 +31,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot obtain a lock on data directory %s. Bitcoin is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Corrupted block database detected. Please restart the client with -reindex."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error initializing database environment %s! To recover, BACKUP THAT "
 "DIRECTORY, then remove everything from it except for wallet.dat."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -96,7 +98,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Connect to a node to retrieve peer addresses,
 QT_TRANSLATE_NOOP("bitcoin-core", "Discover own IP address (default: 1 when listening and no -externalip)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Don't generate coins"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Done loading"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error loading blkindex.dat"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error loading block database"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat: Wallet corrupted"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat: Wallet requires newer version of Bitcoin"),
@@ -112,7 +114,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Find peers using internet relay chat (default
 QT_TRANSLATE_NOOP("bitcoin-core", "Generate coins"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Get help for a command"),
 QT_TRANSLATE_NOOP("bitcoin-core", "How many blocks to check at startup (default: 2500, 0 = all)"),
-QT_TRANSLATE_NOOP("bitcoin-core", "How thorough the block verification is (0-6, default: 1)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "How thorough the block verification is (0-4, default: 3)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Importing blocks from block database..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Imports blocks from external blk000??.dat file"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Information"),
@@ -172,7 +174,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Use UPnP to map the listening port (default: 
 QT_TRANSLATE_NOOP("bitcoin-core", "Use proxy to reach tor hidden services (default: same as -proxy)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Use the test network"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Username for JSON-RPC connections"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Verifying database integrity..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Verifying block database integrity..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Verifying wallet integrity..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Wallet needed to be rewritten: restart Bitcoin to complete"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Warning"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Warning: This version is obsolete, upgrade required!"),
