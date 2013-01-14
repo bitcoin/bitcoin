@@ -12,6 +12,18 @@
 // - E-mail usually won't line-break if there's no punctuation to break at.
 // - Double-clicking selects the whole number as one word if it's all alphanumeric.
 //
+// This base-58 codec encodes a sequence of bytes, not just a big-endian number.
+// The difference is that we preserve the exact number of leading 0 bytes.
+// Each leading zero is represented by a leading 0-value base-58 digit ('1').
+// The remaining bytes, starting from the first non-zero byte, are then interpreted
+// as a big-endian binary number and converted into a big-endian base-58 number.
+//
+// Example:
+// base-58 encoded:  "127"  ==  binary: 0x00 0x40
+// "1" leading 0-byte --------------------^^   ^^
+// "2" 1-valued base-58 digit ----> 1*58 + 6 = 64
+// "7" 6-valued base-58 digit -------------^
+//
 #ifndef BITCOIN_BASE58_H
 #define BITCOIN_BASE58_H
 
@@ -25,44 +37,56 @@
 
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
+// We convert in chunks of BASE58_CHUNK_DIGITS base-58 digits.
+// BASE58_CHUNK_DIGITS is the maximum number of base-58 digits fitting into a BN_ULONG.
+// BASE58_CHUNK_MOD is pow(58, BASE58_CHUNK_DIGITS)
+enum {
+    BASE58_CHUNK_DIGITS = (sizeof(BN_ULONG) == 8 ? 10 : 5),
+    BASE58_CHUNK_MOD    = (sizeof(BN_ULONG) == 8 ? 0x5fa8624c7fba400ULL : 0x271f35a0ULL), // 58^10 : 58^5
+};
+
 // Encode a byte sequence as a base58-encoded string
 inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
 {
-    CAutoBN_CTX pctx;
-    CBigNum bn58 = 58;
-    CBigNum bn0 = 0;
-
-    // Convert big endian data to little endian
-    // Extra zero at the end make sure bignum will interpret as a positive number
-    std::vector<unsigned char> vchTmp(pend-pbegin+1, 0);
-    reverse_copy(pbegin, pend, vchTmp.begin());
-
-    // Convert little endian data to bignum
-    CBigNum bn;
-    bn.setvch(vchTmp);
+    const unsigned char* p;
 
     // Convert bignum to std::string
     std::string str;
-    // Expected size increase from base58 conversion is approximately 137%
-    // use 138% to be safe
-    str.reserve((pend - pbegin) * 138 / 100 + 1);
-    CBigNum dv;
-    CBigNum rem;
-    while (bn > bn0)
+    // Expected size increase from base58 conversion is log(256)/log(58) approximately 1.36566
+    // use 350/256 to be safe
+    str.reserve(((pend - pbegin) * 350) / 256 + 1);
+
+    // Leading zeros encoded as base58 zeros
+    for (p = pbegin; p < pend && *p == 0; p++)
+        str += pszBase58[0];
+    ptrdiff_t nLeadingZeros = p - pbegin;
+
+    // Convert big endian data to bignum
+    CBigNum bn;
+    BN_bin2bn(p, pend - p, &bn);
+
+    BN_ULONG rem;
+    while (1)
     {
-        if (!BN_div(&dv, &rem, &bn, &bn58, pctx))
-            throw bignum_error("EncodeBase58 : BN_div failed");
-        bn = dv;
-        unsigned int c = rem.getulong();
-        str += pszBase58[c];
+        rem = BN_div_word(&bn, BASE58_CHUNK_MOD);
+        if (rem == (BN_ULONG) -1)
+            throw bignum_error("EncodeBase58 : BN_div_word failed");
+        if (!bn)
+            break;		// Not a full chunk
+        for (int i = 0; i < BASE58_CHUNK_DIGITS; i++)
+        {
+            str += pszBase58[rem % 58];
+            rem /= 58;
+        }
+    }
+    while (rem != 0)
+    {
+        str += pszBase58[rem % 58];
+        rem /= 58;
     }
 
-    // Leading zeroes encoded as base58 zeros
-    for (const unsigned char* p = pbegin; p < pend && *p == 0; p++)
-        str += pszBase58[0];
-
-    // Convert little endian std::string to big endian
-    reverse(str.begin(), str.end());
+    // Convert little endian std::string after leading zeros to big endian
+    reverse(str.begin() + nLeadingZeros, str.end());
     return str;
 }
 
@@ -76,47 +100,99 @@ inline std::string EncodeBase58(const std::vector<unsigned char>& vch)
 // returns true if decoding is successful
 inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
 {
-    CAutoBN_CTX pctx;
-    vchRet.clear();
-    CBigNum bn58 = 58;
+    // use unsigned char as array index
+    const unsigned char* p = (const unsigned char*)psz;
     CBigNum bn = 0;
-    CBigNum bnChar;
-    while (isspace(*psz))
-        psz++;
+
+    // map base58 digit to number, BAD, or SPACE
+    enum RBASE58 {
+        // 0 .. 57			// base58 digit of value 0 .. 57
+        RBASE58_BAD   = -1,		// neither base58, nor white space
+        RBASE58_SPACE = -2		// space, tab, newline, vtab, form feed, carriage return
+    };
+    static const signed char rgi8RBase58[256] =
+        {-1,-1,-1,-1,-1,-1,-1,-1,-1,-2,-2,-2,-2,-2,-1,-1,
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+         -2,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+         -1, 0, 1, 2, 3, 4, 5, 6, 7, 8,-1,-1,-1,-1,-1,-1,
+         -1, 9,10,11,12,13,14,15,16,-1,17,18,19,20,21,-1,
+         22,23,24,25,26,27,28,29,30,31,32,-1,-1,-1,-1,-1,
+         -1,33,34,35,36,37,38,39,40,41,42,43,-1,44,45,46,
+         47,48,49,50,51,52,53,54,55,56,57,-1,-1,-1,-1,-1,
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 };
+
+    // The above initializer was calculated using:
+    //    memset(rgi8RBase58, RBASE58_BAD, 256);
+    //    rgi8RBase58[' ']  = RBASE58_SPACE;
+    //    rgi8RBase58['\t'] = RBASE58_SPACE;
+    //    rgi8RBase58['\n'] = RBASE58_SPACE;
+    //    rgi8RBase58['\v'] = RBASE58_SPACE;
+    //    rgi8RBase58['\f'] = RBASE58_SPACE;
+    //    rgi8RBase58['\r'] = RBASE58_SPACE;
+    //
+    //    for (int i = 0; i < 58; i++)
+    //        rgi8RBase58[(unsigned char)pszBase58[i]] = i;
+
+    // Skip whitespace
+    while (rgi8RBase58[*p] == RBASE58_SPACE)
+        p++;
+
+    // Count leading zeros
+    int nLeadingZeros;
+    for (nLeadingZeros = 0; *p == pszBase58[0]; p++)
+        nLeadingZeros++;
 
     // Convert big endian string to bignum
-    for (const char* p = psz; *p; p++)
+    // We accumulate digits in acc and count them
+    BN_ULONG acc = 0;
+    int nDigits = 0;
+    int v;
+    while ((v = rgi8RBase58[*p]) >= 0)
     {
-        const char* p1 = strchr(pszBase58, *p);
-        if (p1 == NULL)
+        acc *= 58;
+        acc += v;
+        nDigits++;
+        if (nDigits == BASE58_CHUNK_DIGITS)
         {
-            while (isspace(*p))
-                p++;
-            if (*p != '\0')
-                return false;
-            break;
+            // push accumulated digits into bn
+            bn *= BASE58_CHUNK_MOD;
+            bn += acc;
+            acc = 0;
+            nDigits = 0;
         }
-        bnChar.setulong(p1 - pszBase58);
-        if (!BN_mul(&bn, &bn, &bn58, pctx))
-            throw bignum_error("DecodeBase58 : BN_mul failed");
-        bn += bnChar;
+        p++;
+    }
+    // push remaining digits
+    if (nDigits > 0)
+    {
+        BN_ULONG mul = 58;
+        while (--nDigits > 0)
+            mul *= 58;
+        bn *= mul;
+        bn += acc;
     }
 
-    // Get bignum as little endian data
-    std::vector<unsigned char> vchTmp = bn.getvch();
+    // Skip whitespace after base58 string
+    while (rgi8RBase58[*p] == RBASE58_SPACE)
+        p++;
 
-    // Trim off sign byte if present
-    if (vchTmp.size() >= 2 && vchTmp.end()[-1] == 0 && vchTmp.end()[-2] >= 0x80)
-        vchTmp.erase(vchTmp.end()-1);
+    // Fail if there is junk at the end
+    if (*p != '\0')
+        return false;
 
-    // Restore leading zeros
-    int nLeadingZeros = 0;
-    for (const char* p = psz; *p == pszBase58[0]; p++)
-        nLeadingZeros++;
-    vchRet.assign(nLeadingZeros + vchTmp.size(), 0);
+    // Fill in leading zeros and make space for bn
+    vchRet.assign(nLeadingZeros + BN_num_bytes(&bn), 0);
 
-    // Convert little endian data to big endian
-    reverse_copy(vchTmp.begin(), vchTmp.end(), vchRet.end() - vchTmp.size());
+    // Fill big endian bn into the right place
+    BN_bn2bin(&bn, &vchRet[nLeadingZeros]);
+
     return true;
 }
 

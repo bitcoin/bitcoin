@@ -422,9 +422,23 @@ public:
         return *this;
     }
 
+    CBigNum& operator+=(const BN_ULONG b)
+    {
+        if (!BN_add_word(this, b))
+            throw bignum_error("CBigNum::operator+= : BN_add_word failed");
+        return *this;
+    }
+
     CBigNum& operator-=(const CBigNum& b)
     {
         *this = *this - b;
+        return *this;
+    }
+
+    CBigNum& operator-=(const BN_ULONG b)
+    {
+        if (!BN_sub_word(this, b))
+            throw bignum_error("CBigNum::operator-= : BN_sub_word failed");
         return *this;
     }
 
@@ -436,15 +450,39 @@ public:
         return *this;
     }
 
+    CBigNum& operator*=(const BN_ULONG b)
+    {
+        if (!BN_mul_word(this, b))
+            throw bignum_error("CBigNum::operator*= : BN_mul_word failed");
+        return *this;
+    }
+
     CBigNum& operator/=(const CBigNum& b)
     {
         *this = *this / b;
         return *this;
     }
 
+    CBigNum& operator/=(const BN_ULONG b)
+    {
+        BN_ULONG r = BN_div_word(this, b);
+        if (r == (BN_ULONG)-1)
+            throw bignum_error("CBigNum::operator/= : BN_div_word failed");
+        return *this;
+    }
+
     CBigNum& operator%=(const CBigNum& b)
     {
         *this = *this % b;
+        return *this;
+    }
+
+    CBigNum& operator%=(const BN_ULONG b)
+    {
+        BN_ULONG r = BN_mod_word(this, b);
+        if (r == (BN_ULONG)-1)
+            throw bignum_error("CBigNum::operator%= : BN_mod_word failed");
+        BN_set_word(this, r);
         return *this;
     }
 
@@ -459,11 +497,9 @@ public:
     {
         // Note: BN_rshift segfaults on 64-bit if 2^shift is greater than the number
         //   if built on ubuntu 9.04 or 9.10, probably depends on version of OpenSSL
-        CBigNum a = 1;
-        a <<= shift;
-        if (BN_cmp(&a, this) > 0)
+        if ((int)shift >= BN_num_bits(this))
         {
-            *this = 0;
+            BN_zero(this);
             return *this;
         }
 
@@ -476,8 +512,8 @@ public:
     CBigNum& operator++()
     {
         // prefix operator
-        if (!BN_add(this, this, BN_value_one()))
-            throw bignum_error("CBigNum::operator++ : BN_add failed");
+        if (!BN_add_word(this, 1))
+            throw bignum_error("CBigNum::operator++ : BN_add_word failed");
         return *this;
     }
 
@@ -492,10 +528,8 @@ public:
     CBigNum& operator--()
     {
         // prefix operator
-        CBigNum r;
-        if (!BN_sub(&r, this, BN_value_one()))
-            throw bignum_error("CBigNum::operator-- : BN_sub failed");
-        *this = r;
+        if (!BN_sub_word(this, 1))
+            throw bignum_error("CBigNum::operator-- : BN_sub_word failed");
         return *this;
     }
 
