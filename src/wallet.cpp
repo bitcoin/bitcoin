@@ -1991,10 +1991,10 @@ bool CWalletManager::UnloadWallet(const std::string& strName)
         LOCK(cs_WalletManager);
         if (!wallets.count(strName)) return false;
         boost::shared_ptr<CWallet> spWallet(wallets[strName]);
-        CWallet* pWallet = spWallet.get();
+        printf("Unloading wallet %s\n", strName.c_str());
         {
-            LOCK(pWallet->cs_wallet);
-            UnregisterWallet(pWallet);
+            LOCK(spWallet->cs_wallet);
+            UnregisterWallet(spWallet.get());
             wallets.erase(strName);
         }
     }
@@ -2015,10 +2015,10 @@ void CWalletManager::UnloadAllWallets()
             
         for (unsigned int i = 0; i < vstrNames.size(); i++)
         {
-            CWallet* pWallet = vpWallets[i].get();
+            printf("Unloading wallet %s\n", vstrNames[i].c_str());
             {
-                LOCK(pWallet->cs_wallet);
-                UnregisterWallet(pWallet);
+                LOCK(vpWallets[i]->cs_wallet);
+                UnregisterWallet(vpWallets[i].get());
                 wallets.erase(vstrNames[i]);
             }
         }
