@@ -172,7 +172,9 @@ class DeploymentInfo(object):
         elif os.path.exists(os.path.join(os.path.dirname(parentDir), "share", "qt4", "translations")):
             # Newer Macports layout
             self.qtPath = os.path.join(os.path.dirname(parentDir), "share", "qt4")
-        
+        else:
+            self.qtPath = os.getenv("QTDIR", None)
+
         if self.qtPath is not None:
             pluginPath = os.path.join(self.qtPath, "plugins")
             if os.path.exists(pluginPath):
@@ -242,7 +244,11 @@ def runStrip(binaryPath, verbose):
     subprocess.check_call(["strip", "-x", binaryPath])
 
 def copyFramework(framework, path, verbose):
-    fromPath = framework.sourceFilePath
+    if framework.sourceFilePath.startswith("Qt"):
+        #standard place for Nokia Qt installer's frameworks
+        fromPath = "/Library/Frameworks/" + framework.sourceFilePath
+    else:
+        fromPath = framework.sourceFilePath
     toDir = os.path.join(path, framework.destinationDirectory)
     toPath = os.path.join(toDir, framework.binaryName)
     
@@ -345,7 +351,7 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
         if pluginDirectory == "designer":
             # Skip designer plugins
             continue
-        elif pluginDirectory == "phonon":
+        elif pluginDirectory == "phonon" or pluginDirectory == "phonon_backend":
             # Deploy the phonon plugins only if phonon is in use
             if not deploymentInfo.usesFramework("phonon"):
                 continue
