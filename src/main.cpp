@@ -467,28 +467,21 @@ CTransaction::GetLegacySigOpCount() const
 
 int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
 {
-    if (fClient)
-    {
-        if (hashBlock == 0)
-            return 0;
-    }
-    else
-    {
-        CBlock blockTmp;
+    CBlock blockTmp;
 
-        if (pblock == NULL) {
-            CCoins coins;
-            if (pcoinsTip->GetCoins(GetHash(), coins)) {
-                CBlockIndex *pindex = FindBlockByHeight(coins.nHeight);
-                if (pindex) {
-                    if (!blockTmp.ReadFromDisk(pindex))
-                        return 0;
-                    pblock = &blockTmp;
-                }
+    if (pblock == NULL) {
+        CCoins coins;
+        if (pcoinsTip->GetCoins(GetHash(), coins)) {
+            CBlockIndex *pindex = FindBlockByHeight(coins.nHeight);
+            if (pindex) {
+                if (!blockTmp.ReadFromDisk(pindex))
+                    return 0;
+                pblock = &blockTmp;
             }
         }
+    }
 
-        if (pblock) {
+    if (pblock) {
         // Update the tx's hashBlock
         hashBlock = pblock->GetHash();
 
@@ -506,7 +499,6 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
 
         // Fill in merkle branch
         vMerkleBranch = pblock->GetMerkleBranch(nIndex);
-        }
     }
 
     // Is the tx in a block that's in the main chain
@@ -915,16 +907,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 
 bool CMerkleTx::AcceptToMemoryPool(bool fCheckInputs)
 {
-    if (fClient)
-    {
-        if (!IsInMainChain() && !ClientCheckInputs())
-            return false;
-        return CTransaction::AcceptToMemoryPool(false);
-    }
-    else
-    {
-        return CTransaction::AcceptToMemoryPool(fCheckInputs);
-    }
+    return CTransaction::AcceptToMemoryPool(fCheckInputs);
 }
 
 
