@@ -47,7 +47,9 @@ public:
        @{*/
     Status status;
     int64 depth;
-    int64 open_for; /**< Timestamp if status==OpenUntilDate, otherwise number of blocks */
+    int64 open_for; /**< Timestamp if status==OpenUntilDate, otherwise number
+                      of additional blocks that need to be mined before
+                      finalization */
     /**@}*/
 
     /** Current number of blocks (to know whether cached status is still valid) */
