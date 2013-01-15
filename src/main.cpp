@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2011-2012 The PPCoin developers
+// Copyright (c) 2011-2013 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1677,70 +1677,6 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 }
 
 
-// ppcoin: coinstake must meet hash target according to the protocol:
-// kernel (input 0) must meet the formula
-//     hash(nBits + txPrev.block.nTime + txPrev.offset + txPrev.nTime + txPrev.vout.n + nTime) < bnTarget * nCoinDay
-// this ensures that the chance of getting a coinstake is proportional to the
-// amount of coin age one owns.
-// The reason this hash is chosen is the following:
-//   nBits: encodes all past block timestamps, making computing hash in advance
-//          more difficult
-//   txPrev.block.nTime: prevent nodes from guessing a good timestamp to
-//                       generate transaction for future advantage
-//   txPrev.offset: offset of txPrev inside block, to reduce the chance of 
-//                  nodes generating coinstake at the same time
-//   txPrev.nTime: reduce the chance of nodes generating coinstake at the same
-//                 time
-//   txPrev.vout.n: output number of txPrev, to reduce the chance of nodes
-//                  generating coinstake at the same time
-//   block/tx hash should not be used here as they can be generated in vast
-//   quantities so as to generate blocks faster, degrading the system back into
-//   a proof-of-work situation.
-//
-bool CTransaction::CheckProofOfStake(unsigned int nBits, uint256& hashProofOfStake) const
-{
-    CBigNum bnTargetPerCoinDay;
-    bnTargetPerCoinDay.SetCompact(nBits);
- 
-    if (!IsCoinStake())
-        return true;
-
-    // Kernel (input 0) must match the stake hash target per coin age (nBits)
-    const CTxIn& txin = vin[0];
-
-    // First try finding the previous transaction in database
-    CTxDB txdb("r");
-    CTransaction txPrev;
-    CTxIndex txindex;
-    if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
-        return fDebug? error("CheckProofOfStake() : read txPrev failed") : false;  // previous transaction not in main chain
-    txdb.Close();
-    if (nTime < txPrev.nTime)  // Transaction timestamp violation
-        return fDebug? error("CheckProofOfStake() : nTime violation") : false;
-
-    // Verify signature
-    if (!VerifySignature(txPrev, *this, 0, true, 0))
-        return DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", GetHash().ToString().c_str()));
-
-    // Read block header
-    CBlock block;
-    if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-        return fDebug? error("CheckProofOfStake() : read block failed") : false; // unable to read block of previous transaction
-    if (block.GetBlockTime() + nStakeMinAge > nTime)
-        return fDebug? error("CheckProofOfStake() : min age violation") : false; // only count coins meeting min age requirement
-
-    int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
-    CBigNum bnCoinDay = CBigNum(nValueIn) * min(nTime-txPrev.nTime, (unsigned int)STAKE_MAX_AGE) / COIN / (24 * 60 * 60);
-    // Calculate hash
-    CDataStream ss(SER_GETHASH, 0);
-    ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << txPrev.nTime << txin.prevout.n << nTime;
-    hashProofOfStake = Hash(ss.begin(), ss.end());
-    if (CBigNum(hashProofOfStake) <= bnCoinDay * bnTargetPerCoinDay)
-        return true;
-    else
-        return DoS(100, error("CheckProofOfStake() : check target failed on coinstake %s", GetHash().ToString().c_str()));
-}
-
 // ppcoin: total coin age spent in transaction, in the unit of coin-days.
 // Only those coins meeting minimum age requirement counts. As those
 // transactions not in main chain are not currently indexed so we
@@ -2054,7 +1990,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (pblock->IsProofOfStake())
     {
         uint256 hashProofOfStake = 0;
-        if (!pblock->vtx[1].CheckProofOfStake(pblock->nBits, hashProofOfStake))
+        if (!CheckProofOfStake(&pblock->vtx[1], pblock->nBits, hashProofOfStake))
         {
             printf("WARNING: ProcessBlock(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
             return false; // do not error here as we expect this during initial block download

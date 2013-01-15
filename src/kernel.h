@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2012 The PPCoin developers
+// Copyright (c) 2012-2013 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef PPCOIN_KERNEL_H
@@ -16,5 +16,6 @@ static const int MODIFIER_INTERVAL_RATIO = 3;
 // Compute the hash modifier for proof-of-stake
 bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64& nStakeModifier, bool& fGeneratedStakeModifier);
 
+bool CheckProofOfStake(const CTransaction* tx, unsigned int nBits, uint256& hashProofOfStake);
 
 #endif // PPCOIN_KERNEL_H

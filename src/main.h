@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2011-2012 The PPCoin developers
+// Copyright (c) 2011-2013 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_MAIN_H
@@ -41,6 +41,9 @@ inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONE
 static const int COINBASE_MATURITY_PPC = 500;
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
 static const int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+static const int STAKE_MIN_AGE = 60 * 60 * 24 * 30; // minimum age for coin age
+static const int STAKE_MAX_AGE = 60 * 60 * 24 * 90; // stake age of full weight
+
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
 #else
@@ -743,7 +746,6 @@ public:
     bool CheckTransaction() const;
     bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
     bool GetCoinAge(CTxDB& txdb, uint64& nCoinAge) const;  // ppcoin: get transaction coin age
-    bool CheckProofOfStake(unsigned int nBits, uint256& hashProofOfStake) const;
 
 protected:
     const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
