@@ -53,6 +53,8 @@ inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONE
 static const int COINBASE_MATURITY = 100;
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+/** Maximum number of script-checking threads allowed */
+static const int MAX_SCRIPTCHECK_THREADS = 16;
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
 #else
@@ -90,6 +92,7 @@ extern unsigned char pchMessageStart[4];
 extern bool fImporting;
 extern bool fReindex;
 extern bool fBenchmark;
+extern int nScriptCheckThreads;
 extern unsigned int nCoinCacheSize;
 
 // Settings
@@ -107,6 +110,7 @@ class CCoins;
 class CTxUndo;
 class CCoinsView;
 class CCoinsViewCache;
+class CScriptCheck;
 
 struct CBlockTemplate;
 
@@ -140,6 +144,10 @@ bool ProcessMessages(CNode* pfrom);
 bool SendMessages(CNode* pto, bool fSendTrickle);
 /** Run the importer thread, which deals with reindexing, loading bootstrap.dat, and whatever is passed to -loadblock */
 void ThreadImport(void *parg);
+/** Run an instance of the script checking thread */
+void ThreadScriptCheck(void* parg);
+/** Stop the script checking threads */
+void ThreadScriptCheckQuit();
 /** Run the miner threads */
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
 /** Generate a new block, without valid proof-of-work */
@@ -168,6 +176,8 @@ bool SetBestChain(CBlockIndex* pindexNew);
 bool ConnectBestBlock();
 /** Create a new block index entry for a given block hash */
 CBlockIndex * InsertBlockIndex(uint256 hash);
+/** Verify a signature */
+bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 
 
 
@@ -432,14 +442,6 @@ enum GetMinFee_mode
     GMF_SEND,
 };
 
-// Modes for script/signature checking
-enum CheckSig_mode
-{
-    CS_NEVER,             // never validate scripts
-    CS_AFTER_CHECKPOINT,  // validate scripts after the last checkpoint
-    CS_ALWAYS             // always validate scripts
-};
-
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks. A transaction can contain multiple inputs and outputs.
  */
@@ -639,8 +641,11 @@ public:
     bool HaveInputs(CCoinsViewCache &view) const;
 
     // Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
-    // This does not modify the UTXO set
-    bool CheckInputs(CCoinsViewCache &view, enum CheckSig_mode csmode, unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC) const;
+    // This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
+    // instead of being performed inline.
+    bool CheckInputs(CCoinsViewCache &view, bool fScriptChecks = true,
+                     unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC,
+                     std::vector<CScriptCheck> *pvChecks = NULL) const;
 
     // Apply the effects of this transaction on the UTXO set represented by view
     bool UpdateCoins(CCoinsViewCache &view, CTxUndo &txundo, int nHeight, const uint256 &txhash) const;
@@ -1056,7 +1061,33 @@ public:
     }
 };
 
+/** Closure representing one script verification
+ *  Note that this stores references to the spending transaction */
+class CScriptCheck
+{
+private:
+    CScript scriptPubKey;
+    const CTransaction *ptxTo;
+    unsigned int nIn;
+    unsigned int nFlags;
+    int nHashType;
 
+public:
+    CScriptCheck() {}
+    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
+        scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
+        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), nHashType(nHashTypeIn) { }
+
+    bool operator()() const;
+
+    void swap(CScriptCheck &check) {
+        scriptPubKey.swap(check.scriptPubKey);
+        std::swap(ptxTo, check.ptxTo);
+        std::swap(nIn, check.nIn);
+        std::swap(nFlags, check.nFlags);
+        std::swap(nHashType, check.nHashType);
+    }
+};
 
 /** A transaction with a merkle branch linking it to the block chain. */
 class CMerkleTx : public CTransaction
