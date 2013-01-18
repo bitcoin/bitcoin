@@ -41,7 +41,7 @@ static int64 GetStakeModifierSelectionInterval()
 // already selected blocks in vSelectedBlocks, and with timestamp up to
 // nSelectionIntervalStop.
 static bool SelectBlockFromCandidates(
-    vector<pair<int64, const CBlockIndex*> >& vSortedByTimestamp,
+    vector<pair<int64, uint256> >& vSortedByTimestamp,
     map<uint256, const CBlockIndex*>& mapSelectedBlocks,
     int64 nSelectionIntervalStop, uint64 nStakeModifierPrev,
     const CBlockIndex** pindexSelected)
@@ -49,9 +49,11 @@ static bool SelectBlockFromCandidates(
     bool fSelected = false;
     uint256 hashBest = 0;
     *pindexSelected = (const CBlockIndex*) 0;
-    BOOST_FOREACH(const PAIRTYPE(int64, const CBlockIndex*)& item, vSortedByTimestamp)
+    BOOST_FOREACH(const PAIRTYPE(int64, uint256)& item, vSortedByTimestamp)
     {
-        const CBlockIndex* pindex = item.second;
+        if (!mapBlockIndex.count(item.second))
+            return error("SelectBlockFromCandidates: failed to find block index for candidate block %s", item.second.ToString().c_str());
+        const CBlockIndex* pindex = mapBlockIndex[item.second];
         if (fSelected && pindex->GetBlockTime() > nSelectionIntervalStop)
             break;
         if (mapSelectedBlocks.count(pindex->GetBlockHash()) > 0)
@@ -79,6 +81,8 @@ static bool SelectBlockFromCandidates(
             *pindexSelected = (const CBlockIndex*) pindex;
         }
     }
+    if (fDebug && GetBoolArg("-printstakemodifier"))
+        printf("SelectBlockFromCandidates: selection hash=%s\n", hashBest.ToString().c_str());
     return fSelected;
 }
 
@@ -117,16 +121,18 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64& nStakeModif
         return true;
 
     // Sort candidate blocks by timestamp
-    vector<pair<int64, const CBlockIndex*> > vSortedByTimestamp;
-    vSortedByTimestamp.reserve(mapBlockIndex.size());
+    vector<pair<int64, uint256> > vSortedByTimestamp;
+    vSortedByTimestamp.reserve(64 * MODIFIER_INTERVAL / STAKE_TARGET_SPACING);
     int64 nSelectionInterval = GetStakeModifierSelectionInterval();
     int64 nSelectionIntervalStart = (pindexPrev->GetBlockTime() / MODIFIER_INTERVAL) * MODIFIER_INTERVAL - nSelectionInterval;
     const CBlockIndex* pindex = pindexPrev;
     while (pindex && pindex->GetBlockTime() >= nSelectionIntervalStart)
     {
-        vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex));
+        vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
         pindex = pindex->pprev;
     }
+    int nHeightFirstCandidate = pindex->nHeight + 1;
+    reverse(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
     sort(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
 
     // Select 64 blocks from candidate blocks to generate stake modifier
@@ -145,9 +151,32 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64& nStakeModif
         // add the selected block from candidates to selected list
         mapSelectedBlocks.insert(make_pair(pindex->GetBlockHash(), pindex));
         if (fDebug && GetBoolArg("-printstakemodifier"))
-            printf("ComputeNextStakeModifier: selected round %d height=%d bit=%d\n", nRound, pindex->nHeight, pindex->GetStakeEntropyBit());
+            printf("ComputeNextStakeModifier: selected round %d stop=%s height=%d bit=%d\n",
+                nRound, DateTimeStrFormat(nSelectionIntervalStop).c_str(), pindex->nHeight, pindex->GetStakeEntropyBit());
     }
 
+    // Print selection map for visualization of the selected blocks
+    if (fDebug && GetBoolArg("-printstakemodifier"))
+    {
+        string strSelectionMap = "";
+        // '-' indicates proof-of-work blocks not selected
+        strSelectionMap.insert(0, pindexPrev->nHeight - nHeightFirstCandidate, '-');
+        pindex = pindexPrev;
+        while (pindex && pindex->nHeight >= nHeightFirstCandidate)
+        {
+            // '=' indicates proof-of-stake blocks not selected
+            if (pindex->IsProofOfStake())
+                strSelectionMap.replace(pindex->nHeight - nHeightFirstCandidate, 1, "=");
+            pindex = pindex->pprev;
+        }
+        BOOST_FOREACH(const PAIRTYPE(uint256, const CBlockIndex*)& item, mapSelectedBlocks)
+        {
+            // 'S' indicates selected proof-of-stake blocks
+            // 'W' indicates selected proof-of-work blocks
+            strSelectionMap.replace(item.second->nHeight - nHeightFirstCandidate, 1, item.second->IsProofOfStake()? "S" : "W");
+        }
+        printf("ComputeNextStakeModifier: selection height [%d, %d] map %s\n", nHeightFirstCandidate, pindexPrev->nHeight, strSelectionMap.c_str());
+    }
     if (fDebug)
     {
         printf("ComputeNextStakeModifier: new modifier=0x%016"PRI64x" time=%s\n", nStakeModifierNew, DateTimeStrFormat(pindexPrev->GetBlockTime()).c_str());
