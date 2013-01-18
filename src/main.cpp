@@ -3588,7 +3588,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         // Nodes must NEVER send a data item > 520 bytes (the max size for a script data object,
         // and thus, the maximum size any matched object can have) in a filteradd message
-        if (vData.size() > 520)
+        if (vData.size() > MAX_SCRIPT_ELEMENT_SIZE)
         {
             pfrom->Misbehaving(100);
         } else {
