@@ -618,7 +618,7 @@ class Benchmark {
         ErrorCheck(status);
 
         // Execute read statement
-        while ((status = sqlite3_step(read_stmt)) == SQLITE_ROW);
+        while ((status = sqlite3_step(read_stmt)) == SQLITE_ROW) {}
         StepErrorCheck(status);
 
         // Reset SQLite statement for another use

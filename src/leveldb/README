@@ -1,11 +1,3 @@
-LevelDB is a third party library used for the transaction database.
-It is imported into the Bitcoin codebase due to being relatively new
-and not widely packaged.
-
-
-
----------------------------------------------------------------------
-
 leveldb: A key-value store
 Authors: Sanjay Ghemawat (sanjay@google.com) and Jeff Dean (jeff@google.com)
 

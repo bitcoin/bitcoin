@@ -24,6 +24,8 @@ using leveldb::Env;
 using leveldb::FileLock;
 using leveldb::FilterPolicy;
 using leveldb::Iterator;
+using leveldb::kMajorVersion;
+using leveldb::kMinorVersion;
 using leveldb::Logger;
 using leveldb::NewBloomFilterPolicy;
 using leveldb::NewLRUCache;
@@ -576,6 +578,18 @@ leveldb_env_t* leveldb_create_default_env() {
 void leveldb_env_destroy(leveldb_env_t* env) {
   if (!env->is_default) delete env->rep;
   delete env;
+}
+
+void leveldb_free(void* ptr) {
+  free(ptr);
+}
+
+int leveldb_major_version() {
+  return kMajorVersion;
+}
+
+int leveldb_minor_version() {
+  return kMinorVersion;
 }
 
 }  // end extern "C"
