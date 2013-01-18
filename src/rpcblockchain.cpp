@@ -9,6 +9,8 @@
 using namespace json_spirit;
 using namespace std;
 
+void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out);
+
 double GetDifficulty(const CBlockIndex* blockindex)
 {
     // Floating point number that is a multiple of the minimum difficulty,
@@ -213,10 +215,9 @@ Value gettxout(const Array& params, bool fHelp)
         ret.push_back(Pair("confirmations", 0));
     else
         ret.push_back(Pair("confirmations", pcoinsTip->GetBestBlock()->nHeight - coins.nHeight + 1));
-    ret.push_back(Pair("amount", (boost::int64_t)coins.vout[n].nValue));
+    ret.push_back(Pair("value", ValueFromAmount(coins.vout[n].nValue)));
     Object o;
-    o.push_back(Pair("asm", coins.vout[n].scriptPubKey.ToString()));
-    o.push_back(Pair("hex", HexStr(coins.vout[n].scriptPubKey.begin(), coins.vout[n].scriptPubKey.end())));
+    ScriptPubKeyToJSON(coins.vout[n].scriptPubKey, o);
     ret.push_back(Pair("scriptPubKey", o));
     ret.push_back(Pair("version", coins.nVersion));
     ret.push_back(Pair("coinbase", coins.fCoinBase));
