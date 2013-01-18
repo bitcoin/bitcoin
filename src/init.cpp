@@ -497,7 +497,7 @@ bool AppInit2()
     nScriptCheckThreads = GetArg("-par", 0);
     if (nScriptCheckThreads == 0)
         nScriptCheckThreads = boost::thread::hardware_concurrency();
-    if (nScriptCheckThreads <= 1) 
+    if (nScriptCheckThreads <= 1)
         nScriptCheckThreads = 0;
     else if (nScriptCheckThreads > MAX_SCRIPTCHECK_THREADS)
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;

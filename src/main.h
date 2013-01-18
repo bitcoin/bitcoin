@@ -28,7 +28,7 @@ struct CBlockIndexWorkComparator;
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 /** The maximum size for mined blocks */
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
-/** The maximum size for transactions we're willing to relay/mine **/
+/** The maximum size for transactions we're willing to relay/mine */
 static const unsigned int MAX_STANDARD_TX_SIZE = MAX_BLOCK_SIZE_GEN/5;
 /** The maximum allowed number of signature check operations in a block (network rule) */
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
@@ -117,7 +117,6 @@ class CScriptCheck;
 class CValidationState;
 
 struct CBlockTemplate;
-
 
 /** Register a wallet to receive updates from core */
 void RegisterWallet(CWallet* pwalletIn);
@@ -1549,7 +1548,7 @@ public:
      }
 
      std::string ToString() const {
-         return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u..%u, time=%s..%s)", nBlocks, nSize, nHeightFirst, nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst).c_str(), DateTimeStrFormat("%Y-%m-%d", nTimeLast).c_str());
+         return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst).c_str(), DateTimeStrFormat("%Y-%m-%d", nTimeLast).c_str());
      }
 
      // update statistics (does not update nSize)
