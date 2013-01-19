@@ -962,9 +962,13 @@ public:
     // ppcoin: entropy bit for stake modifier if chosen by modifier
     unsigned int GetStakeEntropyBit() const
     {
-        uint256 hash = Hash(BEGIN(vchBlockSig), END(vchBlockSig));
-        hash >>= 255;
-        return hash.Get64();
+        uint160 hashSig = Hash160(vchBlockSig);
+        if (fDebug && GetBoolArg("-printstakemodifier"))
+            printf("GetStakeEntropyBit: hashSig=%s", hashSig.ToString().c_str());
+        hashSig >>= 159; // take the first bit of the hash
+        if (fDebug && GetBoolArg("-printstakemodifier"))
+            printf(" entropybit=%d\n", hashSig.Get64());
+        return hashSig.Get64();
     }
 
     // ppcoin: two types of block: proof-of-work or proof-of-stake
@@ -1356,7 +1360,7 @@ public:
     {
         if (nEntropyBit > 1)
             return false;
-        nFlags |= (nEntropyBit << 1);
+        nFlags |= (nEntropyBit? BLOCK_STAKE_ENTROPY : 0);
         return true;
     }
 
