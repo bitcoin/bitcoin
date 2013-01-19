@@ -233,10 +233,19 @@ int main(int argc, char *argv[])
                     splash.finish(&window);
 
                 ClientModel clientModel(&optionsModel);
-                WalletModel walletModel(pwalletMain, &optionsModel);
 
                 window.setClientModel(&clientModel);
-                window.setWalletModel(&walletModel);
+                window.setWalletManager(pWalletManager);
+                
+                // Create wallet models for each wallet and add it.
+                BOOST_FOREACH(const wallet_map::value_type& item, pWalletManager->GetWalletMap())
+                {
+                    QString name(item.first.c_str());
+                    if (name == "") name = "~Default";
+                    WalletModel *walletModel = new WalletModel(item.second.get(), &optionsModel);
+                    window.addWallet(name, walletModel);
+                }
+                window.setCurrentWallet("~Default");
 
                 // If -min option passed, start window minimized.
                 if(GetBoolArg("-min"))
@@ -255,7 +264,7 @@ int main(int argc, char *argv[])
 
                 window.hide();
                 window.setClientModel(0);
-                window.setWalletModel(0);
+                                
                 guiref = 0;
             }
             // Shutdown the core and its threads, but don't exit Bitcoin-Qt here
