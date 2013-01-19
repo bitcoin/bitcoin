@@ -219,10 +219,17 @@ void runCommand(std::string strCommand);
 
 
 
+namespace file_option_flags
+{
+    const unsigned int REGULAR_FILES = 0x01;
+    const unsigned int DIRECTORIES = 0x02;
+};
 
 
 
 
+std::vector<std::string> GetFilesAtPath(const boost::filesystem::path& _path,
+                                        unsigned int flags = file_option_flags::REGULAR_FILES | file_option_flags::DIRECTORIES);
 
 
 inline std::string i64tostr(int64 n)

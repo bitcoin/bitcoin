@@ -36,6 +36,7 @@ LIBS += \
  $(DEPSDIR)/lib/libboost_filesystem-mt.a \
  $(DEPSDIR)/lib/libboost_program_options-mt.a \
  $(DEPSDIR)/lib/libboost_thread-mt.a \
+ ${DEPSDIR}/lib/libboost_regex-mt.a \
  $(DEPSDIR)/lib/libssl.a \
  $(DEPSDIR)/lib/libcrypto.a \
  -lz
@@ -48,6 +49,7 @@ LIBS += \
  -lboost_filesystem-mt \
  -lboost_program_options-mt \
  -lboost_thread-mt \
+ -lboost_regex-mt \
  -lssl \
  -lcrypto \
  -lz
@@ -100,6 +102,7 @@ OBJS= \
     obj/bloom.o \
     obj/noui.o \
     obj/leveldb.o \
+    obj/timer.o \
     obj/txdb.o
 
 ifndef USE_UPNP
