@@ -10,6 +10,7 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include "timer.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -25,6 +26,8 @@
 using namespace std;
 using namespace boost;
 
+CWalletManager* pWalletManager;
+// TODO: get rid of pwalletMain
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
 
@@ -101,8 +104,8 @@ void Shutdown(void* parg)
         }
         bitdb.Flush(true);
         boost::filesystem::remove(GetPidFile());
-        UnregisterWallet(pwalletMain);
-        delete pwalletMain;
+        delete pWalletManager;
+        TimerThread::StopTimer(); // for walletpassphrase unlock
         NewThread(ExitTimeout, NULL);
         Sleep(50);
         printf("Bitcoin exited\n\n");
@@ -395,6 +398,81 @@ void ThreadImport(void *data) {
     delete import;
 
     vnThreadsRunning[THREAD_IMPORT]--;
+}
+
+bool LoadWallets(ostringstream& strErrors)
+{
+    pWalletManager = new CWalletManager();
+    
+    // Get wallet names from -usewallet parameters
+    set<string> setWalletNames;
+    BOOST_FOREACH(const string& name, mapMultiArgs["-usewallet"])
+    {
+        if (name.size() == 0) continue;
+        if (!CWalletManager::IsValidName(name))
+        {
+            printf("Invalid wallet name in -usewallet: %s\n", name.c_str());
+            strErrors << "Invalid wallet name in -usewallet: " << name << "\n";
+        }
+        else
+            setWalletNames.insert(name);
+    }
+    
+    // If there are no -usewallet parameters, get wallet names from files in data directory
+    if (mapMultiArgs["-usewallet"].size() == 0)
+    {
+        try
+        {
+            vector<string> v = CWalletManager::GetWalletsAtPath(GetDataDir());
+            copy(v.begin(), v.end(), inserter(setWalletNames, setWalletNames.end()));
+        }
+        catch (const std::exception& e)
+        {
+            printf("Error looking for wallets from data directory: %s\n", e.what());
+            strErrors << "Error looking for wallets from data directory: " << e.what() << endl;
+        }
+    }
+    
+    // If there are -nousewallet parameters, remove those wallets from our set
+    BOOST_FOREACH(const string& name, mapMultiArgs["-nousewallet"])
+    {
+        if (name.size() == 0) continue;
+        if (!CWalletManager::IsValidName(name))
+        {
+            printf("Invalid wallet name in -nousewallet: %s\n", name.c_str());
+            strErrors << "Invalid wallet name in -nousewallet: " << name << "\n";
+        }
+        else
+            setWalletNames.erase(name);
+    }
+    
+    // Get additional parameters
+    bool fRescan = GetBoolArg("-rescan");
+    bool fUpgrade = GetBoolArg("-upgradewallet");
+    int nMaxVersion = GetArg("-upgradewallet", 0);
+    
+    // Always require a default wallet
+    ostringstream ossErrors;
+    if (!pWalletManager->LoadWallet("", ossErrors, fRescan, fUpgrade, nMaxVersion))
+    {
+        printf("Failed to load default wallet: %s\nExiting...\n", ossErrors.str().c_str());
+        return false;
+    }
+    // TODO: get rid of pwalletMain
+    pwalletMain = pWalletManager->GetDefaultWallet().get();
+    
+    // Be tolerant on nondefault wallets. Just report errors but don't die.
+    BOOST_FOREACH(const string& strWalletName, setWalletNames)
+    {
+        ostringstream strLoadErrors;
+        if (!pWalletManager->LoadWallet(strWalletName, strLoadErrors, fRescan, fUpgrade, nMaxVersion))
+        {
+            strErrors << strLoadErrors.str();
+            printf("Error loading wallet %s: %s\n", strWalletName.c_str(), strLoadErrors.str().c_str());
+        }
+    }
+    
+    return true;
 }
 
 /** Initialize bitcoin.
@@ -845,88 +923,13 @@ bool AppInit2()
         return false;
     }
 
-    // ********************************************************* Step 8: load wallet
+    // ********************************************************* Step 8: load wallets
+    
+    uiInterface.InitMessage(_("Loading wallets..."));
+    printf("Loading wallets...\n");
 
-    uiInterface.InitMessage(_("Loading wallet..."));
-    printf("Loading wallet...\n");
-    nStart = GetTimeMillis();
-    bool fFirstRun = true;
-    pwalletMain = new CWallet("wallet.dat");
-    DBErrors nLoadWalletRet = pwalletMain->LoadWallet(fFirstRun);
-    if (nLoadWalletRet != DB_LOAD_OK)
-    {
-        if (nLoadWalletRet == DB_CORRUPT)
-            strErrors << _("Error loading wallet.dat: Wallet corrupted") << "\n";
-        else if (nLoadWalletRet == DB_NONCRITICAL_ERROR)
-        {
-            string msg(_("Warning: error reading wallet.dat! All keys read correctly, but transaction data"
-                         " or address book entries might be missing or incorrect."));
-            InitWarning(msg);
-        }
-        else if (nLoadWalletRet == DB_TOO_NEW)
-            strErrors << _("Error loading wallet.dat: Wallet requires newer version of Bitcoin") << "\n";
-        else if (nLoadWalletRet == DB_NEED_REWRITE)
-        {
-            strErrors << _("Wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
-            printf("%s", strErrors.str().c_str());
-            return InitError(strErrors.str());
-        }
-        else
-            strErrors << _("Error loading wallet.dat") << "\n";
-    }
-
-    if (GetBoolArg("-upgradewallet", fFirstRun))
-    {
-        int nMaxVersion = GetArg("-upgradewallet", 0);
-        if (nMaxVersion == 0) // the -upgradewallet without argument case
-        {
-            printf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
-            nMaxVersion = CLIENT_VERSION;
-            pwalletMain->SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
-        }
-        else
-            printf("Allowing wallet upgrade up to %i\n", nMaxVersion);
-        if (nMaxVersion < pwalletMain->GetVersion())
-            strErrors << _("Cannot downgrade wallet") << "\n";
-        pwalletMain->SetMaxVersion(nMaxVersion);
-    }
-
-    if (fFirstRun)
-    {
-        // Create new keyUser and set as default key
-        RandAddSeedPerfmon();
-
-        CPubKey newDefaultKey;
-        if (!pwalletMain->GetKeyFromPool(newDefaultKey, false))
-            strErrors << _("Cannot initialize keypool") << "\n";
-        pwalletMain->SetDefaultKey(newDefaultKey);
-        if (!pwalletMain->SetAddressBookName(pwalletMain->vchDefaultKey.GetID(), ""))
-            strErrors << _("Cannot write default address") << "\n";
-    }
-
-    printf("%s", strErrors.str().c_str());
-    printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
-
-    RegisterWallet(pwalletMain);
-
-    CBlockIndex *pindexRescan = pindexBest;
-    if (GetBoolArg("-rescan"))
-        pindexRescan = pindexGenesisBlock;
-    else
-    {
-        CWalletDB walletdb("wallet.dat");
-        CBlockLocator locator;
-        if (walletdb.ReadBestBlock(locator))
-            pindexRescan = locator.GetBlockIndex();
-    }
-    if (pindexBest && pindexBest != pindexRescan)
-    {
-        uiInterface.InitMessage(_("Rescanning..."));
-        printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
-        nStart = GetTimeMillis();
-        pwalletMain->ScanForWalletTransactions(pindexRescan, true);
-        printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
-    }
+    TimerThread::StartTimer(); // for walletpassphrase unlock
+    if (!LoadWallets(strErrors)) return false;
 
     // ********************************************************* Step 9: import blocks
 
@@ -968,10 +971,15 @@ bool AppInit2()
     //// debug print
     printf("mapBlockIndex.size() = %"PRIszu"\n",   mapBlockIndex.size());
     printf("nBestHeight = %d\n",                   nBestHeight);
-    printf("setKeyPool.size() = %"PRIszu"\n",      pwalletMain->setKeyPool.size());
-    printf("mapWallet.size() = %"PRIszu"\n",       pwalletMain->mapWallet.size());
-    printf("mapAddressBook.size() = %"PRIszu"\n",  pwalletMain->mapAddressBook.size());
 
+    BOOST_FOREACH(const wallet_map::value_type& item, pWalletManager->GetWalletMap())
+    {
+        printf("Setting properties for wallet \"%s\"...\n", item.first.c_str());
+        printf("  setKeyPool.size() = %"PRIszu"\n",      item.second->setKeyPool.size());
+        printf("  mapWallet.size() = %"PRIszu"\n",       item.second->mapWallet.size());
+        printf("  mapAddressBook.size() = %"PRIszu"\n",  item.second->mapAddressBook.size());
+    }
+    
     if (!NewThread(StartNode, NULL))
         InitError(_("Error: could not start node"));
 
@@ -987,7 +995,7 @@ bool AppInit2()
         return InitError(strErrors.str());
 
      // Add wallet transactions that aren't already in a block to mapTransactions
-    pwalletMain->ReacceptWalletTransactions();
+    ReacceptWalletTransactions();
 
 #if !defined(QT_GUI)
     // Loop until process is exit()ed from shutdown() function,

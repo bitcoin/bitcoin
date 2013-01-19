@@ -8,6 +8,8 @@
 #include "wallet.h"
 #include "util.h"
 
+CWalletManager* pWalletManager;
+// TODO: get rid of pwalletMain.
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
 
@@ -29,10 +31,10 @@ struct TestingSetup {
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
         LoadBlockIndex();
-        bool fFirstRun;
-        pwalletMain = new CWallet("wallet.dat");
-        pwalletMain->LoadWallet(fFirstRun);
-        RegisterWallet(pwalletMain);
+        pWalletManager = new CWalletManager();
+        std::ostringstream ossErrors;
+        pWalletManager->LoadWallet("", ossErrors);
+        pwalletMain = pWalletManager->GetDefaultWallet().get();
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
             NewThread(ThreadScriptCheck, NULL);
@@ -40,7 +42,8 @@ struct TestingSetup {
     ~TestingSetup()
     {
         ThreadScriptCheckQuit();
-        delete pwalletMain;
+        delete pWalletManager;
+        pWalletManager = NULL;
         pwalletMain = NULL;
         delete pcoinsTip;
         delete pcoinsdbview;
