@@ -16,9 +16,9 @@ protected:
 public:
     CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    bool GetCoins(uint256 txid, CCoins &coins);
-    bool SetCoins(uint256 txid, const CCoins &coins);
-    bool HaveCoins(uint256 txid);
+    bool GetCoins(const uint256 &txid, CCoins &coins);
+    bool SetCoins(const uint256 &txid, const CCoins &coins);
+    bool HaveCoins(const uint256 &txid);
     CBlockIndex *GetBestBlock();
     bool SetBestBlock(CBlockIndex *pindex);
     bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex);

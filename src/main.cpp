@@ -171,9 +171,9 @@ void static ResendWalletTransactions()
 // CCoinsView implementations
 //
 
-bool CCoinsView::GetCoins(uint256 txid, CCoins &coins) { return false; }
-bool CCoinsView::SetCoins(uint256 txid, const CCoins &coins) { return false; }
-bool CCoinsView::HaveCoins(uint256 txid) { return false; }
+bool CCoinsView::GetCoins(const uint256 &txid, CCoins &coins) { return false; }
+bool CCoinsView::SetCoins(const uint256 &txid, const CCoins &coins) { return false; }
+bool CCoinsView::HaveCoins(const uint256 &txid) { return false; }
 CBlockIndex *CCoinsView::GetBestBlock() { return NULL; }
 bool CCoinsView::SetBestBlock(CBlockIndex *pindex) { return false; }
 bool CCoinsView::BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex) { return false; }
@@ -181,9 +181,9 @@ bool CCoinsView::GetStats(CCoinsStats &stats) { return false; }
 
 
 CCoinsViewBacked::CCoinsViewBacked(CCoinsView &viewIn) : base(&viewIn) { }
-bool CCoinsViewBacked::GetCoins(uint256 txid, CCoins &coins) { return base->GetCoins(txid, coins); }
-bool CCoinsViewBacked::SetCoins(uint256 txid, const CCoins &coins) { return base->SetCoins(txid, coins); }
-bool CCoinsViewBacked::HaveCoins(uint256 txid) { return base->HaveCoins(txid); }
+bool CCoinsViewBacked::GetCoins(const uint256 &txid, CCoins &coins) { return base->GetCoins(txid, coins); }
+bool CCoinsViewBacked::SetCoins(const uint256 &txid, const CCoins &coins) { return base->SetCoins(txid, coins); }
+bool CCoinsViewBacked::HaveCoins(const uint256 &txid) { return base->HaveCoins(txid); }
 CBlockIndex *CCoinsViewBacked::GetBestBlock() { return base->GetBestBlock(); }
 bool CCoinsViewBacked::SetBestBlock(CBlockIndex *pindex) { return base->SetBestBlock(pindex); }
 void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
@@ -192,7 +192,7 @@ bool CCoinsViewBacked::GetStats(CCoinsStats &stats) { return base->GetStats(stat
 
 CCoinsViewCache::CCoinsViewCache(CCoinsView &baseIn, bool fDummy) : CCoinsViewBacked(baseIn), pindexTip(NULL) { }
 
-bool CCoinsViewCache::GetCoins(uint256 txid, CCoins &coins) {
+bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) {
     if (cacheCoins.count(txid)) {
         coins = cacheCoins[txid];
         return true;
@@ -204,29 +204,30 @@ bool CCoinsViewCache::GetCoins(uint256 txid, CCoins &coins) {
     return false;
 }
 
-std::map<uint256,CCoins>::iterator CCoinsViewCache::FetchCoins(uint256 txid) {
-    std::map<uint256,CCoins>::iterator it = cacheCoins.find(txid);
-    if (it != cacheCoins.end())
+std::map<uint256,CCoins>::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
+    std::map<uint256,CCoins>::iterator it = cacheCoins.lower_bound(txid);
+    if (it != cacheCoins.end() && it->first == txid)
         return it;
     CCoins tmp;
     if (!base->GetCoins(txid,tmp))
-        return it;
-    std::pair<std::map<uint256,CCoins>::iterator,bool> ret = cacheCoins.insert(std::make_pair(txid, tmp));
-    return ret.first;
+        return cacheCoins.end();
+    std::map<uint256,CCoins>::iterator ret = cacheCoins.insert(it, std::make_pair(txid, CCoins()));
+    tmp.swap(ret->second);
+    return ret;
 }
 
-CCoins &CCoinsViewCache::GetCoins(uint256 txid) {
+CCoins &CCoinsViewCache::GetCoins(const uint256 &txid) {
     std::map<uint256,CCoins>::iterator it = FetchCoins(txid);
     assert(it != cacheCoins.end());
     return it->second;
 }
 
-bool CCoinsViewCache::SetCoins(uint256 txid, const CCoins &coins) {
+bool CCoinsViewCache::SetCoins(const uint256 &txid, const CCoins &coins) {
     cacheCoins[txid] = coins;
     return true;
 }
 
-bool CCoinsViewCache::HaveCoins(uint256 txid) {
+bool CCoinsViewCache::HaveCoins(const uint256 &txid) {
     return FetchCoins(txid) != cacheCoins.end();
 }
 
@@ -263,7 +264,7 @@ unsigned int CCoinsViewCache::GetCacheSize() {
     It does not check for spendings by memory pool transactions. */
 CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView &baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
-bool CCoinsViewMemPool::GetCoins(uint256 txid, CCoins &coins) {
+bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) {
     if (base->GetCoins(txid, coins))
         return true;
     if (mempool.exists(txid)) {
@@ -274,7 +275,7 @@ bool CCoinsViewMemPool::GetCoins(uint256 txid, CCoins &coins) {
     return false;
 }
 
-bool CCoinsViewMemPool::HaveCoins(uint256 txid) {
+bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) {
     return mempool.exists(txid) || base->HaveCoins(txid);
 }
 
