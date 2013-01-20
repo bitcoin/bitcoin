@@ -176,7 +176,7 @@ Value help(const Array& params, bool fHelp)
 
 Value stop(const Array& params, bool fHelp)
 {
-    // Accept the deprecated and ignored 'detach´ boolean argument
+    // Accept the deprecated and ignored 'detach' boolean argument
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "stop\n"
