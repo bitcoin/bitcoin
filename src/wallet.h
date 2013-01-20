@@ -17,7 +17,15 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "walletdb.h"
+#include "timer.h"
 
+#include <stdexcept>
+
+#include <boost/shared_ptr.hpp>
+#include <boost/regex.hpp>
+#include <boost/thread.hpp>
+
+class CWallet;
 class CAccountingEntry;
 class CWalletTx;
 class CReserveKey;
@@ -34,6 +42,15 @@ enum WalletFeature
     FEATURE_LATEST = 60000
 };
 
+class CWalletLockJob : public CTimerJob
+{
+private:
+    CWallet* pWallet;
+    
+public:
+    void SetWallet(CWallet* _pWallet) { pWallet = _pWallet; }
+    void Run();
+};
 
 /** A key pool entry */
 class CKeyPool
@@ -71,6 +88,11 @@ private:
     bool SelectCoins(int64 nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
 
     CWalletDB *pwalletdbEncryption;
+    
+    // for the lock timer
+    CWalletLockJob lockJob;
+    int64 nLockTime;
+    std::string strLockTime;
 
     // the current wallet version: clients below this version are not able to load the wallet
     int nWalletVersion;
@@ -93,6 +115,9 @@ public:
 
     CWallet()
     {
+        lockJob.SetWallet(this);
+        nLockTime = 0;
+        strLockTime = "Locked";
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
         fFileBacked = false;
@@ -102,6 +127,9 @@ public:
     }
     CWallet(std::string strWalletFileIn)
     {
+        lockJob.SetWallet(this);
+        nLockTime = 0;
+        strLockTime = "Locked";
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
         strWalletFile = strWalletFileIn;
@@ -111,6 +139,8 @@ public:
         nOrderPosNext = 0;
     }
 
+    ~CWallet() { CWalletDB::UnloadWallet(this); }
+    
     std::map<uint256, CWalletTx> mapWallet;
     int64 nOrderPosNext;
     std::map<uint256, int> mapRequestCount;
@@ -309,6 +339,57 @@ public:
      * @note called with lock cs_wallet held.
      */
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
+    
+    // If the wallet is unlocked, schedule a job to lock it again after a number of seconds
+    bool TimedLock(int64 seconds);
+    
+    int64 GetLockTime() const { return nLockTime; }
+    std::string GetStringLockTime() { return strLockTime; }
+    void ResetLockTime() { nLockTime = 0; if (IsCrypted()) strLockTime = "Locked"; }
+};
+
+class CWalletManagerException : public std::runtime_error
+{
+public:
+    enum ErrorType
+    {
+        WALLET_NOT_LOADED,
+        UNKNOWN_ERROR
+    };
+    ErrorType type;
+
+    CWalletManagerException(ErrorType _type, const char* message) : std::runtime_error(message), type(_type)  { }
+};
+
+/** A CWalletManager handles loading, unloading, allocation, deallocation, and synchronization of wallet objects.
+ */
+typedef std::map<std::string, boost::shared_ptr<CWallet> > wallet_map;
+class CWalletManager
+{
+protected:
+    static const boost::regex WALLET_NAME_REGEX;
+    static const boost::regex WALLET_FILE_REGEX;
+
+    mutable CCriticalSection cs_WalletManager;
+    wallet_map wallets;
+    
+public:
+    ~CWalletManager() { UnloadAllWallets(); }
+    
+    bool LoadWallet(const std::string& strName, std::ostringstream& strErrors, bool fRescan = false, bool fUpgrade = false, int nMaxVersion = 0);
+    bool UnloadWallet(const std::string& strName);
+    void UnloadAllWallets();
+    
+    // GetWallet and GetDefaultWallet throw a CWalletManagerException if the wallet is not found.
+    boost::shared_ptr<CWallet> GetWallet(const std::string& strName);
+    boost::shared_ptr<CWallet> GetDefaultWallet() { return GetWallet(""); }
+    
+    int GetWalletCount() { return wallets.size(); }
+    wallet_map GetWalletMap() { return wallets; }
+    bool HaveWallet(const std::string& strName) { return (wallets.count(strName) > 0); }
+
+    static bool IsValidName(const std::string& strName);
+    static std::vector<std::string> GetWalletsAtPath(const boost::filesystem::path& pathWallets);
 };
 
 /** A key allocated from the key pool. */

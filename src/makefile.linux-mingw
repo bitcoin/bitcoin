@@ -25,6 +25,7 @@ LIBS= \
  -l boost_filesystem-mt-s \
  -l boost_program_options-mt-s \
  -l boost_thread_win32-mt-s \
+ -l boost_regex-mt-s \
  -l boost_chrono-mt-s \
  -l db_cxx \
  -l ssl \
@@ -86,6 +87,7 @@ OBJS= \
     obj/hash.o \
     obj/bloom.o \
     obj/leveldb.o \
+    obj/timer.o \
     obj/txdb.o
 
 all: bitcoind.exe
