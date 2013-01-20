@@ -71,7 +71,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
 }
 
 
-Value getblockcount(const Array& params, bool fHelp)
+Value getblockcount(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -82,7 +82,7 @@ Value getblockcount(const Array& params, bool fHelp)
 }
 
 
-Value getdifficulty(const Array& params, bool fHelp)
+Value getdifficulty(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -93,7 +93,7 @@ Value getdifficulty(const Array& params, bool fHelp)
 }
 
 
-Value settxfee(const Array& params, bool fHelp)
+Value settxfee(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
@@ -109,7 +109,7 @@ Value settxfee(const Array& params, bool fHelp)
     return true;
 }
 
-Value getrawmempool(const Array& params, bool fHelp)
+Value getrawmempool(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -126,7 +126,7 @@ Value getrawmempool(const Array& params, bool fHelp)
     return a;
 }
 
-Value getblockhash(const Array& params, bool fHelp)
+Value getblockhash(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -141,7 +141,7 @@ Value getblockhash(const Array& params, bool fHelp)
     return pblockindex->phashBlock->GetHex();
 }
 
-Value getblock(const Array& params, bool fHelp)
+Value getblock(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -161,7 +161,7 @@ Value getblock(const Array& params, bool fHelp)
     return blockToJSON(block, pblockindex);
 }
 
-Value gettxoutsetinfo(const Array& params, bool fHelp)
+Value gettxoutsetinfo(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -180,7 +180,7 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
     return ret;
 }
 
-Value gettxout(const Array& params, bool fHelp)
+Value gettxout(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(

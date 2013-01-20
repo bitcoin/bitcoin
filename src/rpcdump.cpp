@@ -2,10 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "init.h" // for pwalletMain
 #include "bitcoinrpc.h"
 #include "ui_interface.h"
 #include "base58.h"
+#include "init.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -32,7 +32,7 @@ public:
     }
 };
 
-Value importprivkey(const Array& params, bool fHelp)
+Value importprivkey(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
@@ -60,24 +60,24 @@ Value importprivkey(const Array& params, bool fHelp)
     key.SetSecret(secret, fCompressed);
     CKeyID vchAddress = key.GetPubKey().GetID();
     {
-        LOCK2(cs_main, pwalletMain->cs_wallet);
+        LOCK2(cs_main, pWallet->cs_wallet);
 
-        pwalletMain->MarkDirty();
-        pwalletMain->SetAddressBookName(vchAddress, strLabel);
+        pWallet->MarkDirty();
+        pWallet->SetAddressBookName(vchAddress, strLabel);
 
-        if (!pwalletMain->AddKey(key))
+        if (!pWallet->AddKey(key))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
 	
         if (fRescan) {
-            pwalletMain->ScanForWalletTransactions(pindexGenesisBlock, true);
-            pwalletMain->ReacceptWalletTransactions();
+            pWallet->ScanForWalletTransactions(pindexGenesisBlock, true);
+            pWallet->ReacceptWalletTransactions();
         }
     }
 
     return Value::null;
 }
 
-Value dumpprivkey(const Array& params, bool fHelp)
+Value dumpprivkey(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -93,7 +93,7 @@ Value dumpprivkey(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
     CSecret vchSecret;
     bool fCompressed;
-    if (!pwalletMain->GetSecret(keyID, vchSecret, fCompressed))
+    if (!pWallet->GetSecret(keyID, vchSecret, fCompressed))
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     return CBitcoinSecret(vchSecret, fCompressed).ToString();
 }

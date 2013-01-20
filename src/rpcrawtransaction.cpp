@@ -132,7 +132,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
     }
 }
 
-Value getrawtransaction(const Array& params, bool fHelp)
+Value getrawtransaction(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -166,7 +166,7 @@ Value getrawtransaction(const Array& params, bool fHelp)
     return result;
 }
 
-Value listunspent(const Array& params, bool fHelp)
+Value listunspent(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 3)
         throw runtime_error(
@@ -204,7 +204,7 @@ Value listunspent(const Array& params, bool fHelp)
 
     Array results;
     vector<COutput> vecOutputs;
-    pwalletMain->AvailableCoins(vecOutputs, false);
+    pWallet->AvailableCoins(vecOutputs, false);
     BOOST_FOREACH(const COutput& out, vecOutputs)
     {
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
@@ -233,7 +233,7 @@ Value listunspent(const Array& params, bool fHelp)
             {
                 const CScriptID& hash = boost::get<const CScriptID&>(address);
                 CScript redeemScript;
-                if (pwalletMain->GetCScript(hash, redeemScript))
+                if (pWallet->GetCScript(hash, redeemScript))
                     entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
             }
         }
@@ -245,7 +245,7 @@ Value listunspent(const Array& params, bool fHelp)
     return results;
 }
 
-Value createrawtransaction(const Array& params, bool fHelp)
+Value createrawtransaction(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -305,7 +305,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
     return HexStr(ss.begin(), ss.end());
 }
 
-Value decoderawtransaction(const Array& params, bool fHelp)
+Value decoderawtransaction(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -328,7 +328,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
     return result;
 }
 
-Value signrawtransaction(const Array& params, bool fHelp)
+Value signrawtransaction(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 4)
         throw runtime_error(
@@ -343,7 +343,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             "Returns json object with keys:\n"
             "  hex : raw transaction with signature(s) (hex-encoded string)\n"
             "  complete : 1 if transaction has a complete set of signature (0 if not)"
-            + HelpRequiringPassphrase());
+            + HelpRequiringPassphrase(pWallet));
 
     RPCTypeCheck(params, list_of(str_type)(array_type)(array_type)(str_type), true);
 
@@ -408,7 +408,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
         }
     }
     else
-        EnsureWalletIsUnlocked();
+        EnsureWalletIsUnlocked(pWallet);
 
     // Add previous txouts given in the RPC call:
     if (params.size() > 1 && params[1].type() != null_type)
@@ -460,7 +460,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
         }
     }
 
-    const CKeyStore& keystore = (fGivenKeys ? tempKeystore : *pwalletMain);
+    const CKeyStore& keystore = (fGivenKeys ? tempKeystore : *pWallet);
 
     int nHashType = SIGHASH_ALL;
     if (params.size() > 3 && params[3].type() != null_type)
@@ -518,7 +518,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     return result;
 }
 
-Value sendrawtransaction(const Array& params, bool fHelp)
+Value sendrawtransaction(CWallet* pWallet, const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(

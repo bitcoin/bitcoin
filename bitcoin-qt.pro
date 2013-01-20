@@ -201,6 +201,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/clientversion.h \
     src/txdb.h \
     src/leveldb.h \
+    src/timer.h \
     src/threadsafety.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
@@ -265,6 +266,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/rpcconsole.cpp \
     src/noui.cpp \
     src/leveldb.cpp \
+    src/timer.cpp \
     src/txdb.cpp
 
 RESOURCES += \
