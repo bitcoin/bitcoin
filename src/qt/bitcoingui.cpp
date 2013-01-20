@@ -117,10 +117,10 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     loadButtonFrameLayout->addWidget(loadWalletButton);
     loadButtonFrameLayout->addWidget(unloadWalletButton);
     listFrameLayout->addWidget(loadButtonFrame);
-    
+
     connect(loadWalletButton, SIGNAL(clicked()), this, SLOT(loadWallet()));
     connect(unloadWalletButton, SIGNAL(clicked()), this, SLOT(unloadWallet()));
-    
+
     // Create wallet stack
     walletStack = new WalletStack(this);
     walletStack->setBitcoinGUI(this);
@@ -129,7 +129,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     walletFrameLayout->addWidget(walletStack);
     setCentralWidget(walletFrame);
 
-//    connect(walletList, SIGNAL(currentTextChanged(const QString&)), this, SLOT(setUnloadButtonState(const QString&)));
+    connect(walletList, SIGNAL(currentTextChanged(const QString&)), this, SLOT(setUnloadEnabled(const QString&)));
     connect(walletList, SIGNAL(currentTextChanged(const QString&)), walletStack, SLOT(setCurrentWalletView(const QString&)));
     
     // Create status bar
@@ -909,3 +909,11 @@ void BitcoinGUI::toggleHidden()
 {
     showNormalIfMinimized(true);
 }
+
+void BitcoinGUI::setUnloadEnabled(const QString& walletName)
+{
+    bool bEnabled = (walletName != DEFAULT_WALLET);
+    unloadWalletButton->setEnabled(bEnabled);
+    unloadWalletAction->setEnabled(bEnabled);
+}
+
