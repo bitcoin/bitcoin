@@ -92,71 +92,116 @@ void UnregisterWallet(CWallet* pwalletIn)
     }
 }
 
+void UnregisterAllWallets()
+{
+    {
+        LOCK(cs_setpwalletRegistered);
+        setpwalletRegistered.clear();
+    }
+}
+
 // check whether the passed transaction is from us
 bool static IsFromMe(CTransaction& tx)
 {
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        if (pwallet->IsFromMe(tx))
-            return true;
+    {
+        LOCK(cs_setpwalletRegistered);
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+            if (pwallet->IsFromMe(tx))
+                return true;
+    }
     return false;
 }
 
 // get the wallet transaction with the given hash (if it exists)
 bool static GetTransaction(const uint256& hashTx, CWalletTx& wtx)
 {
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        if (pwallet->GetTransaction(hashTx,wtx))
-            return true;
-    return false;
+    {
+        LOCK(cs_setpwalletRegistered);
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+            if (pwallet->GetTransaction(hashTx,wtx))
+                return true;
+        return false;
+    }
 }
 
 // erases transaction with the given hash from all wallets
 void static EraseFromWallets(uint256 hash)
 {
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->EraseFromWallet(hash);
+    {
+        LOCK(cs_setpwalletRegistered);
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+            pwallet->EraseFromWallet(hash);
+    }
 }
 
 // make sure all wallets know about the given transaction, in the given block
 void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate)
 {
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->AddToWalletIfInvolvingMe(hash, tx, pblock, fUpdate);
+    {
+        LOCK(cs_setpwalletRegistered);
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+            pwallet->AddToWalletIfInvolvingMe(hash, tx, pblock, fUpdate);
+    }
+}
+
+// Add wallet transactions that aren't already in a block to mapTransactions
+void ReacceptWalletTransactions()
+{
+    {
+        LOCK(cs_setpwalletRegistered);
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+        pwallet->ReacceptWalletTransactions();
+    }
 }
 
 // notify wallets about a new best chain
 void static SetBestChain(const CBlockLocator& loc)
 {
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->SetBestChain(loc);
+    {
+        LOCK(cs_setpwalletRegistered);
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+            pwallet->SetBestChain(loc);
+    }
 }
 
 // notify wallets about an updated transaction
 void static UpdatedTransaction(const uint256& hashTx)
 {
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->UpdatedTransaction(hashTx);
+    {
+        LOCK(cs_setpwalletRegistered);
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+            pwallet->UpdatedTransaction(hashTx);
+    }
 }
 
 // dump all wallets
 void static PrintWallets(const CBlock& block)
 {
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->PrintWallet(block);
+    {
+        LOCK(cs_setpwalletRegistered);
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+            pwallet->PrintWallet(block);
+    }
 }
 
 // notify wallets about an incoming inventory (for request counts)
 void static Inventory(const uint256& hash)
 {
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->Inventory(hash);
+    {
+        LOCK(cs_setpwalletRegistered);
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+            pwallet->Inventory(hash);
+    }
 }
 
 // ask wallets to resend their transactions
 void static ResendWalletTransactions()
 {
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->ResendWalletTransactions();
+    {
+        LOCK(cs_setpwalletRegistered);
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+            pwallet->ResendWalletTransactions();
+    }
 }
 
 
@@ -787,6 +832,7 @@ bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs,
     // If updated, erase old tx from wallet
     if (ptxOld)
         EraseFromWallets(ptxOld->GetHash());
+    SyncWithWallets(hash, tx, NULL, true);
 
     printf("CTxMemPool::accept() : accepted %s (poolsz %"PRIszu")\n",
            hash.ToString().substr(0,10).c_str(),
@@ -3411,7 +3457,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         bool fMissingInputs = false;
         if (tx.AcceptToMemoryPool(true, &fMissingInputs))
         {
-            SyncWithWallets(inv.hash, tx, NULL, true);
             RelayTransaction(tx, inv.hash, vMsg);
             mapAlreadyAskedFor.erase(inv);
             vWorkQueue.push_back(inv.hash);
@@ -3434,7 +3479,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     if (tx.AcceptToMemoryPool(true, &fMissingInputs2))
                     {
                         printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
-                        SyncWithWallets(inv.hash, tx, NULL, true);
                         RelayTransaction(tx, inv.hash, vMsg);
                         mapAlreadyAskedFor.erase(inv);
                         vWorkQueue.push_back(inv.hash);
