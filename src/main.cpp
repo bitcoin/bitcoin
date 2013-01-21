@@ -1592,6 +1592,14 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsViewCache &view, bool fJust
     // verify that the view's current state corresponds to the previous block
     assert(pindex->pprev == view.GetBestBlock());
 
+    // Special case for the genesis block, skipping connection of its transactions
+    // (its coinbase is unspendable)
+    if (GetHash() == hashGenesisBlock) {
+        view.SetBestBlock(pindex);
+        pindexGenesisBlock = pindex;
+        return true;
+    }
+
     bool fScriptChecks = pindex->nHeight >= Checkpoints::GetTotalBlocksEstimate();
 
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
@@ -1726,21 +1734,6 @@ bool SetBestChain(CBlockIndex* pindexNew)
     // All modifications to the coin state will be done in this cache.
     // Only when all have succeeded, we push it to pcoinsTip.
     CCoinsViewCache view(*pcoinsTip, true);
-
-    // special case for attaching the genesis block
-    // note that no ConnectBlock is called, so its coinbase output is non-spendable
-    if (pindexGenesisBlock == NULL && pindexNew->GetBlockHash() == hashGenesisBlock)
-    {
-        view.SetBestBlock(pindexNew);
-        if (!view.Flush())
-            return false;
-        pindexGenesisBlock = pindexNew;
-        pindexBest = pindexNew;
-        hashBestChain = pindexNew->GetBlockHash();
-        nBestHeight = pindexBest->nHeight;
-        bnBestChainWork = pindexNew->bnChainWork;
-        return true;
-    }
 
     // Find the fork (typically, there is none)
     CBlockIndex* pfork = view.GetBestBlock();
