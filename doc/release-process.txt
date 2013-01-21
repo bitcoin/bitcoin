@@ -72,12 +72,7 @@
    rm -rf bitcoin-${VERSION}-win32
 
 * perform Mac build
-  See this blog post for how Gavin set up his build environment to build the OSX
-  release; note that a patched version of macdeployqt is not needed anymore, as
-  the required functionality and fixes are implemented directly in macdeployqtplus:
-    http://gavintech.blogspot.com/2011/11/deploying-bitcoin-qt-on-osx.html
-  Gavin also had trouble with the macports py27-appscript package; he
-  ended up installing a version that worked with: /usr/bin/easy_install-2.7 appscript
+  OSX binaries are created by Gavin Andresen on a 32-bit, OSX 10.6 machine.
 
   qmake RELEASE=1 USE_UPNP=1 USE_QRCODE=1 bitcoin-qt.pro
   make
@@ -87,6 +82,9 @@
 
  Build output expected:
   Bitcoin-Qt.dmg
+
+* Code-sign Windows -setup.exe (in a Windows virtual machine) and
+  OSX Bitcoin-Qt.app (Note: only Gavin has the code-signing keys currently)
 
 * upload builds to SourceForge
 
