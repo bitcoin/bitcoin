@@ -16,6 +16,12 @@ static const int MODIFIER_INTERVAL_RATIO = 3;
 // Compute the hash modifier for proof-of-stake
 bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64& nStakeModifier, bool& fGeneratedStakeModifier);
 
-bool CheckProofOfStake(const CTransaction* tx, unsigned int nBits, uint256& hashProofOfStake);
+// Check whether stake kernel meets hash target
+// Sets hashProofOfStake on success return
+bool CheckStakeKernelHash(unsigned int nBits, unsigned int nTimeBlockFrom, unsigned int nTxPrevOffset, const CTransaction& txPrev, const COutPoint& prevout, unsigned int nTimeTx, uint256& hashProofOfStake);
+
+// Check kernel hash target and coinstake signature
+// Sets hashProofOfStake on success return
+bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hashProofOfStake);
 
 #endif // PPCOIN_KERNEL_H

@@ -8,6 +8,7 @@
 #include "walletdb.h"
 #include "crypter.h"
 #include "ui_interface.h"
+#include "kernel.h"
 
 using namespace std;
 
@@ -1249,18 +1250,15 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         if (block.GetBlockTime() + nStakeMinAge > txNew.nTime - nMaxClockDrift)
             continue; // only count coins meeting min age requirement
 
-        int64 nValueIn = pcoin.first->vout[pcoin.second].nValue;
-        CBigNum bnCoinDay = CBigNum(nValueIn) * min(txNew.nTime-pcoin.first->nTime, (unsigned int)STAKE_MAX_AGE) / COIN / (24 * 60 * 60);
-
         bool fKernelFound = false;
         for (int n=0; n<min(nSearchInterval,(int64)5) && !fKernelFound && !fShutdown; n++)
         {
             // Randomly pick a timestamp from protocol allowed range
             txNew.nTime = GetAdjustedTime() - GetRandInt(nMaxClockDrift - 60);
             // Calculate hash
-            CDataStream ss(SER_GETHASH, 0);
-            ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << pcoin.first->nTime << pcoin.second << txNew.nTime;
-            if (CBigNum(Hash(ss.begin(), ss.end())) <= bnCoinDay * bnTargetPerCoinDay)
+            uint256 hashProofOfStake = 0;
+            COutPoint prevoutStake = COutPoint(pcoin.first->GetHash(), pcoin.second);
+            if (CheckStakeKernelHash(nBits, block.nTime, txindex.pos.nTxPos - txindex.pos.nBlockPos, *pcoin.first, prevoutStake, txNew.nTime, hashProofOfStake))
             {
                 // Found a kernel
                 if (fDebug && GetBoolArg("-printcoinstake"))

@@ -208,16 +208,35 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64& nStakeModif
 //   quantities so as to generate blocks faster, degrading the system back into
 //   a proof-of-work situation.
 //
-bool CheckProofOfStake(const CTransaction* tx, unsigned int nBits, uint256& hashProofOfStake)
+bool CheckStakeKernelHash(unsigned int nBits, unsigned int nTimeBlockFrom, unsigned int nTxPrevOffset, const CTransaction& txPrev, const COutPoint& prevout, unsigned int nTimeTx, uint256& hashProofOfStake)
 {
+    if (nTimeTx < txPrev.nTime)  // Transaction timestamp violation
+        return error("CheckStakeKernelHash() : nTime violation");
+
+    if (nTimeBlockFrom + nStakeMinAge > nTimeTx) // Meeting min age requirement
+        return error("CheckStakeKernelHash() : min age violation");
+
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
+    int64 nValueIn = txPrev.vout[prevout.n].nValue;
+    CBigNum bnCoinDay = CBigNum(nValueIn) * min(nTimeTx-txPrev.nTime, (unsigned int)STAKE_MAX_AGE) / COIN / (24 * 60 * 60);
+    // Calculate hash
+    CDataStream ss(SER_GETHASH, 0);
+    ss << nBits << nTimeBlockFrom << nTxPrevOffset << txPrev.nTime << prevout.n << nTimeTx;
+    hashProofOfStake = Hash(ss.begin(), ss.end());
+    if (CBigNum(hashProofOfStake) <= bnCoinDay * bnTargetPerCoinDay)
+        return true;
+    else
+        return false;
+}
 
-    if (!tx->IsCoinStake())
-        return error("CheckProofOfStake() : called on non-coinstake %s", tx->GetHash().ToString().c_str());
+bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hashProofOfStake)
+{
+    if (!tx.IsCoinStake())
+        return error("CheckProofOfStake() : called on non-coinstake %s", tx.GetHash().ToString().c_str());
 
     // Kernel (input 0) must match the stake hash target per coin age (nBits)
-    const CTxIn& txin = tx->vin[0];
+    const CTxIn& txin = tx.vin[0];
 
     // First try finding the previous transaction in database
     CTxDB txdb("r");
@@ -226,29 +245,19 @@ bool CheckProofOfStake(const CTransaction* tx, unsigned int nBits, uint256& hash
     if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
         return fDebug? error("CheckProofOfStake() : read txPrev failed") : false;  // previous transaction not in main chain
     txdb.Close();
-    if (tx->nTime < txPrev.nTime)  // Transaction timestamp violation
-        return fDebug? error("CheckProofOfStake() : nTime violation") : false;
 
     // Verify signature
-    if (!VerifySignature(txPrev, *tx, 0, true, 0))
-        return tx->DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", tx->GetHash().ToString().c_str()));
+    if (!VerifySignature(txPrev, tx, 0, true, 0))
+        return tx.DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", tx.GetHash().ToString().c_str()));
 
     // Read block header
     CBlock block;
     if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
         return fDebug? error("CheckProofOfStake() : read block failed") : false; // unable to read block of previous transaction
-    if (block.GetBlockTime() + nStakeMinAge > tx->nTime)
-        return fDebug? error("CheckProofOfStake() : min age violation") : false; // only count coins meeting min age requirement
 
-    int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
-    CBigNum bnCoinDay = CBigNum(nValueIn) * min(tx->nTime-txPrev.nTime, (unsigned int)STAKE_MAX_AGE) / COIN / (24 * 60 * 60);
-    // Calculate hash
-    CDataStream ss(SER_GETHASH, 0);
-    ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << txPrev.nTime << txin.prevout.n << tx->nTime;
-    hashProofOfStake = Hash(ss.begin(), ss.end());
-    if (CBigNum(hashProofOfStake) <= bnCoinDay * bnTargetPerCoinDay)
+    if (CheckStakeKernelHash(nBits, block.nTime, txindex.pos.nTxPos - txindex.pos.nBlockPos, txPrev, txin.prevout, tx.nTime, hashProofOfStake))
         return true;
     else
-        return tx->DoS(100, error("CheckProofOfStake() : check target failed on coinstake %s", tx->GetHash().ToString().c_str()));
+        return tx.DoS(100, error("CheckProofOfStake() : check kernel failed on coinstake %s", tx.GetHash().ToString().c_str()));
 }
 
