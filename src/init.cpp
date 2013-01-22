@@ -596,7 +596,7 @@ bool AppInit2()
     if (nScriptCheckThreads) {
         printf("Using %u threads for script verification\n", nScriptCheckThreads);
         for (int i=0; i<nScriptCheckThreads-1; i++)
-            NewThread(ThreadScriptCheck, NULL);
+            NewThread(ThreadScriptCheck, NULL, THREAD_PRIORITY_BELOW_NORMAL);
     }
 
     int64 nStart;
@@ -941,7 +941,7 @@ bool AppInit2()
         BOOST_FOREACH(string strFile, mapMultiArgs["-loadblock"])
             pimport->vFiles.push_back(strFile);
     }
-    NewThread(ThreadImport, pimport);
+    NewThread(ThreadImport, pimport, THREAD_PRIORITY_ABOVE_NORMAL);
 
     // ********************************************************* Step 10: load peers
 

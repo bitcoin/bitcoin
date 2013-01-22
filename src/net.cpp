@@ -1653,7 +1653,7 @@ void ThreadMessageHandler(void* parg)
 void ThreadMessageHandler2(void* parg)
 {
     printf("ThreadMessageHandler started\n");
-    SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
+
     while (!fShutdown)
     {
         vector<CNode*> vNodesCopy;
@@ -1923,7 +1923,7 @@ void StartNode(void* parg)
         printf("Error: NewThread(ThreadOpenConnections) failed\n");
 
     // Process messages
-    if (!NewThread(ThreadMessageHandler, NULL))
+    if (!NewThread(ThreadMessageHandler, NULL, THREAD_PRIORITY_BELOW_NORMAL))
         printf("Error: NewThread(ThreadMessageHandler) failed\n");
 
     // Dump network addresses

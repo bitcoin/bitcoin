@@ -4402,7 +4402,6 @@ static int nLimitProcessors = -1;
 void static BitcoinMiner(CWallet *pwallet)
 {
     printf("BitcoinMiner started\n");
-    SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
     // Make this thread recognisable as the mining thread
     RenameThread("bitcoin-miner");
@@ -4483,9 +4482,7 @@ void static BitcoinMiner(CWallet *pwallet)
                     pblock->nNonce = ByteReverse(nNonceFound);
                     assert(hash == pblock->GetHash());
 
-                    SetThreadPriority(THREAD_PRIORITY_NORMAL);
                     CheckWork(pblock, *pwalletMain, reservekey);
-                    SetThreadPriority(THREAD_PRIORITY_LOWEST);
                     break;
                 }
             }
@@ -4591,7 +4588,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet)
         printf("Starting %d BitcoinMiner threads\n", nAddThreads);
         for (int i = 0; i < nAddThreads; i++)
         {
-            if (!NewThread(ThreadBitcoinMiner, pwallet))
+            if (!NewThread(ThreadBitcoinMiner, pwallet, THREAD_PRIORITY_BELOW_NORMAL))
                 printf("Error: NewThread(ThreadBitcoinMiner) failed\n");
             Sleep(10);
         }

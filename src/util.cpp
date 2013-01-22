@@ -1375,13 +1375,18 @@ void RenameThread(const char* name)
 #endif
 }
 
-bool NewThread(void(*pfn)(void*), void* parg)
+bool NewThread(void(*pfn)(void*), void* parg, int nPriority)
 {
     try
     {
-        boost::thread(pfn, parg); // thread detaches when out of scope
+        boost::thread newThread(pfn, parg); // thread detaches when out of scope
+#ifdef WIN32
+        bool bResult = SetThreadPriority(newThread.native_handle(), nPriority);
+        if (!bResult)
+            printf("NewThread() : Error setting thread priority to %i\n", nPriority);
+#endif
     } catch(boost::thread_resource_error &e) {
-        printf("Error creating thread: %s\n", e.what());
+        printf("NewThread() : Error creating thread: %s\n", e.what());
         return false;
     }
     return true;
