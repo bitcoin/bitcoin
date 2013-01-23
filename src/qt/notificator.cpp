@@ -12,7 +12,7 @@
 #include <QImageWriter>
 
 #ifdef USE_DBUS
-#include <QtDBus/QtDBus>
+#include <QtDBus>
 #include <stdint.h>
 #endif
 

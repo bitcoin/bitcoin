@@ -1,4 +1,3 @@
-
 #include "macdockiconhandler.h"
 
 #include <QMenu>

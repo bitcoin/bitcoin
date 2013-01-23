@@ -1,5 +1,6 @@
 #include "sendcoinsdialog.h"
 #include "ui_sendcoinsdialog.h"
+
 #include "walletmodel.h"
 #include "bitcoinunits.h"
 #include "addressbookpage.h"
@@ -10,7 +11,6 @@
 #include "base58.h"
 
 #include <QMessageBox>
-#include <QLocale>
 #include <QTextDocument>
 #include <QScrollBar>
 

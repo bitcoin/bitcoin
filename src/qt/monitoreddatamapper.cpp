@@ -9,7 +9,6 @@ MonitoredDataMapper::MonitoredDataMapper(QObject *parent) :
 {
 }
 
-
 void MonitoredDataMapper::addMapping(QWidget *widget, int section)
 {
     QDataWidgetMapper::addMapping(widget, section);

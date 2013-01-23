@@ -8,7 +8,9 @@
 class QValueComboBox : public QComboBox
 {
     Q_OBJECT
+
     Q_PROPERTY(QVariant value READ value WRITE setValue NOTIFY valueChanged USER true)
+
 public:
     explicit QValueComboBox(QWidget *parent = 0);
 
@@ -20,8 +22,6 @@ public:
 
 signals:
     void valueChanged();
-
-public slots:
 
 private:
     int role;

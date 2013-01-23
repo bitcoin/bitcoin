@@ -26,6 +26,7 @@ public:
 class WalletModel : public QObject
 {
     Q_OBJECT
+
 public:
     explicit WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent = 0);
     ~WalletModel();
@@ -160,6 +161,5 @@ public slots:
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
 };
-
 
 #endif // WALLETMODEL_H
