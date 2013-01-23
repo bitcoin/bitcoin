@@ -3237,6 +3237,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (fDebugNet || (vInv.size() != 1))
             printf("received getdata (%"PRIszu" invsz)\n", vInv.size());
 
+        vector<CInv> vNotFound;
         BOOST_FOREACH(const CInv& inv, vInv)
         {
             if (fShutdown)
@@ -3309,12 +3310,27 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                         ss.reserve(1000);
                         ss << tx;
                         pfrom->PushMessage("tx", ss);
+                        pushed = true;
                     }
+                }
+                if (!pushed) {
+                    vNotFound.push_back(inv);
                 }
             }
 
-            // Track requests for our stuff
+            // Track requests for our stuff.
             Inventory(inv.hash);
+
+            if (!vNotFound.empty()) {
+                // Let the peer know that we didn't find what it asked for, so it doesn't
+                // have to wait around forever. Currently only SPV clients actually care
+                // about this message: it's needed when they are recursively walking the
+                // dependencies of relevant unconfirmed transactions. SPV clients want to
+                // do that because they want to know about (and store and rebroadcast and
+                // risk analyze) the dependencies of transactions relevant to them, without
+                // having to download the entire memory pool.
+                pfrom->PushMessage("notfound", vNotFound);
+            }
         }
     }
 
