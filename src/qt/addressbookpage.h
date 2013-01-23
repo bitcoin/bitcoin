@@ -54,26 +54,31 @@ private:
     QString returnValue;
     QSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
-    QAction *deleteAction;
+    QAction *deleteAction; // to be able to explicitly disable it
     QString newAddressToSelect;
 
 private slots:
+    /** Delete currently selected address entry */
     void on_deleteButton_clicked();
+    /** Create a new address for receiving coins and / or add a new address book entry */
     void on_newAddressButton_clicked();
     /** Copy address of currently selected address entry to clipboard */
     void on_copyToClipboard_clicked();
+    /** Open the sign message tab in the Sign/Verify Message dialog with currently selected address */
     void on_signMessage_clicked();
+    /** Open the verify message tab in the Sign/Verify Message dialog with currently selected address */
     void on_verifyMessage_clicked();
-    void selectionChanged();
+    /** Generate a QR Code from the currently selected address */
     void on_showQRCode_clicked();
-    /** Spawn contextual menu (right mouse menu) for address book entry */
-    void contextualMenu(const QPoint &point);
-
-    /** Copy label of currently selected address entry to clipboard */
+    /** Copy label of currently selected address entry to clipboard (no button) */
     void onCopyLabelAction();
-    /** Edit currently selected address entry */
+    /** Edit currently selected address entry (no button) */
     void onEditAction();
 
+    /** Set button states based on selected tab and selection */
+    void selectionChanged();
+    /** Spawn contextual menu (right mouse menu) for address book entry */
+    void contextualMenu(const QPoint &point);
     /** New entry/entries were added to address table */
     void selectNewAddress(const QModelIndex &parent, int begin, int /*end*/);
 
