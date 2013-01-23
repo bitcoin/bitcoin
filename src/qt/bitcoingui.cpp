@@ -4,7 +4,11 @@
  * W.J. van der Laan 2011-2012
  * The Bitcoin Developers 2011-2012
  */
+
+#include <QApplication>
+
 #include "bitcoingui.h"
+
 #include "transactiontablemodel.h"
 #include "addressbookpage.h"
 #include "sendcoinsdialog.h"
@@ -31,19 +35,13 @@
 #include "macdockiconhandler.h"
 #endif
 
-#include <QApplication>
-#include <QMainWindow>
 #include <QMenuBar>
 #include <QMenu>
 #include <QIcon>
-#include <QTabWidget>
 #include <QVBoxLayout>
 #include <QToolBar>
 #include <QStatusBar>
 #include <QLabel>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QLocale>
 #include <QMessageBox>
 #include <QProgressBar>
 #include <QStackedWidget>
@@ -54,6 +52,7 @@
 #include <QTimer>
 #include <QDragEnterEvent>
 #include <QUrl>
+#include <QMimeData>
 #include <QStyle>
 
 #include <iostream>

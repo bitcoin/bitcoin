@@ -8,14 +8,14 @@
 #include "csvmodelwriter.h"
 #include "guiutil.h"
 
+#ifdef USE_QRCODE
+#include "qrcodedialog.h"
+#endif
+
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
 #include <QMenu>
-
-#ifdef USE_QRCODE
-#include "qrcodedialog.h"
-#endif
 
 AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QDialog(parent),

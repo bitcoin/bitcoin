@@ -1,4 +1,5 @@
 #include "transactionfilterproxy.h"
+
 #include "transactiontablemodel.h"
 
 #include <QDateTime>
