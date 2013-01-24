@@ -754,7 +754,7 @@ bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs, bool fLimitFree,
             nLastTime = nNow;
             // -limitfreerelay unit is thousand-bytes-per-minute
             // At default rate it would take over a month to fill 1GB
-            if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000)
+            if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
                 return error("CTxMemPool::accept() : free transaction rejected by rate limiter");
             if (fDebug)
                 printf("Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
