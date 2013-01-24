@@ -11,6 +11,7 @@
 
 #include <QSet>
 #include <QTimer>
+#include <QMessageBox>
 
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
@@ -33,7 +34,7 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
 
 WalletModel::~WalletModel()
 {
-    unsubscribeFromCoreSignals();
+    //unsubscribeFromCoreSignals();
 }
 
 qint64 WalletModel::getBalance() const
