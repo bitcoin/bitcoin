@@ -609,7 +609,11 @@ void DBImpl::BackgroundCall() {
   assert(bg_compaction_scheduled_);
   if (!shutting_down_.Acquire_Load()) {
     Status s = BackgroundCompaction();
-    if (!s.ok()) {
+    if (s.ok()) {
+      // Success
+    } else if (shutting_down_.Acquire_Load()) {
+      // Error most likely due to shutdown; do not wait
+    } else {
       // Wait a little bit before retrying background compaction in
       // case this is an environmental problem and we do not want to
       // chew up resources for failed compactions for the duration of
