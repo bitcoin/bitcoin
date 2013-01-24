@@ -300,7 +300,7 @@ HEADERS += src/qt/test/uritests.h
 DEPENDPATH += src/qt/test
 QT += testlib
 TARGET = bitcoin-qt_test
-DEFINES += BITCOIN_QT_TEST
+DEFINES += BITCOIN_QT_TEST VERIFY_OPTIMIZED_SECP256K1=1
   macx: CONFIG -= app_bundle
 }
 

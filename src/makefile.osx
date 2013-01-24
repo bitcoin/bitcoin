@@ -24,7 +24,7 @@ USE_IPV6:=1
 
 LIBS= -dead_strip
 
-TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
+TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data) -DVERIFY_OPTIMIZED_SECP256K1
 
 ifdef STATIC
 # Build STATIC if you are redistributing the bitcoind binary
@@ -161,7 +161,14 @@ obj-test/%.o: test/%.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-test_bitcoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+obj-test/%.o: %.cpp
+	$(CXX) -c $(TESTDEFS) $(CFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
+
+test_bitcoin: $(TESTOBJS) $(filter-out obj-test/init.o,$(OBJS:obj/%=obj-test/%))
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) $(TESTLIBS)
 
 clean:

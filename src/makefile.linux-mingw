@@ -40,7 +40,7 @@ CFLAGS=-O2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(D
 # enable: ASLR, DEP and large address aware
 LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware
 
-TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
+TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data) -DVERIFY_OPTIMIZED_SECP256K1
 
 ifndef USE_UPNP
 	override USE_UPNP = -
@@ -117,7 +117,10 @@ TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 obj-test/%.o: test/%.cpp $(HEADERS)
 	$(CXX) -c $(TESTDEFS) $(CFLAGS) -o $@ $<
 
-test_bitcoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+obj-test/%.o: %.cpp $(HEADERS)
+	$(CXX) -c $(TESTDEFS) $(CFLAGS) -o $@ $<
+
+test_bitcoin.exe: $(TESTOBJS) $(filter-out obj-test/init.o,$(OBJS:obj/%=obj-test/%))
 	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework-mt-s $(LIBS)
 
 
