@@ -4,8 +4,8 @@ exception is that the tail of the file may contain a partial block.
 Each block consists of a sequence of records:
    block := record* trailer?
    record :=
-	checksum: uint32	// crc32c of type and data[]
-	length: uint16
+	checksum: uint32	// crc32c of type and data[] ; little-endian
+	length: uint16		// little-endian
 	type: uint8		// One of FULL, FIRST, MIDDLE, LAST
 	data: uint8[length]
 

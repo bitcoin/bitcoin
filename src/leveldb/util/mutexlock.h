@@ -6,6 +6,7 @@
 #define STORAGE_LEVELDB_UTIL_MUTEXLOCK_H_
 
 #include "port/port.h"
+#include "port/thread_annotations.h"
 
 namespace leveldb {
 
@@ -19,12 +20,13 @@ namespace leveldb {
 //     ... some complex code, possibly with multiple return paths ...
 //   }
 
-class MutexLock {
+class SCOPED_LOCKABLE MutexLock {
  public:
-  explicit MutexLock(port::Mutex *mu) : mu_(mu) {
+  explicit MutexLock(port::Mutex *mu) EXCLUSIVE_LOCK_FUNCTION(mu)
+      : mu_(mu)  {
     this->mu_->Lock();
   }
-  ~MutexLock() { this->mu_->Unlock(); }
+  ~MutexLock() UNLOCK_FUNCTION() { this->mu_->Unlock(); }
 
  private:
   port::Mutex *const mu_;
