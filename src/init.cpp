@@ -305,6 +305,7 @@ std::string HelpMessage()
         "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + "\n" +
         "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 2500, 0 = all)") + "\n" +
         "  -checklevel=<n>        " + _("How thorough the block verification is (0-4, default: 3)") + "\n" +
+        "  -txindex               " + _("Maintain a full transaction index (default: 0)") + "\n" +
         "  -loadblock=<file>      " + _("Imports blocks from external blk000??.dat file") + "\n" +
         "  -reindex               " + _("Rebuild blockchain index from current blk000??.dat files") + "\n" +
         "  -par=N                 " + _("Set the number of script verification threads (1-16, 0=auto, default: 0)") + "\n" +
@@ -781,7 +782,7 @@ bool AppInit2()
     if (nTotalCache < (1 << 22))
         nTotalCache = (1 << 22); // total cache cannot be less than 4 MiB
     size_t nBlockTreeDBCache = nTotalCache / 8;
-    if (nBlockTreeDBCache > (1 << 21))
+    if (nBlockTreeDBCache > (1 << 21) && !GetBoolArg("-txindex", false))
         nBlockTreeDBCache = (1 << 21); // block tree db cache shouldn't be larger than 2 MiB
     nTotalCache -= nBlockTreeDBCache;
     size_t nCoinDBCache = nTotalCache / 2; // use half of the remaining cache for coindb cache
@@ -805,6 +806,9 @@ bool AppInit2()
 
     if (!VerifyDB())
         return InitError(_("Corrupted block database detected. Please restart the client with -reindex."));
+
+    if (mapArgs.count("-txindex") && fTxIndex != GetBoolArg("-txindex", false))
+        return InitError(_("You need to rebuild the databases using -reindex to change -txindex"));
 
     // as LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill bitcoin-qt during the last operation. If so, exit.
