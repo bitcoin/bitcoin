@@ -65,6 +65,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QAction *copyAddressAction = new QAction(ui->copyToClipboard->text(), this);
     QAction *copyLabelAction = new QAction(tr("Copy &Label"), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
+    QAction *sendCoinsAction = new QAction(tr("Send &Coins"), this);
     QAction *showQRCodeAction = new QAction(ui->showQRCode->text(), this);
     QAction *signMessageAction = new QAction(ui->signMessage->text(), this);
     QAction *verifyMessageAction = new QAction(ui->verifyMessage->text(), this);
@@ -78,6 +79,8 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     if(tab == SendingTab)
         contextMenu->addAction(deleteAction);
     contextMenu->addSeparator();
+    if(tab == SendingTab)
+        contextMenu->addAction(sendCoinsAction);
 #ifdef USE_QRCODE
     contextMenu->addAction(showQRCodeAction);
 #endif
@@ -91,6 +94,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(onCopyLabelAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
     connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_deleteButton_clicked()));
+    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(onSendCoins_clicked()));
     connect(showQRCodeAction, SIGNAL(triggered()), this, SLOT(on_showQRCode_clicked()));
     connect(signMessageAction, SIGNAL(triggered()), this, SLOT(on_signMessage_clicked()));
     connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(on_verifyMessage_clicked()));
@@ -203,6 +207,18 @@ void AddressBookPage::on_verifyMessage_clicked()
     {
         QString address = index.data().toString();
         emit verifyMessage(address);
+    }
+}
+
+void AddressBookPage::onSendCoins_clicked()
+{
+    QTableView *table = ui->tableView;
+    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
+
+    foreach (QModelIndex index, indexes)
+    {
+        QString address = index.data().toString();
+        emit sendCoins(address);
     }
 }
 
