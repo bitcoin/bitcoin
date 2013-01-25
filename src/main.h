@@ -93,6 +93,7 @@ extern bool fImporting;
 extern bool fReindex;
 extern bool fBenchmark;
 extern int nScriptCheckThreads;
+extern bool fTxIndex;
 extern unsigned int nCoinCacheSize;
 
 // Settings
@@ -196,9 +197,8 @@ static inline std::string BlockHashStr(const uint256& hash)
 
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
-class CDiskBlockPos
+struct CDiskBlockPos
 {
-public:
     int nFile;
     unsigned int nPos;
 
@@ -228,7 +228,27 @@ public:
     bool IsNull() const { return (nFile == -1); }
 };
 
+struct CDiskTxPos : public CDiskBlockPos
+{
+    unsigned int nTxOffset; // after header
 
+    IMPLEMENT_SERIALIZE(
+        READWRITE(*(CDiskBlockPos*)this);
+        READWRITE(VARINT(nTxOffset));
+    )
+
+    CDiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
+    }
+
+    CDiskTxPos() {
+        SetNull();
+    }
+
+    void SetNull() {
+        CDiskBlockPos::SetNull();
+        nTxOffset = 0;
+    }
+};
 
 
 /** An inpoint - a combination of a transaction and an index n into its vin */

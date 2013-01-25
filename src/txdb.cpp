@@ -145,6 +145,29 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
     return true;
 }
 
+bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
+    return Read(make_pair('t', txid), pos);
+}
+
+bool CBlockTreeDB::WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> >&vect) {
+    CLevelDBBatch batch;
+    for (std::vector<std::pair<uint256,CDiskTxPos> >::const_iterator it=vect.begin(); it!=vect.end(); it++)
+        batch.Write(make_pair('t', it->first), it->second);
+    return WriteBatch(batch);
+}
+
+bool CBlockTreeDB::WriteFlag(const std::string &name, bool fValue) {
+    return Write(std::make_pair('F', name), fValue ? '1' : '0');
+}
+
+bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
+    char ch;
+    if (!Read(std::make_pair('F', name), ch))
+        return false;
+    fValue = ch == '1';
+    return true;
+}
+
 bool CBlockTreeDB::LoadBlockIndexGuts()
 {
     leveldb::Iterator *pcursor = NewIterator();
