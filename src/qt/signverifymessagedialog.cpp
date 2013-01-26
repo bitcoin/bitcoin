@@ -171,6 +171,16 @@ void SignVerifyMessageDialog::on_clearButton_SM_clicked()
     ui->addressIn_SM->setFocus();
 }
 
+void SignVerifyMessageDialog::on_addressIn_SM_textChanged()
+{
+    CBitcoinAddress addr(ui->addressIn_SM->text().toStdString());
+    // enable addressBookButton on invalid address and disable otherwise
+    if (!addr.IsValid())
+        ui->addressBookButton_SM->setEnabled(true);
+    else
+        ui->addressBookButton_SM->setEnabled(false);
+}
+
 void SignVerifyMessageDialog::on_addressBookButton_VM_clicked()
 {
     if (model && model->getAddressTableModel())
@@ -246,6 +256,16 @@ void SignVerifyMessageDialog::on_clearButton_VM_clicked()
     ui->statusLabel_VM->clear();
 
     ui->addressIn_VM->setFocus();
+}
+
+void SignVerifyMessageDialog::on_addressIn_VM_textChanged()
+{
+    CBitcoinAddress addr(ui->addressIn_VM->text().toStdString());
+    // enable addressBookButton on invalid address and disable otherwise
+    if (!addr.IsValid())
+        ui->addressBookButton_VM->setEnabled(true);
+    else
+        ui->addressBookButton_VM->setEnabled(true);
 }
 
 bool SignVerifyMessageDialog::eventFilter(QObject *object, QEvent *event)

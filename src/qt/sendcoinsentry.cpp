@@ -8,6 +8,8 @@
 #include "optionsmodel.h"
 #include "addresstablemodel.h"
 
+#include "base58.h" // for CBitcoinAddress
+
 #include <QApplication>
 #include <QClipboard>
 
@@ -60,6 +62,14 @@ void SendCoinsEntry::on_payTo_textChanged(const QString &address)
 {
     if(!model)
         return;
+
+    // enable addressBookButton on invalid address and disable otherwise
+    CBitcoinAddress addr(ui->payTo->text().toStdString());
+    if (!addr.IsValid())
+        ui->addressBookButton->setEnabled(true);
+    else
+        ui->addressBookButton->setEnabled(false);
+
     // Fill in label from address book, if address has an associated label
     QString associatedLabel = model->getAddressTableModel()->labelForAddress(address);
     if(!associatedLabel.isEmpty())

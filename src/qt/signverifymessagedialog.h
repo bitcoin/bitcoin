@@ -37,10 +37,12 @@ private slots:
     void on_signMessageButton_SM_clicked();
     void on_copySignatureButton_SM_clicked();
     void on_clearButton_SM_clicked();
+    void on_addressIn_SM_textChanged();
     /* verify message */
     void on_addressBookButton_VM_clicked();
     void on_verifyMessageButton_VM_clicked();
     void on_clearButton_VM_clicked();
+    void on_addressIn_VM_textChanged();
 };
 
 #endif // SIGNVERIFYMESSAGEDIALOG_H
