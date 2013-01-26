@@ -203,7 +203,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> hash;
             CWalletTx& wtx = pwallet->mapWallet[hash];
             ssValue >> wtx;
-            if (wtx.CheckTransaction() && (wtx.GetHash() == hash))
+            CValidationState state;
+            if (wtx.CheckTransaction(state) && (wtx.GetHash() == hash) && state.IsValid())
                 wtx.BindWallet(pwallet);
             else
             {
