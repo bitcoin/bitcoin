@@ -303,7 +303,7 @@ std::string HelpMessage()
         "  -keypool=<n>           " + _("Set key pool size to <n> (default: 100)") + "\n" +
         "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + "\n" +
         "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + "\n" +
-        "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 2500, 0 = all)") + "\n" +
+        "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 288, 0 = all)") + "\n" +
         "  -checklevel=<n>        " + _("How thorough the block verification is (0-4, default: 3)") + "\n" +
         "  -txindex               " + _("Maintain a full transaction index (default: 0)") + "\n" +
         "  -loadblock=<file>      " + _("Imports blocks from external blk000??.dat file") + "\n" +
