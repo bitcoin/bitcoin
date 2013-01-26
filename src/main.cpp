@@ -630,7 +630,7 @@ void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
     }
 }
 
-bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs,
+bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs, bool fLimitFree,
                         bool* pfMissingInputs)
 {
     if (pfMissingInputs)
@@ -736,7 +736,7 @@ bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs,
 
         // Don't accept it if it can't get into a block
         int64 txMinFee = tx.GetMinFee(1000, true, GMF_RELAY);
-        if (nFees < txMinFee)
+        if (fLimitFree && nFees < txMinFee)
             return error("CTxMemPool::accept() : not enough fees %s, %"PRI64d" < %"PRI64d,
                          hash.ToString().c_str(),
                          nFees, txMinFee);
@@ -744,25 +744,24 @@ bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs,
         // Continuously rate-limit free transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.
-        if (nFees < MIN_RELAY_TX_FEE)
+        if (fLimitFree && nFees < MIN_RELAY_TX_FEE)
         {
-            static CCriticalSection cs;
             static double dFreeCount;
             static int64 nLastTime;
             int64 nNow = GetTime();
 
-            {
-                // Use an exponentially decaying ~10-minute window:
-                dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-                nLastTime = nNow;
-                // -limitfreerelay unit is thousand-bytes-per-minute
-                // At default rate it would take over a month to fill 1GB
-                if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000 && !IsFromMe(tx))
-                    return error("CTxMemPool::accept() : free transaction rejected by rate limiter");
-                if (fDebug)
-                    printf("Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-                dFreeCount += nSize;
-            }
+            LOCK(cs);
+
+            // Use an exponentially decaying ~10-minute window:
+            dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+            nLastTime = nNow;
+            // -limitfreerelay unit is thousand-bytes-per-minute
+            // At default rate it would take over a month to fill 1GB
+            if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
+                return error("CTxMemPool::accept() : free transaction rejected by rate limiter");
+            if (fDebug)
+                printf("Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+            dFreeCount += nSize;
         }
 
         // Check against previous transactions
@@ -796,9 +795,9 @@ bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs,
     return true;
 }
 
-bool CTransaction::AcceptToMemoryPool(bool fCheckInputs, bool* pfMissingInputs)
+bool CTransaction::AcceptToMemoryPool(bool fCheckInputs, bool fLimitFree, bool* pfMissingInputs)
 {
-    return mempool.accept(*this, fCheckInputs, pfMissingInputs);
+    return mempool.accept(*this, fCheckInputs, fLimitFree, pfMissingInputs);
 }
 
 bool CTxMemPool::addUnchecked(const uint256& hash, CTransaction &tx)
@@ -909,9 +908,9 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(bool fCheckInputs)
+bool CMerkleTx::AcceptToMemoryPool(bool fCheckInputs, bool fLimitFree)
 {
-    return CTransaction::AcceptToMemoryPool(fCheckInputs);
+    return CTransaction::AcceptToMemoryPool(fCheckInputs, fLimitFree);
 }
 
 
@@ -927,10 +926,10 @@ bool CWalletTx::AcceptWalletTransaction(bool fCheckInputs)
             {
                 uint256 hash = tx.GetHash();
                 if (!mempool.exists(hash) && pcoinsTip->HaveCoins(hash))
-                    tx.AcceptToMemoryPool(fCheckInputs);
+                    tx.AcceptToMemoryPool(fCheckInputs, false);
             }
         }
-        return AcceptToMemoryPool(fCheckInputs);
+        return AcceptToMemoryPool(fCheckInputs, false);
     }
     return false;
 }
@@ -1867,7 +1866,7 @@ bool SetBestChain(CBlockIndex* pindexNew)
 
     // Resurrect memory transactions that were in the disconnected branch
     BOOST_FOREACH(CTransaction& tx, vResurrect)
-        tx.AcceptToMemoryPool();
+        tx.AcceptToMemoryPool(true, false);
 
     // Delete redundant memory transactions that are in the connected branch
     BOOST_FOREACH(CTransaction& tx, vDelete) {
@@ -3455,7 +3454,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         pfrom->AddInventoryKnown(inv);
 
         bool fMissingInputs = false;
-        if (tx.AcceptToMemoryPool(true, &fMissingInputs))
+        if (tx.AcceptToMemoryPool(true, true, &fMissingInputs))
         {
             RelayTransaction(tx, inv.hash, vMsg);
             mapAlreadyAskedFor.erase(inv);
@@ -3476,7 +3475,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     CInv inv(MSG_TX, tx.GetHash());
                     bool fMissingInputs2 = false;
 
-                    if (tx.AcceptToMemoryPool(true, &fMissingInputs2))
+                    if (tx.AcceptToMemoryPool(true, true, &fMissingInputs2))
                     {
                         printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
                         RelayTransaction(tx, inv.hash, vMsg);
@@ -3486,9 +3485,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     }
                     else if (!fMissingInputs2)
                     {
-                        // invalid orphan
+                        // invalid or too-little-fee orphan
                         vEraseQueue.push_back(inv.hash);
-                        printf("   removed invalid orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
+                        printf("   removed orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
                     }
                 }
             }
