@@ -1806,6 +1806,13 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     // Make sure it's successfully written to disk before changing memory structure
     bool fIsInitialDownload = IsInitialBlockDownload();
     if (!fIsInitialDownload || pcoinsTip->GetCacheSize() > nCoinCacheSize) {
+        // Typical CCoins structures on disk are around 100 bytes in size.
+        // Pushing a new one to the database can cause it to be written
+        // twice (once in the log, and once in the tables). This is already
+        // an overestimation, as most will delete an existing entry or
+        // overwrite one. Still, use a conservative safety factor of 2.
+        if (!CheckDiskSpace(100 * 2 * 2 * pcoinsTip->GetCacheSize()))
+            return state.Error();
         FlushBlockFile();
         pblocktree->Sync();
         if (!pcoinsTip->Flush())
