@@ -3,6 +3,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef WIN32
+// for posix_fallocate
+#ifdef __linux__
+#define _POSIX_C_SOURCE 200112L
+#endif
+#include <fcntl.h>
+#include <sys/stat.h>
+#endif
+
 #include "util.h"
 #include "sync.h"
 #include "version.h"
@@ -1155,6 +1164,35 @@ int GetFilesize(FILE* file)
 // this function tries to make a particular range of a file allocated (corresponding to disk space)
 // it is advisory, and the range specified in the arguments will never contain live data
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
+#if defined(WIN32)
+    // Windows-specific version
+    HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
+    LARGE_INTEGER nFileSize;
+    int64 nEndPos = (int64)offset + length;
+    nFileSize.u.LowPart = nEndPos & 0xFFFFFFFF;
+    nFileSize.u.HighPart = nEndPos >> 32;
+    SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN);
+    SetEndOfFile(hFile);
+#elif defined(MAC_OSX)
+    // OSX specific version
+    fstore_t fst;
+    fst.fst_flags = F_ALLOCATECONTIG;
+    fst.fst_posmode = F_PEOFPOSMODE;
+    fst.fst_offset = 0;
+    fst.fst_length = (off_t)offset + length;
+    fst.fst_bytesalloc = 0;
+    if (fcntl(fileno(file), F_PREALLOCATE, &fst) == -1) {
+        fst.fst_flags = F_ALLOCATEALL;
+        fcntl(fileno(file), F_PREALLOCATE, &fst);
+    }
+    ftruncate(fileno(file), fst.fst_length);
+#elif defined(__linux__)
+    // Version using posix_fallocate
+    off_t nEndPos = (off_t)offset + length;
+    posix_fallocate(fileno(file), 0, nEndPos);
+#else
+    // Fallback version
+    // TODO: just write one byte per block
     static const char buf[65536] = {};
     fseek(file, offset, SEEK_SET);
     while (length > 0) {
@@ -1164,6 +1202,7 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
         fwrite(buf, 1, now, file); // allowed to fail; this function is advisory anyway
         length -= now;
     }
+#endif
 }
 
 void ShrinkDebugFile()
