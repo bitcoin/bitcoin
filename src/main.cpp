@@ -1687,7 +1687,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
             if (!FindUndoPos(state, pindex->nFile, pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 40))
                 return error("ConnectBlock() : FindUndoPos failed");
             if (!blockundo.WriteToDisk(pos, pindex->pprev->GetBlockHash()))
-                return state.Error(error("ConnectBlock() : CBlockUndo::WriteToDisk failed"));
+                return state.Abort(_("Error: failed to write undo data"));
 
             // update nUndoPos in block index
             pindex->nUndoPos = pos.nPos;
@@ -1698,16 +1698,15 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
 
         CDiskBlockIndex blockindex(pindex);
         if (!pblocktree->WriteBlockIndex(blockindex))
-            return state.Error(error("ConnectBlock() : WriteBlockIndex failed"));
+            return state.Abort(_("Error: failed to write block index"));
     }
 
     if (fTxIndex)
         if (!pblocktree->WriteTxIndex(vPos))
-            return state.Error(error("ConnectBlock() : WriteTxIndex failed"));
+            return state.Abort(_("Error: failed to write transaction index"));
 
     // add this block to the view's block chain
-    if (!view.SetBestBlock(pindex))
-        return state.Error();
+    assert(view.SetBestBlock(pindex));
 
     // Watch for transactions paying to me
     for (unsigned int i=0; i<vtx.size(); i++)
@@ -1727,13 +1726,14 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     CBlockIndex* plonger = pindexNew;
     while (pfork && pfork != plonger)
     {
-        while (plonger->nHeight > pfork->nHeight)
-            if (!(plonger = plonger->pprev))
-                return state.Error(error("SetBestChain() : plonger->pprev is null"));
+        while (plonger->nHeight > pfork->nHeight) {
+            plonger = plonger->pprev;
+            assert(plonger != NULL);
+        }
         if (pfork == plonger)
             break;
-        if (!(pfork = pfork->pprev))
-            return state.Error(error("SetBestChain() : pfork->pprev is null"));
+        pfork = pfork->pprev;
+        assert(pfork != NULL);
     }
 
     // List of what to disconnect (typically nothing)
@@ -1757,7 +1757,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     BOOST_FOREACH(CBlockIndex* pindex, vDisconnect) {
         CBlock block;
         if (!block.ReadFromDisk(pindex))
-            return state.Error(error("SetBestBlock() : ReadFromDisk for disconnect failed"));
+            return state.Abort(_("Error: failed to read block"));
         int64 nStart = GetTimeMicros();
         if (!block.DisconnectBlock(state, pindex, view))
             return error("SetBestBlock() : DisconnectBlock %s failed", BlockHashStr(pindex->GetBlockHash()).c_str());
@@ -1777,7 +1777,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     BOOST_FOREACH(CBlockIndex *pindex, vConnect) {
         CBlock block;
         if (!block.ReadFromDisk(pindex))
-            return state.Error(error("SetBestBlock() : ReadFromDisk for connect failed"));
+            return state.Abort(_("Error: failed to read block"));
         int64 nStart = GetTimeMicros();
         if (!block.ConnectBlock(state, pindex, view)) {
             if (state.IsInvalid()) {
@@ -1797,8 +1797,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     // Flush changes to global coin state
     int64 nStart = GetTimeMicros();
     int nModified = view.GetCacheSize();
-    if (!view.Flush())
-        return state.Error(error("SetBestBlock() : unable to modify coin state"));
+    assert(view.Flush());
     int64 nTime = GetTimeMicros() - nStart;
     if (fBenchmark)
         printf("- Flush %i transactions: %.2fms (%.4fms/tx)\n", nModified, 0.001 * nTime, 0.001 * nTime / nModified);
@@ -1816,7 +1815,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
         FlushBlockFile();
         pblocktree->Sync();
         if (!pcoinsTip->Flush())
-            return state.Error();
+            return state.Abort(_("Error: failed to write to coin database"));
     }
 
     // At this point, all changes have been done to the database.
@@ -1903,8 +1902,7 @@ bool CBlock::AddToBlockIndex(CValidationState &state, const CDiskBlockPos &pos)
 
     // Construct new block index object
     CBlockIndex* pindexNew = new CBlockIndex(*this);
-    if (!pindexNew)
-        return state.Error(error("AddToBlockIndex() : new CBlockIndex failed"));
+    assert(pindexNew);
     map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
     pindexNew->phashBlock = &((*mi).first);
     map<uint256, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(hashPrevBlock);
@@ -1923,7 +1921,7 @@ bool CBlock::AddToBlockIndex(CValidationState &state, const CDiskBlockPos &pos)
     setBlockIndexValid.insert(pindexNew);
 
     if (!pblocktree->WriteBlockIndex(CDiskBlockIndex(pindexNew)))
-        return state.Error(error("AddToBlockIndex() : writing block index failed"));
+        return state.Abort(_("Error: failed to write block index"));
 
     // New best?
     if (!ConnectBestBlock(state))
@@ -1938,7 +1936,7 @@ bool CBlock::AddToBlockIndex(CValidationState &state, const CDiskBlockPos &pos)
     }
 
     if (!pblocktree->Flush())
-        return state.Error("AddToBlockIndex() : failed to sync block tree");
+        return state.Abort(_("Error: failed to sync block index"));
 
     uiInterface.NotifyBlocksChanged();
     return true;
@@ -1987,12 +1985,12 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
                 }
             }
             else
-                return state.Error(error("FindBlockPos() : out of disk space"));
+                return state.Error();
         }
     }
 
     if (!pblocktree->WriteBlockFileInfo(nLastBlockFile, infoLastBlockFile))
-        return state.Error(error("FindBlockPos() : cannot write updated block info"));
+        return state.Abort(_("Error: failed to write file info"));
     if (fUpdatedLast)
         pblocktree->WriteLastBlockFile(nLastBlockFile);
 
@@ -2010,15 +2008,15 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
         pos.nPos = infoLastBlockFile.nUndoSize;
         nNewSize = (infoLastBlockFile.nUndoSize += nAddSize);
         if (!pblocktree->WriteBlockFileInfo(nLastBlockFile, infoLastBlockFile))
-            return state.Error(error("FindUndoPos() : cannot write updated block info"));
+            return state.Abort(_("Error: failed to write block info"));
     } else {
         CBlockFileInfo info;
         if (!pblocktree->ReadBlockFileInfo(nFile, info))
-            return state.Error(error("FindUndoPos() : cannot read block info"));
+            return state.Abort(_("Error: failed to read block info"));
         pos.nPos = info.nUndoSize;
         nNewSize = (info.nUndoSize += nAddSize);
         if (!pblocktree->WriteBlockFileInfo(nFile, info))
-            return state.Error(error("FindUndoPos() : cannot write updated block info"));
+            return state.Abort(_("Error: failed to write block info"));
     }
 
     unsigned int nOldChunks = (pos.nPos + UNDOFILE_CHUNK_SIZE - 1) / UNDOFILE_CHUNK_SIZE;
@@ -2033,7 +2031,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
             }
         }
         else
-            return state.Error(error("FindUndoPos() : out of disk space"));
+            return state.Error();
     }
 
     return true;
@@ -2164,7 +2162,7 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
         return error("AcceptBlock() : FindBlockPos failed");
     if (dbp == NULL)
         if (!WriteToDisk(blockPos))
-            return state.Error(error("AcceptBlock() : WriteToDisk failed"));
+            return state.Abort(_("Error: failed to write block"));
     if (!AddToBlockIndex(state, blockPos))
         return error("AcceptBlock() : AddToBlockIndex failed");
 
@@ -2430,6 +2428,14 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch) {
 
 
 
+bool AbortNode(const std::string &strMessage) {
+    fRequestShutdown = true;
+    strMiscWarning = strMessage;
+    printf("*** %s\n", strMessage.c_str());
+    uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_ERROR);
+    StartShutdown();
+    return false;
+}
 
 bool CheckDiskSpace(uint64 nAdditionalBytes)
 {
@@ -2437,15 +2443,8 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
 
     // Check for nMinDiskSpace bytes (currently 50MB)
     if (nFreeBytesAvailable < nMinDiskSpace + nAdditionalBytes)
-    {
-        fShutdown = true;
-        string strMessage = _("Error: Disk space is low!");
-        strMiscWarning = strMessage;
-        printf("*** %s\n", strMessage.c_str());
-        uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_ERROR);
-        StartShutdown();
-        return false;
-    }
+        return AbortNode(_("Error: Disk space is low!"));
+
     return true;
 }
 
