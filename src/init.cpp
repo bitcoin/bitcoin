@@ -350,7 +350,6 @@ void ThreadImport(void *data) {
 
     // -reindex
     if (fReindex) {
-        CImportingNow imp;
         int nFile = 0;
         while (!fRequestShutdown) {
             CDiskBlockPos pos(nFile, 0);
