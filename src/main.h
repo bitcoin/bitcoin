@@ -181,6 +181,8 @@ bool ConnectBestBlock(CValidationState &state);
 CBlockIndex * InsertBlockIndex(uint256 hash);
 /** Verify a signature */
 bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
+/** Abort with a message */
+bool AbortNode(const std::string &msg);
 
 
 
@@ -1886,9 +1888,13 @@ public:
     bool Invalid(bool ret = false) {
         return DoS(0, ret);
     }
-    bool Error(bool ret = false) {
+    bool Error() {
         mode = MODE_ERROR;
-        return ret;
+        return false;
+    }
+    bool Abort(const std::string &msg) {
+        AbortNode(msg);
+        return Error();
     }
     bool IsValid() {
         return mode == MODE_VALID;
