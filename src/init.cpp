@@ -187,9 +187,9 @@ bool AppInit(int argc, char* argv[])
         fRet = AppInit2();
     }
     catch (std::exception& e) {
-        PrintException(&e, "AppInit()");
+        PrintExceptionContinue(&e, "AppInit()");
     } catch (...) {
-        PrintException(NULL, "AppInit()");
+        PrintExceptionContinue(NULL, "AppInit()");
     }
     if (!fRet)
         Shutdown(NULL);

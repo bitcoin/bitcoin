@@ -800,7 +800,11 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
 
 bool CTransaction::AcceptToMemoryPool(CValidationState &state, bool fCheckInputs, bool fLimitFree, bool* pfMissingInputs)
 {
-    return mempool.accept(state, *this, fCheckInputs, fLimitFree, pfMissingInputs);
+    try {
+        return mempool.accept(state, *this, fCheckInputs, fLimitFree, pfMissingInputs);
+    } catch(std::runtime_error &e) {
+        return state.Abort(_("System error: ") + e.what());
+    }
 }
 
 bool CTxMemPool::addUnchecked(const uint256& hash, CTransaction &tx)
@@ -1256,8 +1260,12 @@ bool ConnectBestBlock(CValidationState &state) {
                     if (fRequestShutdown)
                         break;
                     CValidationState state;
-                    if (!SetBestChain(state, pindexSwitch))
-                        return false;
+                    try {
+                        if (!SetBestChain(state, pindexSwitch))
+                            return false;
+                    } catch(std::runtime_error &e) {
+                        return state.Abort(_("System error: ") + e.what());
+                    }
                 }
                 return true;
             }
@@ -1687,7 +1695,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
             if (!FindUndoPos(state, pindex->nFile, pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 40))
                 return error("ConnectBlock() : FindUndoPos failed");
             if (!blockundo.WriteToDisk(pos, pindex->pprev->GetBlockHash()))
-                return state.Abort(_("Error: failed to write undo data"));
+                return state.Abort(_("Failed to write undo data"));
 
             // update nUndoPos in block index
             pindex->nUndoPos = pos.nPos;
@@ -1698,12 +1706,12 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
 
         CDiskBlockIndex blockindex(pindex);
         if (!pblocktree->WriteBlockIndex(blockindex))
-            return state.Abort(_("Error: failed to write block index"));
+            return state.Abort(_("Failed to write block index"));
     }
 
     if (fTxIndex)
         if (!pblocktree->WriteTxIndex(vPos))
-            return state.Abort(_("Error: failed to write transaction index"));
+            return state.Abort(_("Failed to write transaction index"));
 
     // add this block to the view's block chain
     assert(view.SetBestBlock(pindex));
@@ -1757,7 +1765,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     BOOST_FOREACH(CBlockIndex* pindex, vDisconnect) {
         CBlock block;
         if (!block.ReadFromDisk(pindex))
-            return state.Abort(_("Error: failed to read block"));
+            return state.Abort(_("Failed to read block"));
         int64 nStart = GetTimeMicros();
         if (!block.DisconnectBlock(state, pindex, view))
             return error("SetBestBlock() : DisconnectBlock %s failed", BlockHashStr(pindex->GetBlockHash()).c_str());
@@ -1777,7 +1785,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     BOOST_FOREACH(CBlockIndex *pindex, vConnect) {
         CBlock block;
         if (!block.ReadFromDisk(pindex))
-            return state.Abort(_("Error: failed to read block"));
+            return state.Abort(_("Failed to read block"));
         int64 nStart = GetTimeMicros();
         if (!block.ConnectBlock(state, pindex, view)) {
             if (state.IsInvalid()) {
@@ -1815,7 +1823,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
         FlushBlockFile();
         pblocktree->Sync();
         if (!pcoinsTip->Flush())
-            return state.Abort(_("Error: failed to write to coin database"));
+            return state.Abort(_("Failed to write to coin database"));
     }
 
     // At this point, all changes have been done to the database.
@@ -1921,7 +1929,7 @@ bool CBlock::AddToBlockIndex(CValidationState &state, const CDiskBlockPos &pos)
     setBlockIndexValid.insert(pindexNew);
 
     if (!pblocktree->WriteBlockIndex(CDiskBlockIndex(pindexNew)))
-        return state.Abort(_("Error: failed to write block index"));
+        return state.Abort(_("Failed to write block index"));
 
     // New best?
     if (!ConnectBestBlock(state))
@@ -1936,7 +1944,7 @@ bool CBlock::AddToBlockIndex(CValidationState &state, const CDiskBlockPos &pos)
     }
 
     if (!pblocktree->Flush())
-        return state.Abort(_("Error: failed to sync block index"));
+        return state.Abort(_("Failed to sync block index"));
 
     uiInterface.NotifyBlocksChanged();
     return true;
@@ -1990,7 +1998,7 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
     }
 
     if (!pblocktree->WriteBlockFileInfo(nLastBlockFile, infoLastBlockFile))
-        return state.Abort(_("Error: failed to write file info"));
+        return state.Abort(_("Failed to write file info"));
     if (fUpdatedLast)
         pblocktree->WriteLastBlockFile(nLastBlockFile);
 
@@ -2008,15 +2016,15 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
         pos.nPos = infoLastBlockFile.nUndoSize;
         nNewSize = (infoLastBlockFile.nUndoSize += nAddSize);
         if (!pblocktree->WriteBlockFileInfo(nLastBlockFile, infoLastBlockFile))
-            return state.Abort(_("Error: failed to write block info"));
+            return state.Abort(_("Failed to write block info"));
     } else {
         CBlockFileInfo info;
         if (!pblocktree->ReadBlockFileInfo(nFile, info))
-            return state.Abort(_("Error: failed to read block info"));
+            return state.Abort(_("Failed to read block info"));
         pos.nPos = info.nUndoSize;
         nNewSize = (info.nUndoSize += nAddSize);
         if (!pblocktree->WriteBlockFileInfo(nFile, info))
-            return state.Abort(_("Error: failed to write block info"));
+            return state.Abort(_("Failed to write block info"));
     }
 
     unsigned int nOldChunks = (pos.nPos + UNDOFILE_CHUNK_SIZE - 1) / UNDOFILE_CHUNK_SIZE;
@@ -2154,17 +2162,21 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
     }
 
     // Write block to history file
-    unsigned int nBlockSize = ::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION);
-    CDiskBlockPos blockPos;
-    if (dbp != NULL)
-        blockPos = *dbp;
-    if (!FindBlockPos(state, blockPos, nBlockSize+8, nHeight, nTime, dbp != NULL))
-        return error("AcceptBlock() : FindBlockPos failed");
-    if (dbp == NULL)
-        if (!WriteToDisk(blockPos))
-            return state.Abort(_("Error: failed to write block"));
-    if (!AddToBlockIndex(state, blockPos))
-        return error("AcceptBlock() : AddToBlockIndex failed");
+    try {
+        unsigned int nBlockSize = ::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION);
+        CDiskBlockPos blockPos;
+        if (dbp != NULL)
+            blockPos = *dbp;
+        if (!FindBlockPos(state, blockPos, nBlockSize+8, nHeight, nTime, dbp != NULL))
+            return error("AcceptBlock() : FindBlockPos failed");
+        if (dbp == NULL)
+            if (!WriteToDisk(blockPos))
+                return state.Abort(_("Failed to write block"));
+        if (!AddToBlockIndex(state, blockPos))
+            return error("AcceptBlock() : AddToBlockIndex failed");
+    } catch(std::runtime_error &e) {
+        return state.Abort(_("System error: ") + e.what());
+    }
 
     // Relay inventory, but don't relay old inventory during initial block download
     int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
@@ -2432,7 +2444,7 @@ bool AbortNode(const std::string &strMessage) {
     fRequestShutdown = true;
     strMiscWarning = strMessage;
     printf("*** %s\n", strMessage.c_str());
-    uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_ERROR);
+    uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_ERROR | CClientUIInterface::MODAL);
     StartShutdown();
     return false;
 }
@@ -2801,7 +2813,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
     int64 nStart = GetTimeMillis();
 
     int nLoaded = 0;
-    {
+    try {
         CBufferedFile blkdat(fileIn, 2*MAX_BLOCK_SIZE, MAX_BLOCK_SIZE+8, SER_DISK, CLIENT_VERSION);
         uint64 nStartByte = 0;
         if (dbp) {
@@ -2858,6 +2870,8 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
             }
         }
         fclose(fileIn);
+    } catch(std::runtime_error &e) {
+        AbortNode(_("Error: system error: ") + e.what());
     }
     if (nLoaded > 0)
         printf("Loaded %i blocks from external file in %"PRI64d"ms\n", nLoaded, GetTimeMillis() - nStart);
