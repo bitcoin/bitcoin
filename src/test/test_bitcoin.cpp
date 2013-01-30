@@ -28,7 +28,7 @@ struct TestingSetup {
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
-        LoadBlockIndex();
+        InitBlockIndex();
         bool fFirstRun;
         pwalletMain = new CWallet("wallet.dat");
         pwalletMain->LoadWallet(fFirstRun);
