@@ -355,8 +355,10 @@ void ThreadImport(void *data) {
         while (!fRequestShutdown) {
             CDiskBlockPos pos(nFile, 0);
             FILE *file = OpenBlockFile(pos, true);
-            if (!file)
+            if (!file) {
+                nFile = -1; // use -1 as a flag for reindexing aborted
                 break;
+            }
             printf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
             LoadExternalBlockFile(file, &pos);
             nFile++;
@@ -364,7 +366,10 @@ void ThreadImport(void *data) {
         if (!fRequestShutdown) {
             pblocktree->WriteReindexing(false);
             fReindex = false;
-            printf("Reindexing finished\n");
+            if (nFile != -1)
+                printf("Reindexing finished\n");
+            else
+                printf("Reindexing aborted\n");
         }
     }
 
@@ -740,7 +745,14 @@ bool AppInit2()
 
     // ********************************************************* Step 7: load block chain
 
+    filesystem::path blocksDir = GetDataDir() / "blocks";
+
     fReindex = GetBoolArg("-reindex");
+    // don't try to reindex, if blocks dir is missing or empty
+    if (fReindex && (filesystem::exists(blocksDir) ? filesystem::is_empty(blocksDir) : true)) {
+        InitWarning(_("Disabling -reindex, because blocks directory is missing or empty."));
+        fReindex = false;
+    }
 
     if (!bitdb.Open(GetDataDir()))
     {
@@ -751,7 +763,6 @@ bool AppInit2()
     }
 
     // Upgrading to 0.8; hard-link the old blknnnn.dat files into /blocks/
-    filesystem::path blocksDir = GetDataDir() / "blocks";
     if (!filesystem::exists(blocksDir))
     {
         filesystem::create_directories(blocksDir);
