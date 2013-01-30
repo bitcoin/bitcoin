@@ -73,7 +73,9 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             txFirst.push_back(new CTransaction(pblock->vtx[0]));
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
         pblock->nNonce = blockinfo[i].nonce;
-        assert(ProcessBlock(NULL, pblock));
+        CValidationState state;
+        BOOST_CHECK(ProcessBlock(state, NULL, pblock));
+        BOOST_CHECK(state.IsValid());
         pblock->hashPrevBlock = pblock->GetHash();
     }
     delete pblocktemplate;
