@@ -814,21 +814,11 @@ public:
         uint256 hashChecksum;
         try {
             filein >> *this;
+            filein >> hashChecksum;
         }
         catch (std::exception &e) {
             return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
         }
-
-        // for compatibility with pre-release code that didn't write checksums to undo data
-        // TODO: replace by a simply 'filein >> hashChecksum' in the above try block
-        try {
-            filein >> hashChecksum;
-        } catch (std::exception &e) {
-            hashChecksum = 0;
-        }
-        uint32_t hashInit = hashChecksum.Get64(0) & 0xFFFFFFFFUL;
-        if (hashChecksum == 0 || memcmp(&hashInit, pchMessageStart, 4) == 0)
-            return true;
 
         // Verify checksum
         CHashWriter hasher(SER_GETHASH, PROTOCOL_VERSION);
