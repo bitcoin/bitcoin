@@ -159,6 +159,10 @@ all: bitcoind
 test check: test_bitcoin FORCE
 	./test_bitcoin
 
+ifdef USE_SYSTEM_LEVELDB
+    LIBS += -lleveldb
+    TESTLIBS += -lmemenv
+else
 #
 # LevelDB support
 #
@@ -166,13 +170,14 @@ MAKEOVERRIDES =
 LIBS += $(CURDIR)/leveldb/libleveldb.a
 TESTLIBS += $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
-DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
+DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers/memenv)
 leveldb/libleveldb.a:
 	@echo "Building LevelDB ..." && cd leveldb && $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(xCXXFLAGS)" libleveldb.a && cd ..
 leveldb/libmemenv.a:
 	@echo "Building LevelDB memenv ..." && cd leveldb && $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(xCXXFLAGS)" libmemenv.a && cd ..
 OBJS += leveldb/libleveldb.a
 TESTOBJS += leveldb/libmemenv.a
+endif
 
 # auto-generated dependencies:
 -include obj/*.P

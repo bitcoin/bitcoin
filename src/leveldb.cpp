@@ -9,7 +9,7 @@
 #include <leveldb/cache.h>
 #include <leveldb/filter_policy.h>
 #ifndef LEVELDB_WITHOUT_MEMENV
-#include <memenv/memenv.h>
+#include <memenv.h>
 #endif
 
 #include <boost/filesystem.hpp>
