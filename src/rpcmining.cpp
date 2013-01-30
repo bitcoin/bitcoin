@@ -365,9 +365,10 @@ Value submitblock(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
     }
 
-    bool fAccepted = ProcessBlock(NULL, &pblock);
+    CValidationState state;
+    bool fAccepted = ProcessBlock(state, NULL, &pblock);
     if (!fAccepted)
-        return "rejected";
+        return "rejected"; // TODO: report validation state
 
     return Value::null;
 }

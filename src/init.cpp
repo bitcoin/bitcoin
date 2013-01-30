@@ -187,9 +187,9 @@ bool AppInit(int argc, char* argv[])
         fRet = AppInit2();
     }
     catch (std::exception& e) {
-        PrintException(&e, "AppInit()");
+        PrintExceptionContinue(&e, "AppInit()");
     } catch (...) {
-        PrintException(NULL, "AppInit()");
+        PrintExceptionContinue(NULL, "AppInit()");
     }
     if (!fRet)
         Shutdown(NULL);
@@ -936,7 +936,8 @@ bool AppInit2()
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     uiInterface.InitMessage(_("Importing blocks from block database..."));
-    if (!ConnectBestBlock())
+    CValidationState state;
+    if (!ConnectBestBlock(state))
         strErrors << "Failed to connect best block";
 
     CImportData *pimport = new CImportData();
