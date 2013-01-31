@@ -2239,7 +2239,8 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
             mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
 
             // Ask this guy to fill in what we're missing
-            pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock2));
+            if (pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock2)))
+                printf("fill-in getblocks to %s\n", pfrom->addr.ToString().c_str());
         }
         return true;
     }
@@ -3227,8 +3228,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 // In case we are on a very long side-chain, it is possible that we already have
                 // the last block in an inv bundle sent in response to getblocks. Try to detect
                 // this situation and push another getblocks to continue.
-                pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint256(0));
-                if (fDebug)
+                if (pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint256(0)) && fDebug)
                     printf("force request: %s\n", inv.ToString().c_str());
             }
 
@@ -3362,12 +3362,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (pindex)
             pindex = pindex->pnext;
         int nLimit = 500;
-        printf("getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), BlockHashStr(hashStop).c_str(), nLimit);
+        printf("getblocks %d limit %d from %s\n", (pindex ? pindex->nHeight : -1), nLimit, pfrom->addr.ToString().c_str());
         for (; pindex; pindex = pindex->pnext)
         {
             if (pindex->GetBlockHash() == hashStop)
             {
-                printf("  getblocks stopping at %d %s\n", pindex->nHeight, BlockHashStr(pindex->GetBlockHash()).c_str());
+                printf("  getblocks stopping at %d\n", pindex->nHeight);
                 break;
             }
             pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
@@ -3375,7 +3375,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             {
                 // When this block is requested, we'll send an inv that'll make them
                 // getblocks the next batch of inventory.
-                printf("  getblocks stopping at limit %d %s\n", pindex->nHeight, BlockHashStr(pindex->GetBlockHash()).c_str());
+                printf("  getblocks stopping at limit %d\n", pindex->nHeight);
                 pfrom->hashContinue = pindex->GetBlockHash();
                 break;
             }
