@@ -31,8 +31,8 @@ CTxMemPool mempool;
 unsigned int nTransactionsUpdated = 0;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
-uint256 hashGenesisBlock("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
-static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
+uint256 hashGenesisBlock("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206");
+static CBigNum bnProofOfWorkLimit(~uint256(0) >> 1);
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 CBigNum bnBestChainWork = 0;
@@ -1047,7 +1047,7 @@ int64 static GetBlockValue(int nHeight, int64 nFees)
     int64 nSubsidy = 50 * COIN;
 
     // Subsidy is cut in half every 210000 blocks, which will occur approximately every 4 years
-    nSubsidy >>= (nHeight / 210000);
+    nSubsidy >>= (nHeight / 150);
 
     return nSubsidy + nFees;
 }
@@ -2693,9 +2693,9 @@ bool LoadBlockIndex()
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1231006505;
-        block.nBits    = 0x1d00ffff;
-        block.nNonce   = 2083236893;
+        block.nTime    = 1296688602;
+        block.nBits    = 0x207fffff;
+        block.nNonce   = 2;
 
         if (fTestNet)
         {
@@ -2975,7 +2975,7 @@ bool static AlreadyHave(const CInv& inv)
 // The message start string is designed to be unlikely to occur in normal data.
 // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
 // a large 4-byte int at any alignment.
-unsigned char pchMessageStart[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
+unsigned char pchMessageStart[4] = { 0xfa, 0xbf, 0xb5, 0xda };
 
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
