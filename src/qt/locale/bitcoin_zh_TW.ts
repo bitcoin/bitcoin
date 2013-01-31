@@ -14,8 +14,8 @@
     </message>
     <message>
         <location line="+41"/>
-        <source>Copyright © 2009-2012 The Bitcoin developers</source>
-        <translation>版權為 Bitcoin 開發人員自西元 2009 至 2012 年起所有</translation>
+        <source>Copyright © 2009-2013 The Bitcoin developers</source>
+        <translation>版權為 Bitcoin 開發人員自西元 2009 至 2013 年起所有</translation>
     </message>
     <message>
         <location line="+13"/>

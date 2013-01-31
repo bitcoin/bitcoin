@@ -14,8 +14,8 @@
     </message>
     <message>
         <location line="+41"/>
-        <source>Copyright © 2009-2012 The Bitcoin developers</source>
-        <translation>Авторське право © 2009-2012 Розробники Bitcoin</translation>
+        <source>Copyright © 2009-2013 The Bitcoin developers</source>
+        <translation>Авторське право © 2009-2013 Розробники Bitcoin</translation>
     </message>
     <message>
         <location line="+13"/>
