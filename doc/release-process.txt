@@ -5,6 +5,7 @@
   src/clientversion.h (change CLIENT_VERSION_IS_RELEASE to true)
   share/setup.nsi
   doc/README*
+  contrib/verifysfbinaries/verify.sh
 
 * tag version in git
 
