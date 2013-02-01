@@ -18,7 +18,7 @@ WORKINGDIR="/tmp/bitcoin"
 TMPFILE="hashes.tmp"
 
 #this URL is used if a version number is not specified as an argument to the script
-SIGNATUREFILE="http://downloads.sourceforge.net/project/bitcoin/Bitcoin/bitcoin-0.7.1/test/SHA256SUMS.asc"
+SIGNATUREFILE="http://downloads.sourceforge.net/project/bitcoin/Bitcoin/bitcoin-0.7.2/SHA256SUMS.asc"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test/"
@@ -81,7 +81,7 @@ if [ $RET -ne 0 ]; then
       #and notify the user if it's bad
       echo "Bad signature."
    elif [ $RET -eq 2 ]; then
-      #or if a gpg error has occured
+      #or if a gpg error has occurred
       echo "gpg error. Do you have Gavin's code signing key installed?"
    fi
 
