@@ -421,7 +421,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
             Object prevOut = p.get_obj();
 
-            RPCTypeCheck(prevOut, map_list_of("txid", str_type)("vout", int_type)("scriptPubKey", str_type)("redeemScript",str_type));
+            RPCTypeCheck(prevOut, map_list_of("txid", str_type)("vout", int_type)("scriptPubKey", str_type));
 
             uint256 txid = ParseHashO(prevOut, "txid");
 
@@ -450,12 +450,16 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
             // if redeemScript given and not using the local wallet (private keys
             // given), add redeemScript to the tempKeystore so it can be signed:
-            Value v = find_value(prevOut, "redeemScript");
-            if (fGivenKeys && scriptPubKey.IsPayToScriptHash() && !(v == Value::null))
+            if (fGivenKeys && scriptPubKey.IsPayToScriptHash())
             {
-                vector<unsigned char> rsData(ParseHexV(v, "redeemScript"));
-                CScript redeemScript(rsData.begin(), rsData.end());
-                tempKeystore.AddCScript(redeemScript);
+                RPCTypeCheck(prevOut, map_list_of("txid", str_type)("vout", int_type)("scriptPubKey", str_type)("redeemScript",str_type));
+                Value v = find_value(prevOut, "redeemScript");
+                if (!(v == Value::null))
+                {
+                    vector<unsigned char> rsData(ParseHexV(v, "redeemScript"));
+                    CScript redeemScript(rsData.begin(), rsData.end());
+                    tempKeystore.AddCScript(redeemScript);
+                }
             }
         }
     }
