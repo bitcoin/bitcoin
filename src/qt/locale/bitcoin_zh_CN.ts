@@ -14,8 +14,8 @@
     </message>
     <message>
         <location line="+41"/>
-        <source>Copyright © 2009-2012 The Bitcoin developers</source>
-        <translation>版权所有 © 2009-2012 比特币开发团队</translation>
+        <source>Copyright © 2009-2013 The Bitcoin developers</source>
+        <translation>版权所有 © 2009-2013 比特币开发团队</translation>
     </message>
     <message>
         <location line="+13"/>
