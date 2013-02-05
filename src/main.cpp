@@ -1786,10 +1786,8 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
             return state.Abort(_("Failed to read block"));
         int64 nStart = GetTimeMicros();
         if (!block.ConnectBlock(state, pindex, view)) {
-            if (state.IsInvalid()) {
-                InvalidChainFound(pindexNew);
-                InvalidBlockFound(pindex);
-            }
+            InvalidChainFound(pindexNew);
+            InvalidBlockFound(pindex);
             return error("SetBestBlock() : ConnectBlock %s failed", BlockHashStr(pindex->GetBlockHash()).c_str());
         }
         if (fBenchmark)
