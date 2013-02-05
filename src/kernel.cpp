@@ -145,7 +145,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64& nStakeModif
         vSortedByTimestamp.push_back(make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
         pindex = pindex->pprev;
     }
-    int nHeightFirstCandidate = pindex->nHeight + 1;
+    int nHeightFirstCandidate = pindex ? (pindex->nHeight + 1) : 0;
     reverse(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
     sort(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
 
@@ -174,7 +174,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64& nStakeModif
     {
         string strSelectionMap = "";
         // '-' indicates proof-of-work blocks not selected
-        strSelectionMap.insert(0, pindexPrev->nHeight - nHeightFirstCandidate, '-');
+        strSelectionMap.insert(0, pindexPrev->nHeight - nHeightFirstCandidate + 1, '-');
         pindex = pindexPrev;
         while (pindex && pindex->nHeight >= nHeightFirstCandidate)
         {
