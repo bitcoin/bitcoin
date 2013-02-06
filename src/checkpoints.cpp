@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2011-2012 The PPCoin developers
+// Copyright (c) 2011-2013 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,8 @@ namespace Checkpoints
     static MapCheckpoints mapCheckpoints =
         boost::assign::map_list_of
         ( 0, hashGenesisBlockOfficial )
-        ; // ppcoin: no checkpoint yet; to be created in future releases
+        ( 19080, uint256("0x000000000000bca54d9ac17881f94193fd6a270c1bb21c3bf0b37f588a40dbd7"))
+        ;
 
     bool CheckHardened(int nHeight, const uint256& hash)
     {
