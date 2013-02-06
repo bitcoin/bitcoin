@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET =
+TARGET = ppcoin-qt
 VERSION = 0.6.3.0
 INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
@@ -158,7 +158,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/notificator.h \
     src/qt/qtipcserver.h \
     src/allocators.h \
-    src/ui_interface.h
+    src/ui_interface.h \
+    src/kernel.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -212,7 +213,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/askpassphrasedialog.cpp \
     src/protocol.cpp \
     src/qt/notificator.cpp \
-    src/qt/qtipcserver.cpp
+    src/qt/qtipcserver.cpp \
+    src/kernel.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
