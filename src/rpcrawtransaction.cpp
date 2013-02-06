@@ -421,7 +421,9 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
             Object prevOut = p.get_obj();
 
-            RPCTypeCheck(prevOut, map_list_of("txid", str_type)("vout", int_type)("scriptPubKey", str_type)("redeemScript",str_type));
+            RPCTypeCheck(prevOut, map_list_of("txid", str_type)("vout", int_type)("scriptPubKey", str_type));
+            // redeemScript is optional:
+            RPCTypeCheck(prevOut, map_list_of("redeemScript",str_type), true);
 
             uint256 txid = ParseHashO(prevOut, "txid");
 
