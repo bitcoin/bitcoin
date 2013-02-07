@@ -1333,6 +1333,9 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             // Do not add additional significant input
             if (pcoin.first->vout[pcoin.second].nValue > nCombineThreshold)
                 continue;
+            // Do not add input that is still too young
+            if (pcoin.first->nTime + STAKE_MAX_AGE > txNew.nTime)
+                continue;
             txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
             nCredit += pcoin.first->vout[pcoin.second].nValue;
             vwtxPrev.push_back(pcoin.first);
