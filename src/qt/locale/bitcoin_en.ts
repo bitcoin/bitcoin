@@ -2179,7 +2179,7 @@ Address: %4
         <translation>Bitcoin version</translation>
     </message>
     <message>
-        <location line="+95"/>
+        <location line="+96"/>
         <source>Usage:</source>
         <translation>Usage:</translation>
     </message>
@@ -2219,12 +2219,12 @@ Address: %4
         <translation>Generate coins</translation>
     </message>
     <message>
-        <location line="-26"/>
+        <location line="-27"/>
         <source>Don&apos;t generate coins</source>
         <translation>Don&apos;t generate coins</translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+74"/>
         <source>Specify data directory</source>
         <translation>Specify data directory</translation>
     </message>
@@ -2244,12 +2244,12 @@ Address: %4
         <translation>Maintain at most &lt;n&gt; connections to peers (default: 125)</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-47"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Connect to a node to retrieve peer addresses, and disconnect</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+78"/>
         <source>Specify your own public address</source>
         <translation>Specify your own public address</translation>
     </message>
@@ -2259,7 +2259,7 @@ Address: %4
         <translation>Threshold for disconnecting misbehaving peers (default: 100)</translation>
     </message>
     <message>
-        <location line="-129"/>
+        <location line="-130"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</translation>
     </message>
@@ -2279,7 +2279,7 @@ Address: %4
         <translation>Accept command line and JSON-RPC commands</translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+75"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Run in the background as a daemon and accept commands</translation>
     </message>
@@ -2289,7 +2289,7 @@ Address: %4
         <translation>Use the test network</translation>
     </message>
     <message>
-        <location line="-105"/>
+        <location line="-106"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Accept connections from outside (default: 1 if no -proxy or -connect)</translation>
     </message>
@@ -2410,6 +2410,11 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location line="+3"/>
+        <source>Error initializing block database</source>
+        <translation>Error initializing block database</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Error loading block database</source>
         <translation>Error loading block database</translation>
     </message>
@@ -2659,22 +2664,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Password for JSON-RPC connections</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Allow JSON-RPC connections from specified IP address</translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+75"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-117"/>
+        <location line="-118"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <location line="+139"/>
+        <location line="+140"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Upgrade wallet to latest format</translation>
     </message>
@@ -2704,12 +2709,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Server private key (default: server.pem)</translation>
     </message>
     <message>
-        <location line="-147"/>
+        <location line="-148"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+159"/>
+        <location line="+160"/>
         <source>This help message</source>
         <translation>This help message</translation>
     </message>
@@ -2719,7 +2724,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Unable to bind to %s on this computer (bind returned error %d, %s)</translation>
     </message>
     <message>
-        <location line="-83"/>
+        <location line="-84"/>
         <source>Connect through socks proxy</source>
         <translation>Connect through socks proxy</translation>
     </message>
@@ -2729,7 +2734,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+55"/>
         <source>Loading addresses...</source>
         <translation>Loading addresses...</translation>
     </message>
@@ -2779,7 +2784,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Unknown -socks proxy version requested: %i</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-89"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Cannot resolve -bind address: &apos;%s&apos;</translation>
     </message>
@@ -2789,7 +2794,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Cannot resolve -externalip address: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+43"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
@@ -2814,7 +2819,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Loading block index...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Add a node to connect to and attempt to keep the connection open</translation>
     </message>
@@ -2824,7 +2829,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Unable to bind to %s on this computer. Bitcoin is probably already running.</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+66"/>
         <source>Find peers using internet relay chat (default: 0)</source>
         <translation>Find peers using internet relay chat (default: 0)</translation>
     </message>
@@ -2839,7 +2844,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Loading wallet...</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-52"/>
         <source>Cannot downgrade wallet</source>
         <translation>Cannot downgrade wallet</translation>
     </message>
@@ -2854,17 +2859,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Cannot write default address</translation>
     </message>
     <message>
-        <location line="+61"/>
+        <location line="+62"/>
         <source>Rescanning...</source>
         <translation>Rescanning...</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-56"/>
         <source>Done loading</source>
         <translation>Done loading</translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+79"/>
         <source>To use the %s option</source>
         <translation>To use the %s option</translation>
     </message>
@@ -2874,7 +2879,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Error</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-29"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
