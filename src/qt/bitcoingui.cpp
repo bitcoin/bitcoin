@@ -3,7 +3,7 @@
  *
  * W.J. van der Laan 2011-2012
  * The Bitcoin Developers 2011-2012
- * The PPCoin Developers 2011-2012
+ * The PPCoin Developers 2011-2013
  */
 #include "bitcoingui.h"
 #include "transactiontablemodel.h"
@@ -70,7 +70,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     resize(850, 550);
     setWindowTitle(tr("PPCoin Wallet"));
 #ifndef Q_WS_MAC
-    setWindowIcon(QIcon(":icons/bitcoin"));
+    setWindowIcon(QIcon(":icons/ppcoin"));
 #else
     setUnifiedTitleAndToolBarOnMac(true);
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
@@ -227,17 +227,17 @@ void BitcoinGUI::createActions()
     quitAction->setToolTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About %1").arg(qApp->applicationName()), this);
-    aboutAction->setToolTip(tr("Show information about Bitcoin"));
+    aboutAction = new QAction(QIcon(":/icons/ppcoin"), tr("&About %1").arg(qApp->applicationName()), this);
+    aboutAction->setToolTip(tr("Show information about PPCoin"));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutQtAction = new QAction(tr("About &Qt"), this);
     aboutQtAction->setToolTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setToolTip(tr("Modify configuration options for bitcoin"));
+    optionsAction->setToolTip(tr("Modify configuration options for ppcoin"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
-    toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("Show/Hide &Bitcoin"), this);
-    toggleHideAction->setToolTip(tr("Show or hide the Bitcoin window"));
+    toggleHideAction = new QAction(QIcon(":/icons/ppcoin"), tr("Show/Hide &PPCoin"), this);
+    toggleHideAction->setToolTip(tr("Show or hide the PPCoin window"));
     exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
     exportAction->setToolTip(tr("Export the data in the current tab to a file"));
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet"), this);
@@ -317,9 +317,9 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
             QString title_testnet = windowTitle() + QString(" ") + tr("[testnet]");
             setWindowTitle(title_testnet);
 #ifndef Q_WS_MAC
-            setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+            setWindowIcon(QIcon(":icons/ppcoin_testnet"));
 #else
-            MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
+            MacDockIconHandler::instance()->setIcon(QIcon(":icons/ppcoin_testnet"));
 #endif
             if(trayIcon)
             {
@@ -376,7 +376,7 @@ void BitcoinGUI::createTrayIcon()
     trayIcon = new QSystemTrayIcon(this);
     trayIconMenu = new QMenu(this);
     trayIcon->setContextMenu(trayIconMenu);
-    trayIcon->setToolTip(tr("Bitcoin client"));
+    trayIcon->setToolTip(tr("PPCoin client"));
     trayIcon->setIcon(QIcon(":/icons/toolbar"));
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
@@ -403,7 +403,7 @@ void BitcoinGUI::createTrayIcon()
     trayIconMenu->addAction(quitAction);
 #endif
 
-    notificator = new Notificator(tr("bitcoin-qt"), trayIcon);
+    notificator = new Notificator(tr("ppcoin-qt"), trayIcon);
 }
 
 #ifndef Q_WS_MAC
@@ -467,7 +467,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Bitcoin network", "", count));
+    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to PPCoin network", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)

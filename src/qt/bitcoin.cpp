@@ -1,5 +1,6 @@
 /*
  * W.J. van der Laan 2011-2012
+ * The PPCoin Developers 2013
  */
 #include "bitcoingui.h"
 #include "clientmodel.h"
@@ -177,12 +178,12 @@ int main(int argc, char *argv[])
 
     // Application identification (must be set before OptionsModel is initialized,
     // as it is used to locate QSettings)
-    app.setOrganizationName("Bitcoin");
-    app.setOrganizationDomain("bitcoin.org");
+    app.setOrganizationName("PPCoin");
+    app.setOrganizationDomain("ppcoin.org");
     if(GetBoolArg("-testnet")) // Separate UI settings for testnet
-        app.setApplicationName("Bitcoin-Qt-testnet");
+        app.setApplicationName("PPCoin-Qt-testnet");
     else
-        app.setApplicationName("Bitcoin-Qt");
+        app.setApplicationName("PPCoin-Qt");
 
     // ... then GUI settings:
     OptionsModel optionsModel;
