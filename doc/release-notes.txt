@@ -11,7 +11,7 @@ Incompatible Changes
 This release no longer maintains a full index of historical transaction ids
 by default, so looking up an arbitrary transaction using the getrawtransaction
 RPC call will not work. If you need that functionality, you must run once
-with -txindex=1 -reindex=1 to rebuild block-chain indices (see below for more
+with -txindex -reindex to rebuild block-chain indices (see below for more
 details).
 
 Improvements
@@ -57,7 +57,8 @@ par : controls how many threads to use to validate transactions. Defaults to the
 of CPUs on your machine, use -par=1 to limit to a single CPU.
 
 txindex : maintains an extra index of old, spent transaction ids so they will be found
-by the getrawtransaction JSON-RPC method.
+by the getrawtransaction JSON-RPC method. Can only be set when the database is
+initialized.
 
 reindex : rebuild block and transaction indices from the downloaded block data.
 
@@ -71,6 +72,11 @@ addnode / getaddednodeinfo methods, to connect to specific peers without restart
 
 importprivkey now takes an optional boolean parameter (default true) to control whether
 or not to rescan the blockchain for transactions after importing a new private key.
+
+gettxout retrieves a single transaction output from the current set of unspent outputs.
+Optionally, the mempool transactions are taken into account.
+
+gettxoutsetinfo calculates statistics about the current set of unspent outputs.
 
 Important Bug Fixes
 -------------------
