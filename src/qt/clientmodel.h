@@ -34,6 +34,7 @@ public:
     int getNumBlocks() const;
     int getNumBlocksAtStartup();
 
+    double getVerificationProgress() const;
     QDateTime getLastBlockDate() const;
     QDateTime getGenesisBlockDate() const;
 

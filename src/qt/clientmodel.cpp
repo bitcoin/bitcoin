@@ -6,6 +6,7 @@
 
 #include "alert.h"
 #include "main.h"
+#include "checkpoints.h"
 #include "ui_interface.h"
 
 #include <QDateTime>
@@ -60,6 +61,10 @@ QDateTime ClientModel::getGenesisBlockDate() const
     return QDateTime::fromTime_t(1231006505); // Genesis block's time
 }
 
+double ClientModel::getVerificationProgress() const
+{
+    return Checkpoints::GuessVerificationProgress(pindexBest);
+}
 
 void ClientModel::updateTimer()
 {
