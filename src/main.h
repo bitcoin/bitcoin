@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Copyright (c) 2011-2012 The PPCoin developers
+// Copyright (c) 2012-2013 The NovaCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_MAIN_H
@@ -9,6 +10,7 @@
 #include "bignum.h"
 #include "net.h"
 #include "script.h"
+#include "scrypt_mine.h"
 
 #ifdef WIN32
 #include <io.h> /* for _commit */
@@ -35,7 +37,7 @@ static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
 static const int64 MIN_TX_FEE = CENT;
 static const int64 MIN_RELAY_TX_FEE = CENT;
 static const int64 MAX_MONEY = 2000000000 * COIN;
-static const int64 MAX_MINT_PROOF_OF_WORK = 9999 * COIN;
+static const int64 MAX_MINT_PROOF_OF_WORK = 100 * COIN;
 static const int64 MIN_TXOUT_AMOUNT = MIN_TX_FEE;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 static const int COINBASE_MATURITY_PPC = 500;
@@ -47,17 +49,12 @@ static const int fHaveUPnP = true;
 static const int fHaveUPnP = false;
 #endif
 
-static const uint256 hashGenesisBlockOfficial("0x0000000032fe677166d54963b62a4677d8957e87c508eaa4fd7eb1c880cd27e3");
-static const uint256 hashGenesisBlockTestNet("0x00000001f757bb737f6596503e17cd17b0658ce630cc727c0cca81aec47c9f06");
+static const uint256 hashGenesisBlockOfficial("0x00000a060336cbb72fe969666d337b87198b1add2abaa59cca226820b32933a4");
+static const uint256 hashGenesisBlockTestNet("0x00000a060336cbb72fe969666d337b87198b1add2abaa59cca226820b32933a4");
 
 static const int64 nMaxClockDrift = 2 * 60 * 60;        // two hours
 
 extern CScript COINBASE_FLAGS;
-
-
-
-
-
 
 extern CCriticalSection cs_main;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
@@ -86,9 +83,9 @@ extern std::map<uint256, CBlock*> mapOrphanBlocks;
 // Settings
 extern int64 nTransactionFee;
 
-
-
-
+extern bool fGenerateBitcoins;
+extern bool fLimitProcessors;
+extern int nLimitProcessors;
 
 class CReserveKey;
 class CTxDB;
@@ -927,7 +924,7 @@ public:
 
     void SetNull()
     {
-        nVersion = 1;
+        nVersion = 2;
         hashPrevBlock = 0;
         hashMerkleRoot = 0;
         nTime = 0;
@@ -946,7 +943,14 @@ public:
 
     uint256 GetHash() const
     {
-        return Hash(BEGIN(nVersion), END(nNonce));
+        uint256 thash;
+        void * scratchbuff = scrypt_buffer_alloc();
+
+        scrypt_hash(CVOIDBEGIN(nVersion), sizeof(block_header), UINTBEGIN(thash), scratchbuff);
+
+        scrypt_buffer_free(scratchbuff);
+
+        return thash;
     }
 
     int64 GetBlockTime() const

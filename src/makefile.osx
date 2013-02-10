@@ -80,6 +80,8 @@ OBJS= \
     obj/irc.o \
     obj/keystore.o \
     obj/main.o \
+    obj/scrypt_mine.o \
+    obj/scrypt-$(HOSTTYPE).o \
     obj/net.o \
     obj/protocol.o \
     obj/bitcoinrpc.o \
@@ -88,7 +90,9 @@ OBJS= \
     obj/util.o \
     obj/wallet.o \
     obj/walletdb.o \
-    obj/noui.o
+    obj/noui.o \
+    obj/pbkdf2.o
+
 
 ifdef USE_UPNP
 	DEFS += -DUSE_UPNP=$(USE_UPNP)

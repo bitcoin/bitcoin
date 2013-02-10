@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Copyright (c) 2011-2012 The PPCoin developers
+// Copyright (c) 2012-2013 The NovaCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -250,8 +251,8 @@ bool GetMyExternalIP(CNetAddr& ipRet)
 
 void ThreadGetMyExternalIP(void* parg)
 {
-    // Wait for IRC to get it first - disabled with ppcoin
-    if (false && GetBoolArg("-irc", false))
+    // Wait for IRC to get it first
+    if (GetBoolArg("-irc", true))
     {
         for (int i = 0; i < 2 * 60; i++)
         {
@@ -888,7 +889,7 @@ void ThreadMapPort2(void* parg)
             }
         }
 
-        string strDesc = "PPCoin " + FormatFullVersion();
+        string strDesc = "NovaCoin " + FormatFullVersion();
 #ifndef UPNPDISCOVER_SUCCESS
         /* miniupnpc 1.5 */
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
@@ -981,8 +982,7 @@ void MapPort(bool /* unused fMapPort */)
 // The second name should resolve to a list of seed addresses.
 // testnet dns seed begins with 't', all else are ppcoin dns seeds.
 static const char *strDNSSeed[][2] = {
-    {"seed", "seed.ppcoin.net"},
-    {"tnseed", "tnseed.ppcoin.net"},
+    {"seed", "xxx"}
 };
 
 void ThreadDNSAddressSeed(void* parg)
@@ -1009,7 +1009,7 @@ void ThreadDNSAddressSeed2(void* parg)
     printf("ThreadDNSAddressSeed started\n");
     int found = 0;
 
-    if (true /*!fTestNet*/)  // ppcoin enables dns seeding with testnet too
+    if (true && !fTestNet)
     {
         printf("Loading addresses from DNS seeds (could take a while)\n");
 
@@ -1499,7 +1499,7 @@ bool BindListenPort(string& strError)
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf(_("Unable to bind to port %d on this computer.  PPCoin is probably already running."), ntohs(sockaddr.sin_port));
+            strError = strprintf(_("Unable to bind to port %d on this computer.  NovaCoin is probably already running."), ntohs(sockaddr.sin_port));
         else
             strError = strprintf("Error: Unable to bind to port %d on this computer (bind returned error %d)", ntohs(sockaddr.sin_port), nErr);
         printf("%s\n", strError.c_str());
@@ -1608,21 +1608,24 @@ void StartNode(void* parg)
     // Start threads
     //
 
+/*
     if (!GetBoolArg("-dnsseed", true))
         printf("DNS seeding disabled\n");
     else
         if (!CreateThread(ThreadDNSAddressSeed, NULL))
             printf("Error: CreateThread(ThreadDNSAddressSeed) failed\n");
+*/
+
+    if (GetBoolArg("-dnsseed", false))
+        printf("DNS seeding NYI\n");
 
     // Map ports with UPnP
     if (fHaveUPnP)
         MapPort(fUseUPnP);
 
     // Get addresses from IRC and advertise ours
-    // if (!CreateThread(ThreadIRCSeed, NULL))
-    //     printf("Error: CreateThread(ThreadIRCSeed) failed\n");
-    // IRC disabled with ppcoin
-    printf("IRC seeding/communication disabled\n");
+    if (!CreateThread(ThreadIRCSeed, NULL))
+        printf("Error: CreateThread(ThreadIRCSeed) failed\n");
 
     // Send and receive from sockets, accept connections
     if (!CreateThread(ThreadSocketHandler, NULL))

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>About Bitcoin</string>
+   <string>About NovaCoin</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <item>
@@ -50,7 +50,7 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>&lt;b&gt;Bitcoin&lt;/b&gt; version</string>
+          <string>&lt;b&gt;NovaCoin&lt;/b&gt; version</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -88,7 +88,7 @@
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Copyright © 2009-2012 Bitcoin Developers
+        <string>Copyright © 2009-2012 NovaCoin Developers
 
 This is experimental software.
 

@@ -22,7 +22,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
 #endif
 
 #if QT_VERSION >= 0x040700
-    ui->payTo->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
+    ui->payTo->setPlaceholderText(tr("Enter a NovaCoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)"));
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
 #endif
     setFocusPolicy(Qt::TabFocus);

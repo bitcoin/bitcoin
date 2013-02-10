@@ -81,7 +81,7 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
 }
 
 # regenerate src/build.h
-!windows || contains(USE_BUILD_INFO, 1) {
+!windows | contains(USE_BUILD_INFO, 1) {
     genbuild.depends = FORCE
     genbuild.commands = cd $$PWD; /bin/sh share/genbuild.sh $$OUT_PWD/build/build.h
     genbuild.target = genbuildhook
@@ -89,6 +89,9 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
     QMAKE_EXTRA_TARGETS += genbuild
     DEFINES += HAVE_BUILD_INFO
 }
+
+QMAKE_CXXFLAGS += -msse2
+QMAKE_CFLAGS += -msse2
 
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wformat -Wformat-security -Wno-invalid-offsetof -Wno-sign-compare -Wno-unused-parameter
 
@@ -115,6 +118,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/strlcpy.h \
     src/main.h \
     src/net.h \
+    src/scrypt_mine.h \
+    src/pbkdf2.h \
     src/key.h \
     src/db.h \
     src/walletdb.h \
@@ -178,6 +183,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/main.cpp \
     src/init.cpp \
     src/net.cpp \
+    src/scrypt_mine.cpp \
+    src/pbkdf2.cpp \
     src/irc.cpp \
     src/checkpoints.cpp \
     src/addrman.cpp \
@@ -214,6 +221,14 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/notificator.cpp \
     src/qt/qtipcserver.cpp
 
+contains(QMAKE_HOST.arch, x86):{
+    SOURCES += src/scrypt-x86.S
+}
+
+contains(QMAKE_HOST.arch, x86_64):{
+    SOURCES += src/scrypt-x86_64.S
+}
+
 RESOURCES += \
     src/qt/bitcoin.qrc
 
@@ -240,7 +255,7 @@ SOURCES += src/qt/test/test_main.cpp \
 HEADERS += src/qt/test/uritests.h
 DEPENDPATH += src/qt/test
 QT += testlib
-TARGET = bitcoin-qt_test
+TARGET = novacoin-qt_test
 DEFINES += BITCOIN_QT_TEST
 }
 
@@ -271,7 +286,7 @@ OTHER_FILES += \
 # platform specific defaults, if not overridden on command line
 isEmpty(BOOST_LIB_SUFFIX) {
     macx:BOOST_LIB_SUFFIX = -mt
-    windows:BOOST_LIB_SUFFIX = -mgw44-mt-1_43
+    windows:BOOST_LIB_SUFFIX = -mgw44-mt-1_53
 }
 
 isEmpty(BOOST_THREAD_LIB_SUFFIX) {
@@ -298,7 +313,6 @@ isEmpty(BOOST_INCLUDE_PATH) {
     macx:BOOST_INCLUDE_PATH = /opt/local/include
 }
 
-windows:LIBS += -lws2_32 -lshlwapi
 windows:DEFINES += WIN32
 windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
@@ -323,14 +337,14 @@ macx:OBJECTIVE_SOURCES += src/qt/macdockiconhandler.mm
 macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit
 macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0
 macx:ICON = src/qt/res/icons/bitcoin.icns
-macx:TARGET = "Bitcoin-Qt"
+macx:TARGET = "NovaCoin-Qt"
 
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
 INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH
 LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,) $$join(QRENCODE_LIB_PATH,,-L,)
 LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 # -lgdi32 has to happen after -lcrypto (see  #681)
-windows:LIBS += -lole32 -luuid -lgdi32
+windows:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
 
 contains(RELEASE, 1) {
