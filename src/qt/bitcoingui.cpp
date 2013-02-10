@@ -4,6 +4,7 @@
  * W.J. van der Laan 2011-2012
  * The Bitcoin Developers 2011-2012
  * The PPCoin Developers 2011-2012
+ * The NovaCoin Developers 2011-2012
  */
 #include "bitcoingui.h"
 #include "transactiontablemodel.h"
@@ -68,7 +69,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     notificator(0)
 {
     resize(850, 550);
-    setWindowTitle(tr("PPCoin Wallet"));
+    setWindowTitle(tr("NovaCoin Wallet"));
 #ifndef Q_WS_MAC
     setWindowIcon(QIcon(":icons/bitcoin"));
 #else
@@ -198,7 +199,7 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(receiveCoinsAction);
 
     sendCoinsAction = new QAction(QIcon(":/icons/send"), tr("&Send coins"), this);
-    sendCoinsAction->setToolTip(tr("Send coins to a bitcoin address"));
+    sendCoinsAction->setToolTip(tr("Send coins to a NovaCoin address"));
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
     tabGroup->addAction(sendCoinsAction);
@@ -228,16 +229,16 @@ void BitcoinGUI::createActions()
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
     aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About %1").arg(qApp->applicationName()), this);
-    aboutAction->setToolTip(tr("Show information about Bitcoin"));
+    aboutAction->setToolTip(tr("Show information about NovaCoin"));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutQtAction = new QAction(tr("About &Qt"), this);
     aboutQtAction->setToolTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setToolTip(tr("Modify configuration options for bitcoin"));
+    optionsAction->setToolTip(tr("Modify configuration options for NovaCoin"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
-    toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("Show/Hide &Bitcoin"), this);
-    toggleHideAction->setToolTip(tr("Show or hide the Bitcoin window"));
+    toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("Show/Hide &NovaCoin"), this);
+    toggleHideAction->setToolTip(tr("Show or hide the NovaCoin window"));
     exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
     exportAction->setToolTip(tr("Export the data in the current tab to a file"));
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet"), this);
@@ -376,7 +377,7 @@ void BitcoinGUI::createTrayIcon()
     trayIcon = new QSystemTrayIcon(this);
     trayIconMenu = new QMenu(this);
     trayIcon->setContextMenu(trayIconMenu);
-    trayIcon->setToolTip(tr("Bitcoin client"));
+    trayIcon->setToolTip(tr("NovaCoin client"));
     trayIcon->setIcon(QIcon(":/icons/toolbar"));
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
@@ -403,7 +404,7 @@ void BitcoinGUI::createTrayIcon()
     trayIconMenu->addAction(quitAction);
 #endif
 
-    notificator = new Notificator(tr("bitcoin-qt"), trayIcon);
+    notificator = new Notificator(tr("novacoin-qt"), trayIcon);
 }
 
 #ifndef Q_WS_MAC
@@ -467,7 +468,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Bitcoin network", "", count));
+    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to NovaCoin network", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)

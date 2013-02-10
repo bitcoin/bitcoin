@@ -1,5 +1,5 @@
 
-PPCoin official development tree
+NovaCoin official development tree
 
 Bitcoin development process
 ===========================

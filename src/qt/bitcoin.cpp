@@ -177,12 +177,12 @@ int main(int argc, char *argv[])
 
     // Application identification (must be set before OptionsModel is initialized,
     // as it is used to locate QSettings)
-    app.setOrganizationName("Bitcoin");
-    app.setOrganizationDomain("bitcoin.org");
+    app.setOrganizationName("NovaCoin");
+    app.setOrganizationDomain("novacoin.ru");
     if(GetBoolArg("-testnet")) // Separate UI settings for testnet
-        app.setApplicationName("Bitcoin-Qt-testnet");
+        app.setApplicationName("NovaCoin-Qt-testnet");
     else
-        app.setApplicationName("Bitcoin-Qt");
+        app.setApplicationName("NovaCoin-Qt");
 
     // ... then GUI settings:
     OptionsModel optionsModel;

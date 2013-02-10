@@ -6,10 +6,10 @@
 #define UNUSED
 #endif
 static const char UNUSED *bitcoin_strings[] = {QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Unable to bind to port %d on this computer.  Bitcoin is probably already "
+"Unable to bind to port %d on this computer.  NovaCoin is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Warning: Disk space is low  "),
-QT_TRANSLATE_NOOP("bitcoin-core", "Bitcoin version"),
+QT_TRANSLATE_NOOP("bitcoin-core", "NovaCoin version"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Usage:"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Send command to -server or bitcoind"),
 QT_TRANSLATE_NOOP("bitcoin-core", "List commands"),
@@ -76,9 +76,9 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", "This help message"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Usage"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Cannot obtain a lock on data directory %s.  Bitcoin is probably already "
+"Cannot obtain a lock on data directory %s.  NovaCoin is probably already "
 "running."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Bitcoin"),
+QT_TRANSLATE_NOOP("bitcoin-core", "NovaCoin"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Loading addresses..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading addr.dat"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Loading block index..."),

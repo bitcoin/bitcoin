@@ -31,8 +31,8 @@ unsigned int nTransactionsUpdated = 0;
 map<uint256, CBlockIndex*> mapBlockIndex;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 uint256 hashGenesisBlock = hashGenesisBlockOfficial;
-static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
-static CBigNum bnInitialHashTarget(~uint256(0) >> 40);
+CBigNum bnProofOfWorkLimit(~uint256(0) >> 20);
+CBigNum bnInitialHashTarget(~uint256(0) >> 20);
 unsigned int nStakeMinAge = STAKE_MIN_AGE;
 int nCoinbaseMaturity = COINBASE_MATURITY_PPC;
 CBlockIndex* pindexGenesisBlock = NULL;
@@ -55,7 +55,7 @@ map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "PPCoin Signed Message:\n";
+const string strMessageMagic = "NovaCoin Signed Message:\n";
 
 double dHashesPerSec;
 int64 nHPSTimerStart;
@@ -832,9 +832,13 @@ int64 GetProofOfWorkReward(unsigned int nBits)
     CBigNum bnTargetLimit = bnProofOfWorkLimit;
     bnTargetLimit.SetCompact(bnTargetLimit.GetCompact());
 
-    // ppcoin: subsidy is cut in half every 16x multiply of difficulty
+    // ppcoin: subsidy is cut in half every 64x multiply of difficulty
     // A reasonably continuous curve is used to avoid shock to market
-    // (nSubsidyLimit / nSubsidy) ** 4 == bnProofOfWorkLimit / bnTarget
+    // (nSubsidyLimit / nSubsidy) ** 6 == bnProofOfWorkLimit / bnTarget
+    //
+    // Human readable form:
+    //
+    // nSubsidy = 100 / (diff ^ 1/6)
     CBigNum bnLowerBound = CENT;
     CBigNum bnUpperBound = bnSubsidyLimit;
     while (bnLowerBound + CENT <= bnUpperBound)
@@ -842,7 +846,7 @@ int64 GetProofOfWorkReward(unsigned int nBits)
         CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
         if (fDebug && GetBoolArg("-printcreation"))
             printf("GetProofOfWorkReward() : lower=%"PRI64d" upper=%"PRI64d" mid=%"PRI64d"\n", bnLowerBound.getuint64(), bnUpperBound.getuint64(), bnMidValue.getuint64());
-        if (bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnTargetLimit > bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnTarget)
+        if (bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnTargetLimit > bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnTarget)
             bnUpperBound = bnMidValue;
         else
             bnLowerBound = bnMidValue;
@@ -859,7 +863,7 @@ int64 GetProofOfWorkReward(unsigned int nBits)
 // ppcoin: miner's coin stake is rewarded based on coin age spent (coin-days)
 int64 GetProofOfStakeReward(int64 nCoinAge)
 {
-    static int64 nRewardCoinYear = CENT;  // creation amount per coin-year
+    static int64 nRewardCoinYear = 5 * CENT;  // creation amount per coin-year
     int64 nSubsidy = nCoinAge * 33 / (365 * 33 + 8) * nRewardCoinYear;
     if (fDebug && GetBoolArg("-printcreation"))
         printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRI64d"\n", FormatMoney(nSubsidy).c_str(), nCoinAge);
@@ -1347,17 +1351,15 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     // already refuses previously-known transaction id's entirely.
     // This rule applies to all blocks whose timestamp is after March 15, 2012, 0:00 UTC.
     // On testnet it is enabled as of februari 20, 2012, 0:00 UTC.
-    if (pindex->nTime > 1331769600 || (fTestNet && pindex->nTime > 1329696000))
+
+    BOOST_FOREACH(CTransaction& tx, vtx)
     {
-        BOOST_FOREACH(CTransaction& tx, vtx)
+        CTxIndex txindexOld;
+        if (txdb.ReadTxIndex(tx.GetHash(), txindexOld))
         {
-            CTxIndex txindexOld;
-            if (txdb.ReadTxIndex(tx.GetHash(), txindexOld))
-            {
-                BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
-                    if (pos.IsNull())
-                        return false;
-            }
+            BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
+                if (pos.IsNull())
+                    return false;
         }
     }
 
@@ -1983,6 +1985,14 @@ bool CBlock::AcceptBlock()
     if (!Checkpoints::CheckSync(hash, pindexPrev))
         return error("AcceptBlock() : rejected by synchronized checkpoint");
 
+    if(nHeight > 0)
+    {
+        CScript expect = CScript() << nHeight;
+
+        if (!std::equal(expect.begin(), expect.end(), vtx[0].vin[0].scriptSig.begin()))
+            return DoS(100, error("AcceptBlock() : block height mismatch in coinbase"));
+    }
+
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION)))
         return error("AcceptBlock() : out of disk space");
@@ -2184,7 +2194,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
         string strMessage = _("Warning: Disk space is low");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
-        ThreadSafeMessageBox(strMessage, "PPCoin", wxOK | wxICON_EXCLAMATION | wxMODAL);
+        ThreadSafeMessageBox(strMessage, "NovaCoin", wxOK | wxICON_EXCLAMATION | wxMODAL);
         StartShutdown();
         return false;
     }
@@ -2237,14 +2247,12 @@ bool LoadBlockIndex(bool fAllowNew)
     if (fTestNet)
     {
         hashGenesisBlock = hashGenesisBlockTestNet;
-        bnProofOfWorkLimit = CBigNum(~uint256(0) >> 28);
         nStakeMinAge = 60 * 60 * 24; // test net min age is 1 day
         nCoinbaseMaturity = 60;
-        bnInitialHashTarget = CBigNum(~uint256(0) >> 29);
     }
 
     printf("%s Network: genesis=0x%s nBitsLimit=0x%08x nBitsInitial=0x%08x nStakeMinAge=%d nCoinbaseMaturity=%d\n",
-           fTestNet? "Test" : "PPCoin", hashGenesisBlock.ToString().substr(0, 20).c_str(), bnProofOfWorkLimit.GetCompact(), bnInitialHashTarget.GetCompact(), nStakeMinAge, nCoinbaseMaturity);
+           fTestNet? "Test" : "NovaCoin", hashGenesisBlock.ToString().substr(0, 20).c_str(), bnProofOfWorkLimit.GetCompact(), bnInitialHashTarget.GetCompact(), nStakeMinAge, nCoinbaseMaturity);
 
     //
     // Load block index
@@ -2270,9 +2278,9 @@ bool LoadBlockIndex(bool fAllowNew)
         //   vMerkleTree: 4a5e1e
 
         // Genesis block
-        const char* pszTimestamp = "Matonis 07-AUG-2012 Parallel Currencies And The Roadmap To Monetary Freedom";
+        const char* pszTimestamp = "https://bitcointalk.org/index.php?topic=134179.msg1502196#msg1502196";
         CTransaction txNew;
-        txNew.nTime = 1345083810;
+        txNew.nTime = 1360105017;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(9999) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
@@ -2282,21 +2290,15 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1345084287;
+        block.nTime    = 1360105017;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 2179302059;
-
-        if (fTestNet)
-        {
-            block.nTime    = 1345090000;
-            block.nNonce   = 122894938;
-        }
+        block.nNonce   = 1575379;
 
         //// debug print
         printf("%s\n", block.GetHash().ToString().c_str());
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == uint256("0x3c2d8f85fab4d17aac558cc648a1a58acff0de6deb890c29985690052c5993c2"));
+        assert(block.hashMerkleRoot == uint256("0x4cb33b3b6a861dcbc685d3e614a9cafb945738d6833f182855679f2fad02057b"));
         block.print();
         assert(block.GetHash() == hashGenesisBlock);
         assert(block.CheckBlock());
@@ -2458,14 +2460,14 @@ string GetWarnings(string strFor)
     if (Checkpoints::IsMatureSyncCheckpoint() && !fTestNet)
     {
         nPriority = 2000;
-        strStatusBar = strRPC = "WARNING: Checkpoint is too old. Wait for block chain to download, or notify developers of the issue.";
+        strStatusBar = strRPC = "WARNING: Checkpoint is too old. Wait for block chain download, or notify developers.";
     }
 
     // ppcoin: if detected invalid checkpoint enter safe mode
     if (Checkpoints::hashInvalidCheckpoint != 0)
     {
         nPriority = 3000;
-        strStatusBar = strRPC = "WARNING: Invalid checkpoint found! Displayed transactions may not be correct! You may need to upgrade, or notify developers of the issue.";
+        strStatusBar = strRPC = "WARNING: Invalid checkpoint found! Displayed transactions may not be correct! You may need to upgrade, or notify developers.";
     }
 
     // Alerts
@@ -3534,39 +3536,6 @@ void SHA256Transform(void* pstate, void* pinput, const void* pinit)
         ((uint32_t*)pstate)[i] = ctx.h[i];
 }
 
-//
-// ScanHash scans nonces looking for a hash with at least some zero bits.
-// It operates on big endian data.  Caller does the byte reversing.
-// All input buffers are 16-byte aligned.  nNonce is usually preserved
-// between calls, but periodically or if nNonce is 0xffff0000 or above,
-// the block is rebuilt and nNonce starts over at zero.
-//
-unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1, char* phash, unsigned int& nHashesDone)
-{
-    unsigned int& nNonce = *(unsigned int*)(pdata + 12);
-    for (;;)
-    {
-        // Crypto++ SHA-256
-        // Hash pdata using pmidstate as the starting state into
-        // preformatted buffer phash1, then hash phash1 into phash
-        nNonce++;
-        SHA256Transform(phash1, pdata, pmidstate);
-        SHA256Transform(phash, phash1, pSHA256InitState);
-
-        // Return the nonce if the hash has at least some zero bits,
-        // caller will check if it has enough to reach the target
-        if (((unsigned short*)phash)[14] == 0)
-            return nNonce;
-
-        // If nothing found after trying for a while, return -1
-        if ((nNonce & 0xffff) == 0)
-        {
-            nHashesDone = 0xffff+1;
-            return (unsigned int) -1;
-        }
-    }
-}
-
 // Some explaining would be appreciated
 class COrphan
 {
@@ -3805,7 +3774,10 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
         hashPrevBlock = pblock->hashPrevBlock;
     }
     ++nExtraNonce;
-    pblock->vtx[0].vin[0].scriptSig = (CScript() << pblock->nTime << CBigNum(nExtraNonce)) + COINBASE_FLAGS;
+
+    unsigned int nHeight = pindexPrev->nHeight+1; // Height first in coinbase required for block.version=2
+    pblock->vtx[0].vin[0].scriptSig = (CScript() << nHeight << CBigNum(nExtraNonce)) + COINBASE_FLAGS;
+
     assert(pblock->vtx[0].vin[0].scriptSig.size() <= 100);
 
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
@@ -3898,12 +3870,14 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 
 void static ThreadBitcoinMiner(void* parg);
 
-static bool fGenerateBitcoins = false;
-static bool fLimitProcessors = false;
-static int nLimitProcessors = -1;
+bool fGenerateBitcoins = false;
+bool fLimitProcessors = false;
+int nLimitProcessors = -1;
 
 void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 {
+    void *scratchbuf = scrypt_buffer_alloc();
+
     printf("CPUMiner started for proof-of-%s\n", fProofOfStake? "stake" : "work");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
@@ -3984,28 +3958,33 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
         //
         int64 nStart = GetTime();
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
-        uint256 hashbuf[2];
-        uint256& hash = *alignup<16>(hashbuf);
+
+        unsigned int max_nonce = 0xffff0000;
+        block_header res_header;
+        uint256 result;
+
         loop
         {
             unsigned int nHashesDone = 0;
             unsigned int nNonceFound;
 
-            // Crypto++ SHA-256
-            nNonceFound = ScanHash_CryptoPP(pmidstate, pdata + 64, phash1,
-                                            (char*)&hash, nHashesDone);
+            nNonceFound = scanhash_scrypt(
+                        (block_header *)&pblock->nVersion,
+                        scratchbuf,
+                        max_nonce,
+                        nHashesDone,
+                        UBEGIN(result),
+                        &res_header
+            );
 
             // Check if something found
             if (nNonceFound != (unsigned int) -1)
             {
-                for (unsigned int i = 0; i < sizeof(hash)/4; i++)
-                    ((unsigned int*)&hash)[i] = ByteReverse(((unsigned int*)&hash)[i]);
-
-                if (hash <= hashTarget)
+                if (result <= hashTarget)
                 {
                     // Found a solution
-                    pblock->nNonce = ByteReverse(nNonceFound);
-                    assert(hash == pblock->GetHash());
+                    pblock->nNonce = nNonceFound;
+                    assert(result == pblock->GetHash());
                     if (!pblock->SignBlock(*pwalletMain))
                     {
                         strMintWarning = strMintMessage;
@@ -4074,6 +4053,8 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
                 break;  // need to update coinbase timestamp
         }
     }
+
+    scrypt_buffer_free(scratchbuf);
 }
 
 void static ThreadBitcoinMiner(void* parg)
