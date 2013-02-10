@@ -34,6 +34,11 @@ namespace Checkpoints
         (216116, uint256("0x00000000000001b4f4b433e81ee46494af945cf96014816a4e2370f11b23df4e"))
         ;
 
+    static const int64 nTimeLastCheckpoint = 1357902690;
+    static const int64 nTransactionsLastCheckpoint = 11011160;
+    static const double fTransactionsPerDay = 50500;
+    static const double fSigcheckVerificationFactor = 15.0;
+
     static MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
         ( 546, uint256("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70"))
@@ -49,6 +54,32 @@ namespace Checkpoints
         MapCheckpoints::const_iterator i = checkpoints.find(nHeight);
         if (i == checkpoints.end()) return true;
         return hash == i->second;
+    }
+
+    double GuessVerificationProgress(CBlockIndex *pindex) {
+        int64 nNow = time(NULL);
+
+        double fWorkBefore = 0.0;
+        double fWorkAfter = 0.0;
+
+        if (pindex->nTime <= nTimeLastCheckpoint) {
+            double nCheapBefore = pindex->nChainTx;
+            double nCheapAfter = nTransactionsLastCheckpoint - pindex->nChainTx;
+            double nExpensiveAfter = (nNow - nTimeLastCheckpoint)/86400.0*fTransactionsPerDay;
+            fWorkBefore = nCheapBefore;
+            fWorkAfter = nCheapAfter + nExpensiveAfter*fSigcheckVerificationFactor;
+            // printf("before checkpoint: nCheapBefore=%f nCheapAfter=%f nExpensiveAfter=%f\n", nCheapBefore, nCheapAfter, nExpensiveAfter);
+        } else {
+            double nCheapBefore = nTransactionsLastCheckpoint;
+            double nExpensiveBefore = pindex->nChainTx - nTransactionsLastCheckpoint;
+            double nExpensiveAfter = (nNow - pindex->nTime)/86400.0*fTransactionsPerDay;
+            fWorkBefore = nCheapBefore + nExpensiveBefore*fSigcheckVerificationFactor;
+            fWorkAfter = nExpensiveAfter*fSigcheckVerificationFactor;
+            // printf("after checkpoint: nCheapBefore=%f nExpensiveBefore=%f nExpensiveAfter=%f\n", nCheapBefore, nExpensiveBefore, nExpensiveAfter);
+        }
+
+        // printf("guess: %g%%\n", 100.0*fWorkBefore / (fWorkBefore + fWorkAfter));
+        return (fWorkBefore / (fWorkBefore + fWorkAfter));
     }
 
     int GetTotalBlocksEstimate()
