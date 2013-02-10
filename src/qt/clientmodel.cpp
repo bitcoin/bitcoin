@@ -54,6 +54,7 @@ QDateTime ClientModel::getLastBlockDate() const
         return QDateTime::fromTime_t(1231006505); // Genesis block's time
 }
 
+
 void ClientModel::updateTimer()
 {
     // Some quantities (such as number of blocks) change so fast that we don't want to be notified for each change.
