@@ -527,52 +527,44 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         importText = tr("Reindexing blocks on disk...");
     }
 
+    QDateTime genesisBlockDate = clientModel->getGenesisBlockDate();
+    QDateTime lastBlockDate = clientModel->getLastBlockDate();
+    QDateTime currentDate = QDateTime::currentDateTime();
+    int secs = lastBlockDate.secsTo(currentDate);
+    int totalSecs = genesisBlockDate.secsTo(currentDate);
+
     if(count < nTotalBlocks)
     {
-        int nRemainingBlocks = nTotalBlocks - count;
-        float nPercentageDone = count / (nTotalBlocks * 0.01f);
-
-        progressBarLabel->setText(importText);
-        progressBarLabel->setVisible(true);
-        progressBar->setFormat(tr("~%n block(s) remaining", "", nRemainingBlocks));
-        progressBar->setMaximum(nTotalBlocks);
-        progressBar->setValue(count);
-        progressBar->setVisible(true);
-
-        tooltip = tr("Processed %1 of %2 blocks of transaction history (%3% done).").arg(count).arg(nTotalBlocks).arg(nPercentageDone, 0, 'f', 2);
+        tooltip = tr("Processed %1 of %2 blocks of transaction history.").arg(count).arg(nTotalBlocks);
     }
     else
     {
-        progressBarLabel->setVisible(false);
-
-        progressBar->setVisible(false);
         tooltip = tr("Processed %1 blocks of transaction history.").arg(count);
     }
 
-    QDateTime lastBlockDate = clientModel->getLastBlockDate();
-    int secs = lastBlockDate.secsTo(QDateTime::currentDateTime());
-    QString text;
-
     // Represent time from last generated block in human readable text
+    QString text;
     if(secs <= 0)
     {
         // Fully up to date. Leave text empty.
     }
     else if(secs < 60)
     {
-        text = tr("%n second(s) ago","",secs);
+        text = tr("%n second(s)","",secs);
     }
     else if(secs < 60*60)
     {
-        text = tr("%n minute(s) ago","",secs/60);
+        text = tr("%n minute(s)","",secs/60);
     }
     else if(secs < 24*60*60)
     {
-        text = tr("%n hour(s) ago","",secs/(60*60));
+        text = tr("%n hour(s)","",secs/(60*60));
     }
     else
     {
-        text = tr("%n day(s) ago","",secs/(60*60*24));
+        text = tr("%1 and %2")
+                .arg(tr("%n day(s)","",secs/(60*60*24)))
+                .arg(tr("%n hour(s)","",(secs%(60*60*24))/(60*60)));
     }
 
     // Set icon state: spinning if catching up, tick otherwise
@@ -582,9 +574,19 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
 
         overviewPage->showOutOfSyncWarning(false);
+
+        progressBarLabel->setVisible(false);
+        progressBar->setVisible(false);
     }
     else
     {
+        progressBarLabel->setText(importText);
+        progressBarLabel->setVisible(true);
+        progressBar->setFormat(tr("%1 behind").arg(text));
+        progressBar->setMaximum(totalSecs);
+        progressBar->setValue(totalSecs - secs);
+        progressBar->setVisible(true);
+
         tooltip = tr("Catching up...") + QString("<br>") + tooltip;
         labelBlocksIcon->setMovie(syncIconMovie);
         syncIconMovie->start();
@@ -595,7 +597,8 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     if(!text.isEmpty())
     {
         tooltip += QString("<br>");
-        tooltip += tr("Last received block was generated %1.").arg(text);
+        tooltip += tr("Last received block was generated %1 ago.").arg(text);
+        tooltip += tr("Transactions after this will not yet be visible.");
     }
 
     // Don't word-wrap this (fixed-width) tooltip
