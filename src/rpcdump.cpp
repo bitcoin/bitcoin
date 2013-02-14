@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2012 Bitcoin Developers
-// Copyright (c) 2012 The PPCoin developers
+// Copyright (c) 2012-2013 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -54,6 +54,8 @@ Value importprivkey(const Array& params, bool fHelp)
     bool fGood = vchSecret.SetString(strSecret);
 
     if (!fGood) throw JSONRPCError(-5,"Invalid private key");
+    if (fWalletUnlockMintOnly) // ppcoin: no importprivkey in mint-only mode
+        throw JSONRPCError(-102, "Wallet is unlocked for minting only.");
 
     CKey key;
     bool fCompressed;
@@ -90,6 +92,8 @@ Value dumpprivkey(const Array& params, bool fHelp)
     CBitcoinAddress address;
     if (!address.SetString(strAddress))
         throw JSONRPCError(-5, "Invalid ppcoin address");
+    if (fWalletUnlockMintOnly) // ppcoin: no dumpprivkey in mint-only mode
+        throw JSONRPCError(-102, "Wallet is unlocked for minting only.");
     CSecret vchSecret;
     bool fCompressed;
     if (!pwalletMain->GetSecret(address, vchSecret, fCompressed))
