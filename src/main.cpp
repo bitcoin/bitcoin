@@ -2418,10 +2418,10 @@ string GetWarnings(string strFor)
     }
 
     // ppcoin: should not enter safe mode for longer invalid chain
-    // ppcoin: if sync-checkpoint too old enter safe mode
+    // ppcoin: if sync-checkpoint is too old do not enter safe mode
     if (Checkpoints::IsMatureSyncCheckpoint() && !fTestNet)
     {
-        nPriority = 2000;
+        nPriority = 100;
         strStatusBar = strRPC = "WARNING: Checkpoint is too old. Wait for block chain to download, or notify developers of the issue.";
     }
 
