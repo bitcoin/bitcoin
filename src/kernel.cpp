@@ -2,6 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <boost/assign/list_of.hpp>
+
 #include "kernel.h"
 #include "db.h"
 
@@ -14,6 +16,14 @@ unsigned int nProtocolV03TestSwitchTime = 1359781000;
 // Modifier interval: time to elapse before new modifier is computed
 // Set to 6-hour for production network and 20-minute for test network
 unsigned int nModifierInterval = MODIFIER_INTERVAL;
+
+// Hard checkpoints of stake modifiers to ensure they are deterministic
+static std::map<int, uint64> mapStakeModifierCheckpoints =
+    boost::assign::map_list_of
+    ( 0, 0x0000000000000000llu )
+    ( 19080, 0x3bd847f9885a39b2llu )
+    ( 30583, 0x2fa86fe542b181c0llu )
+    ;
 
 // Whether the given coinstake is subject to new v0.3 protocol
 bool IsProtocolV03(unsigned int nTimeCoinStake)
@@ -367,4 +377,13 @@ bool CheckCoinStakeTimestamp(int64 nTimeBlock, int64 nTimeTx)
         return (nTimeBlock == nTimeTx);
     else // v0.2 protocol
         return ((nTimeTx <= nTimeBlock) && (nTimeBlock <= nTimeTx + nMaxClockDrift));
+}
+
+// Check stake modifier hard checkpoints
+bool CheckStakeModifierCheckpoints(int nHeight, uint64 nStakeModifier)
+{
+    if (fTestNet) return true; // Testnet has no checkpoints
+    if (mapStakeModifierCheckpoints.count(nHeight))
+        return nStakeModifier == mapStakeModifierCheckpoints[nHeight];
+    return true;
 }

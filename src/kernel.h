@@ -35,4 +35,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 // Check whether the coinstake timestamp meets protocol
 bool CheckCoinStakeTimestamp(int64 nTimeBlock, int64 nTimeTx);
 
+// Check stake modifier hard checkpoints
+bool CheckStakeModifierCheckpoints(int nHeight, uint64 nStakeModifier);
+
 #endif // PPCOIN_KERNEL_H
