@@ -1,6 +1,6 @@
-PPCoin 0.2.2 BETA
+PPCoin 0.3.0 BETA
 
-Copyright (c) 2011-2012 PPCoin Developers
+Copyright (c) 2011-2013 PPCoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
@@ -19,7 +19,9 @@ help further advance the field of crypto-currency.
 Setup
 -----
 Unpack the files into a directory and run:
+ bin/32/ppcoin-qt (GUI, 32-bit)
  bin/32/ppcoind (headless, 32-bit)
+ bin/64/ppcoin-qt (GUI, 64-bit)
  bin/64/ppcoind (headless, 64-bit)
 
 The software automatically finds other nodes to connect to.  You can
@@ -31,12 +33,13 @@ but allowing incoming connections helps the PPCoin network.
 
 Upgrade
 -------
-All you existing coins/transactions should be intact with the upgrade.
+All your existing coins/transactions should be intact with the upgrade.
 To upgrade from 0.2, first backup wallet
 ppcoind backupwallet <destination_backup_file>
 Then shutdown ppcoind by
 ppcoind stop
-Start up the new ppcoind (0.2.2).
+Remove files inside wallet directory other than wallet.dat and ppcoin.conf
+Start up the new ppcoind (0.3.0). It would start re-download of block chain.
 
 
 See the documentation/wiki at the ppcoin website:

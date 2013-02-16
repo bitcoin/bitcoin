@@ -1,4 +1,5 @@
 // Copyright (c) 2012 The Bitcoin developers
+// Copyright (c) 2012-2013 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_VERSION_H
@@ -28,8 +29,8 @@ extern const std::string CLIENT_DATE;
 
 // ppcoin version - intended for display purpose ONLY
 #define PPCOIN_VERSION_MAJOR       0
-#define PPCOIN_VERSION_MINOR       2
-#define PPCOIN_VERSION_REVISION    2
+#define PPCOIN_VERSION_MINOR       3
+#define PPCOIN_VERSION_REVISION    0
 #define PPCOIN_VERSION_BUILD       0
 
 //
