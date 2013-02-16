@@ -41,25 +41,6 @@ An executable named `bitcoin-qt` will be built.
 
 .. _`Qt Creator`: http://qt-project.org/downloads/
 
-Windows
---------
-
-Windows build instructions:
-
-- Download the `Qt Windows SDK`_ and install it. You don't need the Symbian stuff, just the desktop Qt.
-
-- Download and extract the `dependencies archive`_  [#]_, or compile openssl, boost and dbcxx yourself.
-
-- Copy the contents of the folder "deps" to "X:\\QtSDK\\mingw", replace X:\\ with the location where you installed the Qt SDK. Make sure that the contents of "deps\\include" end up in the current "include" directory.
-
-- Open the bitcoin-qt.pro file in Qt Creator and build as normal (ctrl-B)
-
-.. _`Qt Windows SDK`: http://qt-project.org/downloads/
-.. _`dependencies archive`: https://download.visucore.com/bitcoin/qtgui_deps_1.zip
-.. [#] PGP signature: https://download.visucore.com/bitcoin/qtgui_deps_1.zip.sig (signed with RSA key ID `610945D0`_)
-.. _`610945D0`: http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x610945D0
-
-
 Mac OS X
 --------
 
