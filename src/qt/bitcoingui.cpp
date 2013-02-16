@@ -606,7 +606,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     progressBar->setToolTip(tooltip);
 }
 
-void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style)
+void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
     QString strTitle = tr("Bitcoin") + " - ";
     // Default to information icon
@@ -646,7 +646,9 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
             buttons = QMessageBox::Ok;
 
         QMessageBox mBox((QMessageBox::Icon)nMBoxIcon, strTitle, message, buttons);
-        mBox.exec();
+        int r = mBox.exec();
+        if (ret != NULL)
+            *ret = r == QMessageBox::Ok;
     }
     else
         notificator->notify((Notificator::Class)nNotifyIcon, strTitle, message);
