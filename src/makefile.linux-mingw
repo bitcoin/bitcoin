@@ -4,7 +4,7 @@
 
 DEPSDIR:=/usr/i586-mingw32msvc
 
-USE_UPNP:=0
+USE_UPNP:=-
 
 INCLUDEPATHS= \
  -I"$(DEPSDIR)/boost_1_47_0" \

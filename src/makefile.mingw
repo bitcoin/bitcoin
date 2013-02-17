@@ -59,7 +59,7 @@
 #
 #
 
-USE_UPNP:=0
+USE_UPNP:=-
 
 INCLUDEPATHS= \
  -I"C:\boost-1.47.0-mgw" \
