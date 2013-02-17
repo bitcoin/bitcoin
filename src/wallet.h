@@ -119,7 +119,7 @@ public:
 
     // keystore implementation
     // Generate a new key
-    std::vector<unsigned char> GenerateNewKey();
+    std::vector<unsigned char> GenerateNewKey(bool bCompressed);
     // Adds a key to the store, and saves it to disk.
     bool AddKey(const CKey& key);
     // Adds a key to the store, without saving it to disk (used by LoadWallet)
