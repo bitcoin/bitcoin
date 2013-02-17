@@ -3,8 +3,7 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-USE_UPNP:=0
-STATIC:=1
+USE_UPNP:=-
 
 DEFS=-DBOOST_SPIRIT_THREADSAFE
 
