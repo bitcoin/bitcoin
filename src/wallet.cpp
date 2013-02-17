@@ -18,9 +18,9 @@ using namespace std;
 // mapWallet
 //
 
-std::vector<unsigned char> CWallet::GenerateNewKey()
+std::vector<unsigned char> CWallet::GenerateNewKey(bool bCompressed = true)
 {
-    bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
+    bool fCompressed = bCompressed ? CanSupportFeature(FEATURE_COMPRPUBKEY) : false; // default to compressed public keys if we want 0.6.0 wallets
 
     RandAddSeedPerfmon();
     CKey key;
