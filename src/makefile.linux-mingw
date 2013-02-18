@@ -4,8 +4,8 @@
 
 DEPSDIR:=/usr/i586-mingw32msvc
 
-CC ?= i586-mingw32msvc-gcc
-CXX ?= i586-mingw32msvc-g++
+CC := i586-mingw32msvc-gcc
+CXX := i586-mingw32msvc-g++
 
 USE_UPNP:=0
 USE_IPV6:=1
