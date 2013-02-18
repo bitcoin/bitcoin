@@ -19,6 +19,8 @@ OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
 
+USE_UPNP=-
+
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
     # Mac: compile for maximum compatibility (10.5, 32-bit)
@@ -221,11 +223,11 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/notificator.cpp \
     src/qt/qtipcserver.cpp
 
-contains(QMAKE_HOST.arch, x86):{
+contains(QMAKE_HOST.arch, x86) | contains(QMAKE_HOST.arch, i686):{
     SOURCES += src/scrypt-x86.S
 }
 
-contains(QMAKE_HOST.arch, x86_64):{
+contains(QMAKE_HOST.arch, x86_64) | contains(QMAKE_HOST.arch, amd64) :{
     SOURCES += src/scrypt-x86_64.S
 }
 
