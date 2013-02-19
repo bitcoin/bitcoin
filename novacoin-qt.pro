@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET =
+TARGET = novacoin-qt
 VERSION = 0.6.3.0
 INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
@@ -18,8 +18,6 @@ CONFIG += no_include_pwd
 OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
-
-USE_UPNP=-
 
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
@@ -117,11 +115,11 @@ HEADERS += src/qt/bitcoingui.h \
     src/util.h \
     src/uint256.h \
     src/serialize.h \
+    src/scrypt_mine.h \
+    src/pbkdf2.h \
     src/strlcpy.h \
     src/main.h \
     src/net.h \
-    src/scrypt_mine.h \
-    src/pbkdf2.h \
     src/key.h \
     src/db.h \
     src/walletdb.h \
@@ -165,7 +163,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/notificator.h \
     src/qt/qtipcserver.h \
     src/allocators.h \
-    src/ui_interface.h
+    src/ui_interface.h \
+    src/kernel.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -183,10 +182,10 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/key.cpp \
     src/script.cpp \
     src/main.cpp \
-    src/init.cpp \
-    src/net.cpp \
     src/scrypt_mine.cpp \
     src/pbkdf2.cpp \
+    src/init.cpp \
+    src/net.cpp \
     src/irc.cpp \
     src/checkpoints.cpp \
     src/addrman.cpp \
@@ -221,15 +220,11 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/askpassphrasedialog.cpp \
     src/protocol.cpp \
     src/qt/notificator.cpp \
-    src/qt/qtipcserver.cpp
+    src/qt/qtipcserver.cpp \
+    src/kernel.cpp \
+    src/scrypt-x86.S \
+    src/scrypt-x86_64.S
 
-contains(QMAKE_HOST.arch, x86) | contains(QMAKE_HOST.arch, i686):{
-    SOURCES += src/scrypt-x86.S
-}
-
-contains(QMAKE_HOST.arch, x86_64) | contains(QMAKE_HOST.arch, amd64) :{
-    SOURCES += src/scrypt-x86_64.S
-}
 
 RESOURCES += \
     src/qt/bitcoin.qrc
@@ -257,7 +252,7 @@ SOURCES += src/qt/test/test_main.cpp \
 HEADERS += src/qt/test/uritests.h
 DEPENDPATH += src/qt/test
 QT += testlib
-TARGET = novacoin-qt_test
+TARGET = bitcoin-qt_test
 DEFINES += BITCOIN_QT_TEST
 }
 
@@ -346,7 +341,7 @@ INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$
 LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,) $$join(QRENCODE_LIB_PATH,,-L,)
 LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 # -lgdi32 has to happen after -lcrypto (see  #681)
-windows:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
+windows:LIBS += -lws2_32 -lshlwapi  -lole32 -luuid -lgdi32
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
 
 contains(RELEASE, 1) {
