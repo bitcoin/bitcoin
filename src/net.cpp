@@ -1,7 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2011-2012 The PPCoin developers
-// Copyright (c) 2012-2013 The NovaCoin developers
+// Copyright (c) 2011-2013 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -982,7 +981,8 @@ void MapPort(bool /* unused fMapPort */)
 // The second name should resolve to a list of seed addresses.
 // testnet dns seed begins with 't', all else are ppcoin dns seeds.
 static const char *strDNSSeed[][2] = {
-    {"seed", "xxx"}
+    {"seed", "seed.ppcoin.net"},
+    {"tnseed", "tnseed.ppcoin.net"},
 };
 
 void ThreadDNSAddressSeed(void* parg)
@@ -1009,7 +1009,7 @@ void ThreadDNSAddressSeed2(void* parg)
     printf("ThreadDNSAddressSeed started\n");
     int found = 0;
 
-    if (true && !fTestNet)
+    if (true /*!fTestNet*/)  // ppcoin enables dns seeding with testnet too
     {
         printf("Loading addresses from DNS seeds (could take a while)\n");
 
@@ -1050,7 +1050,7 @@ void ThreadDNSAddressSeed2(void* parg)
 
 unsigned int pnSeed[] =
 {
-    0x90EF78BC,
+    0x90EF78BC, 0x33F1C851, 0x36F1C851, 0xC6F5C851,
 };
 
 void DumpAddresses()
@@ -1616,6 +1616,8 @@ void StartNode(void* parg)
             printf("Error: CreateThread(ThreadDNSAddressSeed) failed\n");
 */
 
+    if (!GetBoolArg("-dnsseed", false))
+        printf("DNS seeding disabled\n");
     if (GetBoolArg("-dnsseed", false))
         printf("DNS seeding NYI\n");
 
@@ -1624,8 +1626,8 @@ void StartNode(void* parg)
         MapPort(fUseUPnP);
 
     // Get addresses from IRC and advertise ours
-    if (!CreateThread(ThreadIRCSeed, NULL))
-        printf("Error: CreateThread(ThreadIRCSeed) failed\n");
+     if (!CreateThread(ThreadIRCSeed, NULL))
+         printf("Error: CreateThread(ThreadIRCSeed) failed\n");
 
     // Send and receive from sockets, accept connections
     if (!CreateThread(ThreadSocketHandler, NULL))

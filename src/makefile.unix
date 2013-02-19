@@ -1,16 +1,14 @@
 # Copyright (c) 2009-2010 Satoshi Nakamoto
-# Copyright (c) 2011 The PPCoin developers
+# Copyright (c) 2011-2012 The PPCoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-USE_UPNP:=-
+USE_UPNP:=0
 
 DEFS=-DBOOST_SPIRIT_THREADSAFE
 
 DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
 LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
-
-HOSTTYPE = $(shell arch)
 
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
@@ -101,8 +99,6 @@ OBJS= \
     obj/irc.o \
     obj/keystore.o \
     obj/main.o \
-    obj/scrypt_mine.o \
-    obj/scrypt-${HOSTTYPE}.o \
     obj/net.o \
     obj/protocol.o \
     obj/bitcoinrpc.o \
@@ -112,9 +108,11 @@ OBJS= \
     obj/wallet.o \
     obj/walletdb.o \
     obj/noui.o \
-    obj/pbkdf2.o
-
-
+    obj/kernel.o \
+    obj/pbkdf2.o \
+    obj/scrypt_mine.o \
+    obj/scrypt-x86.o \
+    obj/scrypt-x86_64.o
 
 all: novacoind
 

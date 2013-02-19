@@ -509,6 +509,11 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Загружено %1 из %2 блоков истории транзакций.</translation>
     </message>
     <message>
+        <location filename="../bitcoingui.cpp" line="475"/>
+        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
+        <translation>Загружено %1 из %2 блоков истории транзакций (%3% завершено).</translation>
+    </message>
+    <message>
         <location filename="../bitcoingui.cpp" line="487"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>Загружено %1 блоков истории транзакций.</translation>
@@ -796,7 +801,7 @@ Address: %4
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Вы можете подписать сообщение ключом от своего адреса, чтобы доказать владенгие им. Будьте осторожны и не подписывайте текст, не относящийся лично к вам. ПОдписывайте только текст, с которым вы полностью согласны и который можете однозначно интерпретировать.</translation>
+        <translation>Вы можете подписать сообщение ключом от своего адреса, чтобы доказать владенгие им. Будьте осторожны и не подписывайте текст, не относящийся лично к вам. Подписывайте только текст, с которым вы полностью согласны и который можете однозначно интерпретировать.</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
