@@ -1,7 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2011-2012 The PPCoin developers
-// Copyright (c) 2012-2013 The NovaCoin developers
+// Copyright (c) 2011-2013 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_MAIN_H
@@ -43,6 +42,10 @@ inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONE
 static const int COINBASE_MATURITY_PPC = 500;
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
 static const int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+static const int STAKE_TARGET_SPACING = 10 * 60; // 10-minute block spacing 
+static const int STAKE_MIN_AGE = 60 * 60 * 24 * 30; // minimum age for coin age
+static const int STAKE_MAX_AGE = 60 * 60 * 24 * 90; // stake age of full weight
+
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
 #else
@@ -55,6 +58,11 @@ static const uint256 hashGenesisBlockTestNet("0x00000a060336cbb72fe969666d337b87
 static const int64 nMaxClockDrift = 2 * 60 * 60;        // two hours
 
 extern CScript COINBASE_FLAGS;
+
+
+
+
+
 
 extern CCriticalSection cs_main;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
@@ -83,9 +91,9 @@ extern std::map<uint256, CBlock*> mapOrphanBlocks;
 // Settings
 extern int64 nTransactionFee;
 
-extern bool fGenerateBitcoins;
-extern bool fLimitProcessors;
-extern int nLimitProcessors;
+
+
+
 
 class CReserveKey;
 class CTxDB;
@@ -740,7 +748,6 @@ public:
     bool CheckTransaction() const;
     bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
     bool GetCoinAge(CTxDB& txdb, uint64& nCoinAge) const;  // ppcoin: get transaction coin age
-    bool CheckProofOfStake(unsigned int nBits) const;
 
 protected:
     const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
@@ -884,7 +891,7 @@ public:
     // network and disk
     std::vector<CTransaction> vtx;
 
-    // ppcoin: block signature - signed by coin base txout[0]'s owner
+    // ppcoin: block signature - signed by one of the coin base txout[N]'s owner
     std::vector<unsigned char> vchBlockSig;
 
     // memory only
@@ -953,12 +960,25 @@ public:
         return thash;
     }
 
+
     int64 GetBlockTime() const
     {
         return (int64)nTime;
     }
 
     void UpdateTime(const CBlockIndex* pindexPrev);
+
+    // ppcoin: entropy bit for stake modifier if chosen by modifier
+    unsigned int GetStakeEntropyBit() const
+    {
+        uint160 hashSig = Hash160(vchBlockSig);
+        if (fDebug && GetBoolArg("-printstakemodifier"))
+            printf("GetStakeEntropyBit: hashSig=%s", hashSig.ToString().c_str());
+        hashSig >>= 159; // take the first bit of the hash
+        if (fDebug && GetBoolArg("-printstakemodifier"))
+            printf(" entropybit=%d\n", hashSig.Get64());
+        return hashSig.Get64();
+    }
 
     // ppcoin: two types of block: proof-of-work or proof-of-stake
     bool IsProofOfStake() const
@@ -1159,9 +1179,22 @@ public:
     int nHeight;
     int64 nMint;
     int64 nMoneySupply;
-    bool fProofOfStake; // ppcoin: is the block of proof-of-stake type
+
+    unsigned int nFlags;  // ppcoin: block index flags
+    enum  
+    {
+        BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
+        BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
+        BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
+    };
+
+    uint64 nStakeModifier; // hash modifier for proof-of-stake
+    unsigned int nStakeModifierChecksum; // checksum of index; in-memeory only
+
+    // proof-of-stake specific fields
     COutPoint prevoutStake;
     unsigned int nStakeTime;
+    uint256 hashProofOfStake;
 
     // block header
     int nVersion;
@@ -1182,7 +1215,10 @@ public:
         bnChainTrust = 0;
         nMint = 0;
         nMoneySupply = 0;
-        fProofOfStake = true;
+        nFlags = 0;
+        nStakeModifier = 0;
+        nStakeModifierChecksum = 0;
+        hashProofOfStake = 0;
         prevoutStake.SetNull();
         nStakeTime = 0;
 
@@ -1204,9 +1240,13 @@ public:
         bnChainTrust = 0;
         nMint = 0;
         nMoneySupply = 0;
-        fProofOfStake = block.IsProofOfStake();
-        if (fProofOfStake)
+        nFlags = 0;
+        nStakeModifier = 0;
+        nStakeModifierChecksum = 0;
+        hashProofOfStake = 0;
+        if (block.IsProofOfStake())
         {
+            SetProofOfStake();
             prevoutStake = block.vtx[1].vin[0].prevout;
             nStakeTime = block.vtx[1].nTime;
         }
@@ -1252,7 +1292,7 @@ public:
         bnTarget.SetCompact(nBits);
         if (bnTarget <= 0)
             return 0;
-        return (fProofOfStake? (CBigNum(1)<<256) / (bnTarget+1) : 1);
+        return (IsProofOfStake()? (CBigNum(1)<<256) / (bnTarget+1) : 1);
     }
 
     bool IsInMainChain() const
@@ -1262,7 +1302,7 @@ public:
 
     bool CheckIndex() const
     {
-        return IsProofOfWork() ? CheckProofOfWork(GetBlockHash(), nBits) : true;
+        return true;
     }
 
     bool EraseBlockFromDisk()
@@ -1310,20 +1350,53 @@ public:
 
     bool IsProofOfWork() const
     {
-        return !fProofOfStake;
+        return !(nFlags & BLOCK_PROOF_OF_STAKE);
     }
 
     bool IsProofOfStake() const
     {
-        return fProofOfStake;
+        return (nFlags & BLOCK_PROOF_OF_STAKE);
+    }
+
+    void SetProofOfStake()
+    {
+        nFlags |= BLOCK_PROOF_OF_STAKE;
+    }
+
+    unsigned int GetStakeEntropyBit() const
+    {
+        return ((nFlags & BLOCK_STAKE_ENTROPY) >> 1);
+    }
+
+    bool SetStakeEntropyBit(unsigned int nEntropyBit)
+    {
+        if (nEntropyBit > 1)
+            return false;
+        nFlags |= (nEntropyBit? BLOCK_STAKE_ENTROPY : 0);
+        return true;
+    }
+
+    bool GeneratedStakeModifier() const
+    {
+        return (nFlags & BLOCK_STAKE_MODIFIER);
+    }
+
+    void SetStakeModifier(uint64 nModifier, bool fGeneratedStakeModifier)
+    {
+        nStakeModifier = nModifier;
+        if (fGeneratedStakeModifier)
+            nFlags |= BLOCK_STAKE_MODIFIER;
     }
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, fProofOfStake=%d prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
+        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifier=%016"PRI64x", nStakeModifierChecksum=%08x, hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
             pprev, pnext, nFile, nBlockPos, nHeight,
             FormatMoney(nMint).c_str(), FormatMoney(nMoneySupply).c_str(),
-            fProofOfStake, prevoutStake.ToString().c_str(), nStakeTime,
+            GeneratedStakeModifier() ? "MOD" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW",
+            nStakeModifier, nStakeModifierChecksum, 
+            hashProofOfStake.ToString().c_str(),
+            prevoutStake.ToString().c_str(), nStakeTime,
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             GetBlockHash().ToString().substr(0,20).c_str());
     }
@@ -1366,16 +1439,19 @@ public:
         READWRITE(nHeight);
         READWRITE(nMint);
         READWRITE(nMoneySupply);
-        READWRITE(fProofOfStake);
-        if (fProofOfStake)
+        READWRITE(nFlags);
+        READWRITE(nStakeModifier);
+        if (IsProofOfStake())
         {
             READWRITE(prevoutStake);
             READWRITE(nStakeTime);
+            READWRITE(hashProofOfStake);
         }
         else if (fRead)
         {
             const_cast<CDiskBlockIndex*>(this)->prevoutStake.SetNull();
             const_cast<CDiskBlockIndex*>(this)->nStakeTime = 0;
+            const_cast<CDiskBlockIndex*>(this)->hashProofOfStake = 0;
         }
 
         // block header
@@ -1745,7 +1821,7 @@ public:
     bool CheckSignature()
     {
         CKey key;
-        if (!key.SetPubKey(ParseHex("04a0a849dd49b113d3179a332dd77715c43be4d0076e2f19e66de23dd707e56630f792f298dfd209bf042bb3561f4af6983f3d81e439737ab0bf7f898fecd21aab")))
+        if (!key.SetPubKey(ParseHex("043fa441fd4203d03f5df2b75ea14e36f20d39f43e7a61aa7552ab9bcd7ecb0e77a3be4585b13fcdaa22ef6e51f1ff6f2929bec2494385b086fb86610e33193195")))
             return error("CAlert::CheckSignature() : SetPubKey failed");
         if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
             return error("CAlert::CheckSignature() : verify signature failed");

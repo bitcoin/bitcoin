@@ -15,16 +15,16 @@ remotes:
 - "url": "https://github.com/ppcoin/ppcoin.git"
   "dir": "ppcoin"
 files:
-#- "qt-win32-4.7.4-gitian.zip"
+- "qt-win32-4.7.4-gitian.zip"
 - "boost-win32-1.47.0-gitian.zip"
 - "ppcoin-deps-0.0.1.zip"
 script: |
   #
-  #mkdir $HOME/qt
-  #cd $HOME/qt
-  #unzip ../build/qt-win32-4.7.4-gitian.zip
-  cd $HOME/build
-  #export PATH=$PATH:$HOME/qt/bin/
+  mkdir $HOME/qt
+  cd $HOME/qt
+  unzip ../build/qt-win32-4.7.4-gitian.zip
+  cd $HOME/build/
+  export PATH=$PATH:$HOME/qt/bin/
   #
   mkdir boost_1_47_0
   cd boost_1_47_0
@@ -51,9 +51,9 @@ script: |
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  #$HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_47_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_47_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1b OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1b/include QRENCODE_LIB_PATH=$HOME/build/qrencode-3.2.0/.libs QRENCODE_INCLUDE_PATH=$HOME/build/qrencode-3.2.0 USE_QRCODE=1 INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=ppcoin QMAKE_LFLAGS=-frandom-seed=ppcoin USE_BUILD_INFO=1
-  #make $MAKEOPTS
-  #cp release/bitcoin-qt.exe $OUTDIR/
+  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_47_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_47_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1b OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1b/include QRENCODE_LIB_PATH=$HOME/build/qrencode-3.2.0/.libs QRENCODE_INCLUDE_PATH=$HOME/build/qrencode-3.2.0 USE_QRCODE=1 INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=ppcoin QMAKE_LFLAGS=-frandom-seed=ppcoin USE_BUILD_INFO=1
+  make $MAKEOPTS
+  cp release/ppcoin-qt.exe $OUTDIR/
   #
   cd src
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
@@ -68,7 +68,7 @@ script: |
   git archive HEAD | tar -x -C nsis
   cd nsis/src
   mkdir ../release
-  #cp ../../release/* ../release/
+  cp ../../release/* ../release/
   cp ../../src/*.exe .
   makensis ../share/setup.nsi
   cp ../share/ppcoin-*-win32-setup.exe $OUTDIR/

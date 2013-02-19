@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin Developers
 // Copyright (c) 2011-2012 The PPCoin developers
-// Copyright (c) 2012-2013 The NovaCoin developers
+// Copyright (c) 2013 NovaCoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -366,7 +366,7 @@ public:
     void SetSecret(const CSecret& vchSecret, bool fCompressed)
     { 
         assert(vchSecret.size() == 32);
-        SetData(fTestNet ? 239 : 128, &vchSecret[0], vchSecret.size());
+        SetData(128 + (fTestNet ? CBitcoinAddress::PUBKEY_ADDRESS_TEST : CBitcoinAddress::PUBKEY_ADDRESS), &vchSecret[0], vchSecret.size());
         if (fCompressed)
             vchData.push_back(1);
     }
@@ -385,10 +385,10 @@ public:
         bool fExpectTestNet = false;
         switch(nVersion)
         {
-            case 128:
+             case (128 + CBitcoinAddress::PUBKEY_ADDRESS):
                 break;
 
-            case 239:
+            case (128 + CBitcoinAddress::PUBKEY_ADDRESS_TEST):
                 fExpectTestNet = true;
                 break;
 
