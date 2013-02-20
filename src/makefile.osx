@@ -90,6 +90,7 @@ OBJS= \
     obj/walletdb.o \
     obj/noui.o \
     obj/pbkdf2.o \
+    obj/kernel.o \
     obj/scrypt_mine.o \
     obj/scrypt-x86.o \
     obj/scrypt-x86_64.o
