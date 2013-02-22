@@ -8,6 +8,7 @@
 #include "crypter.h"
 #include "ui_interface.h"
 #include "base58.h"
+#include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
 
@@ -476,6 +477,16 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
 
         // Notify UI of new or updated transaction
         NotifyTransactionChanged(this, hash, fInsertedNew ? CT_NEW : CT_UPDATED);
+
+        // notify an external script when a wallet transaction comes in or is updated
+        std::string strCmd = GetArg("-walletnotify", "");
+
+        if ( !strCmd.empty())
+        {
+            boost::replace_all(strCmd, "%s", wtxIn.GetHash().GetHex());
+            boost::thread t(runCommand, strCmd); // thread runs free
+        }
+
     }
     return true;
 }
