@@ -34,6 +34,7 @@ public:
     int getNumBlocks() const;
     int getNumBlocksAtStartup();
 
+    double getVerificationProgress() const;
     QDateTime getLastBlockDate() const;
 
     //! Return true if client connected to testnet
