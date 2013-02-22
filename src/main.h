@@ -909,6 +909,15 @@ public:
     void Cleanup() {
         while (vout.size() > 0 && vout.back().IsNull())
             vout.pop_back();
+        if (vout.empty())
+            std::vector<CTxOut>().swap(vout);
+    }
+
+    void swap(CCoins &to) {
+        std::swap(to.fCoinBase, fCoinBase);
+        to.vout.swap(vout);
+        std::swap(to.nHeight, nHeight);
+        std::swap(to.nVersion, nVersion);
     }
 
     // equality test
@@ -2109,14 +2118,14 @@ class CCoinsView
 {
 public:
     // Retrieve the CCoins (unspent transaction outputs) for a given txid
-    virtual bool GetCoins(uint256 txid, CCoins &coins);
+    virtual bool GetCoins(const uint256 &txid, CCoins &coins);
 
     // Modify the CCoins for a given txid
-    virtual bool SetCoins(uint256 txid, const CCoins &coins);
+    virtual bool SetCoins(const uint256 &txid, const CCoins &coins);
 
     // Just check whether we have data for a given txid.
     // This may (but cannot always) return true for fully spent transactions
-    virtual bool HaveCoins(uint256 txid);
+    virtual bool HaveCoins(const uint256 &txid);
 
     // Retrieve the block index whose state this CCoinsView currently represents
     virtual CBlockIndex *GetBestBlock();
@@ -2142,9 +2151,9 @@ protected:
 
 public:
     CCoinsViewBacked(CCoinsView &viewIn);
-    bool GetCoins(uint256 txid, CCoins &coins);
-    bool SetCoins(uint256 txid, const CCoins &coins);
-    bool HaveCoins(uint256 txid);
+    bool GetCoins(const uint256 &txid, CCoins &coins);
+    bool SetCoins(const uint256 &txid, const CCoins &coins);
+    bool HaveCoins(const uint256 &txid);
     CBlockIndex *GetBestBlock();
     bool SetBestBlock(CBlockIndex *pindex);
     void SetBackend(CCoinsView &viewIn);
@@ -2163,9 +2172,9 @@ public:
     CCoinsViewCache(CCoinsView &baseIn, bool fDummy = false);
 
     // Standard CCoinsView methods
-    bool GetCoins(uint256 txid, CCoins &coins);
-    bool SetCoins(uint256 txid, const CCoins &coins);
-    bool HaveCoins(uint256 txid);
+    bool GetCoins(const uint256 &txid, CCoins &coins);
+    bool SetCoins(const uint256 &txid, const CCoins &coins);
+    bool HaveCoins(const uint256 &txid);
     CBlockIndex *GetBestBlock();
     bool SetBestBlock(CBlockIndex *pindex);
     bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex);
@@ -2173,7 +2182,7 @@ public:
     // Return a modifiable reference to a CCoins. Check HaveCoins first.
     // Many methods explicitly require a CCoinsViewCache because of this method, to reduce
     // copying.
-    CCoins &GetCoins(uint256 txid);
+    CCoins &GetCoins(const uint256 &txid);
 
     // Push the modifications applied to this cache to its base.
     // Failure to call this method before destruction will cause the changes to be forgotten.
@@ -2183,7 +2192,7 @@ public:
     unsigned int GetCacheSize();
 
 private:
-    std::map<uint256,CCoins>::iterator FetchCoins(uint256 txid);
+    std::map<uint256,CCoins>::iterator FetchCoins(const uint256 &txid);
 };
 
 /** CCoinsView that brings transactions from a memorypool into view.
@@ -2195,8 +2204,8 @@ protected:
 
 public:
     CCoinsViewMemPool(CCoinsView &baseIn, CTxMemPool &mempoolIn);
-    bool GetCoins(uint256 txid, CCoins &coins);
-    bool HaveCoins(uint256 txid);
+    bool GetCoins(const uint256 &txid, CCoins &coins);
+    bool HaveCoins(const uint256 &txid);
 };
 
 /** Global variable that points to the active CCoinsView (protected by cs_main) */
