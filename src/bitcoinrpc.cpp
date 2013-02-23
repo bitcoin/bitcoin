@@ -1806,6 +1806,50 @@ Value validateaddress(const Array& params, bool fHelp)
     return ret;
 }
 
+Value validatepubkey(const Array& params, bool fHelp)
+{
+    if (fHelp || !params.size() || params.size() > 2)
+        throw runtime_error(
+            "validatepubkey <novacoinpubkey>\n"
+            "Return information about <novacoinpubkey>.");
+
+    std::vector<unsigned char> vchPubKey = ParseHex(params[0].get_str());
+    bool isValid;
+
+    if(vchPubKey.size() == 33) // Compressed key
+        isValid = (vchPubKey[0] == 0x02 || vchPubKey[0] == 0x03);
+    else if(vchPubKey.size() == 65) // Uncompressed key
+        isValid = vchPubKey[0] == 0x04;
+    else
+        isValid = false;
+
+    CBitcoinAddress address(vchPubKey);
+    isValid = isValid ? address.IsValid() : false;
+
+    Object ret;
+    ret.push_back(Pair("isvalid", isValid));
+    if (isValid)
+    {
+        // Call Hash160ToAddress() so we always return current ADDRESSVERSION
+        // version of the address:
+        string currentAddress = address.ToString();
+        ret.push_back(Pair("address", currentAddress));
+        if (pwalletMain->HaveKey(address))
+        {
+            ret.push_back(Pair("ismine", true));
+            CKey key;
+            key.SetPubKey(vchPubKey);
+            ret.push_back(Pair("iscompressed", key.IsCompressed()));
+        }
+        else
+            ret.push_back(Pair("ismine", false));
+        if (pwalletMain->mapAddressBook.count(address))
+            ret.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
+    }
+    return ret;
+}
+
+
 Value getwork(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -2539,6 +2583,7 @@ static const CRPCCommand vRPCCommands[] =
     { "walletlock",             &walletlock,             true },
     { "encryptwallet",          &encryptwallet,          false },
     { "validateaddress",        &validateaddress,        true },
+    { "validatepubkey",         &validatepubkey,         true },
     { "getbalance",             &getbalance,             false },
     { "move",                   &movecmd,                false },
     { "sendfrom",               &sendfrom,               false },
