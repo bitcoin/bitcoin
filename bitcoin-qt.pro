@@ -208,7 +208,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/leveldb.h \
     src/threadsafety.h
 
-SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
+SOURCES += src/qt/bitcoin.cpp \
+    src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
     src/qt/addresstablemodel.cpp \
     src/qt/optionsdialog.cpp \
@@ -272,11 +273,9 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/leveldb.cpp \
     src/txdb.cpp
 
-RESOURCES += \
-    src/qt/bitcoin.qrc
+RESOURCES += src/qt/bitcoin.qrc
 
-FORMS += \
-    src/qt/forms/sendcoinsdialog.ui \
+FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/addressbookpage.ui \
     src/qt/forms/signverifymessagedialog.ui \
     src/qt/forms/aboutdialog.ui \
