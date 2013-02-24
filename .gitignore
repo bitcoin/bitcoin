@@ -16,6 +16,10 @@ src/test_bitcoin
 Makefile
 bitcoin-qt
 
+# Unit-tests
+Makefile.test
+bitcoin-qt_test
+
 # Resources cpp
 qrc_*.cpp
 
