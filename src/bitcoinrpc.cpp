@@ -114,6 +114,19 @@ HexBits(unsigned int nBits)
     return HexStr(BEGIN(uBits.cBits), END(uBits.cBits));
 }
 
+unsigned int BitsHex(std::string HexBits)
+{
+    union {
+        int32_t nBits;
+        char cBits[4];
+    } uBits;
+
+    vector<unsigned char> vchBits = ParseHex(HexBits);
+    copy(vchBits.begin(), vchBits.begin() + 4, uBits.cBits);
+    uBits.nBits = htonl((int32_t)uBits.nBits);
+    return uBits.nBits;
+}
+
 void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
@@ -846,6 +859,28 @@ Value getbalance(const Array& params, bool fHelp)
 
     return ValueFromAmount(nBalance);
 }
+
+
+Value getpowreward(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "getpowreward [nBits]\n"
+            "Returns PoW reward for block with provided difficulty.");
+
+    if (params.size() == 0)
+        throw JSONRPCError(-200, "no bits provided");
+
+    std::string sBits = params[0].get_str();
+
+    if (sBits.length() != 8)
+        throw JSONRPCError(-201, "incorrect bits provided");
+
+    unsigned int nBits = BitsHex(sBits);
+
+    return (int)GetProofOfWorkReward(nBits);
+}
+
 
 
 Value movecmd(const Array& params, bool fHelp)
@@ -2560,6 +2595,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getblocknumber",         &getblocknumber,         true },
     { "getconnectioncount",     &getconnectioncount,     true },
     { "getdifficulty",          &getdifficulty,          true },
+    { "getpowreward",           &getpowreward,           true },
     { "getgenerate",            &getgenerate,            true },
     { "setgenerate",            &setgenerate,            true },
     { "gethashespersec",        &gethashespersec,        true },
