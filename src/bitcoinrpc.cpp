@@ -211,17 +211,19 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool fPri
     {
         if (fPrintTransactionDetail)
         {
-            txinfo.push_back(tx.ToStringShort());
-            txinfo.push_back(DateTimeStrFormat(tx.nTime));
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-                txinfo.push_back(txin.ToStringShort());
-            BOOST_FOREACH(const CTxOut& txout, tx.vout)
-                txinfo.push_back(txout.ToStringShort());
+            Object entry;
+
+            entry.push_back(Pair("txid", tx.GetHash().GetHex()));
+            TxToJSON(tx, entry);
+            entry.push_back(Pair("time", (boost::int64_t)tx.nTime));
+
+            txinfo.push_back(entry);
         }
         else
             txinfo.push_back(tx.GetHash().GetHex());
     }
-    result.push_back(Pair("tx", txinfo));
+        result.push_back(Pair("tx", txinfo));
+
     return result;
 }
 
