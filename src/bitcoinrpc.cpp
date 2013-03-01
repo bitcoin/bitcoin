@@ -127,6 +127,40 @@ unsigned int BitsHex(std::string HexBits)
     return uBits.nBits;
 }
 
+void TxToJSON(const CTransaction &tx, Object& entry)
+{
+    entry.push_back(Pair("version", tx.nVersion));
+    entry.push_back(Pair("locktime", (boost::int64_t)tx.nLockTime));
+    entry.push_back(Pair("size", (boost::int64_t)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION)));
+    Array vin;
+    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    {
+        Object in;
+        if (tx.IsCoinBase())
+            in.push_back(Pair("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
+        else
+        {
+            Object prevout;
+            prevout.push_back(Pair("hash", txin.prevout.hash.GetHex()));
+            prevout.push_back(Pair("n", (boost::int64_t)txin.prevout.n));
+            in.push_back(Pair("prevout", prevout));
+            in.push_back(Pair("scriptSig", txin.scriptSig.ToString()));
+        }
+        in.push_back(Pair("sequence", (boost::int64_t)txin.nSequence));
+        vin.push_back(in);
+    }
+    entry.push_back(Pair("vin", vin));
+    Array vout;
+    BOOST_FOREACH(const CTxOut& txout, tx.vout)
+    {
+        Object out;
+        out.push_back(Pair("value", ValueFromAmount(txout.nValue)));
+        out.push_back(Pair("scriptPubKey", txout.scriptPubKey.ToString()));
+        vout.push_back(out);
+    }
+    entry.push_back(Pair("vout", vout));
+}
+
 void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
@@ -1534,6 +1568,7 @@ Value listsinceblock(const Array& params, bool fHelp)
     return ret;
 }
 
+/*
 Value gettransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -1564,6 +1599,75 @@ Value gettransaction(const Array& params, bool fHelp)
     Array details;
     ListTransactions(pwalletMain->mapWallet[hash], "*", 0, false, details);
     entry.push_back(Pair("details", details));
+
+    return entry;
+}
+*/
+
+
+Value gettransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "gettransaction <txid>\n"
+            "Get detailed information about <txid>");
+
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    Object entry;
+
+    if (pwalletMain->mapWallet.count(hash))
+    {
+        const CWalletTx& wtx = pwalletMain->mapWallet[hash];
+
+        TxToJSON(wtx, entry);
+
+        int64 nCredit = wtx.GetCredit();
+        int64 nDebit = wtx.GetDebit();
+        int64 nNet = nCredit - nDebit;
+        int64 nFee = (wtx.IsFromMe() ? wtx.GetValueOut() - nDebit : 0);
+
+        entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
+        if (wtx.IsFromMe())
+            entry.push_back(Pair("fee", ValueFromAmount(nFee)));
+
+        WalletTxToJSON(wtx, entry);
+
+        Array details;
+        ListTransactions(pwalletMain->mapWallet[hash], "*", 0, false, details);
+        entry.push_back(Pair("details", details));
+    }
+    else
+    {
+        CTransaction tx;
+        uint256 hashBlock = 0;
+        if (GetTransaction(hash, tx, hashBlock))
+        {
+            entry.push_back(Pair("txid", hash.GetHex()));
+            TxToJSON(tx, entry);
+            if (hashBlock == 0)
+                entry.push_back(Pair("confirmations", 0));
+            else
+            {
+                entry.push_back(Pair("blockhash", hashBlock.GetHex()));
+                map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
+                if (mi != mapBlockIndex.end() && (*mi).second)
+                {
+                    CBlockIndex* pindex = (*mi).second;
+                    if (pindex->IsInMainChain())
+                    {
+                        entry.push_back(Pair("confirmations", 1 + nBestHeight - pindex->nHeight));
+                        entry.push_back(Pair("time", (boost::int64_t)pindex->nTime));
+                    }
+                    else
+                        entry.push_back(Pair("confirmations", 0));
+                }
+            }
+        }
+        else
+            throw JSONRPCError(-5, "No information available about transaction");
+    }
 
     return entry;
 }
@@ -1882,6 +1986,137 @@ Value validatepubkey(const Array& params, bool fHelp)
             ret.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
     }
     return ret;
+}
+
+Value getworkex(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 2)
+        throw runtime_error(
+            "getworkex [data, coinbase]\n"
+            "If [data, coinbase] is not specified, returns extended work data.\n"
+        );
+
+    if (vNodes.empty())
+        throw JSONRPCError(-9, "NovaCoin is not connected!");
+
+    if (IsInitialBlockDownload())
+        throw JSONRPCError(-10, "NovaCoin is downloading blocks...");
+
+    typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
+    static mapNewBlock_t mapNewBlock;
+    static vector<CBlock*> vNewBlock;
+    static CReserveKey reservekey(pwalletMain);
+
+    if (params.size() == 0)
+    {
+        // Update block
+        static unsigned int nTransactionsUpdatedLast;
+        static CBlockIndex* pindexPrev;
+        static int64 nStart;
+        static CBlock* pblock;
+        if (pindexPrev != pindexBest ||
+            (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 60))
+        {
+            if (pindexPrev != pindexBest)
+            {
+                // Deallocate old blocks since they're obsolete now
+                mapNewBlock.clear();
+                BOOST_FOREACH(CBlock* pblock, vNewBlock)
+                    delete pblock;
+                vNewBlock.clear();
+            }
+            nTransactionsUpdatedLast = nTransactionsUpdated;
+            pindexPrev = pindexBest;
+            nStart = GetTime();
+
+            // Create new block
+            pblock = CreateNewBlock(pwalletMain);
+            if (!pblock)
+                throw JSONRPCError(-7, "Out of memory");
+            vNewBlock.push_back(pblock);
+        }
+
+        // Update nTime
+        pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+        pblock->nNonce = 0;
+
+        // Update nExtraNonce
+        static unsigned int nExtraNonce = 0;
+        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
+
+        // Save
+        mapNewBlock[pblock->hashMerkleRoot] = make_pair(pblock, pblock->vtx[0].vin[0].scriptSig);
+
+        // Prebuild hash buffers
+        char pmidstate[32];
+        char pdata[128];
+        char phash1[64];
+        FormatHashBuffers(pblock, pmidstate, pdata, phash1);
+
+        uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+
+        CTransaction coinbaseTx = pblock->vtx[0];
+        std::vector<uint256> merkle = pblock->GetMerkleBranch(0);
+
+        Object result;
+        result.push_back(Pair("data",     HexStr(BEGIN(pdata), END(pdata))));
+        result.push_back(Pair("target",   HexStr(BEGIN(hashTarget), END(hashTarget))));
+
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << coinbaseTx;
+        result.push_back(Pair("coinbase", HexStr(ssTx.begin(), ssTx.end())));
+
+        Array merkle_arr;
+        printf("DEBUG: merkle size %i\n", merkle.size());
+
+        BOOST_FOREACH(uint256 merkleh, merkle) {
+            printf("%s\n", merkleh.ToString().c_str());
+            merkle_arr.push_back(HexStr(BEGIN(merkleh), END(merkleh)));
+        }
+
+        result.push_back(Pair("merkle", merkle_arr));
+
+
+        return result;
+    }
+    else
+    {
+        // Parse parameters
+        vector<unsigned char> vchData = ParseHex(params[0].get_str());
+        vector<unsigned char> coinbase;
+
+        if(params.size() == 2)
+            coinbase = ParseHex(params[1].get_str());
+
+        if (vchData.size() != 128)
+            throw JSONRPCError(-8, "Invalid parameter");
+
+        CBlock* pdata = (CBlock*)&vchData[0];
+
+        // Byte reverse
+        for (int i = 0; i < 128/4; i++)
+            ((unsigned int*)pdata)[i] = ByteReverse(((unsigned int*)pdata)[i]);
+
+        // Get saved block
+        if (!mapNewBlock.count(pdata->hashMerkleRoot))
+            return false;
+        CBlock* pblock = mapNewBlock[pdata->hashMerkleRoot].first;
+
+        pblock->nTime = pdata->nTime;
+        pblock->nNonce = pdata->nNonce;
+
+        if(coinbase.size() == 0)
+            pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
+        else
+            CDataStream(coinbase, SER_NETWORK, PROTOCOL_VERSION) >> pblock->vtx[0]; // FIXME - HACK!
+
+        pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+
+        if (!pblock->SignBlock(*pwalletMain))
+            throw JSONRPCError(-100, "Unable to sign block, wallet locked?");
+
+        return CheckWork(pblock, *pwalletMain, reservekey);
+    }
 }
 
 
@@ -2633,6 +2868,7 @@ static const CRPCCommand vRPCCommands[] =
     { "signmessage",            &signmessage,            false },
     { "verifymessage",          &verifymessage,          false },
     { "getwork",                &getwork,                true },
+    { "getworkex",              &getworkex,                true },
     { "listaccounts",           &listaccounts,           false },
     { "settxfee",               &settxfee,               false },
     { "getmemorypool",          &getmemorypool,          true },
