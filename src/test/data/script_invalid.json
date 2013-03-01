@@ -39,6 +39,9 @@
 ["1", "RETURN"],
 ["1", "DUP IF RETURN ENDIF"],
 
+["1", "RETURN 'data'", "canonical prunable txout format"],
+["0 IF", "RETURN ENDIF 1", "still prunable because IF/ENDIF can't span scriptSig/scriptPubKey"],
+
 ["0", "VERIFY 1"],
 ["1", "VERIFY"],
 ["1", "VERIFY 0"],
