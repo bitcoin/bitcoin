@@ -15,6 +15,7 @@
 
 class CAddress;
 class CAddrMan;
+class CBandwidthMan;
 class CBlockLocator;
 class CDiskBlockIndex;
 class CMasterKey;
@@ -310,18 +311,83 @@ public:
 
 
 
+/** Abstract class to allow building of .dat databases */
+class CDatDB
+{
+private:
+    boost::filesystem::path pathDataDir;
+    boost::filesystem::path pathDat;
+    
+    std::string strFilename;
+protected:
+    CDatDB(const char* pszFilename);
+
+    virtual bool Write(CDataStream& ssWriteStream);
+    virtual bool Read(CDataStream& ssReadStream);
+};
+
+/** Basic template wrapper for CDatDB, to be used by types that have serialization operator overloads */
+template <typename T>
+class CSerialDatDB : public CDatDB
+{
+public:
+    CSerialDatDB(const char* pszFilename);
+    bool Write(const T& writeData);
+    bool Read(T& readData);
+};
+
+
+template <typename T>
+CSerialDatDB<T>::CSerialDatDB(const char* pszFilename) : CDatDB(pszFilename)
+{
+
+}
+
+template <typename T>
+bool CSerialDatDB<T>::Write(const T& writeData)
+{
+    // Create new write stream
+    CDataStream ssWriteStream(SER_DISK, CLIENT_VERSION);
+
+    // serialize addresses
+    ssWriteStream << writeData;
+
+    return CDatDB::Write(ssWriteStream);
+}
+
+template <typename T>
+bool CSerialDatDB<T>::Read(T& readData)
+{
+    CDataStream ssReadStream(SER_DISK, CLIENT_VERSION);
+    if (!CDatDB::Read(ssReadStream))
+        return false;
+
+    try {
+        // de-serialize address data into one CAddrMan object
+        ssReadStream >> readData;
+    }
+    catch (std::exception &e) {
+        return error("CAddrman::Read() : I/O error or stream data corrupted");
+    }
+
+    return true;
+}
+
 
 
 
 /** Access to the (IP) address database (peers.dat) */
-class CAddrDB
+class CAddrDB : public CSerialDatDB<CAddrMan>
 {
-private:
-    boost::filesystem::path pathAddr;
 public:
-    CAddrDB();
-    bool Write(const CAddrMan& addr);
-    bool Read(CAddrMan& addr);
+    CAddrDB() : CSerialDatDB<CAddrMan>("peers.dat") {};
+};
+
+/** Access to the bandwidth database */
+class CBandwidthDB : public CSerialDatDB<CBandwidthMan>
+{
+public:
+    CBandwidthDB() : CSerialDatDB<CBandwidthMan>("bandwidth.dat") {};
 };
 
 #endif // BITCOIN_DB_H

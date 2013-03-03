@@ -58,6 +58,7 @@ uint64 nLocalHostNonce = 0;
 array<int, THREAD_MAX> vnThreadsRunning;
 static std::vector<SOCKET> vhListenSocket;
 CAddrMan addrman;
+CBandwidthMan bandwidthman;
 
 vector<CNode*> vNodes;
 CCriticalSection cs_vNodes;

@@ -92,7 +92,8 @@ OBJS= \
     obj/hash.o \
     obj/bloom.o \
     obj/leveldb.o \
-    obj/txdb.o
+    obj/txdb.o \
+    obj/bandwidthman.o
 
 all: bitcoind.exe
 

@@ -20,6 +20,7 @@
 #include "addrman.h"
 #include "hash.h"
 #include "bloom.h"
+#include "bandwidthman.h"
 
 class CNode;
 class CBlockIndex;
@@ -94,6 +95,7 @@ extern uint64 nLocalServices;
 extern uint64 nLocalHostNonce;
 extern boost::array<int, THREAD_MAX> vnThreadsRunning;
 extern CAddrMan addrman;
+extern CBandwidthMan bandwidthman;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
@@ -349,17 +351,26 @@ public:
     }
 
     // TODO: Document the precondition of this function.  Is cs_vSend locked?
-    void EndMessage() UNLOCK_FUNCTION(cs_vSend)
+    bool EndMessage(const char* pszCommand) UNLOCK_FUNCTION(cs_vSend)
     {
         if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
         {
             printf("dropmessages DROPPING SEND MESSAGE\n");
             AbortMessage();
-            return;
+            // Return true, simulating a send transmission error.
+            return true;
         }
 
         if (nHeaderStart < 0)
-            return;
+            return true;
+
+        // If not allowed to send, abort message and return false.
+        if (!bandwidthman.AllowSendCommand(pszCommand, vSend.size()))
+        {
+            printf("bandwidthman DROPPING SEND MESSAGE\n");
+            AbortMessage();
+            return false;
+        }
 
         // Set the size
         unsigned int nSize = vSend.size() - nMessageStart;
@@ -379,167 +390,178 @@ public:
         nHeaderStart = -1;
         nMessageStart = -1;
         LEAVE_CRITICAL_SECTION(cs_vSend);
+        return true;
     }
 
     void PushVersion();
 
 
-    void PushMessage(const char* pszCommand)
+    bool PushMessage(const char* pszCommand)
     {
         try
         {
             BeginMessage(pszCommand);
-            EndMessage();
+            return EndMessage(pszCommand);
         }
         catch (...)
         {
             AbortMessage();
             throw;
         }
+        return false;
     }
 
     template<typename T1>
-    void PushMessage(const char* pszCommand, const T1& a1)
+    bool PushMessage(const char* pszCommand, const T1& a1)
     {
         try
         {
             BeginMessage(pszCommand);
             vSend << a1;
-            EndMessage();
+            return EndMessage(pszCommand);
         }
         catch (...)
         {
             AbortMessage();
             throw;
         }
+        return false;
     }
 
     template<typename T1, typename T2>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2)
+    bool PushMessage(const char* pszCommand, const T1& a1, const T2& a2)
     {
         try
         {
             BeginMessage(pszCommand);
             vSend << a1 << a2;
-            EndMessage();
+            return EndMessage(pszCommand);
         }
         catch (...)
         {
             AbortMessage();
             throw;
         }
+        return false;
     }
 
     template<typename T1, typename T2, typename T3>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3)
+    bool PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3)
     {
         try
         {
             BeginMessage(pszCommand);
             vSend << a1 << a2 << a3;
-            EndMessage();
+            return EndMessage(pszCommand);
         }
         catch (...)
         {
             AbortMessage();
             throw;
         }
+        return false;
     }
 
     template<typename T1, typename T2, typename T3, typename T4>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4)
+    bool PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4)
     {
         try
         {
             BeginMessage(pszCommand);
             vSend << a1 << a2 << a3 << a4;
-            EndMessage();
+            return EndMessage(pszCommand);
         }
         catch (...)
         {
             AbortMessage();
             throw;
         }
+        return false;
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5)
+    bool PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5)
     {
         try
         {
             BeginMessage(pszCommand);
             vSend << a1 << a2 << a3 << a4 << a5;
-            EndMessage();
+            return EndMessage(pszCommand);
         }
         catch (...)
         {
             AbortMessage();
             throw;
         }
+        return false;
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6)
+    bool PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6)
     {
         try
         {
             BeginMessage(pszCommand);
             vSend << a1 << a2 << a3 << a4 << a5 << a6;
-            EndMessage();
+            return EndMessage(pszCommand);
         }
         catch (...)
         {
             AbortMessage();
             throw;
         }
+        return false;
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7)
+    bool PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7)
     {
         try
         {
             BeginMessage(pszCommand);
             vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7;
-            EndMessage();
+            return EndMessage(pszCommand);
         }
         catch (...)
         {
             AbortMessage();
             throw;
         }
+        return false;
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8)
+    bool PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8)
     {
         try
         {
             BeginMessage(pszCommand);
             vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8;
-            EndMessage();
+            return EndMessage(pszCommand);
         }
         catch (...)
         {
             AbortMessage();
             throw;
         }
+        return false;
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8, const T9& a9)
+    bool PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8, const T9& a9)
     {
         try
         {
             BeginMessage(pszCommand);
             vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8 << a9;
-            EndMessage();
+            return EndMessage(pszCommand);
         }
         catch (...)
         {
             AbortMessage();
             throw;
         }
+        return false;
     }
 
     void PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd);

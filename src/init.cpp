@@ -1010,7 +1010,20 @@ bool AppInit2()
     printf("Loaded %i addresses from peers.dat  %"PRI64d"ms\n",
            addrman.size(), GetTimeMillis() - nStart);
 
-    // ********************************************************* Step 11: start node
+    // ********************************************************* Step 11: load bandwidth manager
+    bandwidthman.LoadConfiguration();
+    nStart = GetTimeMillis();
+    
+    {
+        CBandwidthDB bdb;
+        if (!bdb.Read(bandwidthman))
+            printf("Invalid or missing bandwidth.dat; recreating\n");
+    }
+    
+    printf("Loaded bandwidth info from bandwidth.dat  %"PRI64d"ms\n",
+           GetTimeMillis() - nStart);
+
+    // ********************************************************* Step 12: start node
 
     if (!CheckDiskSpace())
         return false;
@@ -1030,7 +1043,7 @@ bool AppInit2()
     if (fServer)
         NewThread(ThreadRPCServer, NULL);
 
-    // ********************************************************* Step 12: finished
+    // ********************************************************* Step 13: finished
 
     uiInterface.InitMessage(_("Done loading"));
 

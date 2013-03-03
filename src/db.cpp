@@ -469,67 +469,62 @@ void CDBEnv::Flush(bool fShutdown)
 
 
 
-
-
-
-
-
 //
-// CAddrDB
+// CDatDB
 //
-
-
-CAddrDB::CAddrDB()
+CDatDB::CDatDB(const char* pszFilename) : strFilename(pszFilename)
 {
-    pathAddr = GetDataDir() / "peers.dat";
+    pathDataDir = GetDataDir();
+    pathDat = pathDataDir / strFilename;
 }
 
-bool CAddrDB::Write(const CAddrMan& addr)
-{
+bool CDatDB::Write(CDataStream& ssWriteStream)
+{   
     // Generate random temporary filename
     unsigned short randv = 0;
     RAND_bytes((unsigned char *)&randv, sizeof(randv));
-    std::string tmpfn = strprintf("peers.dat.%04x", randv);
+    std::string tmpfn = strprintf("%s.%04x", strFilename.c_str(), randv);
 
-    // serialize addresses, checksum data up to that point, then append csum
-    CDataStream ssPeers(SER_DISK, CLIENT_VERSION);
-    ssPeers << FLATDATA(pchMessageStart);
-    ssPeers << addr;
-    uint256 hash = Hash(ssPeers.begin(), ssPeers.end());
-    ssPeers << hash;
+    // Prepend message start
+    CFlatData& cfdMessageStart = FLATDATA(pchMessageStart);
+    ssWriteStream.insert(ssWriteStream.begin(), cfdMessageStart.begin(), cfdMessageStart.end());
+
+    // Calculate checksum and append it to file
+    uint256 hash = Hash(ssWriteStream.begin(), ssWriteStream.end());
+    ssWriteStream << hash;
 
     // open temp output file, and associate with CAutoFile
-    boost::filesystem::path pathTmp = GetDataDir() / tmpfn;
+    boost::filesystem::path pathTmp = pathDataDir / tmpfn;
     FILE *file = fopen(pathTmp.string().c_str(), "wb");
     CAutoFile fileout = CAutoFile(file, SER_DISK, CLIENT_VERSION);
     if (!fileout)
-        return error("CAddrman::Write() : open failed");
+        return error("CDatDB::Write() : open failed");
 
     // Write and commit header, data
     try {
-        fileout << ssPeers;
+        fileout << ssWriteStream;
     }
     catch (std::exception &e) {
-        return error("CAddrman::Write() : I/O error");
+        return error("CDatDB::Write() : I/O error");
     }
     FileCommit(fileout);
     fileout.fclose();
 
     // replace existing peers.dat, if any, with new peers.dat.XXXX
-    if (!RenameOver(pathTmp, pathAddr))
-        return error("CAddrman::Write() : Rename-into-place failed");
+    if (!RenameOver(pathTmp, pathDat))
+        return error("CDatDB::Write() : Rename-into-place failed");
 
-    return true;
+    return true;  
 }
 
-bool CAddrDB::Read(CAddrMan& addr)
+bool CDatDB::Read(CDataStream& ssReadStream)
 {
     // open input file, and associate with CAutoFile
-    FILE *file = fopen(pathAddr.string().c_str(), "rb");
+    FILE *file = fopen(pathDat.string().c_str(), "rb");
     CAutoFile filein = CAutoFile(file, SER_DISK, CLIENT_VERSION);
     if (!filein)
-        return error("CAddrman::Read() : open failed");
-
+        return error("CDatDB::Read() : open failed");
+    
     // use file size to size memory buffer
     int fileSize = GetFilesize(filein);
     int dataSize = fileSize - sizeof(uint256);
@@ -543,33 +538,34 @@ bool CAddrDB::Read(CAddrMan& addr)
         filein >> hashIn;
     }
     catch (std::exception &e) {
-        return error("CAddrman::Read() 2 : I/O error or stream data corrupted");
+        return error("CDatDB::Read() 2 : I/O error or stream data corrupted");
     }
     filein.fclose();
 
-    CDataStream ssPeers(vchData, SER_DISK, CLIENT_VERSION);
-
     // verify stored checksum matches input data
-    uint256 hashTmp = Hash(ssPeers.begin(), ssPeers.end());
+    CDataStream ssData(vchData, SER_DISK, CLIENT_VERSION);
+    uint256 hashTmp = Hash(ssData.begin(), ssData.end());
     if (hashIn != hashTmp)
-        return error("CAddrman::Read() : checksum mismatch; data corrupted");
+        return error("CDatDB::Read() : checksum mismatch; data corrupted");
 
     unsigned char pchMsgTmp[4];
+
     try {
         // de-serialize file header (pchMessageStart magic number) and
-        ssPeers >> FLATDATA(pchMsgTmp);
+        ssData >> FLATDATA(pchMsgTmp);
 
         // verify the network matches ours
         if (memcmp(pchMsgTmp, pchMessageStart, sizeof(pchMsgTmp)))
-            return error("CAddrman::Read() : invalid network magic number");
+            return error("CDatDB::Read() : invalid network magic number");
 
-        // de-serialize address data into one CAddrMan object
-        ssPeers >> addr;
+        ssReadStream += ssData;
+
     }
     catch (std::exception &e) {
-        return error("CAddrman::Read() : I/O error or stream data corrupted");
+        return error("CDatDB::Read() : I/O error or stream data corrupted");
     }
 
     return true;
 }
+
 
