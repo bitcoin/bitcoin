@@ -131,6 +131,7 @@ private:
     BIGNUM* bnbeta;
     BIGNUM* bnlambda;
     EC_POINT* G128; // G * 2^128
+    EC_GROUP* group;
 
     // Split a secp256k1 exponent k into two smaller ones k1 and k2 such that for any point Y,
     // k*Y = k1*Y + k2*Y', where Y' = lambda*Y is very fast
@@ -172,7 +173,7 @@ private:
     }
 
     // p2 = lambda*p, where lambda is chosen such that this operation is very fast
-    void mullambda(const EC_GROUP *group, EC_POINT *p2, const EC_POINT *p, BN_CTX *ctx) {
+    void mullambda(const EC_GROUP *group_, EC_POINT *p2, const EC_POINT *p, BN_CTX *ctx) {
         BN_CTX_start(ctx);
         BIGNUM *x = BN_CTX_get(ctx);
         BIGNUM *y = BN_CTX_get(ctx);
@@ -204,13 +205,14 @@ public:
         static const unsigned char lambda[] = { 0x53, 0x63, 0xad, 0x4c, 0xc0, 0x5c, 0x30, 0xe0, 0xa5, 0x26, 0x1c, 0x02, 0x88, 0x12, 0x64, 0x5a, 0x12, 0x2e, 0x22, 0xea, 0x20, 0x81, 0x66, 0x78, 0xdf, 0x02, 0x96, 0x7c, 0x1b, 0x23, 0xbd, 0x72 };
 
         EC_KEY *pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
-        const EC_GROUP *group = EC_KEY_get0_group(pkey);
         BN_CTX *ctx = BN_CTX_new();
         BN_CTX_start(ctx);
         BIGNUM *bn128 = BN_CTX_get(ctx);
 
         bnp = BN_new();
         order = BN_new();
+        group = EC_GROUP_dup(EC_KEY_get0_group(pkey));
+        EC_GROUP_precompute_mult(group, ctx);
         EC_GROUP_get_curve_GFp(group, bnp, NULL, NULL, ctx);
         EC_GROUP_get_order(group, order, ctx);
         bna1b2   = BN_bin2bn(a1b2,   sizeof(a1b2),   NULL);
@@ -230,6 +232,7 @@ public:
     }
 
     ~CSecp256k1Math() {
+        EC_GROUP_free(group);
         EC_POINT_free(G128);
         BN_free(order);
         BN_free(bnp);
@@ -241,7 +244,7 @@ public:
     }
 
     // calculate r = n*G + m*q
-    int EC_POINT_mul(const EC_GROUP *group, EC_POINT *r, const BIGNUM *n, const EC_POINT *q, const BIGNUM *m, BN_CTX *ctx) {
+    int EC_POINT_mul(const EC_GROUP *group_, EC_POINT *r, const BIGNUM *n, const EC_POINT *q, const BIGNUM *m, BN_CTX *ctx) {
         BN_CTX_start(ctx);
         BIGNUM *na = BN_CTX_get(ctx);
         BIGNUM *nb = BN_CTX_get(ctx);
