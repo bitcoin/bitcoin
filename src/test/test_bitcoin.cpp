@@ -6,6 +6,7 @@
 #include "txdb.h"
 #include "main.h"
 #include "wallet.h"
+#include "key.h"
 #include "util.h"
 
 CWallet* pwalletMain;
@@ -20,6 +21,7 @@ struct TestingSetup {
 
     TestingSetup() {
         fPrintToDebugger = true; // don't want to write to debug.log file
+        fOptimizedEC = true;
         noui_connect();
         bitdb.MakeMock();
         pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));

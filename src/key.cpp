@@ -9,6 +9,8 @@
 
 #include "key.h"
 
+bool fOptimizedEC = false;
+
 // Generate a private key from just the secret parameter
 int EC_KEY_regenerate_key(EC_KEY *eckey, BIGNUM *priv_key)
 {
@@ -633,16 +635,21 @@ bool CKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>& v
 
 bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSig)
 {
-    const unsigned char *ptr = &vchSig[0];
-    ECDSA_SIG *sig = d2i_ECDSA_SIG(NULL, &ptr, vchSig.size());
-    bool ret = (secp256k1_ecdsa_do_verify((unsigned char*)&hash, sig, pkey) == 1);
+    if (fOptimizedEC) {
+        const unsigned char *ptr = &vchSig[0];
+        ECDSA_SIG *sig = d2i_ECDSA_SIG(NULL, &ptr, vchSig.size());
+        bool ret = (secp256k1_ecdsa_do_verify((unsigned char*)&hash, sig, pkey) == 1);
 #ifdef VERIFY_OPTIMIZED_SECP256K1
-    int fuzzpos = rand() % 256;
-    hash += ((uint256)1) << fuzzpos;
-    secp256k1_ecdsa_do_verify((unsigned char*)&hash, sig, pkey);
+        int fuzzpos = rand() % 256;
+        hash += ((uint256)1) << fuzzpos;
+        secp256k1_ecdsa_do_verify((unsigned char*)&hash, sig, pkey);
 #endif
-    ECDSA_SIG_free(sig);
-    return ret;
+        ECDSA_SIG_free(sig);
+        return ret;
+    }
+    if (ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], vchSig.size(), pkey) != 1)
+        return false;
+    return true;
 }
 
 bool CKey::VerifyCompact(uint256 hash, const std::vector<unsigned char>& vchSig)

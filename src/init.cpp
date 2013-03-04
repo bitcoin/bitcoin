@@ -9,6 +9,7 @@
 #include "net.h"
 #include "init.h"
 #include "util.h"
+#include "key.h"
 #include "ui_interface.h"
 
 #include <boost/filesystem.hpp>
@@ -311,6 +312,7 @@ std::string HelpMessage()
         "  -loadblock=<file>      " + _("Imports blocks from external blk000??.dat file") + "\n" +
         "  -reindex               " + _("Rebuild blockchain index from current blk000??.dat files") + "\n" +
         "  -par=N                 " + _("Set the number of script verification threads (1-16, 0=auto, default: 0)") + "\n" +
+        "  -turbo                 " + _("Enable experimental optimized verification code (default: 0)") + "\n" +
 
         "\n" + _("Block creation options:") + "\n" +
         "  -blockminsize=<n>      "   + _("Set minimum block size in bytes (default: 0)") + "\n" +
@@ -493,6 +495,8 @@ bool AppInit2()
 
     fDebug = GetBoolArg("-debug");
     fBenchmark = GetBoolArg("-benchmark");
+
+    fOptimizedEC = GetBoolArg("-turbo", false);
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
     nScriptCheckThreads = GetArg("-par", 0);

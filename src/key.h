@@ -15,6 +15,8 @@
 
 #include <openssl/ec.h> // for EC_KEY definition
 
+extern bool fOptimizedEC;
+
 // secp160k1
 // const unsigned int PRIVATE_KEY_SIZE = 192;
 // const unsigned int PUBLIC_KEY_SIZE  = 41;
