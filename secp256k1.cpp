@@ -249,6 +249,33 @@ public:
     }
 
 
+    void SetSquareRoot(const FieldElem &a) {
+        // calculate a^p, with p={12,15,24,30,31}
+        FieldElem a2; a2.SetSquare(a);
+        FieldElem a3; a3.SetMult(a2,a);
+        FieldElem a6; a6.SetSquare(a3);
+        FieldElem a12; a12.SetSquare(a6);
+        FieldElem a15; a15.SetMult(a12,a3);
+        FieldElem a24; a24.SetSquare(a12);
+        FieldElem a30; a30.SetSquare(a15);
+        FieldElem a31; a31.SetMult(a30,a);
+        FieldElem x = a15;
+        for (int i=0; i<43; i++) {
+            for (int j=0; j<5; j++) x.SetSquare(x);
+            x.SetMult(x,a31);
+        }
+        for (int j=0; j<5; j++) x.SetSquare(x);
+        x.SetMult(x,a30);
+        for (int i=0; i<4; i++) {
+            for (int j=0; j<5; j++) x.SetSquare(x);
+            x.SetMult(x,a31);
+        }
+        for (int j=0; j<5; j++) x.SetSquare(x);
+        x.SetMult(x,a24);
+        for (int j=0; j<5; j++) x.SetSquare(x);
+        SetMult(x,a12);
+    }
+
     // computes the modular inverse, by computing a^(p-2)
     // TODO: use extmod instead, much faster
     void SetInverse(const FieldElem &a) {
@@ -264,23 +291,18 @@ public:
         FieldElem a31; a31.SetMult(a30,a);
         FieldElem x = a;
         for (int i=0; i<44; i++) {
-            for (int j=0; j<5; j++)
-                x.SetSquare(x);
+            for (int j=0; j<5; j++) x.SetSquare(x);
             x.SetMult(x,a31);
         }
-        for (int j=0; j<5; j++)
-            x.SetSquare(x);
+        for (int j=0; j<5; j++) x.SetSquare(x);
         x.SetMult(x,a27);
         for (int i=0; i<4; i++) {
-            for (int j=0; j<5; j++)
-                x.SetSquare(x);
+            for (int j=0; j<5; j++) x.SetSquare(x);
             x.SetMult(x,a31);
         }
-        for (int j=0; j<5; j++)
-            x.SetSquare(x);
+        for (int j=0; j<5; j++) x.SetSquare(x);
         x.SetMult(x,a);
-        for (int j=0; j<5; j++)
-            x.SetSquare(x);
+        for (int j=0; j<5; j++) x.SetSquare(x);
         SetMult(x,a13);
     }
 
@@ -367,6 +389,17 @@ public:
         yout = y;
     }
 
+    bool SetCompressed(const F &xin) {
+        x = xin;
+        F x2; x2.SetSquare(x);
+        F x3; x3.SetMult(x,x2);
+        fInfinity = false;
+        F c(7);
+        c += x3;
+        y.SetSquareRoot(c);
+        z = F(1);
+    }
+
     std::string ToString() {
         F xt,yt;
         if (fInfinity)
@@ -450,15 +483,15 @@ using namespace secp256k1;
 int main() {
     FieldElem f1,f2;
     f1.SetHex("8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004");
-    f2.SetHex("a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f");
-    GroupElem<FieldElem> g1(f1,f2);
+//    f2.SetHex("a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f");
+    GroupElem<FieldElem> g1; g1.SetCompressed(f1);
     printf("%s\n", g1.ToString().c_str());
     GroupElem<FieldElem> p = g1;
     GroupElem<FieldElem> q = p;
     printf("ok %i\n", (int)p.IsValid());
-    for (int i=0; i<100000000; i++) {
-      p.SetAdd(p,g1);
-      q.SetAdd(q,p);
+    for (int i=0; i<1000000; i++) {
+      p.SetCompressed(f1);
+      f1.SetSquare(f1);
     }
     printf("ok %i\n", (int)q.IsValid());
     printf("%s\n", q.ToString().c_str());
