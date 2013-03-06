@@ -4,74 +4,77 @@
 #include <gmpxx.h>
 #include <assert.h>
 
-// #define VERIFY_BADNESS 1
+// #define VERIFY_MAGNITUDE 1
 
 namespace secp256k1 {
 
 
-/** Implements arithmetic modulo FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F 
- * A FieldElem has an implicit 'badness':
- * - the output of SetSquare, SetMult and Normalize sets the badness to 1
- * - the inputs of SetSquare and SetMult cannot have badness above 8
- * - adding two FieldElems adds the badness together
- * - multiplying a FieldElem with a constant multiplies its badness by that constant
- * - taking the negative requires specifying the badness of the input, the output having badness 1 higher
+/** Implements arithmetic modulo FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F,
+ *  represented as 5 uint64_t's in base 2^52. The values are allowed to contain >52 each. In particular,
+ *  each FieldElem has a 'magnitude' associated with it. Internally, a magnitude M means each element
+ *  is at most M*(2^53-1), except the most significant one, which is limited to M*(2^49-1). All operations
+ *  accept any input with magnitude at most M, and have different rules for propagating magnitude to their
+ *  output.
  */
 class FieldElem {
 private:
     // X = sum(i=0..4, elem[i]*2^52)
     uint64_t n[5];
-#ifdef VERIFY_BADNESS
-    int badness;
+#ifdef VERIFY_MAGNITUDE
+    int magnitude;
 #endif
 
 
 public:
 
+    /** Creates a constant field element. Magnitude=1 */
     FieldElem(int x = 0) {
         n[0] = x;
         n[1] = n[2] = n[3] = n[4] = 0;
-#ifdef VERIFY_BADNESS
-        badness = 1;
+#ifdef VERIFY_MAGNITUDE
+        magnitude = 1;
 #endif
     }
 
+    /** Normalizes the internal representation entries. Magnitude=1 */
     void Normalize() {
         uint64_t c;
-        c = n[0];
-        uint64_t t0 = c & 0xFFFFFFFFFFFFFULL;
-        c = (c >> 52) + n[1];
-        uint64_t t1 = c & 0xFFFFFFFFFFFFFULL;
-        c = (c >> 52) + n[2];
-        uint64_t t2 = c & 0xFFFFFFFFFFFFFULL;
-        c = (c >> 52) + n[3];
-        uint64_t t3 = c & 0xFFFFFFFFFFFFFULL;
-        c = (c >> 52) + n[4];
-        uint64_t t4 = c & 0x0FFFFFFFFFFFFULL;
-        c >>= 48;
-        if (c) {
-            c = c * 0x1000003D1ULL + t0;
-            t0 = c & 0xFFFFFFFFFFFFFULL;
-            c = (c >> 52) + t1;
-            t1 = c & 0xFFFFFFFFFFFFFULL;
-            c = (c >> 52) + t2;
-            t2 = c & 0xFFFFFFFFFFFFFULL;
-            c = (c >> 52) + t3;
-            t3 = c & 0xFFFFFFFFFFFFFULL;
-            c = (c >> 52) + t4;
-            t4 = c & 0x0FFFFFFFFFFFFULL;
+        if (n[0] > 0xFFFFFFFFFFFFFULL || n[1] > 0xFFFFFFFFFFFFFULL || n[2] > 0xFFFFFFFFFFFFFULL || n[3] > 0xFFFFFFFFFFFFFULL || n[4] > 0xFFFFFFFFFFFFULL) {
+            c = n[0];
+            uint64_t t0 = c & 0xFFFFFFFFFFFFFULL;
+            c = (c >> 52) + n[1];
+            uint64_t t1 = c & 0xFFFFFFFFFFFFFULL;
+            c = (c >> 52) + n[2];
+            uint64_t t2 = c & 0xFFFFFFFFFFFFFULL;
+            c = (c >> 52) + n[3];
+            uint64_t t3 = c & 0xFFFFFFFFFFFFFULL;
+            c = (c >> 52) + n[4];
+            uint64_t t4 = c & 0x0FFFFFFFFFFFFULL;
             c >>= 48;
+            if (c) {
+                c = c * 0x1000003D1ULL + t0;
+                t0 = c & 0xFFFFFFFFFFFFFULL;
+                c = (c >> 52) + t1;
+                t1 = c & 0xFFFFFFFFFFFFFULL;
+                c = (c >> 52) + t2;
+                t2 = c & 0xFFFFFFFFFFFFFULL;
+                c = (c >> 52) + t3;
+                t3 = c & 0xFFFFFFFFFFFFFULL;
+                c = (c >> 52) + t4;
+                t4 = c & 0x0FFFFFFFFFFFFULL;
+                c >>= 48;
+            }
+            n[0] = t0; n[1] = t1; n[2] = t2; n[3] = t3; n[4] = t4;
         }
-        if (t4 == 0xFFFFFFFFFFFFULL && t3 == 0xFFFFFFFFFFFFFULL && t2 == 0xFFFFFFFFFFFFFULL && t3 == 0xFFFFFFFFFFFFF && t4 >= 0xFFFFEFFFFFC2FULL) {
-            t4 = 0;
-            t3 = 0;
-            t2 = 0;
-            t1 = 0;
-            t0 -= 0xFFFFEFFFFFC2FULL;
+        if (n[4] == 0xFFFFFFFFFFFFULL && n[3] == 0xFFFFFFFFFFFFFULL && n[2] == 0xFFFFFFFFFFFFFULL && n[1] == 0xFFFFFFFFFFFFF && n[0] >= 0xFFFFEFFFFFC2FULL) {
+            n[4] = 0;
+            n[3] = 0;
+            n[2] = 0;
+            n[1] = 0;
+            n[0] -= 0xFFFFEFFFFFC2FULL;
         }
-        n[0] = t0; n[1] = t1; n[2] = t2; n[3] = t3; n[4] = t4;
-#ifdef VERIFY_BADNESS
-        badness = 1;
+#ifdef VERIFY_MAGNITUDE
+        magnitude = 1;
 #endif
     }
 
@@ -100,26 +103,28 @@ public:
         n[2] = ((in[1] >> 40) | (in[2] << 24)) & 0xFFFFFFFFFFFFFULL;
         n[3] = ((in[2] >> 28) | (in[3] << 36)) & 0xFFFFFFFFFFFFFULL;
         n[4] = (in[3] >> 16);
-#ifdef VERIFY_BADNESS
-        badness = 1;
+#ifdef VERIFY_MAGNITUDE
+        magnitude = 1;
 #endif
     }
 
-    void SetNeg(const FieldElem &a, int badnessIn) {
-#ifdef VERIFY_BADNESS
-        assert(a.badness <= badnessIn);
-        badness = badnessIn + 1;
+    /** Set a FieldElem to be the negative of another. Increases magnitude by one. */
+    void SetNeg(const FieldElem &a, int magnitudeIn) {
+#ifdef VERIFY_MAGNITUDE
+        assert(a.magnitude <= magnitudeIn);
+        magnitude = magnitudeIn + 1;
 #endif
-        n[0] = 0xFFFFEFFFFFC2FULL * (badnessIn + 1) - a.n[0];
-        n[1] = 0xFFFFFFFFFFFFFULL * (badnessIn + 1) - a.n[1];
-        n[2] = 0xFFFFFFFFFFFFFULL * (badnessIn + 1) - a.n[2];
-        n[3] = 0xFFFFFFFFFFFFFULL * (badnessIn + 1) - a.n[3];
-        n[4] = 0x0FFFFFFFFFFFFULL * (badnessIn + 1) - a.n[4];
+        n[0] = 0xFFFFEFFFFFC2FULL * (magnitudeIn + 1) - a.n[0];
+        n[1] = 0xFFFFFFFFFFFFFULL * (magnitudeIn + 1) - a.n[1];
+        n[2] = 0xFFFFFFFFFFFFFULL * (magnitudeIn + 1) - a.n[2];
+        n[3] = 0xFFFFFFFFFFFFFULL * (magnitudeIn + 1) - a.n[3];
+        n[4] = 0x0FFFFFFFFFFFFULL * (magnitudeIn + 1) - a.n[4];
     }
 
+    /** Multiplies this FieldElem with an integer constant. Magnitude is multiplied by v */
     void operator*=(int v) {
-#ifdef VERIFY_BADNESS
-        badness *= v;
+#ifdef VERIFY_MAGNITUDE
+        magnitude *= v;
 #endif
         n[0] *= v;
         n[1] *= v;
@@ -129,8 +134,8 @@ public:
     }
 
     void operator+=(const FieldElem &a) {
-#ifdef VERIFY_BADNESS
-        badness += a.badness;
+#ifdef VERIFY_MAGNITUDE
+        magnitude += a.magnitude;
 #endif
         n[0] += a.n[0];
         n[1] += a.n[1];
@@ -139,12 +144,11 @@ public:
         n[4] += a.n[4];
     }
 
-    // precondition: all values in a and b are at most 56 bits, except n[4] is at most 52 bits
-    // postcondition: all values are at most 53 bits, except n[4] is at most 49 bits
+    /** Set this FieldElem to be the multiplication of two others. Magnitude=1 */
     void SetMult(const FieldElem &a, const FieldElem &b) {
-#ifdef VERIFY_BADNESS
-        assert(a.badness <= 8);
-        assert(b.badness <= 8);
+#ifdef VERIFY_MAGNITUDE
+        assert(a.magnitude <= 8);
+        assert(b.magnitude <= 8);
 #endif
         __int128 c = (__int128)a.n[0] * b.n[0];
         uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
@@ -194,16 +198,15 @@ public:
         c = t0 + (__int128)c * 0x1000003D1ULL;
         n[0] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 1000008
         n[1] = t1 + c;
-#ifdef VERIFY_BADNESS
-        badness = 1;
+#ifdef VERIFY_MAGNITUDE
+        magnitude = 1;
 #endif
     }
 
-    // precondition: all values in a and b are at most 56 bits, except n[4] is at most 52 bits
-    // postcondition: all values are at most 53 bits, except n[4] is at most 49 bits
+    /** Set this FieldElem to be the square of another. Magnitude=1 */
     void SetSquare(const FieldElem &a) {
-#ifdef VERIFY_BADNESS
-        assert(a.badness <= 8);
+#ifdef VERIFY_MAGNITUDE
+        assert(a.magnitude <= 8);
 #endif
         __int128 c = (__int128)a.n[0] * a.n[0];
         uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
@@ -243,67 +246,82 @@ public:
         c = t0 + (__int128)c * 0x1000003D1ULL;
         n[0] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 1000008
         n[1] = t1 + c;
-#ifdef VERIFY_BADNESS
-        assert(a.badness <= 8);
+#ifdef VERIFY_MAGNITUDE
+        assert(a.magnitude <= 8);
 #endif
     }
 
-
+    /** Set this to be the (modular) square root of another FieldElem. Magnitude=1 */
     void SetSquareRoot(const FieldElem &a) {
-        // calculate a^p, with p={12,15,24,30,31}
+        // calculate a^p, with p={15,780,1022,1023}
         FieldElem a2; a2.SetSquare(a);
         FieldElem a3; a3.SetMult(a2,a);
         FieldElem a6; a6.SetSquare(a3);
         FieldElem a12; a12.SetSquare(a6);
         FieldElem a15; a15.SetMult(a12,a3);
-        FieldElem a24; a24.SetSquare(a12);
         FieldElem a30; a30.SetSquare(a15);
-        FieldElem a31; a31.SetMult(a30,a);
+        FieldElem a60; a60.SetSquare(a30);
+        FieldElem a120; a120.SetSquare(a60);
+        FieldElem a240; a240.SetSquare(a120);
+        FieldElem a255; a255.SetMult(a240,a15);
+        FieldElem a510; a510.SetSquare(a255);
+        FieldElem a750; a750.SetMult(a510,a240);
+        FieldElem a780; a780.SetMult(a750,a30);
+        FieldElem a1020; a1020.SetSquare(a510);
+        FieldElem a1022; a1022.SetMult(a1020,a2);
+        FieldElem a1023; a1023.SetMult(a1022,a);
         FieldElem x = a15;
-        for (int i=0; i<43; i++) {
-            for (int j=0; j<5; j++) x.SetSquare(x);
-            x.SetMult(x,a31);
+        for (int i=0; i<21; i++) {
+            for (int j=0; j<10; j++) x.SetSquare(x);
+            x.SetMult(x,a1023);
         }
-        for (int j=0; j<5; j++) x.SetSquare(x);
-        x.SetMult(x,a30);
-        for (int i=0; i<4; i++) {
-            for (int j=0; j<5; j++) x.SetSquare(x);
-            x.SetMult(x,a31);
+        for (int j=0; j<10; j++) x.SetSquare(x);
+        x.SetMult(x,a1022);
+        for (int i=0; i<2; i++) {
+            for (int j=0; j<10; j++) x.SetSquare(x);
+            x.SetMult(x,a1023);
         }
-        for (int j=0; j<5; j++) x.SetSquare(x);
-        x.SetMult(x,a24);
-        for (int j=0; j<5; j++) x.SetSquare(x);
-        SetMult(x,a12);
+        for (int j=0; j<10; j++) x.SetSquare(x);
+        SetMult(x,a780);
     }
 
-    // computes the modular inverse, by computing a^(p-2)
-    // TODO: use extmod instead, much faster
+    bool IsOdd() {
+        Normalize();
+        return n[0] & 1;
+    }
+
+    /** Set this to be the (modular) inverse of another FieldElem. Magnitude=1 */
     void SetInverse(const FieldElem &a) {
-        // calculare a^p, with p={13,27,31}
+        // calculate a^p, with p={45,63,1019,1023}
         FieldElem a2; a2.SetSquare(a);
         FieldElem a3; a3.SetMult(a2,a);
-        FieldElem a6; a6.SetSquare(a3);
-        FieldElem a7; a7.SetMult(a6,a);
-        FieldElem a13; a13.SetMult(a6,a7);
-        FieldElem a26; a26.SetSquare(a13);
-        FieldElem a27; a27.SetMult(a26,a);
-        FieldElem a30; a30.SetMult(a27,a3);
-        FieldElem a31; a31.SetMult(a30,a);
-        FieldElem x = a;
-        for (int i=0; i<44; i++) {
-            for (int j=0; j<5; j++) x.SetSquare(x);
-            x.SetMult(x,a31);
+        FieldElem a4; a4.SetSquare(a);
+        FieldElem a5; a5.SetMult(a4,a);
+        FieldElem a10; a10.SetSquare(a5);
+        FieldElem a11; a11.SetMult(a10,a);
+        FieldElem a21; a21.SetMult(a11,a10);
+        FieldElem a42; a42.SetSquare(a21);
+        FieldElem a45; a45.SetMult(a42,a3);
+        FieldElem a63; a63.SetMult(a42,a21);
+        FieldElem a126; a126.SetSquare(a63);
+        FieldElem a252; a252.SetSquare(a126);
+        FieldElem a504; a504.SetSquare(a252);
+        FieldElem a1008; a1008.SetSquare(a504);
+        FieldElem a1019; a1019.SetMult(a1008,a11);
+        FieldElem a1023; a1023.SetMult(a1019,a4);
+        FieldElem x = a63;
+        for (int i=0; i<21; i++) {
+            for (int j=0; j<10; j++) x.SetSquare(x);
+            x.SetMult(x,a1023);
         }
-        for (int j=0; j<5; j++) x.SetSquare(x);
-        x.SetMult(x,a27);
-        for (int i=0; i<4; i++) {
-            for (int j=0; j<5; j++) x.SetSquare(x);
-            x.SetMult(x,a31);
+        for (int j=0; j<10; j++) x.SetSquare(x);
+        x.SetMult(x,a1019);
+        for (int i=0; i<2; i++) {
+            for (int j=0; j<10; j++) x.SetSquare(x);
+            x.SetMult(x,a1023);
         }
-        for (int j=0; j<5; j++) x.SetSquare(x);
-        x.SetMult(x,a);
-        for (int j=0; j<5; j++) x.SetSquare(x);
-        SetMult(x,a13);
+        for (int j=0; j<10; j++) x.SetSquare(x);
+        SetMult(x,a45);
     }
 
     std::string ToString() {
@@ -352,9 +370,12 @@ private:
     F z;
 
 public:
+    /** Creates the point at infinity */
     GroupElem<F>() {
+        fInfinity = true;
     }
 
+    /** Creates the point with given affine coordinates */
     GroupElem<F>(const F &xin, const F &yin) {
         fInfinity = false;
         x = xin;
@@ -362,7 +383,15 @@ public:
         z = F(1);
     }
 
+    /** Checks whether this is the point at infinity */
+    bool IsInfinity() const {
+        return fInfinity;
+    }
+
+    /** Checks whether this is a non-infinite point on the curve */
     bool IsValid() {
+        if (IsInfinity())
+            return false;
         // y^2 = x^3 + 7
         // (Y/Z^3)^2 = (X/Z^2)^3 + 7
         // Y^2 / Z^6 = X^3 / Z^6 + 7
@@ -376,6 +405,7 @@ public:
         return y2 == x3;
     }
 
+    /** Returns the affine coordinates of this point */
     void GetAffine(F &xout, F &yout) {
         z.SetInverse(z);
         F z2;
@@ -389,7 +419,8 @@ public:
         yout = y;
     }
 
-    bool SetCompressed(const F &xin) {
+    /** Sets this point to have a given X coordinate & given Y oddness */
+    void SetCompressed(const F &xin, bool fOdd) {
         x = xin;
         F x2; x2.SetSquare(x);
         F x3; x3.SetMult(x,x2);
@@ -398,16 +429,11 @@ public:
         c += x3;
         y.SetSquareRoot(c);
         z = F(1);
+        if (y.IsOdd() != fOdd)
+            y.SetNeg(y,1);
     }
 
-    std::string ToString() {
-        F xt,yt;
-        if (fInfinity)
-            return "(inf)";
-        GetAffine(xt,yt);
-        return "(" + xt.ToString() + "," + yt.ToString() + ")";
-    }
-
+    /** Sets this point to be the EC double of another */
     void SetDouble(const GroupElem<F> &p) {
         if (p.fInfinity || y.IsZero()) {
             fInfinity = true;
@@ -437,6 +463,7 @@ public:
         y += t2;               // Y' = 36*X^3*Y^2 - 27*X^6 - 8*Y^4 (4)
     }
 
+    /** Sets this point to be the EC addition of two others */
     void SetAdd(const GroupElem<F> &p, const GroupElem<F> &q) {
         if (p.fInfinity) {
             *this = q;
@@ -474,6 +501,15 @@ public:
         h3.SetMult(h3,s1); h3.SetNeg(h3,1);
         y += h3;
     }
+
+    std::string ToString() {
+        F xt,yt;
+        if (fInfinity)
+            return "(inf)";
+        GetAffine(xt,yt);
+        return "(" + xt.ToString() + "," + yt.ToString() + ")";
+    }
+
 };
 
 }
@@ -484,16 +520,16 @@ int main() {
     FieldElem f1,f2;
     f1.SetHex("8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004");
 //    f2.SetHex("a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f");
-    GroupElem<FieldElem> g1; g1.SetCompressed(f1);
+    GroupElem<FieldElem> g1;
     printf("%s\n", g1.ToString().c_str());
     GroupElem<FieldElem> p = g1;
     GroupElem<FieldElem> q = p;
+    //printf("ok %i\n", (int)p.IsValid());
+    p.SetCompressed(f1,false);
     printf("ok %i\n", (int)p.IsValid());
-    for (int i=0; i<1000000; i++) {
-      p.SetCompressed(f1);
-      f1.SetSquare(f1);
-    }
-    printf("ok %i\n", (int)q.IsValid());
-    printf("%s\n", q.ToString().c_str());
+    printf("%s\n", p.ToString().c_str());
+    p.SetCompressed(f1,true);
+    printf("ok %i\n", (int)p.IsValid());
+    printf("%s\n", p.ToString().c_str());
     return 0;
 }
