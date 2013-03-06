@@ -414,10 +414,10 @@ protected:
 
 public:
     /** Creates the point at infinity */
-    GroupElemJac() : GroupElem<F>() {}
+    GroupElemJac() : GroupElem<F>(), z(1) {}
 
     /** Creates the point with given affine coordinates */
-    GroupElemJac(const F &xin, const F &yin) : GroupElem<F>(xin,yin) {}
+    GroupElemJac(const F &xin, const F &yin) : GroupElem<F>(xin,yin), z(1) {}
 
     /** Checks whether this is a non-infinite point on the curve */
     bool IsValid() {
@@ -524,7 +524,7 @@ public:
         F r2; r2.SetSquare(r);
         F h2; h2.SetSquare(h);
         F h3; h3.SetMult(h,h2);
-        this->z.SetMult(p.z,q.z); this->z.SetMult(z, h);
+        this->z.SetMult(z1,z2); this->z.SetMult(z, h);
         F t; t.SetMult(u1,h2);
         this->x = t; this->x *= 2; this->x += h3; this->x.SetNeg(this->x,3); this->x += r2;
         this->y.SetNeg(this->x,5); this->y += t; this->y.SetMult(this->y,r);
@@ -548,9 +548,9 @@ public:
         this->fInfinity = false;
         const F &x1 = p.x, &y1 = p.y, &z1 = p.z, &x2 = q.x, &y2 = q.y;
         F z12; z12.SetSquare(z1);
-        F u1 = x1;
+        F u1 = x1; u1.Normalize();
         F u2; u2.SetMult(x2, z12);
-        F s1 = y1;
+        F s1 = y1; s1.Normalize();
         F s2; s2.SetMult(y2, z12); s2.SetMult(s2, z1);
         if (u1 == u2) {
             if (s1 == s2) {
@@ -594,8 +594,10 @@ int main() {
     printf("g2: %s (%s)\n", g2.ToString().c_str(), g2.IsValid() ? "ok" : "fail");
     GroupElem<FieldElem> g2a; g2.GetAffine(g2a);
     printf("g2a:%s\n", g2a.ToString().c_str());
-    for (int i=0; i<1000000; i++)
-      g1.SetAdd(g1,g2a);
-    printf("res:%s (%s)\n", g1.ToString().c_str(), g1.IsValid() ? "ok" : "fail");
+    GroupElemJac<FieldElem> x1 = g1, x2 = g1;
+    for (int i=0; i<100000000; i++) {
+      x1.SetAdd(x1,g2a);
+    }
+    printf("res:%s (%s)\n", x1.ToString().c_str(), x1.IsValid() ? "ok" : "fail");
     return 0;
 }
