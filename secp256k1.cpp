@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <string>
 #include <stdio.h>
-#include <gmpxx.h>
+#include <openssl/bn.h>
 #include <assert.h>
 
 // #define VERIFY_MAGNITUDE 1
@@ -23,7 +23,6 @@ private:
 #ifdef VERIFY_MAGNITUDE
     int magnitude;
 #endif
-
 
 public:
 
@@ -363,30 +362,54 @@ public:
 };
 
 template<typename F> class GroupElem {
-private:
+protected:
     bool fInfinity;
     F x;
     F y;
-    F z;
 
 public:
+
     /** Creates the point at infinity */
-    GroupElem<F>() {
+    GroupElem() {
         fInfinity = true;
     }
 
     /** Creates the point with given affine coordinates */
-    GroupElem<F>(const F &xin, const F &yin) {
+    GroupElem(const F &xin, const F &yin) {
         fInfinity = false;
         x = xin;
         y = yin;
-        z = F(1);
     }
 
     /** Checks whether this is the point at infinity */
     bool IsInfinity() const {
         return fInfinity;
     }
+
+    void SetNeg(GroupElem<F> &p) {
+        fInfinity = p.fInfinity;
+        x = p.x;
+        p.y.Normalize();
+        y.SetNeg(p.y, 1);
+    }
+
+    std::string ToString() {
+        if (fInfinity)
+            return "(inf)";
+        return "(" + xt.ToString() + "," + yt.ToString() + ")";
+    }
+};
+
+template<typename F> class GroupElemJac : public GroupElem<F> {
+protected:
+    F z;
+
+public:
+    /** Creates the point at infinity */
+    GroupElemJac() : GroupElem<F>() {}
+
+    /** Creates the point with given affine coordinates */
+    GroupElemJac(const F &xin, const F &yin) : GroupElem<F>(xin,yin) {}
 
     /** Checks whether this is a non-infinite point on the curve */
     bool IsValid() {
@@ -406,7 +429,7 @@ public:
     }
 
     /** Returns the affine coordinates of this point */
-    void GetAffine(F &xout, F &yout) {
+    void GetAffine(GroupElem<F> &aff) {
         z.SetInverse(z);
         F z2;
         z2.SetSquare(z);
@@ -415,8 +438,8 @@ public:
         x.SetMult(x,z2);
         y.SetMult(y,z3);
         z = F(1);
-        xout = x;
-        yout = y;
+        aff.x = x;
+        aff.y = y;
     }
 
     /** Sets this point to have a given X coordinate & given Y oddness */
@@ -434,7 +457,7 @@ public:
     }
 
     /** Sets this point to be the EC double of another */
-    void SetDouble(const GroupElem<F> &p) {
+    void SetDouble(const GroupElemJac<F> &p) {
         if (p.fInfinity || y.IsZero()) {
             fInfinity = true;
             return;
@@ -464,7 +487,7 @@ public:
     }
 
     /** Sets this point to be the EC addition of two others */
-    void SetAdd(const GroupElem<F> &p, const GroupElem<F> &q) {
+    void SetAdd(const GroupElemJac<F> &p, const GroupElemJac<F> &q) {
         if (p.fInfinity) {
             *this = q;
             return;
@@ -502,14 +525,48 @@ public:
         y += h3;
     }
 
-    std::string ToString() {
-        F xt,yt;
-        if (fInfinity)
-            return "(inf)";
-        GetAffine(xt,yt);
-        return "(" + xt.ToString() + "," + yt.ToString() + ")";
+    /** Sets this point to be the EC addition of two others (one of which is in affine coordinates) */
+    void SetAdd(const GroupElemJac<F> &p, const GroupElem<F> &q) {
+        if (p.fInfinity) {
+            *this = q;
+            z = F(1);
+            return;
+        }
+        if (q.fInfinity) {
+            *this = p;
+            return;
+        }
+        fInfinity = false;
+        const F &u1 = p.x, &s1 = p.y, &z1 = p.z, &x2 = q.x, &y2 = q.y;
+        F z12; z12.SetSquare(z1);
+        F u2; u2.SetMult(x2, z12);
+        F s2; s2.SetMult(y2, z12); s2.SetMult(s2, z1);
+        if (u1 == u2) {
+            if (s1 == s2) {
+                SetDouble(p);
+            } else {
+                fInfinity = true;
+            }
+            return;
+        }
+        F h; h.SetNeg(u1,1); h += u2;
+        F r; r.SetNeg(s1,1); r += s2;
+        F r2; r2.SetSquare(r);
+        F h2; h2.SetSquare(h);
+        F h3; h3.SetMult(h,h2);
+        z = p.z; z.SetMult(z, h);
+        F t; t.SetMult(u1,h2);
+        x = t; x *= 2; x += h3; x.SetNeg(x,3); x += r2;
+        y.SetNeg(x,5); y += t; y.SetMult(y,r);
+        h3.SetMult(h3,s1); h3.SetNeg(h3,1);
+        y += h3;
     }
 
+    std::string ToString() {
+        GroupElem<F> aff;
+        GetAffine(aff);
+        return aff.ToString();
+    }
 };
 
 }
@@ -519,17 +576,10 @@ using namespace secp256k1;
 int main() {
     FieldElem f1,f2;
     f1.SetHex("8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004");
-//    f2.SetHex("a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f");
-    GroupElem<FieldElem> g1;
-    printf("%s\n", g1.ToString().c_str());
-    GroupElem<FieldElem> p = g1;
-    GroupElem<FieldElem> q = p;
-    //printf("ok %i\n", (int)p.IsValid());
-    p.SetCompressed(f1,false);
-    printf("ok %i\n", (int)p.IsValid());
-    printf("%s\n", p.ToString().c_str());
-    p.SetCompressed(f1,true);
-    printf("ok %i\n", (int)p.IsValid());
-    printf("%s\n", p.ToString().c_str());
+    f2.SetHex("a357ae915c4a65281309edf20504740f1eb3343990216b4f81063cb65f2f7e0f");
+    GroupElemJac<FieldElem> g1; g1.SetCompressed(f1,false);
+    GroupElemJac<FieldElem> g2; g2.SetCompressed(f2,false);
+    printf("g1: %s (%s)\n", g1.ToString().c_str(), g1.IsValid() ? "ok" : "fail");
+    printf("g2: %s (%s)\n", g1.ToString().c_str(), g1.IsValid() ? "ok" : "fail");
     return 0;
 }
