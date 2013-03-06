@@ -361,6 +361,8 @@ public:
     }
 };
 
+template<typename F> class GroupElemJac;
+
 template<typename F> class GroupElem {
 protected:
     bool fInfinity;
@@ -369,35 +371,41 @@ protected:
 
 public:
 
+    void SetXY(const F &xin, const F &yin) {
+        fInfinity = false;
+        this->x = xin;
+        this->y = yin;
+    }
+
     /** Creates the point at infinity */
     GroupElem() {
-        fInfinity = true;
+        this->fInfinity = true;
     }
 
     /** Creates the point with given affine coordinates */
     GroupElem(const F &xin, const F &yin) {
-        fInfinity = false;
-        x = xin;
-        y = yin;
+        SetXY(xin,yin);
     }
 
     /** Checks whether this is the point at infinity */
     bool IsInfinity() const {
-        return fInfinity;
+        return this->fInfinity;
     }
 
     void SetNeg(GroupElem<F> &p) {
-        fInfinity = p.fInfinity;
-        x = p.x;
+        this->fInfinity = p.fInfinity;
+        this->x = p.x;
         p.y.Normalize();
-        y.SetNeg(p.y, 1);
+        this->y.SetNeg(p.y, 1);
     }
 
     std::string ToString() {
-        if (fInfinity)
+        if (this->fInfinity)
             return "(inf)";
-        return "(" + xt.ToString() + "," + yt.ToString() + ")";
+        return "(" + this->x.ToString() + "," + this->y.ToString() + ")";
     }
+
+    friend class GroupElemJac<F>;
 };
 
 template<typename F> class GroupElemJac : public GroupElem<F> {
@@ -413,15 +421,15 @@ public:
 
     /** Checks whether this is a non-infinite point on the curve */
     bool IsValid() {
-        if (IsInfinity())
+        if (this->IsInfinity())
             return false;
         // y^2 = x^3 + 7
         // (Y/Z^3)^2 = (X/Z^2)^3 + 7
         // Y^2 / Z^6 = X^3 / Z^6 + 7
         // Y^2 = X^3 + 7*Z^6
-        F y2; y2.SetSquare(y);
-        F x3; x3.SetSquare(x); x3.SetMult(x3,x);
-        F z2; z2.SetSquare(z);
+        F y2; y2.SetSquare(this->y);
+        F x3; x3.SetSquare(this->x); x3.SetMult(x3,this->x);
+        F z2; z2.SetSquare(this->z);
         F z6; z6.SetSquare(z2); z6.SetMult(z6,z2);
         z6 *= 7;
         x3 += z6;
@@ -435,55 +443,54 @@ public:
         z2.SetSquare(z);
         F z3;
         z3.SetMult(z,z2);
-        x.SetMult(x,z2);
-        y.SetMult(y,z3);
-        z = F(1);
-        aff.x = x;
-        aff.y = y;
+        this->x.SetMult(this->x,z2);
+        this->y.SetMult(this->y,z3);
+        this->z = F(1);
+        aff.SetXY(this->x,this->y);
     }
 
     /** Sets this point to have a given X coordinate & given Y oddness */
     void SetCompressed(const F &xin, bool fOdd) {
-        x = xin;
-        F x2; x2.SetSquare(x);
-        F x3; x3.SetMult(x,x2);
-        fInfinity = false;
+        this->x = xin;
+        F x2; x2.SetSquare(this->x);
+        F x3; x3.SetMult(this->x,x2);
+        this->fInfinity = false;
         F c(7);
         c += x3;
-        y.SetSquareRoot(c);
-        z = F(1);
-        if (y.IsOdd() != fOdd)
-            y.SetNeg(y,1);
+        this->y.SetSquareRoot(c);
+        this->z = F(1);
+        if (this->y.IsOdd() != fOdd)
+            this->y.SetNeg(this->y,1);
     }
 
     /** Sets this point to be the EC double of another */
     void SetDouble(const GroupElemJac<F> &p) {
-        if (p.fInfinity || y.IsZero()) {
-            fInfinity = true;
+        if (p.fInfinity || this->y.IsZero()) {
+            this->fInfinity = true;
             return;
         }
 
         F t1,t2,t3,t4,t5;
-        z.SetMult(p.y,p.z);
-        z *= 2;                // Z' = 2*Y*Z (2)
+        this->z.SetMult(p.y,p.z);
+        this->z *= 2;                // Z' = 2*Y*Z (2)
         t1.SetSquare(p.x);
         t1 *= 3;               // T1 = 3*X^2 (3)
         t2.SetSquare(t1);      // T2 = 9*X^4 (1)
-        t3.SetSquare(y);
+        t3.SetSquare(p.y);
         t3 *= 2;               // T3 = 2*Y^2 (2)
         t4.SetSquare(t3);
         t4 *= 2;               // T4 = 8*Y^4 (2)
-        t3.SetMult(x,t3);      // T3 = 2*X*Y^2 (1)
-        x = t3;
-        x *= 4;                // X' = 8*X*Y^2 (4)
-        x.SetNeg(x,4);         // X' = -8*X*Y^2 (5)
-        x += t2;               // X' = 9*X^4 - 8*X*Y^2 (6)
+        t3.SetMult(p.x,t3);      // T3 = 2*X*Y^2 (1)
+        this->x = t3;
+        this->x *= 4;                // X' = 8*X*Y^2 (4)
+        this->x.SetNeg(this->x,4);         // X' = -8*X*Y^2 (5)
+        this->x += t2;               // X' = 9*X^4 - 8*X*Y^2 (6)
         t2.SetNeg(t2,1);       // T2 = -9*X^4 (2)
         t3 *= 6;               // T3 = 12*X*Y^2 (6)
         t3 += t2;              // T3 = 12*X*Y^2 - 9*X^4 (8)
-        y.SetMult(t1,t3);      // Y' = 36*X^3*Y^2 - 27*X^6 (1)
+        this->y.SetMult(t1,t3);      // Y' = 36*X^3*Y^2 - 27*X^6 (1)
         t2.SetNeg(t4,2);       // T2 = -8*Y^4 (3)
-        y += t2;               // Y' = 36*X^3*Y^2 - 27*X^6 - 8*Y^4 (4)
+        this->y += t2;               // Y' = 36*X^3*Y^2 - 27*X^6 - 8*Y^4 (4)
     }
 
     /** Sets this point to be the EC addition of two others */
@@ -496,7 +503,7 @@ public:
             *this = p;
             return;
         }
-        fInfinity = false;
+        this->fInfinity = false;
         const F &x1 = p.x, &y1 = p.y, &z1 = p.z, &x2 = q.x, &y2 = q.y, &z2 = q.z;
         F z22; z22.SetSquare(z2);
         F z12; z12.SetSquare(z1);
@@ -508,7 +515,7 @@ public:
             if (s1 == s2) {
                 SetDouble(p);
             } else {
-                fInfinity = true;
+                this->fInfinity = true;
             }
             return;
         }
@@ -517,35 +524,39 @@ public:
         F r2; r2.SetSquare(r);
         F h2; h2.SetSquare(h);
         F h3; h3.SetMult(h,h2);
-        z.SetMult(p.z,q.z); z.SetMult(z, h);
+        this->z.SetMult(p.z,q.z); this->z.SetMult(z, h);
         F t; t.SetMult(u1,h2);
-        x = t; x *= 2; x += h3; x.SetNeg(x,3); x += r2;
-        y.SetNeg(x,5); y += t; y.SetMult(y,r);
+        this->x = t; this->x *= 2; this->x += h3; this->x.SetNeg(this->x,3); this->x += r2;
+        this->y.SetNeg(this->x,5); this->y += t; this->y.SetMult(this->y,r);
         h3.SetMult(h3,s1); h3.SetNeg(h3,1);
-        y += h3;
+        this->y += h3;
     }
 
     /** Sets this point to be the EC addition of two others (one of which is in affine coordinates) */
     void SetAdd(const GroupElemJac<F> &p, const GroupElem<F> &q) {
         if (p.fInfinity) {
-            *this = q;
-            z = F(1);
+            this->x = q.x;
+            this->y = q.y;
+            this->fInfinity = q.fInfinity;
+            this->z = F(1);
             return;
         }
         if (q.fInfinity) {
             *this = p;
             return;
         }
-        fInfinity = false;
-        const F &u1 = p.x, &s1 = p.y, &z1 = p.z, &x2 = q.x, &y2 = q.y;
+        this->fInfinity = false;
+        const F &x1 = p.x, &y1 = p.y, &z1 = p.z, &x2 = q.x, &y2 = q.y;
         F z12; z12.SetSquare(z1);
+        F u1 = x1;
         F u2; u2.SetMult(x2, z12);
+        F s1 = y1;
         F s2; s2.SetMult(y2, z12); s2.SetMult(s2, z1);
         if (u1 == u2) {
             if (s1 == s2) {
                 SetDouble(p);
             } else {
-                fInfinity = true;
+                this->fInfinity = true;
             }
             return;
         }
@@ -554,17 +565,17 @@ public:
         F r2; r2.SetSquare(r);
         F h2; h2.SetSquare(h);
         F h3; h3.SetMult(h,h2);
-        z = p.z; z.SetMult(z, h);
+        this->z = p.z; this->z.SetMult(z, h);
         F t; t.SetMult(u1,h2);
-        x = t; x *= 2; x += h3; x.SetNeg(x,3); x += r2;
-        y.SetNeg(x,5); y += t; y.SetMult(y,r);
+        this->x = t; this->x *= 2; this->x += h3; this->x.SetNeg(this->x,3); this->x += r2;
+        this->y.SetNeg(this->x,5); this->y += t; this->y.SetMult(this->y,r);
         h3.SetMult(h3,s1); h3.SetNeg(h3,1);
-        y += h3;
+        this->y += h3;
     }
 
     std::string ToString() {
         GroupElem<F> aff;
-        GetAffine(aff);
+        this->GetAffine(aff);
         return aff.ToString();
     }
 };
@@ -576,10 +587,15 @@ using namespace secp256k1;
 int main() {
     FieldElem f1,f2;
     f1.SetHex("8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004");
-    f2.SetHex("a357ae915c4a65281309edf20504740f1eb3343990216b4f81063cb65f2f7e0f");
+    f2.SetHex("a357ae915c4a65281309edf20504740f1eb3333990216b4f81063cb65f2f7e0f");
     GroupElemJac<FieldElem> g1; g1.SetCompressed(f1,false);
     GroupElemJac<FieldElem> g2; g2.SetCompressed(f2,false);
     printf("g1: %s (%s)\n", g1.ToString().c_str(), g1.IsValid() ? "ok" : "fail");
-    printf("g2: %s (%s)\n", g1.ToString().c_str(), g1.IsValid() ? "ok" : "fail");
+    printf("g2: %s (%s)\n", g2.ToString().c_str(), g2.IsValid() ? "ok" : "fail");
+    GroupElem<FieldElem> g2a; g2.GetAffine(g2a);
+    printf("g2a:%s\n", g2a.ToString().c_str());
+    for (int i=0; i<1000000; i++)
+      g1.SetAdd(g1,g2a);
+    printf("res:%s (%s)\n", g1.ToString().c_str(), g1.IsValid() ? "ok" : "fail");
     return 0;
 }
