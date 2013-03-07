@@ -2353,7 +2353,7 @@ Value getnewpubkey(const Array& params, bool fHelp)
         pwalletMain->TopUpKeyPool();
 
     // Generate a new key that is added to wallet
-    std::vector<unsigned char> newKey = pwalletMain->GenerateNewKey(false);
+    std::vector<unsigned char> newKey = pwalletMain->GenerateNewKey(true);
 
     if(!newKey.size())
         throw JSONRPCError(-12, "Error: Unable to create key");
