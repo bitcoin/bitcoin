@@ -122,6 +122,16 @@ void Shutdown(void* parg)
     }
 }
 
+//
+// Signal handlers are very limited in what they are allowed to do, so:
+//
+void DetectShutdownThread(boost::thread_group* threadGroup)
+{
+    while (fRequestShutdown == false)
+        Sleep(200);
+    threadGroup->interrupt_all();
+}
+
 void HandleSIGTERM(int)
 {
     fRequestShutdown = true;
@@ -143,6 +153,7 @@ void HandleSIGHUP(int)
 #if !defined(QT_GUI)
 bool AppInit(int argc, char* argv[])
 {
+    boost::thread_group threadGroup;
     bool fRet = false;
     try
     {
@@ -185,7 +196,7 @@ bool AppInit(int argc, char* argv[])
             exit(ret);
         }
 
-        fRet = AppInit2();
+        fRet = AppInit2(threadGroup);
     }
     catch (std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");
@@ -193,7 +204,11 @@ bool AppInit(int argc, char* argv[])
         PrintExceptionContinue(NULL, "AppInit()");
     }
     if (!fRet)
+    {
         Shutdown(NULL);
+        threadGroup.interrupt_all();
+        threadGroup.join_all();
+    }
     return fRet;
 }
 
@@ -405,7 +420,7 @@ void ThreadImport(void *data) {
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
  */
-bool AppInit2()
+bool AppInit2(boost::thread_group& threadGroup)
 {
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
@@ -448,6 +463,8 @@ bool AppInit2()
     sa_hup.sa_flags = 0;
     sigaction(SIGHUP, &sa_hup, NULL);
 #endif
+
+    threadGroup.create_thread(boost::bind(&DetectShutdownThread, &threadGroup));
 
     // ********************************************************* Step 2: parameter interactions
 
