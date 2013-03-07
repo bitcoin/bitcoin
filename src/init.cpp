@@ -68,27 +68,16 @@ void Shutdown(void* parg)
 
     // Make this thread recognisable as the shutdown thread
     RenameThread("bitcoin-shutoff");
-
-    bool fFirstThread = false;
-    {
-        TRY_LOCK(cs_Shutdown, lockShutdown);
-        if (lockShutdown)
-        {
-            fFirstThread = !fTaken;
-            fTaken = true;
-        }
-    }
-    static bool fExit;
-    if (fFirstThread)
+    nTransactionsUpdated++;
+    StopRPCThreads();
+    bitdb.Flush(false);
+    StopNode();
     {
         fShutdown = true;
         fRequestShutdown = true;
         nTransactionsUpdated++;
+        StopRPCThreads();
         bitdb.Flush(false);
-        {
-            LOCK(cs_main);
-            ThreadScriptCheckQuit();
-        }
         StopNode();
         {
             LOCK(cs_main);
@@ -128,7 +117,7 @@ void Shutdown(void* parg)
 void DetectShutdownThread(boost::thread_group* threadGroup)
 {
     while (fRequestShutdown == false)
-        Sleep(200);
+        MilliSleep(200);
     threadGroup->interrupt_all();
 }
 
@@ -313,6 +302,7 @@ std::string HelpMessage()
         "  -rpcport=<port>        " + _("Listen for JSON-RPC connections on <port> (default: 8332 or testnet: 18332)") + "\n" +
         "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified IP address") + "\n" +
         "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n" +
+        "  -rpcthreads=<n>        " + _("Use this mean threads to service RPC calls (default: 4)") + "\n" +
         "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n" +
         "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n" +
         "  -alertnotify=<cmd>     " + _("Execute command when a relevant alert is received (%s in cmd is replaced by message)") + "\n" +
@@ -354,22 +344,16 @@ struct CImportingNow
     }
 };
 
-struct CImportData {
-    std::vector<boost::filesystem::path> vFiles;
-};
 
-void ThreadImport(void *data) {
-    CImportData *import = reinterpret_cast<CImportData*>(data);
-
+void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
+{
     RenameThread("bitcoin-loadblk");
-
-    vnThreadsRunning[THREAD_IMPORT]++;
 
     // -reindex
     if (fReindex) {
         CImportingNow imp;
         int nFile = 0;
-        while (!fRequestShutdown) {
+        while (true) {
             CDiskBlockPos pos(nFile, 0);
             FILE *file = OpenBlockFile(pos, true);
             if (!file)
@@ -378,18 +362,16 @@ void ThreadImport(void *data) {
             LoadExternalBlockFile(file, &pos);
             nFile++;
         }
-        if (!fRequestShutdown) {
-            pblocktree->WriteReindexing(false);
-            fReindex = false;
-            printf("Reindexing finished\n");
-            // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-            InitBlockIndex();
-        }
+        pblocktree->WriteReindexing(false);
+        fReindex = false;
+        printf("Reindexing finished\n");
+        // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
+        InitBlockIndex();
     }
 
     // hardcoded $DATADIR/bootstrap.dat
     filesystem::path pathBootstrap = GetDataDir() / "bootstrap.dat";
-    if (filesystem::exists(pathBootstrap) && !fRequestShutdown) {
+    if (filesystem::exists(pathBootstrap)) {
         FILE *file = fopen(pathBootstrap.string().c_str(), "rb");
         if (file) {
             CImportingNow imp;
@@ -401,9 +383,7 @@ void ThreadImport(void *data) {
     }
 
     // -loadblock=
-    BOOST_FOREACH(boost::filesystem::path &path, import->vFiles) {
-        if (fRequestShutdown)
-            break;
+    BOOST_FOREACH(boost::filesystem::path &path, vImportFiles) {
         FILE *file = fopen(path.string().c_str(), "rb");
         if (file) {
             CImportingNow imp;
@@ -411,10 +391,6 @@ void ThreadImport(void *data) {
             LoadExternalBlockFile(file);
         }
     }
-
-    delete import;
-
-    vnThreadsRunning[THREAD_IMPORT]--;
 }
 
 /** Initialize bitcoin.
@@ -615,7 +591,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (nScriptCheckThreads) {
         printf("Using %u threads for script verification\n", nScriptCheckThreads);
         for (int i=0; i<nScriptCheckThreads-1; i++)
-            NewThread(ThreadScriptCheck, NULL);
+            threadGroup.create_thread(&ThreadScriptCheck);
     }
 
     int64 nStart;
@@ -716,9 +692,6 @@ bool AppInit2(boost::thread_group& threadGroup)
     fNoListen = !GetBoolArg("-listen", true);
     fDiscover = GetBoolArg("-discover", true);
     fNameLookup = GetBoolArg("-dns", true);
-#ifdef USE_UPNP
-    fUseUPnP = GetBoolArg("-upnp", USE_UPNP);
-#endif
 
     bool fBound = false;
     if (!fNoListen) {
@@ -1001,13 +974,13 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (!ConnectBestBlock(state))
         strErrors << "Failed to connect best block";
 
-    CImportData *pimport = new CImportData();
+    std::vector<boost::filesystem::path> vImportFiles;
     if (mapArgs.count("-loadblock"))
     {
         BOOST_FOREACH(string strFile, mapMultiArgs["-loadblock"])
-            pimport->vFiles.push_back(strFile);
+            vImportFiles.push_back(strFile);
     }
-    NewThread(ThreadImport, pimport);
+    threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
 
     // ********************************************************* Step 10: load peers
 
@@ -1038,11 +1011,11 @@ bool AppInit2(boost::thread_group& threadGroup)
     printf("mapWallet.size() = %"PRIszu"\n",       pwalletMain->mapWallet.size());
     printf("mapAddressBook.size() = %"PRIszu"\n",  pwalletMain->mapAddressBook.size());
 
-    if (!NewThread(StartNode, NULL))
+    if (!NewThread(StartNode, (void*)&threadGroup))
         InitError(_("Error: could not start node"));
 
     if (fServer)
-        NewThread(ThreadRPCServer, NULL);
+        StartRPCThreads();
 
     // Generate coins in the background
     GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain);

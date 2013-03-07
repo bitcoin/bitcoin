@@ -33,9 +33,6 @@ private:
     // Master thread blocks on this when out of work
     boost::condition_variable condMaster;
 
-    // Quit method blocks on this until all workers are gone
-    boost::condition_variable condQuit;
-
     // The queue of elements to be processed.
     // As the order of booleans doesn't matter, it is used as a LIFO (stack)
     std::vector<T> queue;
@@ -85,8 +82,6 @@ private:
                 while (queue.empty()) {
                     if ((fMaster || fQuit) && nTodo == 0) {
                         nTotal--;
-                        if (nTotal==0)
-                            condQuit.notify_one();
                         bool fRet = fAllOk;
                         // reset the status for new work later
                         if (fMaster)
@@ -151,20 +146,7 @@ public:
             condWorker.notify_all();
     }
 
-    // Shut the queue down
-    void Quit() {
-        boost::unique_lock<boost::mutex> lock(mutex);
-        fQuit = true;
-        // No need to wake the master, as he will quit automatically when all jobs are
-        // done.
-        condWorker.notify_all(); 
-
-        while (nTotal > 0)
-            condQuit.wait(lock);
-    }
-
     ~CCheckQueue() {
-        Quit();
     }
 
     friend class CCheckQueueControl<T>;
