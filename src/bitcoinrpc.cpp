@@ -194,8 +194,8 @@ Value stop(const Array& params, bool fHelp)
 
 
 static const CRPCCommand vRPCCommands[] =
-{ //  name                      actor (function)         okSafeMode unlocked
-  //  ------------------------  -----------------------  ---------- --------
+{ //  name                      actor (function)         okSafeMode threadSafe
+  //  ------------------------  -----------------------  ---------- ----------
     { "help",                   &help,                   true,      true },
     { "stop",                   &stop,                   true,      true },
     { "getblockcount",          &getblockcount,          true,      false },
@@ -1072,7 +1072,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
         // Execute
         Value result;
         {
-            if (pcmd->unlocked)
+            if (pcmd->threadSafe)
                 result = pcmd->actor(params, false);
             else {
                 LOCK2(cs_main, pwalletMain->cs_wallet);
