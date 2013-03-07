@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <string>
+#include <string.h>
 #include <stdio.h>
 #include <openssl/bn.h>
 #include <assert.h>
@@ -8,6 +9,97 @@
 
 namespace secp256k1 {
 
+class Context {
+private:
+    BN_CTX *bn_ctx;
+    bool root;
+    bool offspring;
+
+public:
+    operator BN_CTX*() {
+        return bn_ctx;
+    }
+
+    Context() {
+        bn_ctx = BN_CTX_new();
+        BN_CTX_start(bn_ctx);
+        root = true;
+        offspring = false;
+    }
+
+    Context(Context &par) {
+        bn_ctx = par.bn_ctx;
+        root = false;
+        offspring = false;
+        par.offspring = true;
+        BN_CTX_start(bn_ctx);
+    }
+
+    ~Context() {
+        BN_CTX_end(bn_ctx);
+        if (root)
+            BN_CTX_free(bn_ctx);
+    }
+
+    BIGNUM *Get() {
+        assert(offspring == false);
+        return BN_CTX_get(bn_ctx);
+    }
+};
+
+
+class Number {
+private:
+    BIGNUM *bn;
+public:
+    Number(Context &ctx) : bn(ctx.Get()) {}
+    Number(Context &ctx, const unsigned char *bin, int len) : bn(ctx.Get()) {
+        SetBytes(bin,len);
+    }
+    void SetBytes(const unsigned char *bin, int len) {
+        BN_bin2bn(bin, len, bn);
+    }
+    void GetBytes(unsigned char *bin, int len) {
+        int size = BN_num_bytes(bn);
+        assert(size <= len);
+        ::memset(bin,0,len);
+        BN_bn2bin(bn, bin + size - len);
+    }
+    void SetModInverse(Context &ctx, const Number &x, const Number &m) {
+        BN_mod_inverse(bn, x.bn, m.bn, ctx);
+    }
+};
+
+        static const unsigned char order_[] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                                               0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+                                               0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+                                               0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41};
+
+        static const unsigned char field_[] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                                               0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                                               0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                                               0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F};
+
+class Constants {
+private:
+    Context ctx;
+
+public:
+    const Number order;
+    const Number field;
+
+    Constants() : order(ctx, order_, sizeof(order_)), 
+                  field(ctx, field_, sizeof(field_)) {}
+};
+
+const Constants consts;
+
+/** Implements arithmetic modulo FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE BAAEDCE6 AF48A03B BFD25E8C D0364141,
+ *  using OpenSSL's BIGNUM
+ */
+class Scalar : private Number {
+public:
+};
 
 /** Implements arithmetic modulo FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F,
  *  represented as 5 uint64_t's in base 2^52. The values are allowed to contain >52 each. In particular,
@@ -88,20 +180,30 @@ public:
         return a.n[0] == b.n[0] && a.n[1] == b.n[1] && a.n[2] == b.n[2] && a.n[3] == b.n[3] && a.n[4] == b.n[4];
     }
 
-    void Get(uint64_t *out) {
+    /** extract as 32-byte big endian array */
+    void GetBytes(unsigned char *o) {
         Normalize();
-        out[0] = n[0] | (n[1] << 52);
-        out[1] = (n[1] >> 12) | (n[2] << 40);
-        out[2] = (n[2] >> 24) | (n[3] << 28);
-        out[3] = (n[3] >> 36) | (n[4] << 16);
+        for (int i=0; i<32; i++) {
+            int c = 0;
+            for (int j=0; j<2; j++) {
+                int limb = (8*i+4*j)/52;
+                int shift = (8*i+4*j)%52;
+                c |= ((n[limb] >> shift) & 0xF) << (4 * j);
+            }
+            o[31-i] = c;
+        }
     }
 
-    void Set(const uint64_t *in) {
-        n[0] = in[0] & 0xFFFFFFFFFFFFFULL;
-        n[1] = ((in[0] >> 52) | (in[1] << 12)) & 0xFFFFFFFFFFFFFULL;
-        n[2] = ((in[1] >> 40) | (in[2] << 24)) & 0xFFFFFFFFFFFFFULL;
-        n[3] = ((in[2] >> 28) | (in[3] << 36)) & 0xFFFFFFFFFFFFFULL;
-        n[4] = (in[3] >> 16);
+    /** set value of 32-byte big endian array */
+    void SetBytes(const unsigned char *in) {
+        n[0] = n[1] = n[2] = n[3] = n[4] = 0;
+        for (int i=0; i<32; i++) {
+            for (int j=0; j<2; j++) {
+                int limb = (8*i+4*j)/52;
+                int shift = (8*i+4*j)%52;
+                n[limb] |= (uint64_t)((in[31-i] >> (4*j)) & 0xF) << shift;
+            }
+        }
 #ifdef VERIFY_MAGNITUDE
         magnitude = 1;
 #endif
@@ -289,8 +391,20 @@ public:
         return n[0] & 1;
     }
 
+    void SetInverse(Context &ctx, FieldElem &a) {
+        unsigned char tmp[32];
+        a.GetBytes(tmp);
+        {
+            Context cctx(ctx);
+            Number n(cctx, tmp, 32);
+            n.SetModInverse(cctx, n, consts.field);
+            n.GetBytes(tmp, 32);
+        }
+        SetBytes(tmp);
+    }
+
     /** Set this to be the (modular) inverse of another FieldElem. Magnitude=1 */
-    void SetInverse(const FieldElem &a) {
+    void SetInverse_(const FieldElem &a) {
         // calculate a^p, with p={45,63,1019,1023}
         FieldElem a2; a2.SetSquare(a);
         FieldElem a3; a3.SetMult(a2,a);
@@ -324,19 +438,19 @@ public:
     }
 
     std::string ToString() {
-        uint64_t tmp[4];
-        Get(tmp);
+        unsigned char tmp[32];
+        GetBytes(tmp);
         std::string ret;
-        for (int i=63; i>=0; i--) {
-            int val = (tmp[i/16] >> ((i%16)*4)) & 0xF;
+        for (int i=0; i<32; i++) {
             static const char *c = "0123456789ABCDEF";
-            ret += c[val];
+            ret += c[(tmp[i] >> 4) & 0xF];
+            ret += c[(tmp[i]) & 0xF];
         }
         return ret;
     }
 
     void SetHex(const std::string &str) {
-        uint64_t tmp[4] = {0,0,0,0};
+        unsigned char tmp[32] = {};
         static const int cvt[256] = {0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                      0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                      0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
@@ -353,11 +467,11 @@ public:
                                      0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                      0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                      0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0};
-        for (int i=0; i<64; i++) {
-            if (str.length() > (63-i))
-                tmp[i/16] |= (uint64_t)cvt[(unsigned char)str[63-i]] << ((i%16)*4);
+        for (int i=0; i<32; i++) {
+            if (str.length() > i*2)
+                tmp[i] = (cvt[(unsigned char)str[2*i]] << 4) + cvt[(unsigned char)str[2*i+1]];
         }
-        Set(tmp);
+        SetBytes(tmp);
     }
 };
 
@@ -431,8 +545,8 @@ public:
     }
 
     /** Returns the affine coordinates of this point */
-    void GetAffine(GroupElem &aff) {
-        z.SetInverse(z);
+    void GetAffine(Context &ctx, GroupElem &aff) {
+        z.SetInverse(ctx, z);
         FieldElem z2;
         z2.SetSquare(z);
         FieldElem z3;
@@ -570,8 +684,9 @@ public:
     }
 
     std::string ToString() {
+        Context ctx;
         GroupElem aff;
-        GetAffine(aff);
+        GetAffine(ctx,aff);
         return aff.ToString();
     }
 };
@@ -581,11 +696,23 @@ public:
 using namespace secp256k1;
 
 int main() {
+    Context ctx;
     FieldElem f1,f2;
-    f1.SetHex("8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004");
+    f1.SetHex("8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846115");
+//    f2.SetHex("8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846115");
+    printf("%s\n",f1.ToString().c_str());
+//    printf("%s\n",f2.ToString().c_str());
     for (int i=0; i<1000000; i++) {
-        f1.SetInverse(f1);
+        f1.SetInverse(ctx,f1);
+//        f2.SetInverse_(f2);
+//        if (!(f1 == f2)) {
+//          printf("f1 %i: %s\n",i,f1.ToString().c_str());
+//          printf("f2 %i: %s\n",i,f2.ToString().c_str());
+//        }
         f1 *= 2;
+//        f2 *= 2;
     }
+    printf("%s\n",f1.ToString().c_str());
+//    printf("%s\n",f2.ToString().c_str());
     return 0;
 }
