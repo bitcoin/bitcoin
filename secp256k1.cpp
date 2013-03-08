@@ -5,6 +5,7 @@
 #include "scalar.h"
 #include "field.h"
 #include "group.h"
+#include "ecmult.h"
 
 using namespace secp256k1;
 
