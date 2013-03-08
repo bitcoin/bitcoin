@@ -743,6 +743,27 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
                          hash.ToString().c_str(),
                          nFees, txMinFee);
 
+        // Don't accept it if it would create an out with a value small enough
+        // that if spending it would cost more in fees than it is worth. To
+        // avoid a hard-coded economic assumption, we use the actual
+        // fees-per-KB the transaction is paying to decide what makes economic
+        // sense to spend.
+        int64 nFeesPerKB = nFees / tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+
+        // Sanity limit between MIN_TX_FEE and the COIN_DUST threshold, the
+        // latter so we don't mess with delibrate sacrifices to mining fees.
+        nFeesPerKB = min(max(MIN_TX_FEE, nFeesPerKB), COIN_DUST);
+
+        for (unsigned int i = 0; i < tx.vout.size(); i++){
+            // The marginal bytes required to spend a UTXO is always less than
+            // 1KB, (>500 bytes scriptSigs are non-standard) so using
+            // nFeesPerKB directly gives some room for a net positive return.
+            if (tx.vout[i].nValue <= nFeesPerKB)
+                return error("CTxMemPool::accept() : uneconomic txout %s:%d, value %s <= fee %s",
+                        hash.ToString().c_str(), i,
+                        FormatMoney(tx.vout[i].nValue).c_str(), FormatMoney(nFeesPerKB).c_str());
+        }
+
         // Continuously rate-limit free transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.

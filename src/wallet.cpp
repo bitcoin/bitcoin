@@ -1189,7 +1189,10 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
                     nFeeRet += nMoveToFee;
                 }
 
-                if (nChange > 0)
+                // Create change if required, but do not create change that
+                // results in a output value that isn't economical to spend.
+                // (see CTxMemPool::accept() logic)
+                if (nChange > max(MIN_TX_FEE, nTransactionFee))
                 {
                     // Note: We use a new key here to keep it from being obvious which side is the change.
                     //  The drawback is that by not reusing a previous key, the change may be lost if a
@@ -1315,6 +1318,14 @@ string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew,
 {
     CReserveKey reservekey(this);
     int64 nFeeRequired;
+
+    int64 nTxFee = max(MIN_TX_FEE, nTransactionFee);
+    if (nValue <= nTxFee){
+        string strError;
+        strError = strprintf(_("Error: Output value is too small; amount must be greater than the transaction fee, %s"), FormatMoney(nTxFee).c_str());
+        printf("SendMoney() : %s", strError.c_str());
+        return strError;
+    }
 
     if (IsLocked())
     {
