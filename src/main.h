@@ -48,6 +48,9 @@ static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 static const int64 MIN_TX_FEE = 50000;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
 static const int64 MIN_RELAY_TX_FEE = 10000;
+/** Coin dust is defined as any output with less than this multiple of the minimum tx fee */
+static const int64 COIN_DUST_RATIO = 20;
+static const int64 COIN_DUST = MIN_TX_FEE * COIN_DUST_RATIO; // 0.01 BTC
 /** No amount larger than this (in satoshi) is valid */
 static const int64 MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
