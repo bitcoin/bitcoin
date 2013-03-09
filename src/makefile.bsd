@@ -36,7 +36,8 @@ LIBS += \
    -l boost_thread$(BOOST_LIB_SUFFIX) \
    -l db_cxx$(BDB_LIB_SUFFIX) \
    -l ssl \
-   -l crypto
+   -l crypto \
+   -l execinfo
 
 ifndef USE_UPNP
 	override USE_UPNP = -
