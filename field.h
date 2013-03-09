@@ -1,12 +1,13 @@
 #ifndef _SECP256K1_FIELD_
 #define _SECP256K1_FIELD_
 
+using namespace std;
+
 #include <assert.h>
 #include <stdint.h>
 #include <string>
 
 #include "num.h"
-#include "consts.h"
 
 // #define VERIFY_MAGNITUDE 1
 
@@ -36,6 +37,10 @@ public:
 #ifdef VERIFY_MAGNITUDE
         magnitude = 1;
 #endif
+    }
+
+    FieldElem(const unsigned char *b32) {
+        SetBytes(b32);
     }
 
     /** Normalizes the internal representation entries. Magnitude=1 */
@@ -302,18 +307,6 @@ public:
         return n[0] & 1;
     }
 
-    void SetInverse_Number(Context &ctx, FieldElem &a) {
-        unsigned char tmp[32];
-        a.GetBytes(tmp);
-        {
-            Context cctx(ctx);
-            Number n(cctx, tmp, 32);
-            n.SetModInverse(cctx, n, consts.field);
-            n.GetBytes(tmp, 32);
-        }
-        SetBytes(tmp);
-    }
-
     /** Set this to be the (modular) inverse of another FieldElem. Magnitude=1 */
     void SetInverse(const FieldElem &a) {
         // calculate a^p, with p={45,63,1019,1023}
@@ -385,6 +378,26 @@ public:
         SetBytes(tmp);
     }
 };
+
+static const unsigned char field_p_[] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                                         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                                         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                                         0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F};
+
+class FieldConstants {
+private:
+    Context ctx;
+
+public:
+    const Number field_p;
+
+    FieldConstants() : field_p(ctx, field_p_, sizeof(field_p_)) {}
+};
+
+const FieldConstants &GetFieldConst() {
+    static const FieldConstants field_const;
+    return field_const;
+}
 
 }
 

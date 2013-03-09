@@ -5,6 +5,8 @@
 
 namespace secp256k1 {
 
+class GroupElemJac;
+
 /** Defines a point on the secp256k1 curve (y^2 = x^3 + 7) */
 class GroupElem {
 protected:
@@ -31,11 +33,10 @@ public:
         return fInfinity;
     }
 
-    void SetNeg(GroupElem &p) {
-        fInfinity = p.fInfinity;
-        x = p.x;
-        p.y.Normalize();
-        y.SetNeg(p.y, 1);
+    void SetNeg(const GroupElem &p) {
+        *this = p;
+        y.Normalize();
+        y.SetNeg(y, 1);
     }
 
     std::string ToString() {
@@ -43,6 +44,8 @@ public:
             return "(inf)";
         return "(" + x.ToString() + "," + y.ToString() + ")";
     }
+
+    void SetJac(GroupElemJac &jac);
 
     friend class GroupElemJac;
 };
@@ -58,6 +61,12 @@ public:
 
     /** Creates the point with given affine coordinates */
     GroupElemJac(const FieldElem &xin, const FieldElem &yin) : GroupElem(xin,yin), z(1) {}
+
+    GroupElemJac(const GroupElem &in) : GroupElem(in), z(1) {}
+
+    void SetJac(GroupElemJac &jac) {
+        *this = jac;
+    }
 
     /** Checks whether this is a non-infinite point on the curve */
     bool IsValid() {
@@ -89,6 +98,12 @@ public:
         aff.fInfinity = false;
         aff.x = x;
         aff.y = y;
+    }
+
+    void SetNeg(const GroupElemJac &p) {
+        *this = p;
+        y.Normalize();
+        y.SetNeg(y, 1);
     }
 
     /** Sets this point to have a given X coordinate & given Y oddness */
@@ -221,6 +236,45 @@ public:
         return aff.ToString();
     }
 };
+
+void GroupElem::SetJac(GroupElemJac &jac) {
+    jac.GetAffine(*this);
+}
+
+static const unsigned char order_[] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                                       0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+                                       0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+                                       0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41};
+
+static const unsigned char g_x_[] = {0x79,0xBE,0x66,0x7E,0xF9,0xDC,0xBB,0xAC,
+                                     0x55,0xA0,0x62,0x95,0xCE,0x87,0x0B,0x07,
+                                     0x02,0x9B,0xFC,0xDB,0x2D,0xCE,0x28,0xD9,
+                                     0x59,0xF2,0x81,0x5B,0x16,0xF8,0x17,0x98};
+
+static const unsigned char g_y_[] = {0x48,0x3A,0xDA,0x77,0x26,0xA3,0xC4,0x65,
+                                     0x5D,0xA4,0xFB,0xFC,0x0E,0x11,0x08,0xA8,
+                                     0xFD,0x17,0xB4,0x48,0xA6,0x85,0x54,0x19,
+                                     0x9C,0x47,0xD0,0x8F,0xFB,0x10,0xD4,0xB8};
+
+class GroupConstants {
+private:
+    Context ctx;
+    const FieldElem g_x;
+    const FieldElem g_y;
+
+public:
+    const Number order;
+    const GroupElem g;
+
+    GroupConstants() : order(ctx, order_, sizeof(order_)),
+                       g_x(g_x_), g_y(g_y_),
+                       g(g_x,g_y) {}
+};
+
+const GroupConstants &GetGroupConst() {
+    static const GroupConstants group_const;
+    return group_const;
+}
 
 }
 
