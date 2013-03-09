@@ -5,7 +5,7 @@ NovaCoin - a hybrid scrypt PoW + PoS based cryptocurrency.
 
 * 10 minute PoW block targets
 * 10 minute PoS block targets
-* Subsidy halves every x64 multiply of difficulty
+* The PoW subsidy halves every x64 multiply of difficulty
 * Maximum PoW reward is 100 coins
 * ~ 2 billion total coins
 
