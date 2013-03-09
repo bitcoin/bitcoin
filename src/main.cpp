@@ -1256,8 +1256,7 @@ bool ConnectBestBlock(CValidationState &state) {
             if (pindexTest->pprev == NULL || pindexTest->pnext != NULL) {
                 reverse(vAttach.begin(), vAttach.end());
                 BOOST_FOREACH(CBlockIndex *pindexSwitch, vAttach) {
-                    if (fRequestShutdown)
-                        break;
+                    boost::this_thread::interruption_point();
                     try {
                         if (!SetBestChain(state, pindexSwitch))
                             return false;
@@ -2457,7 +2456,6 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch) {
 
 
 bool AbortNode(const std::string &strMessage) {
-    fRequestShutdown = true;
     strMiscWarning = strMessage;
     printf("*** %s\n", strMessage.c_str());
     uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_ERROR);
@@ -2536,8 +2534,7 @@ bool static LoadBlockIndexDB()
     if (!pblocktree->LoadBlockIndexGuts())
         return false;
 
-    if (fRequestShutdown)
-        return true;
+    boost::this_thread::interruption_point();
 
     // Calculate bnChainWork
     vector<pair<int, CBlockIndex*> > vSortedByHeight;
@@ -2617,7 +2614,8 @@ bool VerifyDB() {
     CValidationState state;
     for (CBlockIndex* pindex = pindexBest; pindex && pindex->pprev; pindex = pindex->pprev)
     {
-        if (fRequestShutdown || pindex->nHeight < nBestHeight-nCheckDepth)
+        boost::this_thread::interruption_point();
+        if (pindex->nHeight < nBestHeight-nCheckDepth)
             break;
         CBlock block;
         // check level 0: read from disk
@@ -2654,7 +2652,8 @@ bool VerifyDB() {
     // check level 4: try reconnecting blocks
     if (nCheckLevel >= 4) {
         CBlockIndex *pindex = pindexState;
-        while (pindex != pindexBest && !fRequestShutdown) {
+        while (pindex != pindexBest) {
+            boost::this_thread::interruption_point();
              pindex = pindex->pnext;
              CBlock block;
              if (!block.ReadFromDisk(pindex))
@@ -3038,8 +3037,7 @@ void static ProcessGetData(CNode* pfrom)
 
         const CInv &inv = *it;
         {
-            if (fShutdown)
-                break;
+            boost::this_thread::interruption_point();
             it++;
 
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
@@ -3297,8 +3295,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         int64 nSince = nNow - 10 * 60;
         BOOST_FOREACH(CAddress& addr, vAddr)
         {
-            if (fShutdown)
-                return true;
+            boost::this_thread::interruption_point();
+
             if (addr.nTime <= 100000000 || addr.nTime > nNow + 10 * 60)
                 addr.nTime = nNow - 5 * 24 * 60 * 60;
             pfrom->AddAddressKnown(addr);
@@ -3366,8 +3364,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         {
             const CInv &inv = vInv[nInv];
 
-            if (fShutdown)
-                return true;
+            boost::this_thread::interruption_point();
             pfrom->AddInventoryKnown(inv);
 
             bool fAlreadyHave = AlreadyHave(inv);
@@ -3799,8 +3796,7 @@ bool ProcessMessages(CNode* pfrom)
                 LOCK(cs_main);
                 fRet = ProcessMessage(pfrom, strCommand, vRecv);
             }
-            if (fShutdown)
-                break;
+            boost::this_thread::interruption_point();
         }
         catch (std::ios_base::failure& e)
         {
@@ -3818,6 +3814,9 @@ bool ProcessMessages(CNode* pfrom)
             {
                 PrintExceptionContinue(&e, "ProcessMessages()");
             }
+        }
+        catch (boost::thread_interrupted) {
+            throw;
         }
         catch (std::exception& e) {
             PrintExceptionContinue(&e, "ProcessMessages()");
