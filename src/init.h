@@ -7,11 +7,10 @@
 
 #include "wallet.h"
 
-class boost::thread_group;
 extern CWallet* pwalletMain;
 
 void StartShutdown();
-void Shutdown(void* parg);
+void Shutdown();
 bool AppInit2(boost::thread_group& threadGroup);
 std::string HelpMessage();
 

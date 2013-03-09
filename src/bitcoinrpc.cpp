@@ -1221,13 +1221,14 @@ int CommandLineRPC(int argc, char *argv[])
                 strPrint = write_string(result, true);
         }
     }
-    catch (std::exception& e)
-    {
+    catch (boost::thread_interrupted) {
+        throw;
+    }
+    catch (std::exception& e) {
         strPrint = string("error: ") + e.what();
         nRet = 87;
     }
-    catch (...)
-    {
+    catch (...) {
         PrintException(NULL, "CommandLineRPC()");
     }
 
@@ -1264,6 +1265,9 @@ int main(int argc, char *argv[])
         {
             return CommandLineRPC(argc, argv);
         }
+    }
+    catch (boost::thread_interrupted) {
+        throw;
     }
     catch (std::exception& e) {
         PrintException(&e, "main()");
