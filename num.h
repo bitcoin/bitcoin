@@ -74,6 +74,18 @@ public:
     void SetModMul(Context &ctx, const Number &f, const Number &m) {
         BN_mod_mul(bn, bn, f.bn, m.bn, ctx);
     }
+    void SetAdd(Context &ctx, const Number &a1, const Number &a2) {
+        BN_add(bn, a1.bn, a2.bn);
+    }
+    void SetSub(Context &ctx, const Number &a1, const Number &a2) {
+        BN_sub(bn, a1.bn, a2.bn);
+    }
+    void SetMult(Context &ctx, const Number &a1, const Number &a2) {
+        BN_mul(bn, a1.bn, a2.bn, ctx);
+    }
+    void SetDiv(Context &ctx, const Number &a1, const Number &a2) {
+        BN_div(bn, NULL, a1.bn, a2.bn, ctx);
+    }
     int GetBits() const {
         return BN_num_bits(bn);
     }
@@ -91,9 +103,14 @@ public:
     bool IsZero() {
         return BN_is_zero(bn);
     }
-    // right-shift as many zeroes as possible
-    int IsOdd() {
+    bool IsOdd() {
         return BN_is_odd(bn);
+    }
+    bool IsNeg() {
+        return BN_is_negative(bn);
+    }
+    void Negate() {
+        BN_set_negative(bn, !IsNeg());
     }
     void Shift1() {
         BN_rshift1(bn,bn);
@@ -104,6 +121,12 @@ public:
     void SetHex(const std::string &str) {
         BN_hex2bn(&bn, str.c_str());
     }
+    void SplitInto(Context &ctx, int bits, Number &low, Number &high) const {
+        BN_copy(low.bn, bn);
+        BN_mask_bits(low.bn, bits);
+        BN_rshift(high.bn, bn, bits);
+    }
+
     std::string ToString() {
         char *str = BN_bn2hex(bn);
         std::string ret(str);

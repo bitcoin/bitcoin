@@ -239,6 +239,8 @@ public:
         cop.GetAffine(aff);
         return aff.ToString();
     }
+
+    void SetMulLambda(const GroupElemJac &p);
 };
 
 void GroupElem::SetJac(GroupElemJac &jac) {
@@ -260,6 +262,22 @@ static const unsigned char g_y_[] = {0x48,0x3A,0xDA,0x77,0x26,0xA3,0xC4,0x65,
                                      0xFD,0x17,0xB4,0x48,0xA6,0x85,0x54,0x19,
                                      0x9C,0x47,0xD0,0x8F,0xFB,0x10,0xD4,0xB8};
 
+// properties of secp256k1's efficiently computable endomorphism
+static const unsigned char lambda_[] = {0x53,0x63,0xad,0x4c,0xc0,0x5c,0x30,0xe0,
+                                        0xa5,0x26,0x1c,0x02,0x88,0x12,0x64,0x5a,
+                                        0x12,0x2e,0x22,0xea,0x20,0x81,0x66,0x78,
+                                        0xdf,0x02,0x96,0x7c,0x1b,0x23,0xbd,0x72};
+static const unsigned char beta_[] =   {0x7a,0xe9,0x6a,0x2b,0x65,0x7c,0x07,0x10,
+                                        0x6e,0x64,0x47,0x9e,0xac,0x34,0x34,0xe9,
+                                        0x9c,0xf0,0x49,0x75,0x12,0xf5,0x89,0x95,
+                                        0xc1,0x39,0x6c,0x28,0x71,0x95,0x01,0xee};
+static const unsigned char a1b2_[] =   {0x30,0x86,0xd2,0x21,0xa7,0xd4,0x6b,0xcd,
+                                        0xe8,0x6c,0x90,0xe4,0x92,0x84,0xeb,0x15};
+static const unsigned char b1_[]   =   {0xe4,0x43,0x7e,0xd6,0x01,0x0e,0x88,0x28,
+                                        0x6f,0x54,0x7f,0xa9,0x0a,0xbf,0xe4,0xc3};
+static const unsigned char a2_[]   =   {0x01,
+                                        0x14,0xca,0x50,0xf7,0xa8,0xe2,0xf3,0xf6,
+                                        0x57,0xc1,0x10,0x8d,0x9d,0x44,0xcf,0xd8};
 class GroupConstants {
 private:
     Context ctx;
@@ -269,15 +287,51 @@ private:
 public:
     const Number order;
     const GroupElem g;
+    const FieldElem beta;
+    const Number lambda, a1b2, b1, a2;
 
     GroupConstants() : order(ctx, order_, sizeof(order_)),
-                       g_x(g_x_), g_y(g_y_),
-                       g(g_x,g_y) {}
+                       g_x(g_x_), g_y(g_y_), g(g_x,g_y),
+                       beta(beta_),
+                       lambda(ctx, lambda_, sizeof(lambda_)),
+                       a1b2(ctx, a1b2_, sizeof(a1b2_)),
+                       b1(ctx, b1_, sizeof(b1_)),
+                       a2(ctx, a2_, sizeof(a2_)) {}
 };
 
 const GroupConstants &GetGroupConst() {
     static const GroupConstants group_const;
     return group_const;
+}
+
+void GroupElemJac::SetMulLambda(const GroupElemJac &p) {
+    FieldElem beta = GetGroupConst().beta;
+    *this = p;
+    x.SetMult(x, beta);
+}
+
+void SplitExp(Context &ctx, const Number &exp, Number &exp1, Number exp2) {
+    const GroupConstants &c = GetGroupConst();
+    Context ct(ctx);
+    Number bnc1(ct), bnc2(ct), bnt1(ct), bnt2(ct), bnn2(ct);
+    bnn2.SetNumber(c.order);
+    bnn2.Shift1();
+
+    bnc1.SetMult(ct, exp, c.a1b2);
+    bnc1.SetAdd(ct, bnc1, bnn2);
+    bnc1.SetDiv(ct, bnc1, c.order);
+
+    bnc2.SetMult(ct, exp, c.b1);
+    bnc2.SetAdd(ct, bnc2, bnn2);
+    bnc2.SetDiv(ct, bnc2, c.order);
+
+    bnt1.SetMult(ct, bnc1, c.a1b2);
+    bnt2.SetMult(ct, bnc2, c.a2);
+    bnt1.SetAdd(ct, bnt1, bnt2);
+    exp1.SetSub(ct, exp, bnt1);
+    bnt1.SetMult(ct, bnc1, c.b1);
+    bnt2.SetMult(ct, bnc2, c.a1b2);
+    exp2.SetSub(ct, bnt1, bnt2);
 }
 
 }

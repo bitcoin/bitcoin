@@ -5,10 +5,10 @@
 #include <algorithm>
 
 #include "group.h"
-#include "scalar.h"
+#include "num.h"
 
 #define WINDOW_A 5
-#define WINDOW_G 11
+#define WINDOW_G 15
 
 namespace secp256k1 {
 
@@ -17,17 +17,20 @@ private:
     G pre[1 << (W-2)];
 
 public:
-    WNAFPrecomp(const G &base) {
+    WNAFPrecomp() {}
+
+    void Build(const G &base) {
         pre[0] = base;
         GroupElemJac x(base);
-//        printf("base=%s x=%s\n", base.ToString().c_str(), x.ToString().c_str());
         GroupElemJac d; d.SetDouble(x);
-//        printf("d=%s\n", d.ToString().c_str());
         for (int i=1; i<(1 << (W-2)); i++) {
             x.SetAdd(d,pre[i-1]);
             pre[i].SetJac(x);
-//            printf("precomp %s*%i = %s\n", base.ToString().c_str(), i*2 +1, pre[i].ToString().c_str());
         }
+    }
+
+    WNAFPrecomp(const G &base) {
+        Build(base);
     }
 
     void Get(G &out, int exp) const {
@@ -55,11 +58,16 @@ private:
     }
 
 public:
-    WNAF(Context &ctx, const Scalar &exp, int w) : used(0) {
+    WNAF(Context &ctx, const Number &exp, int w) : used(0) {
         int zeroes = 0;
         Context ct(ctx);
-        Scalar x(ct);
+        Number x(ct);
         x.SetNumber(exp);
+        int sign = 1;
+        if (x.IsNeg()) {
+            sign = -1;
+            x.Negate();
+        }
         while (!x.IsZero()) {
             while (!x.IsOdd()) {
                 zeroes++;
@@ -68,9 +76,9 @@ public:
             int word = x.ShiftLowBits(ctx,w);
             if (word & (1 << (w-1))) {
                 x.Inc();
-                PushNAF(word - (1 << w), zeroes);
+                PushNAF(sign * (word - (1 << w)), zeroes);
             } else {
-                PushNAF(word, zeroes);
+                PushNAF(sign * word, zeroes);
             }
             zeroes = w-1;
         }
@@ -100,9 +108,20 @@ public:
 
 class ECMultConsts {
 public:
-    const WNAFPrecomp<GroupElem,WINDOW_G> wpg;
+    WNAFPrecomp<GroupElem,WINDOW_G> wpg;
+    WNAFPrecomp<GroupElem,WINDOW_G> wpg128;
 
-    ECMultConsts() : wpg(GetGroupConst().g) {}
+    ECMultConsts() {
+        printf("Precomputing G multiplies...\n");
+        const GroupElem &g = GetGroupConst().g;
+        GroupElemJac g128j(g);
+        for (int i=0; i<128; i++)
+            g128j.SetDouble(g128j);
+        GroupElem g128; g128.SetJac(g128j);
+        wpg.Build(g);
+        wpg128.Build(g128);
+        printf("Done precomputing\n");
+    }
 };
 
 const ECMultConsts &GetECMultConsts() {
@@ -110,15 +129,33 @@ const ECMultConsts &GetECMultConsts() {
     return ecmult_consts;
 }
 
-void ECMult(Context &ctx, GroupElemJac &out, const GroupElemJac &a, Scalar &an, Scalar &gn) {
-    WNAF<256> wa(ctx, an, WINDOW_A);
-    WNAF<256> wg(ctx, gn, WINDOW_G);
-    WNAFPrecomp<GroupElemJac,WINDOW_A> wpa(a);
-    const WNAFPrecomp<GroupElem,WINDOW_G> &wpg = GetECMultConsts().wpg;
+void ECMult(Context &ctx, GroupElemJac &out, const GroupElemJac &a, Number &an, Number &gn) {
+    Context ct(ctx);
+    Number an1(ct), an2(ct);
+    Number gn1(ct), gn2(ct);
 
-    int size_a = wa.GetSize();
-    int size_g = wg.GetSize();
-    int size = std::max(size_a, size_g);
+    SplitExp(ct, an, an1, an2);
+//    printf("an=%s\n", an.ToString().c_str());
+//    printf("an1=%s\n", an1.ToString().c_str());
+//    printf("an2=%s\n", an2.ToString().c_str());
+//    printf("an1.len=%i\n", an1.GetBits());
+//    printf("an2.len=%i\n", an2.GetBits());
+    gn.SplitInto(ct, 128, gn1, gn2);
+
+    WNAF<129> wa1(ct, an1, WINDOW_A);
+    WNAF<129> wa2(ct, an2, WINDOW_A);
+    WNAF<128> wg1(ct, gn1, WINDOW_G);
+    WNAF<128> wg2(ct, gn2, WINDOW_G);
+    GroupElemJac a2; a2.SetMulLambda(a);
+    WNAFPrecomp<GroupElemJac,WINDOW_A> wpa1(a);
+    WNAFPrecomp<GroupElemJac,WINDOW_A> wpa2(a2);
+    const ECMultConsts &c = GetECMultConsts();
+
+    int size_a1 = wa1.GetSize();
+    int size_a2 = wa2.GetSize();
+    int size_g1 = wg1.GetSize();
+    int size_g2 = wg2.GetSize();
+    int size = std::max(std::max(size_a1, size_a2), std::max(size_g1, size_g2));
 
     out = GroupElemJac();
     GroupElemJac tmpj;
@@ -127,12 +164,20 @@ void ECMult(Context &ctx, GroupElemJac &out, const GroupElemJac &a, Scalar &an, 
     for (int i=size-1; i>=0; i--) {
         out.SetDouble(out);
         int nw;
-        if (i < size_a && (nw = wa.Get(i))) {
-            wpa.Get(tmpj, nw);
+        if (i < size_a1 && (nw = wa1.Get(i))) {
+            wpa1.Get(tmpj, nw);
             out.SetAdd(out, tmpj);
         }
-        if (i < size_g && (nw = wg.Get(i))) {
-            wpg.Get(tmpa, nw);
+        if (i < size_a2 && (nw = wa2.Get(i))) {
+            wpa2.Get(tmpj, nw);
+            out.SetAdd(out, tmpj);
+        }
+        if (i < size_g1 && (nw = wg1.Get(i))) {
+            c.wpg.Get(tmpa, nw);
+            out.SetAdd(out, tmpa);
+        }
+        if (i < size_g2 && (nw = wg2.Get(i))) {
+            c.wpg128.Get(tmpa, nw);
             out.SetAdd(out, tmpa);
         }
     }
