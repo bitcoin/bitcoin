@@ -95,7 +95,7 @@ public:
         BN_div(bn, NULL, a1.bn, a2.bn, ctx);
     }
     void SetMod(Context &ctx, const Number &a, const Number &m) {
-        BN_nnmod(bn, m.bn, a.bn, ctx);
+        BN_nnmod(bn, a.bn, m.bn, ctx);
     }
     int Compare(const Number &a) const {
         return BN_cmp(bn, a.bn);
