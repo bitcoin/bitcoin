@@ -39,6 +39,14 @@ public:
         y.SetNeg(y, 1);
     }
 
+    void GetX(FieldElem &xout) const {
+        xout = x;
+    }
+
+    void GetY(FieldElem &yout) const {
+        yout = y;
+    }
+
     std::string ToString() const {
         if (fInfinity)
             return "(inf)";
@@ -99,6 +107,24 @@ public:
         aff.fInfinity = fInfinity;
         aff.x = x;
         aff.y = y;
+    }
+
+    void GetX(FieldElem &xout) {
+        FieldElem zi;
+        zi.SetInverse(z);
+        zi.SetSquare(zi);
+        xout.SetMult(x, zi);
+    }
+
+    bool IsInfinity() const {
+        return fInfinity;
+    }
+
+    void GetY(FieldElem &yout) {
+        FieldElem zi;
+        zi.SetInverse(z);
+        FieldElem zi3; zi3.SetSquare(zi); zi3.SetMult(zi, zi3);
+        yout.SetMult(y, zi3);
     }
 
     void SetNeg(const GroupElemJac &p) {

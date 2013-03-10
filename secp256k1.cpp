@@ -4,6 +4,7 @@
 #include "field.h"
 #include "group.h"
 #include "ecmult.h"
+#include "ecdsa.h"
 
 using namespace secp256k1;
 

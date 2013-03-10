@@ -71,8 +71,8 @@ public:
     void SetModInverse(Context &ctx, const Number &x, const Number &m) {
         BN_mod_inverse(bn, x.bn, m.bn, ctx);
     }
-    void SetModMul(Context &ctx, const Number &f, const Number &m) {
-        BN_mod_mul(bn, bn, f.bn, m.bn, ctx);
+    void SetModMul(Context &ctx, const Number &a, const Number &b, const Number &m) {
+        BN_mod_mul(bn, a.bn, b.bn, m.bn, ctx);
     }
     void SetAdd(Context &ctx, const Number &a1, const Number &a2) {
         BN_add(bn, a1.bn, a2.bn);
@@ -85,6 +85,12 @@ public:
     }
     void SetDiv(Context &ctx, const Number &a1, const Number &a2) {
         BN_div(bn, NULL, a1.bn, a2.bn, ctx);
+    }
+    void SetMod(Context &ctx, const Number &a, const Number &m) {
+        BN_nnmod(bn, m.bn, a.bn, ctx);
+    }
+    int Compare(const Number &a) {
+        return BN_cmp(bn, a.bn);
     }
     int GetBits() const {
         return BN_num_bits(bn);
@@ -99,7 +105,7 @@ public:
         BN_rshift(bn, bn, bits);
         return ret;
     }
-    // check whether number is 0
+    // check whether number is 0,
     bool IsZero() {
         return BN_is_zero(bn);
     }
