@@ -91,6 +91,9 @@
          <property name="text">
           <string>Using OpenSSL version</string>
          </property>
+         <property name="alignment">
+          <set>Qt::AlignJustify|Qt::AlignVCenter</set>
+         </property>
          <property name="indent">
           <number>10</number>
          </property>
