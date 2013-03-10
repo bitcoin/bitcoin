@@ -26,6 +26,8 @@ private:
     Number r,s;
 
 public:
+    Signature(Context &ctx) : r(ctx), s(ctx) {}
+
     bool Verify(Context &ctx, const GroupElemJac &pubkey, const Number &message) {
         const GroupConstants &c = GetGroupConst();
 
@@ -37,16 +39,22 @@ public:
             return false;
 
         Context ct(ctx);
-        Number sn(ct); sn.SetModInverse(ct, s, c.order);
-        Number u1(ct); u1.SetModMul(ct, sn, message, c.order);
-        Number u2(ct); u2.SetModMul(ct, sn, r, c.order);
+        Number sn(ct), u1(ct), u2(ct), xrn(ct);
+        sn.SetModInverse(ct, s, c.order);
+        u1.SetModMul(ct, sn, message, c.order);
+        u2.SetModMul(ct, sn, r, c.order);
         GroupElemJac pr; ECMult(ct, pr, pubkey, u2, u1);
         if (pr.IsInfinity())
             return false;
         FieldElem xr; pr.GetX(xr);
         unsigned char xrb[32]; xr.GetBytes(xrb);
-        Number xrn(ct); xrn.SetBytes(xrb,32); xrn.SetMod(ct,xrn,c.order);
+        xrn.SetBytes(xrb,32); xrn.SetMod(ct,xrn,c.order);
         return xrn.Compare(r) == 0;
+    }
+
+    void SetRS(const Number &rin, const Number &sin) {
+        r = rin;
+        s = sin;
     }
 };
 

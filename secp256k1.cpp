@@ -10,31 +10,31 @@ using namespace secp256k1;
 
 int main() {
     Context ctx;
-    FieldElem x,y;
+    FieldElem x;
     const Number &order = GetGroupConst().order;
-    x.SetHex("8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004");
-    y.SetHex("a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f");
-    GroupElemJac a(x,y);
-    printf("a=%s\n", a.ToString().c_str());
-    Number an(ctx);
-    an.SetHex("8b30bce9ad2a890696b23f671709eff3727fd8cc04d3362c6c7bf458f2846fff");
-    Number af(ctx);
-    af.SetHex("1337");
-    printf("an=%s\n", an.ToString().c_str());
-    Number gn(ctx);
-    gn.SetHex("f557be925d4b65381409fdf30514750f1eb4343a91216a4f71163cb35f2f6e0e");
-    Number gf(ctx);
-    gf.SetHex("7113");
-    printf("gn=%s\n", gn.ToString().c_str());
+    Number r(ctx), s(ctx), m(ctx);
+    Signature sig(ctx);
+    x.SetHex("a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f");
+    int cnt = 0;
+    int good = 0;
     for (int i=0; i<1000000; i++) {
-        ECMult(ctx, a, a, an, gn);
+//        ECMult(ctx, a, a, an, gn);
 //        an.SetModMul(ctx, af, order);
 //        gn.SetModMul(ctx, gf, order);
-          an.Inc();
-          gn.Inc();
+//          an.Inc();
+//          gn.Inc();
+        r.SetPseudoRand(order);
+        s.SetPseudoRand(order);
+        if (i == 0)
+            x.SetSquare(x);
+        m.SetPseudoRand(order);
+        sig.SetRS(r,s);
+        GroupElemJac pubkey; pubkey.SetCompressed(x, true);
+        if (pubkey.IsValid()) {
+            cnt++;
+            good += sig.Verify(ctx, pubkey, m);
+        }
     }
-    printf("%s\n", an.ToString().c_str());
-    printf("%s\n", gn.ToString().c_str());
-    printf("%s\n", a.ToString().c_str());
+    printf("%i/%i\n", good, cnt);
     return 0;
 }

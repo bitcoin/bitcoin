@@ -127,6 +127,9 @@ public:
     void SetHex(const std::string &str) {
         BN_hex2bn(&bn, str.c_str());
     }
+    void SetPseudoRand(const Number &max) {
+        BN_pseudo_rand_range(bn, max.bn);
+    }
     void SplitInto(Context &ctx, int bits, Number &low, Number &high) const {
         BN_copy(low.bn, bn);
         BN_mask_bits(low.bn, bits);
