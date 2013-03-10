@@ -28,7 +28,7 @@ private:
 public:
     Signature(Context &ctx) : r(ctx), s(ctx) {}
 
-    bool Verify(Context &ctx, const GroupElemJac &pubkey, const Number &message) {
+    bool RecomputeR(Context &ctx, Number &r2, const GroupElemJac &pubkey, const Number &message) {
         const GroupConstants &c = GetGroupConst();
 
         if (r.IsNeg() || s.IsNeg())
@@ -39,7 +39,7 @@ public:
             return false;
 
         Context ct(ctx);
-        Number sn(ct), u1(ct), u2(ct), xrn(ct);
+        Number sn(ct), u1(ct), u2(ct);
         sn.SetModInverse(ct, s, c.order);
         // printf("s=%s 1/s=%s\n", s.ToString().c_str(), sn.ToString().c_str());
         u1.SetModMul(ct, sn, message, c.order);
@@ -50,8 +50,15 @@ public:
             return false;
         FieldElem xr; pr.GetX(xr);
         unsigned char xrb[32]; xr.GetBytes(xrb);
-        xrn.SetBytes(xrb,32); xrn.SetMod(ct,xrn,c.order);
-        return xrn.Compare(r) == 0;
+        r2.SetBytes(xrb,32); r2.SetMod(ct,r2,c.order);
+    }
+
+    bool Verify(Context &ctx, const GroupElemJac &pubkey, const Number &message) {
+        Context ct(ctx);
+        Number r2(ct);
+        if (!RecomputeR(ct, r2, pubkey, message))
+            return false;
+        return r2.Compare(r) == 0;
     }
 
     void SetRS(const Number &rin, const Number &sin) {
