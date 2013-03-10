@@ -41,9 +41,11 @@ public:
         Context ct(ctx);
         Number sn(ct), u1(ct), u2(ct), xrn(ct);
         sn.SetModInverse(ct, s, c.order);
+        // printf("s=%s 1/s=%s\n", s.ToString().c_str(), sn.ToString().c_str());
         u1.SetModMul(ct, sn, message, c.order);
         u2.SetModMul(ct, sn, r, c.order);
         GroupElemJac pr; ECMult(ct, pr, pubkey, u2, u1);
+        //GroupElemJac pr = pubkey;
         if (pr.IsInfinity())
             return false;
         FieldElem xr; pr.GetX(xr);

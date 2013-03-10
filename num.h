@@ -68,6 +68,9 @@ public:
         memset(bin,0,len);
         BN_bn2bin(bn, bin + size - len);
     }
+    void SetInt(int x) {
+        BN_set_word(bn, x);
+    }
     void SetModInverse(Context &ctx, const Number &x, const Number &m) {
         BN_mod_inverse(bn, x.bn, m.bn, ctx);
     }
@@ -89,7 +92,7 @@ public:
     void SetMod(Context &ctx, const Number &a, const Number &m) {
         BN_nnmod(bn, m.bn, a.bn, ctx);
     }
-    int Compare(const Number &a) {
+    int Compare(const Number &a) const {
         return BN_cmp(bn, a.bn);
     }
     int GetBits() const {
@@ -106,13 +109,13 @@ public:
         return ret;
     }
     // check whether number is 0,
-    bool IsZero() {
+    bool IsZero() const {
         return BN_is_zero(bn);
     }
-    bool IsOdd() {
+    bool IsOdd() const {
         return BN_is_odd(bn);
     }
-    bool IsNeg() {
+    bool IsNeg() const {
         return BN_is_negative(bn);
     }
     void Negate() {
