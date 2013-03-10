@@ -336,7 +336,7 @@ void GroupElemJac::SetMulLambda(const GroupElemJac &p) {
     x.SetMult(x, beta);
 }
 
-void SplitExp(Context &ctx, const Number &exp, Number &exp1, Number exp2) {
+void SplitExp(Context &ctx, const Number &exp, Number &exp1, Number &exp2) {
     const GroupConstants &c = GetGroupConst();
     Context ct(ctx);
     Number bnc1(ct), bnc2(ct), bnt1(ct), bnt2(ct), bnn2(ct);
