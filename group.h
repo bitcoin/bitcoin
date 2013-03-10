@@ -39,10 +39,11 @@ public:
         y.SetNeg(y, 1);
     }
 
-    std::string ToString() {
+    std::string ToString() const {
         if (fInfinity)
             return "(inf)";
-        return "(" + x.ToString() + "," + y.ToString() + ")";
+        FieldElem xc = x, yc = y;
+        return "(" + xc.ToString() + "," + yc.ToString() + ")";
     }
 
     void SetJac(GroupElemJac &jac);
@@ -51,7 +52,7 @@ public:
 };
 
 /** Represents a point on the secp256k1 curve, with jacobian coordinates */
-class GroupElemJac : public GroupElem {
+class GroupElemJac : private GroupElem {
 protected:
     FieldElem z;
 
@@ -95,7 +96,7 @@ public:
         x.SetMult(x,z2);
         y.SetMult(y,z3);
         z = FieldElem(1);
-        aff.fInfinity = false;
+        aff.fInfinity = fInfinity;
         aff.x = x;
         aff.y = y;
     }
@@ -122,18 +123,19 @@ public:
 
     /** Sets this point to be the EC double of another */
     void SetDouble(const GroupElemJac &p) {
-        if (p.fInfinity || y.IsZero()) {
+        FieldElem t5 = p.y;
+        if (p.fInfinity || t5.IsZero()) {
             fInfinity = true;
             return;
         }
 
-        FieldElem t1,t2,t3,t4,t5;
-        z.SetMult(p.y,p.z);
+        FieldElem t1,t2,t3,t4;
+        z.SetMult(t5,p.z);
         z *= 2;                // Z' = 2*Y*Z (2)
         t1.SetSquare(p.x);
         t1 *= 3;               // T1 = 3*X^2 (3)
         t2.SetSquare(t1);      // T2 = 9*X^4 (1)
-        t3.SetSquare(p.y);
+        t3.SetSquare(t5);
         t3 *= 2;               // T3 = 2*Y^2 (2)
         t4.SetSquare(t3);
         t4 *= 2;               // T4 = 8*Y^4 (2)
@@ -148,6 +150,7 @@ public:
         y.SetMult(t1,t3);      // Y' = 36*X^3*Y^2 - 27*X^6 (1)
         t2.SetNeg(t4,2);       // T2 = -8*Y^4 (3)
         y += t2;               // Y' = 36*X^3*Y^2 - 27*X^6 - 8*Y^4 (4)
+        fInfinity = false;
     }
 
     /** Sets this point to be the EC addition of two others */
@@ -230,9 +233,10 @@ public:
         y += h3;
     }
 
-    std::string ToString() {
+    std::string ToString() const {
+        GroupElemJac cop = *this;
         GroupElem aff;
-        GetAffine(aff);
+        cop.GetAffine(aff);
         return aff.ToString();
     }
 };

@@ -7,6 +7,9 @@
 #include "group.h"
 #include "scalar.h"
 
+#define WINDOW_A 5
+#define WINDOW_G 11
+
 namespace secp256k1 {
 
 template<typename G, int W> class WNAFPrecomp {
@@ -16,11 +19,14 @@ private:
 public:
     WNAFPrecomp(const G &base) {
         pre[0] = base;
-        GroupElemJac x = base;
+        GroupElemJac x(base);
+//        printf("base=%s x=%s\n", base.ToString().c_str(), x.ToString().c_str());
         GroupElemJac d; d.SetDouble(x);
+//        printf("d=%s\n", d.ToString().c_str());
         for (int i=1; i<(1 << (W-2)); i++) {
             x.SetAdd(d,pre[i-1]);
             pre[i].SetJac(x);
+//            printf("precomp %s*%i = %s\n", base.ToString().c_str(), i*2 +1, pre[i].ToString().c_str());
         }
     }
 
@@ -31,7 +37,7 @@ public:
         if (exp > 0) {
             out = pre[(exp-1)/2];
         } else {
-            out.SetNeg(pre[(1-exp)/2]);
+            out.SetNeg(pre[(-exp-1)/2]);
         }
     }
 };
@@ -49,16 +55,19 @@ private:
     }
 
 public:
-    WNAF(Context &ctx, Scalar &exp, int w) : used(0) {
+    WNAF(Context &ctx, const Scalar &exp, int w) : used(0) {
         int zeroes = 0;
-        while (!exp.IsZero()) {
-            while (!exp.IsOdd()) {
+        Context ct(ctx);
+        Scalar x(ct);
+        x.SetNumber(exp);
+        while (!x.IsZero()) {
+            while (!x.IsOdd()) {
                 zeroes++;
-                exp.Shift1();
+                x.Shift1();
             }
-            int word = exp.ShiftLowBits(ctx,w);
+            int word = x.ShiftLowBits(ctx,w);
             if (word & (1 << (w-1))) {
-                exp.Inc();
+                x.Inc();
                 PushNAF(word - (1 << w), zeroes);
             } else {
                 PushNAF(word, zeroes);
@@ -72,14 +81,15 @@ public:
     }
 
     int Get(int pos) const {
-        return naf[used-1-pos];
+        assert(pos >= 0 && pos < used);
+        return naf[pos];
     }
 
     std::string ToString() {
         std::stringstream ss;
         ss << "(";
         for (int i=0; i<GetSize(); i++) {
-            ss << Get(i);
+            ss << Get(used-1-i);
             if (i != used-1)
                 ss << ',';
         }
@@ -90,7 +100,7 @@ public:
 
 class ECMultConsts {
 public:
-    const WNAFPrecomp<GroupElem,10> wpg;
+    const WNAFPrecomp<GroupElem,WINDOW_G> wpg;
 
     ECMultConsts() : wpg(GetGroupConst().g) {}
 };
@@ -100,28 +110,29 @@ const ECMultConsts &GetECMultConsts() {
     return ecmult_consts;
 }
 
-void ECMult(Context &ctx, GroupElemJac &out, GroupElemJac &a, Scalar &an, Scalar &gn) {
-    WNAF<256> wa(ctx, an, 5);
-    WNAF<256> wg(ctx, gn, 10);
-    WNAFPrecomp<GroupElemJac,5> wpa(a);
-    const WNAFPrecomp<GroupElem,10> &wpg = GetECMultConsts().wpg;
+void ECMult(Context &ctx, GroupElemJac &out, const GroupElemJac &a, Scalar &an, Scalar &gn) {
+    WNAF<256> wa(ctx, an, WINDOW_A);
+    WNAF<256> wg(ctx, gn, WINDOW_G);
+    WNAFPrecomp<GroupElemJac,WINDOW_A> wpa(a);
+    const WNAFPrecomp<GroupElem,WINDOW_G> &wpg = GetECMultConsts().wpg;
 
-    int size = std::max(wa.GetSize(), wg.GetSize());
+    int size_a = wa.GetSize();
+    int size_g = wg.GetSize();
+    int size = std::max(size_a, size_g);
 
     out = GroupElemJac();
     GroupElemJac tmpj;
     GroupElem tmpa;
 
-    for (int i=0; i<size; i++) {
+    for (int i=size-1; i>=0; i--) {
         out.SetDouble(out);
-        int anw = wa.Get(i);
-        if (anw) {
-            wpa.Get(tmpj, anw);
+        int nw;
+        if (i < size_a && (nw = wa.Get(i))) {
+            wpa.Get(tmpj, nw);
             out.SetAdd(out, tmpj);
         }
-        int gnw = wg.Get(i);
-        if (gnw) {
-            wpg.Get(tmpa, gnw);
+        if (i < size_g && (nw = wg.Get(i))) {
+            wpg.Get(tmpa, nw);
             out.SetAdd(out, tmpa);
         }
     }

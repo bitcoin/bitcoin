@@ -87,13 +87,13 @@ public:
 
     bool IsZero() {
         Normalize();
-        return n[0] == 0 && n[1] == 0 && n[2] == 0 && n[3] == 0 && n[4] == 0;
+        return (n[0] == 0 && n[1] == 0 && n[2] == 0 && n[3] == 0 && n[4] == 0);
     }
 
     bool friend operator==(FieldElem &a, FieldElem &b) {
         a.Normalize();
         b.Normalize();
-        return a.n[0] == b.n[0] && a.n[1] == b.n[1] && a.n[2] == b.n[2] && a.n[3] == b.n[3] && a.n[4] == b.n[4];
+        return (a.n[0] == b.n[0] && a.n[1] == b.n[1] && a.n[2] == b.n[2] && a.n[3] == b.n[3] && a.n[4] == b.n[4]);
     }
 
     /** extract as 32-byte big endian array */

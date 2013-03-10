@@ -56,6 +56,9 @@ public:
     Number(Context &ctx, const unsigned char *bin, int len) : bn(ctx.Get()) {
         SetBytes(bin,len);
     }
+    void SetNumber(const Number &x) {
+        BN_copy(bn, x.bn);
+    }
     void SetBytes(const unsigned char *bin, int len) {
         BN_bin2bn(bin, len, bn);
     }
@@ -67,6 +70,9 @@ public:
     }
     void SetModInverse(Context &ctx, const Number &x, const Number &m) {
         BN_mod_inverse(bn, x.bn, m.bn, ctx);
+    }
+    void SetModMul(Context &ctx, const Number &f, const Number &m) {
+        BN_mod_mul(bn, bn, f.bn, m.bn, ctx);
     }
     int GetBits() const {
         return BN_num_bits(bn);
