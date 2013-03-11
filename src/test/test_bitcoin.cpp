@@ -35,7 +35,7 @@ struct TestingSetup {
         RegisterWallet(pwalletMain);
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
-            NewThread(ThreadScriptCheck, NULL);
+            NewThread(ThreadScriptCheck, NULL, THREAD_PRIORITY_BELOW_NORMAL);
     }
     ~TestingSetup()
     {
