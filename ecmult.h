@@ -141,8 +141,8 @@ void ECMult(Context &ctx, GroupElemJac &out, const GroupElemJac &a, const Number
 //    printf("an2.len=%i\n", an2.GetBits());
     gn.SplitInto(ct, 128, gn1, gn2);
 
-    WNAF<129> wa1(ct, an1, WINDOW_A);
-    WNAF<129> wa2(ct, an2, WINDOW_A);
+    WNAF<128> wa1(ct, an1, WINDOW_A);
+    WNAF<128> wa2(ct, an2, WINDOW_A);
     WNAF<128> wg1(ct, gn1, WINDOW_G);
     WNAF<128> wg2(ct, gn2, WINDOW_G);
     GroupElemJac a2; a2.SetMulLambda(a);
