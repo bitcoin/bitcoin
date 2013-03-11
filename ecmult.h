@@ -8,7 +8,7 @@
 #include "num.h"
 
 #define WINDOW_A 5
-#define WINDOW_G 15
+#define WINDOW_G 13
 
 namespace secp256k1 {
 
@@ -51,6 +51,7 @@ private:
     int used;
 
     void PushNAF(int num, int zeroes) {
+        assert(used < B+1);
         for (int i=0; i<zeroes; i++) {
             naf[used++]=0;
         }
@@ -73,7 +74,7 @@ public:
                 zeroes++;
                 x.Shift1();
             }
-            int word = x.ShiftLowBits(ctx,w);
+            int word = x.ShiftLowBits(ct,w);
             if (word & (1 << (w-1))) {
                 x.Inc();
                 PushNAF(sign * (word - (1 << w)), zeroes);
@@ -112,7 +113,6 @@ public:
     WNAFPrecomp<GroupElem,WINDOW_G> wpg128;
 
     ECMultConsts() {
-        printf("Precomputing G multiplies...\n");
         const GroupElem &g = GetGroupConst().g;
         GroupElemJac g128j(g);
         for (int i=0; i<128; i++)
@@ -120,7 +120,6 @@ public:
         GroupElem g128; g128.SetJac(g128j);
         wpg.Build(g);
         wpg128.Build(g128);
-        printf("Done precomputing\n");
     }
 };
 
@@ -129,7 +128,7 @@ const ECMultConsts &GetECMultConsts() {
     return ecmult_consts;
 }
 
-void ECMult(Context &ctx, GroupElemJac &out, const GroupElemJac &a, Number &an, Number &gn) {
+void ECMult(Context &ctx, GroupElemJac &out, const GroupElemJac &a, const Number &an, const Number &gn) {
     Context ct(ctx);
     Number an1(ct), an2(ct);
     Number gn1(ct), gn2(ct);

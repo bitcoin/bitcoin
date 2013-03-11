@@ -78,7 +78,7 @@ public:
     }
 
     /** Checks whether this is a non-infinite point on the curve */
-    bool IsValid() {
+    bool IsValid() const {
         if (IsInfinity())
             return false;
         // y^2 = x^3 + 7

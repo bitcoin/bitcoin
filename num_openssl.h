@@ -74,7 +74,12 @@ public:
         BN_bn2bin(bn, bin + size - len);
     }
     void SetInt(int x) {
-        BN_set_word(bn, x);
+        if (x >= 0) {
+            BN_set_word(bn, x);
+        } else {
+            BN_set_word(bn, -x);
+            BN_set_negative(bn, 1);
+        }
     }
     void SetModInverse(Context &ctx, const Number &x, const Number &m) {
         BN_mod_inverse(bn, x.bn, m.bn, ctx);
