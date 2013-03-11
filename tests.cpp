@@ -62,7 +62,7 @@ void test_point_times_order(const GroupElemJac &point) {
 
 void test_run_point_times_order() {
     Context ctx;
-    FieldElem x; x.SetHex("0000000000000000000000000000000000000000000000000000000000000002");
+    FieldElem x; x.SetHex("02");
     for (int i=0; i<500; i++) {
         GroupElemJac j; j.SetCompressed(x, true);
         test_point_times_order(j);
