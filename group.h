@@ -317,8 +317,9 @@ public:
     const FieldElem beta;
     const Number lambda, a1b2, b1, a2;
 
-    GroupConstants() : order(ctx, order_, sizeof(order_)),
-                       g_x(g_x_), g_y(g_y_), g(g_x,g_y),
+    GroupConstants() : g_x(g_x_), g_y(g_y_),
+                       order(ctx, order_, sizeof(order_)),
+                       g(g_x,g_y),
                        beta(beta_),
                        lambda(ctx, lambda_, sizeof(lambda_)),
                        a1b2(ctx, a1b2_, sizeof(a1b2_)),

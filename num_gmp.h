@@ -1,5 +1,5 @@
-#ifndef _SECP256K1_NUM_OPENSSL_
-#define _SECP256K1_NUM_OPENSSL_
+#ifndef _SECP256K1_NUM_GMP_
+#define _SECP256K1_NUM_GMP_
 
 #include <assert.h>
 #include <string>
@@ -61,11 +61,11 @@ public:
     void SetNumber(const Number &x) {
         mpz_set(bn, x.bn);
     }
-    void SetBytes(const unsigned char *bin, int len) {
+    void SetBytes(const unsigned char *bin, unsigned int len) {
         mpz_import(bn, len, 1, 1, 1, 0, bin);
     }
-    void GetBytes(unsigned char *bin, int len) {
-        int size = (mpz_sizeinbase(bn,2)+7)/8;
+    void GetBytes(unsigned char *bin, unsigned int len) {
+        unsigned int size = (mpz_sizeinbase(bn,2)+7)/8;
         assert(size <= len);
         memset(bin,0,len);
         size_t count = 0;

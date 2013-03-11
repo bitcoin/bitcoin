@@ -340,7 +340,7 @@ public:
                                      0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                      0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                      0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0};
-        for (int i=0; i<32; i++) {
+        for (unsigned int i=0; i<32; i++) {
             if (str.length() > i*2)
                 tmp[32 - str.length()/2 + i] = (cvt[(unsigned char)str[2*i]] << 4) + cvt[(unsigned char)str[2*i+1]];
         }
