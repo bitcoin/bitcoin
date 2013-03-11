@@ -70,7 +70,7 @@ public:
         memset(bin,0,len);
         size_t count = 0;
         mpz_export(bin + len - size, &count, 1, 1, 1, 0, bn);
-        assert(size == count);
+        assert(count == 0 || size == count);
     }
     void SetInt(int x) {
         mpz_set_si(bn, x);
@@ -80,7 +80,7 @@ public:
     }
     void SetModMul(Context &ctx, const Number &a, const Number &b, const Number &m) {
         mpz_mul(bn, a.bn, b.bn);
-        mpz_mod(bn, a.bn, m.bn);
+        mpz_mod(bn, bn, m.bn);
     }
     void SetAdd(Context &ctx, const Number &a1, const Number &a2) {
         mpz_add(bn, a1.bn, a2.bn);
@@ -144,8 +144,8 @@ public:
         mpz_fdiv_q_2exp(high.bn, bn, bits);
     }
 
-    std::string ToString() {
-        char *str = (char*)malloc((GetBits() + 7)/8 + 2);
+    std::string ToString() const {
+        char *str = (char*)malloc(mpz_sizeinbase(bn,16) + 2);
         mpz_get_str(str, 16, bn);
         std::string ret(str);
         free(str);

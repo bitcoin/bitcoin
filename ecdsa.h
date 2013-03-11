@@ -30,11 +30,11 @@ public:
 
     bool Parse(const unsigned char *sig, int size) {
         if (sig[0] != 0x30) return false;
-        if (sig[1] != size-2) return false;
         int lenr = sig[3];
-        if (4+lenr >= size) return false;
+        if (5+lenr >= size) return false;
         int lens = sig[lenr+5];
-        if (lenr+lens+6 != size) return false;
+        if (sig[1] != lenr+lens+4) return false;
+        if (lenr+lens+6 > size) return false;
         if (sig[2] != 0x02) return false;
         if (lenr == 0) return false;
         if (sig[lenr+4] != 0x02) return false;
@@ -80,6 +80,10 @@ public:
         r = rin;
         s = sin;
     }
+
+    std::string ToString() const {
+        return "(" + r.ToString() + "," + s.ToString() + ")";
+    }
 };
 
 int VerifyECDSA(const unsigned char *msg, int msglen, const unsigned char *sig, int siglen, const unsigned char *pubkey, int pubkeylen) {
@@ -90,8 +94,13 @@ int VerifyECDSA(const unsigned char *msg, int msglen, const unsigned char *sig, 
     m.SetBytes(msg, msglen);
     if (!ParsePubKey(q, pubkey, pubkeylen))
         return -1;
-    if (!s.Parse(sig, siglen))
+    if (!s.Parse(sig, siglen)) {
+        fprintf(stderr, "Can't parse signature: ");
+        for (int i=0; i<siglen; i++) fprintf(stderr,"%02x", sig[i]);
+        fprintf(stderr, "\n");
         return -2;
+    }
+//    fprintf(stderr, "Verifying ECDSA: msg=%s pubkey=%s sig=%s\n", m.ToString().c_str(), q.ToString().c_str(), s.ToString().c_str());
     if (!s.Verify(ctx, q, m))
         return 0;
     return 1;

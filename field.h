@@ -308,7 +308,7 @@ public:
     }
 
     /** Set this to be the (modular) inverse of another FieldElem. Magnitude=1 */
-    void SetInverse(Context &ctx, const FieldElem &a);
+    void SetInverse(Context &ctx, FieldElem &a);
 
     std::string ToString() {
         unsigned char tmp[32];
@@ -368,7 +368,7 @@ const FieldConstants &GetFieldConst() {
     return field_const;
 }
 
-void FieldElem::SetInverse(Context &ctx, const FieldElem &a) {
+void FieldElem::SetInverse(Context &ctx, FieldElem &a) {
 #if 0
     // calculate a^p, with p={45,63,1019,1023}
     FieldElem a2; a2.SetSquare(a);
@@ -402,7 +402,7 @@ void FieldElem::SetInverse(Context &ctx, const FieldElem &a) {
     SetMult(x,a45);
 #else
     unsigned char b[32];
-    GetBytes(b);
+    a.GetBytes(b);
     {
         const Number &p = GetFieldConst().field_p;
         Context ct(ctx);

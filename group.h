@@ -39,11 +39,11 @@ public:
         y.SetNeg(y, 1);
     }
 
-    void GetX(FieldElem &xout) const {
+    void GetX(Context &ctx, FieldElem &xout) {
         xout = x;
     }
 
-    void GetY(FieldElem &yout) const {
+    void GetY(Context &ctx, FieldElem &yout) {
         yout = y;
     }
 
