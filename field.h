@@ -308,38 +308,7 @@ public:
     }
 
     /** Set this to be the (modular) inverse of another FieldElem. Magnitude=1 */
-    void SetInverse(const FieldElem &a) {
-        // calculate a^p, with p={45,63,1019,1023}
-        FieldElem a2; a2.SetSquare(a);
-        FieldElem a3; a3.SetMult(a2,a);
-        FieldElem a4; a4.SetSquare(a2);
-        FieldElem a5; a5.SetMult(a4,a);
-        FieldElem a10; a10.SetSquare(a5);
-        FieldElem a11; a11.SetMult(a10,a);
-        FieldElem a21; a21.SetMult(a11,a10);
-        FieldElem a42; a42.SetSquare(a21);
-        FieldElem a45; a45.SetMult(a42,a3);
-        FieldElem a63; a63.SetMult(a42,a21);
-        FieldElem a126; a126.SetSquare(a63);
-        FieldElem a252; a252.SetSquare(a126);
-        FieldElem a504; a504.SetSquare(a252);
-        FieldElem a1008; a1008.SetSquare(a504);
-        FieldElem a1019; a1019.SetMult(a1008,a11);
-        FieldElem a1023; a1023.SetMult(a1019,a4);
-        FieldElem x = a63;
-        for (int i=0; i<21; i++) {
-            for (int j=0; j<10; j++) x.SetSquare(x);
-            x.SetMult(x,a1023);
-        }
-        for (int j=0; j<10; j++) x.SetSquare(x);
-        x.SetMult(x,a1019);
-        for (int i=0; i<2; i++) {
-            for (int j=0; j<10; j++) x.SetSquare(x);
-            x.SetMult(x,a1023);
-        }
-        for (int j=0; j<10; j++) x.SetSquare(x);
-        SetMult(x,a45);
-    }
+    void SetInverse(Context &ctx, const FieldElem &a);
 
     std::string ToString() {
         unsigned char tmp[32];
@@ -397,6 +366,52 @@ public:
 const FieldConstants &GetFieldConst() {
     static const FieldConstants field_const;
     return field_const;
+}
+
+void FieldElem::SetInverse(Context &ctx, const FieldElem &a) {
+#if 0
+    // calculate a^p, with p={45,63,1019,1023}
+    FieldElem a2; a2.SetSquare(a);
+    FieldElem a3; a3.SetMult(a2,a);
+    FieldElem a4; a4.SetSquare(a2);
+    FieldElem a5; a5.SetMult(a4,a);
+    FieldElem a10; a10.SetSquare(a5);
+    FieldElem a11; a11.SetMult(a10,a);
+    FieldElem a21; a21.SetMult(a11,a10);
+    FieldElem a42; a42.SetSquare(a21);
+    FieldElem a45; a45.SetMult(a42,a3);
+    FieldElem a63; a63.SetMult(a42,a21);
+    FieldElem a126; a126.SetSquare(a63);
+    FieldElem a252; a252.SetSquare(a126);
+    FieldElem a504; a504.SetSquare(a252);
+    FieldElem a1008; a1008.SetSquare(a504);
+    FieldElem a1019; a1019.SetMult(a1008,a11);
+    FieldElem a1023; a1023.SetMult(a1019,a4);
+    FieldElem x = a63;
+    for (int i=0; i<21; i++) {
+        for (int j=0; j<10; j++) x.SetSquare(x);
+        x.SetMult(x,a1023);
+    }
+    for (int j=0; j<10; j++) x.SetSquare(x);
+    x.SetMult(x,a1019);
+    for (int i=0; i<2; i++) {
+        for (int j=0; j<10; j++) x.SetSquare(x);
+        x.SetMult(x,a1023);
+    }
+    for (int j=0; j<10; j++) x.SetSquare(x);
+    SetMult(x,a45);
+#else
+    unsigned char b[32];
+    GetBytes(b);
+    {
+        const Number &p = GetFieldConst().field_p;
+        Context ct(ctx);
+        Number n(ct); n.SetBytes(b, 32);
+        n.SetModInverse(ct, n, p);
+        n.GetBytes(b, 32);
+    }
+    SetBytes(b);
+#endif
 }
 
 }

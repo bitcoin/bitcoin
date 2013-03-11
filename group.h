@@ -54,7 +54,7 @@ public:
         return "(" + xc.ToString() + "," + yc.ToString() + ")";
     }
 
-    void SetJac(GroupElemJac &jac);
+    void SetJac(Context &ctx, GroupElemJac &jac);
 
     friend class GroupElemJac;
 };
@@ -73,7 +73,7 @@ public:
 
     GroupElemJac(const GroupElem &in) : GroupElem(in), z(1) {}
 
-    void SetJac(GroupElemJac &jac) {
+    void SetJac(Context &ctx, GroupElemJac &jac) {
         *this = jac;
     }
 
@@ -95,8 +95,8 @@ public:
     }
 
     /** Returns the affine coordinates of this point */
-    void GetAffine(GroupElem &aff) {
-        z.SetInverse(z);
+    void GetAffine(Context &ctx, GroupElem &aff) {
+        z.SetInverse(ctx, z);
         FieldElem z2;
         z2.SetSquare(z);
         FieldElem z3;
@@ -109,9 +109,9 @@ public:
         aff.y = y;
     }
 
-    void GetX(FieldElem &xout) {
+    void GetX(Context &ctx, FieldElem &xout) {
         FieldElem zi;
-        zi.SetInverse(z);
+        zi.SetInverse(ctx, z);
         zi.SetSquare(zi);
         xout.SetMult(x, zi);
     }
@@ -120,9 +120,9 @@ public:
         return fInfinity;
     }
 
-    void GetY(FieldElem &yout) {
+    void GetY(Context &ctx, FieldElem &yout) {
         FieldElem zi;
-        zi.SetInverse(z);
+        zi.SetInverse(ctx, z);
         FieldElem zi3; zi3.SetSquare(zi); zi3.SetMult(zi, zi3);
         yout.SetMult(y, zi3);
     }
@@ -260,17 +260,18 @@ public:
     }
 
     std::string ToString() const {
+        Context ctx;
         GroupElemJac cop = *this;
         GroupElem aff;
-        cop.GetAffine(aff);
+        cop.GetAffine(ctx, aff);
         return aff.ToString();
     }
 
     void SetMulLambda(const GroupElemJac &p);
 };
 
-void GroupElem::SetJac(GroupElemJac &jac) {
-    jac.GetAffine(*this);
+void GroupElem::SetJac(Context &ctx, GroupElemJac &jac) {
+    jac.GetAffine(ctx, *this);
 }
 
 static const unsigned char order_[] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,

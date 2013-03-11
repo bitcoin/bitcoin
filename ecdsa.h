@@ -48,7 +48,7 @@ public:
         //GroupElemJac pr = pubkey;
         if (pr.IsInfinity())
             return false;
-        FieldElem xr; pr.GetX(xr);
+        FieldElem xr; pr.GetX(ct, xr);
         unsigned char xrb[32]; xr.GetBytes(xrb);
         r2.SetBytes(xrb,32); r2.SetMod(ct,r2,c.order);
     }

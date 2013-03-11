@@ -68,7 +68,9 @@ public:
         int size = (mpz_sizeinbase(bn,2)+7)/8;
         assert(size <= len);
         memset(bin,0,len);
-        mpz_export(bin + size - len, NULL, 1, 1, 1, 0, bn);
+        size_t count = 0;
+        mpz_export(bin + len - size, &count, 1, 1, 1, 0, bn);
+        assert(size == count);
     }
     void SetInt(int x) {
         mpz_set_si(bn, x);

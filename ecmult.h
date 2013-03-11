@@ -7,8 +7,12 @@
 #include "group.h"
 #include "num.h"
 
+// optimal for 128-bit and 256-bit exponents
 #define WINDOW_A 5
-#define WINDOW_G 13
+
+// larger numbers may result in slightly better performance, at the cost of
+// exponentially larger precomputed tables. WINDOW_G == 13 results in 640 KiB.
+#define WINDOW_G 14
 
 namespace secp256k1 {
 
@@ -19,18 +23,18 @@ private:
 public:
     WNAFPrecomp() {}
 
-    void Build(const G &base) {
+    void Build(Context &ctx, const G &base) {
         pre[0] = base;
         GroupElemJac x(base);
         GroupElemJac d; d.SetDouble(x);
         for (int i=1; i<(1 << (W-2)); i++) {
             x.SetAdd(d,pre[i-1]);
-            pre[i].SetJac(x);
+            pre[i].SetJac(ctx, x);
         }
     }
 
-    WNAFPrecomp(const G &base) {
-        Build(base);
+    WNAFPrecomp(Context &ctx, const G &base) {
+        Build(ctx, base);
     }
 
     void Get(G &out, int exp) const {
@@ -113,13 +117,14 @@ public:
     WNAFPrecomp<GroupElem,WINDOW_G> wpg128;
 
     ECMultConsts() {
+        Context ctx;
         const GroupElem &g = GetGroupConst().g;
         GroupElemJac g128j(g);
         for (int i=0; i<128; i++)
             g128j.SetDouble(g128j);
-        GroupElem g128; g128.SetJac(g128j);
-        wpg.Build(g);
-        wpg128.Build(g128);
+        GroupElem g128; g128.SetJac(ctx, g128j);
+        wpg.Build(ctx, g);
+        wpg128.Build(ctx, g128);
     }
 };
 
@@ -146,8 +151,8 @@ void ECMult(Context &ctx, GroupElemJac &out, const GroupElemJac &a, const Number
     WNAF<128> wg1(ct, gn1, WINDOW_G);
     WNAF<128> wg2(ct, gn2, WINDOW_G);
     GroupElemJac a2; a2.SetMulLambda(a);
-    WNAFPrecomp<GroupElemJac,WINDOW_A> wpa1(a);
-    WNAFPrecomp<GroupElemJac,WINDOW_A> wpa2(a2);
+    WNAFPrecomp<GroupElemJac,WINDOW_A> wpa1(ct, a);
+    WNAFPrecomp<GroupElemJac,WINDOW_A> wpa2(ct, a2);
     const ECMultConsts &c = GetECMultConsts();
 
     int size_a1 = wa1.GetSize();
