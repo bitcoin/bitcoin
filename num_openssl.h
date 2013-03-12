@@ -71,7 +71,7 @@ public:
         int size = BN_num_bytes(bn);
         assert(size <= len);
         memset(bin,0,len);
-        BN_bn2bin(bn, bin + size - len);
+        BN_bn2bin(bn, bin + len - size);
     }
     void SetInt(int x) {
         if (x >= 0) {
@@ -149,7 +149,7 @@ public:
         BN_rshift(high.bn, bn, bits);
     }
 
-    std::string ToString() {
+    std::string ToString() const {
         char *str = BN_bn2hex(bn);
         std::string ret(str);
         OPENSSL_free(str);
