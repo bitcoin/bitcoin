@@ -795,7 +795,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
 
     if (!IsInitialBlockDownload() && !strCmd.empty())
     {
-        boost::replace_all(strCmd, "%s", tx.GetHex());
+        boost::replace_all(strCmd, "%s", tx.GetHash().GetHex());
         boost::thread t(runCommand, strCmd); // thread runs free
     }
 
