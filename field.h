@@ -369,7 +369,7 @@ const FieldConstants &GetFieldConst() {
 }
 
 void FieldElem::SetInverse(Context &ctx, FieldElem &a) {
-#if 0
+#if defined(USE_FIELDINVERSE_BUILTIN)
     // calculate a^p, with p={45,63,1019,1023}
     FieldElem a2; a2.SetSquare(a);
     FieldElem a3; a3.SetMult(a2,a);
