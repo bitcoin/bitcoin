@@ -26,8 +26,6 @@ private:
     Number r,s;
 
 public:
-    Signature(Context &ctx) : r(ctx), s(ctx) {}
-
     bool Parse(const unsigned char *sig, int size) {
         if (sig[0] != 0x30) return false;
         int lenr = sig[3];
@@ -44,7 +42,7 @@ public:
         return true;
     }
 
-    bool RecomputeR(Context &ctx, Number &r2, const GroupElemJac &pubkey, const Number &message) {
+    bool RecomputeR(Number &r2, const GroupElemJac &pubkey, const Number &message) {
         const GroupConstants &c = GetGroupConst();
 
         if (r.IsNeg() || s.IsNeg())
@@ -54,24 +52,22 @@ public:
         if (r.Compare(c.order) >= 0 || s.Compare(c.order) >= 0)
             return false;
 
-        Context ct(ctx);
-        Number sn(ct), u1(ct), u2(ct);
-        sn.SetModInverse(ct, s, c.order);
-        u1.SetModMul(ct, sn, message, c.order);
-        u2.SetModMul(ct, sn, r, c.order);
-        GroupElemJac pr; ECMult(ct, pr, pubkey, u2, u1);
+        Number sn, u1, u2;
+        sn.SetModInverse(s, c.order);
+        u1.SetModMul(sn, message, c.order);
+        u2.SetModMul(sn, r, c.order);
+        GroupElemJac pr; ECMult(pr, pubkey, u2, u1);
         if (pr.IsInfinity())
             return false;
-        FieldElem xr; pr.GetX(ct, xr);
+        FieldElem xr; pr.GetX(xr);
         unsigned char xrb[32]; xr.GetBytes(xrb);
-        r2.SetBytes(xrb,32); r2.SetMod(ct,r2,c.order);
+        r2.SetBytes(xrb,32); r2.SetMod(r2,c.order);
         return true;
     }
 
-    bool Verify(Context &ctx, const GroupElemJac &pubkey, const Number &message) {
-        Context ct(ctx);
-        Number r2(ct);
-        if (!RecomputeR(ct, r2, pubkey, message))
+    bool Verify(const GroupElemJac &pubkey, const Number &message) {
+        Number r2;
+        if (!RecomputeR(r2, pubkey, message))
             return false;
         return r2.Compare(r) == 0;
     }
@@ -87,9 +83,8 @@ public:
 };
 
 int VerifyECDSA(const unsigned char *msg, int msglen, const unsigned char *sig, int siglen, const unsigned char *pubkey, int pubkeylen) {
-    Context ctx;
-    Number m(ctx); 
-    Signature s(ctx);
+    Number m; 
+    Signature s;
     GroupElemJac q;
     m.SetBytes(msg, msglen);
     if (!ParsePubKey(q, pubkey, pubkeylen))
@@ -101,7 +96,7 @@ int VerifyECDSA(const unsigned char *msg, int msglen, const unsigned char *sig, 
         return -2;
     }
 //    fprintf(stderr, "Verifying ECDSA: msg=%s pubkey=%s sig=%s\n", m.ToString().c_str(), q.ToString().c_str(), s.ToString().c_str());
-    if (!s.Verify(ctx, q, m))
+    if (!s.Verify(q, m))
         return 0;
     return 1;
 }

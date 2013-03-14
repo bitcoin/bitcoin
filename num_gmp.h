@@ -9,15 +9,6 @@
 
 namespace secp256k1 {
 
-class Context {
-public:
-    Context() {
-    }
-
-    Context(Context &par) {
-    }
-};
-
 class NumberState {
 private:
     gmp_randstate_t rng;
@@ -44,13 +35,13 @@ private:
     Number(const Number &x) {
     }
 public:
-    Number(Context &ctx) {
+    Number() {
         mpz_init(bn);
     }
     ~Number() {
         mpz_clear(bn);
     }
-    Number(Context &ctx, const unsigned char *bin, int len) {
+    Number(const unsigned char *bin, int len) {
         mpz_init(bn);
         SetBytes(bin,len);
     }
@@ -75,26 +66,26 @@ public:
     void SetInt(int x) {
         mpz_set_si(bn, x);
     }
-    void SetModInverse(Context &ctx, const Number &x, const Number &m) {
+    void SetModInverse(const Number &x, const Number &m) {
         mpz_invert(bn, x.bn, m.bn);
     }
-    void SetModMul(Context &ctx, const Number &a, const Number &b, const Number &m) {
+    void SetModMul(const Number &a, const Number &b, const Number &m) {
         mpz_mul(bn, a.bn, b.bn);
         mpz_mod(bn, bn, m.bn);
     }
-    void SetAdd(Context &ctx, const Number &a1, const Number &a2) {
+    void SetAdd(const Number &a1, const Number &a2) {
         mpz_add(bn, a1.bn, a2.bn);
     }
-    void SetSub(Context &ctx, const Number &a1, const Number &a2) {
+    void SetSub(const Number &a1, const Number &a2) {
         mpz_sub(bn, a1.bn, a2.bn);
     }
-    void SetMult(Context &ctx, const Number &a1, const Number &a2) {
+    void SetMult(const Number &a1, const Number &a2) {
         mpz_mul(bn, a1.bn, a2.bn);
     }
-    void SetDiv(Context &ctx, const Number &a1, const Number &a2) {
+    void SetDiv(const Number &a1, const Number &a2) {
         mpz_tdiv_q(bn, a1.bn, a2.bn);
     }
-    void SetMod(Context &ctx, const Number &a, const Number &m) {
+    void SetMod(const Number &a, const Number &m) {
         mpz_mod(bn, a.bn, m.bn);
     }
     int Compare(const Number &a) const {
@@ -104,7 +95,7 @@ public:
         return mpz_sizeinbase(bn,2);
     }
     // return the lowest (rightmost) bits bits, and rshift them away
-    int ShiftLowBits(Context &ctx, int bits) {
+    int ShiftLowBits(int bits) {
         int ret = mpz_get_ui(bn) & ((1 << bits) - 1);
         mpz_fdiv_q_2exp(bn, bn, bits);
         return ret;
@@ -134,7 +125,7 @@ public:
     void SetPseudoRand(const Number &max) {
         number_state.gen(bn, max.bn);
     }
-    void SplitInto(Context &ctx, int bits, Number &low, Number &high) const {
+    void SplitInto(int bits, Number &low, Number &high) const {
         mpz_t tmp;
         mpz_init_set_ui(tmp,1);
         mpz_mul_2exp(tmp,tmp,bits);

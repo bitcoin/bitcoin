@@ -7,150 +7,151 @@
 #include <openssl/bn.h>
 #include <openssl/crypto.h>
 
+#include <stdint.h>
+
 namespace secp256k1 {
 
 class Context {
 private:
-    BN_CTX *bn_ctx;
-    bool root;
-    bool offspring;
+    BN_CTX *ctx;
 
-public:
     operator BN_CTX*() {
-        return bn_ctx;
+        return ctx;
     }
 
+    friend class Number;
+public:
     Context() {
-        bn_ctx = BN_CTX_new();
-        BN_CTX_start(bn_ctx);
-        root = true;
-        offspring = false;
-    }
-
-    Context(Context &par) {
-        bn_ctx = par.bn_ctx;
-        root = false;
-        offspring = false;
-        par.offspring = true;
-        BN_CTX_start(bn_ctx);
+        ctx = BN_CTX_new();
     }
 
     ~Context() {
-        BN_CTX_end(bn_ctx);
-        if (root)
-            BN_CTX_free(bn_ctx);
-    }
-
-    BIGNUM *Get() {
-        assert(offspring == false);
-        return BN_CTX_get(bn_ctx);
+        BN_CTX_free(ctx);
     }
 };
 
-
 class Number {
 private:
-    BIGNUM *bn;
+    BIGNUM b;
     Number(const Number &x) {}
+
+    operator const BIGNUM*() const {
+        return &b;
+    }
+
+    operator BIGNUM*() {
+        return &b;
+    }
 public:
-    Number(Context &ctx) : bn(ctx.Get()) {}
-    Number(Context &ctx, const unsigned char *bin, int len) : bn(ctx.Get()) {
+    Number() {
+        BN_init(*this);
+    }
+
+    ~Number() {
+        BN_free(*this);
+    }
+
+    Number(const unsigned char *bin, int len) {
+        BN_init(*this);
         SetBytes(bin,len);
     }
     void SetNumber(const Number &x) {
-        BN_copy(bn, x.bn);
+        BN_copy(*this, x);
     }
     Number &operator=(const Number &x) {
-        BN_copy(bn, x.bn);
+        BN_copy(*this, x);
         return *this;
     }
     void SetBytes(const unsigned char *bin, int len) {
-        BN_bin2bn(bin, len, bn);
+        BN_bin2bn(bin, len, *this);
     }
     void GetBytes(unsigned char *bin, int len) {
-        int size = BN_num_bytes(bn);
+        int size = BN_num_bytes(*this);
         assert(size <= len);
         memset(bin,0,len);
-        BN_bn2bin(bn, bin + len - size);
+        BN_bn2bin(*this, bin + len - size);
     }
     void SetInt(int x) {
         if (x >= 0) {
-            BN_set_word(bn, x);
+            BN_set_word(*this, x);
         } else {
-            BN_set_word(bn, -x);
-            BN_set_negative(bn, 1);
+            BN_set_word(*this, -x);
+            BN_set_negative(*this, 1);
         }
     }
-    void SetModInverse(Context &ctx, const Number &x, const Number &m) {
-        BN_mod_inverse(bn, x.bn, m.bn, ctx);
+    void SetModInverse(const Number &x, const Number &m) {
+        Context ctx;
+        BN_mod_inverse(*this, x, m, ctx);
     }
-    void SetModMul(Context &ctx, const Number &a, const Number &b, const Number &m) {
-        BN_mod_mul(bn, a.bn, b.bn, m.bn, ctx);
+    void SetModMul(const Number &a, const Number &b, const Number &m) {
+        Context ctx;
+        BN_mod_mul(*this, a, b, m, ctx);
     }
-    void SetAdd(Context &ctx, const Number &a1, const Number &a2) {
-        BN_add(bn, a1.bn, a2.bn);
+    void SetAdd(const Number &a1, const Number &a2) {
+        BN_add(*this, a1, a2);
     }
-    void SetSub(Context &ctx, const Number &a1, const Number &a2) {
-        BN_sub(bn, a1.bn, a2.bn);
+    void SetSub(const Number &a1, const Number &a2) {
+        BN_sub(*this, a1, a2);
     }
-    void SetMult(Context &ctx, const Number &a1, const Number &a2) {
-        BN_mul(bn, a1.bn, a2.bn, ctx);
+    void SetMult(const Number &a1, const Number &a2) {
+        Context ctx;
+        BN_mul(*this, a1, a2, ctx);
     }
-    void SetDiv(Context &ctx, const Number &a1, const Number &a2) {
-        BN_div(bn, NULL, a1.bn, a2.bn, ctx);
+    void SetDiv(const Number &a1, const Number &a2) {
+        Context ctx;
+        BN_div(*this, NULL, a1, a2, ctx);
     }
-    void SetMod(Context &ctx, const Number &a, const Number &m) {
-        BN_nnmod(bn, a.bn, m.bn, ctx);
+    void SetMod(const Number &a, const Number &m) {
+        Context ctx;
+        BN_nnmod(*this, a, m, ctx);
     }
     int Compare(const Number &a) const {
-        return BN_cmp(bn, a.bn);
+        return BN_cmp(*this, a);
     }
     int GetBits() const {
-        return BN_num_bits(bn);
+        return BN_num_bits(*this);
     }
     // return the lowest (rightmost) bits bits, and rshift them away
-    int ShiftLowBits(Context &ctx, int bits) {
-        Context ct(ctx);
-        BIGNUM *tmp = ct.Get();
-        BN_copy(tmp, bn);
-        BN_mask_bits(tmp, bits);
-        int ret = BN_get_word(tmp);
-        BN_rshift(bn, bn, bits);
+    int ShiftLowBits(int bits) {
+        BIGNUM *bn = *this;
+        int ret = BN_is_zero(bn) ? 0 : bn->d[0] & ((1 << bits) - 1);
+        BN_rshift(*this, *this, bits);
         return ret;
     }
     // check whether number is 0,
     bool IsZero() const {
-        return BN_is_zero(bn);
+        return BN_is_zero((const BIGNUM*)*this);
     }
     bool IsOdd() const {
-        return BN_is_odd(bn);
+        return BN_is_odd((const BIGNUM*)*this);
     }
     bool IsNeg() const {
-        return BN_is_negative(bn);
+        return BN_is_negative((const BIGNUM*)*this);
     }
     void Negate() {
-        BN_set_negative(bn, !IsNeg());
+        BN_set_negative(*this, !IsNeg());
     }
     void Shift1() {
-        BN_rshift1(bn,bn);
+        BN_rshift1(*this,*this);
     }
     void Inc() {
-        BN_add_word(bn,1);
+        BN_add_word(*this,1);
     }
     void SetHex(const std::string &str) {
+        BIGNUM *bn = *this;
         BN_hex2bn(&bn, str.c_str());
     }
     void SetPseudoRand(const Number &max) {
-        BN_pseudo_rand_range(bn, max.bn);
+        BN_pseudo_rand_range(*this, max);
     }
-    void SplitInto(Context &ctx, int bits, Number &low, Number &high) const {
-        BN_copy(low.bn, bn);
-        BN_mask_bits(low.bn, bits);
-        BN_rshift(high.bn, bn, bits);
+    void SplitInto(int bits, Number &low, Number &high) const {
+        BN_copy(low, *this);
+        BN_mask_bits(low, bits);
+        BN_rshift(high, *this, bits);
     }
 
     std::string ToString() const {
-        char *str = BN_bn2hex(bn);
+        char *str = BN_bn2hex(*this);
         std::string ret(str);
         OPENSSL_free(str);
         return ret;

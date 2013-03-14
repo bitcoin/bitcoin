@@ -39,11 +39,11 @@ public:
         y.SetNeg(y, 1);
     }
 
-    void GetX(Context &ctx, FieldElem &xout) {
+    void GetX(FieldElem &xout) {
         xout = x;
     }
 
-    void GetY(Context &ctx, FieldElem &yout) {
+    void GetY(FieldElem &yout) {
         yout = y;
     }
 
@@ -54,7 +54,7 @@ public:
         return "(" + xc.ToString() + "," + yc.ToString() + ")";
     }
 
-    void SetJac(Context &ctx, GroupElemJac &jac);
+    void SetJac(GroupElemJac &jac);
 
     friend class GroupElemJac;
 };
@@ -73,7 +73,7 @@ public:
 
     GroupElemJac(const GroupElem &in) : GroupElem(in), z(1) {}
 
-    void SetJac(Context &ctx, GroupElemJac &jac) {
+    void SetJac(GroupElemJac &jac) {
         *this = jac;
     }
 
@@ -95,8 +95,8 @@ public:
     }
 
     /** Returns the affine coordinates of this point */
-    void GetAffine(Context &ctx, GroupElem &aff) {
-        z.SetInverse(ctx, z);
+    void GetAffine(GroupElem &aff) {
+        z.SetInverse(z);
         FieldElem z2;
         z2.SetSquare(z);
         FieldElem z3;
@@ -109,9 +109,9 @@ public:
         aff.y = y;
     }
 
-    void GetX(Context &ctx, FieldElem &xout) {
+    void GetX(FieldElem &xout) {
         FieldElem zi;
-        zi.SetInverse(ctx, z);
+        zi.SetInverse(z);
         zi.SetSquare(zi);
         xout.SetMult(x, zi);
     }
@@ -120,9 +120,9 @@ public:
         return fInfinity;
     }
 
-    void GetY(Context &ctx, FieldElem &yout) {
+    void GetY(FieldElem &yout) {
         FieldElem zi;
-        zi.SetInverse(ctx, z);
+        zi.SetInverse(z);
         FieldElem zi3; zi3.SetSquare(zi); zi3.SetMult(zi, zi3);
         yout.SetMult(y, zi3);
     }
@@ -260,18 +260,17 @@ public:
     }
 
     std::string ToString() const {
-        Context ctx;
         GroupElemJac cop = *this;
         GroupElem aff;
-        cop.GetAffine(ctx, aff);
+        cop.GetAffine(aff);
         return aff.ToString();
     }
 
     void SetMulLambda(const GroupElemJac &p);
 };
 
-void GroupElem::SetJac(Context &ctx, GroupElemJac &jac) {
-    jac.GetAffine(ctx, *this);
+void GroupElem::SetJac(GroupElemJac &jac) {
+    jac.GetAffine(*this);
 }
 
 static const unsigned char order_[] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
@@ -307,7 +306,6 @@ static const unsigned char a2_[]   =   {0x01,
                                         0x57,0xc1,0x10,0x8d,0x9d,0x44,0xcf,0xd8};
 class GroupConstants {
 private:
-    Context ctx;
     const FieldElem g_x;
     const FieldElem g_y;
 
@@ -318,13 +316,13 @@ public:
     const Number lambda, a1b2, b1, a2;
 
     GroupConstants() : g_x(g_x_), g_y(g_y_),
-                       order(ctx, order_, sizeof(order_)),
+                       order(order_, sizeof(order_)),
                        g(g_x,g_y),
                        beta(beta_),
-                       lambda(ctx, lambda_, sizeof(lambda_)),
-                       a1b2(ctx, a1b2_, sizeof(a1b2_)),
-                       b1(ctx, b1_, sizeof(b1_)),
-                       a2(ctx, a2_, sizeof(a2_)) {}
+                       lambda(lambda_, sizeof(lambda_)),
+                       a1b2(a1b2_, sizeof(a1b2_)),
+                       b1(b1_, sizeof(b1_)),
+                       a2(a2_, sizeof(a2_)) {}
 };
 
 const GroupConstants &GetGroupConst() {
@@ -338,28 +336,27 @@ void GroupElemJac::SetMulLambda(const GroupElemJac &p) {
     x.SetMult(x, beta);
 }
 
-void SplitExp(Context &ctx, const Number &exp, Number &exp1, Number &exp2) {
+void SplitExp(const Number &exp, Number &exp1, Number &exp2) {
     const GroupConstants &c = GetGroupConst();
-    Context ct(ctx);
-    Number bnc1(ct), bnc2(ct), bnt1(ct), bnt2(ct), bnn2(ct);
+    Number bnc1, bnc2, bnt1, bnt2, bnn2;
     bnn2.SetNumber(c.order);
     bnn2.Shift1();
 
-    bnc1.SetMult(ct, exp, c.a1b2);
-    bnc1.SetAdd(ct, bnc1, bnn2);
-    bnc1.SetDiv(ct, bnc1, c.order);
+    bnc1.SetMult(exp, c.a1b2);
+    bnc1.SetAdd(bnc1, bnn2);
+    bnc1.SetDiv(bnc1, c.order);
 
-    bnc2.SetMult(ct, exp, c.b1);
-    bnc2.SetAdd(ct, bnc2, bnn2);
-    bnc2.SetDiv(ct, bnc2, c.order);
+    bnc2.SetMult(exp, c.b1);
+    bnc2.SetAdd(bnc2, bnn2);
+    bnc2.SetDiv(bnc2, c.order);
 
-    bnt1.SetMult(ct, bnc1, c.a1b2);
-    bnt2.SetMult(ct, bnc2, c.a2);
-    bnt1.SetAdd(ct, bnt1, bnt2);
-    exp1.SetSub(ct, exp, bnt1);
-    bnt1.SetMult(ct, bnc1, c.b1);
-    bnt2.SetMult(ct, bnc2, c.a1b2);
-    exp2.SetSub(ct, bnt1, bnt2);
+    bnt1.SetMult(bnc1, c.a1b2);
+    bnt2.SetMult(bnc2, c.a2);
+    bnt1.SetAdd(bnt1, bnt2);
+    exp1.SetSub(exp, bnt1);
+    bnt1.SetMult(bnc1, c.b1);
+    bnt2.SetMult(bnc2, c.a1b2);
+    exp2.SetSub(bnt1, bnt2);
 }
 
 }
