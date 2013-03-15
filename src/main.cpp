@@ -2057,8 +2057,8 @@ bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerk
         return state.DoS(100, error("CheckBlock() : size limits failed"));
 
     // Special short-term limits to avoid 10,000 BDB lock limit:
-    if (GetBlockTime() > 1363039171 && // 11 March 2013, timestamp of block before the big fork
-        GetBlockTime() < 1368576000)  // 15 May 2013 00:00:00
+    if (GetBlockTime() >= 1363867200 && // start enforcing 21 March 2013, noon GMT
+        GetBlockTime() < 1368576000)  // stop enforcing 15 May 2013 00:00:00
     {
         // Rule is: #unique txids referenced <= 4,500
         // ... to prevent 10,000 BDB lock exhaustion on old clients
@@ -4154,6 +4154,10 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
     unsigned int nBlockMaxSize = GetArg("-blockmaxsize", MAX_BLOCK_SIZE_GEN/2);
     // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
     nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SIZE-1000), nBlockMaxSize));
+
+    // Special compatibility rule before 15 May: limit size to 500,000 bytes:
+    if (GetAdjustedTime() < 1368576000)
+        nBlockMaxSize = std::min(nBlockMaxSize, (unsigned int)(MAX_BLOCK_SIZE_GEN));
 
     // How much of the block should be dedicated to high-priority transactions,
     // included regardless of the fees they pay
