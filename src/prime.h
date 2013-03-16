@@ -8,19 +8,13 @@
 #include "main.h"
 
 
+// Generate small prime table
 void GeneratePrimeTable();
 
-// Check Proth primality proof:  a ** (h * 2**(k-1)) = -1 mod (h * 2**k + 1)
-bool ProthPrimalityProof(uint256& h, unsigned int k, unsigned int a);
-
-// Compute Primorial number
+// Compute Primorial number p#
 void Primorial(unsigned int p, CBigNum& bnPrimorial);
 
-// Attempt to prove primality for: h * p# + 1
-// Return values
-// true - primality proved via Pocklington Theorem
-// false - unable to prove prime (check fComposite)
-// fComposite - if true then n is proven to be composite
-bool PrimorialPrimalityProve(uint256& h, unsigned int p, bool& fComposite);
+// Mine probable Cunningham Chain of form: n = h * p# +/- 1
+bool MineProbableCunninghamChain(CBlockHeader& block, CBigNum& bnPrimorial, unsigned int& nProbableChainLength);
 
 #endif

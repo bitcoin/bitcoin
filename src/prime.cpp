@@ -30,21 +30,7 @@ void GeneratePrimeTable()
     printf("\n");
 }
 
-// Check Proth primality proof:  a ** (h * 2**(k-1)) = -1 mod (h * 2**k + 1)
-bool ProthPrimalityProof(uint256& h, unsigned int k, unsigned int a)
-{
-    CAutoBN_CTX pctx;
-    CBigNum one = 1;
-    CBigNum n;
-    n = ((one << k) * CBigNum(h)) + 1;
-    CBigNum A = a;
-    CBigNum e = (n - 1) >> 1;
-    CBigNum r;
-    BN_mod_exp(&r, &A, &e, &n, pctx);
-    return (r + 1 == n);
-}
-
-// Compute Primorial number
+// Compute Primorial number p#
 void Primorial(unsigned int p, CBigNum& bnPrimorial)
 {
     bnPrimorial = 1;
@@ -55,95 +41,104 @@ void Primorial(unsigned int p, CBigNum& bnPrimorial)
     }
 }
 
-// Check Fermat primality test: a ** (n-1) = 1 (mod n)
+// Check Fermat probable primality test (2-PRP): 2 ** (n-1) = 1 (mod n)
 // true: n is probable prime
 // false: n is composite
-static bool FermatPrimalityTest(CBigNum& n, unsigned int a)
+static bool FermatProbablePrimalityTest(CBigNum& n)
 {
     CAutoBN_CTX pctx;
-    CBigNum A = a;
+    CBigNum a = 2; // base; Fermat witness
     CBigNum e = n - 1;
     CBigNum r;
-    BN_mod_exp(&r, &A, &e, &n, pctx);
+    BN_mod_exp(&r, &a, &e, &n, pctx);
     if (r != 1)
         return false;
     return true;
 }
 
-// Check primorial primality test for n = h * p# + 1, q <= p, both p, q primes
-// 1) a ** (n-1) = 1 (mod n)
-// 2) gcd(a ** ((n-1)/q) - 1, n) = 1
-// Return values
-// true - passed test; a is a witness and n is prime candidate
-// false - failed test; a is not a witness or n is composite (check fComposite)
-// fComposite - if true then n is proven to be composite
-static bool PocklingtonPrimalityTest(uint256& h, CBigNum& bnFactored, unsigned int q, unsigned int a, bool& fComposite)
+// Test primality of n = 2p +/- 1 based on Euler, Lagrange and Lifchitz
+// fSophieGermain:
+//   true:  n = 2p+1, p prime, aka Cunningham Chain of first kind
+//   false: n = 2p-1, p prime, aka Cunningham Chain of second kind
+static bool EulerLagrangeLifchitzPrimalityTest(CBigNum& n, bool fSophieGermain)
 {
-    fComposite = false;
     CAutoBN_CTX pctx;
-    CBigNum n;
-    n = (bnFactored * CBigNum(h)) + 1;
-    if (!FermatPrimalityTest(n, a))
-    {
-        fComposite = true;
-        return false;
-    }
-    CBigNum A = a;
-    CBigNum e = (n - 1) / q;
-    CBigNum b;
-    BN_mod_exp(&b, &A, &e, &n, pctx);
-    if (b <= 1)
-    {
-        fComposite = (b == 0); // a**e = 0 (mod n) means gcd(a, n) > 1
-        return false;
-    }
-    b -= 1;
+    CBigNum a = 2;
+    CBigNum e = (n - 1) >> 1;
     CBigNum r;
-    BN_gcd(&r, &b, &n, pctx);
-    if (r <= 0 || r >= n)
-        return error("PrimorialPrimalityTest() : BN_gcd returned invalid value");
-    if (r > 1)
-    {
-        fComposite = true;
-        return false;
-    }
-    // passed test, a is witness and n is prime candidate
-    return true;
+    BN_mod_exp(&r, &a, &e, &n, pctx);
+    CBigNum nMod8 = n % 8;
+    if (fSophieGermain && (nMod8 == 7)) // Euler & Lagrange
+        return (r == 1);
+    if (fSophieGermain && (nMod8 == 3)) // Lifchitz
+        return ((r+1) == n);
+    if ((!fSophieGermain) && (nMod8 == 5)) // Lifchitz
+        return ((r+1) == n);
+    if ((!fSophieGermain) && (nMod8 == 1)) // LifChitz
+        return (r == 1);
+    return error("EulerLagrangeLifchitzPrimalityTest() : invalid n %% 8 = %d, %s", nMod8.getint(), (fSophieGermain? "first kind" : "second kind"));
 }
 
-// Attempt to prove primality for: h * p# + 1
-bool PrimorialPrimalityProve(uint256& h, unsigned int p, bool& fComposite)
+// Test Probable Cunningham Chain for: n
+// fSophieGermain:
+//   true - Test for Cunningham Chain of first kind (n, 2n+1, 4n+3, ...)
+//   false - Test for Cunningham Chain of second kind (n, 2n-1, 4n-3, ...)
+// Return value:
+//   true - Probable Cunningham Chain found (nProbableChainLength >= 2)
+//   false - Not Cunningham Chain (nProbableChainLength <= 1)
+static bool ProbableCunninghamChainTest(CBigNum& n, bool fSophieGermain, unsigned int& nProbableChainLength)
 {
-    fComposite = false;
-    bool fWitness = false;
-    CBigNum bnPrimorial;
-    Primorial(p, bnPrimorial);
-    if ((bnPrimorial >> 256) == 0)
-        return error("PrimorialPrimalityProve() : primorial too small");
+    nProbableChainLength = 0;
 
-    BOOST_FOREACH(unsigned int nPrime, vPrimes)
+    // Fermat test for n first
+    if (!FermatProbablePrimalityTest(n))
+        return false;
+
+    // Euler-Lagrange-Lifchitz test for the following numbers in chain
+    do
     {
-        if (nPrime > p) break;
-        BOOST_FOREACH(unsigned int a, vPrimes)
-        {
-            if (a > 100)
-                return false; // done too much work just give up
-            if (PocklingtonPrimalityTest(h, bnPrimorial, nPrime, a, fComposite))
-            {
-                if (!fWitness)
-                {
-                    printf("Pocklington witnesses for %u * %u# + 1: ", (unsigned int)h.Get64(), p);
-                    fWitness = true;
-                }
-                printf(" (%u, %u)", nPrime, a);
-                break;
-            }
-            else if (fComposite)
-                return false; // proved composite
-        }
+        nProbableChainLength++;
+        n = n + n + (fSophieGermain? 1 : (-1));
     }
-    if (fWitness)
-        printf("\n");
-    return true; // proved prime
+    while (EulerLagrangeLifchitzPrimalityTest(n, fSophieGermain));
+
+    return (nProbableChainLength >= 2);
+}
+
+// Mine probable Cunningham Chain of form: n = h * p# +/- 1
+bool MineProbableCunninghamChain(CBlockHeader& block, CBigNum& bnPrimorial, unsigned int& nProbableChainLength)
+{
+    CBigNum n;
+
+    int64 nStart = GetTimeMicros();
+    int64 nCurrent = 0;
+
+    while (nCurrent < nStart + 10000 && nCurrent >= nStart)
+    {
+        block.nNonce++;
+
+        // Check for first kind
+        n = (CBigNum(block.GetHash()) * bnPrimorial) - 1;
+        if (ProbableCunninghamChainTest(n, true, nProbableChainLength))
+        {
+            printf("Probable Cunningham chain of length %u of first kind found for nonce=0x%08x!! \n", nProbableChainLength, block.nNonce);
+            return true;
+        }
+
+        // Check for second kind
+        n += 2;
+        if (ProbableCunninghamChainTest(n, false, nProbableChainLength))
+        {
+            printf("Probable Cunningham chain of length %u of second kind found for nonce=0x%08x!! \n", nProbableChainLength, block.nNonce);
+            return true;
+        }
+
+        // stop if nNonce exhausted
+        if (block.nNonce == 0xffffffffu)
+            return false;
+
+        nCurrent = GetTimeMicros();
+    }
+    return false; // stop as timed out
 }
 
