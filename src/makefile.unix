@@ -191,4 +191,13 @@ clean:
 	-rm -f obj/build.h
 	-cd leveldb && $(MAKE) clean || true
 
+obj/genesis.o: genesis.cpp
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(xCXXFLAGS) -MMD -DPRIMECOIN_GENESIS -o obj/init.o init.cpp
+
+genesis: obj/genesis.o $(OBJS:obj/%=obj/%)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+	-rm -f obj/init.*
+	-rm -f obj/genesis.*
+
 FORCE:

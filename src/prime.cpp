@@ -111,7 +111,7 @@ bool MineProbableCunninghamChain(CBlockHeader& block, CBigNum& bnPrimorial, unsi
     CBigNum n;
 
     int64 nStart = GetTimeMicros();
-    int64 nCurrent = 0;
+    int64 nCurrent = nStart;
 
     while (nCurrent < nStart + 10000 && nCurrent >= nStart)
     {
@@ -121,7 +121,7 @@ bool MineProbableCunninghamChain(CBlockHeader& block, CBigNum& bnPrimorial, unsi
         n = (CBigNum(block.GetHash()) * bnPrimorial) - 1;
         if (ProbableCunninghamChainTest(n, true, nProbableChainLength))
         {
-            printf("Probable Cunningham chain of length %u of first kind found for nonce=0x%08x!! \n", nProbableChainLength, block.nNonce);
+            printf("Probable Cunningham chain of length %u of first kind found for nonce=%u!! \n", nProbableChainLength, block.nNonce);
             return true;
         }
 
@@ -129,7 +129,7 @@ bool MineProbableCunninghamChain(CBlockHeader& block, CBigNum& bnPrimorial, unsi
         n += 2;
         if (ProbableCunninghamChainTest(n, false, nProbableChainLength))
         {
-            printf("Probable Cunningham chain of length %u of second kind found for nonce=0x%08x!! \n", nProbableChainLength, block.nNonce);
+            printf("Probable Cunningham chain of length %u of second kind found for nonce=%u!! \n", nProbableChainLength, block.nNonce);
             return true;
         }
 

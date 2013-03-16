@@ -199,6 +199,7 @@ bool AppInit(int argc, char* argv[])
 }
 
 extern void noui_connect();
+#if !defined(PRIMECOIN_GENESIS)
 int main(int argc, char* argv[])
 {
     bool fRet = false;
@@ -213,6 +214,7 @@ int main(int argc, char* argv[])
 
     return 1;
 }
+#endif
 #endif
 
 bool static InitError(const std::string &str)
