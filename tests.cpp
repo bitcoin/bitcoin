@@ -1,10 +1,10 @@
 #include <assert.h>
 
-#include "num.h"
-#include "field.h"
-#include "group.h"
-#include "ecmult.h"
-#include "ecdsa.h"
+#include "num.cpp"
+#include "field.cpp"
+#include "group.cpp"
+#include "ecmult.cpp"
+#include "ecdsa.cpp"
 
 using namespace secp256k1;
 
