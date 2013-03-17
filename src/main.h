@@ -64,8 +64,8 @@ static const int fHaveUPnP = true;
 static const int fHaveUPnP = false;
 #endif
 
-static const uint256 hashGenesisBlockOfficial("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
-static const uint256 hashGenesisBlockTestNet("000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943");
+static const uint256 hashGenesisBlockOfficial("0xcf991ebc540c61c27b3459675e1851088fe9322bf553881eb05abfea34c87e4b");
+static const uint256 hashGenesisBlockTestNet("0xcf991ebc540c61c27b3459675e1851088fe9322bf553881eb05abfea34c87e4b");
 
 extern CScript COINBASE_FLAGS;
 
@@ -171,7 +171,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 /** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits);
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnProbablePrime, int& nProofOfWorkType);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 /** Get the number of active peers */
@@ -1320,8 +1320,12 @@ class CBlock : public CBlockHeader
 public:
     // network and disk
     std::vector<CTransaction> vtx;
+    // Primecoin: proof-of-work certificate
+    // probable prime - first number of a probable Cunningham Chain
+    CBigNum bnProbablePrime;
 
     // memory only
+    int nProofOfWorkType;  // primecoin: see CBlockIndex.nProofOfWorkType
     mutable std::vector<uint256> vMerkleTree;
 
     CBlock()
@@ -1339,6 +1343,7 @@ public:
     (
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
+        READWRITE(bnProbablePrime);
     )
 
     void SetNull()
@@ -1346,6 +1351,7 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         vMerkleTree.clear();
+        bnProbablePrime = 0;
     }
 
     CBlockHeader GetBlockHeader() const
@@ -1460,7 +1466,7 @@ public:
         }
 
         // Check the header
-        if (!CheckProofOfWork(GetHash(), nBits))
+        if (!CheckProofOfWork(GetHash(), nBits, bnProbablePrime, nProofOfWorkType))
             return error("CBlock::ReadFromDisk() : errors in block header");
 
         return true;
@@ -1635,6 +1641,11 @@ public:
     // Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
 
+    // Primecoin: type of Cunningham Chain for proof-of-work
+    // +2, +3, +4, ..., +k, ... Cunningham Chain of length k of first kind
+    // -2, -3, -4, ..., -k, ... Cunningham Chain of length k of second kind
+    int nProofOfWorkType;
+
     // block header
     int nVersion;
     uint256 hashMerkleRoot;
@@ -1656,6 +1667,7 @@ public:
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
+        nProofOfWorkType = 0;
 
         nVersion       = 0;
         hashMerkleRoot = 0;
@@ -1677,6 +1689,7 @@ public:
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
+        nProofOfWorkType = 0;
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
@@ -1742,7 +1755,9 @@ public:
 
     bool CheckIndex() const
     {
-        return CheckProofOfWork(GetBlockHash(), nBits);
+        // Primecoin: disabled proof-of-work check for loading block index
+        // return CheckProofOfWork(GetBlockHash(), nBits);
+        return true;
     }
 
     enum { nMedianTimeSpan=11 };
@@ -1831,6 +1846,7 @@ public:
         READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nStatus));
         READWRITE(VARINT(nTx));
+        READWRITE(VARINT(nProofOfWorkType));
         if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
             READWRITE(VARINT(nFile));
         if (nStatus & BLOCK_HAVE_DATA)

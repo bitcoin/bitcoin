@@ -44,7 +44,7 @@ void Primorial(unsigned int p, CBigNum& bnPrimorial)
 // Check Fermat probable primality test (2-PRP): 2 ** (n-1) = 1 (mod n)
 // true: n is probable prime
 // false: n is composite
-static bool FermatProbablePrimalityTest(CBigNum& n)
+static bool FermatProbablePrimalityTest(const CBigNum& n)
 {
     CAutoBN_CTX pctx;
     CBigNum a = 2; // base; Fermat witness
@@ -60,7 +60,7 @@ static bool FermatProbablePrimalityTest(CBigNum& n)
 // fSophieGermain:
 //   true:  n = 2p+1, p prime, aka Cunningham Chain of first kind
 //   false: n = 2p-1, p prime, aka Cunningham Chain of second kind
-static bool EulerLagrangeLifchitzPrimalityTest(CBigNum& n, bool fSophieGermain)
+static bool EulerLagrangeLifchitzPrimalityTest(const CBigNum& n, bool fSophieGermain)
 {
     CAutoBN_CTX pctx;
     CBigNum a = 2;
@@ -86,21 +86,22 @@ static bool EulerLagrangeLifchitzPrimalityTest(CBigNum& n, bool fSophieGermain)
 // Return value:
 //   true - Probable Cunningham Chain found (nProbableChainLength >= 2)
 //   false - Not Cunningham Chain (nProbableChainLength <= 1)
-static bool ProbableCunninghamChainTest(CBigNum& n, bool fSophieGermain, unsigned int& nProbableChainLength)
+bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, unsigned int& nProbableChainLength)
 {
     nProbableChainLength = 0;
+    CBigNum N = n;
 
     // Fermat test for n first
-    if (!FermatProbablePrimalityTest(n))
+    if (!FermatProbablePrimalityTest(N))
         return false;
 
     // Euler-Lagrange-Lifchitz test for the following numbers in chain
     do
     {
         nProbableChainLength++;
-        n = n + n + (fSophieGermain? 1 : (-1));
+        N = N + N + (fSophieGermain? 1 : (-1));
     }
-    while (EulerLagrangeLifchitzPrimalityTest(n, fSophieGermain));
+    while (EulerLagrangeLifchitzPrimalityTest(N, fSophieGermain));
 
     return (nProbableChainLength >= 2);
 }
@@ -140,5 +141,26 @@ bool MineProbableCunninghamChain(CBlockHeader& block, CBigNum& bnPrimorial, unsi
         nCurrent = GetTimeMicros();
     }
     return false; // stop as timed out
+}
+
+// Find last block index up to pindex of the given proof-of-work type
+// Returns: depth of last block index of shorter or equal type
+unsigned int GetLastBlockIndex(const CBlockIndex* pindex, int nProofOfWorkType, const CBlockIndex** pindexPrev)
+{
+    bool fFoundLastEqualOrShorterType = false;
+    int nDepthOfEqualOrShorterType = 0;
+    for (; pindex && pindex->pprev && pindex->nProofOfWorkType != nProofOfWorkType; pindex = pindex->pprev)
+    {
+        if (!fFoundLastEqualOrShorterType)
+        {
+            if (((pindex->nProofOfWorkType >= 2 && pindex->nProofOfWorkType <= nProofOfWorkType) ||
+             (pindex->nProofOfWorkType <= -2 && pindex->nProofOfWorkType >= nProofOfWorkType)))
+                fFoundLastEqualOrShorterType = true;
+            else
+                nDepthOfEqualOrShorterType++;
+        }
+    }
+    *pindexPrev = pindex;
+    return nDepthOfEqualOrShorterType;
 }
 

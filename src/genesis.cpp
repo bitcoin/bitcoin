@@ -12,6 +12,7 @@ using namespace boost;
 int main(int argc, char *argv[])
 {
     fPrintToConsole = true;
+    GeneratePrimeTable();
     printf("Primecoin Begin Genesis Block\n");
 
     // Genesis block
@@ -19,15 +20,14 @@ int main(int argc, char *argv[])
     CTransaction txNew;
     txNew.vin.resize(1);
     txNew.vout.resize(1);
-    txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(9999) << vector<unsigned char>((const unsigned char*)pszDedication, (const unsigned char*)pszDedication + strlen(pszDedication));
+    txNew.vin[0].scriptSig = CScript() << 0 << CBigNum(99) << vector<unsigned char>((const unsigned char*)pszDedication, (const unsigned char*)pszDedication + strlen(pszDedication));
     txNew.vout[0].nValue = 0;
     txNew.vout[0].scriptPubKey = CScript();
     CBlock block;
     block.vtx.push_back(txNew);
     block.hashPrevBlock = 0;
     block.hashMerkleRoot = block.BuildMerkleTree();
-    block.nVersion = 1;
-    block.nBits    = CBigNum(~uint256(0) >> 28).GetCompact();
+    block.nBits    = (CBigNum(1) << 256).GetCompact();
     block.nTime    = GetAdjustedTime();
     block.nNonce   = 0;
 
