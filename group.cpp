@@ -47,8 +47,15 @@ GroupElemJac::GroupElemJac(const FieldElem &xin, const FieldElem &yin) : GroupEl
 
 GroupElemJac::GroupElemJac(const GroupElem &in) : GroupElem(in), z(1) {}
 
-void GroupElemJac::SetJac(GroupElemJac &jac) {
+void GroupElemJac::SetJac(const GroupElemJac &jac) {
     *this = jac;
+}
+
+void GroupElemJac::SetAffine(const GroupElem &aff) {
+    fInfinity = aff.fInfinity;
+    x = aff.x;
+    y = aff.y;
+    z = FieldElem(1);
 }
 
 bool GroupElemJac::IsValid() const {

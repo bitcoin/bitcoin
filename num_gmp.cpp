@@ -58,6 +58,10 @@ void Number::SetBytes(const unsigned char *bin, unsigned int len) {
     mpz_import(bn, len, 1, 1, 1, 0, bin);
 }
 
+bool Number::CheckBit(int pos) const {
+    return mpz_tstbit(bn, pos);
+}
+
 void Number::GetBytes(unsigned char *bin, unsigned int len) {
     unsigned int size = (mpz_sizeinbase(bn,2)+7)/8;
     assert(size <= len);

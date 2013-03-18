@@ -40,7 +40,28 @@ bool Signature::Parse(const unsigned char *sig, int size) {
     return true;
 }
 
-bool Signature::RecomputeR(Number &r2, const GroupElemJac &pubkey, const Number &message) {
+bool Signature::Serialize(unsigned char *sig, int *size) {
+    int lenR = (r.GetBits() + 7)/8;
+    if (lenR == 0 || r.CheckBit(lenR*8-1))
+        lenR++;
+    int lenS = (s.GetBits() + 7)/8;
+    if (lenS == 0 || s.CheckBit(lenS*8-1))
+        lenS++;
+    if (*size < 6+lenS+lenR)
+        return false;
+    *size = 6 + lenS + lenR;
+    sig[0] = 0x30;
+    sig[1] = 4 + lenS + lenR;
+    sig[2] = 0x02;
+    sig[3] = lenR;
+    r.GetBytes(sig+4, lenR);
+    sig[4+lenR] = 0x02;
+    sig[5+lenR] = lenS;
+    s.GetBytes(sig+6, lenS);
+    return true;
+}
+
+bool Signature::RecomputeR(Number &r2, const GroupElemJac &pubkey, const Number &message) const {
     const GroupConstants &c = GetGroupConst();
 
     if (r.IsNeg() || s.IsNeg())
@@ -63,11 +84,34 @@ bool Signature::RecomputeR(Number &r2, const GroupElemJac &pubkey, const Number 
     return true;
 }
 
-bool Signature::Verify(const GroupElemJac &pubkey, const Number &message) {
+bool Signature::Verify(const GroupElemJac &pubkey, const Number &message) const {
     Number r2;
     if (!RecomputeR(r2, pubkey, message))
         return false;
     return r2.Compare(r) == 0;
+}
+
+bool Signature::Sign(const Number &seckey, const Number &message, const Number &nonce) {
+    const GroupConstants &c = GetGroupConst();
+
+    GroupElemJac rp;
+    ECMultBase(rp, nonce);
+    FieldElem rx;
+    rp.GetX(rx);
+    unsigned char b[32];
+    rx.GetBytes(b);
+    r.SetBytes(b, 32);
+    r.SetMod(r, c.order);
+    Number n;
+    n.SetModMul(r, seckey, c.order);
+    n.SetAdd(message, n);
+    s.SetModInverse(nonce, c.order);
+    s.SetModMul(s, n, c.order);
+    if (s.IsZero())
+        return false;
+    if (s.IsOdd())
+        s.SetSub(c.order, s);
+    return true;
 }
 
 void Signature::SetRS(const Number &rin, const Number &sin) {

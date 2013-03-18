@@ -103,9 +103,31 @@ void test_run_wnaf() {
     }
 }
 
+void test_ecdsa_sign_verify() {
+    const GroupConstants &c = GetGroupConst();
+    Number msg; msg.SetPseudoRand(c.order);
+    Number key; key.SetPseudoRand(c.order);
+    Number nonce;
+    GroupElemJac pub; ECMultBase(pub, key);
+    Signature sig;
+    do {
+        nonce.SetPseudoRand(c.order);
+    } while(!sig.Sign(key, msg, nonce));
+    assert(sig.Verify(pub, msg));
+    msg.Inc();
+    assert(!sig.Verify(pub, msg));
+}
+
+void test_run_ecdsa_sign_verify() {
+    for (int i=0; i<1000; i++) {
+        test_ecdsa_sign_verify();
+    }
+}
+
 int main(void) {
     test_run_wnaf();
     test_run_point_times_order();
     test_run_ecmult_chain();
+    test_run_ecdsa_sign_verify();
     return 0;
 }

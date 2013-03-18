@@ -112,6 +112,8 @@ class ECMultConsts {
 public:
     WNAFPrecomp<GroupElem,WINDOW_G> wpg;
     WNAFPrecomp<GroupElem,WINDOW_G> wpg128;
+    GroupElem prec[64][16]; // prec[j][i] = 16^j * (i+1) * G
+    GroupElem fin; // -(sum(prec[j][0], j=0..63))
 
     ECMultConsts() {
         const GroupElem &g = GetGroupConst().g;
@@ -121,12 +123,36 @@ public:
         GroupElem g128; g128.SetJac(g128j);
         wpg.Build(g);
         wpg128.Build(g128);
+        GroupElemJac gg(g);
+        GroupElem ad(g);
+        GroupElemJac fn;
+        for (int j=0; j<64; j++) {
+            prec[j][0].SetJac(gg);
+            fn.SetAdd(fn, gg);
+            for (int i=1; i<16; i++) {
+                gg.SetAdd(gg, ad);
+                prec[j][i].SetJac(gg);
+            }
+            ad = prec[j][15];
+        }
+        fn.SetNeg(fn);
+        fin.SetJac(fn);
     }
 };
 
 const ECMultConsts &GetECMultConsts() {
     static const ECMultConsts ecmult_consts;
     return ecmult_consts;
+}
+
+void ECMultBase(GroupElemJac &out, const Number &gn) {
+    Number n; n.SetNumber(gn);
+    const ECMultConsts &c = GetECMultConsts();
+    out.SetAffine(c.prec[0][n.ShiftLowBits(4)]);
+    for (int j=1; j<64; j++) {
+        out.SetAdd(out, c.prec[j][n.ShiftLowBits(4)]);
+    }
+    out.SetAdd(out, c.fin);
 }
 
 void ECMult(GroupElemJac &out, const GroupElemJac &a, const Number &an, const Number &gn) {

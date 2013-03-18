@@ -9,8 +9,10 @@ private:
 
 public:
     bool Parse(const unsigned char *sig, int size);
-    bool RecomputeR(Number &r2, const GroupElemJac &pubkey, const Number &message);
-    bool Verify(const GroupElemJac &pubkey, const Number &message);
+    bool Serialize(unsigned char *sig, int *size);
+    bool RecomputeR(Number &r2, const GroupElemJac &pubkey, const Number &message) const;
+    bool Verify(const GroupElemJac &pubkey, const Number &message) const;
+    bool Sign(const Number &seckey, const Number &message, const Number &nonce);
     void SetRS(const Number &rin, const Number &sin);
     std::string ToString() const;
 };

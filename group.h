@@ -55,7 +55,9 @@ public:
 
     GroupElemJac(const GroupElem &in);
 
-    void SetJac(GroupElemJac &jac);
+    void SetJac(const GroupElemJac &jac);
+
+    void SetAffine(const GroupElem &aff);
 
     /** Checks whether this is a non-infinite point on the curve */
     bool IsValid() const;

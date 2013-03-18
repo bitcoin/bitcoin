@@ -138,6 +138,10 @@ bool Number::IsOdd() const {
     return BN_is_odd((const BIGNUM*)*this);
 }
 
+bool Number::CheckBit(int pos) const {
+    return BN_is_bit_set((const BIGNUM*)*this, pos);
+}
+
 bool Number::IsNeg() const {
     return BN_is_negative((const BIGNUM*)*this);
 }

@@ -33,6 +33,7 @@ public:
     bool IsZero() const;
     bool IsOdd() const;
     bool IsNeg() const;
+    bool CheckBit(int pos) const;
     void Negate();
     void Shift1();
     void Inc();
