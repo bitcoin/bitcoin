@@ -378,6 +378,59 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tabAdvanced">
+      <attribute name="title">
+       <string>&amp;Advanced</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_Advanced">
+       <item>
+        <widget class="QLabel" name="dustLimitInfoLabel">
+         <property name="text">
+          <string>Limit to the transaction that this node will process. Transactions which transfer less than this value will be ignored.</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_1_Advanced">
+         <item>
+          <widget class="QLabel" name="dustLimitLabel">
+           <property name="text">
+            <string>&amp;Dust limit</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>dustLimit</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="BitcoinAmountField" name="dustLimit"/>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_1_Advanced">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>

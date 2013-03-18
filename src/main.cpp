@@ -66,6 +66,7 @@ int64 nHPSTimerStart;
 
 // Settings
 int64 nTransactionFee = 0;
+int64 nDustLimit = 0;
 
 
 
@@ -652,6 +653,12 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
     // Rather not work on nonstandard transactions (unless -testnet)
     if (!fTestNet && !tx.IsStandard())
         return error("CTxMemPool::accept() : nonstandard transaction type");
+
+    // Further user defined acceptance tests
+    BOOST_FOREACH(const CTxOut& txout, tx.vout) {
+	if (txout.nValue <= nDustLimit)
+	    return error("CTxMemPool::accept() : transaction output smaller than user defined limit");
+    }
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();

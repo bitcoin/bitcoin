@@ -47,6 +47,7 @@ void OptionsModel::Init()
     fMinimizeToTray = settings.value("fMinimizeToTray", false).toBool();
     fMinimizeOnClose = settings.value("fMinimizeOnClose", false).toBool();
     nTransactionFee = settings.value("nTransactionFee").toLongLong();
+    nDustLimit = settings.value("nDustLimit").toLongLong();
     language = settings.value("language", "").toString();
 
     // These are shared with core Bitcoin; we want
@@ -196,6 +197,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return QVariant(bDisplayAddresses);
         case Language:
             return settings.value("language", "");
+        case DustLimit:
+            return QVariant(nDustLimit);
         default:
             return QVariant();
         }
@@ -278,6 +281,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case Language:
             settings.setValue("language", value);
             break;
+        case DustLimit:
+            nDustLimit = value.toLongLong();
+            settings.setValue("nDustLimit", nDustLimit);
+            break;
         default:
             break;
         }
@@ -290,4 +297,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
 qint64 OptionsModel::getTransactionFee()
 {
     return nTransactionFee;
+}
+
+qint64 OptionsModel::getDustLimit()
+{
+    return nDustLimit;
 }

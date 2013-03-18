@@ -100,6 +100,7 @@ extern unsigned int nCoinCacheSize;
 
 // Settings
 extern int64 nTransactionFee;
+extern int64 nDustLimit;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;

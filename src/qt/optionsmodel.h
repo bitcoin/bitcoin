@@ -29,6 +29,7 @@ public:
         DisplayUnit,       // BitcoinUnits::Unit
         DisplayAddresses,  // bool
         Language,          // QString
+        DustLimit,         // qint64
         OptionIDRowCount,
     };
 
@@ -49,6 +50,7 @@ public:
     int getDisplayUnit() { return nDisplayUnit; }
     bool getDisplayAddresses() { return bDisplayAddresses; }
     QString getLanguage() { return language; }
+    qint64 getDustLimit();
 
 private:
     int nDisplayUnit;
