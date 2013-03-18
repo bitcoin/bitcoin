@@ -8,6 +8,7 @@ using namespace std;
 #include "field.h"
 
 // #define VERIFY_MAGNITUDE 1
+#define CONSTANT_TIME
 
 namespace secp256k1 {
 
@@ -33,6 +34,7 @@ FieldElem::FieldElem(const unsigned char *b32) {
 
 void FieldElem::Normalize() {
     uint64_t c;
+#ifndef CONSTANT_TIME
     if (n[0] > 0xFFFFFFFFFFFFFULL || n[1] > 0xFFFFFFFFFFFFFULL || n[2] > 0xFFFFFFFFFFFFFULL || n[3] > 0xFFFFFFFFFFFFFULL || n[4] > 0xFFFFFFFFFFFFULL) {
         c = n[0];
         uint64_t t0 = c & 0xFFFFFFFFFFFFFULL;
@@ -67,6 +69,45 @@ void FieldElem::Normalize() {
         n[1] = 0;
         n[0] -= 0xFFFFEFFFFFC2FULL;
     }
+#else
+    c = n[0];
+    uint64_t t0 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + n[1];
+    uint64_t t1 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + n[2];
+    uint64_t t2 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + n[3];
+    uint64_t t3 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + n[4];
+    uint64_t t4 = c & 0x0FFFFFFFFFFFFULL;
+    c >>= 48;
+
+    // The following code will not modify the t's if c is initially 0.
+    c = c * 0x1000003D1ULL + t0;
+    t0 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + t1;
+    t1 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + t2;
+    t2 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + t3;
+    t3 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + t4;
+    t4 = c & 0x0FFFFFFFFFFFFULL;
+
+    // Replace n's with t's if one of the n's overflows.
+    // If none of the n's overflow to begin with, the t's will just be the n's already and
+    // we effectively ignore the results of the previous computations.
+    n[0] = t0; n[1] = t1; n[2] = t2; n[3] = t3; n[4] = t4;
+
+    // Subtract p if result >= p
+    uint64_t mask = (uint64_t)~(-(n[4] == 0xFFFFFFFFFFFFULL && n[3] == 0xFFFFFFFFFFFFFULL && n[2] == 0xFFFFFFFFFFFFFULL && n[1] == 0xFFFFFFFFFFFFF && n[0] >= 0xFFFFEFFFFFC2FULL));
+    n[4] &= mask;
+    n[3] &= mask;
+    n[2] &= mask;
+    n[1] &= mask;
+    n[0] -= (~mask & 0xFFFFEFFFFFC2FULL);
+#endif
+ 
 #ifdef VERIFY_MAGNITUDE
     magnitude = 1;
 #endif
