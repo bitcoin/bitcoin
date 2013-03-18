@@ -8,9 +8,6 @@ namespace Ui {
 }
 class WalletModel;
 
-QT_BEGIN_NAMESPACE
-QT_END_NAMESPACE
-
 class SignVerifyMessageDialog : public QDialog
 {
     Q_OBJECT

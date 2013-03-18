@@ -1,4 +1,5 @@
 #include "clientmodel.h"
+
 #include "guiconstants.h"
 #include "optionsmodel.h"
 #include "addresstablemodel.h"
