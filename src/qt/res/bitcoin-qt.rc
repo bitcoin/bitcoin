@@ -22,7 +22,7 @@ BEGIN
             VALUE "FileDescription",    "Bitcoin-Qt (OSS GUI client for Bitcoin)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "bitcoin-qt"
-            VALUE "LegalCopyright",     "2009-2012 The Bitcoin developers"
+            VALUE "LegalCopyright",     "2009-2013 The Bitcoin developers"
             VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
             VALUE "OriginalFilename",   "bitcoin-qt.exe"
             VALUE "ProductName",        "Bitcoin-Qt"
