@@ -100,7 +100,7 @@ void FieldElem::Normalize() {
     n[0] = t0; n[1] = t1; n[2] = t2; n[3] = t3; n[4] = t4;
 
     // Subtract p if result >= p
-    uint64_t mask = (uint64_t)~(-(n[4] == 0xFFFFFFFFFFFFULL && n[3] == 0xFFFFFFFFFFFFFULL && n[2] == 0xFFFFFFFFFFFFFULL && n[1] == 0xFFFFFFFFFFFFF && n[0] >= 0xFFFFEFFFFFC2FULL));
+    uint64_t mask = (uint64_t)~(-(int64_t)(n[4] == 0xFFFFFFFFFFFFULL && n[3] == 0xFFFFFFFFFFFFFULL && n[2] == 0xFFFFFFFFFFFFFULL && n[1] == 0xFFFFFFFFFFFFF && n[0] >= 0xFFFFEFFFFFC2FULL));
     n[4] &= mask;
     n[3] &= mask;
     n[2] &= mask;
