@@ -1,5 +1,6 @@
 #include "sendcoinsentry.h"
 #include "ui_sendcoinsentry.h"
+
 #include "guiutil.h"
 #include "bitcoinunits.h"
 #include "addressbookpage.h"

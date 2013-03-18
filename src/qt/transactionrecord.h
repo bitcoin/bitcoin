@@ -14,8 +14,8 @@ class TransactionStatus
 {
 public:
     TransactionStatus():
-            confirmed(false), sortKey(""), maturity(Mature),
-            matures_in(0), status(Offline), depth(0), open_for(0), cur_num_blocks(-1)
+        confirmed(false), sortKey(""), maturity(Mature),
+        matures_in(0), status(Offline), depth(0), open_for(0), cur_num_blocks(-1)
     { }
 
     enum Maturity

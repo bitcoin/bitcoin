@@ -20,12 +20,9 @@
 #include <QLineEdit>
 #include <QTableView>
 #include <QHeaderView>
-#include <QPushButton>
 #include <QMessageBox>
 #include <QPoint>
 #include <QMenu>
-#include <QApplication>
-#include <QClipboard>
 #include <QLabel>
 #include <QDateTimeEdit>
 
@@ -173,16 +170,11 @@ void TransactionView::setModel(WalletModel *model)
         transactionView->sortByColumn(TransactionTableModel::Status, Qt::DescendingOrder);
         transactionView->verticalHeader()->hide();
 
-        transactionView->horizontalHeader()->resizeSection(
-                TransactionTableModel::Status, 23);
-        transactionView->horizontalHeader()->resizeSection(
-                TransactionTableModel::Date, 120);
-        transactionView->horizontalHeader()->resizeSection(
-                TransactionTableModel::Type, 120);
-        transactionView->horizontalHeader()->setResizeMode(
-                TransactionTableModel::ToAddress, QHeaderView::Stretch);
-        transactionView->horizontalHeader()->resizeSection(
-                TransactionTableModel::Amount, 100);
+        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Status, 23);
+        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Date, 120);
+        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Type, 120);
+        transactionView->horizontalHeader()->setResizeMode(TransactionTableModel::ToAddress, QHeaderView::Stretch);
+        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Amount, 100);
     }
 }
 

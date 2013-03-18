@@ -14,6 +14,7 @@ class WalletModel;
 class AddressTableModel : public QAbstractTableModel
 {
     Q_OBJECT
+
 public:
     explicit AddressTableModel(CWallet *wallet, WalletModel *parent = 0);
     ~AddressTableModel();

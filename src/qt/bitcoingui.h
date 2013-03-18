@@ -17,13 +17,9 @@ class RPCConsole;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
-class QLineEdit;
-class QTableView;
-class QAbstractItemModel;
 class QModelIndex;
 class QProgressBar;
 class QStackedWidget;
-class QUrl;
 QT_END_NAMESPACE
 
 /**
@@ -33,6 +29,7 @@ QT_END_NAMESPACE
 class BitcoinGUI : public QMainWindow
 {
     Q_OBJECT
+
 public:
     explicit BitcoinGUI(QWidget *parent = 0);
     ~BitcoinGUI();
