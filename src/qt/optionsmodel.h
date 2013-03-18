@@ -30,6 +30,7 @@ public:
         DisplayAddresses,  // bool
         Language,          // QString
         DustLimit,         // qint64
+        FilteredAddresses, // QString
         OptionIDRowCount,
     };
 

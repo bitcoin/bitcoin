@@ -386,7 +386,7 @@
        <item>
         <widget class="QLabel" name="dustLimitInfoLabel">
          <property name="text">
-          <string>Limit to the transaction that this node will process. Transactions which transfer less than this value will be ignored.</string>
+          <string>Limits to the transaction that this node will process. Transactions with outputs less than the dust limit will be ignored.</string>
          </property>
          <property name="textFormat">
           <enum>Qt::PlainText</enum>
@@ -428,6 +428,45 @@
           </spacer>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="filteredAddressesInfoLabel">
+         <property name="text">
+          <string>Bitcoin addresses which will be filtered (each address on a line). Outputs spent to these addresses will not be processed by this node.</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="filteredAddresses">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Bitcoin addresses to filter from transaction processing.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_Advanced">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>

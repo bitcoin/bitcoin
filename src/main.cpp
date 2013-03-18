@@ -67,6 +67,7 @@ int64 nHPSTimerStart;
 // Settings
 int64 nTransactionFee = 0;
 int64 nDustLimit = 0;
+set<CBitcoinAddress> filteredAddresses;
 
 
 
@@ -656,8 +657,21 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
 
     // Further user defined acceptance tests
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
-	if (txout.nValue <= nDustLimit)
-	    return error("CTxMemPool::accept() : transaction output smaller than user defined limit");
+        if (txout.nValue <= nDustLimit)
+            return error("CTxMemPool::accept() : transaction output smaller than user defined limit");
+
+        txnouttype type;
+        vector<CTxDestination> addresses;
+        int nRequired;
+        if (!ExtractDestinations(txout.scriptPubKey, type, addresses, nRequired)) {
+            return error("CTxMemPool::accept() : unable to check transaction destinations");
+        }
+
+        BOOST_FOREACH(const CTxDestination& addr, addresses) {
+            if (filteredAddresses.find(CBitcoinAddress(addr)) != filteredAddresses.end()) {
+                return error("CTxMemPool::accept() : transaction destination filtered");
+            }
+        }
     }
 
     // is it already in the memory pool?
