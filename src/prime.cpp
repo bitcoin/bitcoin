@@ -164,3 +164,168 @@ unsigned int GetLastBlockIndex(const CBlockIndex* pindex, int nProofOfWorkType, 
     return nDepthOfEqualOrShorterType;
 }
 
+// Binary logarithm scale of a big number, times 65536
+// Can be used as an approximate log scale for numbers up to 2 ** 65536 - 1
+bool LogScale(const CBigNum& bn, unsigned int& nLogScale)
+{
+    // Get number of bits
+    if (bn < 1)
+        return error("LogScale() : not positive number");
+    unsigned int nBytes = BN_num_bytes(&bn);
+    if (nBytes < 1)
+        return error("LogScale() : zero size");
+    CBigNum bnMantissa;
+    BN_rshift(&bnMantissa, &bn, 8 * (nBytes - 1));
+    unsigned int nByte = BN_get_word(&bnMantissa);
+    unsigned int nBits = 8 * (nBytes - 1);
+    for (; nByte ; nByte >>= 1)
+        nBits++;
+    if (nBits < 1)
+        return error("LogScale() : zero bits");
+    // Get 17-bit mantissa
+    bnMantissa = ((bn << 17) >> nBits);
+    unsigned int nMantissa = BN_get_word(&bnMantissa);
+    // Combine to form approximate log scale
+    nLogScale = (nMantissa & 0xffff);
+    nLogScale |= ((nBits - 1) << 16);
+    return true;
+}
+
+// Binary log log scale of a big number, times 65536
+// Can be used as an approximate log log scale for numbers up to 2 ** 65536 - 1
+static bool LogLogScale(const CBigNum& bn, unsigned int& nLogLogScale)
+{
+    if (bn < 2)
+        return error("LogLogScale() : undefined for log log; must be at least 2");
+    unsigned int nLogScale;
+    if (!LogScale(bn, nLogScale))
+        return error("LogLogScale() : unable to calculate log scale");
+    if (!LogScale(CBigNum(nLogScale), nLogLogScale))
+        return error("LogLogScale() : unable to calculate log log scale");
+    // Here log refers to base 2 (binary) logarithm
+    // nLogLogScale ~ 65536 * (16 + log(log(bn)))
+    if (nLogLogScale < (1 << 20))
+        return error("GetProofOfWorkHashTarget() : log log scale below mininum");
+    nLogLogScale -= (1 << 20); // ~ 65536 * log(log(bn))
+    return true;
+}
+
+// Design Note: Hash target vs. Prime target
+//
+// In Primecoin's hybrid proof-of-work model, a block must meet both a hash
+// target (hash proof-of-work) and a prime target (prime proof-of-work).
+// Hash target is understood in the traditional Bitcoin sense, that is,
+// the block hash must be less than or equal to the hash target.
+// Prime target is the target that the first probable prime of the
+// probable Cunningham Chain must meet, that is, the first probable prime
+// of the chain must be greater than or equal to the prime target. Prime
+// target is stored as nBits inside block header.
+//
+// The reason that hash proof-of-work is still needed is because the size of
+// the probable prime must be capped in order to limit the amount of work
+// required to verify proof-of-work.
+//
+// The cap is set at 2 ** 2039 - 1 as this is the max value of Bitcoin's
+// compact target representation, and a reasonably good cap for performing
+// Fermat-Euler-Lagrange-Lifchitz primality testing on Cunningham Chains.
+//
+// The prime target is then mapped to hash target via a chosen curve such
+// that very little amount of hash proof-of-work is required until the prime
+// approaches the cap, and as it's approaching the cap, hash proof-of-work
+// required would rise toward infinity.
+//
+// This design allows any given length of Cunningham Chain to be permanently 
+// present on block chain even if finding such length of chain at the cap
+// size becomes too easy by itself. As combined with the required hash 
+// proof-of-work it still becomes infinitely difficult as the prime approaches
+// the cap.
+
+
+// Compute hash target from prime target
+static bool GetProofOfWorkHashTarget(unsigned int nBits, CBigNum& bnHashTarget)
+{
+    CBigNum bnPrimeTarget = CBigNum().SetCompact(nBits);
+    if (bnPrimeTarget < bnProofOfWorkLimit || bnPrimeTarget >= bnProofOfWorkMax)
+        return error("GetProofOfWorkHashTarget() : prime target out of valid range");
+    if (bnProofOfWorkMax / bnPrimeTarget < 2)
+    {
+        bnHashTarget = 0;
+        return true;
+    }
+    unsigned int nLogLogScale;
+    if (!LogLogScale(bnProofOfWorkMax / bnPrimeTarget, nLogLogScale))
+        return error("GetProofOfWorkHashTarget() : unable to calculate log log scale of prime target");
+    unsigned int nLogLogScaleMax;
+    if (!LogLogScale(bnProofOfWorkMax / bnProofOfWorkLimit, nLogLogScaleMax))
+        return error("GetProofOfWorkHashTarget() : unable to calculate max log log scale");
+    if (nLogLogScale > nLogLogScaleMax || nLogLogScale >= (((unsigned int )1) << 31))
+        return error("GetProofOfWorkHashTarget() : log log scale exceeds max");
+    nLogLogScale = (nLogLogScaleMax - nLogLogScale) * 2;
+    uint64 nLogLogSquared = ((uint64) nLogLogScale * (uint64) nLogLogScale);
+    // log refers to binary logarithm
+    // nLogLogSquared ~ (2 ** 32) * ((2 log(log(bnPOWMax/bnPrimeTarget))) ** 2)
+    // bnHashTarget = bnPOWLimit / (2 ** ((2 log(log(bnPOWMax/bnPrimeTarget))) ** 2))
+    CBigNum bnHashDifficulty = CBigNum((nLogLogSquared & 0xffffffffllu) + 0x100000000llu) << (nLogLogSquared >> 32);
+    bnHashTarget = (bnProofOfWorkLimit << 32) / bnHashDifficulty;
+    return true;
+}
+
+void PrintMappingPrimeTargetToHashTarget()
+{
+    CBigNum bnHashTarget;
+    printf("proof-of-work target mapping:\n  prime target => hash target\n");
+    for (unsigned int n = 256; n < 2039; n++)
+    {
+        unsigned int nBits = (CBigNum(1) << n).GetCompact();
+        GetProofOfWorkHashTarget(nBits, bnHashTarget);
+        printf("  0x%08x      0x%08x\n", nBits, bnHashTarget.GetCompact());
+    }
+}
+
+// Check hash proof-of-work
+bool CheckHashProofOfWork(uint256 hash, unsigned int nBits)
+{
+    CBigNum bnHashTarget;
+    if (!GetProofOfWorkHashTarget(nBits, bnHashTarget))
+        return error("CheckHashProofOfWork() : failed to get hash target");
+    // Check target for hash proof-of-work
+    if (hash > bnHashTarget.getuint256())
+        return error("CheckHashProofOfWork() : hash not meeting hash target");
+    return true;
+}
+
+// Check prime proof-of-work
+bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnProbablePrime, int& nProofOfWorkType)
+{
+    CBigNum bnPrimeTarget;
+    bnPrimeTarget.SetCompact(nBits);
+
+    // Check range
+    if (bnPrimeTarget < bnProofOfWorkLimit)
+        return error("CheckPrimeProofOfWork() : nBits below minimum work");
+
+    // Check target for prime proof-of-work 
+    if (bnProbablePrime < bnPrimeTarget)
+        return error("CheckPrimeProofOfWork() : prime not meeting prime target");
+    // Prime must not exceed cap
+    if (bnProbablePrime > bnProofOfWorkMax)
+        return error("CheckPrimeProofOfWork() : prime exceeds cap");
+
+    // Check bnProbablePrime % hash = +/- 1
+    CBigNum bnRemainder = bnProbablePrime % CBigNum(hash);
+    if ((bnRemainder != 1) && (bnRemainder + 1 != CBigNum(hash)))
+        return error("CheckPrimeProofOfWork() : bnProbablePrime+/-1 not divisible by hash");
+
+    // Check Cunningham Chain of first kind
+    nProofOfWorkType = 0;
+    unsigned int nChainLength;
+    if (ProbableCunninghamChainTest(bnProbablePrime, true, nChainLength))
+        nProofOfWorkType = nChainLength;
+    // Check Cunningham Chain of second kind
+    if (ProbableCunninghamChainTest(bnProbablePrime, false, nChainLength) && (int)nChainLength > nProofOfWorkType)
+        nProofOfWorkType = -nChainLength;
+    if (nProofOfWorkType == 0)
+        return error("CheckPrimeProofOfWork() : failed Cunningham Chain test");
+    return true;
+}
+

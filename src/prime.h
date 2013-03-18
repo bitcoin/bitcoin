@@ -30,4 +30,15 @@ bool MineProbableCunninghamChain(CBlockHeader& block, CBigNum& bnPrimorial, unsi
 // Returns: depth of last block index of shorter or equal type
 unsigned int GetLastBlockIndex(const CBlockIndex* pindex, int nProofOfWorkType, const CBlockIndex** pindexPrev);
 
+// Size of a big number (in bits), times 65536
+// Can be used as an approximate log scale for numbers up to 2 ** 65536 - 1
+bool LogScale(const CBigNum& bn, unsigned int& nLogScale);
+
+// Print mapping from prime target to hash target
+void PrintMappingPrimeTargetToHashTarget();
+
+// Check hash and prime proof-of-work
+bool CheckHashProofOfWork(uint256 hash, unsigned int nBits);
+bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnProbablePrime, int& nProofOfWorkType);
+
 #endif

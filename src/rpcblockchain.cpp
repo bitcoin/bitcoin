@@ -6,6 +6,7 @@
 
 #include "main.h"
 #include "bitcoinrpc.h"
+#include "prime.h"
 
 using namespace json_spirit;
 using namespace std;
@@ -24,11 +25,10 @@ double GetDifficulty(const CBlockIndex* blockindex)
             blockindex = pindexBest;
     }
 
-    int nShift = (blockindex->nBits >> 24) & 0xff;
-
-    double dDiff = log((double)(blockindex->nBits & 0x007fffff)) / log(2);
-    dDiff += (nShift - 3) * 8;
-
+    CBigNum bnPrimeTarget = CBigNum().SetCompact(blockindex->nBits);
+    unsigned int nLogScale;
+    LogScale(bnPrimeTarget, nLogScale);
+    double dDiff = ((double) nLogScale) / 65536.0 ;
     return dDiff;
 }
 

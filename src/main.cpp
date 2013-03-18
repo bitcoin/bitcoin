@@ -34,9 +34,9 @@ unsigned int nTransactionsUpdated = 0;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
 uint256 hashGenesisBlock = hashGenesisBlockOfficial;
-static CBigNum bnOne = 1;
-static CBigNum bnProofOfWorkLimit = bnOne << 256;
-static CBigNum bnProofOfWorkMax = (bnOne << 2039) - 1;
+CBigNum bnOne = 1;
+CBigNum bnProofOfWorkLimit = bnOne << 256;
+CBigNum bnProofOfWorkMax = (bnOne << 2039) - 1;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 CBigNum bnBestChainWork = 0;
@@ -1125,32 +1125,10 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnProbablePrime, int& nProofOfWorkType)
 {
-    CBigNum bnTarget;
-    bnTarget.SetCompact(nBits);
-
-    // Check range
-    if (bnTarget < bnProofOfWorkLimit)
-        return error("CheckProofOfWork() : nBits below minimum work");
-
-    // Primecoin: probable prime must exceed target
-    if (bnProbablePrime < bnTarget)
-        return error("CheckProofOfWork() : bnProbablePrime doesn't match nBits");
-
-    // Primecoin: check bnProbablePrime % hash = +/- 1
-    CBigNum bnRemainder = bnProbablePrime % CBigNum(hash);
-    if ((bnRemainder != 1) && (bnRemainder + 1 != CBigNum(hash)))
-        return error("CheckProofOfWork() : bnProbablePrime+/-1 not divisible by hash");
-
-    // Primecoin: check Cunningham Chain of first kind
-    nProofOfWorkType = 0;
-    unsigned int nChainLength;
-    if (ProbableCunninghamChainTest(bnProbablePrime, true, nChainLength))
-        nProofOfWorkType = nChainLength;
-    // Primecoin: check Cunningham Chain of second kind
-    if (ProbableCunninghamChainTest(bnProbablePrime, false, nChainLength) && (int)nChainLength > nProofOfWorkType)
-        nProofOfWorkType = -nChainLength;
-    if (nProofOfWorkType == 0)
-        return error("CheckProofOfWork() : failed Cunningham Chain test");
+    if (!CheckHashProofOfWork(hash, nBits))
+        return error("CheckProofOfWork() : check failed for hash proof-of-work");
+    if (!CheckPrimeProofOfWork(hash, nBits, bnProbablePrime, nProofOfWorkType))
+        return error("CheckProofOfWork() : check failed for prime proof-of-work");
     return true;
 }
 
@@ -2497,6 +2475,8 @@ CBlockIndex * InsertBlockIndex(uint256 hash)
 bool static LoadBlockIndexDB()
 {
     GeneratePrimeTable();
+    if (fDebug && GetBoolArg("-printtargetmapping"))
+        PrintMappingPrimeTargetToHashTarget();
 
     if (!pblocktree->LoadBlockIndexGuts())
         return false;
@@ -4421,15 +4401,14 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
-    uint256 hash = pblock->GetHash();
-    uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+    CBigNum bnTarget = CBigNum().SetCompact(pblock->nBits);
 
-    if (hash > hashTarget)
-        return false;
+    if (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->bnProbablePrime, pblock->nProofOfWorkType))
+        return error("PrimecoinMiner : failed proof-of-work check");
 
     //// debug print
-    printf("BitcoinMiner:\n");
-    printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
+    printf("PrimecoinMiner:\n");
+    printf("proof-of-work found  \n  type: %d\n  pprime: %s\n  target: %s\n  ", pblock->nProofOfWorkType, pblock->bnProbablePrime.GetHex().c_str(), bnTarget.GetHex().c_str());
     pblock->print();
     printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
 

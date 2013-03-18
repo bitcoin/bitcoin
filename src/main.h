@@ -101,6 +101,9 @@ extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern unsigned int nCoinCacheSize;
 
+extern CBigNum bnProofOfWorkLimit;
+extern CBigNum bnProofOfWorkMax;
+
 // Settings
 extern int64 nTransactionFee;
 
@@ -1268,7 +1271,7 @@ public:
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
     unsigned int nTime;
-    unsigned int nBits;
+    unsigned int nBits;  // compact form of proof-of-work prime target
     unsigned int nNonce;
 
     CBlockHeader()
