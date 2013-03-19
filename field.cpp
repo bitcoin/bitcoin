@@ -33,8 +33,11 @@ FieldElem::FieldElem(const unsigned char *b32) {
 }
 
 void FieldElem::Normalize() {
+#ifdef CONSTANT_TIME
+    NormalizeCT();
+    return;
+#else
     uint64_t c;
-#ifndef CONSTANT_TIME
     if (n[0] > 0xFFFFFFFFFFFFFULL || n[1] > 0xFFFFFFFFFFFFFULL || n[2] > 0xFFFFFFFFFFFFFULL || n[3] > 0xFFFFFFFFFFFFFULL || n[4] > 0xFFFFFFFFFFFFULL) {
         c = n[0];
         uint64_t t0 = c & 0xFFFFFFFFFFFFFULL;
@@ -69,7 +72,14 @@ void FieldElem::Normalize() {
         n[1] = 0;
         n[0] -= 0xFFFFEFFFFFC2FULL;
     }
-#else
+#ifdef VERIFY_MAGNITUDE
+    magnitude = 1;
+#endif
+#endif
+}
+
+void FieldElem::NormalizeCT() {
+    uint64_t c;
     c = n[0];
     uint64_t t0 = c & 0xFFFFFFFFFFFFFULL;
     c = (c >> 52) + n[1];
@@ -106,8 +116,7 @@ void FieldElem::Normalize() {
     n[2] &= mask;
     n[1] &= mask;
     n[0] -= (~mask & 0xFFFFEFFFFFC2FULL);
-#endif
- 
+
 #ifdef VERIFY_MAGNITUDE
     magnitude = 1;
 #endif
@@ -118,14 +127,38 @@ bool inline FieldElem::IsZero() {
     return (n[0] == 0 && n[1] == 0 && n[2] == 0 && n[3] == 0 && n[4] == 0);
 }
 
+bool inline FieldElem::IsZeroCT() {
+    NormalizeCT();
+    return (n[0] == 0 && n[1] == 0 && n[2] == 0 && n[3] == 0 && n[4] == 0);
+}
+
 bool inline operator==(FieldElem &a, FieldElem &b) {
     a.Normalize();
     b.Normalize();
     return (a.n[0] == b.n[0] && a.n[1] == b.n[1] && a.n[2] == b.n[2] && a.n[3] == b.n[3] && a.n[4] == b.n[4]);
 }
 
+bool inline EqualCT(FieldElem &a, FieldElem &b) {
+    a.NormalizeCT();
+    b.NormalizeCT();
+    return (a.n[0] == b.n[0] && a.n[1] == b.n[1] && a.n[2] == b.n[2] && a.n[3] == b.n[3] && a.n[4] == b.n[4]);
+}
+
 void FieldElem::GetBytes(unsigned char *o) {
     Normalize();
+    for (int i=0; i<32; i++) {
+        int c = 0;
+        for (int j=0; j<2; j++) {
+            int limb = (8*i+4*j)/52;
+            int shift = (8*i+4*j)%52;
+            c |= ((n[limb] >> shift) & 0xF) << (4 * j);
+        }
+        o[31-i] = c;
+    }
+}
+
+void FieldElem::GetBytesCT(unsigned char *o) {
+    NormalizeCT();
     for (int i=0; i<32; i++) {
         int c = 0;
         for (int j=0; j<2; j++) {
@@ -329,9 +362,26 @@ bool FieldElem::IsOdd() {
     return n[0] & 1;
 }
 
+bool FieldElem::IsOddCT() {
+    NormalizeCT();
+    return n[0] & 1;
+}
+
 std::string FieldElem::ToString() {
     unsigned char tmp[32];
     GetBytes(tmp);
+    std::string ret;
+    for (int i=0; i<32; i++) {
+        static const char *c = "0123456789ABCDEF";
+        ret += c[(tmp[i] >> 4) & 0xF];
+        ret += c[(tmp[i]) & 0xF];
+    }
+    return ret;
+}
+
+std::string FieldElem::ToStringCT() {
+    unsigned char tmp[32];
+    GetBytesCT(tmp);
     std::string ret;
     for (int i=0; i<32; i++) {
         static const char *c = "0123456789ABCDEF";
@@ -378,6 +428,7 @@ const FieldConstants &GetFieldConst() {
     return field_const;
 }
 
+// Nonbuiltin Field Inverse is not constant time.
 void FieldElem::SetInverse(FieldElem &a) {
 #if defined(USE_FIELDINVERSE_BUILTIN)
     // calculate a^p, with p={45,63,1019,1023}

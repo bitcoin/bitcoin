@@ -18,6 +18,10 @@ namespace secp256k1 {
  *  is at most M*(2^53-1), except the most significant one, which is limited to M*(2^49-1). All operations
  *  accept any input with magnitude at most M, and have different rules for propagating magnitude to their
  *  output.
+ *
+ *  There are two implementations of the Normalize method, NormalizeCT executing in constant time.
+ *  Similarly, a second version of all the other methods that call Normalize have been added which
+ *  NormalizeCT instead to prevent sidechannel leaks.
  */
 class FieldElem {
 private:
@@ -36,13 +40,17 @@ public:
 
     /** Normalizes the internal representation entries. Magnitude=1 */
     void Normalize();
+    void NormalizeCT();
 
     bool IsZero();
+    bool IsZeroCT();
 
     bool friend operator==(FieldElem &a, FieldElem &b);
+    bool friend EqualCT(FieldElem &a, FieldElem &b);
 
     /** extract as 32-byte big endian array */
     void GetBytes(unsigned char *o);
+    void GetBytesCT(unsigned char *o);
 
     /** set value of 32-byte big endian array */
     void SetBytes(const unsigned char *in);
@@ -65,11 +73,13 @@ public:
     void SetSquareRoot(const FieldElem &a);
 
     bool IsOdd();
+    bool IsOddCT();
 
     /** Set this to be the (modular) inverse of another FieldElem. Magnitude=1 */
     void SetInverse(FieldElem &a);
 
     std::string ToString();
+    std::string ToStringCT();
 
     void SetHex(const std::string &str);
 };
