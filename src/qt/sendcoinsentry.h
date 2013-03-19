@@ -26,6 +26,7 @@ public:
     bool isClear();
 
     void setValue(const SendCoinsRecipient &value);
+    void setAddress(const QString &address);
 
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
      */
