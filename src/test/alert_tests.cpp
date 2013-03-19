@@ -4,12 +4,11 @@
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
+#include <fstream>
 
 #include "alert.h"
 #include "serialize.h"
 #include "util.h"
-
-BOOST_AUTO_TEST_SUITE(Alert_tests)
 
 #if 0
 //
@@ -39,63 +38,88 @@ BOOST_AUTO_TEST_SUITE(Alert_tests)
     SignAndSave(alert, "test/alertTests");
 
     alert.setSubVer.clear();
-    alert.nID = 2;
+    ++alert.nID;
     alert.nCancel = 1;
+    alert.nPriority = 100;
     alert.strStatusBar  = "Alert 2, cancels 1";
     SignAndSave(alert, "test/alertTests");
 
     alert.nExpiration += 60;
+    ++alert.nID;
     SignAndSave(alert, "test/alertTests");
 
+    ++alert.nID;
     alert.nMinVer = 11;
     alert.nMaxVer = 22;
     SignAndSave(alert, "test/alertTests");
 
+    ++alert.nID;
     alert.strStatusBar  = "Alert 2 for Satoshi 0.1.0";
     alert.setSubVer.insert(std::string("/Satoshi:0.1.0/"));
+    SignAndSave(alert, "test/alertTests");
+
+    ++alert.nID;
+    alert.nMinVer = 0;
+    alert.nMaxVer = 999999;
+    alert.strStatusBar  = "Evil Alert'; /bin/ls; echo '";
+    alert.setSubVer.clear();
     SignAndSave(alert, "test/alertTests");
 }
 #endif
 
-
-std::vector<CAlert>
-read_alerts(const std::string& filename)
+struct ReadAlerts
 {
-    std::vector<CAlert> result;
-
-    namespace fs = boost::filesystem;
-    fs::path testFile = fs::current_path() / "test" / "data" / filename;
-#ifdef TEST_DATA_DIR
-    if (!fs::exists(testFile))
+    ReadAlerts()
     {
-        testFile = fs::path(BOOST_PP_STRINGIZE(TEST_DATA_DIR)) / filename;
-    }
-#endif
-    FILE* fp = fopen(testFile.string().c_str(), "rb");
-    if (!fp) return result;
-
-
-    CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
-    if (!filein) return result;
-
-    try {
-        while (!feof(filein))
+        std::string filename("alertTests");
+        namespace fs = boost::filesystem;
+        fs::path testFile = fs::current_path() / "test" / "data" / filename;
+#ifdef TEST_DATA_DIR
+        if (!fs::exists(testFile))
         {
-            CAlert alert;
-            filein >> alert;
-            result.push_back(alert);
+            testFile = fs::path(BOOST_PP_STRINGIZE(TEST_DATA_DIR)) / filename;
         }
-    }
-    catch (std::exception) { }
+#endif
+        FILE* fp = fopen(testFile.string().c_str(), "rb");
+        if (!fp) return;
 
-    return result;
-}
+
+        CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
+        if (!filein) return;
+
+        try {
+            while (!feof(filein))
+            {
+                CAlert alert;
+                filein >> alert;
+                alerts.push_back(alert);
+            }
+        }
+        catch (std::exception) { }
+    }
+    ~ReadAlerts() { }
+
+    static std::vector<std::string> read_lines(boost::filesystem::path filepath)
+    {
+        std::vector<std::string> result;
+
+        std::ifstream f(filepath.string().c_str());
+        std::string line;
+        while (std::getline(f,line))
+            result.push_back(line);
+
+        return result;
+    }
+
+    std::vector<CAlert> alerts;
+};
+
+BOOST_FIXTURE_TEST_SUITE(Alert_tests, ReadAlerts)
+
 
 BOOST_AUTO_TEST_CASE(AlertApplies)
 {
     SetMockTime(11);
-
-    std::vector<CAlert> alerts = read_alerts("alertTests");
 
     BOOST_FOREACH(const CAlert& alert, alerts)
     {
@@ -128,5 +152,34 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
 
     SetMockTime(0);
 }
+
+
+// This uses sh 'echo' to test the -alertnotify function, writing to a
+// /tmp file. So skip it on Windows:
+#ifndef WIN32
+BOOST_AUTO_TEST_CASE(AlertNotify)
+{
+    SetMockTime(11);
+
+    boost::filesystem::path temp = GetTempPath() / "alertnotify.txt";
+    boost::filesystem::remove(temp);
+
+    mapArgs["-alertnotify"] = std::string("echo %s >> ") + temp.string();
+
+    BOOST_FOREACH(CAlert alert, alerts)
+        alert.ProcessAlert(false);
+
+    std::vector<std::string> r = read_lines(temp);
+    BOOST_CHECK_EQUAL(r.size(), 4u);
+    BOOST_CHECK_EQUAL(r[0], "Alert 1");
+    BOOST_CHECK_EQUAL(r[1], "Alert 2, cancels 1");
+    BOOST_CHECK_EQUAL(r[2], "Alert 2, cancels 1");
+    BOOST_CHECK_EQUAL(r[3], "Evil Alert; /bin/ls; echo "); // single-quotes should be removed
+
+    boost::filesystem::remove(temp);
+
+    SetMockTime(0);
+}
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
