@@ -54,6 +54,7 @@
 #include <QUrl>
 #include <QMimeData>
 #include <QStyle>
+#include <QSettings>
 
 #include <iostream>
 
@@ -69,7 +70,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     rpcConsole(0),
     prevBlocks(0)
 {
-    resize(850, 550);
+    restoreWindowGeometry();
     setWindowTitle(tr("Bitcoin") + " - " + tr("Wallet"));
 #ifndef Q_OS_MAC
     qApp->setWindowIcon(QIcon(":icons/bitcoin"));
@@ -185,6 +186,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
 BitcoinGUI::~BitcoinGUI()
 {
+    saveWindowGeometry();
     if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)
         trayIcon->hide();
 #ifdef Q_OS_MAC
@@ -465,6 +467,22 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 #endif
+
+void BitcoinGUI::saveWindowGeometry()
+{
+    QSettings settings;
+    settings.setValue("nWindowPos", pos());
+    settings.setValue("nWindowSize", size());
+}
+
+void BitcoinGUI::restoreWindowGeometry()
+{
+    QSettings settings;
+    QPoint pos = settings.value("nWindowPos").toPoint();
+    QSize size = settings.value("nWindowSize", QSize(850, 550)).toSize();
+    resize(size);
+    move(pos);
+}
 
 void BitcoinGUI::optionsClicked()
 {
