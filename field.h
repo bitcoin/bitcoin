@@ -25,6 +25,7 @@ private:
     uint64_t n[5];
 #ifdef VERIFY_MAGNITUDE
     int magnitude;
+    bool normalized;
 #endif
 
 public:
@@ -37,9 +38,9 @@ public:
     /** Normalizes the internal representation entries. Magnitude=1 */
     void Normalize();
 
-    bool IsZero();
+    bool IsZero() const;
 
-    bool friend operator==(FieldElem &a, FieldElem &b);
+    bool friend operator==(const FieldElem &a, const FieldElem &b);
 
     /** extract as 32-byte big endian array */
     void GetBytes(unsigned char *o);
@@ -64,7 +65,7 @@ public:
     /** Set this to be the (modular) square root of another FieldElem. Magnitude=1 */
     void SetSquareRoot(const FieldElem &a);
 
-    bool IsOdd();
+    bool IsOdd() const;
 
     /** Set this to be the (modular) inverse of another FieldElem. Magnitude=1 */
     void SetInverse(FieldElem &a);

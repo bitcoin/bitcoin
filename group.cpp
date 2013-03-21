@@ -71,6 +71,8 @@ bool GroupElemJac::IsValid() const {
     FieldElem z6; z6.SetSquare(z2); z6.SetMult(z6,z2);
     z6 *= 7;
     x3 += z6;
+    y2.Normalize();
+    x3.Normalize();
     return y2 == x3;
 }
 
@@ -122,12 +124,14 @@ void GroupElemJac::SetCompressed(const FieldElem &xin, bool fOdd) {
     c += x3;
     y.SetSquareRoot(c);
     z = FieldElem(1);
+    y.Normalize();
     if (y.IsOdd() != fOdd)
         y.SetNeg(y,1);
 }
 
 void GroupElemJac::SetDouble(const GroupElemJac &p) {
     FieldElem t5 = p.y;
+    t5.Normalize();
     if (p.fInfinity || t5.IsZero()) {
         fInfinity = true;
         return;
@@ -174,7 +178,11 @@ void GroupElemJac::SetAdd(const GroupElemJac &p, const GroupElemJac &q) {
     FieldElem u2; u2.SetMult(x2, z12);
     FieldElem s1; s1.SetMult(y1, z22); s1.SetMult(s1, z2);
     FieldElem s2; s2.SetMult(y2, z12); s2.SetMult(s2, z1);
+    u1.Normalize();
+    u2.Normalize();
     if (u1 == u2) {
+        s1.Normalize();
+        s2.Normalize();
         if (s1 == s2) {
             SetDouble(p);
         } else {
@@ -214,7 +222,11 @@ void GroupElemJac::SetAdd(const GroupElemJac &p, const GroupElem &q) {
     FieldElem u2; u2.SetMult(x2, z12);
     FieldElem s1 = y1; s1.Normalize(); 
     FieldElem s2; s2.SetMult(y2, z12); s2.SetMult(s2, z1);
+    u1.Normalize();
+    u2.Normalize();
     if (u1 == u2) {
+        s1.Normalize();
+        s2.Normalize();
         if (s1 == s2) {
             SetDouble(p);
         } else {

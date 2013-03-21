@@ -79,6 +79,7 @@ bool Signature::RecomputeR(Number &r2, const GroupElemJac &pubkey, const Number 
     if (pr.IsInfinity())
         return false;
     FieldElem xr; pr.GetX(xr);
+    xr.Normalize();
     unsigned char xrb[32]; xr.GetBytes(xrb);
     r2.SetBytes(xrb,32); r2.SetMod(r2,c.order);
     return true;
@@ -99,6 +100,7 @@ bool Signature::Sign(const Number &seckey, const Number &message, const Number &
     FieldElem rx;
     rp.GetX(rx);
     unsigned char b[32];
+    rx.Normalize();
     rx.GetBytes(b);
     r.SetBytes(b, 32);
     r.SetMod(r, c.order);

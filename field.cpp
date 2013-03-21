@@ -24,6 +24,7 @@ FieldElem::FieldElem(int x) {
     n[1] = n[2] = n[3] = n[4] = 0;
 #ifdef VERIFY_MAGNITUDE
     magnitude = 1;
+    normalized = true;
 #endif
 }
 
@@ -69,22 +70,29 @@ void FieldElem::Normalize() {
     }
 #ifdef VERIFY_MAGNITUDE
     magnitude = 1;
+    normalized = true;
 #endif
 }
 
-bool inline FieldElem::IsZero() {
-    Normalize();
+bool inline FieldElem::IsZero() const {
+#ifdef VERIFY_MAGNITUDE
+    assert(normalized);
+#endif
     return (n[0] == 0 && n[1] == 0 && n[2] == 0 && n[3] == 0 && n[4] == 0);
 }
 
-bool inline operator==(FieldElem &a, FieldElem &b) {
-    a.Normalize();
-    b.Normalize();
+bool inline operator==(const FieldElem &a, const FieldElem &b) {
+#ifdef VERIFY_MAGNITUDE
+    assert(a.normalized);
+    assert(b.normalized);
+#endif
     return (a.n[0] == b.n[0] && a.n[1] == b.n[1] && a.n[2] == b.n[2] && a.n[3] == b.n[3] && a.n[4] == b.n[4]);
 }
 
 void FieldElem::GetBytes(unsigned char *o) {
-    Normalize();
+#ifdef VERIFY_MAGNITUDE
+    assert(normalized);
+#endif
     for (int i=0; i<32; i++) {
         int c = 0;
         for (int j=0; j<2; j++) {
@@ -107,6 +115,7 @@ void FieldElem::SetBytes(const unsigned char *in) {
     }
 #ifdef VERIFY_MAGNITUDE
     magnitude = 1;
+    normalized = true;
 #endif
 }
 
@@ -114,6 +123,7 @@ void inline FieldElem::SetNeg(const FieldElem &a, int magnitudeIn) {
 #ifdef VERIFY_MAGNITUDE
     assert(a.magnitude <= magnitudeIn);
     magnitude = magnitudeIn + 1;
+    normalized = false;
 #endif
     n[0] = 0xFFFFEFFFFFC2FULL * (magnitudeIn + 1) - a.n[0];
     n[1] = 0xFFFFFFFFFFFFFULL * (magnitudeIn + 1) - a.n[1];
@@ -125,6 +135,7 @@ void inline FieldElem::SetNeg(const FieldElem &a, int magnitudeIn) {
 void inline FieldElem::operator*=(int v) {
 #ifdef VERIFY_MAGNITUDE
     magnitude *= v;
+    normalized = false;
 #endif
     n[0] *= v;
     n[1] *= v;
@@ -136,6 +147,7 @@ void inline FieldElem::operator*=(int v) {
 void inline FieldElem::operator+=(const FieldElem &a) {
 #ifdef VERIFY_MAGNITUDE
     magnitude += a.magnitude;
+    normalized = false;
 #endif
     n[0] += a.n[0];
     n[1] += a.n[1];
@@ -200,6 +212,7 @@ void FieldElem::SetMult(const FieldElem &a, const FieldElem &b) {
     n[1] = t1 + c;
 #ifdef VERIFY_MAGNITUDE
     magnitude = 1;
+    normalized = false;
 #endif
 }
 
@@ -247,6 +260,7 @@ void FieldElem::SetSquare(const FieldElem &a) {
     n[1] = t1 + c;
 #ifdef VERIFY_MAGNITUDE
     assert(a.magnitude <= 8);
+    normalized = false;
 #endif
 }
 
@@ -283,13 +297,16 @@ void FieldElem::SetSquareRoot(const FieldElem &a) {
     SetMult(x,a780);
 }
 
-bool FieldElem::IsOdd() {
-    Normalize();
+bool FieldElem::IsOdd() const {
+#ifdef VERIFY_MAGNITUDE
+    assert(normalized);
+#endif
     return n[0] & 1;
 }
 
 std::string FieldElem::ToString() {
     unsigned char tmp[32];
+    Normalize();
     GetBytes(tmp);
     std::string ret;
     for (int i=0; i<32; i++) {
@@ -371,6 +388,7 @@ void FieldElem::SetInverse(FieldElem &a) {
     SetMult(x,a45);
 #else
     unsigned char b[32];
+    a.Normalize();
     a.GetBytes(b);
     {
         const Number &p = GetFieldConst().field_p;
