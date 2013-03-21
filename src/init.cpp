@@ -309,7 +309,7 @@ std::string HelpMessage()
         "  -checklevel=<n>        " + _("How thorough the block verification is (0-4, default: 3)") + "\n" +
         "  -txindex               " + _("Maintain a full transaction index (default: 0)") + "\n" +
         "  -loadblock=<file>      " + _("Imports blocks from external blk000??.dat file") + "\n" +
-        "  -reindex               " + _("Rebuild blockchain index from current blk000??.dat files") + "\n" +
+        "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + "\n" +
         "  -par=N                 " + _("Set the number of script verification threads (1-16, 0=auto, default: 0)") + "\n" +
 
         "\n" + _("Block creation options:") + "\n" +
