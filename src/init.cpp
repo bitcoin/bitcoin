@@ -609,13 +609,11 @@ bool AppInit2()
 
     // ********************************************************* Step 5: verify wallet database integrity
 
-    uiInterface.InitMessage(_("Verifying wallet integrity..."));
+    uiInterface.InitMessage(_("Verifying wallet..."));
 
     if (!bitdb.Open(GetDataDir()))
     {
-        string msg = strprintf(_("Error initializing database environment %s!"
-                                 " To recover, BACKUP THAT DIRECTORY, then remove"
-                                 " everything from it except for wallet.dat."), strDataDir.c_str());
+        string msg = strprintf(_("Error initializing wallet database environment %s!"), strDataDir.c_str());
         return InitError(msg);
     }
 
@@ -827,7 +825,7 @@ bool AppInit2()
                     break;
                 }
 
-                uiInterface.InitMessage(_("Verifying database..."));
+                uiInterface.InitMessage(_("Verifying blocks..."));
                 if (!VerifyDB()) {
                     strLoadError = _("Corrupted block database detected");
                     break;
@@ -986,7 +984,6 @@ bool AppInit2()
     // ********************************************************* Step 9: import blocks
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
-    uiInterface.InitMessage(_("Importing blocks from block database..."));
     CValidationState state;
     if (!ConnectBestBlock(state))
         strErrors << "Failed to connect best block";
