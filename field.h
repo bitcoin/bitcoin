@@ -56,10 +56,10 @@ public:
 
     void operator+=(const FieldElem &a);
 
-    /** Set this FieldElem to be the multiplication of two others. Magnitude=1 */
+    /** Set this FieldElem to be the multiplication of two others. Magnitude=1 (variable time) */
     void SetMult(const FieldElem &a, const FieldElem &b);
 
-    /** Set this FieldElem to be the square of another. Magnitude=1 */
+    /** Set this FieldElem to be the square of another. Magnitude=1 (variable time) */
     void SetSquare(const FieldElem &a);
 
     /** Set this to be the (modular) square root of another FieldElem. Magnitude=1 */
@@ -67,7 +67,7 @@ public:
 
     bool IsOdd() const;
 
-    /** Set this to be the (modular) inverse of another FieldElem. Magnitude=1 */
+    /** Set this to be the (modular) inverse of another FieldElem. Magnitude=1 (variable time) */
     void SetInverse(FieldElem &a);
 
     std::string ToString();

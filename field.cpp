@@ -34,40 +34,43 @@ FieldElem::FieldElem(const unsigned char *b32) {
 
 void FieldElem::Normalize() {
     uint64_t c;
-    if (n[0] > 0xFFFFFFFFFFFFFULL || n[1] > 0xFFFFFFFFFFFFFULL || n[2] > 0xFFFFFFFFFFFFFULL || n[3] > 0xFFFFFFFFFFFFFULL || n[4] > 0xFFFFFFFFFFFFULL) {
-        c = n[0];
-        uint64_t t0 = c & 0xFFFFFFFFFFFFFULL;
-        c = (c >> 52) + n[1];
-        uint64_t t1 = c & 0xFFFFFFFFFFFFFULL;
-        c = (c >> 52) + n[2];
-        uint64_t t2 = c & 0xFFFFFFFFFFFFFULL;
-        c = (c >> 52) + n[3];
-        uint64_t t3 = c & 0xFFFFFFFFFFFFFULL;
-        c = (c >> 52) + n[4];
-        uint64_t t4 = c & 0x0FFFFFFFFFFFFULL;
-        c >>= 48;
-        if (c) {
-            c = c * 0x1000003D1ULL + t0;
-            t0 = c & 0xFFFFFFFFFFFFFULL;
-            c = (c >> 52) + t1;
-            t1 = c & 0xFFFFFFFFFFFFFULL;
-            c = (c >> 52) + t2;
-            t2 = c & 0xFFFFFFFFFFFFFULL;
-            c = (c >> 52) + t3;
-            t3 = c & 0xFFFFFFFFFFFFFULL;
-            c = (c >> 52) + t4;
-            t4 = c & 0x0FFFFFFFFFFFFULL;
-            c >>= 48;
-        }
-        n[0] = t0; n[1] = t1; n[2] = t2; n[3] = t3; n[4] = t4;
-    }
-    if (n[4] == 0xFFFFFFFFFFFFULL && n[3] == 0xFFFFFFFFFFFFFULL && n[2] == 0xFFFFFFFFFFFFFULL && n[1] == 0xFFFFFFFFFFFFF && n[0] >= 0xFFFFEFFFFFC2FULL) {
-        n[4] = 0;
-        n[3] = 0;
-        n[2] = 0;
-        n[1] = 0;
-        n[0] -= 0xFFFFEFFFFFC2FULL;
-    }
+    c = n[0];
+    uint64_t t0 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + n[1];
+    uint64_t t1 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + n[2];
+    uint64_t t2 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + n[3];
+    uint64_t t3 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + n[4];
+    uint64_t t4 = c & 0x0FFFFFFFFFFFFULL;
+    c >>= 48;
+
+    // The following code will not modify the t's if c is initially 0.
+    c = c * 0x1000003D1ULL + t0;
+    t0 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + t1;
+    t1 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + t2;
+    t2 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + t3;
+    t3 = c & 0xFFFFFFFFFFFFFULL;
+    c = (c >> 52) + t4;
+    t4 = c & 0x0FFFFFFFFFFFFULL;
+
+    // Replace n's with t's if one of the n's overflows.
+    // If none of the n's overflow to begin with, the t's will just be the n's already and
+    // we effectively ignore the results of the previous computations.
+    n[0] = t0; n[1] = t1; n[2] = t2; n[3] = t3; n[4] = t4;
+
+    // Subtract p if result >= p
+    uint64_t mask = (uint64_t)~(-(int64_t)(n[4] == 0xFFFFFFFFFFFFULL && n[3] == 0xFFFFFFFFFFFFFULL && n[2] == 0xFFFFFFFFFFFFFULL && n[1] == 0xFFFFFFFFFFFFF && n[0] >= 0xFFFFEFFFFFC2FULL));
+    n[4] &= mask;
+    n[3] &= mask;
+    n[2] &= mask;
+    n[1] &= mask;
+    n[0] -= (~mask & 0xFFFFEFFFFFC2FULL);
+
 #ifdef VERIFY_MAGNITUDE
     magnitude = 1;
     normalized = true;
@@ -354,6 +357,7 @@ const FieldConstants &GetFieldConst() {
     return field_const;
 }
 
+// Nonbuiltin Field Inverse is not constant time.
 void FieldElem::SetInverse(FieldElem &a) {
 #if defined(USE_FIELDINVERSE_BUILTIN)
     // calculate a^p, with p={45,63,1019,1023}
