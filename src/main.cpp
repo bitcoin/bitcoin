@@ -1064,9 +1064,9 @@ int64 static GetBlockValue(int nHeight, int64 nFees)
     return nSubsidy + nFees;
 }
 
-static const int64 nTargetTimespan = 7 * 24 * 60 * 60; // one weeks
+static const int64 nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
 static const int64 nTargetSpacingMin = 10 * 60; // min target spacing per type
-static const int64 nTargetSpacingMax = 2*60*60; // max target spacing per type
+static const int64 nTargetSpacingMax = 3*60*60; // max target spacing per type
 
 //
 // minimum amount of work that could possibly be required nTime after
@@ -1096,6 +1096,8 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
     if (pindexLast == NULL)
         return nProofOfWorkLimit;
 
+    if (fDebug && GetBoolArg("-printtarget"))
+        printf("GetNextWorkRequired() : lastindex=%u type=%d ", pindexLast->nHeight, nProofOfWorkType);
     const CBlockIndex* pindexPrev = NULL;
     unsigned int nDepthOfEqualOrShorterType = GetLastBlockIndex(pindexLast, nProofOfWorkType, &pindexPrev);
     if (pindexPrev->pprev == NULL)
@@ -1112,22 +1114,38 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
 
     CBigNum bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
+    unsigned int nLogScale;
+    if (!LogScale(bnNew, nLogScale))
+        return error("GetNextWorkRequired() : log scale of prime target");
+    CBigNum bnNewLogScale = nLogScale;
     int64 nTargetSpacing = min(nTargetSpacingMax, nTargetSpacingMin * (1 + nDepthOfEqualOrShorterType));
     int64 nInterval = nTargetTimespan / nTargetSpacing;
-    bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
-    bnNew /= ((nInterval + 1) * nTargetSpacing);
+    bnNewLogScale *= ((nInterval + 1) * nTargetSpacing);
+    bnNewLogScale /= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
+    if (bnNewLogScale > 0xffffffffu)
+        bnNew = bnProofOfWorkMax;
+    else
+    {
+        nLogScale = (unsigned int)bnNewLogScale.getuint();
+        bnNew = (CBigNum((nLogScale & 0xffff) + 0x10000) << (nLogScale >> 16)) >> 16;
+    }
 
+    // TODO: limit adjustment of the target
     if (bnNew < bnProofOfWorkLimit)
         bnNew = bnProofOfWorkLimit;
+    if (bnNew >= bnProofOfWorkMax)
+        bnNew = bnProofOfWorkMax;
 
+    if (fDebug && GetBoolArg("-printtarget"))
+        printf("prev=%08x new=%08x\n", pindexPrev->nBits, bnNew.GetCompact());
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnProbablePrime, int& nProofOfWorkType)
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, int nProofOfWorkType, const CBigNum& bnProbablePrime)
 {
     if (!CheckHashProofOfWork(hash, nBits))
         return error("CheckProofOfWork() : check failed for hash proof-of-work");
-    if (!CheckPrimeProofOfWork(hash, nBits, bnProbablePrime, nProofOfWorkType))
+    if (!CheckPrimeProofOfWork(hash, nBits, nProofOfWorkType, bnProbablePrime))
         return error("CheckProofOfWork() : check failed for prime proof-of-work");
     return true;
 }
@@ -2168,7 +2186,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         return error("ProcessBlock() : CheckBlock FAILED");
 
     // Check proof of work matches claimed amount
-    if (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->bnProbablePrime, pblock->nProofOfWorkType))
+    if (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->nProofOfWorkType, pblock->bnProbablePrime))
         return state.DoS(100, error("ProcessBlock() : proof of work failed"));
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
@@ -2186,7 +2204,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
         if (bnNewBlock > bnRequired)
         {
-            return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work"));
+            return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work type=%d nBits=%08x required=%08x", pblock->nProofOfWorkType, pblock->nBits, bnRequired.GetCompact()));
         }
     }
 
@@ -2688,6 +2706,7 @@ bool InitBlockIndex() {
             block.nNonce   = 15336;
         }
 
+        block.nProofOfWorkType = -3;
         block.bnProbablePrime = CBigNum(block.GetHash()) * 2 * 3 * 5 * 7 + 1;
 
         //// debug print
@@ -2701,7 +2720,7 @@ bool InitBlockIndex() {
         {
             CValidationState state;
             assert(block.CheckBlock(state, true, true));
-            assert(CheckProofOfWork(block.GetHash(), block.nBits, block.bnProbablePrime, block.nProofOfWorkType));
+            assert(CheckProofOfWork(block.GetHash(), block.nBits, block.nProofOfWorkType, block.bnProbablePrime));
         }
 
         // Start new block file
@@ -4316,6 +4335,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         pblock->UpdateTime(pindexPrev);
+        pblock->nProofOfWorkType = nMinerType;
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, nMinerType);
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
@@ -4403,7 +4423,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
     CBigNum bnTarget = CBigNum().SetCompact(pblock->nBits);
 
-    if (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->bnProbablePrime, pblock->nProofOfWorkType))
+    if (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->nProofOfWorkType, pblock->bnProbablePrime))
         return error("PrimecoinMiner : failed proof-of-work check");
 
     //// debug print
@@ -4483,7 +4503,6 @@ void static BitcoinMiner(CWallet *pwallet)
         printf("Running BitcoinMiner with %"PRIszu" transactions in block (%u bytes)\n", pblock->vtx.size(),
                ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
 
-
         //
         // Pre-build hash buffers
         //
@@ -4502,61 +4521,92 @@ void static BitcoinMiner(CWallet *pwallet)
         // Search
         //
         int64 nStart = GetTime();
-        uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+        bool fHashFound = false;
+        CBigNum bnTried = 0;
+        CBigNum bnHashTarget;
+        GetProofOfWorkHashTarget(pblock->nBits, bnHashTarget);
+        uint256 hashTarget = bnHashTarget.getuint256();
         uint256 hashbuf[2];
         uint256& hash = *alignup<16>(hashbuf);
         loop
         {
-            unsigned int nHashesDone = 0;
-            unsigned int nNonceFound;
+            unsigned int nTests = 0;
+            unsigned int nPrimesHit = 0;
 
-            // Crypto++ SHA256
-            nNonceFound = ScanHash_CryptoPP(pmidstate, pdata + 64, phash1,
-                                            (char*)&hash, nHashesDone);
-
-            // Check if something found
-            if (nNonceFound != (unsigned int) -1)
+            if (fHashFound)  // Primecoin: hash met target, now look for prime
             {
-                for (unsigned int i = 0; i < sizeof(hash)/4; i++)
-                    ((unsigned int*)&hash)[i] = ByteReverse(((unsigned int*)&hash)[i]);
+                CBigNum bnPrimeTarget = CBigNum().SetCompact(pblock->nBits);
+                CBigNum bnMultiplierMin = (bnPrimeTarget + 1) / CBigNum(pblock->GetHash()) + 1;
+                CBigNum bnPrimorial;
+                PrimorialAt(bnMultiplierMin, bnPrimorial);
 
-                if (hash <= hashTarget)
+                unsigned int nProbableChainLength;
+                if (MineProbableCunninghamChain(*pblock, bnPrimorial, bnTried, 2, nProbableChainLength, nTests, nPrimesHit) && nProbableChainLength >= 2)
                 {
-                    // Found a solution
-                    pblock->nNonce = ByteReverse(nNonceFound);
-                    assert(hash == pblock->GetHash());
-
                     SetThreadPriority(THREAD_PRIORITY_NORMAL);
                     CheckWork(pblock, *pwalletMain, reservekey);
                     SetThreadPriority(THREAD_PRIORITY_LOWEST);
                     break;
                 }
             }
+            else  // Primecoin: first need to meet hash target
+            {
+                unsigned int nHashesDone = 0;
+                unsigned int nNonceFound;
 
-            // Meter hashes/sec
-            static int64 nHashCounter;
+                // Crypto++ SHA256
+                nNonceFound = ScanHash_CryptoPP(pmidstate, pdata + 64, phash1,
+                                                (char*)&hash, nHashesDone);
+
+                // Check if something found
+                if (nNonceFound != (unsigned int) -1)
+                {
+                    for (unsigned int i = 0; i < sizeof(hash)/4; i++)
+                        ((unsigned int*)&hash)[i] = ByteReverse(((unsigned int*)&hash)[i]);
+
+                    if (hash <= hashTarget)
+                    {
+                        // Found a solution
+                        pblock->nNonce = ByteReverse(nNonceFound);
+                        assert(hash == pblock->GetHash());
+                        fHashFound = true;
+                        printf("Found nNonce=%u\n%s\n%s\n", pblock->nNonce, hash.GetHex().c_str(), hashTarget.GetHex().c_str());
+                        continue;
+                    }
+                }
+            }
+
+            // Meter primes/sec
+            static int64 nPrimeCounter;
+            static int64 nTestCounter;
             if (nHPSTimerStart == 0)
             {
                 nHPSTimerStart = GetTimeMillis();
-                nHashCounter = 0;
+                nPrimeCounter = 0;
+                nTestCounter = 0;
             }
             else
-                nHashCounter += nHashesDone;
-            if (GetTimeMillis() - nHPSTimerStart > 4000)
+            {
+                nPrimeCounter += nPrimesHit;
+                nTestCounter += nTests;
+            }
+            if (GetTimeMillis() - nHPSTimerStart > 60000)
             {
                 static CCriticalSection cs;
                 {
                     LOCK(cs);
-                    if (GetTimeMillis() - nHPSTimerStart > 4000)
+                    if (GetTimeMillis() - nHPSTimerStart > 60000)
                     {
-                        dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
+                        double dPrimesPerMinute = 60000.0 * nPrimeCounter / (GetTimeMillis() - nHPSTimerStart);
+                        double dTestsPerMinute = 60000.0 * nTestCounter / (GetTimeMillis() - nHPSTimerStart);
                         nHPSTimerStart = GetTimeMillis();
-                        nHashCounter = 0;
-                        static int64 nLogTime;
-                        if (GetTime() - nLogTime > 30 * 60)
+                        nPrimeCounter = 0;
+                        nTestCounter = 0;
+                        static int64 nLogTime = 0;
+                        if (GetTime() - nLogTime > 60)
                         {
                             nLogTime = GetTime();
-                            printf("hashmeter %3d CPUs %6.0f khash/s\n", vnThreadsRunning[THREAD_MINER], dHashesPerSec/1000.0);
+                            printf("primemeter %3d CPUs %9.0f prime/h %9.0f test/h\n", vnThreadsRunning[THREAD_MINER], dPrimesPerMinute * 60.0, dTestsPerMinute * 60.0);
                         }
                     }
                 }
@@ -4579,13 +4629,10 @@ void static BitcoinMiner(CWallet *pwallet)
                 break;
 
             // Update nTime every few seconds
-            pblock->UpdateTime(pindexPrev);
-            nBlockTime = ByteReverse(pblock->nTime);
-            if (fTestNet)
+            if (!fHashFound)
             {
-                // Changing pblock->nTime can change work required on testnet:
-                nBlockBits = ByteReverse(pblock->nBits);
-                hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+                pblock->UpdateTime(pindexPrev);
+                nBlockTime = ByteReverse(pblock->nTime);
             }
         }
     }

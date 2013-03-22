@@ -41,6 +41,18 @@ void Primorial(unsigned int p, CBigNum& bnPrimorial)
     }
 }
 
+// Compute first primorial number greater than or equal to pn
+void PrimorialAt(CBigNum& bn, CBigNum& bnPrimorial)
+{
+    bnPrimorial = 1;
+    BOOST_FOREACH(unsigned int nPrime, vPrimes)
+    {
+        bnPrimorial *= nPrime;
+        if (bnPrimorial >= bn)
+            return;
+    }
+}
+
 // Check Fermat probable primality test (2-PRP): 2 ** (n-1) = 1 (mod n)
 // true: n is probable prime
 // false: n is composite
@@ -107,36 +119,29 @@ bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, unsigned
 }
 
 // Mine probable Cunningham Chain of form: n = h * p# +/- 1
-bool MineProbableCunninghamChain(CBlockHeader& block, CBigNum& bnPrimorial, unsigned int& nProbableChainLength)
+bool MineProbableCunninghamChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, int nChainType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
 {
     CBigNum n;
+    bool fSophieGermain = (nChainType > 0);
 
     int64 nStart = GetTimeMicros();
     int64 nCurrent = nStart;
+    nTests = 0;
+    nPrimesHit = 0;
 
     while (nCurrent < nStart + 10000 && nCurrent >= nStart)
     {
-        block.nNonce++;
-
-        // Check for first kind
-        n = (CBigNum(block.GetHash()) * bnPrimorial) - 1;
-        if (ProbableCunninghamChainTest(n, true, nProbableChainLength))
+        nTests++;
+        bnTried++;
+        n = CBigNum(block.GetHash()) * bnPrimorial * bnTried + (fSophieGermain? -1 : 1);
+        if (ProbableCunninghamChainTest(n, fSophieGermain, nProbableChainLength))
         {
-            printf("Probable Cunningham chain of length %u of first kind found for nonce=%u!! \n", nProbableChainLength, block.nNonce);
+            printf("Probable Cunningham chain of length %u of %s kind found for nonce=%u!! \n", nProbableChainLength, fSophieGermain? "first" : "second", block.nNonce);
+            block.bnProbablePrime = n;
             return true;
         }
-
-        // Check for second kind
-        n += 2;
-        if (ProbableCunninghamChainTest(n, false, nProbableChainLength))
-        {
-            printf("Probable Cunningham chain of length %u of second kind found for nonce=%u!! \n", nProbableChainLength, block.nNonce);
-            return true;
-        }
-
-        // stop if nNonce exhausted
-        if (block.nNonce == 0xffffffffu)
-            return false;
+        else if(nProbableChainLength > 0)
+            nPrimesHit++;
 
         nCurrent = GetTimeMicros();
     }
@@ -242,7 +247,7 @@ static bool LogLogScale(const CBigNum& bn, unsigned int& nLogLogScale)
 
 
 // Compute hash target from prime target
-static bool GetProofOfWorkHashTarget(unsigned int nBits, CBigNum& bnHashTarget)
+bool GetProofOfWorkHashTarget(unsigned int nBits, CBigNum& bnHashTarget)
 {
     CBigNum bnPrimeTarget = CBigNum().SetCompact(nBits);
     if (bnPrimeTarget < bnProofOfWorkLimit || bnPrimeTarget >= bnProofOfWorkMax)
@@ -289,16 +294,20 @@ bool CheckHashProofOfWork(uint256 hash, unsigned int nBits)
     if (!GetProofOfWorkHashTarget(nBits, bnHashTarget))
         return error("CheckHashProofOfWork() : failed to get hash target");
     // Check target for hash proof-of-work
-    if (hash > bnHashTarget.getuint256())
-        return error("CheckHashProofOfWork() : hash not meeting hash target");
+    if (CBigNum(hash) > bnHashTarget)
+        return error("CheckHashProofOfWork() : hash not meeting hash target nBits=%08x\n%s\n%s", nBits, hash.GetHex().c_str(), bnHashTarget.GetHex().c_str());
     return true;
 }
 
 // Check prime proof-of-work
-bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnProbablePrime, int& nProofOfWorkType)
+bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, int nProofOfWorkType, const CBigNum& bnProbablePrime)
 {
     CBigNum bnPrimeTarget;
     bnPrimeTarget.SetCompact(nBits);
+
+    // Check type
+    if ((nProofOfWorkType < 2 && nProofOfWorkType > -2) || nProofOfWorkType >= 1000 || nProofOfWorkType <= -1000)
+        return error("CheckPrimeProofOfWork() : invalid proof-of-work type %d", nProofOfWorkType);
 
     // Check range
     if (bnPrimeTarget < bnProofOfWorkLimit)
@@ -316,16 +325,30 @@ bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnPr
     if ((bnRemainder != 1) && (bnRemainder + 1 != CBigNum(hash)))
         return error("CheckPrimeProofOfWork() : bnProbablePrime+/-1 not divisible by hash");
 
-    // Check Cunningham Chain of first kind
-    nProofOfWorkType = 0;
+    // Check Cunningham Chain
+    bool fSophieGermain = (nProofOfWorkType >= 0);
     unsigned int nChainLength;
-    if (ProbableCunninghamChainTest(bnProbablePrime, true, nChainLength))
-        nProofOfWorkType = nChainLength;
-    // Check Cunningham Chain of second kind
-    if (ProbableCunninghamChainTest(bnProbablePrime, false, nChainLength) && (int)nChainLength > nProofOfWorkType)
-        nProofOfWorkType = -nChainLength;
-    if (nProofOfWorkType == 0)
-        return error("CheckPrimeProofOfWork() : failed Cunningham Chain test");
-    return true;
+    if (ProbableCunninghamChainTest(bnProbablePrime, fSophieGermain, nChainLength) && (nChainLength >= abs(nProofOfWorkType)))
+        return true;
+    return error("CheckPrimeProofOfWork() : failed Cunningham Chain test type=%d length=%u", nProofOfWorkType, nChainLength);
+}
+
+// prime target difficulty value for visualization
+unsigned int GetPrimeDifficulty(unsigned int nBits)
+{
+    CBigNum bnPrimeTarget = CBigNum().SetCompact(nBits);
+    unsigned int nLogScale;
+    LogScale(bnPrimeTarget, nLogScale);
+    return nLogScale;
+}
+
+// hash target difficulty value for visualization
+unsigned int GetHashDifficulty(unsigned int nBits)
+{
+    CBigNum bnHashTarget;
+    GetProofOfWorkHashTarget(nBits, bnHashTarget);
+    unsigned int nLogScale;
+    LogScale((bnProofOfWorkLimit << 16) / bnHashTarget, nLogScale);
+    return nLogScale - (1 << 20);
 }
 

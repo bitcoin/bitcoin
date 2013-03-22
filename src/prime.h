@@ -11,8 +11,10 @@
 // Generate small prime table
 void GeneratePrimeTable();
 
-// Compute Primorial number p#
+// Compute primorial number p#
 void Primorial(unsigned int p, CBigNum& bnPrimorial);
+// Compute the first primorial number greater than or equal to bn
+void PrimorialAt(CBigNum& bn, CBigNum& bnPrimorial);
 
 // Test Probable Cunningham Chain for: n
 // fSophieGermain:
@@ -24,7 +26,7 @@ void Primorial(unsigned int p, CBigNum& bnPrimorial);
 bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, unsigned int& nProbableChainLength);
 
 // Mine probable Cunningham Chain of form: n = h * p# +/- 1
-bool MineProbableCunninghamChain(CBlockHeader& block, CBigNum& bnPrimorial, unsigned int& nProbableChainLength);
+bool MineProbableCunninghamChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, int nChainType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
 
 // Find last block index up to pindex of the given proof-of-work type
 // Returns: depth of last block index of shorter or equal type
@@ -34,11 +36,19 @@ unsigned int GetLastBlockIndex(const CBlockIndex* pindex, int nProofOfWorkType, 
 // Can be used as an approximate log scale for numbers up to 2 ** 65536 - 1
 bool LogScale(const CBigNum& bn, unsigned int& nLogScale);
 
+// Compute hash target from prime target
+bool GetProofOfWorkHashTarget(unsigned int nBits, CBigNum& bnHashTarget);
+
 // Print mapping from prime target to hash target
 void PrintMappingPrimeTargetToHashTarget();
 
 // Check hash and prime proof-of-work
 bool CheckHashProofOfWork(uint256 hash, unsigned int nBits);
-bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnProbablePrime, int& nProofOfWorkType);
+bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, int nProofOfWorkType, const CBigNum& bnProbablePrime);
+
+// prime target difficulty value for visualization
+unsigned int GetPrimeDifficulty(unsigned int nBits);
+// hash target difficulty value for visualization
+unsigned int GetHashDifficulty(unsigned int nBits);
 
 #endif

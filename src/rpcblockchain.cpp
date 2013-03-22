@@ -13,10 +13,11 @@ using namespace std;
 
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out);
 
+// Primecoin: get prime difficulty value (log scale)
 double GetDifficulty(const CBlockIndex* blockindex)
 {
-    // Floating point number that is a multiple of the minimum difficulty,
-    // minimum difficulty = 1.0.
+    // Floating point number that is approximate log scale of prime target,
+    // minimum difficulty = 256, maximum difficulty = 2039
     if (blockindex == NULL)
     {
         if (pindexBest == NULL)
@@ -25,12 +26,28 @@ double GetDifficulty(const CBlockIndex* blockindex)
             blockindex = pindexBest;
     }
 
-    CBigNum bnPrimeTarget = CBigNum().SetCompact(blockindex->nBits);
-    unsigned int nLogScale;
-    LogScale(bnPrimeTarget, nLogScale);
-    double dDiff = ((double) nLogScale) / 65536.0 ;
+    double dDiff = ((double) GetPrimeDifficulty(blockindex->nBits)) / 65536.0 ;
     return dDiff;
 }
+
+// Primecoin: get hash difficulty value (log scale)
+double GetHashDifficulty(const CBlockIndex* blockindex)
+{
+    // Floating point number that is approximate log scale of hash difficulty,
+    // minimum difficulty = 0, maximum difficulty = 256
+    // bitcoin difficulty 1 (2**32 hashes) is equivalent to difficulty 32.
+    if (blockindex == NULL)
+    {
+        if (pindexBest == NULL)
+            return 0.0;
+        else
+            blockindex = pindexBest;
+    }
+
+    double dDiff = ((double) GetHashDifficulty(blockindex->nBits)) / 65536.0 ;
+    return dDiff;
+}
+
 
 
 Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
@@ -51,8 +68,12 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("time", (boost::int64_t)block.GetBlockTime()));
     result.push_back(Pair("nonce", (boost::uint64_t)block.nNonce));
     result.push_back(Pair("bits", HexBits(block.nBits)));
-    result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
-    result.push_back(Pair("powtype", block.nProofOfWorkType));
+    if (block.nProofOfWorkType == blockindex->nProofOfWorkType)
+        result.push_back(Pair("powtype", block.nProofOfWorkType));
+    else
+        result.push_back(Pair("powtype", "mismatch"));
+    result.push_back(Pair("primedifficulty", GetDifficulty(blockindex)));
+    result.push_back(Pair("hashdifficulty", GetHashDifficulty(blockindex)));
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));

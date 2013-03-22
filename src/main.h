@@ -174,7 +174,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 /** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnProbablePrime, int& nProofOfWorkType);
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, int nProofOfWorkType, const CBigNum& bnProbablePrime);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 /** Get the number of active peers */
@@ -1323,12 +1323,20 @@ class CBlock : public CBlockHeader
 public:
     // network and disk
     std::vector<CTransaction> vtx;
+
+    // Primecoin: type of Cunningham Chain for proof-of-work
+    // +2, +3, +4, ..., +k, ... Cunningham Chain of length k of first kind
+    // -2, -3, -4, ..., -k, ... Cunningham Chain of length k of second kind
+    // Note: The chain length of the type is what the miner intended for
+    //       during the search, as it must match nBits in the block header.
+    //       The actual length of the found chain could be longer.
+    int nProofOfWorkType;
+
     // Primecoin: proof-of-work certificate
     // probable prime - first number of a probable Cunningham Chain
     CBigNum bnProbablePrime;
 
     // memory only
-    int nProofOfWorkType;  // primecoin: see CBlockIndex.nProofOfWorkType
     mutable std::vector<uint256> vMerkleTree;
 
     CBlock()
@@ -1346,6 +1354,7 @@ public:
     (
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
+        READWRITE(nProofOfWorkType);
         READWRITE(bnProbablePrime);
     )
 
@@ -1469,7 +1478,7 @@ public:
         }
 
         // Check the header
-        if (!CheckProofOfWork(GetHash(), nBits, bnProbablePrime, nProofOfWorkType))
+        if (!CheckProofOfWork(GetHash(), nBits, nProofOfWorkType, bnProbablePrime))
             return error("CBlock::ReadFromDisk() : errors in block header");
 
         return true;
@@ -1645,8 +1654,7 @@ public:
     unsigned int nStatus;
 
     // Primecoin: type of Cunningham Chain for proof-of-work
-    // +2, +3, +4, ..., +k, ... Cunningham Chain of length k of first kind
-    // -2, -3, -4, ..., -k, ... Cunningham Chain of length k of second kind
+    //            See CBlock::nProofOfWorkType for definition
     int nProofOfWorkType;
 
     // block header
@@ -1744,11 +1752,8 @@ public:
 
     CBigNum GetBlockWork() const
     {
-        CBigNum bnTarget;
-        bnTarget.SetCompact(nBits);
-        if (bnTarget <= 0)
-            return 0;
-        return (CBigNum(1)<<256) / (bnTarget+1);
+        // Primecoin: all blocks have work value 1 for reorganization purpose
+        return (CBigNum(1));
     }
 
     bool IsInMainChain() const

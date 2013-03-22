@@ -27,12 +27,14 @@ int main(int argc, char *argv[])
     block.vtx.push_back(txNew);
     block.hashPrevBlock = 0;
     block.hashMerkleRoot = block.BuildMerkleTree();
-    block.nBits    = (CBigNum(1) << 256).GetCompact();
+    block.nBits    = bnProofOfWorkLimit.GetCompact();
     block.nTime    = GetAdjustedTime();
     block.nNonce   = 0;
 
     CBigNum bnTarget;
     bnTarget.SetCompact(block.nBits);
+    CBigNum bnTried = 0;
+    int nProofOfWorkType = 3;
 
     while (true)
     {
@@ -40,10 +42,14 @@ int main(int argc, char *argv[])
         CBigNum bnPrimorial;
         Primorial(p, bnPrimorial);
         unsigned int nProbableChainLength;
-        if (MineProbableCunninghamChain(block, bnPrimorial, nProbableChainLength) && nProbableChainLength >= 3)
+        unsigned int nPrimesHit;
+        unsigned int nTests;
+        CBigNum bnHashTarget;
+        GetProofOfWorkHashTarget(block.nBits, bnHashTarget);
+        CBigNum bnPrimeTarget = CBigNum().SetCompact(block.nBits);
+        if (MineProbableCunninghamChain(block, bnPrimorial, bnTried, nProofOfWorkType, nProbableChainLength, nTests, nPrimesHit) && nProbableChainLength >= abs(nProofOfWorkType))
         {
-            printf("time=%u nonce=%u hash=%s\n", block.nTime, block.nNonce,
-                   block.GetHash().ToString().c_str());
+            printf("type=%d multiplier=%u hash=%s\n", nProofOfWorkType, bnTried.getuint(), block.GetHash().ToString().c_str());
             break;
         }
         else
