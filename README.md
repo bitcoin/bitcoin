@@ -3,7 +3,7 @@ Bitcoin integration/staging tree
 
 http://www.bitcoin.org
 
-Copyright (c) 2009-2012 Bitcoin Developers
+Copyright (c) 2009-2013 Bitcoin Developers
 
 What is Bitcoin?
 ----------------
