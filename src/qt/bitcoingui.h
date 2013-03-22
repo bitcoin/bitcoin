@@ -3,10 +3,14 @@
 
 #include <QMainWindow>
 #include <QSystemTrayIcon>
+#include <QMap>
 
 class TransactionTableModel;
+class WalletFrame;
+class WalletView;
 class ClientModel;
 class WalletModel;
+class WalletStack;
 class TransactionView;
 class OverviewPage;
 class AddressBookPage;
@@ -15,11 +19,16 @@ class SignVerifyMessageDialog;
 class Notificator;
 class RPCConsole;
 
+class CWallet;
+
 QT_BEGIN_NAMESPACE
 class QLabel;
 class QModelIndex;
 class QProgressBar;
 class QStackedWidget;
+class QUrl;
+class QListWidget;
+class QPushButton;
 QT_END_NAMESPACE
 
 /**
@@ -31,6 +40,8 @@ class BitcoinGUI : public QMainWindow
     Q_OBJECT
 
 public:
+    static const QString DEFAULT_WALLET;
+    
     explicit BitcoinGUI(QWidget *parent = 0);
     ~BitcoinGUI();
 
@@ -42,7 +53,11 @@ public:
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
-    void setWalletModel(WalletModel *walletModel);
+
+    bool addWallet(const QString& name, WalletModel *walletModel);
+    bool setCurrentWallet(const QString& name);
+    
+    void removeAllWallets();
 
 protected:
     void changeEvent(QEvent *e);
@@ -53,16 +68,7 @@ protected:
 
 private:
     ClientModel *clientModel;
-    WalletModel *walletModel;
-
-    QStackedWidget *centralWidget;
-
-    OverviewPage *overviewPage;
-    QWidget *transactionsPage;
-    AddressBookPage *addressBookPage;
-    AddressBookPage *receiveCoinsPage;
-    SendCoinsDialog *sendCoinsPage;
-    SignVerifyMessageDialog *signVerifyMessageDialog;
+    WalletFrame *walletFrame;
 
     QLabel *labelEncryptionIcon;
     QLabel *labelConnectionsIcon;
@@ -88,7 +94,7 @@ private:
     QAction *changePassphraseAction;
     QAction *aboutQtAction;
     QAction *openRPCConsoleAction;
-
+    
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
     TransactionView *transactionView;
@@ -139,6 +145,9 @@ public slots:
     void askFee(qint64 nFeeRequired, bool *payFee);
     void handleURI(QString strURI);
 
+    /** Show incoming transaction notification for new transactions. */
+    void incomingTransaction(const QString& date, int unit, qint64 amount, const QString& type, const QString& address);
+
 private slots:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
@@ -149,7 +158,7 @@ private slots:
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
-    void gotoSendCoinsPage(QString addr = "");
+    void gotoSendCoinsPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
@@ -164,11 +173,6 @@ private slots:
     /** Handle tray icon clicked */
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
 #endif
-    /** Show incoming transaction notification for new transactions.
-
-        The new items are those between start and end inclusive, under the given parent item.
-    */
-    void incomingTransaction(const QModelIndex& parent, int start, int /*end*/);
     /** Encrypt the wallet */
     void encryptWallet(bool status);
     /** Backup the wallet */
