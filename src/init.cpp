@@ -61,8 +61,8 @@ enum BindFlags {
 // immediately and the parent exits from main().
 //
 // Shutdown for Qt is very similar, only it uses a QTimer to detect
-// fRequestShutdown getting set (either by RPC stop or SIGTERM)
-// and then does the normal Qt shutdown thing.
+// fRequestShutdown getting set, and then does the normal Qt
+// shutdown thing.
 //
 
 volatile bool fRequestShutdown = false;
@@ -70,6 +70,10 @@ volatile bool fRequestShutdown = false;
 void StartShutdown()
 {
     fRequestShutdown = true;
+}
+bool ShutdownRequested()
+{
+    return fRequestShutdown;
 }
 
 static CCoinsViewDB *pcoinsdbview;

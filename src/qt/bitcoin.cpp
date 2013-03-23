@@ -88,11 +88,6 @@ static void InitMessage(const std::string &message)
     printf("init message: %s\n", message.c_str());
 }
 
-static void QueueShutdown()
-{
-    QMetaObject::invokeMethod(qApp, "quit", Qt::QueuedConnection);
-}
-
 /*
    Translate string to current locale using Qt.
  */
@@ -186,7 +181,6 @@ int main(int argc, char *argv[])
     uiInterface.ThreadSafeMessageBox.connect(ThreadSafeMessageBox);
     uiInterface.ThreadSafeAskFee.connect(ThreadSafeAskFee);
     uiInterface.InitMessage.connect(InitMessage);
-    uiInterface.QueueShutdown.connect(QueueShutdown);
     uiInterface.Translate.connect(Translate);
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
@@ -217,8 +211,14 @@ int main(int argc, char *argv[])
             GUIUtil::SetStartOnSystemStartup(true);
 
         boost::thread_group threadGroup;
+
         BitcoinGUI window;
         guiref = &window;
+
+        QTimer* pollShutdownTimer = new QTimer(guiref);
+        QObject::connect(pollShutdownTimer, SIGNAL(timeout()), guiref, SLOT(detectShutdown()));
+        pollShutdownTimer->start(200);
+
         if(AppInit2(threadGroup))
         {
             {
