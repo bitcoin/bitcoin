@@ -1088,7 +1088,7 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
     return bnResult.GetCompact();
 }
 
-unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, int nProofOfWorkType)
+unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, unsigned int nProofOfWorkType)
 {
     unsigned int nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
 
@@ -1097,7 +1097,7 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
         return nProofOfWorkLimit;
 
     if (fDebug && GetBoolArg("-printtarget"))
-        printf("GetNextWorkRequired() : lastindex=%u type=%d ", pindexLast->nHeight, nProofOfWorkType);
+        printf("GetNextWorkRequired() : lastindex=%u type=%s ", pindexLast->nHeight, TypeGetName(nProofOfWorkType).c_str());
     const CBlockIndex* pindexPrev = NULL;
     unsigned int nDepthOfEqualOrShorterType = GetLastBlockIndex(pindexLast, nProofOfWorkType, &pindexPrev);
     if (pindexPrev->pprev == NULL)
@@ -1141,7 +1141,7 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, int nProofOfWorkType, const CBigNum& bnProbablePrime)
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnProbablePrime)
 {
     if (!CheckHashProofOfWork(hash, nBits))
         return error("CheckProofOfWork() : check failed for hash proof-of-work");
@@ -2204,7 +2204,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
         if (bnNewBlock > bnRequired)
         {
-            return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work type=%d nBits=%08x required=%08x", pblock->nProofOfWorkType, pblock->nBits, bnRequired.GetCompact()));
+            return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work type=%s nBits=%08x required=%08x", TypeGetName(pblock->nProofOfWorkType).c_str(), pblock->nBits, bnRequired.GetCompact()));
         }
     }
 
@@ -2706,7 +2706,7 @@ bool InitBlockIndex() {
             block.nNonce   = 15336;
         }
 
-        block.nProofOfWorkType = -3;
+        block.nProofOfWorkType = 3;
         block.bnProbablePrime = CBigNum(block.GetHash()) * 2 * 3 * 5 * 7 + 1;
 
         //// debug print
@@ -4094,9 +4094,6 @@ public:
     }
 };
 
-// Primecoin: miner type
-static int nMinerType = 2;
-
 CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
 {
     // Create new block
@@ -4335,8 +4332,8 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         pblock->UpdateTime(pindexPrev);
-        pblock->nProofOfWorkType = nMinerType;
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, nMinerType);
+        pblock->nProofOfWorkType = (2 + GetRandInt(2)) | 0x10000;
+        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, pblock->nProofOfWorkType);
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
         pblocktemplate->vTxSigOps[0] = pblock->vtx[0].GetLegacySigOpCount();
@@ -4428,7 +4425,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 
     //// debug print
     printf("PrimecoinMiner:\n");
-    printf("proof-of-work found  \n  type: %d\n  pprime: %s\n  target: %s\n  ", pblock->nProofOfWorkType, pblock->bnProbablePrime.GetHex().c_str(), bnTarget.GetHex().c_str());
+    printf("proof-of-work found  \n  type: %s\n  pprime: %s\n  target: %s\n  ", TypeGetName(pblock->nProofOfWorkType).c_str(), pblock->bnProbablePrime.GetHex().c_str(), bnTarget.GetHex().c_str());
     pblock->print();
     printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
 
@@ -4525,7 +4522,6 @@ void static BitcoinMiner(CWallet *pwallet)
         CBigNum bnTried = 0;
         CBigNum bnHashTarget;
         GetProofOfWorkHashTarget(pblock->nBits, bnHashTarget);
-        uint256 hashTarget = bnHashTarget.getuint256();
         uint256 hashbuf[2];
         uint256& hash = *alignup<16>(hashbuf);
         loop
@@ -4541,7 +4537,7 @@ void static BitcoinMiner(CWallet *pwallet)
                 PrimorialAt(bnMultiplierMin, bnPrimorial);
 
                 unsigned int nProbableChainLength;
-                if (MineProbableCunninghamChain(*pblock, bnPrimorial, bnTried, 2, nProbableChainLength, nTests, nPrimesHit) && nProbableChainLength >= 2)
+                if (MineProbableCunninghamChain(*pblock, bnPrimorial, bnTried, pblock->nProofOfWorkType, nProbableChainLength, nTests, nPrimesHit))
                 {
                     SetThreadPriority(THREAD_PRIORITY_NORMAL);
                     CheckWork(pblock, *pwalletMain, reservekey);
@@ -4564,13 +4560,13 @@ void static BitcoinMiner(CWallet *pwallet)
                     for (unsigned int i = 0; i < sizeof(hash)/4; i++)
                         ((unsigned int*)&hash)[i] = ByteReverse(((unsigned int*)&hash)[i]);
 
-                    if (hash <= hashTarget)
+                    if (CBigNum(hash) <= CBigNum(bnHashTarget))
                     {
                         // Found a solution
                         pblock->nNonce = ByteReverse(nNonceFound);
                         assert(hash == pblock->GetHash());
                         fHashFound = true;
-                        printf("Found nNonce=%u\n%s\n%s\n", pblock->nNonce, hash.GetHex().c_str(), hashTarget.GetHex().c_str());
+                        printf("Found nNonce=%u\n%s\n%s\n", pblock->nNonce, hash.GetHex().c_str(), bnHashTarget.GetHex().c_str());
                         continue;
                     }
                 }

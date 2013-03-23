@@ -91,6 +91,36 @@ static bool EulerLagrangeLifchitzPrimalityTest(const CBigNum& n, bool fSophieGer
     return error("EulerLagrangeLifchitzPrimalityTest() : invalid n %% 8 = %d, %s", nMod8.getint(), (fSophieGermain? "first kind" : "second kind"));
 }
 
+// Proof-of-work Type (prime chain type):
+//   format - 32 bit, ffll: f is flag byte, l is length byte
+// Flags:
+//   fSophieGermain  0x00010000  (Cunningham chain of first kind)
+//   fBiTwin         0x00020000  (BiTwin chain)
+// Flag bytes value:
+//   0 - Cunningham chain of second kind
+//   1 - Cunningham chain of first kind
+//   2 - BiTwin chain (allow one non-twin prime at the end for odd length chain)
+
+static unsigned int TypeGetLength(unsigned int nProofOfWorkType)
+{
+    return (nProofOfWorkType & 0xffff);
+}
+
+static bool TypeIsSophieGermain(unsigned int nProofOfWorkType)
+{
+    return (nProofOfWorkType & 0x00010000);
+}
+
+static bool TypeIsBiTwin(unsigned int nProofOfWorkType)
+{
+    return (nProofOfWorkType & 0x00020000);
+}
+
+std::string TypeGetName(unsigned int nProofOfWorkType)
+{
+    return strprintf("%s%02u", TypeIsBiTwin(nProofOfWorkType)? "TWN" : (TypeIsSophieGermain(nProofOfWorkType)? "1CC" : "2CC"), TypeGetLength(nProofOfWorkType));
+}
+
 // Test Probable Cunningham Chain for: n
 // fSophieGermain:
 //   true - Test for Cunningham Chain of first kind (n, 2n+1, 4n+3, ...)
@@ -119,10 +149,10 @@ bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, unsigned
 }
 
 // Mine probable Cunningham Chain of form: n = h * p# +/- 1
-bool MineProbableCunninghamChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, int nChainType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
+bool MineProbableCunninghamChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
 {
     CBigNum n;
-    bool fSophieGermain = (nChainType > 0);
+    bool fSophieGermain = TypeIsSophieGermain(nProofOfWorkType);
 
     int64 nStart = GetTimeMicros();
     int64 nCurrent = nStart;
@@ -134,7 +164,7 @@ bool MineProbableCunninghamChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& b
         nTests++;
         bnTried++;
         n = CBigNum(block.GetHash()) * bnPrimorial * bnTried + (fSophieGermain? -1 : 1);
-        if (ProbableCunninghamChainTest(n, fSophieGermain, nProbableChainLength))
+        if (ProbableCunninghamChainTest(n, fSophieGermain, nProbableChainLength) && nProbableChainLength >= TypeGetLength(nProofOfWorkType))
         {
             printf("Probable Cunningham chain of length %u of %s kind found for nonce=%u!! \n", nProbableChainLength, fSophieGermain? "first" : "second", block.nNonce);
             block.bnProbablePrime = n;
@@ -150,7 +180,7 @@ bool MineProbableCunninghamChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& b
 
 // Find last block index up to pindex of the given proof-of-work type
 // Returns: depth of last block index of shorter or equal type
-unsigned int GetLastBlockIndex(const CBlockIndex* pindex, int nProofOfWorkType, const CBlockIndex** pindexPrev)
+unsigned int GetLastBlockIndex(const CBlockIndex* pindex, unsigned int nProofOfWorkType, const CBlockIndex** pindexPrev)
 {
     bool fFoundLastEqualOrShorterType = false;
     int nDepthOfEqualOrShorterType = 0;
@@ -158,8 +188,7 @@ unsigned int GetLastBlockIndex(const CBlockIndex* pindex, int nProofOfWorkType, 
     {
         if (!fFoundLastEqualOrShorterType)
         {
-            if (((pindex->nProofOfWorkType >= 2 && pindex->nProofOfWorkType <= nProofOfWorkType) ||
-             (pindex->nProofOfWorkType <= -2 && pindex->nProofOfWorkType >= nProofOfWorkType)))
+            if ((((pindex->nProofOfWorkType>>16) == (nProofOfWorkType>>16)) && TypeGetLength(pindex->nProofOfWorkType) <= TypeGetLength(nProofOfWorkType)))
                 fFoundLastEqualOrShorterType = true;
             else
                 nDepthOfEqualOrShorterType++;
@@ -300,13 +329,13 @@ bool CheckHashProofOfWork(uint256 hash, unsigned int nBits)
 }
 
 // Check prime proof-of-work
-bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, int nProofOfWorkType, const CBigNum& bnProbablePrime)
+bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnProbablePrime)
 {
     CBigNum bnPrimeTarget;
     bnPrimeTarget.SetCompact(nBits);
 
     // Check type
-    if ((nProofOfWorkType < 2 && nProofOfWorkType > -2) || nProofOfWorkType >= 1000 || nProofOfWorkType <= -1000)
+    if ((nProofOfWorkType>>16) > 2 || TypeGetLength(nProofOfWorkType) < 2 || TypeGetLength(nProofOfWorkType) > 99)
         return error("CheckPrimeProofOfWork() : invalid proof-of-work type %d", nProofOfWorkType);
 
     // Check range
@@ -326,11 +355,11 @@ bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, int nProofOfWorkTyp
         return error("CheckPrimeProofOfWork() : bnProbablePrime+/-1 not divisible by hash");
 
     // Check Cunningham Chain
-    bool fSophieGermain = (nProofOfWorkType >= 0);
+    bool fSophieGermain = TypeIsSophieGermain(nProofOfWorkType);
     unsigned int nChainLength;
-    if (ProbableCunninghamChainTest(bnProbablePrime, fSophieGermain, nChainLength) && (nChainLength >= abs(nProofOfWorkType)))
+    if (ProbableCunninghamChainTest(bnProbablePrime, fSophieGermain, nChainLength) && (nChainLength >= TypeGetLength(nProofOfWorkType)))
         return true;
-    return error("CheckPrimeProofOfWork() : failed Cunningham Chain test type=%d length=%u", nProofOfWorkType, nChainLength);
+    return error("CheckPrimeProofOfWork() : failed Cunningham Chain test type=%s length=%u", TypeGetName(nProofOfWorkType).c_str(), nChainLength);
 }
 
 // prime target difficulty value for visualization

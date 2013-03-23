@@ -174,7 +174,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 /** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, int nProofOfWorkType, const CBigNum& bnProbablePrime);
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnProbablePrime);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 /** Get the number of active peers */
@@ -1324,13 +1324,12 @@ public:
     // network and disk
     std::vector<CTransaction> vtx;
 
-    // Primecoin: type of Cunningham Chain for proof-of-work
-    // +2, +3, +4, ..., +k, ... Cunningham Chain of length k of first kind
-    // -2, -3, -4, ..., -k, ... Cunningham Chain of length k of second kind
+    // Primecoin: type of prime chain for proof-of-work
+    // See prime.cpp for detailed descriptions and usage
     // Note: The chain length of the type is what the miner intended for
     //       during the search, as it must match nBits in the block header.
     //       The actual length of the found chain could be longer.
-    int nProofOfWorkType;
+    unsigned int nProofOfWorkType;
 
     // Primecoin: proof-of-work certificate
     // probable prime - first number of a probable Cunningham Chain
@@ -1653,9 +1652,8 @@ public:
     // Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
 
-    // Primecoin: type of Cunningham Chain for proof-of-work
-    //            See CBlock::nProofOfWorkType for definition
-    int nProofOfWorkType;
+    // Primecoin: type of prime chain for proof-of-work
+    unsigned int nProofOfWorkType;
 
     // block header
     int nVersion;

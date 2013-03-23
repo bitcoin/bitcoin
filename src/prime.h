@@ -25,12 +25,14 @@ void PrimorialAt(CBigNum& bn, CBigNum& bnPrimorial);
 //   false - Not Cunningham Chain (nProbableChainLength <= 1)
 bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, unsigned int& nProbableChainLength);
 
+std::string TypeGetName(unsigned int nProofOfWorkType);
+
 // Mine probable Cunningham Chain of form: n = h * p# +/- 1
-bool MineProbableCunninghamChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, int nChainType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
+bool MineProbableCunninghamChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
 
 // Find last block index up to pindex of the given proof-of-work type
 // Returns: depth of last block index of shorter or equal type
-unsigned int GetLastBlockIndex(const CBlockIndex* pindex, int nProofOfWorkType, const CBlockIndex** pindexPrev);
+unsigned int GetLastBlockIndex(const CBlockIndex* pindex, unsigned int nProofOfWorkType, const CBlockIndex** pindexPrev);
 
 // Size of a big number (in bits), times 65536
 // Can be used as an approximate log scale for numbers up to 2 ** 65536 - 1
@@ -44,7 +46,7 @@ void PrintMappingPrimeTargetToHashTarget();
 
 // Check hash and prime proof-of-work
 bool CheckHashProofOfWork(uint256 hash, unsigned int nBits);
-bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, int nProofOfWorkType, const CBigNum& bnProbablePrime);
+bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnProbablePrime);
 
 // prime target difficulty value for visualization
 unsigned int GetPrimeDifficulty(unsigned int nBits);

@@ -1221,7 +1221,12 @@ void ThreadDNSAddressSeed2(void* parg)
 
 
 
-unsigned int pnSeed[] =
+unsigned int pnSeedMainNet[] =
+{
+    0x231621b2,
+};
+
+unsigned int pnSeedTestNet[] =
 {
     0x141621b2,
 };
@@ -1353,6 +1358,7 @@ void ThreadOpenConnections2(void* parg)
         // Add seed nodes if IRC isn't working
         if (addrman.size()==0 && (GetTime() - nStart > 60) && !fTestNet)
         {
+            static const unsigned int *pnSeed = fTestNet? pnSeedTestNet : pnSeedMainNet;
             std::vector<CAddress> vAdd;
             for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++)
             {

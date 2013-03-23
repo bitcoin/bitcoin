@@ -14,16 +14,16 @@ using namespace std;
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out);
 
 // Primecoin: get prime difficulty value (log scale)
-double GetDifficulty(const CBlockIndex* blockindex)
+double GetDifficulty(unsigned int nProofOfWorkType, const CBlockIndex* blockindex)
 {
     // Floating point number that is approximate log scale of prime target,
     // minimum difficulty = 256, maximum difficulty = 2039
     if (blockindex == NULL)
     {
         if (pindexBest == NULL)
-            return 1.0;
+            return 256.0;
         else
-            blockindex = pindexBest;
+            GetLastBlockIndex(pindexBest, nProofOfWorkType, &blockindex);
     }
 
     double dDiff = ((double) GetPrimeDifficulty(blockindex->nBits)) / 65536.0 ;
@@ -31,7 +31,7 @@ double GetDifficulty(const CBlockIndex* blockindex)
 }
 
 // Primecoin: get hash difficulty value (log scale)
-double GetHashDifficulty(const CBlockIndex* blockindex)
+double GetHashDifficulty(unsigned int nProofOfWorkType, const CBlockIndex* blockindex)
 {
     // Floating point number that is approximate log scale of hash difficulty,
     // minimum difficulty = 0, maximum difficulty = 256
@@ -41,7 +41,7 @@ double GetHashDifficulty(const CBlockIndex* blockindex)
         if (pindexBest == NULL)
             return 0.0;
         else
-            blockindex = pindexBest;
+            GetLastBlockIndex(pindexBest, nProofOfWorkType, &blockindex);
     }
 
     double dDiff = ((double) GetHashDifficulty(blockindex->nBits)) / 65536.0 ;
@@ -69,11 +69,11 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("nonce", (boost::uint64_t)block.nNonce));
     result.push_back(Pair("bits", HexBits(block.nBits)));
     if (block.nProofOfWorkType == blockindex->nProofOfWorkType)
-        result.push_back(Pair("powtype", block.nProofOfWorkType));
+        result.push_back(Pair("powtype", TypeGetName(block.nProofOfWorkType)));
     else
         result.push_back(Pair("powtype", "mismatch"));
-    result.push_back(Pair("primedifficulty", GetDifficulty(blockindex)));
-    result.push_back(Pair("hashdifficulty", GetHashDifficulty(blockindex)));
+    result.push_back(Pair("primedifficulty", GetDifficulty(block.nProofOfWorkType, blockindex)));
+    result.push_back(Pair("hashdifficulty", GetHashDifficulty(block.nProofOfWorkType, blockindex)));
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
@@ -99,9 +99,23 @@ Value getdifficulty(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getdifficulty\n"
-            "Returns the proof-of-work difficulty as a multiple of the minimum difficulty.");
+            "Returns the proof-of-work difficulties in log scale (256 ~ 2039).");
 
-    return GetDifficulty();
+    std::map<int, CBlockIndex*> mapProofOfWorkType;
+    for (CBlockIndex* pindex = pindexBest; pindex; pindex=pindex->pprev)
+        if (!mapProofOfWorkType.count(pindex->nProofOfWorkType))
+        {
+            mapProofOfWorkType[pindex->nProofOfWorkType] = pindex;
+            printf("Type %d at height %u\n", pindex->nProofOfWorkType, pindex->nHeight);
+        }
+
+    Object result;
+    BOOST_FOREACH(PAIRTYPE(int, CBlockIndex*) item, mapProofOfWorkType)
+    {
+        result.push_back(Pair(TypeGetName(item.first), GetDifficulty(item.first, item.second)));
+    }
+
+    return result;
 }
 
 
