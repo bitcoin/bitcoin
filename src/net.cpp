@@ -535,7 +535,12 @@ void CNode::CloseSocketDisconnect()
     fDisconnect = true;
     if (hSocket != INVALID_SOCKET)
     {
-        printf("disconnecting node %s\n", addrName.c_str());
+        printf("disconnecting node %s [", addrName.c_str());
+        if (fAskedForBlocks) {
+            nAskedForBlocks--;
+            printf("ASKFOR.");
+        }
+        printf("]\n");
         closesocket(hSocket);
         hSocket = INVALID_SOCKET;
         vRecv.clear();
