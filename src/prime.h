@@ -16,19 +16,16 @@ void Primorial(unsigned int p, CBigNum& bnPrimorial);
 // Compute the first primorial number greater than or equal to bn
 void PrimorialAt(CBigNum& bn, CBigNum& bnPrimorial);
 
-// Test Probable Cunningham Chain for: n
-// fSophieGermain:
-//   true - Test for Cunningham Chain of first kind (n, 2n+1, 4n+3, ...)
-//   false - Test for Cunningham Chain of second kind (n, 2n-1, 4n-3, ...)
+// Test probable prime chain for: n
 // Return value:
-//   true - Probable Cunningham Chain found (nProbableChainLength >= 2)
-//   false - Not Cunningham Chain (nProbableChainLength <= 1)
-bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, unsigned int& nProbableChainLength);
+//   true - Probable prime chain found (nProbableChainLength >= TypeGetLength)
+//   false - Not prime chain (nProbableChainLength < TypeGetLength)
+bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength);
 
 std::string TypeGetName(unsigned int nProofOfWorkType);
 
-// Mine probable Cunningham Chain of form: n = h * p# +/- 1
-bool MineProbableCunninghamChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
+// Mine probable prime chain of form: n = h * p# +/- 1
+bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
 
 // Find last block index up to pindex of the given proof-of-work type
 // Returns: depth of last block index of shorter or equal type

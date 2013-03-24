@@ -128,7 +128,7 @@ std::string TypeGetName(unsigned int nProofOfWorkType)
 // Return value:
 //   true - Probable Cunningham Chain found (nProbableChainLength >= 2)
 //   false - Not Cunningham Chain (nProbableChainLength <= 1)
-bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, unsigned int& nProbableChainLength)
+static bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, unsigned int& nProbableChainLength)
 {
     nProbableChainLength = 0;
     CBigNum N = n;
@@ -148,11 +148,37 @@ bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, unsigned
     return (nProbableChainLength >= 2);
 }
 
-// Mine probable Cunningham Chain of form: n = h * p# +/- 1
-bool MineProbableCunninghamChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
+// Test probable prime chain for: n
+// Return value:
+//   true - Probable prime chain found (nProbableChainLength >= TypeGetLength)
+//   false - Not prime chain (nProbableChainLength < TypeGetLength)
+bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength)
+{
+    nProbableChainLength = 0;
+    bool fSophieGermain= TypeIsSophieGermain(nProofOfWorkType);
+    bool fBiTwin = TypeIsBiTwin(nProofOfWorkType);
+    CBigNum N = n;
+
+    if (fBiTwin)
+    {
+        // BiTwin chain allows a single prime at the end for odd length chain
+        unsigned int nLengthFirstKind = 0;
+        unsigned int nLengthSecondKind = 0;
+        ProbableCunninghamChainTest(n, true, nLengthFirstKind);
+        ProbableCunninghamChainTest(n+2, false, nLengthSecondKind);
+        nProbableChainLength = (2 * std::min(nLengthFirstKind, nLengthSecondKind)) + ((nLengthFirstKind > nLengthSecondKind)? 1 : 0);
+    }
+    else
+        ProbableCunninghamChainTest(n, fSophieGermain, nProbableChainLength);
+    return (nProbableChainLength >= TypeGetLength(nProofOfWorkType));
+}
+
+// Mine probable prime chain of form: n = h * p# +/- 1
+bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
 {
     CBigNum n;
     bool fSophieGermain = TypeIsSophieGermain(nProofOfWorkType);
+    bool fBiTwin = TypeIsBiTwin(nProofOfWorkType);
 
     int64 nStart = GetTimeMicros();
     int64 nCurrent = nStart;
@@ -163,10 +189,10 @@ bool MineProbableCunninghamChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& b
     {
         nTests++;
         bnTried++;
-        n = CBigNum(block.GetHash()) * bnPrimorial * bnTried + (fSophieGermain? -1 : 1);
-        if (ProbableCunninghamChainTest(n, fSophieGermain, nProbableChainLength) && nProbableChainLength >= TypeGetLength(nProofOfWorkType))
+        n = CBigNum(block.GetHash()) * bnPrimorial * bnTried + ((fSophieGermain || fBiTwin)? -1 : 1);
+        if (ProbablePrimeChainTest(n, nProofOfWorkType, nProbableChainLength))
         {
-            printf("Probable Cunningham chain of length %u of %s kind found for nonce=%u!! \n", nProbableChainLength, fSophieGermain? "first" : "second", block.nNonce);
+            printf("Probable prime chain of type %s found for nonce=%u!! \n", TypeGetName(nProofOfWorkType).c_str(), block.nNonce);
             block.bnProbablePrime = n;
             return true;
         }
@@ -349,17 +375,16 @@ bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProof
     if (bnProbablePrime > bnProofOfWorkMax)
         return error("CheckPrimeProofOfWork() : prime exceeds cap");
 
-    // Check bnProbablePrime % hash = +/- 1
-    CBigNum bnRemainder = bnProbablePrime % CBigNum(hash);
-    if ((bnRemainder != 1) && (bnRemainder + 1 != CBigNum(hash)))
-        return error("CheckPrimeProofOfWork() : bnProbablePrime+/-1 not divisible by hash");
+    // The doubling origin of the chain must be divisible by hash
+    CBigNum bnDoublingOrigin = bnProbablePrime + ((nProofOfWorkType>>16)? 1 : (-1));
+    if ((bnDoublingOrigin % CBigNum(hash)) != 0)
+        return error("CheckPrimeProofOfWork() : prime chain not divisible by hash");
 
-    // Check Cunningham Chain
-    bool fSophieGermain = TypeIsSophieGermain(nProofOfWorkType);
+    // Check prime chain
     unsigned int nChainLength;
-    if (ProbableCunninghamChainTest(bnProbablePrime, fSophieGermain, nChainLength) && (nChainLength >= TypeGetLength(nProofOfWorkType)))
+    if (ProbablePrimeChainTest(bnProbablePrime, nProofOfWorkType, nChainLength) && (nChainLength >= TypeGetLength(nProofOfWorkType)))
         return true;
-    return error("CheckPrimeProofOfWork() : failed Cunningham Chain test type=%s length=%u", TypeGetName(nProofOfWorkType).c_str(), nChainLength);
+    return error("CheckPrimeProofOfWork() : failed prime chain test type=%s actual length=%u", TypeGetName(nProofOfWorkType).c_str(), nChainLength);
 }
 
 // prime target difficulty value for visualization

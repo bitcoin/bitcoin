@@ -4332,7 +4332,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         pblock->UpdateTime(pindexPrev);
-        pblock->nProofOfWorkType = (2 + GetRandInt(2)) | 0x10000;
+        pblock->nProofOfWorkType = (2 + GetRandInt(2)) | (GetRandInt(3) << 16);
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, pblock->nProofOfWorkType);
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
@@ -4537,7 +4537,7 @@ void static BitcoinMiner(CWallet *pwallet)
                 PrimorialAt(bnMultiplierMin, bnPrimorial);
 
                 unsigned int nProbableChainLength;
-                if (MineProbableCunninghamChain(*pblock, bnPrimorial, bnTried, pblock->nProofOfWorkType, nProbableChainLength, nTests, nPrimesHit))
+                if (MineProbablePrimeChain(*pblock, bnPrimorial, bnTried, pblock->nProofOfWorkType, nProbableChainLength, nTests, nPrimesHit))
                 {
                     SetThreadPriority(THREAD_PRIORITY_NORMAL);
                     CheckWork(pblock, *pwalletMain, reservekey);
