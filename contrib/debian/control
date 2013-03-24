@@ -33,8 +33,6 @@ Description: peer-to-peer network based digital currency - daemon
  transact directly with each other, with the help of a P2P network to
  check for double-spending.
  .
- By default connects to an IRC network to discover other peers.
- .
  Full transaction history is stored locally at each client.  This
  requires 2+ GB of space, slowly growing.
  .
@@ -50,8 +48,6 @@ Description: peer-to-peer network based digital currency - Qt GUI
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to
  check for double-spending.
- .
- By default connects to an IRC network to discover other peers.
  .
  Full transaction history is stored locally at each client.  This
  requires 2+ GB of space, slowly growing.
