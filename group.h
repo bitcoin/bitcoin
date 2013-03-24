@@ -95,17 +95,18 @@ private:
     const FieldElem g_y;
 
 public:
-    const Number order;
+    secp256k1_num_t order;
     const GroupElem g;
     const FieldElem beta;
-    const Number lambda, a1b2, b1, a2;
+    secp256k1_num_t lambda, a1b2, b1, a2;
 
     GroupConstants();
+    ~GroupConstants();
 };
 
 const GroupConstants &GetGroupConst();
 
-void SplitExp(const Number &exp, Number &exp1, Number &exp2);
+void SplitExp(const secp256k1_num_t &exp, secp256k1_num_t &exp1, secp256k1_num_t &exp2);
 
 }
 

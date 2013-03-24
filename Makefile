@@ -54,8 +54,8 @@ clean-$(CONF):
 obj/secp256k1-$(CONF).o: $(SECP256K1_FILES)
 	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) secp256k1.cpp -c -o obj/secp256k1-$(CONF).o
 
-bench-$(CONF): obj/secp256k1-$(CONF).o bench.cpp
-	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) obj/secp256k1-$(CONF).o bench.cpp $(LIBS) -o bench-$(CONF)
+bench-$(CONF): $(SECP256K1_FILES) bench.cpp
+	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) bench.cpp $(LIBS) -o bench-$(CONF)
 
 tests-$(CONF): $(SECP256K1_FILES) tests.cpp
-	$(CXX) $(FLAGS_COMMON) $(FLAGS_TEST) $(FLAGS_CONF) tests.cpp $(LIBS) -o tests-$(CONF)
+	$(CXX) $(FLAGS_COMMON) $(FLAGS_DEBUG) $(FLAGS_CONF) tests.cpp $(LIBS) -o tests-$(CONF)

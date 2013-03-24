@@ -35,17 +35,17 @@ bool Signature::Parse(const unsigned char *sig, int size) {
     if (lenr == 0) return false;
     if (sig[lenr+4] != 0x02) return false;
     if (lens == 0) return false;
-    r.SetBytes(sig+4, lenr);
-    s.SetBytes(sig+6+lenr, lens);
+    secp256k1_num_set_bin(&r, sig+4, lenr);
+    secp256k1_num_set_bin(&s, sig+6+lenr, lens);
     return true;
 }
 
 bool Signature::Serialize(unsigned char *sig, int *size) {
-    int lenR = (r.GetBits() + 7)/8;
-    if (lenR == 0 || r.CheckBit(lenR*8-1))
+    int lenR = (secp256k1_num_bits(&r) + 7)/8;
+    if (lenR == 0 || secp256k1_num_get_bit(&r, lenR*8-1))
         lenR++;
-    int lenS = (s.GetBits() + 7)/8;
-    if (lenS == 0 || s.CheckBit(lenS*8-1))
+    int lenS = (secp256k1_num_bits(&s) + 7)/8;
+    if (lenS == 0 || secp256k1_num_get_bit(&s, lenS*8-1))
         lenS++;
     if (*size < 6+lenS+lenR)
         return false;
@@ -54,45 +54,56 @@ bool Signature::Serialize(unsigned char *sig, int *size) {
     sig[1] = 4 + lenS + lenR;
     sig[2] = 0x02;
     sig[3] = lenR;
-    r.GetBytes(sig+4, lenR);
+    secp256k1_num_get_bin(sig+4, lenR, &r);
     sig[4+lenR] = 0x02;
     sig[5+lenR] = lenS;
-    s.GetBytes(sig+6, lenS);
+    secp256k1_num_get_bin(sig+lenR+6, lenS, &s);
     return true;
 }
 
-bool Signature::RecomputeR(Number &r2, const GroupElemJac &pubkey, const Number &message) const {
+bool Signature::RecomputeR(secp256k1_num_t &r2, const GroupElemJac &pubkey, const secp256k1_num_t &message) const {
     const GroupConstants &c = GetGroupConst();
 
-    if (r.IsNeg() || s.IsNeg())
+    if (secp256k1_num_is_neg(&r) || secp256k1_num_is_neg(&s))
         return false;
-    if (r.IsZero() || s.IsZero())
+    if (secp256k1_num_is_zero(&r) || secp256k1_num_is_zero(&s))
         return false;
-    if (r.Compare(c.order) >= 0 || s.Compare(c.order) >= 0)
+    if (secp256k1_num_cmp(&r, &c.order) >= 0 || secp256k1_num_cmp(&s, &c.order) >= 0)
         return false;
 
-    Number sn, u1, u2;
-    sn.SetModInverse(s, c.order);
-    u1.SetModMul(sn, message, c.order);
-    u2.SetModMul(sn, r, c.order);
+    bool ret = false;
+    secp256k1_num_t sn, u1, u2;
+    secp256k1_num_init(&sn);
+    secp256k1_num_init(&u1);
+    secp256k1_num_init(&u2);
+    secp256k1_num_mod_inverse(&sn, &s, &c.order);
+    secp256k1_num_mod_mul(&u1, &sn, &message, &c.order);
+    secp256k1_num_mod_mul(&u2, &sn, &r, &c.order);
     GroupElemJac pr; ECMult(pr, pubkey, u2, u1);
-    if (pr.IsInfinity())
-        return false;
-    FieldElem xr; pr.GetX(xr);
-    xr.Normalize();
-    unsigned char xrb[32]; xr.GetBytes(xrb);
-    r2.SetBytes(xrb,32); r2.SetMod(r2,c.order);
-    return true;
+    if (!pr.IsInfinity()) {
+        FieldElem xr; pr.GetX(xr);
+        xr.Normalize();
+        unsigned char xrb[32]; xr.GetBytes(xrb);
+        secp256k1_num_set_bin(&r2, xrb, 32);
+        secp256k1_num_mod(&r2, &r2, &c.order);
+        ret = true;
+    }
+    secp256k1_num_free(&sn);
+    secp256k1_num_free(&u1);
+    secp256k1_num_free(&u2);
+    return ret;
 }
 
-bool Signature::Verify(const GroupElemJac &pubkey, const Number &message) const {
-    Number r2;
-    if (!RecomputeR(r2, pubkey, message))
-        return false;
-    return r2.Compare(r) == 0;
+bool Signature::Verify(const GroupElemJac &pubkey, const secp256k1_num_t &message) const {
+    secp256k1_num_t r2;
+    secp256k1_num_init(&r2);
+    bool ret = false;
+    ret = RecomputeR(r2, pubkey, message) && secp256k1_num_cmp(&r, &r2) == 0;
+    secp256k1_num_free(&r2);
+    return ret;
 }
 
-bool Signature::Sign(const Number &seckey, const Number &message, const Number &nonce) {
+bool Signature::Sign(const secp256k1_num_t &seckey, const secp256k1_num_t &message, const secp256k1_num_t &nonce) {
     const GroupConstants &c = GetGroupConst();
 
     GroupElemJac rp;
@@ -102,27 +113,33 @@ bool Signature::Sign(const Number &seckey, const Number &message, const Number &
     unsigned char b[32];
     rx.Normalize();
     rx.GetBytes(b);
-    r.SetBytes(b, 32);
-    r.SetMod(r, c.order);
-    Number n;
-    n.SetModMul(r, seckey, c.order);
-    n.SetAdd(message, n);
-    s.SetModInverse(nonce, c.order);
-    s.SetModMul(s, n, c.order);
-    if (s.IsZero())
+    secp256k1_num_set_bin(&r, b, 32);
+    secp256k1_num_mod(&r, &r, &c.order);
+    secp256k1_num_t n;
+    secp256k1_num_init(&n);
+    secp256k1_num_mod_mul(&n, &r, &seckey, &c.order);
+    secp256k1_num_add(&n, &n, &message);
+    secp256k1_num_mod_inverse(&s, &nonce, &c.order);
+    secp256k1_num_mod_mul(&s, &s, &n, &c.order);
+    secp256k1_num_free(&n);
+    if (secp256k1_num_is_zero(&s))
         return false;
-    if (s.IsOdd())
-        s.SetSub(c.order, s);
+    if (secp256k1_num_is_odd(&s))
+        secp256k1_num_sub(&s, &c.order, &s);
     return true;
 }
 
-void Signature::SetRS(const Number &rin, const Number &sin) {
-    r = rin;
-    s = sin;
+void Signature::SetRS(const secp256k1_num_t &rin, const secp256k1_num_t &sin) {
+    secp256k1_num_copy(&r, &rin);
+    secp256k1_num_copy(&s, &sin);
 }
 
 std::string Signature::ToString() const {
-    return "(" + r.ToString() + "," + s.ToString() + ")";
+    char rs[65], ss[65];
+    int rl = 65, sl = 65;
+    secp256k1_num_get_hex(rs, &rl, &r);
+    secp256k1_num_get_hex(ss, &sl, &s);
+    return "(" + std::string(rs) + "," + std::string(ss) + ")";
 }
 
 }
