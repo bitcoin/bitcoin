@@ -3,11 +3,13 @@ using namespace std;
 #include <assert.h>
 #include <stdint.h>
 #include <string>
-
+#define INLINE_ASM
+#include "lin64.h"
 #include "num.h"
 #include "field.h"
-
+#include <iostream>
 // #define VERIFY_MAGNITUDE 1
+using namespace std;
 
 namespace secp256k1 {
 
@@ -164,7 +166,11 @@ void FieldElem::SetMult(const FieldElem &a, const FieldElem &b) {
     assert(a.magnitude <= 8);
     assert(b.magnitude <= 8);
 #endif
-    __int128 c = (__int128)a.n[0] * b.n[0];
+
+#ifdef INLINE_ASM
+    _ExSetMult((uint64_t *) a.n,(uint64_t *) b.n, (uint64_t *) n);
+#else
+    unsigned __int128 c = (__int128)a.n[0] * b.n[0];
     uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
     c = c + (__int128)a.n[0] * b.n[1] +
             (__int128)a.n[1] * b.n[0];
@@ -199,8 +205,8 @@ void FieldElem::SetMult(const FieldElem &a, const FieldElem &b) {
     c = c + (__int128)a.n[4] * b.n[4];
     uint64_t t8 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 001000000000001E
     uint64_t t9 = c;
-    c = t0 + (__int128)t5 * 0x1000003D10ULL;
 
+    c = t0 + (__int128)t5 * 0x1000003D10ULL;
     t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
     c = c + t1 + (__int128)t6 * 0x1000003D10ULL;
     t1 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
@@ -213,6 +219,7 @@ void FieldElem::SetMult(const FieldElem &a, const FieldElem &b) {
     c = t0 + (__int128)c * 0x1000003D1ULL;
     n[0] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 1000008
     n[1] = t1 + c;
+#endif
 #ifdef VERIFY_MAGNITUDE
     magnitude = 1;
     normalized = false;
@@ -223,6 +230,10 @@ void FieldElem::SetSquare(const FieldElem &a) {
 #ifdef VERIFY_MAGNITUDE
     assert(a.magnitude <= 8);
 #endif
+
+#ifdef INLINE_ASM
+    _ExSetSquare((uint64_t *)a.n,(uint64_t *)n);
+#else
     __int128 c = (__int128)a.n[0] * a.n[0];
     uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
     c = c + (__int128)(a.n[0]*2) * a.n[1];
@@ -261,6 +272,8 @@ void FieldElem::SetSquare(const FieldElem &a) {
     c = t0 + (__int128)c * 0x1000003D1ULL;
     n[0] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 1000008
     n[1] = t1 + c;
+#endif
+
 #ifdef VERIFY_MAGNITUDE
     assert(a.magnitude <= 8);
     normalized = false;

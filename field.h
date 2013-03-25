@@ -13,7 +13,7 @@ using namespace std;
 namespace secp256k1 {
 
 /** Implements arithmetic modulo FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F,
- *  represented as 5 uint64_t's in base 2^52. The values are allowed to contain >52 each. In particular,
+ *  represented as 5 uint64_t's in base 2^52. he values are allowed to contain >52 each. In particular,
  *  each FieldElem has a 'magnitude' associated with it. Internally, a magnitude M means each element
  *  is at most M*(2^53-1), except the most significant one, which is limited to M*(2^49-1). All operations
  *  accept any input with magnitude at most M, and have different rules for propagating magnitude to their
