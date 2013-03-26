@@ -49,6 +49,10 @@ public:
     enum BlockSource getBlockSource() const;
     //! Return conservative estimate of total number of blocks, or 0 if unknown
     int getNumBlocksOfPeers() const;
+    //! Return true if network activity in core is enabled
+    bool getNetworkActive() const;
+    //! Toggle network activity state in core
+    void setNetworkActive(bool active);
     //! Return warnings to be displayed in status bar
     QString getStatusBarWarnings() const;
 
@@ -75,6 +79,7 @@ private:
 
 signals:
     void numConnectionsChanged(int count);
+    void networkActiveChanged(bool networkActive);
     void numBlocksChanged(int count, int countOfPeers);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
@@ -85,6 +90,7 @@ signals:
 public slots:
     void updateTimer();
     void updateNumConnections(int numConnections);
+    void updateNetworkActive(bool networkActive);
     void updateAlert(const QString &hash, int status);
 };
 
