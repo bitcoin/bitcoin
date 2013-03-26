@@ -222,7 +222,9 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool fPri
         else
             txinfo.push_back(tx.GetHash().GetHex());
     }
-        result.push_back(Pair("tx", txinfo));
+
+    result.push_back(Pair("tx", txinfo));
+    result.push_back(Pair("signature", HexStr(block.vchBlockSig.begin(), block.vchBlockSig.end())));
 
     return result;
 }
