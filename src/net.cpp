@@ -2050,6 +2050,8 @@ void CConnman::SetNetworkActive(bool active)
     } else {
         fNetworkActive = true;
     }
+
+    uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
 
 CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSeed1(nSeed1In)
