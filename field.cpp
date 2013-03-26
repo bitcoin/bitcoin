@@ -1,15 +1,15 @@
-using namespace std;
-
 #include <assert.h>
 #include <stdint.h>
 #include <string>
-#define INLINE_ASM
-#include "lin64.h"
 #include "num.h"
 #include "field.h"
 #include <iostream>
-// #define VERIFY_MAGNITUDE 1
+
 using namespace std;
+
+#ifdef INLINE_ASM
+#include "lin64.h"
+#endif
 
 namespace secp256k1 {
 

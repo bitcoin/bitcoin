@@ -4,12 +4,13 @@ FLAGS_DEBUG:=-DVERIFY_MAGNITUDE -ggdb3 -O1
 FLAGS_TEST:=-DVERIFY_MAGNITUDE -ggdb3 -O2 -march=native
 
 SECP256K1_FILES := num.h   field.h   group.h   ecmult.h   ecdsa.h \
-                   num.cpp field.cpp group.cpp ecmult.cpp ecdsa.cpp \
-		   lin64.asm
+                   num.cpp field.cpp group.cpp ecmult.cpp ecdsa.cpp
 
 ifndef CONF
 CONF := gmp
 endif
+
+default: all
 
 ifeq ($(CONF), openssl)
 FLAGS_CONF:=-DUSE_NUM_OPENSSL -DUSE_FIELDINVERSE_BUILTIN
@@ -20,16 +21,27 @@ ifeq ($(CONF), gmp)
 FLAGS_CONF:=-DUSE_NUM_GMP
 LIBS:=-lgmp
 SECP256K1_FILES := $(SECP256K1_FILES) num_gmp.h num_gmp.cpp 
+else
+ifeq ($(CONF), gmpasm)
+FLAGS_CONF:=-DUSE_NUM_GMP -DINLINE_ASM
+LIBS:=-lgmp obj/lin64.o
+SECP256K1_FILES := $(SECP256K1_FILES) num_gmp.h num_gmp.cpp obj/lin64.o
+
+obj/lin64.o: lin64.asm
+	/tmp/jwasm -Fo obj/lin64.o -elf64 lin64.asm
+endif
 endif
 endif
 
 all: *.cpp *.asm *.h
 	+make CONF=openssl all-openssl
 	+make CONF=gmp     all-gmp
+	+make CONF=gmpasm  all-gmpasm
 
 clean:
 	+make CONF=openssl clean-openssl
 	+make CONF=gmp     clean-gmp
+	+make CONF=gmpasm  clean-gmpasm
 
 bench-any: bench-$(CONF)
 tests-any: tests-$(CONF)
@@ -42,11 +54,8 @@ clean-$(CONF):
 obj/secp256k1-$(CONF).o: $(SECP256K1_FILES)
 	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) secp256k1.cpp -c -o obj/secp256k1-$(CONF).o
 
-obj/lin64.o: lin64.asm
-	~/tmp/jwasm -Fo obj/lin64.o -elf64 lin64.asm 
+bench-$(CONF): obj/secp256k1-$(CONF).o bench.cpp
+	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) obj/secp256k1-$(CONF).o bench.cpp $(LIBS) -o bench-$(CONF)
 
-bench-$(CONF): obj/secp256k1-$(CONF).o bench.cpp obj/lin64.o
-	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) obj/secp256k1-$(CONF).o obj/lin64.o bench.cpp $(LIBS) -o bench-$(CONF)
-
-tests-$(CONF): $(SECP256K1_FILES) tests.cpp obj/lin64.o
-	$(CXX) $(FLAGS_COMMON) $(FLAGS_TEST) $(FLAGS_CONF) obj/lin64.o tests.cpp $(LIBS) -o tests-$(CONF)
+tests-$(CONF): $(SECP256K1_FILES) tests.cpp
+	$(CXX) $(FLAGS_COMMON) $(FLAGS_TEST) $(FLAGS_CONF) tests.cpp $(LIBS) -o tests-$(CONF)
