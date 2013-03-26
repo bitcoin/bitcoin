@@ -231,6 +231,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getpeerinfo",            &getpeerinfo,            true,      false,      false },
     { "ping",                   &ping,                   true,      false,      false },
     { "addnode",                &addnode,                true,      true,       false },
+    { "togglenetwork",          &togglenetwork,          true,      false,      false },
     { "getaddednodeinfo",       &getaddednodeinfo,       true,      true,       false },
     { "getnettotals",           &getnettotals,           true,      true,       false },
     { "getdifficulty",          &getdifficulty,          true,      false,      false },
