@@ -292,25 +292,25 @@ ExSetMult	ENDP
 	;; 		rsi	 = a.n[4] / t9
 ExSetSquare	PROC C PUBLIC USES rbx rbp r12 r13 r14 r15
 	push rsi
-	mov rsi,0FFFFFFFFFFFFFh
+	mov rbp,0FFFFFFFFFFFFFh
 	
 	;; c=a.n[0] * a.n[0]
-   	mov r15,[rdi+0*8]
-	mov r10,rsi		; modulus 
-	mov rax,r15
-	mul rax  		; rsi=b.n[0]
-	mov rbx,[rdi+1*8]	; a.n[1]
-	add r15,r15		; r15=2*a.n[0]
+   	mov r14,[rdi+0*8]	; r14=a.n[0]
+	mov r10,rbp		; modulus 
+	mov rax,r14
+	mul rax
+	mov r15,[rdi+1*8]	; a.n[1]
+	add r14,r14		; r14=2*a.n[0]
 	mov r8,rax
 	and r10,rax		; only need lower qword
 	shrd r8,rdx,52
 	xor r9,r9
 
 	;; c+=2*a.n[0] * a.n[1]
-	mov rax,r15
-	mul rbx 	
-	mov rcx,[rdi+2*8]	; rcx=a.n[2]
-	mov r11,rsi 		; modulus
+	mov rax,r14		; r14=2*a.n[0]
+	mul r15
+	mov rbx,[rdi+2*8]	; rbx=a.n[2]
+	mov r11,rbp 		; modulus
 	add r8,rax
 	adc r9,rdx
 	and r11,r8
@@ -318,33 +318,32 @@ ExSetSquare	PROC C PUBLIC USES rbx rbp r12 r13 r14 r15
 	xor r9,r9
 	
 	;; c+=2*a.n[0]*a.n[2]+a.n[1]*a.n[1]
+	mov rax,r14
+	mul rbx
+	add r8,rax
+	adc r9,rdx
+
 	mov rax,r15
-	mul rcx
-	add r8,rax
-	adc r9,rdx
-
-	mov rax,rbx
-	mov r12,rsi		; modulus
+	mov r12,rbp		; modulus
 	mul rax
-	mov rbp,[rdi+3*8]	; rbp=a.n[3]
-	add rbx,rbx		; rbx=a.n[1]*2
+	mov rcx,[rdi+3*8]	; rcx=a.n[3]
+	add r15,r15		; r15=a.n[1]*2
 	add r8,rax
 	adc r9,rdx
-
 	and r12,r8		; only need lower dword
 	shrd r8,r9,52
 	xor r9,r9		
 
 	;; c+=2*a.n[0]*a.n[3]+2*a.n[1]*a.n[2]
-	mov rax,r15
-	mul rbp
+	mov rax,r14
+	mul rcx
 	add r8,rax
 	adc r9,rdx
 
-	mov rax,rbx		; rax=2*a.n[1]
-	mov r13,rsi		; modulus
-	mul rcx
-	mov rsi,[rdi+4*8]	; rsi=a.n[4] / destroy constant
+	mov rax,r15		; rax=2*a.n[1]
+	mov r13,rbp		; modulus
+	mul rbx
+	mov rsi,[rdi+4*8]	; rsi=a.n[4]
 	add r8,rax
 	adc r9,rdx
 	and r13,r8
@@ -352,20 +351,20 @@ ExSetSquare	PROC C PUBLIC USES rbx rbp r12 r13 r14 r15
 	xor r9,r9		
 
 	;; c+=2*a.n[0]*a.n[4]+2*a.n[1]*a.n[3]+a.n[2]*a.n[2]
-	mov rax,r15		; last time we need 2*a.n[0]
+	mov rax,r14		; last time we need 2*a.n[0]
 	mul rsi
 	add r8,rax
 	adc r9,rdx
 
-	mov rax,rbx
-	mul rbp
-	mov r14,0FFFFFFFFFFFFFh ; modulus
+	mov rax,r15
+	mul rcx
+	mov r14,rbp		; modulus
 	add r8,rax
 	adc r9,rdx
 
-	mov rax,rcx
+	mov rax,rbx
 	mul rax
-	add rcx,rcx		; rcx=2*a.n[2]
+	add rbx,rbx		; rcx=2*a.n[2]
 	add r8,rax
 	adc r9,rdx
 	and r14,r8
@@ -373,14 +372,14 @@ ExSetSquare	PROC C PUBLIC USES rbx rbp r12 r13 r14 r15
 	xor r9,r9		
 
 	;; c+=2*a.n[1]*a.n[4]+2*a.n[2]*a.n[3]
-	mov rax,rbx
+	mov rax,r15		; last time we need 2*a.n[1]
 	mul rsi
 	add r8,rax
 	adc r9,rdx
 
-	mov rax,rcx
-	mul rbp
-	mov r15,0FFFFFFFFFFFFFh ; modulus
+	mov rax,rbx
+	mul rcx
+	mov r15,rbp		; modulus
 	add r8,rax
 	adc r9,rdx
 	and r15,r8
@@ -388,24 +387,24 @@ ExSetSquare	PROC C PUBLIC USES rbx rbp r12 r13 r14 r15
 	xor r9,r9		
 
 	;; c+=2*a.n[2]*a.n[4]+a.n[3]*a.n[3]
-	mov rax,rcx		; 2*a.n[2]
+	mov rax,rbx		; last time we need 2*a.n[2]
 	mul rsi
 	add r8,rax
 	adc r9,rdx
 
-	mov rax,rbp		; a.n[3]
+	mov rax,rcx		; a.n[3]
 	mul rax
-	mov rbx,0FFFFFFFFFFFFFh ; modulus
+	mov rbx,rbp		; modulus
 	add r8,rax
 	adc r9,rdx
 	and rbx,r8		; only need lower dword
-	lea rax,[2*rbp]
+	lea rax,[2*rcx]
 	shrd r8,r9,52
 	xor r9,r9		
 
 	;; c+=2*a.n[3]*a.n[4]
 	mul rsi
-	mov rcx,0FFFFFFFFFFFFFh ; modulus
+	mov rcx,rbp		; modulus
 	add r8,rax
 	adc r9,rdx
 	and rcx,r8		; only need lower dword
@@ -415,7 +414,7 @@ ExSetSquare	PROC C PUBLIC USES rbx rbp r12 r13 r14 r15
 	;; c+=a.n[4]*a.n[4]
 	mov rax,rsi
 	mul rax
-	mov rbp,0FFFFFFFFFFFFFh ; modulus
+	;; mov rbp,rbp		; modulus is already there!
 	add r8,rax
 	adc r9,rdx
 	and rbp,r8 
