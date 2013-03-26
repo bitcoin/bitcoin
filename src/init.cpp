@@ -371,7 +371,7 @@ bool AppInit2(int argc, char* argv[])
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
     if (!LoadBlockIndex())
-        strErrors << _("Error loading blkindex.dat") << "\n";
+        strErrors << _("Error loading blkindex.dat. Remove blk*.dat from your data directory and try again.") << "\n";
 
     // as LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill bitcoin-qt during the last operation. If so, exit.

@@ -928,7 +928,7 @@ public:
 
     void SetNull()
     {
-        nVersion = 2;
+        nVersion = 3;
         hashPrevBlock = 0;
         hashMerkleRoot = 0;
         nTime = 0;
@@ -1365,6 +1365,18 @@ public:
         return (nFlags & BLOCK_PROOF_OF_STAKE);
     }
 
+    static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
+    {
+        unsigned int nFound = 0;
+        for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
+        {
+            if (pstart->nVersion >= minVersion)
+                ++nFound;
+            pstart = pstart->pprev;
+        }
+        return (nFound >= nRequired);
+    }
+
     void SetProofOfStake()
     {
         nFlags |= BLOCK_PROOF_OF_STAKE;
@@ -1422,11 +1434,13 @@ class CDiskBlockIndex : public CBlockIndex
 public:
     uint256 hashPrev;
     uint256 hashNext;
+    int nProtocolVersion;
 
     CDiskBlockIndex()
     {
         hashPrev = 0;
         hashNext = 0;
+        nProtocolVersion = PROTOCOL_VERSION;
     }
 
     explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex)
@@ -1448,6 +1462,7 @@ public:
         READWRITE(nMoneySupply);
         READWRITE(nFlags);
         READWRITE(nStakeModifier);
+        READWRITE(nProtocolVersion);
         if (IsProofOfStake())
         {
             READWRITE(prevoutStake);
