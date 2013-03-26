@@ -1698,6 +1698,8 @@ void SetNetworkActive(bool active)
     } else {
         fNetworkActive = true;
     }
+
+    uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
 
 class CNetCleanup
