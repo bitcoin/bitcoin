@@ -28,7 +28,7 @@ LIBS:=-lgmp obj/lin64.o
 SECP256K1_FILES := $(SECP256K1_FILES) num_gmp.h num_gmp.cpp obj/lin64.o
 
 obj/lin64.o: lin64.asm
-	/tmp/jwasm -Fo obj/lin64.o -elf64 lin64.asm
+	yasm -f elf64 -o obj/lin64.o lin64.asm
 endif
 endif
 endif

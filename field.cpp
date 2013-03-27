@@ -168,7 +168,7 @@ void FieldElem::SetMult(const FieldElem &a, const FieldElem &b) {
 #endif
 
 #ifdef INLINE_ASM
-    _ExSetMult((uint64_t *) a.n,(uint64_t *) b.n, (uint64_t *) n);
+    ExSetMult((uint64_t *) a.n,(uint64_t *) b.n, (uint64_t *) n);
 #else
     unsigned __int128 c = (__int128)a.n[0] * b.n[0];
     uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
@@ -232,7 +232,7 @@ void FieldElem::SetSquare(const FieldElem &a) {
 #endif
 
 #ifdef INLINE_ASM
-    _ExSetSquare((uint64_t *)a.n,(uint64_t *)n);
+    ExSetSquare((uint64_t *)a.n,(uint64_t *)n);
 #else
     __int128 c = (__int128)a.n[0] * a.n[0];
     uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
