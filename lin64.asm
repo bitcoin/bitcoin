@@ -4,19 +4,13 @@
 	;; 	ExSetMult
 	;; 	ExSetSquare
 	;;
-	;; Needed tools: JWASM (http://www.japheth.de/JWasm.html)
-	;;
-	;; !!! WARNING !!!   !!! WARNING !!!   !!! WARNING !!!
-	;;
-	;; Please note that recompiling this binary (jwasm) under a 64-bit OS
-	;; may yield unexpected results and create a corrupted ELF64 header.
+	;; Needed tools: YASM (http://www.japheth.de/JWasm.html)
 	;;
 	;; 
 
-	.x64			
-QTEST	EQU 1
-	.code
-	
+	BITS 64
+
+	;;  Procedure ExSetMult
 	;;  Register Layout:
 	;;  INPUT: 	rdi	= a.n
 	;; 	   	rsi  	= b.n
@@ -31,7 +25,10 @@ QTEST	EQU 1
 	;; 		rcx	 = b.n[3] / t7
 	;; 		rbp	 = Constant 0FFFFFFFFFFFFFh / t8
 	;; 		rsi	 = b.n / b.n[4] / t9
-ExSetMult	PROC C PUBLIC USES rbx rbp r12 r13 r14 r15
+
+	GLOBAL ExSetMult
+	ALIGN 32
+ExSetMult:
 	push rdx
 	mov r14,[rsi+8*0]	; preload b.n[0]. This will be the case until
 				; b.n[0] is no longer needed, then we reassign
@@ -217,7 +214,7 @@ ExSetMult	PROC C PUBLIC USES rbx rbp r12 r13 r14 r15
 	mov rsi,r8		; load c into t9 and destroy b.n[4]
 
 	;; *******************************************************
-common_exit_norm::
+common_exit_norm:
 	mov rdi,01000003D10h	; load constant
 
 	mov rax,r15		; get t5
@@ -290,9 +287,9 @@ common_exit_norm::
 	add r8,r11
 	mov [rbx+1*8],r8	; -> this.n[1]
 	ret
-ExSetMult	ENDP
 
-
+	
+	;;  PROC ExSetSquare
 	;;  Register Layout:
 	;;  INPUT: 	rdi	 = a.n
 	;; 	   	rsi  	 = this.a
@@ -305,7 +302,9 @@ ExSetMult	ENDP
 	;; 		rcx	 = a.n[3] / t7
 	;; 		rbp	 = 0FFFFFFFFFFFFFh / t8
 	;; 		rsi	 = a.n[4] / a.n[4] /t9
-ExSetSquare	PROC C PUBLIC USES rbx rbp r12 r13 r14 r15
+	GLOBAL ExSetSquare
+	ALIGN 32
+ExSetSquare:
 	push rsi
 	mov rbp,0FFFFFFFFFFFFFh
 	
@@ -440,7 +439,6 @@ ExSetSquare	PROC C PUBLIC USES rbx rbp r12 r13 r14 r15
 
 	;; *******************************************************
 	jmp common_exit_norm
-ExSetSquare	ENDP
 	end
 
 	
