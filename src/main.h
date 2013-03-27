@@ -174,7 +174,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 /** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnProbablePrime);
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnPrimeChainMultiplier);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 /** Get the number of active peers */
@@ -1332,8 +1332,11 @@ public:
     unsigned int nProofOfWorkType;
 
     // Primecoin: proof-of-work certificate
-    // probable prime - first number of a probable Cunningham Chain
-    CBigNum bnProbablePrime;
+    // Multiplier to block hash to derive the probable prime chain (k=0, 1, ...)
+    // Cunningham Chain of first kind:  hash * multiplier * 2**k - 1
+    // Cunningham Chain of second kind: hash * multiplier * 2**k + 1
+    // BiTwin Chain:                    hash * multiplier * 2**k +/- 1
+    CBigNum bnPrimeChainMultiplier;
 
     // memory only
     mutable std::vector<uint256> vMerkleTree;
@@ -1354,7 +1357,7 @@ public:
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
         READWRITE(nProofOfWorkType);
-        READWRITE(bnProbablePrime);
+        READWRITE(bnPrimeChainMultiplier);
     )
 
     void SetNull()
@@ -1362,7 +1365,7 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         vMerkleTree.clear();
-        bnProbablePrime = 0;
+        bnPrimeChainMultiplier = 0;
     }
 
     CBlockHeader GetBlockHeader() const
@@ -1477,7 +1480,7 @@ public:
         }
 
         // Check the header
-        if (!CheckProofOfWork(GetHash(), nBits, nProofOfWorkType, bnProbablePrime))
+        if (!CheckProofOfWork(GetHash(), nBits, nProofOfWorkType, bnPrimeChainMultiplier))
             return error("CBlock::ReadFromDisk() : errors in block header");
 
         return true;

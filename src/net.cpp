@@ -1356,7 +1356,7 @@ void ThreadOpenConnections2(void* parg)
             return;
 
         // Add seed nodes if IRC isn't working
-        if (addrman.size()==0 && (GetTime() - nStart > 60) && !fTestNet)
+        if (addrman.size()==0 && (GetTime() - nStart > 60))
         {
             static const unsigned int *pnSeed = fTestNet? pnSeedTestNet : pnSeedMainNet;
             std::vector<CAddress> vAdd;

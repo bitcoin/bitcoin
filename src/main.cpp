@@ -1114,21 +1114,34 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
 
     CBigNum bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
-    unsigned int nLogScale;
+    unsigned int nLogScale, nLogScaleMax, nLogScaleReversed;
     if (!LogScale(bnNew, nLogScale))
         return error("GetNextWorkRequired() : log scale of prime target");
-    CBigNum bnNewLogScale = nLogScale;
+    if (!LogScale(bnProofOfWorkMax, nLogScaleMax))
+        return error("GetNextWorkRequired() : log scale of max target");
+    if (nLogScale > nLogScaleMax)
+        return error("GetNextWorkRequired() : log scale over max");
+    // nLogScaleReversed - adjust max-nLogScale instead as we approach max
+    nLogScaleReversed = nLogScaleMax - nLogScale;
+    CBigNum bnNewLogScale = (nLogScale < nLogScaleReversed)? nLogScale : nLogScaleReversed;
     int64 nTargetSpacing = min(nTargetSpacingMax, nTargetSpacingMin * (1 + nDepthOfEqualOrShorterType));
     int64 nInterval = nTargetTimespan / nTargetSpacing;
-    bnNewLogScale *= ((nInterval + 1) * nTargetSpacing);
-    bnNewLogScale /= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
-    if (bnNewLogScale > 0xffffffffu)
-        bnNew = bnProofOfWorkMax;
+    if (nLogScale < nLogScaleReversed)
+    {
+        bnNewLogScale *= ((nInterval + 1) * nTargetSpacing);
+        bnNewLogScale /= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
+    }
     else
     {
-        nLogScale = (unsigned int)bnNewLogScale.getuint();
-        bnNew = (CBigNum((nLogScale & 0xffff) + 0x10000) << (nLogScale >> 16)) >> 16;
+        bnNewLogScale *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
+        bnNewLogScale /= ((nInterval + 1) * nTargetSpacing);
     }
+    if (bnNewLogScale > nLogScaleMax)
+        bnNewLogScale = nLogScaleMax;
+    nLogScale = (nLogScale < nLogScaleReversed)? bnNewLogScale.getuint() : (nLogScaleMax - bnNewLogScale.getuint());
+
+    // Convert back to normal scale
+    bnNew = (CBigNum((nLogScale & 0xffff) + 0x10000) << (nLogScale >> 16)) >> 16;
 
     // TODO: limit adjustment of the target
     if (bnNew < bnProofOfWorkLimit)
@@ -2186,7 +2199,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         return error("ProcessBlock() : CheckBlock FAILED");
 
     // Check proof of work matches claimed amount
-    if (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->nProofOfWorkType, pblock->bnProbablePrime))
+    if (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->nProofOfWorkType, pblock->bnPrimeChainMultiplier))
         return state.DoS(100, error("ProcessBlock() : proof of work failed"));
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
@@ -2707,7 +2720,7 @@ bool InitBlockIndex() {
         }
 
         block.nProofOfWorkType = 3;
-        block.bnProbablePrime = CBigNum(block.GetHash()) * 2 * 3 * 5 * 7 + 1;
+        block.bnPrimeChainMultiplier = 2 * 3 * 5 * 7;
 
         //// debug print
         uint256 hash = block.GetHash();
@@ -2720,7 +2733,7 @@ bool InitBlockIndex() {
         {
             CValidationState state;
             assert(block.CheckBlock(state, true, true));
-            assert(CheckProofOfWork(block.GetHash(), block.nBits, block.nProofOfWorkType, block.bnProbablePrime));
+            assert(CheckProofOfWork(block.GetHash(), block.nBits, block.nProofOfWorkType, block.bnPrimeChainMultiplier));
         }
 
         // Start new block file
@@ -4420,12 +4433,12 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
     CBigNum bnTarget = CBigNum().SetCompact(pblock->nBits);
 
-    if (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->nProofOfWorkType, pblock->bnProbablePrime))
+    if (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->nProofOfWorkType, pblock->bnPrimeChainMultiplier))
         return error("PrimecoinMiner : failed proof-of-work check");
 
     //// debug print
     printf("PrimecoinMiner:\n");
-    printf("proof-of-work found  \n  type: %s\n  pprime: %s\n  target: %s\n  ", TypeGetName(pblock->nProofOfWorkType).c_str(), pblock->bnProbablePrime.GetHex().c_str(), bnTarget.GetHex().c_str());
+    printf("proof-of-work found  \n  type: %s\n  multiplier: %s\n  ", TypeGetName(pblock->nProofOfWorkType).c_str(), pblock->bnPrimeChainMultiplier.GetHex().c_str());
     pblock->print();
     printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
 

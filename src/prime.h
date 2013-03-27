@@ -43,7 +43,7 @@ void PrintMappingPrimeTargetToHashTarget();
 
 // Check hash and prime proof-of-work
 bool CheckHashProofOfWork(uint256 hash, unsigned int nBits);
-bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnProbablePrime);
+bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnPrimeChainMultiplier);
 
 // prime target difficulty value for visualization
 unsigned int GetPrimeDifficulty(unsigned int nBits);

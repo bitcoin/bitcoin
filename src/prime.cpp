@@ -193,7 +193,7 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTrie
         if (ProbablePrimeChainTest(n, nProofOfWorkType, nProbableChainLength))
         {
             printf("Probable prime chain of type %s found for nonce=%u!! \n", TypeGetName(nProofOfWorkType).c_str(), block.nNonce);
-            block.bnProbablePrime = n;
+            block.bnPrimeChainMultiplier = bnPrimorial * bnTried;
             return true;
         }
         else if(nProbableChainLength > 0)
@@ -355,30 +355,25 @@ bool CheckHashProofOfWork(uint256 hash, unsigned int nBits)
 }
 
 // Check prime proof-of-work
-bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnProbablePrime)
+bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnPrimeChainMultiplier)
 {
-    CBigNum bnPrimeTarget;
-    bnPrimeTarget.SetCompact(nBits);
-
     // Check type
     if ((nProofOfWorkType>>16) > 2 || TypeGetLength(nProofOfWorkType) < 2 || TypeGetLength(nProofOfWorkType) > 99)
         return error("CheckPrimeProofOfWork() : invalid proof-of-work type %d", nProofOfWorkType);
 
-    // Check range
+    // Check target range
+    CBigNum bnPrimeTarget;
+    bnPrimeTarget.SetCompact(nBits);
     if (bnPrimeTarget < bnProofOfWorkLimit)
         return error("CheckPrimeProofOfWork() : nBits below minimum work");
 
-    // Check target for prime proof-of-work 
+    // Check target for prime proof-of-work
+    CBigNum bnProbablePrime = (CBigNum(hash) * bnPrimeChainMultiplier) + ((nProofOfWorkType>>16)? (-1) : 1);
     if (bnProbablePrime < bnPrimeTarget)
         return error("CheckPrimeProofOfWork() : prime not meeting prime target");
-    // Prime must not exceed cap
+    // First prime in chain must not exceed cap
     if (bnProbablePrime > bnProofOfWorkMax)
         return error("CheckPrimeProofOfWork() : prime exceeds cap");
-
-    // The doubling origin of the chain must be divisible by hash
-    CBigNum bnDoublingOrigin = bnProbablePrime + ((nProofOfWorkType>>16)? 1 : (-1));
-    if ((bnDoublingOrigin % CBigNum(hash)) != 0)
-        return error("CheckPrimeProofOfWork() : prime chain not divisible by hash");
 
     // Check prime chain
     unsigned int nChainLength;
