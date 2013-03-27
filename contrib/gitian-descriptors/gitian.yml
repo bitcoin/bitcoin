@@ -24,7 +24,7 @@ remotes:
   "dir": "bitcoin"
 files:
 - "miniupnpc-1.6.tar.gz"
-- "qrencode-3.2.0.tar.bz2"
+- "qrencode-3.4.2.tar.bz2"
 script: |
   INSTDIR="$HOME/install"
   export LIBRARY_PATH="$INSTDIR/lib"
@@ -34,8 +34,8 @@ script: |
   INSTALLPREFIX=$INSTDIR make $MAKEOPTS install
   cd ..
   #
-  tar xjf qrencode-3.2.0.tar.bz2
-  cd qrencode-3.2.0
+  tar xjf qrencode-3.4.2.tar.bz2
+  cd qrencode-3.4.2
   ./configure --prefix=$INSTDIR --enable-static --disable-shared
   make $MAKEOPTS install
   cd ..
