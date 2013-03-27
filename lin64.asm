@@ -29,6 +29,12 @@
 	GLOBAL ExSetMult
 	ALIGN 32
 ExSetMult:
+	push rbp
+	push rbx
+	push r12
+	push r13
+	push r14
+	push r15
 	push rdx
 	mov r14,[rsi+8*0]	; preload b.n[0]. This will be the case until
 				; b.n[0] is no longer needed, then we reassign
@@ -286,6 +292,13 @@ common_exit_norm:
 	mov [rbx+0*8],rax	; -> this.n[0]
 	add r8,r11
 	mov [rbx+1*8],r8	; -> this.n[1]
+
+	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop rbx
+	pop rbp
 	ret
 
 	
@@ -305,6 +318,12 @@ common_exit_norm:
 	GLOBAL ExSetSquare
 	ALIGN 32
 ExSetSquare:
+	push rbp
+	push rbx
+	push r12
+	push r13
+	push r14
+	push r15
 	push rsi
 	mov rbp,0FFFFFFFFFFFFFh
 	
