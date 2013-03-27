@@ -22,6 +22,10 @@
 #include <signal.h>
 #endif
 
+#ifdef USE_ZMQ
+#include "bitcoin_zmq.h"
+#endif
+
 using namespace std;
 using namespace boost;
 
@@ -104,6 +108,9 @@ void Shutdown(void* parg)
         boost::filesystem::remove(GetPidFile());
         UnregisterWallet(pwalletMain);
         delete pwalletMain;
+#ifdef USE_ZMQ
+        bz_Shutdown();
+#endif
         NewThread(ExitTimeout, NULL);
         Sleep(50);
         printf("Bitcoin exited\n\n");
@@ -321,7 +328,16 @@ std::string HelpMessage()
         "  -rpcssl                                  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n" +
         "  -rpcsslcertificatechainfile=<file.cert>  " + _("Server certificate file (default: server.cert)") + "\n" +
         "  -rpcsslprivatekeyfile=<file.pem>         " + _("Server private key (default: server.pem)") + "\n" +
-        "  -rpcsslciphers=<ciphers>                 " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)") + "\n";
+        "  -rpcsslciphers=<ciphers>                 " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)") + "\n" +
+
+#ifdef USE_ZMQ
+        "\n" + _("ZMQ options: ")+ "\n" +
+        "  -zmqctxsetopt=<option:value> " + _("ZMQ_CTX_SET (Example: -zmqctxsetopt=ZMQ_IO_THREADS:2)") + "\n" +
+        "  -zmqpubsetopt=<option:value> " + _("ZMQ_SETSOCKOPT for the Publisher socket (Example: -zmqpubsetopt=ZMQ_SNDHWM:10)") + "\n" +
+        "  -zmqpubbind                  " + _("ZMQ_BIND Publisher socket to bind to (default: none)") + "\n" +
+        "  -zmqpubconnect               " + _("ZMQ_CONNECT Publisher socket to connect to (default: none)") + "\n" +
+#endif
+        "\n";
 
     return strUsage;
 }
@@ -589,6 +605,9 @@ bool AppInit2()
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     printf("Bitcoin version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
     printf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
+#ifdef USE_ZMQ
+    bz_Version();
+#endif
     if (!fLogTimestamps)
         printf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
     printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
@@ -1023,6 +1042,40 @@ bool AppInit2()
     printf("setKeyPool.size() = %"PRIszu"\n",      pwalletMain->setKeyPool.size());
     printf("mapWallet.size() = %"PRIszu"\n",       pwalletMain->mapWallet.size());
     printf("mapAddressBook.size() = %"PRIszu"\n",  pwalletMain->mapAddressBook.size());
+
+#ifdef USE_ZMQ
+    bz_InitCtx();
+
+    if (mapArgs.count("-zmqctxsetopt")) 
+    {
+        BOOST_FOREACH(string strZmqCtxSetOpt, mapMultiArgs["-zmqctxsetopt"]) {
+            bz_CtxSetOptions(strZmqCtxSetOpt);
+        }
+    }
+
+    bz_InitSockets();
+
+    if (mapArgs.count("-zmqpubsetopt")) 
+    {
+        BOOST_FOREACH(string strZmqPubSetOpt, mapMultiArgs["-zmqpubsetopt"]) {
+            bz_PubSetOptions(strZmqPubSetOpt);
+        }
+    }
+
+    if (mapArgs.count("-zmqpubbind")) 
+    {
+        BOOST_FOREACH(string strZmqPubBind, mapMultiArgs["-zmqpubbind"]) {
+            bz_PubBind(strZmqPubBind);
+        }
+    }
+
+    if (mapArgs.count("-zmqpubconnect")) 
+    {
+        BOOST_FOREACH(string strZmqPubConnect, mapMultiArgs["-zmqpubconnect"]) {
+            bz_PubConnect(strZmqPubConnect);
+        }
+    }
+#endif
 
     if (!NewThread(StartNode, NULL))
         InitError(_("Error: could not start node"));
