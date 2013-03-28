@@ -1,5 +1,5 @@
-diff --git a/src/main.cpp b/src/main.cpp
-index 8c115c2..1e70ff2 100644
+diff --git a/contrib/test-patches/bitcoind-comparison.patch b/contrib/test-patches/bitcoind-comparison.patch
+index 04a8618..519429a 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
 @@ -31,8 +31,8 @@ CTxMemPool mempool;
@@ -12,7 +12,7 @@ index 8c115c2..1e70ff2 100644
 +static CBigNum bnProofOfWorkLimit(~uint256(0) >> 1);
  CBlockIndex* pindexGenesisBlock = NULL;
  int nBestHeight = -1;
- CBigNum bnBestChainWork = 0;
+ uint256 nBestChainWork = 0;
 @@ -1055,7 +1055,7 @@ int64 static GetBlockValue(int nHeight, int64 nFees)
      int64 nSubsidy = 50 * COIN;
  
@@ -22,7 +22,7 @@ index 8c115c2..1e70ff2 100644
  
      return nSubsidy + nFees;
  }
-@@ -2706,9 +2706,9 @@ bool InitBlockIndex() {
+@@ -2736,9 +2736,9 @@ bool InitBlockIndex() {
          block.hashPrevBlock = 0;
          block.hashMerkleRoot = block.BuildMerkleTree();
          block.nVersion = 1;
@@ -35,7 +35,7 @@ index 8c115c2..1e70ff2 100644
  
          if (fTestNet)
          {
-@@ -3007,7 +3007,7 @@ bool static AlreadyHave(const CInv& inv)
+@@ -3024,7 +3024,7 @@ bool static AlreadyHave(const CInv& inv)
  // The message start string is designed to be unlikely to occur in normal data.
  // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
  // a large 4-byte int at any alignment.
