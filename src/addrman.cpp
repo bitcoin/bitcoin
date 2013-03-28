@@ -5,7 +5,7 @@
 #include "addrman.h"
 #include "hash.h"
 
-#ifdef USE_ZMQ
+#if USE_ZMQ
 #include "bitcoin_zmq.h"
 #endif
 
