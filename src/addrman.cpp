@@ -358,8 +358,8 @@ bool CAddrMan::Add_(const CAddress &addr, const CNetAddr& source, int64 nTimePen
 //        printf("Added %s [nTime=%fhr]\n", pinfo->ToString().c_str(), (GetAdjustedTime() - pinfo->nTime) / 3600.0);
         nNew++;
         fNew = true;
-#ifdef USE_ZMQ
-        bz_Send_IpAddress(pinfo->ToString().c_str());
+#if USE_ZMQ
+        BZmq_SendIPAddress(pinfo->ToString().c_str());
 #endif
     }
 

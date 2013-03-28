@@ -49,7 +49,7 @@ ifneq (${USE_IPV6}, -)
 	DEFS += -DUSE_IPV6=$(USE_IPV6)
 endif
 
-ifneq (${USE_ZMQ}, -)
+ifeq (${USE_ZMQ}, 1)
         LIBS += -l zmq
         DEFS += -DUSE_ZMQ=$(USE_ZMQ)
 endif
@@ -140,7 +140,7 @@ OBJS= \
     obj/leveldb.o \
     obj/txdb.o
 
-ifneq (${USE_ZMQ}, -)
+ifeq (${USE_ZMQ}, 1)
     OBJS += obj/bitcoin_zmq.o
 endif
 

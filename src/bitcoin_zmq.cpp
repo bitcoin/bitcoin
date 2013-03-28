@@ -9,240 +9,240 @@
 #include "main.h"
 
 
-static void *bz_ctx = NULL;
-static void *bz_socket_pub = NULL;
-std::string bz_ID_TRANSACTION = "cf954abb";
-std::string bz_ID_BLOCK = "ec747b90";
-std::string bz_ID_IPADDRESS = "a610612a";
+static void *pBZmq_ctx = NULL;
+static void *pBZmq_socket_pub = NULL;
+std::string strBZmq_ID_TRANSACTION = "cf954abb";
+std::string strBZmq_ID_BLOCK = "ec747b90";
+std::string strBZmq_ID_IPADDRESS = "a610612a";
 
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, json_spirit::Object& entry);
 extern json_spirit::Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex);
 
 
-void bz_InitCtx() {
-    bz_ctx = zmq_ctx_new();
+void BZmq_InitCtx() {
+    pBZmq_ctx = zmq_ctx_new();
 }
 
-void bz_InitSockets() {
-    bz_socket_pub = zmq_socket(bz_ctx, ZMQ_PUB);
+void BZmq_InitSockets() {
+    pBZmq_socket_pub = zmq_socket(pBZmq_ctx, ZMQ_PUB);
 }
 
-void bz_CtxSetOptions(std::string& opt) {
-    std::string::size_type name_pos = opt.find(":");
+void BZmq_CtxSetOptions(std::string& strOpt) {
+    std::string::size_type nNamePos = strOpt.find(":");
 
-    if (name_pos != std::string::npos) 
+    if (nNamePos != std::string::npos) 
     {
-        std::string name = opt.substr(0, name_pos);
-        std::string value = opt.substr(name_pos + 1);
-        std::stringstream string_to_ints(value);
-        int value_int = 0;
-        string_to_ints >> value_int;
-        int rc = -2;
+        std::string strName = strOpt.substr(0, nNamePos);
+        std::string strValue = strOpt.substr(nNamePos + 1);
+        std::stringstream streamStringToInts(strValue);
+        int nValue_int = 0;
+        streamStringToInts >> nValue_int;
+        int nRc = -2;
 
-        if (name == "ZMQ_IO_THREADS")
-            rc = zmq_ctx_set(bz_ctx, ZMQ_IO_THREADS, value_int);
-        if (name ==  "ZMQ_MAX_SOCKETS")
-            rc = zmq_ctx_set(bz_ctx, ZMQ_MAX_SOCKETS, value_int);
+        if (strName == "ZMQ_IO_THREADS")
+            nRc = zmq_ctx_set(pBZmq_ctx, ZMQ_IO_THREADS, nValue_int);
+        if (strName ==  "ZMQ_MAX_SOCKETS")
+            nRc = zmq_ctx_set(pBZmq_ctx, ZMQ_MAX_SOCKETS, nValue_int);
 
-        if (rc == -2)
-                printf("ZMQ_CTX_SET: ERROR! %s does not exists as an option!\n", name.c_str());
+        if (nRc == -2)
+                printf("ZMQ_CTX_SET: ERROR! %s does not exists as an strOption!\n", strName.c_str());
         else
-            if (rc < 0)
-                printf("ZMQ_CTX_SET: %s value: %i returncode: %i errno: %i strerror: %s\n", name.c_str(), value_int, rc, errno, strerror(errno));
+            if (nRc < 0)
+                printf("ZMQ_CTX_SET: %s value: %i returncode: %i errno: %i strerror: %s\n", strName.c_str(), nValue_int, nRc, errno, strerror(errno));
             else
-                printf("ZMQ_CTX_SET: %s value: %i OK\n", name.c_str(), value_int);
+                printf("ZMQ_CTX_SET: %s value: %i OK\n", strName.c_str(), nValue_int);
     }
 }
 
-void bz_SetSocket(void *socket, const char *socket_name, std::string& opt) {
-    std::string::size_type name_pos = opt.find(":");
+void BZmq_SetSocket(void *pSocket, const char *pszSocketName, std::string& strOpt) {
+    std::string::size_type nNamePos = strOpt.find(":");
 
-    if (name_pos != std::string::npos) 
+    if (nNamePos != std::string::npos) 
     {
-        std::string name = opt.substr(0, name_pos);
-        std::string value = opt.substr(name_pos + 1);
-        std::stringstream string_to_ints(value);
-        int rc = -2;
-        int value_int = 0; 
-        string_to_ints >> value_int;
-        uint64_t value_uint64_t = 0;
-        string_to_ints >> value_uint64_t;
-        int64_t value_int64_t = 0;
-        string_to_ints >> value_int64_t;
+        std::string strName = strOpt.substr(0, nNamePos);
+        std::string strValue = strOpt.substr(nNamePos + 1);
+        std::stringstream streamStringToInts(strValue);
+        int nRc = -2;
+        int nValue_int = 0; 
+        streamStringToInts >> nValue_int;
+        uint64_t nValue_uint64_t = 0;
+        streamStringToInts >> nValue_uint64_t;
+        int64_t nValue_int64_t = 0;
+        streamStringToInts >> nValue_int64_t;
 
-        if (name == "ZMQ_SNDHWM")
-            rc = zmq_setsockopt (socket, ZMQ_SNDHWM, &value_int, sizeof(int));
+        if (strName == "ZMQ_SNDHWM")
+            nRc = zmq_setsockopt (pSocket, ZMQ_SNDHWM, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_RCVHWM")
-            rc = zmq_setsockopt (socket, ZMQ_RCVHWM, &value_int, sizeof(int));
+        if (strName == "ZMQ_RCVHWM")
+            nRc = zmq_setsockopt (pSocket, ZMQ_RCVHWM, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_AFFINITY")
-            rc = zmq_setsockopt (socket, ZMQ_AFFINITY, &value_uint64_t, sizeof(uint64_t));
+        if (strName == "ZMQ_AFFINITY")
+            nRc = zmq_setsockopt (pSocket, ZMQ_AFFINITY, &nValue_uint64_t, sizeof(uint64_t));
 
-        if (name == "ZMQ_SUBSCRIBE")
-            rc = zmq_setsockopt (socket, ZMQ_SUBSCRIBE, value.c_str(), value.length());
+        if (strName == "ZMQ_SUBSCRIBE")
+            nRc = zmq_setsockopt (pSocket, ZMQ_SUBSCRIBE, strValue.c_str(), strValue.length());
 
-        if (name == "ZMQ_UNSUBSCRIBE")
-            rc = zmq_setsockopt (socket, ZMQ_UNSUBSCRIBE, value.c_str(), value.length());
+        if (strName == "ZMQ_UNSUBSCRIBE")
+            nRc = zmq_setsockopt (pSocket, ZMQ_UNSUBSCRIBE, strValue.c_str(), strValue.length());
 
-        if (name == "ZMQ_IDENTITY")
-            rc = zmq_setsockopt (socket, ZMQ_IDENTITY, value.c_str(), value.length());
+        if (strName == "ZMQ_IDENTITY")
+            nRc = zmq_setsockopt (pSocket, ZMQ_IDENTITY, strValue.c_str(), strValue.length());
 
-        if (name == "ZMQ_RATE")
-            rc = zmq_setsockopt (socket, ZMQ_RATE, &value_int, sizeof(int));
+        if (strName == "ZMQ_RATE")
+            nRc = zmq_setsockopt (pSocket, ZMQ_RATE, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_RECOVERY_IVL")
-            rc = zmq_setsockopt (socket, ZMQ_RECOVERY_IVL, &value_int, sizeof(int));
+        if (strName == "ZMQ_RECOVERY_IVL")
+            nRc = zmq_setsockopt (pSocket, ZMQ_RECOVERY_IVL, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_SNDBUF")
-            rc = zmq_setsockopt (socket, ZMQ_SNDBUF, &value_int, sizeof(int));
+        if (strName == "ZMQ_SNDBUF")
+            nRc = zmq_setsockopt (pSocket, ZMQ_SNDBUF, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_RCVBUF")
-            rc = zmq_setsockopt (socket, ZMQ_RCVBUF, &value_int, sizeof(int));
+        if (strName == "ZMQ_RCVBUF")
+            nRc = zmq_setsockopt (pSocket, ZMQ_RCVBUF, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_LINGER")
-            rc = zmq_setsockopt (socket, ZMQ_LINGER, &value_int, sizeof(int));
+        if (strName == "ZMQ_LINGER")
+            nRc = zmq_setsockopt (pSocket, ZMQ_LINGER, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_RECONNECT_IVL")
-            rc = zmq_setsockopt (socket, ZMQ_RECONNECT_IVL, &value_int, sizeof(int));
+        if (strName == "ZMQ_RECONNECT_IVL")
+            nRc = zmq_setsockopt (pSocket, ZMQ_RECONNECT_IVL, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_RECONNECT_IVL_MAX")
-            rc = zmq_setsockopt (socket, ZMQ_RECONNECT_IVL_MAX, &value_int, sizeof(int));
+        if (strName == "ZMQ_RECONNECT_IVL_MAX")
+            nRc = zmq_setsockopt (pSocket, ZMQ_RECONNECT_IVL_MAX, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_BACKLOG")
-            rc = zmq_setsockopt (socket, ZMQ_BACKLOG, &value_int, sizeof(int));
+        if (strName == "ZMQ_BACKLOG")
+            nRc = zmq_setsockopt (pSocket, ZMQ_BACKLOG, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_MAXMSGSIZE")
-            rc = zmq_setsockopt (socket, ZMQ_MAXMSGSIZE, &value_int64_t, sizeof(int64_t));
+        if (strName == "ZMQ_MAXMSGSIZE")
+            nRc = zmq_setsockopt (pSocket, ZMQ_MAXMSGSIZE, &nValue_int64_t, sizeof(int64_t));
 
-        if (name == "ZMQ_MULTICAST_HOPS")
-            rc = zmq_setsockopt (socket, ZMQ_MULTICAST_HOPS, &value_int, sizeof(int));
+        if (strName == "ZMQ_MULTICAST_HOPS")
+            nRc = zmq_setsockopt (pSocket, ZMQ_MULTICAST_HOPS, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_RCVTIMEO")
-            rc = zmq_setsockopt (socket, ZMQ_RCVTIMEO, &value_int, sizeof(int));
+        if (strName == "ZMQ_RCVTIMEO")
+            nRc = zmq_setsockopt (pSocket, ZMQ_RCVTIMEO, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_SNDTIMEO")
-            rc = zmq_setsockopt (socket, ZMQ_SNDTIMEO, &value_int, sizeof(int));
+        if (strName == "ZMQ_SNDTIMEO")
+            nRc = zmq_setsockopt (pSocket, ZMQ_SNDTIMEO, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_IPV4ONLY")
-            rc = zmq_setsockopt (socket, ZMQ_IPV4ONLY, &value_int, sizeof(int));
+        if (strName == "ZMQ_IPV4ONLY")
+            nRc = zmq_setsockopt (pSocket, ZMQ_IPV4ONLY, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_DELAY_ATTACH_ON_CONNECT")
-            rc = zmq_setsockopt (socket, ZMQ_DELAY_ATTACH_ON_CONNECT, &value_int, sizeof(int));
+        if (strName == "ZMQ_DELAY_ATTACH_ON_CONNECT")
+            nRc = zmq_setsockopt (pSocket, ZMQ_DELAY_ATTACH_ON_CONNECT, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_ROUTER_MANDATORY")
-            rc = zmq_setsockopt (socket, ZMQ_ROUTER_MANDATORY, &value_int, sizeof(int));
+        if (strName == "ZMQ_ROUTER_MANDATORY")
+            nRc = zmq_setsockopt (pSocket, ZMQ_ROUTER_MANDATORY, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_XPUB_VERBOSE")
-            rc = zmq_setsockopt (socket, ZMQ_XPUB_VERBOSE, &value_int, sizeof(int));
+        if (strName == "ZMQ_XPUB_VERBOSE")
+            nRc = zmq_setsockopt (pSocket, ZMQ_XPUB_VERBOSE, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_TCP_KEEPALIVE")
-            rc = zmq_setsockopt (socket, ZMQ_TCP_KEEPALIVE, &value_int, sizeof(int));
+        if (strName == "ZMQ_TCP_KEEPALIVE")
+            nRc = zmq_setsockopt (pSocket, ZMQ_TCP_KEEPALIVE, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_TCP_KEEPALIVE_IDLE")
-            rc = zmq_setsockopt (socket, ZMQ_TCP_KEEPALIVE_IDLE, &value_int, sizeof(int));
+        if (strName == "ZMQ_TCP_KEEPALIVE_IDLE")
+            nRc = zmq_setsockopt (pSocket, ZMQ_TCP_KEEPALIVE_IDLE, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_TCP_KEEPALIVE_CNT")
-            rc = zmq_setsockopt (socket, ZMQ_TCP_KEEPALIVE_CNT, &value_int, sizeof(int));
+        if (strName == "ZMQ_TCP_KEEPALIVE_CNT")
+            nRc = zmq_setsockopt (pSocket, ZMQ_TCP_KEEPALIVE_CNT, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_TCP_KEEPALIVE_INTVL")
-            rc = zmq_setsockopt (socket, ZMQ_TCP_KEEPALIVE_INTVL, &value_int, sizeof(int));
+        if (strName == "ZMQ_TCP_KEEPALIVE_INTVL")
+            nRc = zmq_setsockopt (pSocket, ZMQ_TCP_KEEPALIVE_INTVL, &nValue_int, sizeof(int));
 
-        if (name == "ZMQ_TCP_ACCEPT_FILTER")
-            rc = zmq_setsockopt (socket, ZMQ_TCP_ACCEPT_FILTER, value.c_str(), value.length());
+        if (strName == "ZMQ_TCP_ACCEPT_FILTER")
+            nRc = zmq_setsockopt (pSocket, ZMQ_TCP_ACCEPT_FILTER, strValue.c_str(), strValue.length());
 
-        if (rc == -2)
-                printf("ZMQ_%s_SETSOCKOPT: ERROR! %s does not exists as an option!\n", socket_name, name.c_str());
+        if (nRc == -2)
+                printf("ZMQ_%s_SETSOCKOPT: ERROR! %s does not exists as an strOption!\n", pszSocketName, strName.c_str());
         else
-            if (rc < 0)
-                printf("ZMQ_%s_SETSOCKOPT: %s value: %s returncode: %i errno: %i strerror: %s\n", socket_name, name.c_str(), value.c_str(), rc, errno, strerror(errno));
+            if (nRc < 0)
+                printf("ZMQ_%s_SETSOCKOPT: %s value: %s returncode: %i errno: %i strerror: %s\n", pszSocketName, strName.c_str(), strValue.c_str(), nRc, errno, strerror(errno));
             else
-                printf("ZMQ_%s_SETSOCKOPT: %s value: %s OK (int: %i, int64_t:%li, uint64_t: %lu)\n", socket_name, name.c_str(), value.c_str(), value_int, value_int64_t, value_uint64_t);
+                printf("ZMQ_%s_SETSOCKOPT: %s value: %s OK (int: %i, int64_t:%li, uint64_t: %lu)\n", pszSocketName, strName.c_str(), strValue.c_str(), nValue_int, nValue_int64_t, nValue_uint64_t);
     }
 }
 
-void bz_PubSetOptions(std::string& opt) {
-    bz_SetSocket(bz_socket_pub, "PUB", opt);
+void BZmq_PubSetOptions(std::string& strOpt) {
+    BZmq_SetSocket(pBZmq_socket_pub, "PUB", strOpt);
 }
 
-void bz_PubBind(std::string& bind_addr) {
-    int rc = zmq_bind(bz_socket_pub, bind_addr.c_str());
-    printf("ZMQ_BIND Publisher binding to socket: %s ", bind_addr.c_str());
-    if (rc < 0)
+void BZmq_PubBind(std::string& strBindAddr) {
+    int nRc = zmq_bind(pBZmq_socket_pub, strBindAddr.c_str());
+    printf("ZMQ_BIND Publisher binding to socket: %s ", strBindAddr.c_str());
+    if (nRc < 0)
         printf("ERROR errno: %i strerror: %s\n", errno, strerror(errno));
     else
         printf("OK\n");
 }
 
-void bz_PubConnect(std::string& connect_addr) {
-    int rc = zmq_connect(bz_socket_pub, connect_addr.c_str());
-    printf("ZMQ_CONNECT Publisher connecting to socket: %s", connect_addr.c_str());
-    if (rc < 0)
+void BZmq_PubConnect(std::string& strConnectAddr) {
+    int nRc = zmq_connect(pBZmq_socket_pub, strConnectAddr.c_str());
+    printf("ZMQ_CONNECT Publisher connecting to socket: %s", strConnectAddr.c_str());
+    if (nRc < 0)
         printf("ERROR errno: %i strerror: %s\n", errno, strerror(errno));
     else
         printf("OK\n");
 }
 
-void bz_Shutdown() {
+void BZmq_Shutdown() {
     printf("ZMQ Shutdown() Begin\n");
 
-    if (bz_socket_pub)
-        zmq_close(bz_socket_pub);
+    if (pBZmq_socket_pub)
+        zmq_close(pBZmq_socket_pub);
 
-    if (bz_ctx)
-        zmq_term(bz_ctx);
+    if (pBZmq_ctx)
+        zmq_term(pBZmq_ctx);
 
     printf("ZMQ Shutdown() End\n");
 }
 
-void bz_Version() {
-    int z_version_major, z_version_minor, z_version_patch;
-    zmq_version(&z_version_major, &z_version_minor, &z_version_patch);
-    printf("Using ZMQ version API: %i.%i.%i Runtime: %i.%i.%i\n", ZMQ_VERSION_MAJOR, ZMQ_VERSION_MINOR, ZMQ_VERSION_PATCH, z_version_major, z_version_minor, z_version_patch);
+void BZmq_Version() {
+    int nZmq_version_major, nZmq_version_minor, nZmq_version_patch;
+    zmq_version(&nZmq_version_major, &nZmq_version_minor, &nZmq_version_patch);
+    printf("Using ZMQ version API: %i.%i.%i Runtime: %i.%i.%i\n", ZMQ_VERSION_MAJOR, ZMQ_VERSION_MINOR, ZMQ_VERSION_PATCH, nZmq_version_major, nZmq_version_minor, nZmq_version_patch);
 }
 
-void bz_Send_TX(CTransaction& tx) {
+void BZmq_SendTX(CTransaction& tx) {
     json_spirit::Object result;
     TxToJSON(tx, 0, result);
 
-    std::string s = bz_ID_TRANSACTION + json_spirit::write_string(json_spirit::Value(result), false);
+    std::string strTemp = strBZmq_ID_TRANSACTION + json_spirit::write_string(json_spirit::Value(result), false);
 
-    int rc = zmq_send(bz_socket_pub, s.c_str(), s.length(), ZMQ_DONTWAIT);
+    int nRc = zmq_send(pBZmq_socket_pub, strTemp.c_str(), strTemp.length(), ZMQ_DONTWAIT);
 
-    if (rc < 0)
-        printf("ZMQ ERROR in bz_Send_TX() errno: %i strerror: %s\n", errno, strerror(errno));
+    if (nRc < 0)
+        printf("ZMQ ERROR in BZmq_Send_TX() errno: %i strerror: %s\n", errno, strerror(errno));
 }
 
-void bz_Send_Block(CBlockIndex* pblockindex) {
+void BZmq_SendBlock(CBlockIndex* pblockindex) {
     CBlock block;
     block.ReadFromDisk(pblockindex);
 
     json_spirit::Object result = blockToJSON(block, pblockindex);
-    std::string s = bz_ID_BLOCK + json_spirit::write_string(json_spirit::Value(result), false);
+    std::string strTemp = strBZmq_ID_BLOCK + json_spirit::write_string(json_spirit::Value(result), false);
 
-    int rc = zmq_send(bz_socket_pub, s.c_str(), s.length(), ZMQ_DONTWAIT);
+    int nRc = zmq_send(pBZmq_socket_pub, strTemp.c_str(), strTemp.length(), ZMQ_DONTWAIT);
 
-    if (rc < 0)
-        printf("ZMQ ERROR in bz_Send_Block() errno: %i strerror: %s\n", errno, strerror(errno));
+    if (nRc < 0)
+        printf("ZMQ ERROR in BZmq_Send_Block() errno: %i strerror: %s\n", errno, strerror(errno));
 }
 
-void bz_Send_IpAddress(const char *ip) {
-    std::string i = ip;
-    std::string::size_type port_pos = i.rfind(":");
-    if (port_pos != std::string::npos) 
+void BZmq_SendIPAddress(const char *pszIP) {
+    std::string strIP = pszIP;
+    std::string::size_type nPortPos = strIP.rfind(":");
+    if (nPortPos != std::string::npos) 
     {
-        std::string ipaddress = i.substr(0, port_pos);
-        std::string s = bz_ID_IPADDRESS;
-        s.append("{\"ip\":\"");
-        s.append(ipaddress);
-        s.append("\",\"port\":");
-        s.append(i.substr(port_pos + 1));
-        s.append("}");
+        std::string strIPAddress = strIP.substr(0, nPortPos);
+        std::string strTemp = strBZmq_ID_IPADDRESS;
+        strTemp.append("{\"ip\":\"");
+        strTemp.append(strIPAddress);
+        strTemp.append("\",\"port\":");
+        strTemp.append(strIP.substr(nPortPos + 1));
+        strTemp.append("}");
 
-        int rc = zmq_send(bz_socket_pub, s.c_str(), s.length(), ZMQ_DONTWAIT);
+        int nRc = zmq_send(pBZmq_socket_pub, strTemp.c_str(), strTemp.length(), ZMQ_DONTWAIT);
 
-        if (rc < 0)
-            printf("ZMQ ERROR in bz_Send_IpAddress() errno: %i strerror: %s\n", errno, strerror(errno));
+        if (nRc < 0)
+            printf("ZMQ ERROR in BZmq_Send_IpAddress() errno: %i strerror: %s\n", errno, strerror(errno));
     }
 }

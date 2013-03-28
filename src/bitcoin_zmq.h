@@ -6,17 +6,16 @@
 #define BITCOIN_ZMQ_H
 
 #include "main.h"
-
-void bz_InitCtx();
-void bz_InitSockets();
-void bz_CtxSetOptions(std::string&);
-void bz_PubSetOptions(std::string&);
-void bz_PubBind(std::string&);
-void bz_PubConnect(std::string&);
-void bz_Shutdown();
-void bz_Version();
-void bz_Send_TX(CTransaction& tx);
-void bz_Send_Block(CBlockIndex*);
-void bz_Send_IpAddress(const char *);
+void BZmq_InitCtx();
+void BZmq_InitSockets();
+void BZmq_CtxSetOptions(std::string&);
+void BZmq_PubSetOptions(std::string&);
+void BZmq_PubBind(std::string&);
+void BZmq_PubConnect(std::string&);
+void BZmq_Shutdown();
+void BZmq_Version();
+void BZmq_SendTX(CTransaction& tx);
+void BZmq_SendBlock(CBlockIndex*);
+void BZmq_SendIPAddress(const char *);
 
 #endif
