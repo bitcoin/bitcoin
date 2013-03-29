@@ -65,9 +65,6 @@ StartNode : Starts other threads.
 ThreadGetMyExternalIP : Determines outside-the-firewall IP address,
 sends addr message to connected peers when it determines it. 
 
-ThreadIRCSeed : Joins IRC bootstrapping channel, watching for new
-peers and advertising this node's IP address. 
-
 ThreadSocketHandler : Sends/Receives data from peers on port 8333.
 
 ThreadMessageHandler : Higher-level message handling (sending and
