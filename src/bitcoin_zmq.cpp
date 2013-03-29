@@ -8,16 +8,20 @@
 #include "bitcoinrpc.h"
 #include "main.h"
 
+#define BZMQ_BUFFER_SIZE 8388608
 
 static void *pBZmq_ctx = NULL;
 static void *pBZmq_socket_pub = NULL;
+static void *pBZmq_socket_rep = NULL;
 std::string strBZmq_ID_TRANSACTION = "cf954abb";
 std::string strBZmq_ID_BLOCK = "ec747b90";
 std::string strBZmq_ID_IPADDRESS = "a610612a";
-
+bool fBZmq_ThreadReqRep = false;
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, json_spirit::Object& entry);
 extern json_spirit::Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex);
+extern std::string JSONRPCExecBatch(const json_spirit::Array&);
+extern json_spirit::Object JSONRPCExecOne(const json_spirit::Value&);
 
 
 void BZmq_InitCtx() {
@@ -26,6 +30,7 @@ void BZmq_InitCtx() {
 
 void BZmq_InitSockets() {
     pBZmq_socket_pub = zmq_socket(pBZmq_ctx, ZMQ_PUB);
+    pBZmq_socket_rep = zmq_socket(pBZmq_ctx, ZMQ_REP);
 }
 
 void BZmq_CtxSetOptions(std::string& strOpt) {
@@ -184,8 +189,33 @@ void BZmq_PubConnect(std::string& strConnectAddr) {
         printf("OK\n");
 }
 
+void BZmq_RepSetOptions(std::string& strOpt) {
+    BZmq_SetSocket(pBZmq_socket_rep, "REP", strOpt);
+}
+
+void BZmq_RepBind(std::string& strBindAddr) {
+    int nRc = zmq_bind(pBZmq_socket_rep, strBindAddr.c_str());
+    printf("ZMQ_BIND Replier binding to socket: %s ", strBindAddr.c_str());
+    if (nRc < 0)
+        printf("ERROR errno: %i strerror: %s\n", errno, strerror(errno));
+    else
+        printf("OK\n");
+}
+
+void BZmq_RepConnect(std::string& strConnectAddr) {
+    int nRc = zmq_connect(pBZmq_socket_rep, strConnectAddr.c_str());
+    printf("ZMQ_CONNECT Replier connecting to socket: %s", strConnectAddr.c_str());
+    if (nRc < 0)
+        printf("ERROR errno: %i strerror: %s\n", errno, strerror(errno));
+    else
+        printf("OK\n");
+}
+
 void BZmq_Shutdown() {
-    printf("ZMQ Shutdown() Begin\n");
+    printf("BZmq_Shutdown() Begin\n");
+
+    while(fBZmq_ThreadReqRep)
+        sleep(1);
 
     if (pBZmq_socket_pub)
         zmq_close(pBZmq_socket_pub);
@@ -193,7 +223,7 @@ void BZmq_Shutdown() {
     if (pBZmq_ctx)
         zmq_term(pBZmq_ctx);
 
-    printf("ZMQ Shutdown() End\n");
+    printf("BZmq_Shutdown() End\n");
 }
 
 void BZmq_Version() {
@@ -211,7 +241,7 @@ void BZmq_SendTX(CTransaction& tx) {
     int nRc = zmq_send(pBZmq_socket_pub, strTemp.c_str(), strTemp.length(), ZMQ_DONTWAIT);
 
     if (nRc < 0)
-        printf("ZMQ ERROR in BZmq_Send_TX() errno: %i strerror: %s\n", errno, strerror(errno));
+        printf("ZMQ ERROR in BZmq_SendTX() errno: %i strerror: %s\n", errno, strerror(errno));
 }
 
 void BZmq_SendBlock(CBlockIndex* pblockindex) {
@@ -224,7 +254,7 @@ void BZmq_SendBlock(CBlockIndex* pblockindex) {
     int nRc = zmq_send(pBZmq_socket_pub, strTemp.c_str(), strTemp.length(), ZMQ_DONTWAIT);
 
     if (nRc < 0)
-        printf("ZMQ ERROR in BZmq_Send_Block() errno: %i strerror: %s\n", errno, strerror(errno));
+        printf("ZMQ ERROR in BZmq_SendBlock() errno: %i strerror: %s\n", errno, strerror(errno));
 }
 
 void BZmq_SendIPAddress(const char *pszIP) {
@@ -243,6 +273,80 @@ void BZmq_SendIPAddress(const char *pszIP) {
         int nRc = zmq_send(pBZmq_socket_pub, strTemp.c_str(), strTemp.length(), ZMQ_DONTWAIT);
 
         if (nRc < 0)
-            printf("ZMQ ERROR in BZmq_Send_IpAddress() errno: %i strerror: %s\n", errno, strerror(errno));
+            printf("ZMQ ERROR in BZmq_SendIpAddress() errno: %i strerror: %s\n", errno, strerror(errno));
     }
+}
+
+void BZmq_ThreadReqRep(void *pArg) {
+/*
+    This is the Reply socket thread to question which comes from a Request socket.
+
+    To make an long story sort:
+    This thread is an an RPC Server - but for 0MQ.
+
+*/
+    int nRc, nRc_recv;
+    fBZmq_ThreadReqRep = true;
+    RenameThread("bitcoin-zmqreqrep");
+
+    zmq_pollitem_t BZmq_pollitems [] = {
+        {pBZmq_socket_rep, 0, ZMQ_POLLIN, 0 }
+    };
+
+    char *BZmq_buffer = (char *)malloc(BZMQ_BUFFER_SIZE);
+    if (BZmq_buffer != NULL) {
+        memset(BZmq_buffer, 0, BZMQ_BUFFER_SIZE);
+
+        while(!fShutdown) {
+            nRc = zmq_poll (BZmq_pollitems, 1, 0);
+            if (nRc == -1) {
+                printf("ZMQ ERROR: zmq_poll in BZmq_ThreadReqRep() errno: %i strerror: %s\n", errno, strerror(errno));
+                break;
+            }
+
+            if (nRc > 0 && !fShutdown)  {
+                if (BZmq_pollitems [0].revents & ZMQ_POLLIN) {
+                    nRc_recv = zmq_recv (pBZmq_socket_rep, &BZmq_buffer[0], BZMQ_BUFFER_SIZE, 0);
+                    if (nRc_recv != -1) {
+                        if (nRc_recv == 0 || nRc_recv == BZMQ_BUFFER_SIZE)
+                            //we don't care about these...
+                            nRc = zmq_send(pBZmq_socket_rep, "", 0, ZMQ_DONTWAIT);
+                        else {
+                            std::string strCommand = &BZmq_buffer[0];
+                            json_spirit::Value jsonCommand;
+                            std::string strTemp;
+                            if (json_spirit::read_string(strCommand, jsonCommand)) {
+
+                                if (jsonCommand.type() == json_spirit::obj_type) {
+                                    json_spirit::Object result = JSONRPCExecOne(jsonCommand);
+                                    strTemp = json_spirit::write_string(json_spirit::Value(result), false);
+                                } else if (jsonCommand.type() == json_spirit::array_type)
+                                    // array of requests
+                                    strTemp = JSONRPCExecBatch(jsonCommand.get_array());
+                                else
+                                    printf("ZMQ ERROR: no jsonCommand.type() found! %s\n", strCommand.c_str());
+
+                                nRc = zmq_send(pBZmq_socket_rep, strTemp.c_str(), strTemp.length(), ZMQ_DONTWAIT);
+                                if (nRc < 0)
+                                    printf("ZMQ ERROR: zmq_send in BZmq_ThreadReqRep() errno: %i strerror: %s\n", errno, strerror(errno));
+                            } else {
+                                printf("ZMQ ERROR: read_string failed for command: '%s'\n", strCommand.c_str());
+                                nRc = zmq_send(pBZmq_socket_rep, "", 0, ZMQ_DONTWAIT);
+                            }
+                        }
+                        memset(BZmq_buffer, 0, nRc_recv);
+                    } else
+                        printf("ZMQ ERROR: zmq_recv in BZmq_ThreadReqRep() errno: %i strerror: %s\n", errno, strerror(errno));
+                }
+            } else 
+                //we are only sleeping if we don't have anything to do.
+                usleep(10000);
+        }
+    } else 
+        printf("ZMQ ERROR: malloc failed in BZmq_ThreadReqRep() errno: %i strerror: %s\n", errno, strerror(errno));
+
+    if (pBZmq_socket_rep)
+        zmq_close(pBZmq_socket_rep);
+
+    fBZmq_ThreadReqRep = false;
 }

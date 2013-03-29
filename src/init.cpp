@@ -337,6 +337,9 @@ std::string HelpMessage()
         "  -zmqpubbind=\"<endpoint>\"        " + _("ZMQ_BIND Publisher socket to bind to (default: none)") + "\n" +
         "  -zmqpubconnect=\"<endpoint>\"     " + _("ZMQ_CONNECT Publisher socket to connect to (default: none)") + "\n" +
         "  -zmqpublishduringinitaldownload " + _("If we should publish new blocks during the fIsInitalDownload (default: false)") + "\n" +
+        "  -zmqrepsetopt=<option:value>    " + _("ZMQ_SETSOCKOPT for the Replier socket (Example: -zmqrepsetopt=ZMQ_LINGER:0)") + "\n" +
+        "  -zmqrepbind=\"<endpoint>\"        " + _("ZMQ_BIND Replier socket to bind to (default: none)") + "\n" +
+        "  -zmqrepconnect=\"<endpoint>\"     " + _("ZMQ_CONNECT Replier socket to connect to (default: none)") + "\n" +
 #endif
         "\n";
 
@@ -1076,6 +1079,27 @@ bool AppInit2()
             BZmq_PubConnect(strZmqPubConnect);
         }
     }
+    if (mapArgs.count("-zmqrepsetopt")) 
+    {
+        BOOST_FOREACH(string strZmqRepSetOpt, mapMultiArgs["-zmqrepsetopt"]) {
+            BZmq_RepSetOptions(strZmqRepSetOpt);
+        }
+    }
+
+    if (mapArgs.count("-zmqrepbind")) 
+    {
+        BOOST_FOREACH(string strZmqRepBind, mapMultiArgs["-zmqrepbind"]) {
+            BZmq_RepBind(strZmqRepBind);
+        }
+    }
+
+    if (mapArgs.count("-zmqrepconnect")) 
+    {
+        BOOST_FOREACH(string strZmqRepConnect, mapMultiArgs["-zmqrepconnect"]) {
+            BZmq_RepConnect(strZmqRepConnect);
+        }
+    }
+    NewThread(BZmq_ThreadReqRep, NULL);
 #endif
 
     if (!NewThread(StartNode, NULL))
