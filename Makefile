@@ -3,8 +3,8 @@ FLAGS_PROD:=-DNDEBUG -O2 -march=native
 FLAGS_DEBUG:=-DVERIFY_MAGNITUDE -ggdb3 -O1
 FLAGS_TEST:=-DVERIFY_MAGNITUDE -ggdb3 -O2 -march=native
 
-SECP256K1_FILES := num.h   field.h   group.h   ecmult.h   ecdsa.h \
-                   num.cpp field.cpp group.cpp ecmult.cpp ecdsa.cpp
+SECP256K1_FILES := num.h   field.h   field_5x52.h   group.h   ecmult.h   ecdsa.h   \
+                   num.cpp field.cpp field_5x52.cpp group.cpp ecmult.cpp ecdsa.cpp
 
 ifndef CONF
 CONF := gmp
@@ -46,7 +46,7 @@ clean:
 bench-any: bench-$(CONF)
 tests-any: tests-$(CONF)
 
-all-$(CONF): bench-$(CONF) tests-$(CONF)
+all-$(CONF): bench-$(CONF) tests-$(CONF) obj/secp256k1-$(CONF).o
 
 clean-$(CONF):
 	rm -f bench-$(CONF) tests-$(CONF) obj/secp256k1-$(CONF).o
