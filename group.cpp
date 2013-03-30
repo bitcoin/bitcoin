@@ -10,7 +10,7 @@ GroupElem::GroupElem() {
     fInfinity = true;
 }
 
-GroupElem::GroupElem(const FieldElem &xin, const FieldElem &yin) {
+GroupElem::GroupElem(const secp256k1_fe_t &xin, const secp256k1_fe_t &yin) {
     fInfinity = false;
     x = xin;
     y = yin;
@@ -22,30 +22,40 @@ bool GroupElem::IsInfinity() const {
 
 void GroupElem::SetNeg(const GroupElem &p) {
     *this = p;
-    y.Normalize();
-    y.SetNeg(y, 1);
+    secp256k1_fe_normalize(&y);
+    secp256k1_fe_negate(&y, &y, 1);
 }
 
-void GroupElem::GetX(FieldElem &xout) {
+void GroupElem::GetX(secp256k1_fe_t &xout) {
     xout = x;
 }
 
-void GroupElem::GetY(FieldElem &yout) {
+void GroupElem::GetY(secp256k1_fe_t &yout) {
     yout = y;
 }
 
 std::string GroupElem::ToString() const {
     if (fInfinity)
         return "(inf)";
-    FieldElem xc = x, yc = y;
-    return "(" + xc.ToString() + "," + yc.ToString() + ")";
+    secp256k1_fe_t xc = x, yc = y;
+    char xo[65], yo[65];
+    int xl = 65, yl = 65;
+    secp256k1_fe_get_hex(xo, &xl, &xc);
+    secp256k1_fe_get_hex(yo, &yl, &yc);
+    return "(" + std::string(xo) + "," + std::string(yo) + ")";
 }
 
-GroupElemJac::GroupElemJac() : GroupElem(), z(1) {}
+GroupElemJac::GroupElemJac() : GroupElem() {
+    secp256k1_fe_set_int(&z, 1);
+}
 
-GroupElemJac::GroupElemJac(const FieldElem &xin, const FieldElem &yin) : GroupElem(xin,yin), z(1) {}
+GroupElemJac::GroupElemJac(const secp256k1_fe_t &xin, const secp256k1_fe_t &yin) : GroupElem(xin,yin) {
+    secp256k1_fe_set_int(&z, 1);
+}
 
-GroupElemJac::GroupElemJac(const GroupElem &in) : GroupElem(in), z(1) {}
+GroupElemJac::GroupElemJac(const GroupElem &in) : GroupElem(in) {
+    secp256k1_fe_set_int(&z, 1);
+}
 
 void GroupElemJac::SetJac(const GroupElemJac &jac) {
     *this = jac;
@@ -55,7 +65,7 @@ void GroupElemJac::SetAffine(const GroupElem &aff) {
     fInfinity = aff.fInfinity;
     x = aff.x;
     y = aff.y;
-    z = FieldElem(1);
+    secp256k1_fe_set_int(&z, 1);
 }
 
 bool GroupElemJac::IsValid() const {
@@ -65,43 +75,38 @@ bool GroupElemJac::IsValid() const {
     // (Y/Z^3)^2 = (X/Z^2)^3 + 7
     // Y^2 / Z^6 = X^3 / Z^6 + 7
     // Y^2 = X^3 + 7*Z^6
-    FieldElem y2; y2.SetSquare(y);
-    FieldElem x3; x3.SetSquare(x); x3.SetMult(x3,x);
-    FieldElem z2; z2.SetSquare(z);
-    FieldElem z6; z6.SetSquare(z2); z6.SetMult(z6,z2);
-    z6 *= 7;
-    x3 += z6;
-    y2.Normalize();
-    x3.Normalize();
-    return y2 == x3;
+    secp256k1_fe_t y2; secp256k1_fe_sqr(&y2, &y);
+    secp256k1_fe_t x3; secp256k1_fe_sqr(&x3, &x); secp256k1_fe_mul(&x3, &x3, &x);
+    secp256k1_fe_t z2; secp256k1_fe_sqr(&z2, &z);
+    secp256k1_fe_t z6; secp256k1_fe_sqr(&z6, &z2); secp256k1_fe_mul(&z6, &z6, &z2);
+    secp256k1_fe_mul_int(&z6, 7);
+    secp256k1_fe_add(&x3, &z6);
+    secp256k1_fe_normalize(&y2);
+    secp256k1_fe_normalize(&x3);
+    return secp256k1_fe_equal(&y2, &x3);
 }
 
 void GroupElemJac::GetAffine(GroupElem &aff) {
-    z.SetInverse(z);
-    FieldElem z2;
-    z2.SetSquare(z);
-    FieldElem z3;
-    z3.SetMult(z,z2);
-    x.SetMult(x,z2);
-    y.SetMult(y,z3);
-    z = FieldElem(1);
+    secp256k1_fe_inv(&z, &z);
+    secp256k1_fe_t z2; secp256k1_fe_sqr(&z2, &z);
+    secp256k1_fe_t z3; secp256k1_fe_mul(&z3, &z, &z2);
+    secp256k1_fe_mul(&x, &x, &z2);
+    secp256k1_fe_mul(&y, &y, &z3);
+    secp256k1_fe_set_int(&z, 1);
     aff.fInfinity = fInfinity;
     aff.x = x;
     aff.y = y;
 }
 
-void GroupElemJac::GetX(FieldElem &xout) {
-    FieldElem zi;
-    zi.SetInverse(z);
-    zi.SetSquare(zi);
-    xout.SetMult(x, zi);
+void GroupElemJac::GetX(secp256k1_fe_t &xout) {
+    secp256k1_fe_t zi2; secp256k1_fe_inv(&zi2, &z); secp256k1_fe_sqr(&zi2, &zi2);
+    secp256k1_fe_mul(&xout, &x, &zi2);
 }
 
-void GroupElemJac::GetY(FieldElem &yout) {
-    FieldElem zi;
-    zi.SetInverse(z);
-    FieldElem zi3; zi3.SetSquare(zi); zi3.SetMult(zi, zi3);
-    yout.SetMult(y, zi3);
+void GroupElemJac::GetY(secp256k1_fe_t &yout) {
+    secp256k1_fe_t zi; secp256k1_fe_inv(&zi, &z); 
+    secp256k1_fe_t zi3; secp256k1_fe_sqr(&zi3, &zi); secp256k1_fe_mul(&zi3, &zi, &zi3);
+    secp256k1_fe_mul(&yout, &y, &zi3);
 }
 
 bool GroupElemJac::IsInfinity() const {
@@ -111,53 +116,53 @@ bool GroupElemJac::IsInfinity() const {
 
 void GroupElemJac::SetNeg(const GroupElemJac &p) {
     *this = p;
-    y.Normalize();
-    y.SetNeg(y, 1);
+    secp256k1_fe_normalize(&y);
+    secp256k1_fe_negate(&y, &y, 1);
 }
 
-void GroupElemJac::SetCompressed(const FieldElem &xin, bool fOdd) {
+void GroupElemJac::SetCompressed(const secp256k1_fe_t &xin, bool fOdd) {
     x = xin;
-    FieldElem x2; x2.SetSquare(x);
-    FieldElem x3; x3.SetMult(x,x2);
+    secp256k1_fe_t x2; secp256k1_fe_sqr(&x2, &x);
+    secp256k1_fe_t x3; secp256k1_fe_mul(&x3, &x, &x2);
     fInfinity = false;
-    FieldElem c(7);
-    c += x3;
-    y.SetSquareRoot(c);
-    z = FieldElem(1);
-    y.Normalize();
-    if (y.IsOdd() != fOdd)
-        y.SetNeg(y,1);
+    secp256k1_fe_t c; secp256k1_fe_set_int(&c, 7);
+    secp256k1_fe_add(&c, &x3);
+    secp256k1_fe_sqrt(&y, &c);
+    secp256k1_fe_set_int(&z, 1);
+    secp256k1_fe_normalize(&y);
+    if (secp256k1_fe_is_odd(&y) != fOdd)
+        secp256k1_fe_negate(&y, &y, 1);
 }
 
 void GroupElemJac::SetDouble(const GroupElemJac &p) {
-    FieldElem t5 = p.y;
-    t5.Normalize();
-    if (p.fInfinity || t5.IsZero()) {
+    secp256k1_fe_t t5 = p.y;
+    secp256k1_fe_normalize(&t5);
+    if (p.fInfinity || secp256k1_fe_is_zero(&t5)) {
         fInfinity = true;
         return;
     }
 
-    FieldElem t1,t2,t3,t4;
-    z.SetMult(t5,p.z);
-    z *= 2;                // Z' = 2*Y*Z (2)
-    t1.SetSquare(p.x);
-    t1 *= 3;               // T1 = 3*X^2 (3)
-    t2.SetSquare(t1);      // T2 = 9*X^4 (1)
-    t3.SetSquare(t5);
-    t3 *= 2;               // T3 = 2*Y^2 (2)
-    t4.SetSquare(t3);
-    t4 *= 2;               // T4 = 8*Y^4 (2)
-    t3.SetMult(p.x,t3);      // T3 = 2*X*Y^2 (1)
+    secp256k1_fe_t t1,t2,t3,t4;
+    secp256k1_fe_mul(&z, &t5, &p.z);
+    secp256k1_fe_mul_int(&z, 2);      // Z' = 2*Y*Z (2)
+    secp256k1_fe_sqr(&t1, &p.x);
+    secp256k1_fe_mul_int(&t1, 3);     // T1 = 3*X^2 (3)
+    secp256k1_fe_sqr(&t2, &t1);       // T2 = 9*X^4 (1)
+    secp256k1_fe_sqr(&t3, &t5);
+    secp256k1_fe_mul_int(&t3, 2);     // T3 = 2*Y^2 (2)
+    secp256k1_fe_sqr(&t4, &t3);
+    secp256k1_fe_mul_int(&t4, 2);     // T4 = 8*Y^4 (2)
+    secp256k1_fe_mul(&t3, &p.x, &t3); // T3 = 2*X*Y^2 (1)
     x = t3;
-    x *= 4;                // X' = 8*X*Y^2 (4)
-    x.SetNeg(x,4);         // X' = -8*X*Y^2 (5)
-    x += t2;               // X' = 9*X^4 - 8*X*Y^2 (6)
-    t2.SetNeg(t2,1);       // T2 = -9*X^4 (2)
-    t3 *= 6;               // T3 = 12*X*Y^2 (6)
-    t3 += t2;              // T3 = 12*X*Y^2 - 9*X^4 (8)
-    y.SetMult(t1,t3);      // Y' = 36*X^3*Y^2 - 27*X^6 (1)
-    t2.SetNeg(t4,2);       // T2 = -8*Y^4 (3)
-    y += t2;               // Y' = 36*X^3*Y^2 - 27*X^6 - 8*Y^4 (4)
+    secp256k1_fe_mul_int(&x, 4);      // X' = 8*X*Y^2 (4)
+    secp256k1_fe_negate(&x, &x, 4);   // X' = -8*X*Y^2 (5)
+    secp256k1_fe_add(&x, &t2);        // X' = 9*X^4 - 8*X*Y^2 (6)
+    secp256k1_fe_negate(&t2, &t2, 1); // T2 = -9*X^4 (2)
+    secp256k1_fe_mul_int(&t3, 6);     // T3 = 12*X*Y^2 (6)
+    secp256k1_fe_add(&t3, &t2);       // T3 = 12*X*Y^2 - 9*X^4 (8)
+    secp256k1_fe_mul(&y, &t1, &t3);   // Y' = 36*X^3*Y^2 - 27*X^6 (1)
+    secp256k1_fe_negate(&t2, &t4, 2); // T2 = -8*Y^4 (3)
+    secp256k1_fe_add(&y, &t2);        // Y' = 36*X^3*Y^2 - 27*X^6 - 8*Y^4 (4)
     fInfinity = false;
 }
 
@@ -171,36 +176,36 @@ void GroupElemJac::SetAdd(const GroupElemJac &p, const GroupElemJac &q) {
         return;
     }
     fInfinity = false;
-    const FieldElem &x1 = p.x, &y1 = p.y, &z1 = p.z, &x2 = q.x, &y2 = q.y, &z2 = q.z;
-    FieldElem z22; z22.SetSquare(z2);
-    FieldElem z12; z12.SetSquare(z1);
-    FieldElem u1; u1.SetMult(x1, z22);
-    FieldElem u2; u2.SetMult(x2, z12);
-    FieldElem s1; s1.SetMult(y1, z22); s1.SetMult(s1, z2);
-    FieldElem s2; s2.SetMult(y2, z12); s2.SetMult(s2, z1);
-    u1.Normalize();
-    u2.Normalize();
-    if (u1 == u2) {
-        s1.Normalize();
-        s2.Normalize();
-        if (s1 == s2) {
+    const secp256k1_fe_t &x1 = p.x, &y1 = p.y, &z1 = p.z, &x2 = q.x, &y2 = q.y, &z2 = q.z;
+    secp256k1_fe_t z22; secp256k1_fe_sqr(&z22, &z2);
+    secp256k1_fe_t z12; secp256k1_fe_sqr(&z12, &z1);
+    secp256k1_fe_t u1; secp256k1_fe_mul(&u1, &x1, &z22);
+    secp256k1_fe_t u2; secp256k1_fe_mul(&u2, &x2, &z12);
+    secp256k1_fe_t s1; secp256k1_fe_mul(&s1, &y1, &z22); secp256k1_fe_mul(&s1, &s1, &z2);
+    secp256k1_fe_t s2; secp256k1_fe_mul(&s2, &y2, &z12); secp256k1_fe_mul(&s2, &s2, &z1);
+    secp256k1_fe_normalize(&u1);
+    secp256k1_fe_normalize(&u2);
+    if (secp256k1_fe_equal(&u1, &u2)) {
+        secp256k1_fe_normalize(&s1);
+        secp256k1_fe_normalize(&s2);
+        if (secp256k1_fe_equal(&s1, &s2)) {
             SetDouble(p);
         } else {
             fInfinity = true;
         }
         return;
     }
-    FieldElem h; h.SetNeg(u1,1); h += u2;
-    FieldElem r; r.SetNeg(s1,1); r += s2;
-    FieldElem r2; r2.SetSquare(r);
-    FieldElem h2; h2.SetSquare(h);
-    FieldElem h3; h3.SetMult(h,h2);
-    z.SetMult(z1,z2); z.SetMult(z, h);
-    FieldElem t; t.SetMult(u1,h2);
-    x = t; x *= 2; x += h3; x.SetNeg(x,3); x += r2;
-    y.SetNeg(x,5); y += t; y.SetMult(y,r);
-    h3.SetMult(h3,s1); h3.SetNeg(h3,1);
-    y += h3;
+    secp256k1_fe_t h; secp256k1_fe_negate(&h, &u1, 1); secp256k1_fe_add(&h, &u2);
+    secp256k1_fe_t r; secp256k1_fe_negate(&r, &s1, 1); secp256k1_fe_add(&r, &s2);
+    secp256k1_fe_t r2; secp256k1_fe_sqr(&r2, &r);
+    secp256k1_fe_t h2; secp256k1_fe_sqr(&h2, &h);
+    secp256k1_fe_t h3; secp256k1_fe_mul(&h3, &h, &h2);
+    secp256k1_fe_mul(&z, &z1, &z2); secp256k1_fe_mul(&z, &z, &h);
+    secp256k1_fe_t t; secp256k1_fe_mul(&t, &u1, &h2);
+    x = t; secp256k1_fe_mul_int(&x, 2); secp256k1_fe_add(&x, &h3); secp256k1_fe_negate(&x, &x, 3); secp256k1_fe_add(&x, &r2);
+    secp256k1_fe_negate(&y, &x, 5); secp256k1_fe_add(&y, &t); secp256k1_fe_mul(&y, &y, &r);
+    secp256k1_fe_mul(&h3, &h3, &s1); secp256k1_fe_negate(&h3, &h3, 1);
+    secp256k1_fe_add(&y, &h3);
 }
 
 void GroupElemJac::SetAdd(const GroupElemJac &p, const GroupElem &q) {
@@ -208,7 +213,7 @@ void GroupElemJac::SetAdd(const GroupElemJac &p, const GroupElem &q) {
         x = q.x;
         y = q.y;
         fInfinity = q.fInfinity;
-        z = FieldElem(1);
+        secp256k1_fe_set_int(&z, 1);
         return;
     }
     if (q.fInfinity) {
@@ -216,35 +221,35 @@ void GroupElemJac::SetAdd(const GroupElemJac &p, const GroupElem &q) {
         return;
     }
     fInfinity = false;
-    const FieldElem &x1 = p.x, &y1 = p.y, &z1 = p.z, &x2 = q.x, &y2 = q.y;
-    FieldElem z12; z12.SetSquare(z1);
-    FieldElem u1 = x1; u1.Normalize();
-    FieldElem u2; u2.SetMult(x2, z12);
-    FieldElem s1 = y1; s1.Normalize(); 
-    FieldElem s2; s2.SetMult(y2, z12); s2.SetMult(s2, z1);
-    u1.Normalize();
-    u2.Normalize();
-    if (u1 == u2) {
-        s1.Normalize();
-        s2.Normalize();
-        if (s1 == s2) {
+    const secp256k1_fe_t &x1 = p.x, &y1 = p.y, &z1 = p.z, &x2 = q.x, &y2 = q.y;
+    secp256k1_fe_t z12; secp256k1_fe_sqr(&z12, &z1);
+    secp256k1_fe_t u1 = x1; secp256k1_fe_normalize(&u1);
+    secp256k1_fe_t u2; secp256k1_fe_mul(&u2, &x2, &z12);
+    secp256k1_fe_t s1 = y1; secp256k1_fe_normalize(&s1); 
+    secp256k1_fe_t s2; secp256k1_fe_mul(&s2, &y2, &z12); secp256k1_fe_mul(&s2, &s2, &z1);
+    secp256k1_fe_normalize(&u1);
+    secp256k1_fe_normalize(&u2);
+    if (secp256k1_fe_equal(&u1, &u2)) {
+        secp256k1_fe_normalize(&s1);
+        secp256k1_fe_normalize(&s2);
+        if (secp256k1_fe_equal(&s1, &s2)) {
             SetDouble(p);
         } else {
             fInfinity = true;
         }
         return;
     }
-    FieldElem h; h.SetNeg(u1,1); h += u2;
-    FieldElem r; r.SetNeg(s1,1); r += s2;
-    FieldElem r2; r2.SetSquare(r);
-    FieldElem h2; h2.SetSquare(h);
-    FieldElem h3; h3.SetMult(h,h2);
-    z = p.z; z.SetMult(z, h);
-    FieldElem t; t.SetMult(u1,h2);
-    x = t; x *= 2; x += h3; x.SetNeg(x,3); x += r2;
-    y.SetNeg(x,5); y += t; y.SetMult(y,r);
-    h3.SetMult(h3,s1); h3.SetNeg(h3,1);
-    y += h3;
+    secp256k1_fe_t h; secp256k1_fe_negate(&h, &u1, 1); secp256k1_fe_add(&h, &u2);
+    secp256k1_fe_t r; secp256k1_fe_negate(&r, &s1, 1); secp256k1_fe_add(&r, &s2);
+    secp256k1_fe_t r2; secp256k1_fe_sqr(&r2, &r);
+    secp256k1_fe_t h2; secp256k1_fe_sqr(&h2, &h);
+    secp256k1_fe_t h3; secp256k1_fe_mul(&h3, &h, &h2);
+    z = p.z; secp256k1_fe_mul(&z, &z, &h);
+    secp256k1_fe_t t; secp256k1_fe_mul(&t, &u1, &h2);
+    x = t; secp256k1_fe_mul_int(&x, 2); secp256k1_fe_add(&x, &h3); secp256k1_fe_negate(&x, &x, 3); secp256k1_fe_add(&x, &r2);
+    secp256k1_fe_negate(&y, &x, 5); secp256k1_fe_add(&y, &t); secp256k1_fe_mul(&y, &y, &r);
+    secp256k1_fe_mul(&h3, &h3, &s1); secp256k1_fe_negate(&h3, &h3, 1);
+    secp256k1_fe_add(&y, &h3);
 }
 
 std::string GroupElemJac::ToString() const {
@@ -290,14 +295,18 @@ static const unsigned char a2_[]   =   {0x01,
                                         0x14,0xca,0x50,0xf7,0xa8,0xe2,0xf3,0xf6,
                                         0x57,0xc1,0x10,0x8d,0x9d,0x44,0xcf,0xd8};
 
-GroupConstants::GroupConstants() : g_x(g_x_), g_y(g_y_),
-                                   g(g_x,g_y),
-                                   beta(beta_) {
+GroupConstants::GroupConstants() {
     secp256k1_num_init(&order);
     secp256k1_num_init(&lambda);
     secp256k1_num_init(&a1b2);
     secp256k1_num_init(&b1);
     secp256k1_num_init(&a2);
+
+    secp256k1_fe_set_b32(&g_x, g_x_);
+    secp256k1_fe_set_b32(&g_y, g_y_);
+    secp256k1_fe_set_b32(&beta, beta_);
+
+    g = GroupElem(g_x, g_y);
 
     secp256k1_num_set_bin(&order, order_, sizeof(order_));
     secp256k1_num_set_bin(&lambda, lambda_, sizeof(lambda_));
@@ -320,9 +329,9 @@ const GroupConstants &GetGroupConst() {
 }
 
 void GroupElemJac::SetMulLambda(const GroupElemJac &p) {
-    FieldElem beta = GetGroupConst().beta;
+    const secp256k1_fe_t &beta = GetGroupConst().beta;
     *this = p;
-    x.SetMult(x, beta);
+    secp256k1_fe_mul(&x, &x, &beta);
 }
 
 void SplitExp(const secp256k1_num_t &exp, secp256k1_num_t &exp1, secp256k1_num_t &exp2) {

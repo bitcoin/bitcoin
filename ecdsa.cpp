@@ -8,15 +8,15 @@ namespace secp256k1 {
 
 bool ParsePubKey(GroupElemJac &elem, const unsigned char *pub, int size) {
     if (size == 33 && (pub[0] == 0x02 || pub[0] == 0x03)) {
-        FieldElem x;
-        x.SetBytes(pub+1);
+        secp256k1_fe_t x;
+        secp256k1_fe_set_b32(&x, pub+1);
         elem.SetCompressed(x, pub[0] == 0x03);
     } else if (size == 65 && (pub[0] == 0x04 || pub[0] == 0x06 || pub[0] == 0x07)) {
-        FieldElem x,y;
-        x.SetBytes(pub+1);
-        y.SetBytes(pub+33);
+        secp256k1_fe_t x,y;
+        secp256k1_fe_set_b32(&x, pub+1);
+        secp256k1_fe_set_b32(&y, pub+33);
         elem = GroupElem(x,y);
-        if ((pub[0] == 0x06 || pub[0] == 0x07) && y.IsOdd() != (pub[0] == 0x07))
+        if ((pub[0] == 0x06 || pub[0] == 0x07) && secp256k1_fe_is_odd(&y) != (pub[0] == 0x07))
             return false;
     } else {
         return false;
@@ -81,9 +81,9 @@ bool Signature::RecomputeR(secp256k1_num_t &r2, const GroupElemJac &pubkey, cons
     secp256k1_num_mod_mul(&u2, &sn, &r, &c.order);
     GroupElemJac pr; ECMult(pr, pubkey, u2, u1);
     if (!pr.IsInfinity()) {
-        FieldElem xr; pr.GetX(xr);
-        xr.Normalize();
-        unsigned char xrb[32]; xr.GetBytes(xrb);
+        secp256k1_fe_t xr; pr.GetX(xr);
+        secp256k1_fe_normalize(&xr);
+        unsigned char xrb[32]; secp256k1_fe_get_b32(xrb, &xr);
         secp256k1_num_set_bin(&r2, xrb, 32);
         secp256k1_num_mod(&r2, &r2, &c.order);
         ret = true;
@@ -108,11 +108,11 @@ bool Signature::Sign(const secp256k1_num_t &seckey, const secp256k1_num_t &messa
 
     GroupElemJac rp;
     ECMultBase(rp, nonce);
-    FieldElem rx;
+    secp256k1_fe_t rx;
     rp.GetX(rx);
     unsigned char b[32];
-    rx.Normalize();
-    rx.GetBytes(b);
+    secp256k1_fe_normalize(&rx);
+    secp256k1_fe_get_b32(b, &rx);
     secp256k1_num_set_bin(&r, b, 32);
     secp256k1_num_mod(&r, &r, &c.order);
     secp256k1_num_t n;
