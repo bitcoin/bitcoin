@@ -1,183 +1,146 @@
 #include <assert.h>
-#include <string>
 #include <string.h>
+#include <stdlib.h>
 #include <openssl/bn.h>
 #include <openssl/crypto.h>
 
-#include "num_openssl.h"
+#include "num.h"
 
-namespace secp256k1 {
-
-class Context {
-private:
-    BN_CTX *ctx;
-
-    operator BN_CTX*() {
-        return ctx;
-    }
-
-    friend class Number;
-public:
-    Context() {
-        ctx = BN_CTX_new();
-    }
-
-    ~Context() {
-        BN_CTX_free(ctx);
-    }
-};
-
-Number::operator const BIGNUM*() const {
-    return &b;
+void static secp256k1_num_start() {
 }
 
-Number::operator BIGNUM*() {
-    return &b;
+void static secp256k1_num_init(secp256k1_num_t *r) {
+    BN_init(&r->bn);
 }
 
-Number::Number() {
-    BN_init(*this);
+void static secp256k1_num_free(secp256k1_num_t *r) {
+    BN_free(&r->bn);
 }
 
-Number::~Number() {
-    BN_free(*this);
+void static secp256k1_num_copy(secp256k1_num_t *r, const secp256k1_num_t *a) {
+    BN_copy(&r->bn, &a->bn);
 }
 
-Number::Number(const unsigned char *bin, int len) {
-    BN_init(*this);
-    SetBytes(bin,len);
+void static secp256k1_num_get_bin(unsigned char *r, unsigned int rlen, const secp256k1_num_t *a) {
+    unsigned int size = BN_num_bytes(&a->bn);
+    assert(size <= rlen);
+    memset(r,0,rlen);
+    BN_bn2bin(&a->bn, r + rlen - size);
 }
 
-void Number::SetNumber(const Number &x) {
-    BN_copy(*this, x);
+void static secp256k1_num_set_bin(secp256k1_num_t *r, const unsigned char *a, unsigned int alen) {
+    BN_bin2bn(a, alen, &r->bn);
 }
 
-Number::Number(const Number &x) {
-    BN_init(*this);
-    BN_copy(*this, x);
+void static secp256k1_num_set_int(secp256k1_num_t *r, int a) {
+    BN_set_word(&r->bn, a < 0 ? -a : a);
+    BN_set_negative(&r->bn, a < 0);
 }
 
-Number &Number::operator=(const Number &x) {
-    BN_copy(*this, x);
-    return *this;
+void static secp256k1_num_mod_inverse(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *m) {
+    BN_CTX *ctx = BN_CTX_new();
+    BN_mod_inverse(&r->bn, &a->bn, &m->bn, ctx);
+    BN_CTX_free(ctx);
 }
 
-void Number::SetBytes(const unsigned char *bin, int len) {
-    BN_bin2bn(bin, len, *this);
+void static secp256k1_num_mod_mul(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b, const secp256k1_num_t *m) {
+    BN_CTX *ctx = BN_CTX_new();
+    BN_mod_mul(&r->bn, &a->bn, &b->bn, &m->bn, ctx);
+    BN_CTX_free(ctx);
 }
 
-void Number::GetBytes(unsigned char *bin, int len) {
-    int size = BN_num_bytes(*this);
-    assert(size <= len);
-    memset(bin,0,len);
-    BN_bn2bin(*this, bin + len - size);
+int static secp256k1_num_cmp(const secp256k1_num_t *a, const secp256k1_num_t *b) {
+    return BN_cmp(&a->bn, &b->bn);
 }
 
-void Number::SetInt(int x) {
-    if (x >= 0) {
-        BN_set_word(*this, x);
-    } else {
-        BN_set_word(*this, -x);
-        BN_set_negative(*this, 1);
-    }
+void static secp256k1_num_add(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+    BN_add(&r->bn, &a->bn, &b->bn);
 }
 
-void Number::SetModInverse(const Number &x, const Number &m) {
-    Context ctx;
-    BN_mod_inverse(*this, x, m, ctx);
+void static secp256k1_num_sub(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+    BN_sub(&r->bn, &a->bn, &b->bn);
 }
 
-void Number::SetModMul(const Number &a, const Number &b, const Number &m) {
-    Context ctx;
-    BN_mod_mul(*this, a, b, m, ctx);
+void static secp256k1_num_mul(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+    BN_CTX *ctx = BN_CTX_new();
+    BN_mul(&r->bn, &a->bn, &b->bn, ctx);
+    BN_CTX_free(ctx);
 }
 
-void Number::SetAdd(const Number &a1, const Number &a2) {
-    BN_add(*this, a1, a2);
+void static secp256k1_num_div(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+    BN_CTX *ctx = BN_CTX_new();
+    BN_div(&r->bn, NULL, &a->bn, &b->bn, ctx);
+    BN_CTX_free(ctx);
 }
 
-void Number::SetSub(const Number &a1, const Number &a2) {
-    BN_sub(*this, a1, a2);
+void static secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+    BN_CTX *ctx = BN_CTX_new();
+    BN_nnmod(&r->bn, &a->bn, &b->bn, ctx);
+    BN_CTX_free(ctx);
 }
 
-void Number::SetMult(const Number &a1, const Number &a2) {
-    Context ctx;
-    BN_mul(*this, a1, a2, ctx);
+int static secp256k1_num_bits(const secp256k1_num_t *a) {
+    return BN_num_bits(&a->bn);
 }
 
-void Number::SetDiv(const Number &a1, const Number &a2) {
-    Context ctx;
-    BN_div(*this, NULL, a1, a2, ctx);
-}
-
-void Number::SetMod(const Number &a, const Number &m) {
-    Context ctx;
-    BN_nnmod(*this, a, m, ctx);
-}
-
-int Number::Compare(const Number &a) const {
-    return BN_cmp(*this, a);
-}
-
-int Number::GetBits() const {
-    return BN_num_bits(*this);
-}
-
-int Number::ShiftLowBits(int bits) {
-    BIGNUM *bn = *this;
-    int ret = BN_is_zero(bn) ? 0 : bn->d[0] & ((1 << bits) - 1);
-    BN_rshift(*this, *this, bits);
+int static secp256k1_num_shift(secp256k1_num_t *r, int bits) {
+    int ret = BN_is_zero(&r->bn) ? 0 : r->bn.d[0] & ((1 << bits) - 1);
+    BN_rshift(&r->bn, &r->bn, bits);
     return ret;
 }
 
-bool Number::IsZero() const {
-    return BN_is_zero((const BIGNUM*)*this);
+int static secp256k1_num_is_zero(const secp256k1_num_t *a) {
+    return BN_is_zero(&a->bn);
 }
 
-bool Number::IsOdd() const {
-    return BN_is_odd((const BIGNUM*)*this);
+int static secp256k1_num_is_odd(const secp256k1_num_t *a) {
+    return BN_is_odd(&a->bn);
 }
 
-bool Number::CheckBit(int pos) const {
-    return BN_is_bit_set((const BIGNUM*)*this, pos);
+int static secp256k1_num_is_neg(const secp256k1_num_t *a) {
+    return BN_is_negative(&a->bn);
 }
 
-bool Number::IsNeg() const {
-    return BN_is_negative((const BIGNUM*)*this);
+int static secp256k1_num_get_bit(const secp256k1_num_t *a, int pos) {
+    return BN_is_bit_set(&a->bn, pos);
 }
 
-void Number::Negate() {
-    BN_set_negative(*this, !IsNeg());
+void static secp256k1_num_inc(secp256k1_num_t *r) {
+    BN_add_word(&r->bn, 1);
 }
 
-void Number::Shift1() {
-    BN_rshift1(*this,*this);
+void static secp256k1_num_set_hex(secp256k1_num_t *r, const char *a, int alen) {
+    char *str = (char*)malloc(alen+1);
+    memcpy(str, a, alen);
+    str[alen] = 0;
+    BIGNUM *pbn = &r->bn;
+    BN_hex2bn(&pbn, str);
+    free(str);
 }
 
-void Number::Inc() {
-    BN_add_word(*this,1);
-}
-
-void Number::SetHex(const std::string &str) {
-    BIGNUM *bn = *this;
-    BN_hex2bn(&bn, str.c_str());
-}
-
-void Number::SetPseudoRand(const Number &max) {
-    BN_pseudo_rand_range(*this, max);
-}
-
-void Number::SplitInto(int bits, Number &low, Number &high) const {
-    BN_copy(low, *this);
-    BN_mask_bits(low, bits);
-    BN_rshift(high, *this, bits);
-}
-
-std::string Number::ToString() const {
-    char *str = BN_bn2hex(*this);
-    std::string ret(str);
+void static secp256k1_num_get_hex(char *r, int *rlen, const secp256k1_num_t *a) {
+    char *str = BN_bn2hex(&a->bn);
+    int len = strlen(str) + 1;
+    if (len > *rlen) {
+        *rlen = strlen(str);
+        OPENSSL_free(str);
+        return;
+    }
+    memcpy(r, str, len);
     OPENSSL_free(str);
-    return ret;
+    *rlen = len;
 }
 
+void static secp256k1_num_split(secp256k1_num_t *rl, secp256k1_num_t *rh, const secp256k1_num_t *a, int bits) {
+    BN_copy(&rl->bn, &a->bn);
+    BN_rshift(&rh->bn, &a->bn, bits);
+    BN_mask_bits(&rl->bn, bits);
+}
+
+void static secp256k1_num_negate(secp256k1_num_t *r) {
+    BN_set_negative(&r->bn, !BN_is_negative(&r->bn));
+}
+
+void static secp256k1_num_set_rand(secp256k1_num_t *r, const secp256k1_num_t *a) {
+    BN_pseudo_rand_range(&r->bn, &a->bn);
 }

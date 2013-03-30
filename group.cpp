@@ -291,13 +291,28 @@ static const unsigned char a2_[]   =   {0x01,
                                         0x57,0xc1,0x10,0x8d,0x9d,0x44,0xcf,0xd8};
 
 GroupConstants::GroupConstants() : g_x(g_x_), g_y(g_y_),
-                                   order(order_, sizeof(order_)),
                                    g(g_x,g_y),
-                                   beta(beta_),
-                                   lambda(lambda_, sizeof(lambda_)),
-                                   a1b2(a1b2_, sizeof(a1b2_)),
-                                   b1(b1_, sizeof(b1_)),
-                                   a2(a2_, sizeof(a2_)) {}
+                                   beta(beta_) {
+    secp256k1_num_init(&order);
+    secp256k1_num_init(&lambda);
+    secp256k1_num_init(&a1b2);
+    secp256k1_num_init(&b1);
+    secp256k1_num_init(&a2);
+
+    secp256k1_num_set_bin(&order, order_, sizeof(order_));
+    secp256k1_num_set_bin(&lambda, lambda_, sizeof(lambda_));
+    secp256k1_num_set_bin(&a1b2, a1b2_, sizeof(a1b2_));
+    secp256k1_num_set_bin(&b1, b1_, sizeof(b1_));
+    secp256k1_num_set_bin(&a2, a2_, sizeof(a2_));
+}
+
+GroupConstants::~GroupConstants() {
+    secp256k1_num_free(&order);
+    secp256k1_num_free(&lambda);
+    secp256k1_num_free(&a1b2);
+    secp256k1_num_free(&b1);
+    secp256k1_num_free(&a2);
+}
 
 const GroupConstants &GetGroupConst() {
     static const GroupConstants group_const;
@@ -310,27 +325,40 @@ void GroupElemJac::SetMulLambda(const GroupElemJac &p) {
     x.SetMult(x, beta);
 }
 
-void SplitExp(const Number &exp, Number &exp1, Number &exp2) {
+void SplitExp(const secp256k1_num_t &exp, secp256k1_num_t &exp1, secp256k1_num_t &exp2) {
     const GroupConstants &c = GetGroupConst();
-    Number bnc1, bnc2, bnt1, bnt2, bnn2;
-    bnn2.SetNumber(c.order);
-    bnn2.Shift1();
+    secp256k1_num_t bnc1, bnc2, bnt1, bnt2, bnn2;
 
-    bnc1.SetMult(exp, c.a1b2);
-    bnc1.SetAdd(bnc1, bnn2);
-    bnc1.SetDiv(bnc1, c.order);
+    secp256k1_num_init(&bnc1);
+    secp256k1_num_init(&bnc2);
+    secp256k1_num_init(&bnt1);
+    secp256k1_num_init(&bnt2);
+    secp256k1_num_init(&bnn2);
 
-    bnc2.SetMult(exp, c.b1);
-    bnc2.SetAdd(bnc2, bnn2);
-    bnc2.SetDiv(bnc2, c.order);
+    secp256k1_num_copy(&bnn2, &c.order);
+    secp256k1_num_shift(&bnn2, 1);
 
-    bnt1.SetMult(bnc1, c.a1b2);
-    bnt2.SetMult(bnc2, c.a2);
-    bnt1.SetAdd(bnt1, bnt2);
-    exp1.SetSub(exp, bnt1);
-    bnt1.SetMult(bnc1, c.b1);
-    bnt2.SetMult(bnc2, c.a1b2);
-    exp2.SetSub(bnt1, bnt2);
+    secp256k1_num_mul(&bnc1, &exp, &c.a1b2);
+    secp256k1_num_add(&bnc1, &bnc1, &bnn2);
+    secp256k1_num_div(&bnc1, &bnc1, &c.order);
+
+    secp256k1_num_mul(&bnc2, &exp, &c.b1);
+    secp256k1_num_add(&bnc2, &bnc2, &bnn2);
+    secp256k1_num_div(&bnc2, &bnc2, &c.order);
+
+    secp256k1_num_mul(&bnt1, &bnc1, &c.a1b2);
+    secp256k1_num_mul(&bnt2, &bnc2, &c.a2);
+    secp256k1_num_add(&bnt1, &bnt1, &bnt2);
+    secp256k1_num_sub(&exp1, &exp, &bnt1);
+    secp256k1_num_mul(&bnt1, &bnc1, &c.b1);
+    secp256k1_num_mul(&bnt2, &bnc2, &c.a1b2);
+    secp256k1_num_sub(&exp2, &bnt1, &bnt2);
+
+    secp256k1_num_free(&bnc1);
+    secp256k1_num_free(&bnc2);
+    secp256k1_num_free(&bnt1);
+    secp256k1_num_free(&bnt2);
+    secp256k1_num_free(&bnn2);
 }
 
 }

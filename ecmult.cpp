@@ -61,29 +61,31 @@ private:
     }
 
 public:
-    WNAF(const Number &exp, int w) : used(0) {
+    WNAF(const secp256k1_num_t &exp, int w) : used(0) {
         int zeroes = 0;
-        Number x;
-        x.SetNumber(exp);
+        secp256k1_num_t x;
+        secp256k1_num_init(&x);
+        secp256k1_num_copy(&x, &exp);
         int sign = 1;
-        if (x.IsNeg()) {
+        if (secp256k1_num_is_neg(&x)) {
             sign = -1;
-            x.Negate();
+            secp256k1_num_negate(&x);
         }
-        while (!x.IsZero()) {
-            while (!x.IsOdd()) {
+        while (!secp256k1_num_is_zero(&x)) {
+            while (!secp256k1_num_is_odd(&x)) {
                 zeroes++;
-                x.Shift1();
+                secp256k1_num_shift(&x, 1);
             }
-            int word = x.ShiftLowBits(w);
+            int word = secp256k1_num_shift(&x, w);
             if (word & (1 << (w-1))) {
-                x.Inc();
+                secp256k1_num_inc(&x);
                 PushNAF(sign * (word - (1 << w)), zeroes);
             } else {
                 PushNAF(sign * word, zeroes);
             }
             zeroes = w-1;
         }
+        secp256k1_num_free(&x);
     }
 
     int GetSize() const {
@@ -145,19 +147,27 @@ const ECMultConsts &GetECMultConsts() {
     return ecmult_consts;
 }
 
-void ECMultBase(GroupElemJac &out, const Number &gn) {
-    Number n; n.SetNumber(gn);
+void ECMultBase(GroupElemJac &out, const secp256k1_num_t &gn) {
+    secp256k1_num_t n;
+    secp256k1_num_init(&n);
+    secp256k1_num_copy(&n, &gn);
     const ECMultConsts &c = GetECMultConsts();
-    out.SetAffine(c.prec[0][n.ShiftLowBits(4)]);
+    out.SetAffine(c.prec[0][secp256k1_num_shift(&n, 4)]);
     for (int j=1; j<64; j++) {
-        out.SetAdd(out, c.prec[j][n.ShiftLowBits(4)]);
+        out.SetAdd(out, c.prec[j][secp256k1_num_shift(&n, 4)]);
     }
+    secp256k1_num_free(&n);
     out.SetAdd(out, c.fin);
 }
 
-void ECMult(GroupElemJac &out, const GroupElemJac &a, const Number &an, const Number &gn) {
-    Number an1, an2;
-    Number gn1, gn2;
+void ECMult(GroupElemJac &out, const GroupElemJac &a, const secp256k1_num_t &an, const secp256k1_num_t &gn) {
+    secp256k1_num_t an1, an2;
+    secp256k1_num_t gn1, gn2;
+
+    secp256k1_num_init(&an1);
+    secp256k1_num_init(&an2);
+    secp256k1_num_init(&gn1);
+    secp256k1_num_init(&gn2);
 
     SplitExp(an, an1, an2);
 //    printf("an=%s\n", an.ToString().c_str());
@@ -165,7 +175,7 @@ void ECMult(GroupElemJac &out, const GroupElemJac &a, const Number &an, const Nu
 //    printf("an2=%s\n", an2.ToString().c_str());
 //    printf("an1.len=%i\n", an1.GetBits());
 //    printf("an2.len=%i\n", an2.GetBits());
-    gn.SplitInto(128, gn1, gn2);
+    secp256k1_num_split(&gn1, &gn2, &gn, 128);
 
     WNAF<128> wa1(an1, WINDOW_A);
     WNAF<128> wa2(an2, WINDOW_A);
@@ -206,6 +216,11 @@ void ECMult(GroupElemJac &out, const GroupElemJac &a, const Number &an, const Nu
             out.SetAdd(out, tmpa);
         }
     }
+
+    secp256k1_num_free(&an1);
+    secp256k1_num_free(&an2);
+    secp256k1_num_free(&gn1);
+    secp256k1_num_free(&gn2);
 }
 
 }

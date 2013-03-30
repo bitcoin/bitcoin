@@ -6,8 +6,8 @@
 
 namespace secp256k1 {
 
-void ECMultBase(GroupElemJac &out, const Number &gn);
-void ECMult(GroupElemJac &out, const GroupElemJac &a, const Number &an, const Number &gn);
+void ECMultBase(GroupElemJac &out, const secp256k1_num_t &gn);
+void ECMult(GroupElemJac &out, const GroupElemJac &a, const secp256k1_num_t &an, const secp256k1_num_t &gn);
 
 }
 
