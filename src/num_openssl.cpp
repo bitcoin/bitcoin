@@ -9,6 +9,10 @@
 void static secp256k1_num_start() {
 }
 
+void static secp256k1_num_stop() {
+}
+
+
 void static secp256k1_num_init(secp256k1_num_t *r) {
     BN_init(&r->bn);
 }

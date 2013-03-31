@@ -4,9 +4,22 @@
 #include "ecmult.cpp"
 #include "ecdsa.cpp"
 
+
 namespace secp256k1 {
 
-int VerifyECDSA(const unsigned char *msg, int msglen, const unsigned char *sig, int siglen, const unsigned char *pubkey, int pubkeylen) {
+extern "C" void secp256k1_start(void) {
+    secp256k1_num_start();
+    secp256k1_fe_start();
+    GetGroupConst();
+    GetECMultConsts();
+}
+
+extern "C" void secp256k1_stop(void) {
+    secp256k1_fe_stop();
+    secp256k1_num_stop();
+}
+
+extern "C" int secp256k1_ecdsa_verify(const unsigned char *msg, int msglen, const unsigned char *sig, int siglen, const unsigned char *pubkey, int pubkeylen) {
     int ret = -3;
     secp256k1_num_t m; 
     secp256k1_num_init(&m);
@@ -34,5 +47,5 @@ end:
     return ret;
 }
 
-
 }
+

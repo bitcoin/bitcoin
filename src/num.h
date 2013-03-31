@@ -12,6 +12,7 @@
 extern "C" {
 
 void static secp256k1_num_start(void);
+void static secp256k1_num_stop(void);
 void static secp256k1_num_init(secp256k1_num_t *r);
 void static secp256k1_num_free(secp256k1_num_t *r);
 void static secp256k1_num_copy(secp256k1_num_t *r, const secp256k1_num_t *a);

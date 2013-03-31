@@ -21,6 +21,13 @@ void static secp256k1_num_start(void) {
     gmp_randinit_default(secp256k1_num_state.rng);
 }
 
+void static secp256k1_num_stop(void) {
+    if (!secp256k1_num_state.initialized)
+        return;
+    secp256k1_num_state.initialized = 0;
+    gmp_randclear(secp256k1_num_state.rng);
+}
+
 void static secp256k1_num_init(secp256k1_num_t *r) {
     mpz_init(r->bn);
 }
