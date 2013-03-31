@@ -13,6 +13,7 @@ static const unsigned char secp256k1_fe_consts_p[] = {
 void static secp256k1_fe_start(void) {
     if (secp256k1_fe_consts == NULL) {
         secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)malloc(sizeof(secp256k1_fe_t));
+        secp256k1_num_init(&ret->p);
         secp256k1_num_set_bin(&ret->p, secp256k1_fe_consts_p, sizeof(secp256k1_fe_consts_p));
         secp256k1_fe_consts = ret;
     }
@@ -20,7 +21,9 @@ void static secp256k1_fe_start(void) {
 
 void static secp256k1_fe_stop(void) {
     if (secp256k1_fe_consts != NULL) {
-        free((void*)secp256k1_fe_consts);
+        secp256k1_fe_consts_t *c = (secp256k1_fe_consts_t*)secp256k1_fe_consts;
+        secp256k1_num_free(&c->p);
+        free((void*)c);
         secp256k1_fe_consts = NULL;
     }
 }
