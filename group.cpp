@@ -87,7 +87,7 @@ bool GroupElemJac::IsValid() const {
 }
 
 void GroupElemJac::GetAffine(GroupElem &aff) {
-    secp256k1_fe_inv(&z, &z);
+    secp256k1_fe_inv_var(&z, &z);
     secp256k1_fe_t z2; secp256k1_fe_sqr(&z2, &z);
     secp256k1_fe_t z3; secp256k1_fe_mul(&z3, &z, &z2);
     secp256k1_fe_mul(&x, &x, &z2);
@@ -99,12 +99,12 @@ void GroupElemJac::GetAffine(GroupElem &aff) {
 }
 
 void GroupElemJac::GetX(secp256k1_fe_t &xout) {
-    secp256k1_fe_t zi2; secp256k1_fe_inv(&zi2, &z); secp256k1_fe_sqr(&zi2, &zi2);
+    secp256k1_fe_t zi2; secp256k1_fe_inv_var(&zi2, &z); secp256k1_fe_sqr(&zi2, &zi2);
     secp256k1_fe_mul(&xout, &x, &zi2);
 }
 
 void GroupElemJac::GetY(secp256k1_fe_t &yout) {
-    secp256k1_fe_t zi; secp256k1_fe_inv(&zi, &z); 
+    secp256k1_fe_t zi; secp256k1_fe_inv_var(&zi, &z); 
     secp256k1_fe_t zi3; secp256k1_fe_sqr(&zi3, &zi); secp256k1_fe_mul(&zi3, &zi, &zi3);
     secp256k1_fe_mul(&yout, &y, &zi3);
 }

@@ -1,5 +1,5 @@
 FLAGS_COMMON:=-Wall
-FLAGS_PROD:=-DNDEBUG -O3 -march=native
+FLAGS_PROD:=-DNDEBUG -O2 -march=native
 FLAGS_DEBUG:=-DVERIFY -ggdb3 -O1
 FLAGS_TEST:=-DVERIFY -ggdb3 -O2 -march=native
 
