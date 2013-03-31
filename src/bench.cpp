@@ -11,9 +11,10 @@ using namespace secp256k1;
 int main() {
     secp256k1_num_start();
     secp256k1_fe_start();
+    secp256k1_ge_start();
 
     secp256k1_fe_t x;
-    const secp256k1_num_t &order = GetGroupConst().order;
+    const secp256k1_num_t *order = &secp256k1_ge_consts->order;
     secp256k1_num_t r, s, m;
     secp256k1_num_init(&r);
     secp256k1_num_init(&s);
@@ -23,12 +24,12 @@ int main() {
     int cnt = 0;
     int good = 0;
     for (int i=0; i<1000000; i++) {
-        secp256k1_num_set_rand(&r, &order);
-        secp256k1_num_set_rand(&s, &order);
-        secp256k1_num_set_rand(&m, &order);
+        secp256k1_num_set_rand(&r, order);
+        secp256k1_num_set_rand(&s, order);
+        secp256k1_num_set_rand(&m, order);
         sig.SetRS(r,s);
-        GroupElemJac pubkey; pubkey.SetCompressed(x, true);
-        if (pubkey.IsValid()) {
+        secp256k1_gej_t pubkey; secp256k1_gej_set_xo(&pubkey, &x, 1);
+        if (secp256k1_gej_is_valid(&pubkey)) {
             cnt++;
             good += sig.Verify(pubkey, m);
         }
@@ -38,6 +39,8 @@ int main() {
     secp256k1_num_free(&s);
     secp256k1_num_free(&m);
 
+    secp256k1_ge_stop();
     secp256k1_fe_stop();
+    secp256k1_num_stop();
     return 0;
 }

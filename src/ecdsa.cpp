@@ -6,22 +6,22 @@
 
 namespace secp256k1 {
 
-bool ParsePubKey(GroupElemJac &elem, const unsigned char *pub, int size) {
+bool ParsePubKey(secp256k1_gej_t &elem, const unsigned char *pub, int size) {
     if (size == 33 && (pub[0] == 0x02 || pub[0] == 0x03)) {
         secp256k1_fe_t x;
         secp256k1_fe_set_b32(&x, pub+1);
-        elem.SetCompressed(x, pub[0] == 0x03);
+        secp256k1_gej_set_xo(&elem, &x, pub[0] == 0x03);
     } else if (size == 65 && (pub[0] == 0x04 || pub[0] == 0x06 || pub[0] == 0x07)) {
         secp256k1_fe_t x,y;
         secp256k1_fe_set_b32(&x, pub+1);
         secp256k1_fe_set_b32(&y, pub+33);
-        elem = GroupElem(x,y);
+        secp256k1_gej_set_xy(&elem, &x, &y);
         if ((pub[0] == 0x06 || pub[0] == 0x07) && secp256k1_fe_is_odd(&y) != (pub[0] == 0x07))
             return false;
     } else {
         return false;
     }
-    return elem.IsValid();
+    return secp256k1_gej_is_valid(&elem);
 }
 
 bool Signature::Parse(const unsigned char *sig, int size) {
@@ -61,8 +61,8 @@ bool Signature::Serialize(unsigned char *sig, int *size) {
     return true;
 }
 
-bool Signature::RecomputeR(secp256k1_num_t &r2, const GroupElemJac &pubkey, const secp256k1_num_t &message) const {
-    const GroupConstants &c = GetGroupConst();
+bool Signature::RecomputeR(secp256k1_num_t &r2, const secp256k1_gej_t &pubkey, const secp256k1_num_t &message) const {
+    const secp256k1_ge_consts_t &c = *secp256k1_ge_consts;
 
     if (secp256k1_num_is_neg(&r) || secp256k1_num_is_neg(&s))
         return false;
@@ -79,9 +79,9 @@ bool Signature::RecomputeR(secp256k1_num_t &r2, const GroupElemJac &pubkey, cons
     secp256k1_num_mod_inverse(&sn, &s, &c.order);
     secp256k1_num_mod_mul(&u1, &sn, &message, &c.order);
     secp256k1_num_mod_mul(&u2, &sn, &r, &c.order);
-    GroupElemJac pr; ECMult(pr, pubkey, u2, u1);
-    if (!pr.IsInfinity()) {
-        secp256k1_fe_t xr; pr.GetX(xr);
+    secp256k1_gej_t pr; ECMult(pr, pubkey, u2, u1);
+    if (!secp256k1_gej_is_infinity(&pr)) {
+        secp256k1_fe_t xr; secp256k1_gej_get_x(&xr, &pr);
         secp256k1_fe_normalize(&xr);
         unsigned char xrb[32]; secp256k1_fe_get_b32(xrb, &xr);
         secp256k1_num_set_bin(&r2, xrb, 32);
@@ -94,7 +94,7 @@ bool Signature::RecomputeR(secp256k1_num_t &r2, const GroupElemJac &pubkey, cons
     return ret;
 }
 
-bool Signature::Verify(const GroupElemJac &pubkey, const secp256k1_num_t &message) const {
+bool Signature::Verify(const secp256k1_gej_t &pubkey, const secp256k1_num_t &message) const {
     secp256k1_num_t r2;
     secp256k1_num_init(&r2);
     bool ret = false;
@@ -104,12 +104,12 @@ bool Signature::Verify(const GroupElemJac &pubkey, const secp256k1_num_t &messag
 }
 
 bool Signature::Sign(const secp256k1_num_t &seckey, const secp256k1_num_t &message, const secp256k1_num_t &nonce) {
-    const GroupConstants &c = GetGroupConst();
+    const secp256k1_ge_consts_t &c = *secp256k1_ge_consts;
 
-    GroupElemJac rp;
+    secp256k1_gej_t rp;
     ECMultBase(rp, nonce);
     secp256k1_fe_t rx;
-    rp.GetX(rx);
+    secp256k1_gej_get_x(&rx, &rp);
     unsigned char b[32];
     secp256k1_fe_normalize(&rx);
     secp256k1_fe_get_b32(b, &rx);

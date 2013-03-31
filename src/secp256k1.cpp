@@ -10,11 +10,12 @@ namespace secp256k1 {
 extern "C" void secp256k1_start(void) {
     secp256k1_num_start();
     secp256k1_fe_start();
-    GetGroupConst();
+    secp256k1_ge_start();
     GetECMultConsts();
 }
 
 extern "C" void secp256k1_stop(void) {
+    secp256k1_ge_stop();
     secp256k1_fe_stop();
     secp256k1_num_stop();
 }
@@ -24,7 +25,7 @@ extern "C" int secp256k1_ecdsa_verify(const unsigned char *msg, int msglen, cons
     secp256k1_num_t m; 
     secp256k1_num_init(&m);
     Signature s;
-    GroupElemJac q;
+    secp256k1_gej_t q;
     secp256k1_num_set_bin(&m, msg, msglen);
     if (!ParsePubKey(q, pubkey, pubkeylen)) {
         ret = -1;

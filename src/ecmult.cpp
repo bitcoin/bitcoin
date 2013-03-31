@@ -14,35 +14,65 @@
 
 namespace secp256k1 {
 
-template<typename G, int W> class WNAFPrecomp {
+template<int W> class WNAFPrecompJac {
 private:
-    G pre[1 << (W-2)];
+    secp256k1_gej_t pre[1 << (W-2)];
 
 public:
-    WNAFPrecomp() {}
+    WNAFPrecompJac() {}
 
-    void Build(const G &base) {
+    void Build(const secp256k1_gej_t &base) {
         pre[0] = base;
-        GroupElemJac x(base);
-        GroupElemJac d; d.SetDouble(x);
-        for (int i=1; i<(1 << (W-2)); i++) {
-            x.SetAdd(d,pre[i-1]);
-            pre[i].SetJac(x);
-        }
+        secp256k1_gej_t d; secp256k1_gej_double(&d, &pre[0]);
+        for (int i=1; i<(1 << (W-2)); i++)
+            secp256k1_gej_add(&pre[i], &d, &pre[i-1]);
     }
 
-    WNAFPrecomp(const G &base) {
+    WNAFPrecompJac(const secp256k1_gej_t &base) {
         Build(base);
     }
 
-    void Get(G &out, int exp) const {
+    void Get(secp256k1_gej_t &out, int exp) const {
         assert((exp & 1) == 1);
         assert(exp >= -((1 << (W-1)) - 1));
         assert(exp <=  ((1 << (W-1)) - 1));
         if (exp > 0) {
             out = pre[(exp-1)/2];
         } else {
-            out.SetNeg(pre[(-exp-1)/2]);
+            secp256k1_gej_neg(&out, &pre[(-exp-1)/2]);
+        }
+    }
+};
+
+template<int W> class WNAFPrecompAff {
+private:
+    secp256k1_ge_t pre[1 << (W-2)];
+
+public:
+    WNAFPrecompAff() {}
+
+    void Build(const secp256k1_ge_t &base) {
+        pre[0] = base;
+        secp256k1_gej_t x; secp256k1_gej_set_ge(&x, &base);
+        secp256k1_gej_t d; secp256k1_gej_double(&d, &x);
+        for (int i=1; i<(1 << (W-2)); i++) {
+            secp256k1_gej_add_ge(&x, &d, &pre[i-1]);
+            secp256k1_ge_set_gej(&pre[i], &x);
+        }
+    }
+
+    WNAFPrecompAff(const secp256k1_ge_t &base) {
+        Build(base);
+    }
+
+    void Get(secp256k1_ge_t &out, int exp) const {
+        assert((exp & 1) == 1);
+        assert(exp >= -((1 << (W-1)) - 1));
+        assert(exp <=  ((1 << (W-1)) - 1));
+        if (exp > 0) {
+            out = pre[(exp-1)/2];
+        } else {
+            secp256k1_ge_neg(&out, &pre[(-exp-1)/2]);
         }
     }
 };
@@ -112,33 +142,33 @@ public:
 
 class ECMultConsts {
 public:
-    WNAFPrecomp<GroupElem,WINDOW_G> wpg;
-    WNAFPrecomp<GroupElem,WINDOW_G> wpg128;
-    GroupElem prec[64][16]; // prec[j][i] = 16^j * (i+1) * G
-    GroupElem fin; // -(sum(prec[j][0], j=0..63))
+    WNAFPrecompAff<WINDOW_G> wpg;
+    WNAFPrecompAff<WINDOW_G> wpg128;
+    secp256k1_ge_t prec[64][16]; // prec[j][i] = 16^j * (i+1) * G
+    secp256k1_ge_t fin; // -(sum(prec[j][0], j=0..63))
 
     ECMultConsts() {
-        const GroupElem &g = GetGroupConst().g;
-        GroupElemJac g128j(g);
+        const secp256k1_ge_t &g = secp256k1_ge_consts->g;
+        secp256k1_gej_t g128j; secp256k1_gej_set_ge(&g128j, &g);
         for (int i=0; i<128; i++)
-            g128j.SetDouble(g128j);
-        GroupElem g128; g128.SetJac(g128j);
+            secp256k1_gej_double(&g128j, &g128j);
+        secp256k1_ge_t g128; secp256k1_ge_set_gej(&g128, &g128j);
         wpg.Build(g);
         wpg128.Build(g128);
-        GroupElemJac gg(g);
-        GroupElem ad(g);
-        GroupElemJac fn;
+        secp256k1_gej_t gg; secp256k1_gej_set_ge(&gg, &g);
+        secp256k1_ge_t ad = g;
+        secp256k1_gej_t fn; secp256k1_gej_set_infinity(&fn);
         for (int j=0; j<64; j++) {
-            prec[j][0].SetJac(gg);
-            fn.SetAdd(fn, gg);
+            secp256k1_ge_set_gej(&prec[j][0], &gg);
+            secp256k1_gej_add(&fn, &fn, &gg);
             for (int i=1; i<16; i++) {
-                gg.SetAdd(gg, ad);
-                prec[j][i].SetJac(gg);
+                secp256k1_gej_add_ge(&gg, &gg, &ad);
+                secp256k1_ge_set_gej(&prec[j][i], &gg);
             }
             ad = prec[j][15];
         }
-        fn.SetNeg(fn);
-        fin.SetJac(fn);
+        secp256k1_ge_set_gej(&fin, &fn);
+        secp256k1_ge_neg(&fin, &fin);
     }
 };
 
@@ -147,20 +177,20 @@ const ECMultConsts &GetECMultConsts() {
     return ecmult_consts;
 }
 
-void ECMultBase(GroupElemJac &out, const secp256k1_num_t &gn) {
+void ECMultBase(secp256k1_gej_t &out, const secp256k1_num_t &gn) {
     secp256k1_num_t n;
     secp256k1_num_init(&n);
     secp256k1_num_copy(&n, &gn);
     const ECMultConsts &c = GetECMultConsts();
-    out.SetAffine(c.prec[0][secp256k1_num_shift(&n, 4)]);
+    secp256k1_gej_set_ge(&out, &c.prec[0][secp256k1_num_shift(&n, 4)]);
     for (int j=1; j<64; j++) {
-        out.SetAdd(out, c.prec[j][secp256k1_num_shift(&n, 4)]);
+        secp256k1_gej_add_ge(&out, &out, &c.prec[j][secp256k1_num_shift(&n, 4)]);
     }
     secp256k1_num_free(&n);
-    out.SetAdd(out, c.fin);
+    secp256k1_gej_add_ge(&out, &out, &c.fin);
 }
 
-void ECMult(GroupElemJac &out, const GroupElemJac &a, const secp256k1_num_t &an, const secp256k1_num_t &gn) {
+void ECMult(secp256k1_gej_t &out, const secp256k1_gej_t &a, const secp256k1_num_t &an, const secp256k1_num_t &gn) {
     secp256k1_num_t an1, an2;
     secp256k1_num_t gn1, gn2;
 
@@ -169,7 +199,7 @@ void ECMult(GroupElemJac &out, const GroupElemJac &a, const secp256k1_num_t &an,
     secp256k1_num_init(&gn1);
     secp256k1_num_init(&gn2);
 
-    SplitExp(an, an1, an2);
+    secp256k1_gej_split_exp(&an1, &an2, &an);
 //    printf("an=%s\n", an.ToString().c_str());
 //    printf("an1=%s\n", an1.ToString().c_str());
 //    printf("an2=%s\n", an2.ToString().c_str());
@@ -181,9 +211,9 @@ void ECMult(GroupElemJac &out, const GroupElemJac &a, const secp256k1_num_t &an,
     WNAF<128> wa2(an2, WINDOW_A);
     WNAF<128> wg1(gn1, WINDOW_G);
     WNAF<128> wg2(gn2, WINDOW_G);
-    GroupElemJac a2; a2.SetMulLambda(a);
-    WNAFPrecomp<GroupElemJac,WINDOW_A> wpa1(a);
-    WNAFPrecomp<GroupElemJac,WINDOW_A> wpa2(a2);
+    secp256k1_gej_t a2; secp256k1_gej_mul_lambda(&a2, &a);
+    WNAFPrecompJac<WINDOW_A> wpa1(a);
+    WNAFPrecompJac<WINDOW_A> wpa2(a2);
     const ECMultConsts &c = GetECMultConsts();
 
     int size_a1 = wa1.GetSize();
@@ -192,28 +222,28 @@ void ECMult(GroupElemJac &out, const GroupElemJac &a, const secp256k1_num_t &an,
     int size_g2 = wg2.GetSize();
     int size = std::max(std::max(size_a1, size_a2), std::max(size_g1, size_g2));
 
-    out = GroupElemJac();
-    GroupElemJac tmpj;
-    GroupElem tmpa;
+    out; secp256k1_gej_set_infinity(&out);
+    secp256k1_gej_t tmpj;
+    secp256k1_ge_t tmpa;
 
     for (int i=size-1; i>=0; i--) {
-        out.SetDouble(out);
+        secp256k1_gej_double(&out, &out);
         int nw;
         if (i < size_a1 && (nw = wa1.Get(i))) {
             wpa1.Get(tmpj, nw);
-            out.SetAdd(out, tmpj);
+            secp256k1_gej_add(&out, &out, &tmpj);
         }
         if (i < size_a2 && (nw = wa2.Get(i))) {
             wpa2.Get(tmpj, nw);
-            out.SetAdd(out, tmpj);
+            secp256k1_gej_add(&out, &out, &tmpj);
         }
         if (i < size_g1 && (nw = wg1.Get(i))) {
             c.wpg.Get(tmpa, nw);
-            out.SetAdd(out, tmpa);
+            secp256k1_gej_add_ge(&out, &out, &tmpa);
         }
         if (i < size_g2 && (nw = wg2.Get(i))) {
             c.wpg128.Get(tmpa, nw);
-            out.SetAdd(out, tmpa);
+            secp256k1_gej_add_ge(&out, &out, &tmpa);
         }
     }
 

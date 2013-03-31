@@ -19,8 +19,8 @@ public:
 
     bool Parse(const unsigned char *sig, int size);
     bool Serialize(unsigned char *sig, int *size);
-    bool RecomputeR(secp256k1_num_t &r2, const GroupElemJac &pubkey, const secp256k1_num_t &message) const;
-    bool Verify(const GroupElemJac &pubkey, const secp256k1_num_t &message) const;
+    bool RecomputeR(secp256k1_num_t &r2, const secp256k1_gej_t &pubkey, const secp256k1_num_t &message) const;
+    bool Verify(const secp256k1_gej_t &pubkey, const secp256k1_num_t &message) const;
     bool Sign(const secp256k1_num_t &seckey, const secp256k1_num_t &message, const secp256k1_num_t &nonce);
     void SetRS(const secp256k1_num_t &rin, const secp256k1_num_t &sin);
     std::string ToString() const;
