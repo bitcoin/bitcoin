@@ -3,39 +3,44 @@ FLAGS_PROD:=-DNDEBUG -O2 -march=native
 FLAGS_DEBUG:=-DVERIFY -ggdb3 -O1
 FLAGS_TEST:=-DVERIFY -ggdb3 -O2 -march=native
 
-SECP256K1_FILES := num.h   field.h   field_5x52.h   group.h   ecmult.h   ecdsa.h   \
-                   num.cpp field.cpp field_5x52.cpp group.cpp ecmult.cpp ecdsa.cpp
+SECP256K1_FILES := src/num.h   src/field.h   src/field_5x52.h   src/group.h   src/ecmult.h   src/ecdsa.h   \
+                   src/num.cpp src/field.cpp src/field_5x52.cpp src/group.cpp src/ecmult.cpp src/ecdsa.cpp
+
 
 ifndef CONF
 CONF := gmp
 endif
 
+OBJS := obj/secp256k1-$(CONF).o
+
 default: all
 
 ifeq ($(CONF), openssl)
-FLAGS_CONF:=-DUSE_NUM_OPENSSL -DUSE_FIELDINVERSE_BUILTIN
+FLAGS_CONF:=-DUSE_NUM_OPENSSL -DUSE_FIELD_INV_BUILTIN
 LIBS:=-lcrypto
-SECP256K1_FILES := $(SECP256K1_FILES) num_openssl.h num_openssl.cpp field_5x52_int128.cpp
+SECP256K1_FILES := $(SECP256K1_FILES) src/num_openssl.h src/num_openssl.cpp src/field_5x52_int128.cpp
 else
 ifeq ($(CONF), gmp)
 FLAGS_CONF:=-DUSE_NUM_GMP
 LIBS:=-lgmp
-SECP256K1_FILES := $(SECP256K1_FILES) num_gmp.h num_gmp.cpp field_5x52_int128.cpp
+SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/num_gmp.cpp src/field_5x52_int128.cpp
 else
 ifeq ($(CONF), gmpasm)
-FLAGS_CONF:=-DUSE_NUM_GMP -DINLINE_ASM
+FLAGS_CONF:=-DUSE_NUM_GMP -DUSE_FIELD_5X52_ASM
 LIBS:=-lgmp obj/field_5x52_asm.o
-SECP256K1_FILES := $(SECP256K1_FILES) num_gmp.h num_gmp.cpp field_5x52_asm.cpp obj/field_5x52_asm.o
+OBJS:=$(OBJS) obj/field_5x52_asm.o
+SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/num_gmp.cpp src/field_5x52_asm.cpp
 
-obj/field_5x52_asm.o: field_5x52_asm.asm
-	yasm -f elf64 -o obj/field_5x52_asm.o field_5x52_asm.asm
+obj/field_5x52_asm.o: src/field_5x52_asm.asm
+	yasm -f elf64 -o obj/field_5x52_asm.o src/field_5x52_asm.asm
 else
-SECP256K1_FILES := $(SECP256K1_FILES) field_5x52_int128.cpp
+SECP256K1_FILES := $(SECP256K1_FILES) src/field_5x52_int128.cpp
 endif
 endif
 endif
 
-all: *.cpp *.asm *.h
+
+all: src/*.cpp src/*.asm src/*.h include/*.h
 	+make CONF=openssl all-openssl
 	+make CONF=gmp     all-gmp
 	+make CONF=gmpasm  all-gmpasm
@@ -48,16 +53,19 @@ clean:
 bench-any: bench-$(CONF)
 tests-any: tests-$(CONF)
 
-all-$(CONF): bench-$(CONF) tests-$(CONF) obj/secp256k1-$(CONF).o
+all-$(CONF): bench-$(CONF) tests-$(CONF) libsecp256k1-$(CONF).a
 
 clean-$(CONF):
-	rm -f bench-$(CONF) tests-$(CONF) obj/secp256k1-$(CONF).o
+	rm -f bench-$(CONF) tests-$(CONF) libsecp256k1-$(CONF).a obj/*
 
-obj/secp256k1-$(CONF).o: $(SECP256K1_FILES)
-	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) secp256k1.cpp -c -o obj/secp256k1-$(CONF).o
+obj/secp256k1-$(CONF).o: $(SECP256K1_FILES) src/secp256k1.cpp include/secp256k1.h
+	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) src/secp256k1.cpp -c -o obj/secp256k1-$(CONF).o
 
-bench-$(CONF): $(SECP256K1_FILES) bench.cpp
-	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) bench.cpp $(LIBS) -o bench-$(CONF)
+bench-$(CONF): $(OBJS) src/bench.cpp
+	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) src/bench.cpp $(LIBS) -o bench-$(CONF)
 
-tests-$(CONF): $(SECP256K1_FILES) tests.cpp
-	$(CXX) $(FLAGS_COMMON) $(FLAGS_TEST) $(FLAGS_CONF) tests.cpp $(LIBS) -o tests-$(CONF)
+tests-$(CONF): $(OBJS) src/tests.cpp
+	$(CXX) $(FLAGS_COMMON) $(FLAGS_TEST) $(FLAGS_CONF) src/tests.cpp $(LIBS) -o tests-$(CONF)
+
+libsecp256k1-$(CONF).a: $(OBJS)
+	$(AR) -rs $@ $(OBJS)

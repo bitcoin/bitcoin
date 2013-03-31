@@ -135,7 +135,7 @@ void static secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 }
 
 void static secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
-#if defined(USE_FIELDINVERSE_BUILTIN)
+#if defined(USE_FIELD_INV_BUILTIN)
     secp256k1_fe_inv(r, a);
 #else
     unsigned char b[32];

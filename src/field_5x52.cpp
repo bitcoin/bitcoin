@@ -3,7 +3,7 @@
 #include "num.h"
 #include "field.h"
 
-#ifdef INLINE_ASM
+#ifdef USE_FIELD_5X52_ASM
 #include "field_5x52_asm.cpp"
 #else
 #include "field_5x52_int128.cpp"
