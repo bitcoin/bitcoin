@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+extern "C" {
+
 typedef struct {
     // X = sum(i=0..4, elem[i]*2^52) mod n
     uint64_t n[5];
@@ -11,5 +13,7 @@ typedef struct {
     int normalized;
 #endif
 } secp256k1_fe_t;
+
+}
 
 #endif

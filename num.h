@@ -9,6 +9,8 @@
 #error "Please select num implementation"
 #endif
 
+extern "C" {
+
 void static secp256k1_num_start(void);
 void static secp256k1_num_init(secp256k1_num_t *r);
 void static secp256k1_num_free(secp256k1_num_t *r);
@@ -36,5 +38,7 @@ void static secp256k1_num_get_hex(char *r, int *rlen, const secp256k1_num_t *a);
 void static secp256k1_num_split(secp256k1_num_t *rl, secp256k1_num_t *rh, const secp256k1_num_t *a, int bits);
 void static secp256k1_num_negate(secp256k1_num_t *r);
 void static secp256k1_num_set_rand(secp256k1_num_t *r, const secp256k1_num_t *a);
+
+}
 
 #endif

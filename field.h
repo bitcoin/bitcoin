@@ -15,6 +15,8 @@
 // just one implementation for now
 #include "field_5x52.h"
 
+extern "C" {
+
 typedef struct {
     secp256k1_num_t p;
 } secp256k1_fe_consts_t;
@@ -84,5 +86,7 @@ void static secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a);
 
 /** Convert a hexadecimal string to a field element. */
 void static secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen);
+
+}
 
 #endif

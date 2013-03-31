@@ -7,6 +7,8 @@
 #include "lin64.h"
 #endif
 
+extern "C" {
+
 /** Implements arithmetic modulo FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F,
  *  represented as 5 uint64_t's in base 2^52. The values are allowed to contain >52 each. In particular,
  *  each FieldElem has a 'magnitude' associated with it. Internally, a magnitude M means each element
@@ -58,7 +60,7 @@ void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
 #endif
 }
 
-void static secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
+void static inline secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
     r->n[0] = a;
     r->n[1] = r->n[2] = r->n[3] = r->n[4] = 0;
 #ifdef VERIFY
@@ -68,14 +70,14 @@ void static secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
 }
 
 // TODO: not constant time!
-int static secp256k1_fe_is_zero(const secp256k1_fe_t *a) {
+int static inline secp256k1_fe_is_zero(const secp256k1_fe_t *a) {
 #ifdef VERIFY
     assert(a->normalized);
 #endif
     return (a->n[0] == 0 && a->n[1] == 0 && a->n[2] == 0 && a->n[3] == 0 && a->n[4] == 0);
 }
 
-int static secp256k1_fe_is_odd(const secp256k1_fe_t *a) {
+int static inline secp256k1_fe_is_odd(const secp256k1_fe_t *a) {
 #ifdef VERIFY
     assert(a->normalized);
 #endif
@@ -83,7 +85,7 @@ int static secp256k1_fe_is_odd(const secp256k1_fe_t *a) {
 }
 
 // TODO: not constant time!
-int static secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+int static inline secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
 #ifdef VERIFY
     assert(a->normalized);
     assert(b->normalized);
@@ -122,7 +124,7 @@ void static secp256k1_fe_get_b32(unsigned char *r, const secp256k1_fe_t *a) {
     }
 }
 
-void static secp256k1_fe_negate(secp256k1_fe_t *r, const secp256k1_fe_t *a, int m) {
+void static inline secp256k1_fe_negate(secp256k1_fe_t *r, const secp256k1_fe_t *a, int m) {
 #ifdef VERIFY
     assert(a->magnitude <= m);
     r->magnitude = m + 1;
@@ -135,7 +137,7 @@ void static secp256k1_fe_negate(secp256k1_fe_t *r, const secp256k1_fe_t *a, int 
     r->n[4] = 0x0FFFFFFFFFFFFULL * (m + 1) - a->n[4];
 }
 
-void static secp256k1_fe_mul_int(secp256k1_fe_t *r, int a) {
+void static inline secp256k1_fe_mul_int(secp256k1_fe_t *r, int a) {
 #ifdef VERIFY
     r->magnitude *= a;
     r->normalized = false;
@@ -147,7 +149,7 @@ void static secp256k1_fe_mul_int(secp256k1_fe_t *r, int a) {
     r->n[4] *= a;
 }
 
-void static secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
+void static inline secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #ifdef VERIFY
     r->magnitude += a->magnitude;
     r->normalized = 0;
@@ -273,7 +275,9 @@ void static secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #endif
 
 #ifdef VERIFY
-    assert(a->magnitude <= 8);
-    a->normalized = 0;
+    r->magnitude = 1;
+    r->normalized = 0;
 #endif
+}
+
 }

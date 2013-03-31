@@ -5,6 +5,8 @@
 
 #include "num.h"
 
+extern "C" {
+
 typedef struct {
     int initialized;
     gmp_randstate_t rng;
@@ -145,4 +147,6 @@ void static secp256k1_num_negate(secp256k1_num_t *r) {
 
 void static secp256k1_num_set_rand(secp256k1_num_t *r, const secp256k1_num_t *a) {
     mpz_urandomm(r->bn, secp256k1_num_state.rng, a->bn);
+}
+
 }

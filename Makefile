@@ -1,7 +1,7 @@
 FLAGS_COMMON:=-Wall
-FLAGS_PROD:=-DNDEBUG -O2 -march=native
-FLAGS_DEBUG:=-DVERIFY_MAGNITUDE -ggdb3 -O1
-FLAGS_TEST:=-DVERIFY_MAGNITUDE -ggdb3 -O2 -march=native
+FLAGS_PROD:=-DNDEBUG -O3 -march=native
+FLAGS_DEBUG:=-DVERIFY -ggdb3 -O1
+FLAGS_TEST:=-DVERIFY -ggdb3 -O2 -march=native
 
 SECP256K1_FILES := num.h   field.h   field_5x52.h   group.h   ecmult.h   ecdsa.h   \
                    num.cpp field.cpp field_5x52.cpp group.cpp ecmult.cpp ecdsa.cpp
@@ -58,4 +58,4 @@ bench-$(CONF): $(SECP256K1_FILES) bench.cpp
 	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) bench.cpp $(LIBS) -o bench-$(CONF)
 
 tests-$(CONF): $(SECP256K1_FILES) tests.cpp
-	$(CXX) $(FLAGS_COMMON) $(FLAGS_DEBUG) $(FLAGS_CONF) tests.cpp $(LIBS) -o tests-$(CONF)
+	$(CXX) $(FLAGS_COMMON) $(FLAGS_TEST) $(FLAGS_CONF) tests.cpp $(LIBS) -o tests-$(CONF)

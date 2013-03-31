@@ -1,6 +1,8 @@
 // just one implementation for now
 #include "field_5x52.cpp"
 
+extern "C" {
+
 static const unsigned char secp256k1_fe_consts_p[] = {
     0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
     0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
@@ -148,4 +150,6 @@ void static secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_num_free(&n);
     secp256k1_fe_set_b32(&c, b);
 #endif
+}
+
 }
