@@ -1,4 +1,4 @@
-FLAGS_COMMON:=-Wall -Wno-unused
+FLAGS_COMMON:=-Wall -Wno-unused -fPIC
 FLAGS_PROD:=-DNDEBUG -O2 -march=native
 FLAGS_DEBUG:=-DVERIFY -ggdb3 -O1
 FLAGS_TEST:=-DVERIFY -ggdb3 -O2 -march=native
@@ -6,6 +6,7 @@ FLAGS_TEST:=-DVERIFY -ggdb3 -O2 -march=native
 SECP256K1_FILES := src/num.h   src/field.h   src/field_5x52.h   src/group.h   src/ecmult.h   src/ecdsa.h   \
                    src/num.cpp src/field.cpp src/field_5x52.cpp src/group.cpp src/ecmult.cpp src/ecdsa.cpp
 
+JAVA_FILES := src/java/org_bitcoin_NativeSecp256k1.h src/java/org_bitcoin_NativeSecp256k1.c
 
 ifndef CONF
 CONF := gmp
@@ -56,7 +57,7 @@ tests-any: tests-$(CONF)
 all-$(CONF): bench-$(CONF) tests-$(CONF) libsecp256k1-$(CONF).a
 
 clean-$(CONF):
-	rm -f bench-$(CONF) tests-$(CONF) libsecp256k1-$(CONF).a obj/*
+	rm -f bench-$(CONF) tests-$(CONF) libsecp256k1-$(CONF).a libjavasecp256k1-$(CONF).so obj/*
 
 obj/secp256k1-$(CONF).o: $(SECP256K1_FILES) src/secp256k1.cpp include/secp256k1.h
 	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) src/secp256k1.cpp -c -o obj/secp256k1-$(CONF).o
@@ -69,3 +70,8 @@ tests-$(CONF): $(OBJS) src/tests.cpp
 
 libsecp256k1-$(CONF).a: $(OBJS)
 	$(AR) -rs $@ $(OBJS)
+
+libjavasecp256k1-$(CONF).so: $(OBJS) $(JAVA_FILES)
+	$(CXX) $(FLAGS_COMMON) $(FLAGS_PROD) $(FLAGS_CONF) -I. src/java/org_bitcoin_NativeSecp256k1.c $(LIBS) $(OBJS) -shared -o libjavasecp256k1-$(CONF).so
+
+java: libjavasecp256k1-$(CONF).so
