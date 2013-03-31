@@ -158,23 +158,6 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>Number of transactions:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QLabel" name="labelNumTransactions">
-              <property name="toolTip">
-               <string>Total number of transactions in wallet</string>
-              </property>
-              <property name="text">
-               <string notr="true">0</string>
-              </property>
-             </widget>
-            </item>
             <item row="2" column="0">
              <widget class="QLabel" name="labelImmatureText">
               <property name="text">
