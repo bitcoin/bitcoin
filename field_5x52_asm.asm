@@ -1,10 +1,10 @@
 	;; Added by Diederik Huys, March 2013
 	;;
 	;; Provided public procedures:
-	;; 	ExSetMult
-	;; 	ExSetSquare
+	;; 	secp256k1_fe_mul_inner
+	;; 	secp256k1_fe_sqr_inner
 	;;
-	;; Needed tools: YASM (http://www.japheth.de/JWasm.html)
+	;; Needed tools: YASM (http://yasm.tortall.net)
 	;;
 	;; 
 
@@ -12,9 +12,9 @@
 
 	;;  Procedure ExSetMult
 	;;  Register Layout:
-	;;  INPUT: 	rdi	= a.n
-	;; 	   	rsi  	= b.n
-	;; 	   	rdx  	= this.a
+	;;  INPUT: 	rdi	= a->n
+	;; 	   	rsi  	= b->n
+	;; 	   	rdx  	= r->a
 	;; 
 	;;  INTERNAL:	rdx:rax  = multiplication accumulator
 	;; 		r9:r8    = c
@@ -26,9 +26,9 @@
 	;; 		rbp	 = Constant 0FFFFFFFFFFFFFh / t8
 	;; 		rsi	 = b.n / b.n[4] / t9
 
-	GLOBAL ExSetMult
+	GLOBAL secp256k1_fe_mul_inner
 	ALIGN 32
-ExSetMult:
+secp256k1_fe_mul_inner:
 	push rbp
 	push rbx
 	push r12
@@ -315,9 +315,9 @@ common_exit_norm:
 	;; 		rcx	 = a.n[3] / t7
 	;; 		rbp	 = 0FFFFFFFFFFFFFh / t8
 	;; 		rsi	 = a.n[4] / a.n[4] /t9
-	GLOBAL ExSetSquare
+	GLOBAL secp256k1_fe_sqr_inner
 	ALIGN 32
-ExSetSquare:
+secp256k1_fe_sqr_inner:
 	push rbp
 	push rbx
 	push r12

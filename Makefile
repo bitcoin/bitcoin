@@ -1,4 +1,4 @@
-FLAGS_COMMON:=-Wall
+FLAGS_COMMON:=-Wall -Wno-unused
 FLAGS_PROD:=-DNDEBUG -O2 -march=native
 FLAGS_DEBUG:=-DVERIFY -ggdb3 -O1
 FLAGS_TEST:=-DVERIFY -ggdb3 -O2 -march=native
@@ -15,20 +15,22 @@ default: all
 ifeq ($(CONF), openssl)
 FLAGS_CONF:=-DUSE_NUM_OPENSSL -DUSE_FIELDINVERSE_BUILTIN
 LIBS:=-lcrypto
-SECP256K1_FILES := $(SECP256K1_FILES) num_openssl.h num_openssl.cpp
+SECP256K1_FILES := $(SECP256K1_FILES) num_openssl.h num_openssl.cpp field_5x52_int128.cpp
 else
 ifeq ($(CONF), gmp)
 FLAGS_CONF:=-DUSE_NUM_GMP
 LIBS:=-lgmp
-SECP256K1_FILES := $(SECP256K1_FILES) num_gmp.h num_gmp.cpp 
+SECP256K1_FILES := $(SECP256K1_FILES) num_gmp.h num_gmp.cpp field_5x52_int128.cpp
 else
 ifeq ($(CONF), gmpasm)
 FLAGS_CONF:=-DUSE_NUM_GMP -DINLINE_ASM
-LIBS:=-lgmp obj/lin64.o
-SECP256K1_FILES := $(SECP256K1_FILES) num_gmp.h num_gmp.cpp obj/lin64.o
+LIBS:=-lgmp obj/field_5x52_asm.o
+SECP256K1_FILES := $(SECP256K1_FILES) num_gmp.h num_gmp.cpp field_5x52_asm.cpp obj/field_5x52_asm.o
 
-obj/lin64.o: lin64.asm
-	yasm -f elf64 -o obj/lin64.o lin64.asm
+obj/field_5x52_asm.o: field_5x52_asm.asm
+	yasm -f elf64 -o obj/field_5x52_asm.o field_5x52_asm.asm
+else
+SECP256K1_FILES := $(SECP256K1_FILES) field_5x52_int128.cpp
 endif
 endif
 endif

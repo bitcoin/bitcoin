@@ -4,7 +4,9 @@
 #include "field.h"
 
 #ifdef INLINE_ASM
-#include "lin64.h"
+#include "field_5x52_asm.cpp"
+#else
+#include "field_5x52_int128.cpp"
 #endif
 
 extern "C" {
@@ -165,119 +167,19 @@ void static secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const s
 #ifdef VERIFY
     assert(a->magnitude <= 8);
     assert(b->magnitude <= 8);
-#endif
-
-#ifdef INLINE_ASM
-    ExSetMult((uint64_t*)a->n, (uint64_t*)b->n, (uint64_t*)r->n);
-#else
-    unsigned __int128 c = (__int128)a->n[0] * b->n[0];
-    uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
-    c = c + (__int128)a->n[0] * b->n[1] +
-            (__int128)a->n[1] * b->n[0];
-    uint64_t t1 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 20000000000000BF
-    c = c + (__int128)a->n[0] * b->n[2] +
-            (__int128)a->n[1] * b->n[1] +
-            (__int128)a->n[2] * b->n[0];
-    uint64_t t2 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 30000000000001A0
-    c = c + (__int128)a->n[0] * b->n[3] +
-            (__int128)a->n[1] * b->n[2] +
-            (__int128)a->n[2] * b->n[1] +
-            (__int128)a->n[3] * b->n[0];
-    uint64_t t3 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 4000000000000280
-    c = c + (__int128)a->n[0] * b->n[4] +
-            (__int128)a->n[1] * b->n[3] +
-            (__int128)a->n[2] * b->n[2] +
-            (__int128)a->n[3] * b->n[1] +
-            (__int128)a->n[4] * b->n[0];
-    uint64_t t4 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 320000000000037E
-    c = c + (__int128)a->n[1] * b->n[4] +
-            (__int128)a->n[2] * b->n[3] +
-            (__int128)a->n[3] * b->n[2] +
-            (__int128)a->n[4] * b->n[1];
-    uint64_t t5 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 22000000000002BE
-    c = c + (__int128)a->n[2] * b->n[4] +
-            (__int128)a->n[3] * b->n[3] +
-            (__int128)a->n[4] * b->n[2];
-    uint64_t t6 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 12000000000001DE
-    c = c + (__int128)a->n[3] * b->n[4] +
-            (__int128)a->n[4] * b->n[3];
-    uint64_t t7 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 02000000000000FE
-    c = c + (__int128)a->n[4] * b->n[4];
-    uint64_t t8 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 001000000000001E
-    uint64_t t9 = c;
-
-    c = t0 + (__int128)t5 * 0x1000003D10ULL;
-    t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t1 + (__int128)t6 * 0x1000003D10ULL;
-    t1 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t2 + (__int128)t7 * 0x1000003D10ULL;
-    r->n[2] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t3 + (__int128)t8 * 0x1000003D10ULL;
-    r->n[3] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t4 + (__int128)t9 * 0x1000003D10ULL;
-    r->n[4] = c & 0x0FFFFFFFFFFFFULL; c = c >> 48; // c max 000001000003D110
-    c = t0 + (__int128)c * 0x1000003D1ULL;
-    r->n[0] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 1000008
-    r->n[1] = t1 + c;
-#endif
-#ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 0;
 #endif
+    secp256k1_fe_mul_inner(a->n, b->n, r->n);
 }
 
 void static secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #ifdef VERIFY
     assert(a->magnitude <= 8);
-#endif
-
-#ifdef INLINE_ASM
-    ExSetSquare((uint64_t*)&a->n, (uint64_t*)&r->n);
-#else
-    __int128 c = (__int128)a->n[0] * a->n[0];
-    uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
-    c = c + (__int128)(a->n[0]*2) * a->n[1];
-    uint64_t t1 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 20000000000000BF
-    c = c + (__int128)(a->n[0]*2) * a->n[2] +
-            (__int128)a->n[1] * a->n[1];
-    uint64_t t2 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 30000000000001A0
-    c = c + (__int128)(a->n[0]*2) * a->n[3] +
-            (__int128)(a->n[1]*2) * a->n[2];
-    uint64_t t3 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 4000000000000280
-    c = c + (__int128)(a->n[0]*2) * a->n[4] +
-            (__int128)(a->n[1]*2) * a->n[3] +
-            (__int128)a->n[2] * a->n[2];
-    uint64_t t4 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 320000000000037E
-    c = c + (__int128)(a->n[1]*2) * a->n[4] +
-            (__int128)(a->n[2]*2) * a->n[3];
-    uint64_t t5 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 22000000000002BE
-    c = c + (__int128)(a->n[2]*2) * a->n[4] +
-            (__int128)a->n[3] * a->n[3];
-    uint64_t t6 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 12000000000001DE
-    c = c + (__int128)(a->n[3]*2) * a->n[4];
-    uint64_t t7 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 02000000000000FE
-    c = c + (__int128)a->n[4] * a->n[4];
-    uint64_t t8 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 001000000000001E
-    uint64_t t9 = c;
-    c = t0 + (__int128)t5 * 0x1000003D10ULL;
-    t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t1 + (__int128)t6 * 0x1000003D10ULL;
-    t1 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t2 + (__int128)t7 * 0x1000003D10ULL;
-    r->n[2] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t3 + (__int128)t8 * 0x1000003D10ULL;
-    r->n[3] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t4 + (__int128)t9 * 0x1000003D10ULL;
-    r->n[4] = c & 0x0FFFFFFFFFFFFULL; c = c >> 48; // c max 000001000003D110
-    c = t0 + (__int128)c * 0x1000003D1ULL;
-    r->n[0] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 1000008
-    r->n[1] = t1 + c;
-#endif
-
-#ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 0;
 #endif
+    secp256k1_fe_sqr_inner(a->n, r->n);
 }
 
 }
