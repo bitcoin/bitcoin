@@ -147,11 +147,6 @@ void OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 
     ui->labelImmatureText->setVisible(showImmature);
 }
 
-void OverviewPage::setNumTransactions(int count)
-{
-    ui->labelNumTransactions->setText(QLocale::system().toString(count));
-}
-
 void OverviewPage::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
@@ -182,9 +177,6 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // Keep up to date with wallet
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
         connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
-
-        setNumTransactions(model->getNumTransactions());
-        connect(model, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
     }
