@@ -148,7 +148,7 @@ void static secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_num_mod_inverse(&n, &n, &secp256k1_fe_consts->p);
     secp256k1_num_get_bin(b, 32, &n);
     secp256k1_num_free(&n);
-    secp256k1_fe_set_b32(&c, b);
+    secp256k1_fe_set_b32(r, b);
 #endif
 }
 
