@@ -14,8 +14,8 @@ class GroupElemJac;
 class GroupElem {
 protected:
     bool fInfinity;
-    FieldElem x;
-    FieldElem y;
+    secp256k1_fe_t x;
+    secp256k1_fe_t y;
 
 public:
 
@@ -23,16 +23,16 @@ public:
     GroupElem();
 
     /** Creates the point with given affine coordinates */
-    GroupElem(const FieldElem &xin, const FieldElem &yin);
+    GroupElem(const secp256k1_fe_t &xin, const secp256k1_fe_t &yin);
 
     /** Checks whether this is the point at infinity */
     bool IsInfinity() const;
 
     void SetNeg(const GroupElem &p);
 
-    void GetX(FieldElem &xout);
+    void GetX(secp256k1_fe_t &xout);
 
-    void GetY(FieldElem &yout);
+    void GetY(secp256k1_fe_t &yout);
 
     std::string ToString() const;
 
@@ -44,14 +44,14 @@ public:
 /** Represents a point on the secp256k1 curve, with jacobian coordinates */
 class GroupElemJac : private GroupElem {
 protected:
-    FieldElem z;
+    secp256k1_fe_t z;
 
 public:
     /** Creates the point at infinity */
     GroupElemJac();
 
     /** Creates the point with given affine coordinates */
-    GroupElemJac(const FieldElem &xin, const FieldElem &yin);
+    GroupElemJac(const secp256k1_fe_t &xin, const secp256k1_fe_t &yin);
 
     GroupElemJac(const GroupElem &in);
 
@@ -65,15 +65,15 @@ public:
     /** Returns the affine coordinates of this point */
     void GetAffine(GroupElem &aff);
 
-    void GetX(FieldElem &xout);
-    void GetY(FieldElem &yout);
+    void GetX(secp256k1_fe_t &xout);
+    void GetY(secp256k1_fe_t &yout);
 
     bool IsInfinity() const;
 
     void SetNeg(const GroupElemJac &p);
 
     /** Sets this point to have a given X coordinate & given Y oddness */
-    void SetCompressed(const FieldElem &xin, bool fOdd);
+    void SetCompressed(const secp256k1_fe_t &xin, bool fOdd);
 
     /** Sets this point to be the EC double of another */
     void SetDouble(const GroupElemJac &p);
@@ -91,13 +91,13 @@ public:
 
 class GroupConstants {
 private:
-    const FieldElem g_x;
-    const FieldElem g_y;
+    secp256k1_fe_t g_x;
+    secp256k1_fe_t g_y;
 
 public:
     secp256k1_num_t order;
-    const GroupElem g;
-    const FieldElem beta;
+    GroupElem g;
+    secp256k1_fe_t beta;
     secp256k1_num_t lambda, a1b2, b1, a2;
 
     GroupConstants();

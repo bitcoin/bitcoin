@@ -13,8 +13,8 @@ using namespace secp256k1;
 
 void test_run_ecmult_chain() {
     // random starting point A (on the curve)
-    FieldElem ax; ax.SetHex("8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004");
-    FieldElem ay; ay.SetHex("a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f");
+    secp256k1_fe_t ax; secp256k1_fe_set_hex(&ax, "8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004", 64);
+    secp256k1_fe_t ay; secp256k1_fe_set_hex(&ay, "a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f", 64);
     GroupElemJac a(ax,ay);
     // two random initial factors xn and gn
     secp256k1_num_t xn;
@@ -85,13 +85,15 @@ void test_point_times_order(const GroupElemJac &point) {
 }
 
 void test_run_point_times_order() {
-    FieldElem x; x.SetHex("02");
+    secp256k1_fe_t x; secp256k1_fe_set_hex(&x, "02", 2);
     for (int i=0; i<500; i++) {
         GroupElemJac j; j.SetCompressed(x, true);
         test_point_times_order(j);
-        x.SetSquare(x);
+        secp256k1_fe_sqr(&x, &x);
     }
-    assert(x.ToString() == "7603CB59B0EF6C63FE6084792A0C378CDB3233A80F8A9A09A877DEAD31B38C45"); // 0x02 ^ (2^500)
+    char c[65]; int cl=65;
+    secp256k1_fe_get_hex(c, &cl, &x);
+    assert(strcmp(c, "7603CB59B0EF6C63FE6084792A0C378CDB3233A80F8A9A09A877DEAD31B38C45") == 0);
 }
 
 void test_wnaf(const secp256k1_num_t &number, int w) {
@@ -173,10 +175,13 @@ void test_run_ecdsa_sign_verify() {
 
 int main(void) {
     secp256k1_num_start();
+    secp256k1_fe_start();
 
     test_run_wnaf();
     test_run_point_times_order();
     test_run_ecmult_chain();
     test_run_ecdsa_sign_verify();
+
+    secp256k1_fe_stop();
     return 0;
 }

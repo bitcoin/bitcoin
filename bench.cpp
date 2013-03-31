@@ -9,15 +9,17 @@
 using namespace secp256k1;
 
 int main() {
-    FieldElem x;
+    secp256k1_num_start();
+    secp256k1_fe_start();
+
+    secp256k1_fe_t x;
     const secp256k1_num_t &order = GetGroupConst().order;
     secp256k1_num_t r, s, m;
-    secp256k1_num_start();
     secp256k1_num_init(&r);
     secp256k1_num_init(&s);
     secp256k1_num_init(&m);
     Signature sig;
-    x.SetHex("a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f");
+    secp256k1_fe_set_hex(&x, "a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f", 64);
     int cnt = 0;
     int good = 0;
     for (int i=0; i<1000000; i++) {
@@ -35,5 +37,7 @@ int main() {
     secp256k1_num_free(&r);
     secp256k1_num_free(&s);
     secp256k1_num_free(&m);
+
+    secp256k1_fe_stop();
     return 0;
 }
