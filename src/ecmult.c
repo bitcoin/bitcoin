@@ -1,18 +1,13 @@
-#include <sstream>
-#include <algorithm>
-
 #include "num.h"
 #include "group.h"
 #include "ecmult.h"
 
-// optimal for 128-bit and 256-bit exponents
+// optimal for 128-bit and 256-bit exponents.
 #define WINDOW_A 5
 
 // larger numbers may result in slightly better performance, at the cost of
-// exponentially larger precomputed tables. WINDOW_G == 13 results in 640 KiB.
+// exponentially larger precomputed tables. WINDOW_G == 14 results in 640 KiB.
 #define WINDOW_G 14
-
-extern "C" {
 
 /** Fill a table 'pre' with precomputed odd multiples of a. W determines the size of the table.
  *  pre will contains the values [1*a,3*a,5*a,...,(2^(w-1)-1)*a], so it needs place for
@@ -196,7 +191,10 @@ void static secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
     secp256k1_ecmult_table_precomp_gej(pre_a_1,   a,      WINDOW_A);
     secp256k1_ecmult_table_precomp_gej(pre_a_lam, &a_lam, WINDOW_A);
 
-    int bits = std::max(std::max(bits_na_1, bits_na_lam), std::max(bits_ng_1, bits_ng_128));
+    int bits = bits_na_1;
+    if (bits_na_lam > bits) bits = bits_na_lam;
+    if (bits_ng_1 > bits) bits = bits_ng_1;
+    if (bits_ng_128 > bits) bits = bits_ng_128;
 
     secp256k1_gej_set_infinity(r);
     secp256k1_gej_t tmpj;
@@ -227,6 +225,4 @@ void static secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
     secp256k1_num_free(&na_lam);
     secp256k1_num_free(&ng_1);
     secp256k1_num_free(&ng_128);
-}
-
 }

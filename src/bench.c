@@ -1,10 +1,10 @@
 #include <stdio.h>
 
-#include "num.cpp"
-#include "field.cpp"
-#include "group.cpp"
-#include "ecmult.cpp"
-#include "ecdsa.cpp"
+#include "num.c"
+#include "field.c"
+#include "group.c"
+#include "ecmult.c"
+#include "ecdsa.c"
 
 int main() {
     secp256k1_num_start();

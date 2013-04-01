@@ -3,12 +3,8 @@
 
 #include <gmp.h>
 
-extern "C" {
-
 typedef struct {
     mpz_t bn;
 } secp256k1_num_t;
-
-}
 
 #endif

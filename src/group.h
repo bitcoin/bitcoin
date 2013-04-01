@@ -4,8 +4,6 @@
 #include "num.h"
 #include "field.h"
 
-extern "C" {
-
 typedef struct {
     secp256k1_fe_t x;
     secp256k1_fe_t y;
@@ -51,7 +49,5 @@ void static secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
 void static secp256k1_gej_get_hex(char *r, int *rlen, const secp256k1_gej_t *a);
 void static secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *a);
 void static secp256k1_gej_split_exp(secp256k1_num_t *r1, secp256k1_num_t *r2, const secp256k1_num_t *a);
-
-}
 
 #endif

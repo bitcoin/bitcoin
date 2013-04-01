@@ -4,8 +4,6 @@
 #include "ecmult.h"
 #include "ecdsa.h"
 
-extern "C" {
-
 void static secp256k1_ecdsa_sig_init(secp256k1_ecdsa_sig_t *r) {
     secp256k1_num_init(&r->r);
     secp256k1_num_init(&r->s);
@@ -27,9 +25,9 @@ int static secp256k1_ecdsa_pubkey_parse(secp256k1_gej_t *elem, const unsigned ch
         secp256k1_fe_set_b32(&y, pub+33);
         secp256k1_gej_set_xy(elem, &x, &y);
         if ((pub[0] == 0x06 || pub[0] == 0x07) && secp256k1_fe_is_odd(&y) != (pub[0] == 0x07))
-            return false;
+            return 0;
     } else {
-        return false;
+        return 0;
     }
     return secp256k1_gej_is_valid(elem);
 }
@@ -136,12 +134,10 @@ int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_
         return 0;
     if (secp256k1_num_is_odd(&sig->s))
         secp256k1_num_sub(&sig->s, &c->order, &sig->s);
-    return true;
+    return 1;
 }
 
 void static secp256k1_ecdsa_sig_set_rs(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *r, const secp256k1_num_t *s) {
     secp256k1_num_copy(&sig->r, r);
     secp256k1_num_copy(&sig->s, s);
-}
-
 }

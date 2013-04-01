@@ -4,12 +4,10 @@
 #include "field.h"
 
 #ifdef USE_FIELD_5X52_ASM
-#include "field_5x52_asm.cpp"
+#include "field_5x52_asm.c"
 #else
-#include "field_5x52_int128.cpp"
+#include "field_5x52_int128.c"
 #endif
-
-extern "C" {
 
 /** Implements arithmetic modulo FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F,
  *  represented as 5 uint64_t's in base 2^52. The values are allowed to contain >52 each. In particular,
@@ -106,7 +104,7 @@ void static secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
     }
 #ifdef VERIFY
     r->magnitude = 1;
-    r->normalized = true;
+    r->normalized = 1;
 #endif
 }
 
@@ -142,7 +140,7 @@ void static inline secp256k1_fe_negate(secp256k1_fe_t *r, const secp256k1_fe_t *
 void static inline secp256k1_fe_mul_int(secp256k1_fe_t *r, int a) {
 #ifdef VERIFY
     r->magnitude *= a;
-    r->normalized = false;
+    r->normalized = 0;
 #endif
     r->n[0] *= a;
     r->n[1] *= a;
@@ -180,6 +178,4 @@ void static secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     r->normalized = 0;
 #endif
     secp256k1_fe_sqr_inner(a->n, r->n);
-}
-
 }

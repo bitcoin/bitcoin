@@ -1,10 +1,8 @@
-#include "num.cpp"
-#include "field.cpp"
-#include "group.cpp"
-#include "ecmult.cpp"
-#include "ecdsa.cpp"
-
-extern "C" {
+#include "num.c"
+#include "field.c"
+#include "group.c"
+#include "ecmult.c"
+#include "ecdsa.c"
 
 void secp256k1_start(void) {
     secp256k1_num_start();
@@ -46,7 +44,5 @@ end:
     secp256k1_ecdsa_sig_free(&s);
     secp256k1_num_free(&m);
     return ret;
-}
-
 }
 

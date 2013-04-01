@@ -1,10 +1,10 @@
 #include <assert.h>
 
-#include "num.cpp"
-#include "field.cpp"
-#include "group.cpp"
-#include "ecmult.cpp"
-#include "ecdsa.cpp"
+#include "num.c"
+#include "field.c"
+#include "group.c"
+#include "ecmult.c"
+#include "ecdsa.c"
 
 // #define COUNT 2
 #define COUNT 100
@@ -70,9 +70,9 @@ void test_run_ecmult_chain() {
     secp256k1_num_free(&ge);
 }
 
-void test_point_times_order(const secp256k1_gej_t &point) {
+void test_point_times_order(const secp256k1_gej_t *point) {
     // either the point is not on the curve, or multiplying it by the order results in O
-    if (!secp256k1_gej_is_valid(&point))
+    if (!secp256k1_gej_is_valid(point))
         return;
 
     const secp256k1_num_t *order = &secp256k1_ge_consts->order;
@@ -80,7 +80,7 @@ void test_point_times_order(const secp256k1_gej_t &point) {
     secp256k1_num_init(&zero);
     secp256k1_num_set_int(&zero, 0);
     secp256k1_gej_t res;
-    secp256k1_ecmult(&res, &point, order, order); // calc res = order * point + order * G;
+    secp256k1_ecmult(&res, point, order, order); // calc res = order * point + order * G;
     assert(secp256k1_gej_is_infinity(&res));
     secp256k1_num_free(&zero);
 }
@@ -88,8 +88,8 @@ void test_point_times_order(const secp256k1_gej_t &point) {
 void test_run_point_times_order() {
     secp256k1_fe_t x; secp256k1_fe_set_hex(&x, "02", 2);
     for (int i=0; i<500; i++) {
-        secp256k1_gej_t j; secp256k1_gej_set_xo(&j, &x, true);
-        test_point_times_order(j);
+        secp256k1_gej_t j; secp256k1_gej_set_xo(&j, &x, 1);
+        test_point_times_order(&j);
         secp256k1_fe_sqr(&x, &x);
     }
     char c[65]; int cl=65;
@@ -97,7 +97,7 @@ void test_run_point_times_order() {
     assert(strcmp(c, "7603CB59B0EF6C63FE6084792A0C378CDB3233A80F8A9A09A877DEAD31B38C45") == 0);
 }
 
-void test_wnaf(const secp256k1_num_t &number, int w) {
+void test_wnaf(const secp256k1_num_t *number, int w) {
     secp256k1_num_t x, two, t;
     secp256k1_num_init(&x);
     secp256k1_num_init(&two);
@@ -105,7 +105,7 @@ void test_wnaf(const secp256k1_num_t &number, int w) {
     secp256k1_num_set_int(&x, 0);
     secp256k1_num_set_int(&two, 2);
     int wnaf[1024];
-    int bits = secp256k1_ecmult_wnaf(wnaf, &number, w);
+    int bits = secp256k1_ecmult_wnaf(wnaf, number, w);
     int zeroes = -1;
     for (int i=bits-1; i>=0; i--) {
         secp256k1_num_mul(&x, &x, &two);
@@ -123,7 +123,7 @@ void test_wnaf(const secp256k1_num_t &number, int w) {
         secp256k1_num_set_int(&t, v);
         secp256k1_num_add(&x, &x, &t);
     }
-    assert(secp256k1_num_cmp(&x, &number) == 0); // check that wnaf represents number
+    assert(secp256k1_num_cmp(&x, number) == 0); // check that wnaf represents number
     secp256k1_num_free(&x);
     secp256k1_num_free(&two);
     secp256k1_num_free(&t);
@@ -141,7 +141,7 @@ void test_run_wnaf() {
     for (int i=0; i<COUNT; i++) {
         secp256k1_num_set_rand(&n, &range);
         secp256k1_num_add(&n, &n, &min);
-        test_wnaf(n, 4+(i%10));
+        test_wnaf(&n, 4+(i%10));
     }
     secp256k1_num_free(&range);
     secp256k1_num_free(&min);
@@ -149,18 +149,18 @@ void test_run_wnaf() {
 }
 
 void test_ecdsa_sign_verify() {
-    const secp256k1_ge_consts_t &c = *secp256k1_ge_consts;
+    const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
     secp256k1_num_t msg, key, nonce;
     secp256k1_num_init(&msg);
-    secp256k1_num_set_rand(&msg, &c.order);
+    secp256k1_num_set_rand(&msg, &c->order);
     secp256k1_num_init(&key);
-    secp256k1_num_set_rand(&key, &c.order);
+    secp256k1_num_set_rand(&key, &c->order);
     secp256k1_num_init(&nonce);
     secp256k1_gej_t pub; secp256k1_ecmult_gen(&pub, &key);
     secp256k1_ecdsa_sig_t sig;
     secp256k1_ecdsa_sig_init(&sig);
     do {
-        secp256k1_num_set_rand(&nonce, &c.order);
+        secp256k1_num_set_rand(&nonce, &c->order);
     } while(!secp256k1_ecdsa_sig_sign(&sig, &key, &msg, &nonce));
     assert(secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));
     secp256k1_num_inc(&msg);

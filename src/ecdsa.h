@@ -3,8 +3,6 @@
 
 #include "num.h"
 
-extern "C" {
-
 typedef struct {
     secp256k1_num_t r, s;
 } secp256k1_ecdsa_sig_t;
@@ -17,7 +15,5 @@ int static secp256k1_ecdsa_sig_parse(secp256k1_ecdsa_sig_t *r, const unsigned ch
 int static secp256k1_ecdsa_sig_serialize(unsigned char *sig, int *size, const secp256k1_ecdsa_sig_t *a);
 int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *seckey, const secp256k1_num_t *message, const secp256k1_num_t *nonce);
 void static secp256k1_ecdsa_sig_set_rs(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *r, const secp256k1_num_t *s);
-
-}
 
 #endif
