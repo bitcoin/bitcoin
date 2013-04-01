@@ -12,6 +12,7 @@ int main() {
     secp256k1_num_start();
     secp256k1_fe_start();
     secp256k1_ge_start();
+    secp256k1_ecmult_start();
 
     secp256k1_fe_t x;
     const secp256k1_num_t *order = &secp256k1_ge_consts->order;
@@ -39,6 +40,7 @@ int main() {
     secp256k1_num_free(&s);
     secp256k1_num_free(&m);
 
+    secp256k1_ecmult_stop();
     secp256k1_ge_stop();
     secp256k1_fe_stop();
     secp256k1_num_stop();

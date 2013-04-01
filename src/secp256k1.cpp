@@ -11,10 +11,11 @@ extern "C" void secp256k1_start(void) {
     secp256k1_num_start();
     secp256k1_fe_start();
     secp256k1_ge_start();
-    GetECMultConsts();
+    secp256k1_ecmult_start();
 }
 
 extern "C" void secp256k1_stop(void) {
+    secp256k1_ecmult_stop();
     secp256k1_ge_stop();
     secp256k1_fe_stop();
     secp256k1_num_stop();

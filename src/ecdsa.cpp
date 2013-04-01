@@ -79,7 +79,7 @@ bool Signature::RecomputeR(secp256k1_num_t &r2, const secp256k1_gej_t &pubkey, c
     secp256k1_num_mod_inverse(&sn, &s, &c.order);
     secp256k1_num_mod_mul(&u1, &sn, &message, &c.order);
     secp256k1_num_mod_mul(&u2, &sn, &r, &c.order);
-    secp256k1_gej_t pr; ECMult(pr, pubkey, u2, u1);
+    secp256k1_gej_t pr; secp256k1_ecmult(&pr, &pubkey, &u2, &u1);
     if (!secp256k1_gej_is_infinity(&pr)) {
         secp256k1_fe_t xr; secp256k1_gej_get_x(&xr, &pr);
         secp256k1_fe_normalize(&xr);
@@ -107,7 +107,7 @@ bool Signature::Sign(const secp256k1_num_t &seckey, const secp256k1_num_t &messa
     const secp256k1_ge_consts_t &c = *secp256k1_ge_consts;
 
     secp256k1_gej_t rp;
-    ECMultBase(rp, nonce);
+    secp256k1_ecmult_gen(&rp, &nonce);
     secp256k1_fe_t rx;
     secp256k1_gej_get_x(&rx, &rp);
     unsigned char b[32];

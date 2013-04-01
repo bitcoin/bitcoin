@@ -42,7 +42,7 @@ void test_run_ecmult_chain() {
     const secp256k1_num_t *order = &secp256k1_ge_consts->order;
     for (int i=0; i<200*COUNT; i++) {
         // in each iteration, compute X = xn*X + gn*G;
-        ECMult(x, x, xn, gn);
+        secp256k1_ecmult(&x, &x, &xn, &gn);
         // also compute ae and ge: the actual accumulated factors for A and G
         // if X was (ae*A+ge*G), xn*X + gn*G results in (xn*ae*A + (xn*ge+gn)*G)
         secp256k1_num_mod_mul(&ae, &ae, &xn, order);
@@ -59,7 +59,7 @@ void test_run_ecmult_chain() {
       assert(strcmp(res, "(D6E96687F9B10D092A6F35439D86CEBEA4535D0D409F53586440BD74B933E830,B95CBCA2C77DA786539BE8FD53354D2D3B4F566AE658045407ED6015EE1B2A88)") == 0);
     }
     // redo the computation, but directly with the resulting ae and ge coefficients:
-    secp256k1_gej_t x2; ECMult(x2, a, ae, ge);
+    secp256k1_gej_t x2; secp256k1_ecmult(&x2, &a, &ae, &ge);
     char res2[132]; int resl2 = 132;
     secp256k1_gej_get_hex(res2, &resl2, &x2);
     assert(strcmp(res, res2) == 0);
@@ -82,7 +82,7 @@ void test_point_times_order(const secp256k1_gej_t &point) {
     secp256k1_num_init(&zero);
     secp256k1_num_set_int(&zero, 0);
     secp256k1_gej_t res;
-    ECMult(res, point, *order, zero); // calc res = order * point + 0 * G;
+    secp256k1_ecmult(&res, &point, order, order); // calc res = order * point + order * G;
     assert(secp256k1_gej_is_infinity(&res));
     secp256k1_num_free(&zero);
 }
@@ -106,11 +106,12 @@ void test_wnaf(const secp256k1_num_t &number, int w) {
     secp256k1_num_init(&t);
     secp256k1_num_set_int(&x, 0);
     secp256k1_num_set_int(&two, 2);
-    WNAF<1023> wnaf(number, w);
+    int wnaf[1024];
+    int bits = secp256k1_ecmult_wnaf(wnaf, &number, w);
     int zeroes = -1;
-    for (int i=wnaf.GetSize()-1; i>=0; i--) {
+    for (int i=bits-1; i>=0; i--) {
         secp256k1_num_mul(&x, &x, &two);
-        int v = wnaf.Get(i);
+        int v = wnaf[i];
         if (v) {
             assert(zeroes == -1 || zeroes >= w-1); // check that distance between non-zero elements is at least w-1
             zeroes=0;
@@ -157,7 +158,7 @@ void test_ecdsa_sign_verify() {
     secp256k1_num_init(&key);
     secp256k1_num_set_rand(&key, &c.order);
     secp256k1_num_init(&nonce);
-    secp256k1_gej_t pub; ECMultBase(pub, key);
+    secp256k1_gej_t pub; secp256k1_ecmult_gen(&pub, &key);
     Signature sig;
     do {
         secp256k1_num_set_rand(&nonce, &c.order);
@@ -180,12 +181,14 @@ int main(void) {
     secp256k1_num_start();
     secp256k1_fe_start();
     secp256k1_ge_start();
+    secp256k1_ecmult_start();
 
     test_run_wnaf();
     test_run_point_times_order();
     test_run_ecmult_chain();
     test_run_ecdsa_sign_verify();
 
+    secp256k1_ecmult_stop();
     secp256k1_ge_stop();
     secp256k1_fe_stop();
     secp256k1_num_stop();
