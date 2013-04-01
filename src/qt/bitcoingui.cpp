@@ -338,6 +338,7 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         // Receive and report messages from network/worker thread
         connect(clientModel, SIGNAL(message(QString,QString,unsigned int)), this, SLOT(message(QString,QString,unsigned int)));
 
+        rpcConsole->setClientModel(clientModel);
         walletFrame->setClientModel(clientModel);
     }
 }
