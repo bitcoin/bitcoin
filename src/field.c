@@ -1,31 +1,6 @@
 // just one implementation for now
 #include "field_5x52.c"
 
-static const unsigned char secp256k1_fe_consts_p[] = {
-    0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-    0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-    0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-    0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F
-};
-
-void static secp256k1_fe_start(void) {
-    if (secp256k1_fe_consts == NULL) {
-        secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)malloc(sizeof(secp256k1_fe_t));
-        secp256k1_num_init(&ret->p);
-        secp256k1_num_set_bin(&ret->p, secp256k1_fe_consts_p, sizeof(secp256k1_fe_consts_p));
-        secp256k1_fe_consts = ret;
-    }
-}
-
-void static secp256k1_fe_stop(void) {
-    if (secp256k1_fe_consts != NULL) {
-        secp256k1_fe_consts_t *c = (secp256k1_fe_consts_t*)secp256k1_fe_consts;
-        secp256k1_num_free(&c->p);
-        free((void*)c);
-        secp256k1_fe_consts = NULL;
-    }
-}
-
 void static secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a) {
     if (*rlen < 65) {
         *rlen = 65;
@@ -151,4 +126,28 @@ void static secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_num_free(&n);
     secp256k1_fe_set_b32(r, b);
 #endif
+}
+
+void static secp256k1_fe_start(void) {
+    static const unsigned char secp256k1_fe_consts_p[] = {
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+        0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F
+    };
+    if (secp256k1_fe_consts == NULL) {
+        secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)malloc(sizeof(secp256k1_fe_t));
+        secp256k1_num_init(&ret->p);
+        secp256k1_num_set_bin(&ret->p, secp256k1_fe_consts_p, sizeof(secp256k1_fe_consts_p));
+        secp256k1_fe_consts = ret;
+    }
+}
+
+void static secp256k1_fe_stop(void) {
+    if (secp256k1_fe_consts != NULL) {
+        secp256k1_fe_consts_t *c = (secp256k1_fe_consts_t*)secp256k1_fe_consts;
+        secp256k1_num_free(&c->p);
+        free((void*)c);
+        secp256k1_fe_consts = NULL;
+    }
 }
