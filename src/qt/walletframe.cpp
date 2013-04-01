@@ -88,9 +88,9 @@ void WalletFrame::gotoReceiveCoinsPage()
     walletStack->gotoReceiveCoinsPage();
 }
 
-void WalletFrame::gotoSendCoinsPage()
+void WalletFrame::gotoSendCoinsPage(QString addr)
 {
-    walletStack->gotoSendCoinsPage();
+    walletStack->gotoSendCoinsPage(addr);
 }
 
 void WalletFrame::gotoSignMessageTab(QString addr)
