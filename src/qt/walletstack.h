@@ -45,16 +45,16 @@ public:
     ~WalletStack();
 
     void setBitcoinGUI(BitcoinGUI *gui) { this->gui = gui; }
-    
+
     void setClientModel(ClientModel *clientModel) { this->clientModel = clientModel; }
-    
+
     bool addWallet(const QString& name, WalletModel *walletModel);
     bool removeWallet(const QString& name);
-    
+
     void removeAllWallets();
 
     bool handleURI(const QString &uri);
-    
+
     void showOutOfSyncWarning(bool fShow);
 
 private:
@@ -76,7 +76,7 @@ public slots:
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
-    void gotoSendCoinsPage();
+    void gotoSendCoinsPage(QString addr = "");
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
