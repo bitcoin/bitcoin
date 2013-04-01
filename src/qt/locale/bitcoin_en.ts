@@ -123,7 +123,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Edit</translation>
     </message>
     <message>
-        <location line="+248"/>
+        <location line="+1"/>
+        <source>Send &amp;Coins</source>
+        <translation>Send &amp;Coins</translation>
+    </message>
+    <message>
+        <location line="+263"/>
         <source>Export Address Book Data</source>
         <translation>Export Address Book Data</translation>
     </message>
@@ -305,7 +310,7 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+267"/>
+        <location filename="../bitcoingui.cpp" line="+269"/>
         <source>Sign &amp;message...</source>
         <translation>Sign &amp;message...</translation>
     </message>
@@ -460,18 +465,18 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Verify message...</translation>
     </message>
     <message>
-        <location line="-196"/>
-        <location line="+529"/>
+        <location line="-198"/>
+        <location line="+531"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-529"/>
+        <location line="-531"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
     <message>
-        <location line="+176"/>
+        <location line="+178"/>
         <source>&amp;About Bitcoin</source>
         <translation>&amp;About Bitcoin</translation>
     </message>
@@ -614,7 +619,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</translation>
     </message>
     <message>
-        <location line="+210"/>
+        <location line="+213"/>
         <source>Backup Successful</source>
         <translation>Backup Successful</translation>
     </message>
@@ -624,7 +629,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>The wallet data was successfully saved to the new location.</translation>
     </message>
     <message>
-        <location line="-348"/>
+        <location line="-351"/>
         <source>Up to date</source>
         <translation>Up to date</translation>
     </message>
@@ -662,7 +667,7 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="+99"/>
+        <location line="+102"/>
         <location line="+28"/>
         <source>URI handling</source>
         <translation>URI handling</translation>
@@ -2196,12 +2201,12 @@ Address: %4
         <translation>List commands</translation>
     </message>
     <message>
-        <location line="-11"/>
+        <location line="-10"/>
         <source>Get help for a command</source>
         <translation>Get help for a command</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+21"/>
         <source>Options:</source>
         <translation>Options:</translation>
     </message>
@@ -2216,12 +2221,12 @@ Address: %4
         <translation>Specify pid file (default: bitcoind.pid)</translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-47"/>
         <source>Generate coins</source>
         <translation>Generate coins</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-29"/>
         <source>Don&apos;t generate coins</source>
         <translation>Don&apos;t generate coins</translation>
     </message>
@@ -2427,6 +2432,11 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location line="+1"/>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation>Error initializing wallet database environment %s!</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Error loading block database</source>
         <translation>Error loading block database</translation>
     </message>
@@ -2526,12 +2536,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>How thorough the block verification is (0-4, default: 3)</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Importing blocks from block database...</source>
-        <translation>Importing blocks from block database...</translation>
+        <location line="+24"/>
+        <source>Rebuild block chain index from current blk000??.dat files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Verifying blocks...</source>
+        <translation>Verifying blocks...</translation>
     </message>
     <message>
         <location line="+1"/>
+        <source>Verifying wallet...</source>
+        <translation>Verifying wallet...</translation>
+    </message>
+    <message>
+        <location line="-61"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Imports blocks from external blk000??.dat file</translation>
     </message>
@@ -2586,12 +2606,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Prepend debug output with timestamp</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Rebuild blockchain index from current blk000??.dat files</source>
-        <translation>Rebuild blockchain index from current blk000??.dat files</translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</translation>
     </message>
@@ -2656,12 +2671,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Username for JSON-RPC connections</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Verifying database...</source>
-        <translation>Verifying database...</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
@@ -2761,7 +2771,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Loading addresses...</translation>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="-36"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Error loading wallet.dat: Wallet corrupted</translation>
     </message>
@@ -2772,21 +2782,16 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location line="+88"/>
-        <source>Verifying wallet integrity...</source>
-        <translation>Verifying wallet integrity...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Wallet needed to be rewritten: restart Bitcoin to complete</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-90"/>
         <source>Error loading wallet.dat</source>
         <translation>Error loading wallet.dat</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+31"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Invalid -proxy address: &apos;%s&apos;</translation>
     </message>
@@ -2816,12 +2821,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-26"/>
+        <location line="-25"/>
         <source>Error: could not start node</source>
         <translation>Error: could not start node</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+26"/>
         <source>Invalid amount</source>
         <translation>Invalid amount</translation>
     </message>
@@ -2846,7 +2851,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Unable to bind to %s on this computer. Bitcoin is probably already running.</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+70"/>
         <source>Find peers using internet relay chat (default: 0)</source>
         <translation>Find peers using internet relay chat (default: 0)</translation>
     </message>
@@ -2856,7 +2861,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Fee per KB to add to transactions you send</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+18"/>
         <source>Loading wallet...</source>
         <translation>Loading wallet...</translation>
     </message>
@@ -2891,12 +2896,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>To use the %s option</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-72"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-33"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
