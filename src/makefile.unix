@@ -4,6 +4,7 @@
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 USE_UPNP:=0
+STATIC:=1
 
 DEFS=-DBOOST_SPIRIT_THREADSAFE
 
