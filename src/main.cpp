@@ -957,7 +957,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
             }
         }
 
-        if (lookupHashBlock != 0 && mapBlockIndex.count(lookupHashBlock) > 0) {
+        if (lookupHashBlock != 0) {
             CBlock block;
             CBlockIndex* pblockindex = mapBlockIndex[lookupHashBlock];
             block.ReadFromDisk(pblockindex);

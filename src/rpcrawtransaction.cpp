@@ -155,6 +155,8 @@ Value getrawtransaction(const Array& params, bool fHelp)
     if (params.size() > 2){
         std::string strHash = params[2].get_str();
         uint256 hash(strHash);
+        if (mapBlockIndex.count(hash) == 0)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Blockhash not found");
         lookupHashBlock = hash;
     }
 
