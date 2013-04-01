@@ -42,6 +42,7 @@ void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
     t3 = c & 0xFFFFFFFFFFFFFULL;
     c = (c >> 52) + t4;
     t4 = c & 0x0FFFFFFFFFFFFULL;
+    assert((c >> 48) == 0);
 
     // Subtract p if result >= p
     uint64_t mask = -(int64_t)((t4 < 0xFFFFFFFFFFFFULL) | (t3 < 0xFFFFFFFFFFFFFULL) | (t2 < 0xFFFFFFFFFFFFFULL) | (t1 < 0xFFFFFFFFFFFFFULL) | (t0 < 0xFFFFEFFFFFC2FULL));

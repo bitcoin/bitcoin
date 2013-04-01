@@ -12,8 +12,11 @@
  *    normality.
  */
 
-// just one implementation for now
+#ifdef USE_FIELD_10X26
+#include "field_10x26.h"
+#else
 #include "field_5x52.h"
+#endif
 
 typedef struct {
     secp256k1_num_t p;

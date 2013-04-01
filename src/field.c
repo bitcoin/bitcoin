@@ -1,5 +1,8 @@
-// just one implementation for now
+#ifdef USE_FIELD_10X26
+#include "field_10x26.c"
+#else
 #include "field_5x52.c"
+#endif
 
 void static secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a) {
     if (*rlen < 65) {

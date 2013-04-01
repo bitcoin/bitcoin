@@ -16,6 +16,11 @@ OBJS :=
 
 default: all
 
+ifeq ($(CONF), gmp32)
+FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_GMP -DUSE_FIELD_10X26
+LIBS := -lgmp
+SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/num_gmp.c src/field_10x26.c src/field_10x26.h
+else
 ifeq ($(CONF), openssl)
 FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_OPENSSL -DUSE_FIELD_INV_BUILTIN
 LIBS := -lcrypto
@@ -39,16 +44,19 @@ SECP256K1_FILES := $(SECP256K1_FILES) src/field_5x52_int128.c
 endif
 endif
 endif
+endif
 
 
 all: src/*.c src/*.asm src/*.h include/*.h
 	+make CONF=openssl all-openssl
 	+make CONF=gmp     all-gmp
+	+make CONF=gmp32   all-gmp32
 	+make CONF=gmpasm  all-gmpasm
 
 clean:
 	+make CONF=openssl clean-openssl
 	+make CONF=gmp     clean-gmp
+	+make CONF=gmp32   clean-gmp32
 	+make CONF=gmpasm  clean-gmpasm
 
 bench-any: bench-$(CONF)
@@ -62,10 +70,10 @@ clean-$(CONF):
 obj/secp256k1-$(CONF).o: $(SECP256K1_FILES) src/secp256k1.c include/secp256k1.h
 	$(CC) $(FLAGS_COMMON) $(FLAGS_PROD) src/secp256k1.c -c -o obj/secp256k1-$(CONF).o
 
-bench-$(CONF): $(OBJS) src/bench.c
+bench-$(CONF): $(OBJS) $(SECP256K1_FILES) src/bench.c
 	$(CC) $(FLAGS_COMMON) $(FLAGS_PROD) src/bench.c $(LIBS) $(OBJS) -o bench-$(CONF)
 
-tests-$(CONF): $(OBJS) src/tests.c
+tests-$(CONF): $(OBJS) $(SECP256K1_FILES) src/tests.c
 	$(CC) $(FLAGS_COMMON) $(FLAGS_TEST) src/tests.c $(LIBS) $(OBJS) -o tests-$(CONF)
 
 libsecp256k1-$(CONF).a: $(OBJS) obj/secp256k1-$(CONF).o

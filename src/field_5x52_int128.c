@@ -1,7 +1,7 @@
 #include "field.h"
 
 void static inline secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t *b, uint64_t *r) {
-    unsigned __int128 c = (__int128)a[0] * b[0];
+    __int128 c = (__int128)a[0] * b[0];
     uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
     c = c + (__int128)a[0] * b[1] +
             (__int128)a[1] * b[0];
