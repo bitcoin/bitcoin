@@ -74,9 +74,11 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     // Double-clicking on a transaction on the transaction history page shows details
     connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
 
-    // Clicking on "Verify Message" in the address book sends you to the verify message tab
+    // Clicking on "Send Coins" in the address book sends you to the send coins tab
+    connect(addressBookPage, SIGNAL(sendCoins(QString)), this, SLOT(gotoSendCoinsPage(QString)));
+    // Clicking on "Verify Message" in the address book opens the verify message tab in the Sign/Verify Message dialog
     connect(addressBookPage, SIGNAL(verifyMessage(QString)), this, SLOT(gotoVerifyMessageTab(QString)));
-    // Clicking on "Sign Message" in the receive coins page sends you to the sign message tab
+    // Clicking on "Sign Message" in the receive coins page opens the sign message tab in the Sign/Verify Message dialog
     connect(receiveCoinsPage, SIGNAL(signMessage(QString)), this, SLOT(gotoSignMessageTab(QString)));
 
     gotoOverviewPage();
@@ -257,13 +259,16 @@ void WalletView::gotoReceiveCoinsPage()
     connect(exportAction, SIGNAL(triggered()), receiveCoinsPage, SLOT(exportClicked()));
 }
 
-void WalletView::gotoSendCoinsPage()
+void WalletView::gotoSendCoinsPage(QString addr)
 {
     sendCoinsAction->setChecked(true);
     setCurrentWidget(sendCoinsPage);
 
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+
+    if(!addr.isEmpty())
+        sendCoinsPage->setAddress(addr);
 }
 
 void WalletView::gotoSignMessageTab(QString addr)
