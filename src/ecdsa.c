@@ -102,7 +102,7 @@ int static secp256k1_ecdsa_sig_recompute(secp256k1_num_t *r2, const secp256k1_ec
     return ret;
 }
 
-int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const secp256k1_gej_t *pubkey, const secp256k1_num_t *message) {
+int static secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const secp256k1_gej_t *pubkey, const secp256k1_num_t *message) {
     secp256k1_num_t r2;
     secp256k1_num_init(&r2);
     int ret = 0;
