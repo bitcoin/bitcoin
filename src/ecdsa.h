@@ -1,30 +1,22 @@
 #ifndef _SECP256K1_ECDSA_
 #define _SECP256K1_ECDSA_
 
-namespace secp256k1 {
+#include "num.h"
 
-class Signature {
-private:
-    secp256k1_num_t r,s;
+extern "C" {
 
-public:
-    Signature() {
-        secp256k1_num_init(&r);
-        secp256k1_num_init(&s);
-    }
-    ~Signature() {
-        secp256k1_num_free(&r);
-        secp256k1_num_free(&s);
-    }
+typedef struct {
+    secp256k1_num_t r, s;
+} secp256k1_ecdsa_sig_t;
 
-    bool Parse(const unsigned char *sig, int size);
-    bool Serialize(unsigned char *sig, int *size);
-    bool RecomputeR(secp256k1_num_t &r2, const secp256k1_gej_t &pubkey, const secp256k1_num_t &message) const;
-    bool Verify(const secp256k1_gej_t &pubkey, const secp256k1_num_t &message) const;
-    bool Sign(const secp256k1_num_t &seckey, const secp256k1_num_t &message, const secp256k1_num_t &nonce);
-    void SetRS(const secp256k1_num_t &rin, const secp256k1_num_t &sin);
-    std::string ToString() const;
-};
+void static secp256k1_ecdsa_sig_init(secp256k1_ecdsa_sig_t *r);
+void static secp256k1_ecdsa_sig_free(secp256k1_ecdsa_sig_t *r);
+
+int static secp256k1_ecdsa_pubkey_parse(secp256k1_gej_t *elem, const unsigned char *pub, int size);
+int static secp256k1_ecdsa_sig_parse(secp256k1_ecdsa_sig_t *r, const unsigned char *sig, int size);
+int static secp256k1_ecdsa_sig_serialize(unsigned char *sig, int *size, const secp256k1_ecdsa_sig_t *a);
+int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *seckey, const secp256k1_num_t *message, const secp256k1_num_t *nonce);
+void static secp256k1_ecdsa_sig_set_rs(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *r, const secp256k1_num_t *s);
 
 }
 

@@ -9,8 +9,6 @@
 // #define COUNT 2
 #define COUNT 100
 
-using namespace secp256k1;
-
 void test_run_ecmult_chain() {
     // random starting point A (on the curve)
     secp256k1_fe_t ax; secp256k1_fe_set_hex(&ax, "8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004", 64);
@@ -159,13 +157,15 @@ void test_ecdsa_sign_verify() {
     secp256k1_num_set_rand(&key, &c.order);
     secp256k1_num_init(&nonce);
     secp256k1_gej_t pub; secp256k1_ecmult_gen(&pub, &key);
-    Signature sig;
+    secp256k1_ecdsa_sig_t sig;
+    secp256k1_ecdsa_sig_init(&sig);
     do {
         secp256k1_num_set_rand(&nonce, &c.order);
-    } while(!sig.Sign(key, msg, nonce));
-    assert(sig.Verify(pub, msg));
+    } while(!secp256k1_ecdsa_sig_sign(&sig, &key, &msg, &nonce));
+    assert(secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));
     secp256k1_num_inc(&msg);
-    assert(!sig.Verify(pub, msg));
+    assert(!secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));
+    secp256k1_ecdsa_sig_free(&sig);
     secp256k1_num_free(&msg);
     secp256k1_num_free(&key);
     secp256k1_num_free(&nonce);
