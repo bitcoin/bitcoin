@@ -160,8 +160,10 @@ void copyEntryData(QAbstractItemView *view, int column, int role)
 
     if(!selection.isEmpty())
     {
-        // Copy first item
-        QApplication::clipboard()->setText(selection.at(0).data(role).toString(),QClipboard::Selection);
+        // Copy first item (global clipboard)
+        qApp->clipboard()->setText(selection.at(0).data(role).toString(), QClipboard::Clipboard);
+        // Copy first item (global mouse selection for e.g. X11 - NOP on Windows)
+        qApp->clipboard()->setText(selection.at(0).data(role).toString(), QClipboard::Selection);
     }
 }
 
@@ -213,7 +215,7 @@ QString getSaveFileName(QWidget *parent, const QString &caption,
 
 Qt::ConnectionType blockingGUIThreadConnection()
 {
-    if(QThread::currentThread() != QCoreApplication::instance()->thread())
+    if(QThread::currentThread() != qApp->thread())
     {
         return Qt::BlockingQueuedConnection;
     }
@@ -457,4 +459,3 @@ void HelpMessageBox::showOrPrint()
 }
 
 } // namespace GUIUtil
-
