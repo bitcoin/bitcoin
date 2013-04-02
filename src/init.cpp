@@ -1027,6 +1027,9 @@ bool AppInit2()
     if (fServer)
         NewThread(ThreadRPCServer, NULL);
 
+    // Generate coins in the background
+    GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain);
+
     // ********************************************************* Step 12: finished
 
     uiInterface.InitMessage(_("Done loading"));
