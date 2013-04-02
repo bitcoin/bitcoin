@@ -67,7 +67,9 @@ int64 nHPSTimerStart;
 // Settings
 int64 nTransactionFee = 0;
 
-
+#if USE_ZMQ
+#include "bitcoin_zmq.h"
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -794,6 +796,10 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
     printf("CTxMemPool::accept() : accepted %s (poolsz %"PRIszu")\n",
            hash.ToString().substr(0,10).c_str(),
            mapTx.size());
+#if USE_ZMQ
+    BZmq_SendTX(tx);
+#endif
+
     return true;
 }
 
@@ -1872,6 +1878,12 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
       BlockHashStr(hashBestChain).c_str(), nBestHeight, bnBestChainWork.ToString().c_str(), (unsigned long)pindexNew->nChainTx,
       DateTimeStrFormat("%Y-%m-%d %H:%M:%S", pindexBest->GetBlockTime()).c_str());
 
+#if USE_ZMQ
+    bool fZmqPDID = GetBoolArg("-zmqpublishduringinitaldownload", false);
+    if (fZmqPDID && fIsInitialDownload)
+        BZmq_SendBlock(pindexBest);
+#endif
+
     // Check the version of the last 100 blocks to see if we need to upgrade:
     if (!fIsInitialDownload)
     {
@@ -1888,14 +1900,17 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
         if (nUpgraded > 100/2)
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: This version is obsolete, upgrade required!");
-    }
 
-    std::string strCmd = GetArg("-blocknotify", "");
+        std::string strCmd = GetArg("-blocknotify", "");
 
-    if (!fIsInitialDownload && !strCmd.empty())
-    {
-        boost::replace_all(strCmd, "%s", hashBestChain.GetHex());
-        boost::thread t(runCommand, strCmd); // thread runs free
+        if (!strCmd.empty())
+        {
+            boost::replace_all(strCmd, "%s", hashBestChain.GetHex());
+            boost::thread t(runCommand, strCmd); // thread runs free
+        }
+#if USE_ZMQ
+        BZmq_SendBlock(pindexBest);
+#endif
     }
 
     return true;
