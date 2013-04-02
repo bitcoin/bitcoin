@@ -82,14 +82,14 @@ static void InitMessage(const std::string &message)
     if(splashref)
     {
         splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(255,255,200));
-        QApplication::instance()->processEvents();
+        qApp->processEvents();
     }
     printf("init message: %s\n", message.c_str());
 }
 
 static void QueueShutdown()
 {
-    QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(qApp, "quit", Qt::QueuedConnection);
 }
 
 /*
