@@ -51,25 +51,26 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     switch(tab)
     {
     case SendingTab:
-        ui->labelExplanation->setVisible(false);
-        ui->deleteButton->setVisible(true);
+        ui->labelExplanation->setText(tr("These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins."));
+        ui->deleteAddress->setVisible(true);
         ui->signMessage->setVisible(false);
         break;
     case ReceivingTab:
-        ui->deleteButton->setVisible(false);
+        ui->labelExplanation->setText(tr("These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you."));
+        ui->deleteAddress->setVisible(false);
         ui->signMessage->setVisible(true);
         break;
     }
 
     // Context menu actions
-    QAction *copyAddressAction = new QAction(ui->copyToClipboard->text(), this);
+    QAction *copyAddressAction = new QAction(ui->copyAddress->text(), this);
     QAction *copyLabelAction = new QAction(tr("Copy &Label"), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
     QAction *sendCoinsAction = new QAction(tr("Send &Coins"), this);
     QAction *showQRCodeAction = new QAction(ui->showQRCode->text(), this);
     QAction *signMessageAction = new QAction(ui->signMessage->text(), this);
     QAction *verifyMessageAction = new QAction(ui->verifyMessage->text(), this);
-    deleteAction = new QAction(ui->deleteButton->text(), this);
+    deleteAction = new QAction(ui->deleteAddress->text(), this);
 
     // Build context menu
     contextMenu = new QMenu();
@@ -90,11 +91,11 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
         contextMenu->addAction(verifyMessageAction);
 
     // Connect signals for context menu actions
-    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(on_copyToClipboard_clicked()));
+    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(on_copyAddress_clicked()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(onCopyLabelAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
-    connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_deleteButton_clicked()));
-    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(onSendCoins_clicked()));
+    connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_deleteAddress_clicked()));
+    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(onSendCoinsAction()));
     connect(showQRCodeAction, SIGNAL(triggered()), this, SLOT(on_showQRCode_clicked()));
     connect(signMessageAction, SIGNAL(triggered()), this, SLOT(on_signMessage_clicked()));
     connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(on_verifyMessage_clicked()));
@@ -138,17 +139,14 @@ void AddressBookPage::setModel(AddressTableModel *model)
     ui->tableView->sortByColumn(0, Qt::AscendingOrder);
 
     // Set column widths
-    ui->tableView->horizontalHeader()->resizeSection(
-            AddressTableModel::Address, 320);
-    ui->tableView->horizontalHeader()->setResizeMode(
-            AddressTableModel::Label, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::Label, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::Address, QHeaderView::ResizeToContents);
 
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             this, SLOT(selectionChanged()));
 
     // Select row for newly created address
-    connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)),
-            this, SLOT(selectNewAddress(QModelIndex,int,int)));
+    connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewAddress(QModelIndex,int,int)));
 
     selectionChanged();
 }
@@ -158,7 +156,7 @@ void AddressBookPage::setOptionsModel(OptionsModel *optionsModel)
     this->optionsModel = optionsModel;
 }
 
-void AddressBookPage::on_copyToClipboard_clicked()
+void AddressBookPage::on_copyAddress_clicked()
 {
     GUIUtil::copyEntryData(ui->tableView, AddressTableModel::Address);
 }
@@ -210,7 +208,7 @@ void AddressBookPage::on_verifyMessage_clicked()
     }
 }
 
-void AddressBookPage::onSendCoins_clicked()
+void AddressBookPage::onSendCoinsAction()
 {
     QTableView *table = ui->tableView;
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
@@ -222,7 +220,7 @@ void AddressBookPage::onSendCoins_clicked()
     }
 }
 
-void AddressBookPage::on_newAddressButton_clicked()
+void AddressBookPage::on_newAddress_clicked()
 {
     if(!model)
         return;
@@ -238,7 +236,7 @@ void AddressBookPage::on_newAddressButton_clicked()
     }
 }
 
-void AddressBookPage::on_deleteButton_clicked()
+void AddressBookPage::on_deleteAddress_clicked()
 {
     QTableView *table = ui->tableView;
     if(!table->selectionModel())
@@ -264,8 +262,8 @@ void AddressBookPage::selectionChanged()
         {
         case SendingTab:
             // In sending tab, allow deletion of selection
-            ui->deleteButton->setEnabled(true);
-            ui->deleteButton->setVisible(true);
+            ui->deleteAddress->setEnabled(true);
+            ui->deleteAddress->setVisible(true);
             deleteAction->setEnabled(true);
             ui->signMessage->setEnabled(false);
             ui->signMessage->setVisible(false);
@@ -274,8 +272,8 @@ void AddressBookPage::selectionChanged()
             break;
         case ReceivingTab:
             // Deleting receiving addresses, however, is not allowed
-            ui->deleteButton->setEnabled(false);
-            ui->deleteButton->setVisible(false);
+            ui->deleteAddress->setEnabled(false);
+            ui->deleteAddress->setVisible(false);
             deleteAction->setEnabled(false);
             ui->signMessage->setEnabled(true);
             ui->signMessage->setVisible(true);
@@ -283,14 +281,14 @@ void AddressBookPage::selectionChanged()
             ui->verifyMessage->setVisible(false);
             break;
         }
-        ui->copyToClipboard->setEnabled(true);
+        ui->copyAddress->setEnabled(true);
         ui->showQRCode->setEnabled(true);
     }
     else
     {
-        ui->deleteButton->setEnabled(false);
+        ui->deleteAddress->setEnabled(false);
         ui->showQRCode->setEnabled(false);
-        ui->copyToClipboard->setEnabled(false);
+        ui->copyAddress->setEnabled(false);
         ui->signMessage->setEnabled(false);
         ui->verifyMessage->setEnabled(false);
     }
