@@ -161,9 +161,9 @@ void copyEntryData(QAbstractItemView *view, int column, int role)
     if(!selection.isEmpty())
     {
         // Copy first item (global clipboard)
-        qApp->clipboard()->setText(selection.at(0).data(role).toString(), QClipboard::Clipboard);
+        QApplication::clipboard()->setText(selection.at(0).data(role).toString(), QClipboard::Clipboard);
         // Copy first item (global mouse selection for e.g. X11 - NOP on Windows)
-        qApp->clipboard()->setText(selection.at(0).data(role).toString(), QClipboard::Selection);
+        QApplication::clipboard()->setText(selection.at(0).data(role).toString(), QClipboard::Selection);
     }
 }
 
@@ -227,7 +227,7 @@ Qt::ConnectionType blockingGUIThreadConnection()
 
 bool checkPoint(const QPoint &p, const QWidget *w)
 {
-    QWidget *atW = qApp->widgetAt(w->mapToGlobal(p));
+    QWidget *atW = QApplication::widgetAt(w->mapToGlobal(p));
     if (!atW) return false;
     return atW->topLevelWidget() == w;
 }
