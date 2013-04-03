@@ -489,7 +489,7 @@ void BitcoinGUI::gotoSignMessageTab(QString addr)
 
 void BitcoinGUI::gotoVerifyMessageTab(QString addr)
 {
-    if (walletFrame) walletFrame->gotoSignMessageTab(addr);
+    if (walletFrame) walletFrame->gotoVerifyMessageTab(addr);
 }
 
 void BitcoinGUI::setNumConnections(int count)
