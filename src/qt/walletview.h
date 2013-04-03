@@ -10,7 +10,6 @@
 #include <QStackedWidget>
 
 class BitcoinGUI;
-class TransactionTableModel;
 class ClientModel;
 class WalletModel;
 class TransactionView;
@@ -18,7 +17,6 @@ class OverviewPage;
 class AddressBookPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
-class Notificator;
 class RPCConsole;
 
 QT_BEGIN_NAMESPACE
@@ -35,6 +33,7 @@ QT_END_NAMESPACE
 class WalletView : public QStackedWidget
 {
     Q_OBJECT
+
 public:
     explicit WalletView(QWidget *parent, BitcoinGUI *_gui);
     ~WalletView();
@@ -66,34 +65,7 @@ private:
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
 
-    QLabel *labelEncryptionIcon;
-    QLabel *labelConnectionsIcon;
-    QLabel *labelBlocksIcon;
-    QLabel *progressBarLabel;
-
-    QAction *overviewAction;
-    QAction *historyAction;
-    QAction *quitAction;
-    QAction *sendCoinsAction;
-    QAction *addressBookAction;
-    QAction *signMessageAction;
-    QAction *verifyMessageAction;
-    QAction *aboutAction;
-    QAction *receiveCoinsAction;
-    QAction *optionsAction;
-    QAction *toggleHideAction;
-    QAction *exportAction;
-    QAction *encryptWalletAction;
-    QAction *backupWalletAction;
-    QAction *changePassphraseAction;
-    QAction *aboutQtAction;
-    QAction *openRPCConsoleAction;
-
     TransactionView *transactionView;
-
-    /** Create the main UI actions. */
-    void createActions();
-    /** Create the menu bar and sub-menus. */
 
 public slots:
     /** Switch to overview (home) page */

@@ -29,6 +29,7 @@ class QStackedWidget;
 class QUrl;
 class QListWidget;
 class QPushButton;
+class QAction;
 QT_END_NAMESPACE
 
 /**
@@ -41,7 +42,7 @@ class BitcoinGUI : public QMainWindow
 
 public:
     static const QString DEFAULT_WALLET;
-    
+
     explicit BitcoinGUI(QWidget *parent = 0);
     ~BitcoinGUI();
 
@@ -56,8 +57,16 @@ public:
 
     bool addWallet(const QString& name, WalletModel *walletModel);
     bool setCurrentWallet(const QString& name);
-    
+
     void removeAllWallets();
+
+    /** Used by WalletView to allow access to needed QActions */
+    QAction * getOverviewAction() { return overviewAction; }
+    QAction * getHistoryAction() { return historyAction; }
+    QAction * getAddressBookAction() { return addressBookAction; }
+    QAction * getReceiveCoinsAction() { return receiveCoinsAction; }
+    QAction * getSendCoinsAction() { return sendCoinsAction; }
+    QAction * getExportAction() { return exportAction; }
 
 protected:
     void changeEvent(QEvent *e);

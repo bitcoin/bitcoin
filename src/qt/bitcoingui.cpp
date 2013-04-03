@@ -56,7 +56,7 @@
 
 const QString BitcoinGUI::DEFAULT_WALLET = "~Default";
 
-BitcoinGUI::BitcoinGUI(QWidget *parent):
+BitcoinGUI::BitcoinGUI(QWidget *parent) :
     QMainWindow(parent),
     clientModel(0),
     encryptWalletAction(0),
@@ -94,7 +94,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Create wallet frame and make it the central widget
     walletFrame = new WalletFrame(this);
     setCentralWidget(walletFrame);
-    
+
     // Create status bar
     statusBar();
 
@@ -221,6 +221,7 @@ void BitcoinGUI::createActions()
     optionsAction->setMenuRole(QAction::PreferencesRole);
     toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
+
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet..."), this);
     encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your wallet"));
     encryptWalletAction->setCheckable(true);
