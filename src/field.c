@@ -1,7 +1,11 @@
+#ifdef USE_FIELD_GMP
+#include "field_gmp.c"
+#else
 #ifdef USE_FIELD_10X26
 #include "field_10x26.c"
 #else
 #include "field_5x52.c"
+#endif
 #endif
 
 void static secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a) {

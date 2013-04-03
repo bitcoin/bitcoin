@@ -16,6 +16,11 @@ OBJS :=
 
 default: all
 
+ifeq ($(CONF), gmpgmp)
+FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_GMP -DUSE_FIELD_GMP
+LIBS := -lgmp
+SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/num_gmp.c src/field_gmp.c src/field_gmp.h
+else
 ifeq ($(CONF), gmp32)
 FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_GMP -DUSE_FIELD_10X26
 LIBS := -lgmp
@@ -45,11 +50,12 @@ endif
 endif
 endif
 endif
-
+endif
 
 all: src/*.c src/*.asm src/*.h include/*.h
 	+make CONF=openssl all-openssl
 	+make CONF=gmp     all-gmp
+	+make CONF=gmpgmp  all-gmpgmp
 	+make CONF=gmp32   all-gmp32
 	+make CONF=gmpasm  all-gmpasm
 
