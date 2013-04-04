@@ -9,6 +9,8 @@
 
 #include "key.h"
 
+bool fOptimizedEC = false;
+
 // Generate a private key from just the secret parameter
 int EC_KEY_regenerate_key(EC_KEY *eckey, BIGNUM *priv_key)
 {
@@ -117,6 +119,267 @@ err:
     if (R != NULL) EC_POINT_free(R);
     if (O != NULL) EC_POINT_free(O);
     if (Q != NULL) EC_POINT_free(Q);
+    return ret;
+}
+
+
+class CSecp256k1Math {
+private:
+    BIGNUM* order;
+    BIGNUM* bnp;
+    BIGNUM* bna1b2;
+    BIGNUM* bnb1m;
+    BIGNUM* bna2;
+    BIGNUM* bnbeta;
+    BIGNUM* bnlambda;
+    EC_POINT* G128; // G * 2^128
+    EC_GROUP* group;
+
+    // Split a secp256k1 exponent k into two smaller ones k1 and k2 such that for any point Y,
+    // k*Y = k1*Y + k2*Y', where Y' = lambda*Y is very fast
+    void splitk(BIGNUM *bnk1, BIGNUM *bnk2, const BIGNUM *bnk, BN_CTX *ctx) {
+        BN_CTX_start(ctx);
+        BIGNUM *bnc1 = BN_CTX_get(ctx);
+        BIGNUM *bnc2 = BN_CTX_get(ctx);
+        BIGNUM *bnt1 = BN_CTX_get(ctx);
+        BIGNUM *bnt2 = BN_CTX_get(ctx);
+        BIGNUM *bnn2 = BN_CTX_get(ctx);
+
+        BN_rshift1(bnn2, order);
+        BN_mul(bnc1, bnk,  bna1b2, ctx);
+        BN_add(bnc1, bnc1, bnn2);
+        BN_div(bnc1, NULL, bnc1, order, ctx);
+        BN_mul(bnc2, bnk,  bnb1m, ctx);
+        BN_add(bnc2, bnc2, bnn2);
+        BN_div(bnc2, NULL, bnc2, order, ctx);
+
+        BN_mul(bnt1, bnc1, bna1b2, ctx);
+        BN_mul(bnt2, bnc2, bna2, ctx);
+        BN_add(bnt1, bnt1, bnt2);
+        BN_sub(bnk1, bnk,  bnt1);
+        BN_mul(bnt1, bnc1, bnb1m, ctx);
+        BN_mul(bnt2, bnc2, bna1b2, ctx);
+        BN_sub(bnk2, bnt1, bnt2);
+
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+        // verify k == k1 + lambda*k2
+        BIGNUM *bnt = BN_new();
+        BN_mul(bnt, bnk2, bnlambda, ctx);
+        BN_add(bnt, bnt, bnk1);
+        BN_nnmod(bnt, bnt, order, ctx);
+        assert(BN_cmp(bnk, bnt) == 0);
+        BN_free(bnt);
+#endif
+
+        BN_CTX_end(ctx);
+    }
+
+    // p2 = lambda*p, where lambda is chosen such that this operation is very fast
+    void mullambda(const EC_GROUP *group_, EC_POINT *p2, const EC_POINT *p, BN_CTX *ctx) {
+        BN_CTX_start(ctx);
+        BIGNUM *x = BN_CTX_get(ctx);
+        BIGNUM *y = BN_CTX_get(ctx);
+
+        // deconstruct p as (x,y)
+        EC_POINT_get_affine_coordinates_GFp(group, p, x, y, ctx);
+        // x' = x*beta
+        BN_mod_mul(x, x, bnbeta, bnp, ctx);
+        // construct p2 as (x',y)
+        EC_POINT_set_affine_coordinates_GFp(group, p2, x, y, ctx);
+
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+        // verify p2 == lambda*p
+        EC_POINT *t = EC_POINT_new(group);
+        ::EC_POINT_mul(group, t, NULL, p, bnlambda, ctx);
+        assert(EC_POINT_cmp(group, t, p2, ctx) == 0);
+        EC_POINT_free(t);
+#endif
+
+        BN_CTX_end(ctx);
+    }
+
+public:
+    CSecp256k1Math() {
+        static const unsigned char a1b2[] =   {       0x30, 0x86, 0xd2, 0x21, 0xa7, 0xd4, 0x6b, 0xcd, 0xe8, 0x6c, 0x90, 0xe4, 0x92, 0x84, 0xeb, 0x15 };
+        static const unsigned char b1m[] =    {       0xe4, 0x43, 0x7e, 0xd6, 0x01, 0x0e, 0x88, 0x28, 0x6f, 0x54, 0x7f, 0xa9, 0x0a, 0xbf, 0xe4, 0xc3 };
+        static const unsigned char a2[] =     { 0x01, 0x14, 0xca, 0x50, 0xf7, 0xa8, 0xe2, 0xf3, 0xf6, 0x57, 0xc1, 0x10, 0x8d, 0x9d, 0x44, 0xcf, 0xd8 };
+        static const unsigned char beta[] =   { 0x7a, 0xe9, 0x6a, 0x2b, 0x65, 0x7c, 0x07, 0x10, 0x6e, 0x64, 0x47, 0x9e, 0xac, 0x34, 0x34, 0xe9, 0x9c, 0xf0, 0x49, 0x75, 0x12, 0xf5, 0x89, 0x95, 0xc1, 0x39, 0x6c, 0x28, 0x71, 0x95, 0x01, 0xee };
+        static const unsigned char lambda[] = { 0x53, 0x63, 0xad, 0x4c, 0xc0, 0x5c, 0x30, 0xe0, 0xa5, 0x26, 0x1c, 0x02, 0x88, 0x12, 0x64, 0x5a, 0x12, 0x2e, 0x22, 0xea, 0x20, 0x81, 0x66, 0x78, 0xdf, 0x02, 0x96, 0x7c, 0x1b, 0x23, 0xbd, 0x72 };
+
+        EC_KEY *pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
+        BN_CTX *ctx = BN_CTX_new();
+        BN_CTX_start(ctx);
+        BIGNUM *bn128 = BN_CTX_get(ctx);
+
+        bnp = BN_new();
+        order = BN_new();
+        group = EC_GROUP_dup(EC_KEY_get0_group(pkey));
+        EC_GROUP_precompute_mult(group, ctx);
+        EC_GROUP_get_curve_GFp(group, bnp, NULL, NULL, ctx);
+        EC_GROUP_get_order(group, order, ctx);
+        bna1b2   = BN_bin2bn(a1b2,   sizeof(a1b2),   NULL);
+        bnb1m    = BN_bin2bn(b1m,    sizeof(b1m),    NULL);
+        bna2     = BN_bin2bn(a2,     sizeof(a2),     NULL);
+        bnbeta   = BN_bin2bn(beta,   sizeof(beta),   NULL);
+        bnlambda = BN_bin2bn(lambda, sizeof(lambda), NULL);
+
+        BN_one(bn128);
+        BN_lshift(bn128, bn128, 128);
+        G128 = EC_POINT_new(group);
+        ::EC_POINT_mul(group, G128, bn128, NULL, NULL, ctx);
+
+        BN_CTX_end(ctx);
+        BN_CTX_free(ctx);
+        EC_KEY_free(pkey);
+    }
+
+    ~CSecp256k1Math() {
+        EC_GROUP_free(group);
+        EC_POINT_free(G128);
+        BN_free(order);
+        BN_free(bnp);
+        BN_free(bna1b2);
+        BN_free(bnb1m);
+        BN_free(bna2);
+        BN_free(bnbeta);
+        BN_free(bnlambda);
+    }
+
+    // calculate r = n*G + m*q
+    int EC_POINT_mul(const EC_GROUP *group_, EC_POINT *r, const BIGNUM *n, const EC_POINT *q, const BIGNUM *m, BN_CTX *ctx) {
+        BN_CTX_start(ctx);
+        BIGNUM *na = BN_CTX_get(ctx);
+        BIGNUM *nb = BN_CTX_get(ctx);
+        BIGNUM *ma = BN_CTX_get(ctx);
+        BIGNUM *mb = BN_CTX_get(ctx);
+        EC_POINT *qlam = EC_POINT_new(group);
+
+        // rewrite n*G as na*G + nb*G128, where na and nb are small, and G128 = G*2^128 is precomputed
+        BN_copy(na, n);
+        BN_mask_bits(na, 128);
+        BN_rshift(nb, n, 128);
+
+        // rewrite m*q as ma*q + mb*qlam, where ma and mb are small, and qlam = lambda*q is efficiently computable
+        splitk(ma, mb, m, ctx); // split m
+        mullambda(group, qlam, q, ctx); // calculate qlam = lamda*Q
+
+        // the actual calculation now becomes: r = nb*G128 + ma*q + mb*qlam + na*G, where [na,nb,ma,mb] are small
+        const EC_POINT *points[3] = {G128, q,  qlam};
+        const BIGNUM   *exps[3]   = {nb,   ma, mb};
+        int ret = EC_POINTs_mul(group, r, na, 3, points, exps, ctx); // the exponent na to G is passed separately
+
+        EC_POINT_free(qlam);
+        BN_CTX_end(ctx);
+        return ret;
+    }
+
+    const BIGNUM *get_order() {
+        return order;
+    }
+};
+
+static CSecp256k1Math secp256k1math;
+
+/** this is an almost exact copy of OpenSSL's ecdsa_do_verify, except:
+ *  - it takes fixed size input
+ *  - it uses a static order (which is a constant, assuming secp256k1)
+ *  - it uses the optimized EC_POINT_mul operation from CSecp256k1Math
+ */
+int static secp256k1_ecdsa_do_verify(const unsigned char hash[32], const ECDSA_SIG *sig, const EC_KEY *eckey)
+{
+    int ret = -1;
+
+    const EC_GROUP *group;
+    const EC_POINT *pub_key;
+    EC_POINT *point = NULL;
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+    EC_POINT *point2 = NULL;
+    BIGNUM *order2 = NULL;
+#endif
+    BIGNUM *m, *u2, *u1, *X;
+    const BIGNUM *order;
+    BN_CTX *ctx = NULL;
+
+    // check input values
+    if (eckey == NULL || (group = EC_KEY_get0_group(eckey)) == NULL ||
+        (pub_key = EC_KEY_get0_public_key(eckey)) == NULL || sig == NULL)
+        goto err;
+
+    ctx = BN_CTX_new();
+    BN_CTX_start(ctx);
+
+    m = BN_CTX_get(ctx);
+    u2 = BN_CTX_get(ctx);
+    u1 = BN_CTX_get(ctx);
+    X = BN_CTX_get(ctx);
+    if (!X)
+        goto err;
+
+    order = secp256k1math.get_order();
+
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+    // verify order == group.order
+    order2 = BN_CTX_get(ctx);
+    assert(EC_GROUP_get_order(group, order2, ctx));
+    assert(BN_cmp(order, order2) == 0);
+#endif
+
+    // sanity checks
+    if (BN_is_zero(sig->r) || BN_is_negative(sig->r) || BN_ucmp(sig->r, order) >= 0
+        || BN_is_zero(sig->s) || BN_is_negative(sig->s) || BN_ucmp(sig->s, order) >= 0)
+        goto err;
+
+    // calculate tmp = inv(S) mod order
+    if (!BN_mod_inverse(u2, sig->s, order, ctx))
+        goto err;
+
+    // turn message into number
+    if (!BN_bin2bn(hash, 32, m))
+        goto err;
+
+    // u1 = m * tmp mod order
+    if (!BN_mod_mul(u1, m, u2, order, ctx))
+        goto err;
+
+    // u2 = r * tmp mod order
+    if (!BN_mod_mul(u2, sig->r, u2, order, ctx))
+        goto err;
+
+    // allocate result point
+    if ((point = EC_POINT_new(group)) == NULL)
+        goto err;
+
+    // calculate point = u1*G + u2*pub_key
+    if (!secp256k1math.EC_POINT_mul(group, point, u1, pub_key, u2, ctx))
+        goto err;
+
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+    // verify point == u1*G + u2*pub_key
+    assert((point2 = EC_POINT_new(group)));
+    assert(EC_POINT_mul(group, point2, u1, pub_key, u2, ctx));
+    assert(EC_POINT_cmp(group, point, point2, ctx) == 0);
+    EC_POINT_free(point2);
+#endif
+
+    // extract X coordinate from result point
+    if (!EC_POINT_get_affine_coordinates_GFp(group, point, X, NULL, ctx))
+        goto err;
+
+    // u1 = X mod order
+    if (!BN_nnmod(u1, X, order, ctx))
+        goto err;
+
+    // compare u1 to r
+    ret = (BN_ucmp(u1, sig->r) == 0);
+
+err:
+    if (point)
+        EC_POINT_free(point);
+    if (ctx) {
+        BN_CTX_end(ctx);
+        BN_CTX_free(ctx);
+    }
+
     return ret;
 }
 
@@ -372,10 +635,20 @@ bool CKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>& v
 
 bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSig)
 {
-    // -1 = error, 0 = bad sig, 1 = good
+    if (fOptimizedEC) {
+        const unsigned char *ptr = &vchSig[0];
+        ECDSA_SIG *sig = d2i_ECDSA_SIG(NULL, &ptr, vchSig.size());
+        bool ret = (secp256k1_ecdsa_do_verify((unsigned char*)&hash, sig, pkey) == 1);
+#ifdef VERIFY_OPTIMIZED_SECP256K1
+        int fuzzpos = rand() % 256;
+        hash += ((uint256)1) << fuzzpos;
+        secp256k1_ecdsa_do_verify((unsigned char*)&hash, sig, pkey);
+#endif
+        ECDSA_SIG_free(sig);
+        return ret;
+    }
     if (ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], vchSig.size(), pkey) != 1)
         return false;
-
     return true;
 }
 
