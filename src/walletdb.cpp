@@ -622,11 +622,11 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
 
     bool fSuccess = allOK;
     Db* pdbCopy = new Db(&dbenv.dbenv, 0);
-    int ret = pdbCopy->open(NULL,                 // Txn pointer
+    int ret = pdbCopy->open(NULL,               // Txn pointer
                             filename.c_str(),   // Filename
-                            "main",    // Logical db name
-                            DB_BTREE,  // Database type
-                            DB_CREATE,    // Flags
+                            "main",             // Logical db name
+                            DB_BTREE,           // Database type
+                            DB_CREATE,          // Flags
                             0);
     if (ret > 0)
     {

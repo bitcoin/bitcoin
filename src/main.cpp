@@ -2655,12 +2655,12 @@ bool VerifyDB() {
         CBlockIndex *pindex = pindexState;
         while (pindex != pindexBest) {
             boost::this_thread::interruption_point();
-             pindex = pindex->pnext;
-             CBlock block;
-             if (!block.ReadFromDisk(pindex))
-                 return error("VerifyDB() : *** block.ReadFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
-             if (!block.ConnectBlock(state, pindex, coins))
-                 return error("VerifyDB() : *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+            pindex = pindex->pnext;
+            CBlock block;
+            if (!block.ReadFromDisk(pindex))
+                return error("VerifyDB() : *** block.ReadFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+            if (!block.ConnectBlock(state, pindex, coins))
+                return error("VerifyDB() : *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
         }
     }
 

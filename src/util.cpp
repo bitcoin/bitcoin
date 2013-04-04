@@ -1072,7 +1072,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 
     fs::create_directory(path);
 
-    cachedPath[fNetSpecific]=true;
+    cachedPath[fNetSpecific] = true;
     return path;
 }
 
@@ -1336,14 +1336,14 @@ void seed_insecure_rand(bool fDeterministic)
         insecure_rand_Rz = insecure_rand_Rw = 11;
     } else {
         uint32_t tmp;
-        do{
-            RAND_bytes((unsigned char*)&tmp,4);
-        }while(tmp==0 || tmp==0x9068ffffU);
-        insecure_rand_Rz=tmp;
-        do{
-            RAND_bytes((unsigned char*)&tmp,4);
-        }while(tmp==0 || tmp==0x464fffffU);
-        insecure_rand_Rw=tmp;
+        do {
+            RAND_bytes((unsigned char*)&tmp, 4);
+        } while(tmp == 0 || tmp == 0x9068ffffU);
+        insecure_rand_Rz = tmp;
+        do {
+            RAND_bytes((unsigned char*)&tmp, 4);
+        } while(tmp == 0 || tmp == 0x464fffffU);
+        insecure_rand_Rw = tmp;
     }
 }
 
