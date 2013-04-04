@@ -17,6 +17,7 @@ extern void noui_connect();
 struct TestingSetup {
     CCoinsViewDB *pcoinsdbview;
     boost::filesystem::path pathTemp;
+    boost::thread_group threadGroup;
 
     TestingSetup() {
         fPrintToDebugger = true; // don't want to write to debug.log file
@@ -35,11 +36,12 @@ struct TestingSetup {
         RegisterWallet(pwalletMain);
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
-            NewThread(ThreadScriptCheck, NULL);
+            threadGroup.create_thread(&ThreadScriptCheck);
     }
     ~TestingSetup()
     {
-        ThreadScriptCheckQuit();
+        threadGroup.interrupt_all();
+        threadGroup.join_all();
         delete pwalletMain;
         pwalletMain = NULL;
         delete pcoinsTip;
