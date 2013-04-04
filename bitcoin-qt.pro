@@ -3,7 +3,8 @@ TARGET = bitcoin-qt
 macx:TARGET = "Bitcoin-Qt"
 VERSION = 0.8.0
 INCLUDEPATH += src src/json src/qt
-QT += network
+QT += core gui network
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 CONFIG += thread
@@ -310,6 +311,7 @@ DEFINES += BITCOIN_QT_TEST
   macx: CONFIG -= app_bundle
 }
 
+# Todo: Remove this line when switching to Qt5, as that option was removed
 CODECFORTR = UTF-8
 
 # for lrelease/lupdate
