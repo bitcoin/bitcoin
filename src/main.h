@@ -150,12 +150,8 @@ CBlockIndex* FindBlockByHeight(int nHeight);
 bool ProcessMessages(CNode* pfrom);
 /** Send queued protocol messages to be sent to a give node */
 bool SendMessages(CNode* pto, bool fSendTrickle);
-/** Run the importer thread, which deals with reindexing, loading bootstrap.dat, and whatever is passed to -loadblock */
-void ThreadImport(void *parg);
 /** Run an instance of the script checking thread */
-void ThreadScriptCheck(void* parg);
-/** Stop the script checking threads */
-void ThreadScriptCheckQuit();
+void ThreadScriptCheck();
 /** Run the miner threads */
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
 /** Generate a new block, without valid proof-of-work */

@@ -61,8 +61,8 @@ CScript COINBASE_FLAGS;
 
 const string strMessageMagic = "Bitcoin Signed Message:\n";
 
-double dHashesPerSec;
-int64 nHPSTimerStart;
+double dHashesPerSec = 0.0;
+int64 nHPSTimerStart = 0;
 
 // Settings
 int64 nTransactionFee = 0;
@@ -1256,8 +1256,7 @@ bool ConnectBestBlock(CValidationState &state) {
             if (pindexTest->pprev == NULL || pindexTest->pnext != NULL) {
                 reverse(vAttach.begin(), vAttach.end());
                 BOOST_FOREACH(CBlockIndex *pindexSwitch, vAttach) {
-                    if (fRequestShutdown)
-                        break;
+                    boost::this_thread::interruption_point();
                     try {
                         if (!SetBestChain(state, pindexSwitch))
                             return false;
@@ -1560,15 +1559,9 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
-void ThreadScriptCheck(void*) {
-    vnThreadsRunning[THREAD_SCRIPTCHECK]++;
+void ThreadScriptCheck() {
     RenameThread("bitcoin-scriptch");
     scriptcheckqueue.Thread();
-    vnThreadsRunning[THREAD_SCRIPTCHECK]--;
-}
-
-void ThreadScriptCheckQuit() {
-    scriptcheckqueue.Quit();
 }
 
 bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsViewCache &view, bool fJustCheck)
@@ -2464,7 +2457,6 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch) {
 
 
 bool AbortNode(const std::string &strMessage) {
-    fRequestShutdown = true;
     strMiscWarning = strMessage;
     printf("*** %s\n", strMessage.c_str());
     uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_ERROR);
@@ -2543,8 +2535,7 @@ bool static LoadBlockIndexDB()
     if (!pblocktree->LoadBlockIndexGuts())
         return false;
 
-    if (fRequestShutdown)
-        return true;
+    boost::this_thread::interruption_point();
 
     // Calculate bnChainWork
     vector<pair<int, CBlockIndex*> > vSortedByHeight;
@@ -2624,7 +2615,8 @@ bool VerifyDB() {
     CValidationState state;
     for (CBlockIndex* pindex = pindexBest; pindex && pindex->pprev; pindex = pindex->pprev)
     {
-        if (fRequestShutdown || pindex->nHeight < nBestHeight-nCheckDepth)
+        boost::this_thread::interruption_point();
+        if (pindex->nHeight < nBestHeight-nCheckDepth)
             break;
         CBlock block;
         // check level 0: read from disk
@@ -2661,7 +2653,8 @@ bool VerifyDB() {
     // check level 4: try reconnecting blocks
     if (nCheckLevel >= 4) {
         CBlockIndex *pindex = pindexState;
-        while (pindex != pindexBest && !fRequestShutdown) {
+        while (pindex != pindexBest) {
+            boost::this_thread::interruption_point();
              pindex = pindex->pnext;
              CBlock block;
              if (!block.ReadFromDisk(pindex))
@@ -2868,7 +2861,9 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
             }
         }
         uint64 nRewind = blkdat.GetPos();
-        while (blkdat.good() && !blkdat.eof() && !fRequestShutdown) {
+        while (blkdat.good() && !blkdat.eof()) {
+            boost::this_thread::interruption_point();
+
             blkdat.SetPos(nRewind);
             nRewind++; // start one byte further next time, in case of failure
             blkdat.SetLimit(); // remove former limit
@@ -3043,8 +3038,7 @@ void static ProcessGetData(CNode* pfrom)
 
         const CInv &inv = *it;
         {
-            if (fShutdown)
-                break;
+            boost::this_thread::interruption_point();
             it++;
 
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
@@ -3302,8 +3296,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         int64 nSince = nNow - 10 * 60;
         BOOST_FOREACH(CAddress& addr, vAddr)
         {
-            if (fShutdown)
-                return true;
+            boost::this_thread::interruption_point();
+
             if (addr.nTime <= 100000000 || addr.nTime > nNow + 10 * 60)
                 addr.nTime = nNow - 5 * 24 * 60 * 60;
             pfrom->AddAddressKnown(addr);
@@ -3371,8 +3365,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         {
             const CInv &inv = vInv[nInv];
 
-            if (fShutdown)
-                return true;
+            boost::this_thread::interruption_point();
             pfrom->AddInventoryKnown(inv);
 
             bool fAlreadyHave = AlreadyHave(inv);
@@ -3804,8 +3797,7 @@ bool ProcessMessages(CNode* pfrom)
                 LOCK(cs_main);
                 fRet = ProcessMessage(pfrom, strCommand, vRecv);
             }
-            if (fShutdown)
-                break;
+            boost::this_thread::interruption_point();
         }
         catch (std::ios_base::failure& e)
         {
@@ -3823,6 +3815,9 @@ bool ProcessMessages(CNode* pfrom)
             {
                 PrintExceptionContinue(&e, "ProcessMessages()");
             }
+        }
+        catch (boost::thread_interrupted) {
+            throw;
         }
         catch (std::exception& e) {
             PrintExceptionContinue(&e, "ProcessMessages()");
@@ -4090,6 +4085,8 @@ unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1
             nHashesDone = 0xffff+1;
             return (unsigned int) -1;
         }
+        if ((nNonce & 0xfff) == 0)
+            boost::this_thread::interruption_point();
     }
 }
 
@@ -4507,37 +4504,19 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     return true;
 }
 
-void static ThreadBitcoinMiner(void* parg);
-
-static bool fGenerateBitcoins = false;
-static bool fLimitProcessors = false;
-static int nLimitProcessors = -1;
-
 void static BitcoinMiner(CWallet *pwallet)
 {
     printf("BitcoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-
-    // Make this thread recognisable as the mining thread
     RenameThread("bitcoin-miner");
 
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
-    while (fGenerateBitcoins)
-    {
-        if (fShutdown)
-            return;
-        while (vNodes.empty() || IsInitialBlockDownload())
-        {
-            Sleep(1000);
-            if (fShutdown)
-                return;
-            if (!fGenerateBitcoins)
-                return;
-        }
-
+    try { loop {
+        while (vNodes.empty())
+            MilliSleep(1000);
 
         //
         // Create new block
@@ -4553,7 +4532,6 @@ void static BitcoinMiner(CWallet *pwallet)
 
         printf("Running BitcoinMiner with %"PRIszu" transactions in block (%u bytes)\n", pblock->vtx.size(),
                ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
-
 
         //
         // Pre-build hash buffers
@@ -4627,19 +4605,14 @@ void static BitcoinMiner(CWallet *pwallet)
                         if (GetTime() - nLogTime > 30 * 60)
                         {
                             nLogTime = GetTime();
-                            printf("hashmeter %3d CPUs %6.0f khash/s\n", vnThreadsRunning[THREAD_MINER], dHashesPerSec/1000.0);
+                            printf("hashmeter %6.0f khash/s\n", dHashesPerSec/1000.0);
                         }
                     }
                 }
             }
 
             // Check for stop or if block needs to be rebuilt
-            if (fShutdown)
-                return;
-            if (!fGenerateBitcoins)
-                return;
-            if (fLimitProcessors && vnThreadsRunning[THREAD_MINER] > nLimitProcessors)
-                return;
+            boost::this_thread::interruption_point();
             if (vNodes.empty())
                 break;
             if (nBlockNonce >= 0xffff0000)
@@ -4659,57 +4632,35 @@ void static BitcoinMiner(CWallet *pwallet)
                 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
             }
         }
-    }
-}
-
-void static ThreadBitcoinMiner(void* parg)
-{
-    CWallet* pwallet = (CWallet*)parg;
-    try
+    } }
+    catch (boost::thread_interrupted)
     {
-        vnThreadsRunning[THREAD_MINER]++;
-        BitcoinMiner(pwallet);
-        vnThreadsRunning[THREAD_MINER]--;
+        printf("BitcoinMiner terminated\n");
+        throw;
     }
-    catch (std::exception& e) {
-        vnThreadsRunning[THREAD_MINER]--;
-        PrintException(&e, "ThreadBitcoinMiner()");
-    } catch (...) {
-        vnThreadsRunning[THREAD_MINER]--;
-        PrintException(NULL, "ThreadBitcoinMiner()");
-    }
-    nHPSTimerStart = 0;
-    if (vnThreadsRunning[THREAD_MINER] == 0)
-        dHashesPerSec = 0;
-    printf("ThreadBitcoinMiner exiting, %d threads remaining\n", vnThreadsRunning[THREAD_MINER]);
 }
-
 
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet)
 {
-    fGenerateBitcoins = fGenerate;
-    nLimitProcessors = GetArg("-genproclimit", -1);
-    if (nLimitProcessors == 0)
-        fGenerateBitcoins = false;
-    fLimitProcessors = (nLimitProcessors != -1);
+    static boost::thread_group* minerThreads = NULL;
 
-    if (fGenerate)
+    int nThreads = GetArg("-genproclimit", -1);
+    if (nThreads < 0)
+        nThreads = boost::thread::hardware_concurrency();
+
+    if (minerThreads != NULL)
     {
-        int nProcessors = boost::thread::hardware_concurrency();
-        printf("%d processors\n", nProcessors);
-        if (nProcessors < 1)
-            nProcessors = 1;
-        if (fLimitProcessors && nProcessors > nLimitProcessors)
-            nProcessors = nLimitProcessors;
-        int nAddThreads = nProcessors - vnThreadsRunning[THREAD_MINER];
-        printf("Starting %d BitcoinMiner threads\n", nAddThreads);
-        for (int i = 0; i < nAddThreads; i++)
-        {
-            if (!NewThread(ThreadBitcoinMiner, pwallet))
-                printf("Error: NewThread(ThreadBitcoinMiner) failed\n");
-            Sleep(10);
-        }
+        minerThreads->interrupt_all();
+        delete minerThreads;
+        minerThreads = NULL;
     }
+
+    if (nThreads == 0 || !fGenerate)
+        return;
+
+    minerThreads = new boost::thread_group();
+    for (int i = 0; i < nThreads; i++)
+        minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
 }
 
 // Amount compression:
