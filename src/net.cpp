@@ -44,6 +44,7 @@ static map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfReachable[NET_MAX] = {};
 static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
+static CNode* pnodeSync = NULL;
 uint64 nLocalHostNonce = 0;
 static std::vector<SOCKET> vhListenSocket;
 CAddrMan addrman;
@@ -521,12 +522,16 @@ void CNode::CloseSocketDisconnect()
         printf("disconnecting node %s\n", addrName.c_str());
         closesocket(hSocket);
         hSocket = INVALID_SOCKET;
-
-        // in case this fails, we'll empty the recv buffer when the CNode is deleted
-        TRY_LOCK(cs_vRecvMsg, lockRecv);
-        if (lockRecv)
-            vRecvMsg.clear();
     }
+
+    // in case this fails, we'll empty the recv buffer when the CNode is deleted
+    TRY_LOCK(cs_vRecvMsg, lockRecv);
+    if (lockRecv)
+        vRecvMsg.clear();
+
+    // if this was the sync node, we'll need a new one
+    if (this == pnodeSync)
+        pnodeSync = NULL;
 }
 
 void CNode::Cleanup()
@@ -1546,23 +1551,63 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOu
 }
 
 
+// for now, use a very simple selection metric: the node from which we received
+// most recently
+double static NodeSyncScore(const CNode *pnode) {
+    return -pnode->nLastRecv;
+}
 
+void static StartSync(const vector<CNode*> &vNodes) {
+    CNode *pnodeNewSync = NULL;
+    double dBestScore = 0;
 
+    // fImporting and fReindex are accessed out of cs_main here, but only
+    // as an optimization - they are checked again in SendMessages.
+    if (fImporting || fReindex)
+        return;
 
-
+    // Iterate over all nodes
+    BOOST_FOREACH(CNode* pnode, vNodes) {
+        // check preconditions for allowing a sync
+        if (!pnode->fClient && !pnode->fOneShot &&
+            !pnode->fDisconnect && pnode->fSuccessfullyConnected &&
+            (pnode->nStartingHeight > (nBestHeight - 144)) &&
+            (pnode->nVersion < NOBLKS_VERSION_START || pnode->nVersion >= NOBLKS_VERSION_END)) {
+            // if ok, compare node's score with the best so far
+            double dScore = NodeSyncScore(pnode);
+            if (pnodeNewSync == NULL || dScore > dBestScore) {
+                pnodeNewSync = pnode;
+                dBestScore = dScore;
+            }
+        }
+    }
+    // if a new sync candidate was found, start sync!
+    if (pnodeNewSync) {
+        pnodeNewSync->fStartSync = true;
+        pnodeSync = pnodeNewSync;
+    }
+}
 
 void ThreadMessageHandler()
 {
     SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
     while (true)
     {
+        bool fHaveSyncNode = false;
+
         vector<CNode*> vNodesCopy;
         {
             LOCK(cs_vNodes);
             vNodesCopy = vNodes;
-            BOOST_FOREACH(CNode* pnode, vNodesCopy)
+            BOOST_FOREACH(CNode* pnode, vNodesCopy) {
                 pnode->AddRef();
+                if (pnode == pnodeSync)
+                    fHaveSyncNode = true;
+            }
         }
+
+        if (!fHaveSyncNode)
+            StartSync(vNodesCopy);
 
         // Poll the connected nodes for messages
         CNode* pnodeTrickle = NULL;
