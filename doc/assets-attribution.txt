@@ -56,6 +56,6 @@ Designer: Vignoni David
 Site: http://www.oxygen-icons.org/
 License: Oxygen icon theme is dual licensed. You may copy it under the Creative Common Attribution-ShareAlike 3.0 License or the GNU Library General Public License.
 
-Icon: src/qt/res/icons/bitcoin.icns, src/qt/res/icons/bitcoin.psd, src/qt/res/icons/bitcoin.svg
+Icon: src/qt/res/icons/bitcoin.icns, src/qt/res/icons/bitcoin.svg
 Designer: Jonas Schnelli (original bitcoin logo from Bitboy)
 License: MIT
