@@ -38,7 +38,6 @@ class RPCExecutor : public QObject
     Q_OBJECT
 
 public slots:
-    void start();
     void request(const QString &command);
 
 signals:
@@ -46,11 +45,6 @@ signals:
 };
 
 #include "rpcconsole.moc"
-
-void RPCExecutor::start()
-{
-   // Nothing to do
-}
 
 /**
  * Split shell command line into a list of arguments. Aims to emulate \c bash and friends.
@@ -187,6 +181,7 @@ void RPCExecutor::request(const QString &command)
 RPCConsole::RPCConsole(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RPCConsole),
+    clientModel(0),
     historyPtr(0)
 {
     ui->setupUi(this);
@@ -384,16 +379,15 @@ void RPCConsole::browseHistory(int offset)
 
 void RPCConsole::startExecutor()
 {
-    QThread* thread = new QThread;
+    QThread *thread = new QThread;
     RPCExecutor *executor = new RPCExecutor();
     executor->moveToThread(thread);
 
-    // Notify executor when thread started (in executor thread)
-    connect(thread, SIGNAL(started()), executor, SLOT(start()));
     // Replies from executor object must go to this object
     connect(executor, SIGNAL(reply(int,QString)), this, SLOT(message(int,QString)));
     // Requests from this object must go to executor
     connect(this, SIGNAL(cmdRequest(QString)), executor, SLOT(request(QString)));
+
     // On stopExecutor signal
     // - queue executor for deletion (in execution thread)
     // - quit the Qt event loop in the execution thread
