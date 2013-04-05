@@ -1,12 +1,15 @@
+#ifndef _SECP256K1_FIELD_REPR_IMPL_H_
+#define _SECP256K1_FIELD_REPR_IMPL_H_
+
 #include <assert.h>
 #include <string.h>
-#include "num.h"
-#include "field.h"
+#include "../num.h"
+#include "../field.h"
 
 #ifdef USE_FIELD_5X52_ASM
-#include "field_5x52_asm.c"
+#include "field_5x52_asm.h"
 #else
-#include "field_5x52_int128.c"
+#include "field_5x52_int128.h"
 #endif
 
 /** Implements arithmetic modulo FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F,
@@ -180,3 +183,5 @@ void static secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #endif
     secp256k1_fe_sqr_inner(a->n, r->n);
 }
+
+#endif

@@ -1,8 +1,11 @@
+#ifndef _SECP256K1_FIELD_REPR_IMPL_H_
+#define _SECP256K1_FIELD_REPR_IMPL_H_
+
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
-#include "num.h"
-#include "field.h"
+#include "../num.h"
+#include "../field.h"
 
 void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
 //    fog("normalize in: ", r);
@@ -473,3 +476,5 @@ void static secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #endif
     secp256k1_fe_sqr_inner(a->n, r->n);
 }
+
+#endif

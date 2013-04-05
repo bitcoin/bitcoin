@@ -1,5 +1,5 @@
-#ifndef _SECP256K1_FIELD_GMP_
-#define _SECP256K1_FIELD_GMP_
+#ifndef _SECP256K1_FIELD_REPR_
+#define _SECP256K1_FIELD_REPR_
 
 #include <gmp.h>
 

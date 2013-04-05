@@ -1,6 +1,9 @@
-#include "num.h"
-#include "group.h"
-#include "ecmult.h"
+#ifndef _SECP256K1_ECMULT_IMPL_H_
+#define _SECP256K1_ECMULT_IMPL_H_
+
+#include "../num.h"
+#include "../group.h"
+#include "../ecmult.h"
 
 // optimal for 128-bit and 256-bit exponents.
 #define WINDOW_A 5
@@ -226,3 +229,5 @@ void static secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
     secp256k1_num_free(&ng_1);
     secp256k1_num_free(&ng_128);
 }
+
+#endif

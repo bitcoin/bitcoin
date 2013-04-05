@@ -1,10 +1,13 @@
+#ifndef _SECP256K1_FIELD_IMPL_H_
+#define _SECP256K1_FIELD_IMPL_H_
+
 #ifdef USE_FIELD_GMP
-#include "field_gmp.c"
+#include "field_gmp.h"
 #else
 #ifdef USE_FIELD_10X26
-#include "field_10x26.c"
+#include "field_10x26.h"
 #else
-#include "field_5x52.c"
+#include "field_5x52.h"
 #endif
 #endif
 
@@ -158,3 +161,5 @@ void static secp256k1_fe_stop(void) {
         secp256k1_fe_consts = NULL;
     }
 }
+
+#endif

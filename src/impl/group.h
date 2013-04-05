@@ -1,8 +1,11 @@
+#ifndef _SECP256K1_GROUP_IMPL_H_
+#define _SECP256K1_GROUP_IMPL_H_
+
 #include <string.h>
 
-#include "num.h"
-#include "field.h"
-#include "group.h"
+#include "../num.h"
+#include "../field.h"
+#include "../group.h"
 
 void static secp256k1_ge_set_infinity(secp256k1_ge_t *r) {
     r->infinity = 1;
@@ -370,3 +373,5 @@ void static secp256k1_ge_stop(void) {
         secp256k1_ge_consts = NULL;
     }
 }
+
+#endif

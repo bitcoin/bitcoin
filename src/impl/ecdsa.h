@@ -1,8 +1,11 @@
-#include "num.h"
-#include "field.h"
-#include "group.h"
-#include "ecmult.h"
-#include "ecdsa.h"
+#ifndef _SECP256K1_ECDSA_IMPL_H_
+#define _SECP256K1_ECDSA_IMPL_H_
+
+#include "../num.h"
+#include "../field.h"
+#include "../group.h"
+#include "../ecmult.h"
+#include "../ecdsa.h"
 
 void static secp256k1_ecdsa_sig_init(secp256k1_ecdsa_sig_t *r) {
     secp256k1_num_init(&r->r);
@@ -141,3 +144,5 @@ void static secp256k1_ecdsa_sig_set_rs(secp256k1_ecdsa_sig_t *sig, const secp256
     secp256k1_num_copy(&sig->r, r);
     secp256k1_num_copy(&sig->s, s);
 }
+
+#endif

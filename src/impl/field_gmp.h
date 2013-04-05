@@ -1,8 +1,11 @@
+#ifndef _SECP256K1_FIELD_REPR_IMPL_H_
+#define _SECP256K1_FIELD_REPR_IMPL_H_
+
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
-#include "num.h"
-#include "field.h"
+#include "../num.h"
+#include "../field.h"
 
 void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
 #if (GMP_NUMB_BITS >= 40)
@@ -119,3 +122,5 @@ void static secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     mpn_sqr(tmp, ac.n, FIELD_LIMBS);
     secp256k1_fe_reduce(r, tmp);
 }
+
+#endif

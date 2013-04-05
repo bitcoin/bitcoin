@@ -1,4 +1,7 @@
-#include "field.h"
+#ifndef _SECP256K1_FIELD_INNER5X52_IMPL_H_
+#define _SECP256K1_FIELD_INNER5X52_IMPL_H_
+
+#include <stdint.h>
 
 void static inline secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t *b, uint64_t *r) {
     __int128 c = (__int128)a[0] * b[0];
@@ -94,3 +97,5 @@ void static inline secp256k1_fe_sqr_inner(const uint64_t *a, uint64_t *r) {
     r[1] = t1 + c;
 
 }
+
+#endif

@@ -1,5 +1,5 @@
-#ifndef _SECP256K1_NUM_OPENSSL_
-#define _SECP256K1_NUM_OPENSSL_
+#ifndef _SECP256K1_NUM_REPR_
+#define _SECP256K1_NUM_REPR_
 
 #include <openssl/bn.h>
 

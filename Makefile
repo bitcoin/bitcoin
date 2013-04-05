@@ -4,7 +4,7 @@ FLAGS_DEBUG:=-DVERIFY -ggdb3 -O1
 FLAGS_TEST:=-DVERIFY -ggdb3 -O2 -march=native
 
 SECP256K1_FILES := src/num.h src/field.h src/field_5x52.h src/group.h src/ecmult.h src/ecdsa.h \
-                   src/num.c src/field.c src/field_5x52.c src/group.c src/ecmult.c src/ecdsa.c
+                   src/impl/*.h
 
 JAVA_FILES := src/java/org_bitcoin_NativeSecp256k1.h src/java/org_bitcoin_NativeSecp256k1.c
 
@@ -19,33 +19,33 @@ default: all
 ifeq ($(CONF), gmpgmp)
 FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_GMP -DUSE_FIELD_GMP
 LIBS := -lgmp
-SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/num_gmp.c src/field_gmp.c src/field_gmp.h
+SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/field_gmp.h
 else
 ifeq ($(CONF), gmp32)
 FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_GMP -DUSE_FIELD_10X26
 LIBS := -lgmp
-SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/num_gmp.c src/field_10x26.c src/field_10x26.h
+SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/field_10x26.h
 else
 ifeq ($(CONF), openssl)
 FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_OPENSSL -DUSE_FIELD_INV_BUILTIN
 LIBS := -lcrypto
-SECP256K1_FILES := $(SECP256K1_FILES) src/num_openssl.h src/num_openssl.c src/field_5x52_int128.c
+SECP256K1_FILES := $(SECP256K1_FILES) src/num_openssl.h src/field_5x52.h
 else
 ifeq ($(CONF), gmp)
 FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_GMP
 LIBS := -lgmp
-SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/num_gmp.c src/field_5x52_int128.c
+SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/field_5x52.h
 else
 ifeq ($(CONF), gmpasm)
 FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_GMP -DUSE_FIELD_5X52_ASM
 LIBS := -lgmp
 OBJS := $(OBJS) obj/field_5x52_asm.o
-SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/num_gmp.c src/field_5x52_asm.c
+SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/field_5x52.h
 
 obj/field_5x52_asm.o: src/field_5x52_asm.asm
 	yasm -f elf64 -o obj/field_5x52_asm.o src/field_5x52_asm.asm
 else
-SECP256K1_FILES := $(SECP256K1_FILES) src/field_5x52_int128.c
+error
 endif
 endif
 endif

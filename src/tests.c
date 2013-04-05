@@ -1,10 +1,10 @@
 #include <assert.h>
 
-#include "num.c"
-#include "field.c"
-#include "group.c"
-#include "ecmult.c"
-#include "ecdsa.c"
+#include "impl/num.h"
+#include "impl/field.h"
+#include "impl/group.h"
+#include "impl/ecmult.h"
+#include "impl/ecdsa.h"
 
 // #define COUNT 2
 #define COUNT 100

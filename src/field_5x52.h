@@ -1,5 +1,5 @@
-#ifndef _SECP256K1_FIELD_5x52_
-#define _SECP256K1_FIELD_5x52_
+#ifndef _SECP256K1_FIELD_REPR_
+#define _SECP256K1_FIELD_REPR_
 
 #include <stdint.h>
 
