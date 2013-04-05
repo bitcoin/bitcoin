@@ -1,25 +1,26 @@
-* update translations (ping tcatm on IRC for now)
+* update translations (ping wumpus, Diapolo or tcatm on IRC)
+  * see https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#syncing-with-transifex
 
 * update (commit) version in sources
   bitcoin-qt.pro
-  src/clientversion.h (change CLIENT_VERSION_IS_RELEASE to true)
-  share/setup.nsi
-  doc/README*
   contrib/verifysfbinaries/verify.sh
+  doc/README*
+  share/setup.nsi
+  src/clientversion.h (change CLIENT_VERSION_IS_RELEASE to true)
 
 * tag version in git
 
-   git tag -a v0.5.1
+   git tag -a v0.8.0
 
-* write release notes.  git shortlog helps a lot:
+* write release notes. git shortlog helps a lot, for example:
 
-   git shortlog --no-merges v0.5.0..
+   git shortlog --no-merges v0.7.2..v0.8.0
 
 * perform gitian builds
 
   * From a directory containing the bitcoin source, gitian-builder and gitian.sigs
    export SIGNER=(your gitian key, ie bluematt, sipa, etc)
-   export VERSION=0.5.1
+   export VERSION=0.8.0
    cd ./gitian-builder
 
   * Fetch and build inputs: (first time, or when dependency versions change)
