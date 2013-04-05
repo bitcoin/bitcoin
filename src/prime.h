@@ -7,6 +7,9 @@
 
 #include "main.h"
 
+static const CBigNum bnOne = 1;
+static const CBigNum bnPrimeMax = (bnOne << 2039) - 1;
+static const CBigNum bnPrimeMin = (bnOne << 256);
 
 // Generate small prime table
 void GeneratePrimeTable();
@@ -18,36 +21,37 @@ void PrimorialAt(CBigNum& bn, CBigNum& bnPrimorial);
 
 // Test probable prime chain for: n
 // Return value:
-//   true - Probable prime chain found (nProbableChainLength >= TypeGetLength)
-//   false - Not prime chain (nProbableChainLength < TypeGetLength)
-bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength);
+//   true - Probable prime chain found (nProbableChainLength meeting target)
+//   false - prime chain too short (nProbableChainLength not meeting target)
+bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nBits, unsigned int& nProbableChainLength);
 
-std::string TypeGetName(unsigned int nProofOfWorkType);
+static const unsigned int nFractionalBits = 20;
+static const uint64 nFractionalDifficultyMax = (1llu << (nFractionalBits + 32));
+static const uint64 nFractionalDifficultyMin = (1llu << 32);
+bool TargetSetLength(unsigned int nLength, unsigned int& nBits);
+unsigned int TargetGetFractional(unsigned int nBits);
+uint64 TargetGetFractionalDifficulty(unsigned int nBits);
+bool TargetSetFractionalDifficulty(uint64 nFractionalDifficulty, unsigned int& nBits);
+bool TargetIsSophieGermain(unsigned int nBits);
+void TargetSetSophieGermain(bool fSophieGermain, unsigned int& nBits);
+bool TargetIsBiTwin(unsigned int nBits);
+void TargetSetBiTwin(bool fBiTwin, unsigned int& nBits);
+std::string TargetGetName(unsigned int nBits);
 
 // Mine probable prime chain of form: n = h * p# +/- 1
-bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
+bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
 
-// Find last block index up to pindex of the given proof-of-work type
-// Returns: depth of last block index of shorter or equal type
-unsigned int GetLastBlockIndex(const CBlockIndex* pindex, unsigned int nProofOfWorkType, const CBlockIndex** pindexPrev);
+// Find last block index up to pindex of the given prime chain type
+bool GetLastBlockIndex(const CBlockIndex* pindex, bool fSophieGermain, bool fBiTwin, const CBlockIndex** pindexPrev);
 
 // Size of a big number (in bits), times 65536
 // Can be used as an approximate log scale for numbers up to 2 ** 65536 - 1
 bool LogScale(const CBigNum& bn, unsigned int& nLogScale);
 
-// Compute hash target from prime target
-bool GetProofOfWorkHashTarget(unsigned int nBits, CBigNum& bnHashTarget);
-
-// Print mapping from prime target to hash target
-void PrintMappingPrimeTargetToHashTarget();
-
-// Check hash and prime proof-of-work
-bool CheckHashProofOfWork(uint256 hash, unsigned int nBits);
-bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnPrimeChainMultiplier);
+// Check prime proof-of-work
+bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier);
 
 // prime target difficulty value for visualization
-unsigned int GetPrimeDifficulty(unsigned int nBits);
-// hash target difficulty value for visualization
-unsigned int GetHashDifficulty(unsigned int nBits);
+double GetPrimeDifficulty(unsigned int nBits);
 
 #endif

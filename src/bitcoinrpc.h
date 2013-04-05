@@ -126,7 +126,7 @@ extern const CRPCTable tableRPC;
 extern int64 nWalletUnlockTime;
 extern int64 AmountFromValue(const json_spirit::Value& value);
 extern json_spirit::Value ValueFromAmount(int64 amount);
-extern double GetDifficulty(unsigned int nProofOfWorkType, const CBlockIndex* blockindex = NULL);
+extern double GetDifficulty(bool fSophieGermain, bool fBiTwin, const CBlockIndex* blockindex = NULL);
 extern double GetHashDifficulty(unsigned int nProofOfWorkType, const CBlockIndex* blockindex);
 extern std::string HexBits(unsigned int nBits);
 extern std::string HelpRequiringPassphrase();

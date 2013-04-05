@@ -13,8 +13,8 @@ using namespace std;
 
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out);
 
-// Primecoin: get prime difficulty value (log scale)
-double GetDifficulty(unsigned int nProofOfWorkType, const CBlockIndex* blockindex)
+// Primecoin: get prime difficulty value (chain length)
+double GetDifficulty(bool fSophieGermain, bool fBiTwin, const CBlockIndex* blockindex)
 {
     // Floating point number that is approximate log scale of prime target,
     // minimum difficulty = 256, maximum difficulty = 2039
@@ -23,32 +23,12 @@ double GetDifficulty(unsigned int nProofOfWorkType, const CBlockIndex* blockinde
         if (pindexBest == NULL)
             return 256.0;
         else
-            GetLastBlockIndex(pindexBest, nProofOfWorkType, &blockindex);
+            GetLastBlockIndex(pindexBest, fSophieGermain, fBiTwin, &blockindex);
     }
 
-    double dDiff = ((double) GetPrimeDifficulty(blockindex->nBits)) / 65536.0 ;
+    double dDiff = GetPrimeDifficulty(blockindex->nBits);
     return dDiff;
 }
-
-// Primecoin: get hash difficulty value (log scale)
-double GetHashDifficulty(unsigned int nProofOfWorkType, const CBlockIndex* blockindex)
-{
-    // Floating point number that is approximate log scale of hash difficulty,
-    // minimum difficulty = 0, maximum difficulty = 256
-    // bitcoin difficulty 1 (2**32 hashes) is equivalent to difficulty 32.
-    if (blockindex == NULL)
-    {
-        if (pindexBest == NULL)
-            return 0.0;
-        else
-            GetLastBlockIndex(pindexBest, nProofOfWorkType, &blockindex);
-    }
-
-    double dDiff = ((double) GetHashDifficulty(blockindex->nBits)) / 65536.0 ;
-    return dDiff;
-}
-
-
 
 Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
 {
@@ -68,12 +48,14 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("time", (boost::int64_t)block.GetBlockTime()));
     result.push_back(Pair("nonce", (boost::uint64_t)block.nNonce));
     result.push_back(Pair("bits", HexBits(block.nBits)));
-    if (block.nProofOfWorkType == blockindex->nProofOfWorkType)
-        result.push_back(Pair("powtype", TypeGetName(block.nProofOfWorkType)));
-    else
-        result.push_back(Pair("powtype", "mismatch"));
-    result.push_back(Pair("primedifficulty", GetDifficulty(block.nProofOfWorkType, blockindex)));
-    result.push_back(Pair("hashdifficulty", GetHashDifficulty(block.nProofOfWorkType, blockindex)));
+    result.push_back(Pair("primetype", TargetGetName(block.nBits)));
+    result.push_back(Pair("primedifficulty", GetPrimeDifficulty(block.nBits)));
+    unsigned int nChainLength;
+    bool fSophieGermain= TargetIsSophieGermain(block.nBits);
+    bool fBiTwin = TargetIsBiTwin(block.nBits);
+    CBigNum bnProbablePrime = (CBigNum(block.GetHash()) * block.bnPrimeChainMultiplier) + ((fSophieGermain || fBiTwin)? (-1) : 1);
+    ProbablePrimeChainTest(bnProbablePrime, block.nBits, nChainLength);
+    result.push_back(Pair("primechain", GetPrimeDifficulty(nChainLength)));
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
@@ -99,21 +81,12 @@ Value getdifficulty(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getdifficulty\n"
-            "Returns the proof-of-work difficulties in log scale (256 ~ 2039).");
-
-    std::map<int, CBlockIndex*> mapProofOfWorkType;
-    for (CBlockIndex* pindex = pindexBest; pindex; pindex=pindex->pprev)
-        if (!mapProofOfWorkType.count(pindex->nProofOfWorkType))
-        {
-            mapProofOfWorkType[pindex->nProofOfWorkType] = pindex;
-            printf("Type %d at height %u\n", pindex->nProofOfWorkType, pindex->nHeight);
-        }
+            "Returns the proof-of-work difficulties in prime chain length.");
 
     Object result;
-    BOOST_FOREACH(PAIRTYPE(int, CBlockIndex*) item, mapProofOfWorkType)
-    {
-        result.push_back(Pair(TypeGetName(item.first), GetDifficulty(item.first, item.second)));
-    }
+    result.push_back(Pair("1CC", GetDifficulty(true, false)));
+    result.push_back(Pair("2CC", GetDifficulty(false, false)));
+    result.push_back(Pair("TWN", GetDifficulty(false, true)));
 
     return result;
 }

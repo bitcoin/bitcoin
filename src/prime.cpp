@@ -56,19 +56,25 @@ void PrimorialAt(CBigNum& bn, CBigNum& bnPrimorial)
 // Check Fermat probable primality test (2-PRP): 2 ** (n-1) = 1 (mod n)
 // true: n is probable prime
 // false: n is composite
-static bool FermatProbablePrimalityTest(const CBigNum& n)
+static bool FermatProbablePrimalityTest(const CBigNum& n, unsigned int& nLength)
 {
     CAutoBN_CTX pctx;
     CBigNum a = 2; // base; Fermat witness
     CBigNum e = n - 1;
     CBigNum r;
     BN_mod_exp(&r, &a, &e, &n, pctx);
-    if (r != 1)
+    if (r == 1)
+    {
+        return true;
+    }
+    else
+    {
+        nLength = (nLength & 0xfff00000u) | ((((n-r) << nFractionalBits) / n).getuint());
         return false;
-    return true;
+    }
 }
 
-// Test primality of n = 2p +/- 1 based on Euler, Lagrange and Lifchitz
+// Test probable primality of n = 2p +/- 1 based on Euler, Lagrange and Lifchitz
 // fSophieGermain:
 //   true:  n = 2p+1, p prime, aka Cunningham Chain of first kind
 //   false: n = 2p-1, p prime, aka Cunningham Chain of second kind
@@ -91,34 +97,94 @@ static bool EulerLagrangeLifchitzPrimalityTest(const CBigNum& n, bool fSophieGer
     return error("EulerLagrangeLifchitzPrimalityTest() : invalid n %% 8 = %d, %s", nMod8.getint(), (fSophieGermain? "first kind" : "second kind"));
 }
 
-// Proof-of-work Type (prime chain type):
-//   format - 32 bit, ffll: f is flag byte, l is length byte
+// Proof-of-work Target (prime chain target):
+//   format - 32 bit, 2 flags bits, 10 length bits, 20 fractional length bits
 // Flags:
-//   fSophieGermain  0x00010000  (Cunningham chain of first kind)
-//   fBiTwin         0x00020000  (BiTwin chain)
-// Flag bytes value:
+//   fSophieGermain  0x80000000  (Cunningham chain of first kind)
+//   fBiTwin         0x40000000  (BiTwin chain)
+// Flags value (high 2 bits):
 //   0 - Cunningham chain of second kind
-//   1 - Cunningham chain of first kind
-//   2 - BiTwin chain (allow one non-twin prime at the end for odd length chain)
+//   1 - BiTwin chain (allow one non-twin prime at the end for odd length chain)
+//   2 - Cunningham chain of first kind
 
-static unsigned int TypeGetLength(unsigned int nProofOfWorkType)
+static const unsigned int TARGET_SOPHIE_GERMAIN = 0x80000000u;
+static const unsigned int TARGET_BI_TWIN        = 0x40000000u;
+static unsigned int TargetGetLength(unsigned int nBits)
 {
-    return (nProofOfWorkType & 0xffff);
+    return ((nBits & 0x3ff00000u) >> 20);
 }
 
-static bool TypeIsSophieGermain(unsigned int nProofOfWorkType)
+bool TargetSetLength(unsigned int nLength, unsigned int& nBits)
 {
-    return (nProofOfWorkType & 0x00010000);
+    if (nLength >= 0xff || nLength < TargetGetLength(nProofOfWorkLimit))
+        return error("TargetSetLength() : invalid length=%u", nLength);
+    nBits &= ~(0x3ff00000u);
+    nBits |= (nLength << nFractionalBits);
+    return true;
 }
 
-static bool TypeIsBiTwin(unsigned int nProofOfWorkType)
+static unsigned int TargetGetLengthWithFractional(unsigned int nBits)
 {
-    return (nProofOfWorkType & 0x00020000);
+    return (nBits & 0x3fffffffu);
 }
 
-std::string TypeGetName(unsigned int nProofOfWorkType)
+unsigned int TargetGetFractional(unsigned int nBits)
 {
-    return strprintf("%s%02u", TypeIsBiTwin(nProofOfWorkType)? "TWN" : (TypeIsSophieGermain(nProofOfWorkType)? "1CC" : "2CC"), TypeGetLength(nProofOfWorkType));
+    return (nBits & 0xfffffu);
+}
+
+uint64 TargetGetFractionalDifficulty(unsigned int nBits)
+{
+    return ((1llu << (nFractionalBits+32)) / (uint64) (0x00100000u - TargetGetFractional(nBits)));
+}
+
+bool TargetSetFractionalDifficulty(uint64 nFractionalDifficulty, unsigned int& nBits)
+{
+    if (nFractionalDifficulty < nFractionalDifficultyMin)
+        return error("TargetSetFractionalDifficulty() : difficulty below min");
+    uint64 nFractional = (1llu << (nFractionalBits+32)) / nFractionalDifficulty;
+    if (nFractional >= 0x00100000u)
+        return error("TargetSetFractionalDifficulty() : difficulty overflow");
+    nFractional = 0x00100000u - nFractional;
+    nBits &= 0xfff00000u;
+    nBits |= (unsigned int)nFractional;
+    return true;
+}
+
+bool TargetIsSophieGermain(unsigned int nBits)
+{
+    return (nBits & TARGET_SOPHIE_GERMAIN);
+}
+
+void TargetSetSophieGermain(bool fSophieGermain, unsigned int& nBits)
+{
+    if (fSophieGermain)
+        nBits |= TARGET_SOPHIE_GERMAIN;
+    else
+        nBits &= ~(TARGET_SOPHIE_GERMAIN);
+}
+
+bool TargetIsBiTwin(unsigned int nBits)
+{
+    return (nBits & TARGET_BI_TWIN);
+}
+
+void TargetSetBiTwin(bool fBiTwin, unsigned int& nBits)
+{
+    if (fBiTwin)
+        nBits |= TARGET_BI_TWIN;
+    else
+        nBits &= ~(TARGET_BI_TWIN);
+}
+
+std::string TargetGetName(unsigned int nBits)
+{
+    return strprintf("%s%02u", TargetIsBiTwin(nBits)? "TWN" : (TargetIsSophieGermain(nBits)? "1CC" : "2CC"), TargetGetLength(nBits));
+}
+
+static unsigned int TargetLengthFromInt(unsigned int nLength)
+{
+    return (nLength << 20);
 }
 
 // Test Probable Cunningham Chain for: n
@@ -134,30 +200,30 @@ static bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, u
     CBigNum N = n;
 
     // Fermat test for n first
-    if (!FermatProbablePrimalityTest(N))
+    if (!FermatProbablePrimalityTest(N, nProbableChainLength))
         return false;
 
     // Euler-Lagrange-Lifchitz test for the following numbers in chain
     do
     {
-        nProbableChainLength++;
+        nProbableChainLength += (1 << nFractionalBits);
         N = N + N + (fSophieGermain? 1 : (-1));
     }
     while (EulerLagrangeLifchitzPrimalityTest(N, fSophieGermain));
 
-    return (nProbableChainLength >= 2);
+    FermatProbablePrimalityTest(N, nProbableChainLength);
+    return (nProbableChainLength >= (2 << nFractionalBits));
 }
 
 // Test probable prime chain for: n
 // Return value:
-//   true - Probable prime chain found (nProbableChainLength >= TypeGetLength)
-//   false - Not prime chain (nProbableChainLength < TypeGetLength)
-bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength)
+//   true - Probable prime chain found (nProbableChainLength meeting target)
+//   false - prime chain too short (nProbableChainLength not meeting target)
+bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nBits, unsigned int& nProbableChainLength)
 {
     nProbableChainLength = 0;
-    bool fSophieGermain= TypeIsSophieGermain(nProofOfWorkType);
-    bool fBiTwin = TypeIsBiTwin(nProofOfWorkType);
-    CBigNum N = n;
+    bool fSophieGermain= TargetIsSophieGermain(nBits);
+    bool fBiTwin = TargetIsBiTwin(nBits);
 
     if (fBiTwin)
     {
@@ -166,19 +232,19 @@ bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nProofOfWorkType, uns
         unsigned int nLengthSecondKind = 0;
         ProbableCunninghamChainTest(n, true, nLengthFirstKind);
         ProbableCunninghamChainTest(n+2, false, nLengthSecondKind);
-        nProbableChainLength = (2 * std::min(nLengthFirstKind, nLengthSecondKind)) + ((nLengthFirstKind > nLengthSecondKind)? 1 : 0);
+        nProbableChainLength = (TargetGetLength(nLengthFirstKind) > TargetGetLength(nLengthSecondKind))? (nLengthSecondKind + TargetLengthFromInt(TargetGetLength(nLengthSecondKind)+1)) : (nLengthFirstKind + TargetLengthFromInt(TargetGetLength(nLengthFirstKind)));
     }
     else
         ProbableCunninghamChainTest(n, fSophieGermain, nProbableChainLength);
-    return (nProbableChainLength >= TypeGetLength(nProofOfWorkType));
+    return (nProbableChainLength >= TargetGetLengthWithFractional(nBits));
 }
 
 // Mine probable prime chain of form: n = h * p# +/- 1
-bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int nProofOfWorkType, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
+bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
 {
     CBigNum n;
-    bool fSophieGermain = TypeIsSophieGermain(nProofOfWorkType);
-    bool fBiTwin = TypeIsBiTwin(nProofOfWorkType);
+    bool fSophieGermain = TargetIsSophieGermain(block.nBits);
+    bool fBiTwin = TargetIsBiTwin(block.nBits);
 
     int64 nStart = GetTimeMicros();
     int64 nCurrent = nStart;
@@ -190,9 +256,9 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTrie
         nTests++;
         bnTried++;
         n = CBigNum(block.GetHash()) * bnPrimorial * bnTried + ((fSophieGermain || fBiTwin)? -1 : 1);
-        if (ProbablePrimeChainTest(n, nProofOfWorkType, nProbableChainLength))
+        if (ProbablePrimeChainTest(n, block.nBits, nProbableChainLength))
         {
-            printf("Probable prime chain of type %s found for nonce=%u!! \n", TypeGetName(nProofOfWorkType).c_str(), block.nNonce);
+            printf("Probable prime chain of type %s found for block=%s!! \n", TargetGetName(block.nBits).c_str(), block.GetHash().GetHex().c_str());
             block.bnPrimeChainMultiplier = bnPrimorial * bnTried;
             return true;
         }
@@ -204,24 +270,17 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTrie
     return false; // stop as timed out
 }
 
-// Find last block index up to pindex of the given proof-of-work type
-// Returns: depth of last block index of shorter or equal type
-unsigned int GetLastBlockIndex(const CBlockIndex* pindex, unsigned int nProofOfWorkType, const CBlockIndex** pindexPrev)
+// Find last block index up to pindex of the given prime chain type
+bool GetLastBlockIndex(const CBlockIndex* pindex, bool fSophieGermain, bool fBiTwin, const CBlockIndex** pindexPrev)
 {
-    bool fFoundLastEqualOrShorterType = false;
-    int nDepthOfEqualOrShorterType = 0;
-    for (; pindex && pindex->pprev && pindex->nProofOfWorkType != nProofOfWorkType; pindex = pindex->pprev)
+    for (; pindex && pindex->pprev; pindex = pindex->pprev)
     {
-        if (!fFoundLastEqualOrShorterType)
-        {
-            if ((((pindex->nProofOfWorkType>>16) == (nProofOfWorkType>>16)) && TypeGetLength(pindex->nProofOfWorkType) <= TypeGetLength(nProofOfWorkType)))
-                fFoundLastEqualOrShorterType = true;
-            else
-                nDepthOfEqualOrShorterType++;
-        }
+        if ((TargetIsSophieGermain(pindex->nBits) && fSophieGermain) ||
+            (TargetIsBiTwin(pindex->nBits) && fBiTwin))
+            break;
     }
     *pindexPrev = pindex;
-    return nDepthOfEqualOrShorterType;
+    return true;
 }
 
 // Binary logarithm scale of a big number, times 65536
@@ -270,134 +329,36 @@ static bool LogLogScale(const CBigNum& bn, unsigned int& nLogLogScale)
     return true;
 }
 
-// Design Note: Hash target vs. Prime target
-//
-// In Primecoin's hybrid proof-of-work model, a block must meet both a hash
-// target (hash proof-of-work) and a prime target (prime proof-of-work).
-// Hash target is understood in the traditional Bitcoin sense, that is,
-// the block hash must be less than or equal to the hash target.
-// Prime target is the target that the first probable prime of the
-// probable Cunningham Chain must meet, that is, the first probable prime
-// of the chain must be greater than or equal to the prime target. Prime
-// target is stored as nBits inside block header.
-//
-// The reason that hash proof-of-work is still needed is because the size of
-// the probable prime must be capped in order to limit the amount of work
-// required to verify proof-of-work.
-//
-// The cap is set at 2 ** 2039 - 1 as this is the max value of Bitcoin's
-// compact target representation, and a reasonably good cap for performing
-// Fermat-Euler-Lagrange-Lifchitz primality testing on Cunningham Chains.
-//
-// The prime target is then mapped to hash target via a chosen curve such
-// that very little amount of hash proof-of-work is required until the prime
-// approaches the cap, and as it's approaching the cap, hash proof-of-work
-// required would rise toward infinity.
-//
-// This design allows any given length of Cunningham Chain to be permanently 
-// present on block chain even if finding such length of chain at the cap
-// size becomes too easy by itself. As combined with the required hash 
-// proof-of-work it still becomes infinitely difficult as the prime approaches
-// the cap.
-
-
-// Compute hash target from prime target
-bool GetProofOfWorkHashTarget(unsigned int nBits, CBigNum& bnHashTarget)
-{
-    CBigNum bnPrimeTarget = CBigNum().SetCompact(nBits);
-    if (bnPrimeTarget < bnProofOfWorkLimit || bnPrimeTarget >= bnProofOfWorkMax)
-        return error("GetProofOfWorkHashTarget() : prime target out of valid range");
-    if (bnProofOfWorkMax / bnPrimeTarget < 2)
-    {
-        bnHashTarget = 0;
-        return true;
-    }
-    unsigned int nLogLogScale;
-    if (!LogLogScale(bnProofOfWorkMax / bnPrimeTarget, nLogLogScale))
-        return error("GetProofOfWorkHashTarget() : unable to calculate log log scale of prime target");
-    unsigned int nLogLogScaleMax;
-    if (!LogLogScale(bnProofOfWorkMax / bnProofOfWorkLimit, nLogLogScaleMax))
-        return error("GetProofOfWorkHashTarget() : unable to calculate max log log scale");
-    if (nLogLogScale > nLogLogScaleMax || nLogLogScale >= (((unsigned int )1) << 31))
-        return error("GetProofOfWorkHashTarget() : log log scale exceeds max");
-    nLogLogScale = (nLogLogScaleMax - nLogLogScale) * 2;
-    uint64 nLogLogSquared = ((uint64) nLogLogScale * (uint64) nLogLogScale);
-    // log refers to binary logarithm
-    // nLogLogSquared ~ (2 ** 32) * ((2 log(log(bnPOWMax/bnPrimeTarget))) ** 2)
-    // bnHashTarget = bnPOWLimit / (2 ** ((2 log(log(bnPOWMax/bnPrimeTarget))) ** 2))
-    CBigNum bnHashDifficulty = CBigNum((nLogLogSquared & 0xffffffffllu) + 0x100000000llu) << (nLogLogSquared >> 32);
-    bnHashTarget = (bnProofOfWorkLimit << 32) / bnHashDifficulty;
-    return true;
-}
-
-void PrintMappingPrimeTargetToHashTarget()
-{
-    CBigNum bnHashTarget;
-    printf("proof-of-work target mapping:\n  prime target => hash target\n");
-    for (unsigned int n = 256; n < 2039; n++)
-    {
-        unsigned int nBits = (CBigNum(1) << n).GetCompact();
-        GetProofOfWorkHashTarget(nBits, bnHashTarget);
-        printf("  0x%08x      0x%08x\n", nBits, bnHashTarget.GetCompact());
-    }
-}
-
-// Check hash proof-of-work
-bool CheckHashProofOfWork(uint256 hash, unsigned int nBits)
-{
-    CBigNum bnHashTarget;
-    if (!GetProofOfWorkHashTarget(nBits, bnHashTarget))
-        return error("CheckHashProofOfWork() : failed to get hash target");
-    // Check target for hash proof-of-work
-    if (CBigNum(hash) > bnHashTarget)
-        return error("CheckHashProofOfWork() : hash not meeting hash target nBits=%08x\n%s\n%s", nBits, hash.GetHex().c_str(), bnHashTarget.GetHex().c_str());
-    return true;
-}
-
 // Check prime proof-of-work
-bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, unsigned int nProofOfWorkType, const CBigNum& bnPrimeChainMultiplier)
+bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier)
 {
     // Check type
-    if ((nProofOfWorkType>>16) > 2 || TypeGetLength(nProofOfWorkType) < 2 || TypeGetLength(nProofOfWorkType) > 99)
-        return error("CheckPrimeProofOfWork() : invalid proof-of-work type %d", nProofOfWorkType);
-
-    // Check target range
-    CBigNum bnPrimeTarget;
-    bnPrimeTarget.SetCompact(nBits);
-    if (bnPrimeTarget < bnProofOfWorkLimit)
-        return error("CheckPrimeProofOfWork() : nBits below minimum work");
+    bool fSophieGermain= TargetIsSophieGermain(nBits);
+    bool fBiTwin = TargetIsBiTwin(nBits);
+    if (fSophieGermain && fBiTwin)
+        return error("CheckPrimeProofOfWork() : invalid prime chain type");
+    if (TargetGetLength(nBits) < 2 || TargetGetLength(nBits) > 99)
+        return error("CheckPrimeProofOfWork() : invalid chain length target %u", TargetGetLength(nBits));
 
     // Check target for prime proof-of-work
-    CBigNum bnProbablePrime = (CBigNum(hash) * bnPrimeChainMultiplier) + ((nProofOfWorkType>>16)? (-1) : 1);
-    if (bnProbablePrime < bnPrimeTarget)
-        return error("CheckPrimeProofOfWork() : prime not meeting prime target");
+    CBigNum bnProbablePrime = (CBigNum(hash) * bnPrimeChainMultiplier) + ((fSophieGermain || fBiTwin)? (-1) : 1);
+    if (bnProbablePrime < bnPrimeMin)
+        return error("CheckPrimeProofOfWork() : prime too small");
     // First prime in chain must not exceed cap
-    if (bnProbablePrime > bnProofOfWorkMax)
-        return error("CheckPrimeProofOfWork() : prime exceeds cap");
+    if (bnProbablePrime > bnPrimeMax)
+        return error("CheckPrimeProofOfWork() : prime too big");
 
     // Check prime chain
     unsigned int nChainLength;
-    if (ProbablePrimeChainTest(bnProbablePrime, nProofOfWorkType, nChainLength) && (nChainLength >= TypeGetLength(nProofOfWorkType)))
+    if (ProbablePrimeChainTest(bnProbablePrime, nBits, nChainLength) && nChainLength >= TargetGetLengthWithFractional(nBits))
         return true;
-    return error("CheckPrimeProofOfWork() : failed prime chain test type=%s actual length=%u", TypeGetName(nProofOfWorkType).c_str(), nChainLength);
+    return error("CheckPrimeProofOfWork() : failed prime chain test type=%s nBits=%08x length=%08x", TargetGetName(nBits).c_str(), nBits, nChainLength);
 }
 
 // prime target difficulty value for visualization
-unsigned int GetPrimeDifficulty(unsigned int nBits)
+double GetPrimeDifficulty(unsigned int nBits)
 {
-    CBigNum bnPrimeTarget = CBigNum().SetCompact(nBits);
-    unsigned int nLogScale;
-    LogScale(bnPrimeTarget, nLogScale);
-    return nLogScale;
+    return ((double) TargetGetLengthWithFractional(nBits) / (double) (1 << 20));
 }
 
-// hash target difficulty value for visualization
-unsigned int GetHashDifficulty(unsigned int nBits)
-{
-    CBigNum bnHashTarget;
-    GetProofOfWorkHashTarget(nBits, bnHashTarget);
-    unsigned int nLogScale;
-    LogScale((bnProofOfWorkLimit << 16) / bnHashTarget, nLogScale);
-    return nLogScale - (1 << 20);
-}
 

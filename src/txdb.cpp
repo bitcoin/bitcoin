@@ -203,7 +203,6 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nNonce         = diskindex.nNonce;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
-                pindexNew->nProofOfWorkType = diskindex.nProofOfWorkType;
 
                 // Watch for genesis block
                 if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
