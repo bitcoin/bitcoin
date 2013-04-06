@@ -1,91 +1,39 @@
-FLAGS_COMMON:=-Wall -Wno-unused -fPIC -std=c99
-FLAGS_PROD:=-DNDEBUG -O2 -march=native
-FLAGS_DEBUG:=-DVERIFY -ggdb3 -O1
-FLAGS_TEST:=-DVERIFY -ggdb3 -O2 -march=native
+$(shell CC=$(CC) YASM=$(YASM) ./configure)
+include config.mk
 
-SECP256K1_FILES := src/num.h src/field.h src/field_5x52.h src/group.h src/ecmult.h src/ecdsa.h \
-                   src/impl/*.h
+FILES := src/*.h src/impl/*.h
 
 JAVA_FILES := src/java/org_bitcoin_NativeSecp256k1.h src/java/org_bitcoin_NativeSecp256k1.c
 
-ifndef CONF
-CONF := gmp
-endif
-
 OBJS :=
 
-default: all
-
-ifeq ($(CONF), gmpgmp)
-FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_GMP -DUSE_FIELD_GMP
-LIBS := -lgmp
-SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/field_gmp.h
-else
-ifeq ($(CONF), gmp32)
-FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_GMP -DUSE_FIELD_10X26
-LIBS := -lgmp
-SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/field_10x26.h
-else
-ifeq ($(CONF), openssl)
-FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_OPENSSL -DUSE_FIELD_INV_BUILTIN
-LIBS := -lcrypto
-SECP256K1_FILES := $(SECP256K1_FILES) src/num_openssl.h src/field_5x52.h
-else
-ifeq ($(CONF), gmp)
-FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_GMP
-LIBS := -lgmp
-SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/field_5x52.h
-else
-ifeq ($(CONF), gmpasm)
-FLAGS_COMMON := $(FLAGS_COMMON) -DUSE_NUM_GMP -DUSE_FIELD_5X52_ASM
-LIBS := -lgmp
-OBJS := $(OBJS) obj/field_5x52_asm.o
-SECP256K1_FILES := $(SECP256K1_FILES) src/num_gmp.h src/field_5x52.h
-
-obj/field_5x52_asm.o: src/field_5x52_asm.asm
-	yasm -f elf64 -o obj/field_5x52_asm.o src/field_5x52_asm.asm
-else
-error
-endif
-endif
-endif
-endif
+ifeq ($(USE_ASM), 1)
+    OBJS := $(OBJS) obj/field_5x52_asm.o
 endif
 
-all: src/*.c src/*.asm src/*.h include/*.h
-	+make CONF=openssl all-openssl
-	+make CONF=gmp     all-gmp
-	+make CONF=gmpgmp  all-gmpgmp
-	+make CONF=gmp32   all-gmp32
-	+make CONF=gmpasm  all-gmpasm
+default: tests libsecp256k1.a libsecp256k1.so
+	./tests
 
 clean:
-	+make CONF=openssl clean-openssl
-	+make CONF=gmp     clean-gmp
-	+make CONF=gmp32   clean-gmp32
-	+make CONF=gmpasm  clean-gmpasm
+	rm -rf obj/*.o bench tests *.a *.so config.mk
 
-bench-any: bench-$(CONF)
-tests-any: tests-$(CONF)
+obj/field_5x52_asm.o: src/field_5x52_asm.asm
+	$(YASM) -f elf64 -o obj/field_5x52_asm.o src/field_5x52_asm.asm
 
-all-$(CONF): bench-$(CONF) tests-$(CONF) libsecp256k1-$(CONF).a
+obj/secp256k1.o: $(FILES) src/secp256k1.c include/secp256k1.h
+	$(CC) -fPIC -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DNDEBUG -O2 src/secp256k1.c -c -o obj/secp256k1.o
 
-clean-$(CONF):
-	rm -f bench-$(CONF) tests-$(CONF) libsecp256k1-$(CONF).a libjavasecp256k1-$(CONF).so obj/*
+bench: $(FILES) src/bench.c $(OBJS)
+	$(CC) -fPIC -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DNDEBUG -O2 src/bench.c $(OBJS) $(LDFLAGS_EXTRA) -o bench
 
-obj/secp256k1-$(CONF).o: $(SECP256K1_FILES) src/secp256k1.c include/secp256k1.h
-	$(CC) $(FLAGS_COMMON) $(FLAGS_PROD) src/secp256k1.c -c -o obj/secp256k1-$(CONF).o
+tests: $(FILES) src/tests.c $(OBJS)
+	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DVERIFY -O1 src/tests.c $(OBJS) $(LDFLAGS_EXTRA) -o tests
 
-bench-$(CONF): $(OBJS) $(SECP256K1_FILES) src/bench.c
-	$(CC) $(FLAGS_COMMON) $(FLAGS_PROD) src/bench.c $(LIBS) $(OBJS) -o bench-$(CONF)
+libsecp256k1.a: obj/secp256k1.o $(OBJS)
+	$(AR) -rs $@ $(OBJS) obj/secp256k1.o
 
-tests-$(CONF): $(OBJS) $(SECP256K1_FILES) src/tests.c
-	$(CC) $(FLAGS_COMMON) $(FLAGS_TEST) src/tests.c $(LIBS) $(OBJS) -o tests-$(CONF)
+libsecp256k1.so: obj/secp256k1.o $(OBJS)
+	$(CC) -std=c99 $(LDFLAGS_EXTRA) $(OBJS) obj/secp256k1.o -shared -o libsecp256k1.so
 
-libsecp256k1-$(CONF).a: $(OBJS) obj/secp256k1-$(CONF).o
-	$(AR) -rs $@ $(OBJS) obj/secp256k1-$(CONF).o
-
-libjavasecp256k1-$(CONF).so: $(OBJS) obj/secp256k1-$(CONF).o $(JAVA_FILES)
-	$(CC) $(FLAGS_COMMON) $(FLAGS_PROD) -I. src/java/org_bitcoin_NativeSecp256k1.c $(LIBS) $(OBJS) obj/secp256k1-$(CONF).o -shared -o libjavasecp256k1-$(CONF).so
-
-java: libjavasecp256k1-$(CONF).so
+libjavasecp256k1.so: $(OBJS) obj/secp256k1.o $(JAVA_FILES)
+	$(CC) -fPIC -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DNDEBUG -O2 -I. src/java/org_bitcoin_NativeSecp256k1.c $(LDFLAGS_EXTRA) $(OBJS) obj/secp256k1.o -shared -o libjavasecp256k1.so

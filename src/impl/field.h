@@ -1,14 +1,14 @@
 #ifndef _SECP256K1_FIELD_IMPL_H_
 #define _SECP256K1_FIELD_IMPL_H_
 
-#ifdef USE_FIELD_GMP
+#if defined(USE_FIELD_GMP)
 #include "field_gmp.h"
-#else
-#ifdef USE_FIELD_10X26
+#elif defined(USE_FIELD_10X26)
 #include "field_10x26.h"
-#else
+#elif defined(USE_FIELD_5X52)
 #include "field_5x52.h"
-#endif
+#else
+#error "Please select field implementation"
 #endif
 
 void static secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a) {
@@ -123,7 +123,7 @@ void static secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 void static secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #if defined(USE_FIELD_INV_BUILTIN)
     secp256k1_fe_inv(r, a);
-#else
+#elif defined(USE_FIELD_INV_NUM)
     unsigned char b[32];
     secp256k1_fe_t c = *a;
     secp256k1_fe_normalize(&c);
@@ -135,6 +135,8 @@ void static secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_num_get_bin(b, 32, &n);
     secp256k1_num_free(&n);
     secp256k1_fe_set_b32(r, b);
+#else
+#error "Please select field inverse implementation"
 #endif
 }
 

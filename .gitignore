@@ -1,0 +1,7 @@
+obj/*
+bench
+tests
+*.so
+*.a
+config.mk
+

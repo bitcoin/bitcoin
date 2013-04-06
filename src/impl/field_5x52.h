@@ -6,10 +6,12 @@
 #include "../num.h"
 #include "../field.h"
 
-#ifdef USE_FIELD_5X52_ASM
+#if defined(USE_FIELD_5X52_ASM)
 #include "field_5x52_asm.h"
-#else
+#elif defined(USE_FIELD_5X52_INT128)
 #include "field_5x52_int128.h"
+#else
+#error "Please select field_5x52 implementation"
 #endif
 
 /** Implements arithmetic modulo FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F,
