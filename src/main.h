@@ -117,7 +117,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 int64 GetProofOfWorkReward(unsigned int nBits);
 int64 GetProofOfStakeReward(int64 nCoinAge);
-unsigned int ComputeMinWork(unsigned int nBase, int64 nTime, bool fProofOfStake, int nHeight);
+unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 int GetNumBlocksOfPeers();
 bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
@@ -956,8 +956,6 @@ public:
 
         return thash;
     }
-
-    int GetBlockHeight() const;
 
     int64 GetBlockTime() const
     {
