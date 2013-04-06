@@ -7,6 +7,9 @@
 #include "../num.h"
 #include "../field.h"
 
+void static secp256k1_fe_inner_start(void) {}
+void static secp256k1_fe_inner_stop(void) {}
+
 void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
 //    fog("normalize in: ", r);
     uint32_t c;

@@ -7,25 +7,38 @@
 #include "../num.h"
 #include "../field.h"
 
-void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
-#if (GMP_NUMB_BITS >= 40)
-    if (r->n[FIELD_LIMBS] == 0)
-        return;
-    mp_limb_t carry = mpn_add_1(r->n, r->n, FIELD_LIMBS, 0x1000003D1ULL * r->n[FIELD_LIMBS]);
-    mpn_add_1(r->n, r->n, FIELD_LIMBS, 0x1000003D1ULL * carry);
-    r->n[FIELD_LIMBS] = 0;
-    int overflow = 1;
-    for (int i=FIELD_LIMBS-1; i>0; i--)
-        overflow &= (r->n[i] == GMP_NUMB_MASK);
-    overflow &= (r->n[0] >= GMP_NUMB_MASK - 0x1000003D0ULL);
-    if (overflow) {
-        for (int i=FIELD_LIMBS-1; i>0; i--)
-            r->n[i] = 0;
-        r->n[0] -= (GMP_NUMB_MASK - 0x1000003D0ULL);
+static mp_limb_t secp256k1_field_p[FIELD_LIMBS];
+static mp_limb_t secp256k1_field_pc[(33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS];
+
+void static secp256k1_fe_inner_start(void) {
+    for (int i=0; i<(33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS; i++)
+        secp256k1_field_pc[i] = 0;
+    secp256k1_field_pc[0] += 0x3D1UL;
+    secp256k1_field_pc[32/GMP_NUMB_BITS] += (1UL << (32 % GMP_NUMB_BITS));
+    for (int i=0; i<FIELD_LIMBS; i++) {
+        secp256k1_field_p[i] = 0;
     }
+    mpn_sub(secp256k1_field_p, secp256k1_field_p, FIELD_LIMBS, secp256k1_field_pc, (33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS);
+}
+
+void static secp256k1_fe_inner_stop(void) {
+}
+
+void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
+    if (r->n[FIELD_LIMBS] != 0) {
+#if (GMP_NUMB_BITS >= 40)
+        mp_limb_t carry = mpn_add_1(r->n, r->n, FIELD_LIMBS, 0x1000003D1ULL * r->n[FIELD_LIMBS]);
+        mpn_add_1(r->n, r->n, FIELD_LIMBS, 0x1000003D1ULL * carry);
 #else
-#    error "GMP_NUMB_BITS too low"
+        mp_limb_t carry = mpn_add_1(r->n, r->n, FIELD_LIMBS, 0x3D1UL * r->n[FIELD_LIMBS]) + 
+                          mpn_add_1(r->n+(32/GMP_NUMB_BITS), r->n+(32/GMP_NUMB_BITS), FIELD_LIMBS-(32/GMP_NUMB_BITS), r->n[FIELD_LIMBS] << (32 % GMP_NUMB_BITS));
+        mpn_add_1(r->n, r->n, FIELD_LIMBS, 0x3D1UL * carry);
+        mpn_add_1(r->n+(32/GMP_NUMB_BITS), r->n+(32/GMP_NUMB_BITS), FIELD_LIMBS-(32/GMP_NUMB_BITS), carry << (32%GMP_NUMB_BITS));
 #endif
+        r->n[FIELD_LIMBS] = 0;
+    }
+    if (mpn_cmp(r->n, secp256k1_field_p, FIELD_LIMBS) >= 0)
+        mpn_sub(r->n, r->n, FIELD_LIMBS, secp256k1_field_p, FIELD_LIMBS);
 }
 
 void static inline secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
@@ -34,7 +47,6 @@ void static inline secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
         r->n[i] = 0;
 }
 
-// TODO: not constant time!
 int static inline secp256k1_fe_is_zero(const secp256k1_fe_t *a) {
     int ret = 1;
     for (int i=0; i<FIELD_LIMBS+1; i++)
@@ -46,7 +58,6 @@ int static inline secp256k1_fe_is_odd(const secp256k1_fe_t *a) {
     return a->n[0] & 1;
 }
 
-// TODO: not constant time!
 int static inline secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
     int ret = 1;
     for (int i=0; i<FIELD_LIMBS+1; i++)
@@ -86,7 +97,7 @@ void static inline secp256k1_fe_negate(secp256k1_fe_t *r, const secp256k1_fe_t *
     mpn_sub_1(r->n, r->n, FIELD_LIMBS, 0x1000003D0ULL);
 #else
     mpn_sub_1(r->n, r->n, FIELD_LIMBS, 0x3D0UL);
-    mpn_sub_1(r->n+1, r->n+1, FIELD_LIMBS-1, 0x1);
+    mpn_sub_1(r->n+(32/GMP_NUMB_BITS), r->n+(32/GMP_NUMB_BITS), FIELD_LIMBS-(32/GMP_NUMB_BITS), 0x1UL << (32%GMP_NUMB_BITS));
 #endif
 }
 
@@ -99,10 +110,24 @@ void static inline secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1_fe_t *a) 
 }
 
 void static secp256k1_fe_reduce(secp256k1_fe_t *r, mp_limb_t *tmp) {
-    mp_limb_t o = mpn_addmul_1(tmp, tmp+FIELD_LIMBS, FIELD_LIMBS, 0x1000003D1);
-    mp_limb_t q[2];
-    q[1] = mpn_mul_1(q, &o, 1, 0x1000003D1);
-    r->n[FIELD_LIMBS] = mpn_add(r->n, tmp, FIELD_LIMBS, q, 2);
+    // <A1 A2 A3 A4> <B1 B2 B3 B4>
+    //       B1 B2 B3 B4
+    // + C * A1 A2 A3 A4
+    // +  A1 A2 A3 A4
+
+#if (GMP_NUMB_BITS >= 33)
+    mp_limb_t o = mpn_addmul_1(tmp, tmp+FIELD_LIMBS, FIELD_LIMBS, 0x1000003D1ULL);
+#else
+    mp_limb_t o = mpn_addmul_1(tmp, tmp+FIELD_LIMBS, FIELD_LIMBS, 0x3D1UL) +
+                  mpn_addmul_1(tmp+(32/GMP_NUMB_BITS), tmp+FIELD_LIMBS, FIELD_LIMBS-(32/GMP_NUMB_BITS), 0x1UL << (32%GMP_NUMB_BITS));
+#endif
+    mp_limb_t q[1+(33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS];
+    q[(33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS] = mpn_mul_1(q, secp256k1_field_pc, (33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS, o);
+#if (GMP_NUMB_BITS <= 32)
+    mp_limb_t o2 = tmp[2*FIELD_LIMBS-(32/GMP_NUMB_BITS)] << (32%GMP_NUMB_BITS);
+    q[(33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS] += mpn_addmul_1(q, secp256k1_field_pc, (33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS, o2);
+#endif
+    r->n[FIELD_LIMBS] = mpn_add(r->n, tmp, FIELD_LIMBS, q, 1+(33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS);
 }
 
 void static secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const secp256k1_fe_t *b) {

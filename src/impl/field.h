@@ -146,6 +146,7 @@ void static secp256k1_fe_start(void) {
         0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F
     };
     if (secp256k1_fe_consts == NULL) {
+        secp256k1_fe_inner_start();
         secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)malloc(sizeof(secp256k1_fe_t));
         secp256k1_num_init(&ret->p);
         secp256k1_num_set_bin(&ret->p, secp256k1_fe_consts_p, sizeof(secp256k1_fe_consts_p));
@@ -159,6 +160,7 @@ void static secp256k1_fe_stop(void) {
         secp256k1_num_free(&c->p);
         free((void*)c);
         secp256k1_fe_consts = NULL;
+        secp256k1_fe_inner_stop();
     }
 }
 

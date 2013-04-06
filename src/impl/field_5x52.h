@@ -20,6 +20,9 @@
  *  output.
  */
 
+void static secp256k1_fe_inner_start(void) {}
+void static secp256k1_fe_inner_stop(void) {}
+
 void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
     uint64_t c;
     c = r->n[0];
