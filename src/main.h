@@ -117,7 +117,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 int64 GetProofOfWorkReward(unsigned int nBits);
 int64 GetProofOfStakeReward(int64 nCoinAge);
-unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
+unsigned int ComputeMinWork(unsigned int nBase, int64 nTime, bool fProofOfStake, int nHeight);
 int GetNumBlocksOfPeers();
 bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
@@ -957,6 +957,7 @@ public:
         return thash;
     }
 
+    int GetBlockHeight() const;
 
     int64 GetBlockTime() const
     {
@@ -1365,18 +1366,6 @@ public:
         return (nFlags & BLOCK_PROOF_OF_STAKE);
     }
 
-    static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
-    {
-        unsigned int nFound = 0;
-        for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
-        {
-            if (pstart->nVersion >= minVersion)
-                ++nFound;
-            pstart = pstart->pprev;
-        }
-        return (nFound >= nRequired);
-    }
-
     void SetProofOfStake()
     {
         nFlags |= BLOCK_PROOF_OF_STAKE;
@@ -1434,13 +1423,11 @@ class CDiskBlockIndex : public CBlockIndex
 public:
     uint256 hashPrev;
     uint256 hashNext;
-    int nProtocolVersion;
 
     CDiskBlockIndex()
     {
         hashPrev = 0;
         hashNext = 0;
-        nProtocolVersion = PROTOCOL_VERSION;
     }
 
     explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex)
@@ -1462,7 +1449,6 @@ public:
         READWRITE(nMoneySupply);
         READWRITE(nFlags);
         READWRITE(nStakeModifier);
-        READWRITE(nProtocolVersion);
         if (IsProofOfStake())
         {
             READWRITE(prevoutStake);

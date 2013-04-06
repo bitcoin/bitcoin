@@ -44,7 +44,7 @@
         <item row="2" column="1">
          <widget class="QLabel" name="labelBalance">
           <property name="text">
-           <string notr="true">0 BTC</string>
+           <string notr="true">0 NVC</string>
           </property>
          </widget>
         </item>
@@ -72,7 +72,7 @@
         <item row="4" column="1">
          <widget class="QLabel" name="labelUnconfirmed">
           <property name="text">
-           <string notr="true">0 BTC</string>
+           <string notr="true">0 NVC</string>
           </property>
          </widget>
         </item>
@@ -86,7 +86,7 @@
         <item row="3" column="1">
          <widget class="QLabel" name="labelStake">
           <property name="text">
-           <string notr="true">0 BTC</string>
+           <string notr="true">0 NVC</string>
           </property>
          </widget>
         </item>
@@ -95,6 +95,7 @@
           <property name="font">
            <font>
             <pointsize>11</pointsize>
+            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
