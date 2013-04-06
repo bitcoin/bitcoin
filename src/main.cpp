@@ -892,18 +892,9 @@ static const int64 nTargetSpacingWorkMax = 12 * STAKE_TARGET_SPACING; // 2-hour
 // minimum amount of work that could possibly be required nTime after
 // minimum work required was nBase
 //
-unsigned int ComputeMinWork(unsigned int nBase, int64 nTime, bool fProofOfStake, int nHeight)
+unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
 {
     CBigNum bnTargetLimit = bnProofOfWorkLimit;
-
-    if(fProofOfStake)
-    {
-        // Proof-of-Stake blocks has own target limit since nVersion=3 supermajority on mainNet and always on testNet
-        if(fTestNet || nHeight > 15000)
-            bnTargetLimit = bnProofOfStakeLimit;
-        else if(nHeight > 14060)
-            bnTargetLimit = bnProofOfStakeHardLimit;
-    }
 
     CBigNum bnResult;
     bnResult.SetCompact(nBase);
@@ -1945,25 +1936,6 @@ bool CBlock::CheckBlock() const
     return true;
 }
 
-int CBlock::GetBlockHeight() const
-{
-    if(nVersion == 1)
-        return 0;
-
-    if(vtx[0].vin[0].scriptSig[0] > 4)
-        return vtx[0].vin[0].scriptSig[0] - 80;
-
-    int nBlockHeight = 0;
-
-    memcpy((void *)&nBlockHeight, (const void *)&vtx[0].vin[0].scriptSig[1], vtx[0].vin[0].scriptSig[0]);
-
-#ifdef BIGENDIAN
-    return htonl(nBlockHeight);
-#else
-    return nBlockHeight;
-#endif
-}
-
 bool CBlock::AcceptBlock()
 {
     // Check for duplicate
@@ -2006,14 +1978,6 @@ bool CBlock::AcceptBlock()
     CScript expect = CScript() << nHeight;
     if (!std::equal(expect.begin(), expect.end(), vtx[0].vin[0].scriptSig.begin()))
         return DoS(100, error("AcceptBlock() : block height mismatch in coinbase"));
-
-    /**
-      * TODO: replace previous check with this.
-      */
-
-    // if(nHeight != GetBlockHeight())
-    //    return DoS(100, error("AcceptBlock() : block height mismatch in coinbase"));
-
 
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION)))
@@ -2081,7 +2045,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         CBigNum bnNewBlock;
         bnNewBlock.SetCompact(pblock->nBits);
         CBigNum bnRequired;
-        bnRequired.SetCompact(ComputeMinWork(GetLastBlockIndex(pcheckpoint, pblock->IsProofOfStake())->nBits, deltaTime, pblock->IsProofOfStake(), pblock->GetBlockHeight()));
+        bnRequired.SetCompact(ComputeMinWork(GetLastBlockIndex(pcheckpoint, pblock->IsProofOfStake())->nBits, deltaTime));
 
         if (bnNewBlock > bnRequired)
         {
