@@ -13,12 +13,7 @@
         <translation>&lt;b&gt;Bitcoin&lt;/b&gt; versión</translation>
     </message>
     <message>
-        <location line="+41"/>
-        <source>Copyright © 2009-2012 The Bitcoin developers</source>
-        <translation>Copyright © 2009-2012 Los desarrolladores de Bitcoin</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+57"/>
         <source>
 This is experimental software.
 
@@ -34,6 +29,16 @@ COPYING o http://www.opensource.org/licenses/mit-license.php.
 Este producto incluye software desarrollado por OpenSSL Project para su uso en
 el OpenSSL Toolkit (http://www.openssl.org/) y software criptográfico escrito por
 Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="+17"/>
+        <source>Copyright</source>
+        <translation>Copyright</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>2009-%1 The Bitcoin developers</source>
+        <translation>2009-%1 Los desarrolladores de Bitcoin</translation>
     </message>
 </context>
 <context>
@@ -66,7 +71,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="-46"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Estas son tus direcciones Bitcoin para recibir pagos. Puedes utilizar una diferente por cada persona emisora para saber quien te está pagando.</translation>
+        <translation>Estas son tus direcciones Bitcoin para recibir pagos. Puedes utilizar una diferente por cada persona emisora para saber quién te está pagando.</translation>
     </message>
     <message>
         <location line="+60"/>
@@ -109,17 +114,22 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>&amp;Borrar</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+65"/>
+        <location filename="../addressbookpage.cpp" line="+66"/>
         <source>Copy &amp;Label</source>
         <translation>Copiar &amp;etiqueta</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>&amp;Edit</source>
         <translation>&amp;Editar</translation>
     </message>
     <message>
-        <location line="+250"/>
+        <location line="+1"/>
+        <source>Send &amp;Coins</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+263"/>
         <source>Export Address Book Data</source>
         <translation>Exportar datos de la libreta de direcciones</translation>
     </message>
@@ -142,7 +152,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="+142"/>
+        <location filename="../addresstablemodel.cpp" line="+144"/>
         <source>Label</source>
         <translation>Etiqueta</translation>
     </message>
@@ -301,17 +311,17 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+267"/>
+        <location filename="../bitcoingui.cpp" line="+231"/>
         <source>Sign &amp;message...</source>
         <translation>Firmar &amp;mensaje...</translation>
     </message>
     <message>
-        <location line="+254"/>
+        <location line="+299"/>
         <source>Synchronizing with network...</source>
         <translation>Sincronizando con la red…</translation>
     </message>
     <message>
-        <location line="-322"/>
+        <location line="-367"/>
         <source>&amp;Overview</source>
         <translation>&amp;Vista general</translation>
     </message>
@@ -331,32 +341,17 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Examinar el historial de transacciones</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>&amp;Address Book</source>
-        <translation>&amp;Libreta de direcciones</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+7"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Editar la lista de las direcciones y etiquetas almacenadas</translation>
     </message>
     <message>
-        <location line="-15"/>
-        <source>&amp;Receive coins</source>
-        <translation>&amp;Recibir monedas</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="-14"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Mostrar la lista de direcciones utilizadas para recibir pagos</translation>
     </message>
     <message>
-        <location line="-8"/>
-        <source>&amp;Send coins</source>
-        <translation>&amp;Enviar monedas</translation>
-    </message>
-    <message>
-        <location line="+39"/>
+        <location line="+31"/>
         <source>E&amp;xit</source>
         <translation>&amp;Salir</translation>
     </message>
@@ -401,7 +396,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>&amp;Cambiar la contraseña…</translation>
     </message>
     <message>
-        <location line="+259"/>
+        <location line="+304"/>
         <source>Importing blocks from disk...</source>
         <translation>Importando bloques de disco...</translation>
     </message>
@@ -410,13 +405,8 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <source>Reindexing blocks on disk...</source>
         <translation>Reindexando bloques en disco...</translation>
     </message>
-    <message numerus="yes">
-        <location line="+10"/>
-        <source>~%n block(s) remaining</source>
-        <translation><numerusform>~%n bloque restante</numerusform><numerusform>~%n bloques restantes</numerusform></translation>
-    </message>
     <message>
-        <location line="-265"/>
+        <location line="-300"/>
         <source>&amp;Export...</source>
         <translation>&amp;Exportar…</translation>
     </message>
@@ -461,18 +451,33 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>&amp;Verificar mensaje...</translation>
     </message>
     <message>
-        <location line="-196"/>
-        <location line="+538"/>
+        <location line="-162"/>
+        <location line="+540"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-538"/>
+        <location line="-540"/>
         <source>Wallet</source>
         <translation>Monedero</translation>
     </message>
     <message>
-        <location line="+176"/>
+        <location line="+99"/>
+        <source>&amp;Send</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Receive</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>&amp;Addresses</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+22"/>
         <source>&amp;About Bitcoin</source>
         <translation>&amp;Acerca de Bitcoin</translation>
     </message>
@@ -533,27 +538,57 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+47"/>
         <source>Bitcoin client</source>
         <translation>Cliente Bitcoin</translation>
     </message>
     <message numerus="yes">
-        <location line="+79"/>
+        <location line="+140"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n conexión activa hacia la red Bitcoin</numerusform><numerusform>%n conexiones activas hacia la red Bitcoin</numerusform></translation>
     </message>
     <message>
-        <location line="+45"/>
-        <source>Processed %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation>Procesados %1 de %2 bloques del historial de transacciones (%3% completo).</translation>
+        <location line="+39"/>
+        <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
+        <translation>Se han procesado %1 de %2 (estimación) bloques de historia de transacción.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+4"/>
         <source>Processed %1 blocks of transaction history.</source>
         <translation>Procesados %1 bloques del historial de transacciones.</translation>
     </message>
+    <message numerus="yes">
+        <location line="+20"/>
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n hora</numerusform><numerusform>%n horas</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n day(s)</source>
+        <translation><numerusform>%n día</numerusform><numerusform>%n días</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n week(s)</source>
+        <translation><numerusform>%n semana</numerusform><numerusform>%n semanas</numerusform></translation>
+    </message>
     <message>
-        <location line="+70"/>
+        <location line="+5"/>
+        <source>%1 behind</source>
+        <translation>%1 detrás</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>El último bloque recibido fue generado hace %1.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Las transacciones que vengan después de esta todavía no serán visibles.</translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
@@ -568,62 +603,27 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Información</translation>
     </message>
     <message>
-        <location line="+66"/>
+        <location line="+68"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
         <translation>Esta transacción supera el límite de tamaño. Puede enviarla con una comisión de %1, destinada a los nodos que procesen su transacción para contribuir al mantenimiento de la red. ¿Desea pagar esta comisión?</translation>
     </message>
     <message>
-        <location line="+210"/>
-        <source>Backup Successful</source>
-        <translation>Se ha completado con éxito la copia de respaldo</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>The wallet data was successfully saved to the new location.</source>
-        <translation>Los datos del monedero se han guardado con éxito en la nueva ubicación.</translation>
-    </message>
-    <message numerus="yes">
-        <location line="-338"/>
-        <source>%n second(s) ago</source>
-        <translation><numerusform>hace %n segundo</numerusform><numerusform>hace %n segundos</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location line="+4"/>
-        <source>%n minute(s) ago</source>
-        <translation><numerusform>hace %n minuto</numerusform><numerusform>hace %n minutos</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location line="+4"/>
-        <source>%n hour(s) ago</source>
-        <translation><numerusform>hace %n hora</numerusform><numerusform>hace %n horas</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location line="+4"/>
-        <source>%n day(s) ago</source>
-        <translation><numerusform>hace %n día</numerusform><numerusform>hace %n días</numerusform></translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="-138"/>
         <source>Up to date</source>
         <translation>Actualizado</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+32"/>
         <source>Catching up...</source>
         <translation>Recuperando...</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>Last received block was generated %1.</source>
-        <translation>El último bloque recibido fue generado %1.</translation>
-    </message>
-    <message>
-        <location line="+97"/>
+        <location line="+110"/>
         <source>Confirm transaction fee</source>
         <translation>Confirme la tarifa de la transacción</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+8"/>
         <source>Sent transaction</source>
         <translation>Transacción enviada</translation>
     </message>
@@ -646,14 +646,14 @@ Dirección: %4
 </translation>
     </message>
     <message>
-        <location line="+99"/>
-        <location line="+28"/>
+        <location line="+33"/>
+        <location line="+23"/>
         <source>URI handling</source>
         <translation>Gestión de URI</translation>
     </message>
     <message>
-        <location line="-28"/>
-        <location line="+28"/>
+        <location line="-23"/>
+        <location line="+23"/>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
         <translation>¡No se puede interpretar la URI! Esto puede deberse a una dirección Bitcoin inválida o a parámetros de URI mal formados.</translation>
     </message>
@@ -668,27 +668,7 @@ Dirección: %4
         <translation>El monedero está &lt;b&gt;cifrado&lt;/b&gt; y actualmente &lt;b&gt;bloqueado&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="+23"/>
-        <source>Backup Wallet</source>
-        <translation>Copia de seguridad del monedero</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Datos del monedero (*.dat)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Backup Failed</source>
-        <translation>La copia de seguridad ha fallado</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation>Ha habido un error al intentar guardar los datos del monedero en la nueva ubicación.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoin.cpp" line="+109"/>
+        <location filename="../bitcoin.cpp" line="+108"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Ha ocurrido un error crítico. Bitcoin ya no puede continuar con seguridad y se cerrará.</translation>
     </message>
@@ -696,7 +676,7 @@ Dirección: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+86"/>
+        <location filename="../clientmodel.cpp" line="+96"/>
         <source>Network Alert</source>
         <translation>Alerta de red</translation>
     </message>
@@ -729,7 +709,7 @@ Dirección: %4
         <translation>La dirección asociada con esta entrada en la guía. Solo puede ser modificada para direcciones de envío.</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="+20"/>
+        <location filename="../editaddressdialog.cpp" line="+21"/>
         <source>New receiving address</source>
         <translation>Nueva dirección para recibir</translation>
     </message>
@@ -749,17 +729,17 @@ Dirección: %4
         <translation>Editar dirección de envío</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+76"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
         <translation>La dirección introducida &quot;%1&quot; ya está presente en la libreta de direcciones.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-5"/>
         <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
         <translation>La dirección introducida &quot;%1&quot; no es una dirección Bitcoin válida.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+10"/>
         <source>Could not unlock wallet.</source>
         <translation>No se pudo desbloquear el monedero.</translation>
     </message>
@@ -772,7 +752,7 @@ Dirección: %4
 <context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+419"/>
+        <location filename="../guiutil.cpp" line="+422"/>
         <location line="+12"/>
         <source>Bitcoin-Qt</source>
         <translation>Bitcoin-Qt</translation>
@@ -986,7 +966,7 @@ Dirección: %4
         <translation>&amp;Aplicar</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+55"/>
+        <location filename="../optionsdialog.cpp" line="+53"/>
         <source>default</source>
         <translation>predeterminado</translation>
     </message>
@@ -1031,23 +1011,18 @@ Dirección: %4
         <translation>Desde</translation>
     </message>
     <message>
-        <location line="+51"/>
-        <location line="+183"/>
+        <location line="+50"/>
+        <location line="+166"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>La información mostrada puede estar desactualizada. Su monedero se sincroniza automáticamente con la red Bitcoin después de que se haya establecido una conexión , pero este proceso aún no se ha completado.</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-124"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="+58"/>
-        <source>Number of transactions:</source>
-        <translation>Número de movimientos:</translation>
-    </message>
-    <message>
-        <location line="-29"/>
+        <location line="+29"/>
         <source>Unconfirmed:</source>
         <translation>No confirmado(s):</translation>
     </message>
@@ -1057,7 +1032,7 @@ Dirección: %4
         <translation>Monedero</translation>
     </message>
     <message>
-        <location line="+124"/>
+        <location line="+107"/>
         <source>Immature:</source>
         <translation>No disponible:</translation>
     </message>
@@ -1072,7 +1047,7 @@ Dirección: %4
         <translation>&lt;b&gt;Movimientos recientes&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="-118"/>
+        <location line="-101"/>
         <source>Your current balance</source>
         <translation>Saldo actual</translation>
     </message>
@@ -1082,15 +1057,18 @@ Dirección: %4
         <translation>Total de las transacciones que faltan por confirmar y que no contribuyen al saldo actual</translation>
     </message>
     <message>
-        <location line="+20"/>
-        <source>Total number of transactions in wallet</source>
-        <translation>Número total de movimientos en el monedero</translation>
-    </message>
-    <message>
         <location filename="../overviewpage.cpp" line="+115"/>
         <location line="+1"/>
         <source>out of sync</source>
         <translation>desincronizado</translation>
+    </message>
+</context>
+<context>
+    <name>PaymentServer</name>
+    <message>
+        <location filename="../paymentserver.cpp" line="+107"/>
+        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <translation>No se pudo iniciar bitcoin: manejador de pago-al-clic</translation>
     </message>
 </context>
 <context>
@@ -1432,7 +1410,7 @@ Dirección: %4
     </message>
     <message>
         <location line="+60"/>
-        <location filename="../sendcoinsentry.cpp" line="+25"/>
+        <location filename="../sendcoinsentry.cpp" line="+26"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>Etiquete esta dirección para añadirla a la libreta</translation>
     </message>
@@ -1668,7 +1646,7 @@ Dirección: %4
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+19"/>
+        <location filename="../transactiondesc.cpp" line="+20"/>
         <source>Open until %1</source>
         <translation>Abierto hasta %1</translation>
     </message>
@@ -1826,7 +1804,7 @@ Dirección: %4
     <message>
         <location line="-209"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation>, no ha sido emitido satisfactoriamente todavía</translation>
+        <translation>, todavía no se ha sido difundido satisfactoriamente</translation>
     </message>
     <message numerus="yes">
         <location line="-35"/>
@@ -1855,7 +1833,7 @@ Dirección: %4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+226"/>
+        <location filename="../transactiontablemodel.cpp" line="+225"/>
         <source>Date</source>
         <translation>Fecha</translation>
     </message>
@@ -1973,7 +1951,7 @@ Dirección: %4
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+55"/>
+        <location filename="../transactionview.cpp" line="+52"/>
         <location line="+16"/>
         <source>All</source>
         <translation>Todo</translation>
@@ -2060,6 +2038,11 @@ Dirección: %4
     </message>
     <message>
         <location line="+1"/>
+        <source>Copy transaction ID</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Edit label</source>
         <translation>Editar etiqueta</translation>
     </message>
@@ -2069,7 +2052,7 @@ Dirección: %4
         <translation>Mostrar detalles de la transacción</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+139"/>
         <source>Export Transaction Data</source>
         <translation>Exportar datos de la transacción</translation>
     </message>
@@ -2124,7 +2107,7 @@ Dirección: %4
         <translation>No se pudo escribir en el archivo %1.</translation>
     </message>
     <message>
-        <location line="+95"/>
+        <location line="+100"/>
         <source>Range:</source>
         <translation>Rango:</translation>
     </message>
@@ -2135,30 +2118,173 @@ Dirección: %4
     </message>
 </context>
 <context>
+    <name>WalletView</name>
+    <message>
+        <location filename="../walletview.cpp" line="+95"/>
+        <source>&amp;Overview</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show general overview of wallet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&amp;Send coins</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Send coins to a Bitcoin address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&amp;Receive coins</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the list of addresses for receiving payments</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&amp;Transactions</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse transaction history</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&amp;Address Book</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Edit the list of stored addresses and labels</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Cifrar las claves privadas de su monedero</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&amp;Backup Wallet...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Backup wallet to another location</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Change Passphrase...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Sign &amp;message...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation>Firmar mensajes con sus direcciones Bitcoin para probar la propiedad</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Verify message...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation>Verificar mensajes comprobando que están firmados con direcciones Bitcoin concretas</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&amp;Export...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+180"/>
+        <source>Backup Wallet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Wallet Data (*.dat)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Backup Failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>There was an error trying to save the wallet data to the new location.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Backup Successful</source>
+        <translation>Se ha completado con éxito la copia de respaldo</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>The wallet data was successfully saved to the new location.</source>
+        <translation>Los datos del monedero se han guardado con éxito en la nueva ubicación.</translation>
+    </message>
+</context>
+<context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+88"/>
+        <location filename="../bitcoinstrings.cpp" line="+96"/>
         <source>Bitcoin version</source>
         <translation>Versión de Bitcoin</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+98"/>
         <source>Usage:</source>
         <translation>Uso:</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-24"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Envíar comando a -server o bitcoind</translation>
     </message>
     <message>
-        <location line="-21"/>
+        <location line="-22"/>
         <source>List commands</source>
         <translation>Muestra comandos
 </translation>
     </message>
     <message>
-        <location line="-11"/>
+        <location line="-10"/>
         <source>Get help for a command</source>
         <translation>Recibir ayuda para un comando
 </translation>
@@ -2187,12 +2313,12 @@ Dirección: %4
         <translation>Generar monedas</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-28"/>
         <source>Don&apos;t generate coins</source>
         <translation>No generar monedas</translation>
     </message>
     <message>
-        <location line="+61"/>
+        <location line="+74"/>
         <source>Specify data directory</source>
         <translation>Especificar directorio para los datos</translation>
     </message>
@@ -2202,90 +2328,85 @@ Dirección: %4
         <translation>Establecer el tamaño de caché de la base de datos en megabytes (predeterminado: 25)</translation>
     </message>
     <message>
-        <location line="-26"/>
+        <location line="-27"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Escuchar conexiones en &lt;puerto&gt; (predeterminado: 8333 o testnet: 18333)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation>Mantener como máximo &lt;n&gt; conexiones a pares (predeterminado: 125)</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-49"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Conectar a un nodo para obtener direcciones de pares y desconectar</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+80"/>
         <source>Specify your own public address</source>
         <translation>Especifique su propia dirección pública</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Umbral para la desconexión de pares con mal comportamiento (predeterminado: 100)</translation>
     </message>
     <message>
-        <location line="-114"/>
+        <location line="-132"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Número de segundos en que se evita la reconexión de pares con mal comportamiento (predeterminado: 86400)</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-32"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation>Ha ocurrido un error al configurar el puerto RPC %u para escucha en IPv4: %s</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+30"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Escuchar conexiones JSON-RPC en &lt;puerto&gt; (predeterminado: 8332 o testnet:18332)</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Aceptar comandos consola y JSON-RPC
 </translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+77"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Correr como demonio y aceptar comandos
 </translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
         <source>Use the test network</source>
         <translation>Usar la red de pruebas
 </translation>
     </message>
     <message>
-        <location line="-92"/>
+        <location line="-108"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Aceptar conexiones desde el exterior (predeterminado: 1 si no -proxy o -connect)</translation>
     </message>
     <message>
-        <location line="-74"/>
+        <location line="-82"/>
         <source>%s, you must set a rpcpassword in the configuration file:
- %s
+%s
 It is recommended you use the following random password:
 rpcuser=bitcoinrpc
 rpcpassword=%s
 (you do not need to remember this password)
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
 </source>
-        <translation>%s, debe asignar un valor a rpcpassword en el archivo de configuración:
- %s
-Se recomienda que utilice la siguiente contraseña aleatoria:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(no necesita recordar esta contraseña)
-El nombre de usuario y la contraseña NO DEBEN ser iguales.
-Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
         <translation>Ha ocurrido un error al configurar el puerto RPC %u para escuchar mediante IPv6. Recurriendo a IPv4: %s</translation>
     </message>
@@ -2301,11 +2422,6 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Corrupted block database detected. Please restart the client with -reindex.</source>
-        <translation>Detectada base de datos de bloques corrupta. Reinicie el cliente con -reindex.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>Error initializing database environment %s! To recover, BACKUP THAT DIRECTORY, then remove everything from it except for wallet.dat.</source>
         <translation>¡Error al inicializar el entorno de base de datos %s! Para restaurarlo, HAGA UNA COPIA DE SEGURIDAD DEL DIRECTORIO y borre todos sus contenidos excepto wallet.dat.</translation>
     </message>
@@ -2320,12 +2436,27 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>¡Error: Esta transacción requiere una comisión de al menos %s debido a su monto, complejidad, o al uso de fondos recién recibidos!</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Execute command when a relevant alert is received (%s in cmd is replaced by message)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation>Ejecutar comando cuando una transacción del monedero cambia (%s en cmd se remplazará por TxID)</translation>
+    </message>
+    <message>
         <location line="+11"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
         <translation>Establecer el tamaño máximo de las transacciones de alta prioridad/comisión baja en bytes (predeterminado:27000)</translation>
     </message>
     <message>
         <location line="+3"/>
+        <source>Set the number of script verification threads (1-16, 0=auto, default: 0)</source>
+        <translation>Establecer el número de hilos para la verificación de scripts (1-16, 0=automático, predeterminado: 0)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Esta es una versión de prueba pre-release - utilícela bajo su propio riesgo. No la utilice para usos comerciales o de minería.</translation>
     </message>
@@ -2371,16 +2502,41 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
     </message>
     <message>
         <location line="+3"/>
+        <source>Corrupted block database detected</source>
+        <translation>Corrupción de base de datos de bloques detectada.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation>Descubrir dirección IP propia (predeterminado: 1 al escuchar sin -externalip)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation>¿Quieres reconstruir la base de datos de bloques ahora?</translation>
+    </message>
+    <message>
         <location line="+3"/>
+        <source>Error initializing block database</source>
+        <translation>Error al inicializar la base de datos de bloques</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Error loading block database</source>
         <translation>Error cargando base de datos de bloques</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
+        <source>Error opening block database</source>
+        <translation>Error al abrir base de datos de bloques.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Error: Disk space is low!</source>
         <translation>Error: ¡Espacio en disco bajo!</translation>
     </message>
@@ -2396,8 +2552,63 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
     </message>
     <message>
         <location line="+2"/>
+        <source>Error: system error: </source>
+        <translation>Error: error de sistema: </translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Ha fallado la escucha en todos los puertos. Use -listen=0 si desea esto.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to read block info</source>
+        <translation>No se ha podido leer la información de bloque</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to read block</source>
+        <translation>No se ha podido leer el bloque</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to sync block index</source>
+        <translation>No se ha podido sincronizar el índice de bloques</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write block index</source>
+        <translation>No se ha podido escribir en el índice de bloques</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write block info</source>
+        <translation>No se ha podido escribir la información de bloques</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write block</source>
+        <translation>No se ha podido escribir el bloque</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write file info</source>
+        <translation>No se ha podido escribir la información de archivo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write to coin database</source>
+        <translation>No se ha podido escribir en la base de datos de monedas</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write transaction index</source>
+        <translation>No se ha podido escribir en el índice de transacciones</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write undo data</source>
+        <translation>No se han podido escribir los datos de deshacer</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2405,17 +2616,32 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>Encontrar pares mediante búsqueda de DNS (predeterminado: 1 salvo con -connect)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+3"/>
+        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
+        <translation>Cuántos bloques comprobar al iniciar (predeterminado: 288, 0 = todos)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>How thorough the block verification is (0-4, default: 3)</source>
         <translation>Como es de exhaustiva la verificació de bloques (0-4, por defecto 3)</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Importing blocks from block database...</source>
-        <translation>Importando bloques de la base de datos de bloques...</translation>
+        <location line="+24"/>
+        <source>Rebuild block chain index from current blk000??.dat files</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Verifying blocks...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
+        <source>Verifying wallet...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-61"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importa los bloques desde un archivo blk000??.dat externo</translation>
     </message>
@@ -2430,7 +2656,12 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>Dirección -tor inválida: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
+        <source>Maintain a full transaction index (default: 0)</source>
+        <translation>Mantener índice de transacciones completo (predeterminado: 0)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
         <translation>Búfer de recepción máximo por conexión, &lt;n&gt;*1000 bytes (predeterminado: 5000)</translation>
     </message>
@@ -2465,12 +2696,7 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>Anteponer marca temporal a la información de depuración</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Rebuild blockchain index from current blk000??.dat files</source>
-        <translation>Reconstruir el índice de la cadena de bloques a partir de los archivos blk000??.dat actuales</translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Opciones SSL: (ver la Bitcoin Wiki para instrucciones de configuración SSL)</translation>
     </message>
@@ -2510,7 +2736,12 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>Especificar el tiempo máximo de conexión en milisegundos (predeterminado: 5000)</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+4"/>
+        <source>System error: </source>
+        <translation>Error de sistema: </translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Usar UPnP para asignar el puerto de escucha (predeterminado: 0)</translation>
     </message>
@@ -2542,39 +2773,44 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
     </message>
     <message>
         <location line="+1"/>
+        <source>You need to rebuild the databases using -reindex to change -txindex</source>
+        <translation>Necesita reconstruir las bases de datos con la opción -reindex para modificar -txindex</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat corrupto. Ha fallado la recuperación.</translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-45"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Contraseña para las conexiones JSON-RPC
 </translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-68"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Permitir conexiones JSON-RPC desde la dirección IP especificada
 </translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+77"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Enviar comando al nodo situado en &lt;ip&gt; (predeterminado: 127.0.0.1)
 </translation>
     </message>
     <message>
-        <location line="-103"/>
+        <location line="-120"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Ejecutar un comando cuando cambia el mejor bloque (%s en cmd se sustituye por el hash de bloque)</translation>
     </message>
     <message>
-        <location line="+124"/>
+        <location line="+142"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Actualizar el monedero al último formato</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-16"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Ajustar el número de claves en reserva &lt;n&gt; (predeterminado: 100)
 </translation>
@@ -2585,18 +2821,13 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>Volver a examinar la cadena de bloques en busca de transacciones del monedero perdidas</translation>
     </message>
     <message>
-        <location line="-26"/>
-        <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
-        <translation>Cuántos bloques comprobar al iniciar (predeterminado: 2500, 0 = todos)</translation>
-    </message>
-    <message>
-        <location line="+55"/>
+        <location line="+30"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Usar OpenSSL (https) para las conexiones JSON-RPC
 </translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="-21"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Certificado del servidor (predeterminado: server.cert)
 </translation>
@@ -2608,13 +2839,13 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
 </translation>
     </message>
     <message>
-        <location line="-133"/>
+        <location line="-154"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Cifrados aceptados (predeterminado: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)
 </translation>
     </message>
     <message>
-        <location line="+144"/>
+        <location line="+166"/>
         <source>This help message</source>
         <translation>Este mensaje de ayuda
 </translation>
@@ -2625,7 +2856,7 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>No es posible conectar con %s en este sistema (bind ha dado el error %d, %s)</translation>
     </message>
     <message>
-        <location line="-70"/>
+        <location line="-86"/>
         <source>Connect through socks proxy</source>
         <translation>Conectar mediante proxy socks</translation>
     </message>
@@ -2635,12 +2866,12 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>Permitir búsquedas DNS para -addnode, -seednode y -connect</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+57"/>
         <source>Loading addresses...</source>
         <translation>Cargando direcciones...</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-35"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Error al cargar wallet.dat: el monedero está dañado</translation>
     </message>
@@ -2650,32 +2881,22 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>Error al cargar wallet.dat: El monedero requiere una versión más reciente de Bitcoin</translation>
     </message>
     <message>
-        <location line="+73"/>
-        <source>Verifying block database integrity...</source>
-        <translation>Verificando la integridad de la base de datos de bloques...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Verifying wallet integrity...</source>
-        <translation>Verificando la integridad del monedero...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+87"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>El monedero ha necesitado ser reescrito. Reinicie Bitcoin para completar el proceso</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-89"/>
         <source>Error loading wallet.dat</source>
         <translation>Error al cargar wallet.dat</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+30"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Dirección -proxy inválida: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+48"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>La red especificada en -onlynet &apos;%s&apos; es desconocida</translation>
     </message>
@@ -2685,7 +2906,7 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>Solicitada versión de proxy -socks desconocida: %i</translation>
     </message>
     <message>
-        <location line="-75"/>
+        <location line="-91"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>No se puede resolver la dirección de -bind: &apos;%s&apos;</translation>
     </message>
@@ -2695,17 +2916,17 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>No se puede resolver la dirección de -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+45"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Cantidad inválida para -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-24"/>
         <source>Error: could not start node</source>
         <translation>Error: no se ha podido iniciar el nodo</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+25"/>
         <source>Invalid amount</source>
         <translation>Cuantía no válida</translation>
     </message>
@@ -2720,7 +2941,7 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>Cargando el índice de bloques...</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-59"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Añadir un nodo al que conectarse y tratar de mantener la conexión abierta</translation>
     </message>
@@ -2730,22 +2951,17 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>No es posible conectar con %s en este sistema. Probablemente Bitcoin ya está ejecutándose.</translation>
     </message>
     <message>
-        <location line="+54"/>
-        <source>Find peers using internet relay chat (default: 0)</source>
-        <translation>Encontrar los pares utilizando Internet Relay Chat (predeterminado: 0)</translation>
-    </message>
-    <message>
-        <location line="-2"/>
+        <location line="+68"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Tarifa por KB que añadir a las transacciones que envíe</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+17"/>
         <source>Loading wallet...</source>
         <translation>Cargando monedero...</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-54"/>
         <source>Cannot downgrade wallet</source>
         <translation>No se puede rebajar el monedero</translation>
     </message>
@@ -2760,27 +2976,27 @@ Si el archivo no existe, créelo con permisos owner-readable-only.</translation>
         <translation>No se puede escribir la dirección predeterminada</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+64"/>
         <source>Rescanning...</source>
         <translation>Rescaneando...</translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-56"/>
         <source>Done loading</source>
         <translation>Generado pero no aceptado</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+79"/>
         <source>To use the %s option</source>
         <translation>Para utilizar la opción %s</translation>
     </message>
     <message>
-        <location line="-60"/>
+        <location line="-71"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-33"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
