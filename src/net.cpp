@@ -619,6 +619,9 @@ void CNode::copyStats(CNodeStats &stats)
     X(nReleaseTime);
     X(nStartingHeight);
     X(nMisbehavior);
+    X(nSendBytes);
+    X(nRecvBytes);
+    stats.fSyncNode = (this == pnodeSync);
 }
 #undef X
 
@@ -713,6 +716,7 @@ void SocketSendData(CNode *pnode)
         int nBytes = send(pnode->hSocket, &data[pnode->nSendOffset], data.size() - pnode->nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
         if (nBytes > 0) {
             pnode->nLastSend = GetTime();
+            pnode->nSendBytes += nBytes;
             pnode->nSendOffset += nBytes;
             if (pnode->nSendOffset == data.size()) {
                 pnode->nSendOffset = 0;
@@ -976,6 +980,7 @@ void ThreadSocketHandler()
                             if (!pnode->ReceiveMsgBytes(pchBuf, nBytes))
                                 pnode->CloseSocketDisconnect();
                             pnode->nLastRecv = GetTime();
+                            pnode->nRecvBytes += nBytes;
                         }
                         else if (nBytes == 0)
                         {
