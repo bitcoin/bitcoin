@@ -1,16 +1,16 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="fr_CA" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="eo" version="2.0">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Bitcoin</source>
-        <translation>A propos de Bitcoin</translation>
+        <translation>Pri Bitcoin</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; version</translation>
+        <translation>&lt;b&gt;Bitcoin&lt;/b&gt;-a versio</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -20,12 +20,7 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>
-Ce logiciel est en phase expérimentale.
-
-Distribué sous licence MIT/X11, voir le fichier COPYING ou http://www.opensource.org/licenses/mit-license.php.
-
-Ce produit comprend des logiciels développés par le projet OpenSSL pour être utilisés dans la boîte à outils OpenSSL (http://www.openssl.org/), un logiciel cryptographique écrit par Eric Young (eay@cryptsoft.com) et un logiciel UPnP écrit par Thomas Bernard.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="+17"/>
@@ -43,37 +38,37 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../forms/addressbookpage.ui" line="+14"/>
         <source>Address Book</source>
-        <translation>Carnet d&apos;adresses</translation>
+        <translation>Adresaro</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Double-click to edit address or label</source>
-        <translation>Double-cliquez afin de modifier l&apos;adress ou l&apos;étiquette</translation>
+        <translation>Duoble-klaku por redakti adreson aŭ etikedon</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Create a new address</source>
-        <translation>Créer une nouvelle adresse</translation>
+        <translation>Kreu novan adreson</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l&apos;adresse surligné a votre presse-papier</translation>
+        <translation>Kopiu elektitan adreson al la tondejo</translation>
     </message>
     <message>
         <location line="-11"/>
         <source>&amp;New Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Nova Adreso</translation>
     </message>
     <message>
         <location line="-46"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Ceux-ci sont vos adresses Bitcoin qui vous permettent de recevoir des paiements.  Vous pouvez en donner une différente à chaque expédieur afin de savoir qui vous payent.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+60"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kopiu Adreson</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -108,17 +103,17 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+14"/>
         <source>&amp;Delete</source>
-        <translation>&amp;Supprimer</translation>
+        <translation>&amp;Forviŝu</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="+66"/>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>Kopiu &amp;Etikedon</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Redaktu</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -128,22 +123,22 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+263"/>
         <source>Export Address Book Data</source>
-        <translation>Exporter les données du carnet d&apos;adresses</translation>
+        <translation>Eksportu Adresarajn Datumojn</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Diskoma dosiero (*.csv)</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Error exporting</source>
-        <translation type="unfinished"/>
+        <translation>Eraro dum eksportado</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation type="unfinished"/>
+        <translation>Ne eblis skribi al dosiero %1.</translation>
     </message>
 </context>
 <context>
@@ -151,17 +146,17 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../addresstablemodel.cpp" line="+144"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etikedo</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adreso</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(ne etikedo)</translation>
     </message>
 </context>
 <context>
@@ -174,62 +169,62 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+21"/>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Enigu pasfrazon</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Nova pasfrazo</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Ripetu novan pasfrazon</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="+33"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Enigu novan pasfrazon por la monujo.&lt;br/&gt;Bonvolu, uzu pasfrazon kun &lt;b&gt;10 aŭ pli hazardaj signoj&lt;/b&gt;, aŭ &lt;b&gt;ok aŭ pli vortoj&lt;/b&gt;.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Encrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Ĉifru monujon</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Ĉi tiu operacio devas vian monujan pasfrazon, por malŝlosi la monujon.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Malŝlosu monujon</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Ĉi tiu operacio devas vian monujan pasfrazon, por malĉifri la monujon.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Decrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Malĉifru monujon</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Change passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Anstataŭigu pasfrazon</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Enigu la malnovan kaj novan monujan pasfrazon.</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Konfirmu ĉifrado de monujo</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -256,7 +251,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
         <location line="-130"/>
         <location line="+58"/>
         <source>Wallet encrypted</source>
-        <translation type="unfinished"/>
+        <translation>Monujo ĉifrita</translation>
     </message>
     <message>
         <location line="-56"/>
@@ -269,35 +264,35 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
         <location line="+42"/>
         <location line="+6"/>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Monujo ĉifrado fiaskis</translation>
     </message>
     <message>
         <location line="-54"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished"/>
+        <translation>Ĉifrado de monujo fiaskis, kaŭze de interna eraro. Via monujo ne ĉifritas.</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+48"/>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished"/>
+        <translation>La pasfrazoj enigitaj ne samas.</translation>
     </message>
     <message>
         <location line="-37"/>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished"/>
+        <translation>Monujo malŝlosado fiaskis</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+11"/>
         <location line="+19"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>La pasfrazo enigita por ĉifrado de monujo ne konformas.</translation>
     </message>
     <message>
         <location line="-20"/>
         <source>Wallet decryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Monujo malĉifrado fiaskis</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -310,17 +305,17 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../bitcoingui.cpp" line="+231"/>
         <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
+        <translation>Subskribu &amp;mesaĝon...</translation>
     </message>
     <message>
         <location line="+299"/>
         <source>Synchronizing with network...</source>
-        <translation type="unfinished"/>
+        <translation>Sinkronigante kun reto...</translation>
     </message>
     <message>
         <location line="-367"/>
         <source>&amp;Overview</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Superrigardo</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -330,12 +325,12 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+20"/>
         <source>&amp;Transactions</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Transakcioj</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation type="unfinished"/>
+        <translation>Esploru historion de transakcioj</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -350,37 +345,37 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+31"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Eliru</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Quit application</source>
-        <translation type="unfinished"/>
+        <translation>Eliru de aplikaĵo</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Show information about Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Vidigu informaĵon pri Bitmono</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"/>
+        <translation>Pri &amp;QT</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"/>
+        <translation>Vidigu informaĵon pri Qt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Opcioj...</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ĉifru Monujon...</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -390,7 +385,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Anstataŭigu pasfrazon...</translation>
     </message>
     <message>
         <location line="+304"/>
@@ -405,7 +400,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="-300"/>
         <source>&amp;Export...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Eksportu...</translation>
     </message>
     <message>
         <location line="-65"/>
@@ -445,7 +440,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="-7"/>
         <source>&amp;Verify message...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kontrolu mesaĝon...</translation>
     </message>
     <message>
         <location line="-162"/>
@@ -456,7 +451,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="-540"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Monujo</translation>
     </message>
     <message>
         <location line="+99"/>
@@ -476,7 +471,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+22"/>
         <source>&amp;About Bitcoin</source>
-        <translation>&amp;A propos de Bitcoin</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+9"/>
@@ -506,17 +501,17 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+31"/>
         <source>&amp;File</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Dosiero</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>&amp;Settings</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Agordoj</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&amp;Help</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Helpo</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -557,17 +552,17 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message numerus="yes">
         <location line="+20"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n horo</numerusform><numerusform>%n horoj</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n tago</numerusform><numerusform>%n tagoj</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n semajno</numerusform><numerusform>%n semajnoj</numerusform></translation>
     </message>
     <message>
         <location line="+5"/>
@@ -587,7 +582,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+21"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Eraro</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -607,12 +602,12 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="-138"/>
         <source>Up to date</source>
-        <translation type="unfinished"/>
+        <translation>Ĝisdata</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Catching up...</source>
-        <translation type="unfinished"/>
+        <translation>Ĝisdatigante...</translation>
     </message>
     <message>
         <location line="+110"/>
@@ -622,12 +617,12 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+8"/>
         <source>Sent transaction</source>
-        <translation type="unfinished"/>
+        <translation>Sendita transakcio</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Incoming transaction</source>
-        <translation type="unfinished"/>
+        <translation>Envenanta transakcio</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -653,12 +648,12 @@ Address: %4
     <message>
         <location line="+17"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Monujo estas &lt;b&gt;ĉifrita&lt;/b&gt; kaj nun &lt;b&gt;malŝlosita&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Monujo estas &lt;b&gt;ĉifrita&lt;/b&gt; kaj nun &lt;b&gt;ŝlosita&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="+108"/>
@@ -671,7 +666,7 @@ Address: %4
     <message>
         <location filename="../clientmodel.cpp" line="+96"/>
         <source>Network Alert</source>
-        <translation type="unfinished"/>
+        <translation>Reta Averto</translation>
     </message>
 </context>
 <context>
@@ -679,22 +674,22 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>Redaktu Adreson</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Etikedo</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The label associated with this address book entry</source>
-        <translation type="unfinished"/>
+        <translation>La etikedo interrilatita kun ĉi tiun adreso</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Adreso</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -724,7 +719,7 @@ Address: %4
     <message>
         <location line="+76"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation type="unfinished"/>
+        <translation>La adreso enigita &quot;%1&quot; jam ekzistas en la adresaro.</translation>
     </message>
     <message>
         <location line="-5"/>
@@ -734,7 +729,7 @@ Address: %4
     <message>
         <location line="+10"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Ne eblis malŝlosi monujon</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -748,12 +743,12 @@ Address: %4
         <location filename="../guiutil.cpp" line="+422"/>
         <location line="+12"/>
         <source>Bitcoin-Qt</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin-Qt</translation>
     </message>
     <message>
         <location line="-12"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>versio</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -791,7 +786,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="+14"/>
         <source>Options</source>
-        <translation type="unfinished"/>
+        <translation>Opcioj</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -946,17 +941,17 @@ Address: %4
     <message>
         <location line="+71"/>
         <source>&amp;OK</source>
-        <translation type="unfinished"/>
+        <translation>&amp;OK</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Cancel</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Nuligu</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>&amp;Apply</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Apliku</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="+53"/>
@@ -1017,12 +1012,12 @@ Address: %4
     <message>
         <location line="+29"/>
         <source>Unconfirmed:</source>
-        <translation type="unfinished"/>
+        <translation>Nekonfirmita:</translation>
     </message>
     <message>
         <location line="-78"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Monujo</translation>
     </message>
     <message>
         <location line="+107"/>
@@ -1037,7 +1032,7 @@ Address: %4
     <message>
         <location line="+46"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Lastaj transakcioj&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="-101"/>
@@ -1084,7 +1079,7 @@ Address: %4
     <message>
         <location line="-44"/>
         <source>Label:</source>
-        <translation type="unfinished"/>
+        <translation>Etikedo:</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -1166,7 +1161,7 @@ Address: %4
     <message>
         <location line="+29"/>
         <source>Network</source>
-        <translation type="unfinished"/>
+        <translation>Reto</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1201,7 +1196,7 @@ Address: %4
     <message>
         <location line="+52"/>
         <source>&amp;Open</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Malfermu</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1281,12 +1276,12 @@ Address: %4
         <location line="+5"/>
         <location line="+5"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Sendu Monojn</translation>
     </message>
     <message>
         <location line="+50"/>
         <source>Send to multiple recipients at once</source>
-        <translation type="unfinished"/>
+        <translation>Sendu samtempe al multaj ricevantoj</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1311,7 +1306,7 @@ Address: %4
     <message>
         <location line="+10"/>
         <source>123.456 BTC</source>
-        <translation type="unfinished"/>
+        <translation>123,456 BTC</translation>
     </message>
     <message>
         <location line="+31"/>
@@ -1326,7 +1321,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-59"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;%1&lt;/b&gt; al %2 (%3)</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1336,12 +1331,12 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Are you sure you want to send %1?</source>
-        <translation type="unfinished"/>
+        <translation>Ĉu vi vere volas sendi %1?</translation>
     </message>
     <message>
         <location line="+0"/>
         <source> and </source>
-        <translation type="unfinished"/>
+        <translation>kaj</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -1410,32 +1405,32 @@ Address: %4
     <message>
         <location line="-78"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Etikedo:</translation>
     </message>
     <message>
         <location line="+28"/>
         <source>Choose address from address book</source>
-        <translation type="unfinished"/>
+        <translation>Elektu adreson el adresaro</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Algluu adreson de tondejo</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Remove this recipient</source>
-        <translation type="unfinished"/>
+        <translation>Forigu ĉi tiun ricevanton</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
@@ -1475,17 +1470,17 @@ Address: %4
         <location line="-203"/>
         <location line="+213"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location line="-203"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Algluu adreson de tondejo</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -1651,12 +1646,12 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>%1/nekonfirmita</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 confirmations</source>
-        <translation type="unfinished"/>
+        <translation>%1 konfirmoj</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -1671,7 +1666,7 @@ Address: %4
     <message>
         <location line="+4"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Dato</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1782,7 +1777,7 @@ Address: %4
     <message>
         <location line="+23"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Sumo</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1797,7 +1792,7 @@ Address: %4
     <message>
         <location line="-209"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"/>
+        <translation>, ankoraŭ ne elsendita sukcese</translation>
     </message>
     <message numerus="yes">
         <location line="-35"/>
@@ -1807,7 +1802,7 @@ Address: %4
     <message>
         <location line="+70"/>
         <source>unknown</source>
-        <translation type="unfinished"/>
+        <translation>nekonata</translation>
     </message>
 </context>
 <context>
@@ -1815,7 +1810,7 @@ Address: %4
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="+14"/>
         <source>Transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Transakciaj detaloj</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1828,22 +1823,22 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="+225"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Dato</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Tipo</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adreso</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Sumo</translation>
     </message>
     <message numerus="yes">
         <location line="+57"/>
@@ -1888,27 +1883,27 @@ Address: %4
     <message>
         <location line="+43"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Ricevita kun</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Received from</source>
-        <translation type="unfinished"/>
+        <translation>Ricevita de</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Sendita al</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Payment to yourself</source>
-        <translation type="unfinished"/>
+        <translation>Pago al vi mem</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Minita</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -1928,7 +1923,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Transakcia tipo.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1947,12 +1942,12 @@ Address: %4
         <location filename="../transactionview.cpp" line="+52"/>
         <location line="+16"/>
         <source>All</source>
-        <translation type="unfinished"/>
+        <translation>Ĉiuj</translation>
     </message>
     <message>
         <location line="-15"/>
         <source>Today</source>
-        <translation type="unfinished"/>
+        <translation>Hodiaŭ</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1982,22 +1977,22 @@ Address: %4
     <message>
         <location line="+11"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Ricevita kun</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Sendita al</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>To yourself</source>
-        <translation type="unfinished"/>
+        <translation>Al vi mem</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Minita</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2017,7 +2012,7 @@ Address: %4
     <message>
         <location line="+34"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Kopiu adreson</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2037,7 +2032,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Edit label</source>
-        <translation type="unfinished"/>
+        <translation>Redaktu etikedon</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2052,37 +2047,37 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Diskoma dosiero (*.csv)</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>Konfirmita</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Dato</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Tipo</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etikedo</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adreso</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Sumo</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2092,12 +2087,12 @@ Address: %4
     <message>
         <location line="+4"/>
         <source>Error exporting</source>
-        <translation type="unfinished"/>
+        <translation>Eraro dum eksportado</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation type="unfinished"/>
+        <translation>Ne eblis skribi al dosiero %1.</translation>
     </message>
     <message>
         <location line="+100"/>
@@ -2115,7 +2110,7 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="+95"/>
         <source>&amp;Overview</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Superrigardo</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2145,12 +2140,12 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>&amp;Transactions</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Transakcioj</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation type="unfinished"/>
+        <translation>Esploru historion de transakcioj</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2165,7 +2160,7 @@ Address: %4
     <message>
         <location line="+12"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ĉifru Monujon...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2185,7 +2180,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Anstataŭigu pasfrazon...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2195,7 +2190,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
+        <translation>Subskribu &amp;mesaĝon...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2205,7 +2200,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>&amp;Verify message...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kontrolu mesaĝon...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2215,7 +2210,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>&amp;Export...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Eksportu...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2258,7 +2253,7 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="+96"/>
         <source>Bitcoin version</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin-a versio</translation>
     </message>
     <message>
         <location line="+98"/>
@@ -2273,7 +2268,7 @@ Address: %4
     <message>
         <location line="-22"/>
         <source>List commands</source>
-        <translation type="unfinished"/>
+        <translation>Listigu instrukciojn</translation>
     </message>
     <message>
         <location line="-10"/>
@@ -2283,7 +2278,7 @@ Address: %4
     <message>
         <location line="+21"/>
         <source>Options:</source>
-        <translation type="unfinished"/>
+        <translation>Opcioj:</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -2298,12 +2293,12 @@ Address: %4
     <message>
         <location line="-47"/>
         <source>Generate coins</source>
-        <translation type="unfinished"/>
+        <translation>Generu monerojn</translation>
     </message>
     <message>
         <location line="-28"/>
         <source>Don&apos;t generate coins</source>
-        <translation type="unfinished"/>
+        <translation>Ne generu monerojn</translation>
     </message>
     <message>
         <location line="+74"/>
@@ -2843,7 +2838,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+57"/>
         <source>Loading addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Ŝarĝante adresojn...</translation>
     </message>
     <message>
         <location line="-35"/>
@@ -2913,7 +2908,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+8"/>
         <source>Loading block index...</source>
-        <translation type="unfinished"/>
+        <translation>Ŝarĝante blok-indekson...</translation>
     </message>
     <message>
         <location line="-59"/>
@@ -2933,7 +2928,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+17"/>
         <source>Loading wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Ŝarĝante monujon...</translation>
     </message>
     <message>
         <location line="-54"/>
@@ -2958,17 +2953,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="-56"/>
         <source>Done loading</source>
-        <translation type="unfinished"/>
+        <translation>Ŝarĝado finitas</translation>
     </message>
     <message>
         <location line="+79"/>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>Por uzi la opcion %s</translation>
     </message>
     <message>
         <location line="-71"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Eraro</translation>
     </message>
     <message>
         <location line="-33"/>
