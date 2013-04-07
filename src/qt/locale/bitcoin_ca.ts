@@ -1,16 +1,16 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="fr_CA" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="ca" version="2.0">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Bitcoin</source>
-        <translation>A propos de Bitcoin</translation>
+        <translation>A prop de Bitcoin</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; version</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+57"/>
@@ -20,12 +20,7 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>
-Ce logiciel est en phase expérimentale.
-
-Distribué sous licence MIT/X11, voir le fichier COPYING ou http://www.opensource.org/licenses/mit-license.php.
-
-Ce produit comprend des logiciels développés par le projet OpenSSL pour être utilisés dans la boîte à outils OpenSSL (http://www.openssl.org/), un logiciel cryptographique écrit par Eric Young (eay@cryptsoft.com) et un logiciel UPnP écrit par Thomas Bernard.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="+17"/>
@@ -43,22 +38,22 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../forms/addressbookpage.ui" line="+14"/>
         <source>Address Book</source>
-        <translation>Carnet d&apos;adresses</translation>
+        <translation>Llibreta d&apos;adreçes</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Double-click to edit address or label</source>
-        <translation>Double-cliquez afin de modifier l&apos;adress ou l&apos;étiquette</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+27"/>
         <source>Create a new address</source>
-        <translation>Créer une nouvelle adresse</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+14"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l&apos;adresse surligné a votre presse-papier</translation>
+        <translation>Copia la selecció actual al porta-retalls del sistema</translation>
     </message>
     <message>
         <location line="-11"/>
@@ -68,7 +63,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="-46"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Ceux-ci sont vos adresses Bitcoin qui vous permettent de recevoir des paiements.  Vous pouvez en donner une différente à chaque expédieur afin de savoir qui vous payent.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+60"/>
@@ -108,7 +103,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+14"/>
         <source>&amp;Delete</source>
-        <translation>&amp;Supprimer</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="+66"/>
@@ -128,7 +123,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+263"/>
         <source>Export Address Book Data</source>
-        <translation>Exporter les données du carnet d&apos;adresses</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -476,7 +471,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location line="+22"/>
         <source>&amp;About Bitcoin</source>
-        <translation>&amp;A propos de Bitcoin</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+9"/>
