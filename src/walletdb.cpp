@@ -240,7 +240,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             //printf(" %12"PRI64d"  %s  %s  %s\n",
             //    wtx.vout[0].nValue,
             //    DateTimeStrFormat("%Y-%m-%d %H:%M:%S", wtx.GetBlockTime()).c_str(),
-            //    wtx.hashBlock.ToString().substr(0,20).c_str(),
+            //    wtx.hashBlock.ToString().c_str(),
             //    wtx.mapValue["message"].c_str());
         }
         else if (strType == "acentry")
