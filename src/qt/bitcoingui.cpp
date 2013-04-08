@@ -77,10 +77,15 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
     setUnifiedTitleAndToolBarOnMac(true);
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
+    // Create wallet frame and make it the central widget
+    walletFrame = new WalletFrame(this);
+    setCentralWidget(walletFrame);
+
     // Accept D&D of URIs
     setAcceptDrops(true);
 
     // Create actions for the toolbar, menu bar and tray/dock icon
+    // Needs walletFrame to be initialized
     createActions();
 
     // Create application menu bar
@@ -91,10 +96,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
 
     // Create system tray icon and notification
     createTrayIcon();
-
-    // Create wallet frame and make it the central widget
-    walletFrame = new WalletFrame(this);
-    setCentralWidget(walletFrame);
 
     // Create status bar
     statusBar();
@@ -246,9 +247,9 @@ void BitcoinGUI::createActions()
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
-    connect(encryptWalletAction, SIGNAL(triggered(bool)), this, SLOT(encryptWallet(bool)));
-    connect(backupWalletAction, SIGNAL(triggered()), this, SLOT(backupWallet()));
-    connect(changePassphraseAction, SIGNAL(triggered()), this, SLOT(changePassphrase()));
+    connect(encryptWalletAction, SIGNAL(triggered(bool)), walletFrame, SLOT(encryptWallet(bool)));
+    connect(backupWalletAction, SIGNAL(triggered()), walletFrame, SLOT(backupWallet()));
+    connect(changePassphraseAction, SIGNAL(triggered()), walletFrame, SLOT(changePassphrase()));
     connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
     connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
 }
@@ -792,26 +793,6 @@ void BitcoinGUI::setEncryptionStatus(int status)
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;
     }
-}
-
-void BitcoinGUI::encryptWallet(bool status)
-{
-    walletFrame->encryptWallet(status);
-}
-
-void BitcoinGUI::backupWallet()
-{
-    walletFrame->backupWallet();
-}
-
-void BitcoinGUI::changePassphrase()
-{
-    walletFrame->changePassphrase();
-}
-
-void BitcoinGUI::unlockWallet()
-{
-    walletFrame->unlockWallet();
 }
 
 void BitcoinGUI::showNormalIfMinimized(bool fToggleHidden)
