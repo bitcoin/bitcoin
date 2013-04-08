@@ -1071,6 +1071,14 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
         path /= "testnet3";
 
     fs::create_directory(path);
+    
+    // fs::create_directory sets access permission to 0777 (full access
+    // by all users). Secure DataDir by setting his to 0700 (full
+    // access by owner only).
+#ifndef WIN32
+    // Mac and Linux
+    chmod(path.string().c_str(), S_IRUSR|S_IWUSR|S_IXUSR);
+#endif
 
     cachedPath[fNetSpecific] = true;
     return path;
