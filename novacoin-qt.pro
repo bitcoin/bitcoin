@@ -252,7 +252,7 @@ SOURCES += src/qt/test/test_main.cpp \
 HEADERS += src/qt/test/uritests.h
 DEPENDPATH += src/qt/test
 QT += testlib
-TARGET = bitcoin-qt_test
+TARGET = novacoin-qt_test
 DEFINES += BITCOIN_QT_TEST
 }
 
