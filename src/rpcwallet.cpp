@@ -520,12 +520,12 @@ Value getbalance(const Array& params, bool fHelp)
     if (params[0].get_str() == "*") {
         // Calculate total balance a different way from GetBalance()
         // (GetBalance() sums up all unspent TxOuts)
-        // getbalance and getbalance '*' should always return the same number.
+        // getbalance and getbalance '*' 0 should return the same number
         int64 nBalance = 0;
         for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
         {
             const CWalletTx& wtx = (*it).second;
-            if (!wtx.IsFinal())
+            if (!wtx.IsConfirmed())
                 continue;
 
             int64 allFee;
