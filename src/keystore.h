@@ -174,6 +174,8 @@ public:
             mi++;
         }
     }
+    void GetCryptedKeys(std::map<CKeyID, std::vector<unsigned char> > &mapKeysOut) const;
+
 
     /* Wallet status (encrypted, locked) changed.
      * Note: Called without locks held.

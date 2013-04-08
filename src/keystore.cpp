@@ -177,6 +177,21 @@ bool CCryptoKeyStore::GetKey(const CKeyID &address, CKey& keyOut) const
     return false;
 }
 
+void CCryptoKeyStore::GetCryptedKeys(
+        std::map<CKeyID, std::vector<unsigned char> > &mapKeysOut) const
+{
+    LOCK(cs_KeyStore);
+
+    mapKeysOut.clear();
+
+    CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
+    while (mi != mapCryptedKeys.end()) {
+        mapKeysOut[(*mi).first] = (*mi).second.second;
+
+        mi++;
+    }
+}
+
 bool CCryptoKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
 {
     {
