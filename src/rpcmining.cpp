@@ -28,7 +28,7 @@ Value setgenerate(const Array& params, bool fHelp)
         throw runtime_error(
             "setgenerate <generate> [genproclimit]\n"
             "<generate> is true or false to turn generation on or off.\n"
-            "Generation is limited to [genproclimit] processors, -1 is unlimited.");
+            "Generation is limited to [genproclimit] threads, -1 is unlimited.");
 
     bool fGenerate = true;
     if (params.size() > 0)
