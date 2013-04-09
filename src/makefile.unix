@@ -36,6 +36,10 @@ LIBS += \
    -l ssl \
    -l crypto
 
+TESTLIBS += \
+ -Wl,-B$(LMODE) \
+   -l boost_unit_test_framework$(BOOST_LIB_SUFFIX)
+
 ifndef USE_UPNP
 	override USE_UPNP = -
 endif
@@ -178,7 +182,7 @@ obj-test/%.o: test/%.cpp
 	  rm -f $(@:%.o=%.d)
 
 test_bitcoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
-	$(LINK) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-B$(LMODE) -lboost_unit_test_framework $(xLDFLAGS) $(LIBS)
+	$(LINK) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ $(TESTLIBS) $(xLDFLAGS) $(LIBS)
 
 clean:
 	-rm -f bitcoind test_bitcoin
