@@ -1,8 +1,8 @@
 Icon: src/qt/res/icons/clock*.png, src/qt/res/icons/tx*.png,
-      src/qt/res/src/clock_green.svg, src/qt/res/src/clock1.svg
-	  src/qt/res/src/clock2.svg, src/qt/res/src/clock3.svg
-	  src/qt/res/src/clock4.svg, src/qt/res/src/clock5.svg
-	  src/qt/res/src/inout.svg, src/qt/res/src/questionmark.svg
+      src/qt/res/src/clock_green.svg, src/qt/res/src/clock1.svg,
+      src/qt/res/src/clock2.svg, src/qt/res/src/clock3.svg,
+      src/qt/res/src/clock4.svg, src/qt/res/src/clock5.svg,
+      src/qt/res/src/inout.svg, src/qt/res/src/questionmark.svg
 Designer: Wladimir van der Laan
 License: MIT
 
@@ -38,12 +38,12 @@ Designer: http://www.everaldo.com
 Icon Pack: Crystal SVG
 License: LGPL
 
-Icon: src/qt/res/icons/toolbar.png
+Icon: src/qt/res/icons/toolbar.png, toolbar_testnet.png
 Designer: Bitboy (optimized for 16x16 by Wladimir van der Laan)
 License: Public Domain
 Site: https://bitcointalk.org/?topic=1756.0
 
-Icon:  scripts/img/reload.xcf (modified),src/qt/res/movies/update_spinner.mng
+Icon:  scripts/img/reload.xcf (modified), src/qt/res/movies/update_spinner.mng
 Icon Pack: Kids
 Designer: Everaldo (Everaldo Coelho)
 License: GNU/GPL 
