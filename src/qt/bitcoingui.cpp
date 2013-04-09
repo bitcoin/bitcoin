@@ -611,25 +611,28 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    QString strTitle = tr("Bitcoin") + " - ";
+    QString strTitle = tr("Bitcoin"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
 
-    // Check for usage of predefined title
+    // Override title based on style
+    QString msgType;
     switch (style) {
     case CClientUIInterface::MSG_ERROR:
-        strTitle += tr("Error");
+        msgType = tr("Error");
         break;
     case CClientUIInterface::MSG_WARNING:
-        strTitle += tr("Warning");
+        msgType = tr("Warning");
         break;
     case CClientUIInterface::MSG_INFORMATION:
-        strTitle += tr("Information");
+        msgType = tr("Information");
         break;
     default:
-        strTitle += title; // Use supplied title
+        msgType = title; // Use supplied title
     }
+    if (!msgType.isEmpty())
+        strTitle += " - " + msgType;
 
     // Check for error/warning icon
     if (style & CClientUIInterface::ICON_ERROR) {
