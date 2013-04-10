@@ -15,9 +15,9 @@ QT_END_NAMESPACE
 
 enum BlockSource {
     BLOCK_SOURCE_NONE,
-    BLOCK_SOURCE_NETWORK,
+    BLOCK_SOURCE_REINDEX,
     BLOCK_SOURCE_DISK,
-    BLOCK_SOURCE_REINDEX
+    BLOCK_SOURCE_NETWORK
 };
 
 /** Model for Bitcoin network client. */
