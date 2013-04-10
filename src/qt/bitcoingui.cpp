@@ -74,6 +74,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
     QApplication::setWindowIcon(QIcon(":icons/bitcoin"));
     setWindowIcon(QIcon(":icons/bitcoin"));
 #else
+    MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin"));
     setUnifiedTitleAndToolBarOnMac(true);
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
