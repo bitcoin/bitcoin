@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
     // define text to place
     QString titleText       = QString(QApplication::applicationName()).replace(QString("-testnet"), QString(""), Qt::CaseSensitive);
     QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion())); //!<set the version string without client model (it's not available yet)
-    QString copyrightText   = QString("\u00A9 2009-%1\n").arg(COPYRIGHT_YEAR) + QString(BitcoinGUI::tr("The Bitcoin developers")); //TODO: where we gonna place the copyright endyear (also check aboutdialog.cpp!)?
+    QString copyrightText   = QChar(0xA9)+QString(" 2009-%1\n").arg(COPYRIGHT_YEAR) + QString(BitcoinGUI::tr("The Bitcoin developers")); //TODO: where we gonna place the copyright endyear (also check aboutdialog.cpp!)?
     QString testnetAddText  = QString(BitcoinGUI::tr("[testnet]"));
 
     // load the bitmap for writing some text over it
