@@ -4,4 +4,4 @@ tests
 *.so
 *.a
 config.mk
-
+!.gitignore
