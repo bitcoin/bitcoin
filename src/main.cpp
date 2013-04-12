@@ -669,7 +669,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
         if (mapNextTx.count(outpoint))
         {
             // Disable replacement feature for now
-            return false;
+            if (!fTestNet) return false;
 
             // Allow replacing with a newer version of the same transaction
             if (i != 0)
