@@ -3,6 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <boost/thread/locks.hpp>
+
 #include "main.h"
 #include "db.h"
 #include "init.h"
@@ -220,6 +222,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.");
 
     std::string strMode = "template";
+    Value lpval = Value::null;
     if (params.size() > 0)
     {
         const Object& oparam = params[0].get_obj();
@@ -232,6 +235,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
         }
         else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
+        lpval = find_value(oparam, "longpollid");
     }
 
     if (strMode != "template")
@@ -242,6 +246,30 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
     if (IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+
+    if (lpval.type() == str_type)
+    {
+        // If longpollid is provided but doesn't match our current best block, we want to respond immediately, not wait
+        uint256 lpid;
+        lpid.SetHex(lpval.get_str());
+        if (lpid != hashBestChain)
+            lpval = Value::null;
+    }
+    if (lpval.type() != null_type)
+    {
+        // Wait until the best block changes to respond
+        uint256 hashWatchedChain = hashBestChain;
+
+        LEAVE_CRITICAL_SECTION(pwalletMain->cs_wallet);
+        LEAVE_CRITICAL_SECTION(cs_main);
+        {
+            boost::unique_lock<boost::mutex> lock(csBestBlock);
+            while (hashBestChain == hashWatchedChain)
+                cvBlockChange.wait(lock);
+        }
+        ENTER_CRITICAL_SECTION(cs_main);
+        ENTER_CRITICAL_SECTION(pwalletMain->cs_wallet);
+    }
 
     static CReserveKey reservekey(pwalletMain);
 
@@ -333,6 +361,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("transactions", transactions));
     result.push_back(Pair("coinbaseaux", aux));
     result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue));
+    result.push_back(Pair("longpollid", hashBestChain.GetHex()));
     result.push_back(Pair("target", hashTarget.GetHex()));
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
     result.push_back(Pair("mutable", aMutable));

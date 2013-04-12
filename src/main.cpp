@@ -14,6 +14,9 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/mutex.hpp>
 
 using namespace std;
 using namespace boost;
@@ -41,6 +44,8 @@ uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
 set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid; // may contain all CBlockIndex*'s that have validness >=BLOCK_VALID_TRANSACTIONS, and must contain those who aren't failed
 int64 nTimeBestReceived = 0;
+boost::mutex csBestBlock;
+boost::condition_variable cvBlockChange;
 int nScriptCheckThreads = 0;
 bool fImporting = false;
 bool fReindex = false;
@@ -1853,6 +1858,9 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
         ::SetBestChain(locator);
     }
 
+    {
+        boost::lock_guard<boost::mutex> lock(csBestBlock);
+
     // New best block
     hashBestChain = pindexNew->GetBlockHash();
     pindexBest = pindexNew;
@@ -1861,10 +1869,15 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     bnBestChainWork = pindexNew->bnChainWork;
     nTimeBestReceived = GetTime();
     nTransactionsUpdated++;
+
+    }
+
     printf("SetBestChain: new best=%s  height=%d  work=%s  tx=%lu  date=%s  progress=%f\n",
       hashBestChain.ToString().c_str(), nBestHeight, bnBestChainWork.ToString().c_str(), (unsigned long)pindexNew->nChainTx,
       DateTimeStrFormat("%Y-%m-%d %H:%M:%S", pindexBest->GetBlockTime()).c_str(),
       Checkpoints::GuessVerificationProgress(pindexBest));
+
+    cvBlockChange.notify_all();
 
     // Check the version of the last 100 blocks to see if we need to upgrade:
     if (!fIsInitialDownload)
