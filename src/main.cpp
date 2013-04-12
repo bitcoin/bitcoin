@@ -791,6 +791,14 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
         EraseFromWallets(ptxOld->GetHash());
     SyncWithWallets(hash, tx, NULL, true);
 
+    std::string strCmd = GetArg("-txnotify", "");
+
+    if (!IsInitialBlockDownload() && !strCmd.empty())
+    {
+        boost::replace_all(strCmd, "%s", hash.GetHex());
+        boost::thread t(runCommand, strCmd); // thread runs free
+    }
+
     printf("CTxMemPool::accept() : accepted %s (poolsz %"PRIszu")\n",
            hash.ToString().c_str(),
            mapTx.size());
@@ -1710,9 +1718,21 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     // add this block to the view's block chain
     assert(view.SetBestBlock(pindex));
 
-    // Watch for transactions paying to me
+    
     for (unsigned int i=0; i<vtx.size(); i++)
+    {
+        // Watch for transactions paying to me
         SyncWithWallets(GetTxHash(i), vtx[i], this, true);
+
+        std::string strCmd = GetArg("-txnotify", "");
+
+        if (!IsInitialBlockDownload() && !strCmd.empty())
+        {
+            boost::replace_all(strCmd, "%s", GetTxHash(i).GetHex());
+            boost::thread t(runCommand, strCmd); // thread runs free
+        }
+
+    }
 
     return true;
 }
