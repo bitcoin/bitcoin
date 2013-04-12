@@ -19,9 +19,12 @@
 #include "ui_interface.h"
 
 #include <QVBoxLayout>
-#include <QActionGroup>
 #include <QAction>
+#if QT_VERSION < 0x050000
 #include <QDesktopServices>
+#else
+#include <QStandardPaths>
+#endif
 #include <QFileDialog>
 
 WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
@@ -126,14 +129,10 @@ void WalletView::incomingTransaction(const QModelIndex& parent, int start, int /
 
     TransactionTableModel *ttm = walletModel->getTransactionTableModel();
 
-    QString date = ttm->index(start, TransactionTableModel::Date, parent)
-                     .data().toString();
-    qint64 amount = ttm->index(start, TransactionTableModel::Amount, parent)
-                      .data(Qt::EditRole).toULongLong();
-    QString type = ttm->index(start, TransactionTableModel::Type, parent)
-                     .data().toString();
-    QString address = ttm->index(start, TransactionTableModel::ToAddress, parent)
-                        .data().toString();
+    QString date = ttm->index(start, TransactionTableModel::Date, parent).data().toString();
+    qint64 amount = ttm->index(start, TransactionTableModel::Amount, parent).data(Qt::EditRole).toULongLong();
+    QString type = ttm->index(start, TransactionTableModel::Type, parent).data().toString();
+    QString address = ttm->index(start, TransactionTableModel::ToAddress, parent).data().toString();
 
     gui->incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address);
 }
@@ -233,8 +232,7 @@ void WalletView::encryptWallet(bool status)
 {
     if(!walletModel)
         return;
-    AskPassphraseDialog dlg(status ? AskPassphraseDialog::Encrypt:
-                                     AskPassphraseDialog::Decrypt, this);
+    AskPassphraseDialog dlg(status ? AskPassphraseDialog::Encrypt: AskPassphraseDialog::Decrypt, this);
     dlg.setModel(walletModel);
     dlg.exec();
 
@@ -243,7 +241,11 @@ void WalletView::encryptWallet(bool status)
 
 void WalletView::backupWallet()
 {
+#if QT_VERSION < 0x050000
     QString saveDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+#else
+    QString saveDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+#endif
     QString filename = QFileDialog::getSaveFileName(this, tr("Backup Wallet"), saveDir, tr("Wallet Data (*.dat)"));
     if (!filename.isEmpty()) {
         if (!walletModel->backupWallet(filename)) {

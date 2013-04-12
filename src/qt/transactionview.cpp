@@ -173,11 +173,19 @@ void TransactionView::setModel(WalletModel *model)
         transactionView->sortByColumn(TransactionTableModel::Status, Qt::DescendingOrder);
         transactionView->verticalHeader()->hide();
 
-        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Status, 23);
-        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Date, 120);
-        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Type, 120);
+#if QT_VERSION < 0x050000
+        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Status, QHeaderView::ResizeToContents);
+        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Date, QHeaderView::ResizeToContents);
+        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Type, QHeaderView::ResizeToContents);
         transactionView->horizontalHeader()->setResizeMode(TransactionTableModel::ToAddress, QHeaderView::Stretch);
-        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Amount, 100);
+        transactionView->horizontalHeader()->resizeSection(TransactionTableModel::Amount, QHeaderView::ResizeToContents);
+#else
+        transactionView->horizontalHeader()->setSectionResizeMode(TransactionTableModel::Status, QHeaderView::ResizeToContents);
+        transactionView->horizontalHeader()->setSectionResizeMode(TransactionTableModel::Date, QHeaderView::ResizeToContents);
+        transactionView->horizontalHeader()->setSectionResizeMode(TransactionTableModel::Type, QHeaderView::ResizeToContents);
+        transactionView->horizontalHeader()->setSectionResizeMode(TransactionTableModel::ToAddress, QHeaderView::Stretch);
+        transactionView->horizontalHeader()->setSectionResizeMode(TransactionTableModel::Amount, QHeaderView::ResizeToContents);
+#endif
     }
 }
 
