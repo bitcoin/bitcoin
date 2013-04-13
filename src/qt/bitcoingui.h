@@ -67,7 +67,6 @@ public:
     QAction * getAddressBookAction() { return addressBookAction; }
     QAction * getReceiveCoinsAction() { return receiveCoinsAction; }
     QAction * getSendCoinsAction() { return sendCoinsAction; }
-    QAction * getExportAction() { return exportAction; }
 
 protected:
     void changeEvent(QEvent *e);
@@ -98,7 +97,6 @@ private:
     QAction *receiveCoinsAction;
     QAction *optionsAction;
     QAction *toggleHideAction;
-    QAction *exportAction;
     QAction *encryptWalletAction;
     QAction *backupWalletAction;
     QAction *changePassphraseAction;
