@@ -7,10 +7,11 @@
 
 #include <QDialog>
 
+class WalletModel;
+
 namespace Ui {
     class SignVerifyMessageDialog;
 }
-class WalletModel;
 
 class SignVerifyMessageDialog : public QDialog
 {

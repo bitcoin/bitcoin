@@ -6,18 +6,20 @@
 #include "ui_rpcconsole.h"
 
 #include "clientmodel.h"
-#include "bitcoinrpc.h"
 #include "guiutil.h"
 
-#include <QTime>
-#include <QThread>
+#include "bitcoinrpc.h"
+
+#include "json/json_spirit_value.h"
+#include <openssl/crypto.h>
 #include <QKeyEvent>
+#include <QScrollBar>
+#include <QThread>
+#include <QTime>
+
 #if QT_VERSION < 0x050000
 #include <QUrl>
 #endif
-#include <QScrollBar>
-
-#include <openssl/crypto.h>
 
 // TODO: add a scrollback limit, as there is currently none
 // TODO: make it possible to filter out categories (esp debug messages when implemented)

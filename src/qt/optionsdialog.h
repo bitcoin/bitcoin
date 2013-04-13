@@ -7,12 +7,13 @@
 
 #include <QDialog>
 
+class MonitoredDataMapper;
+class OptionsModel;
+class QValidatedLineEdit;
+
 namespace Ui {
 class OptionsDialog;
 }
-class OptionsModel;
-class MonitoredDataMapper;
-class QValidatedLineEdit;
 
 /** Preferences dialog. */
 class OptionsDialog : public QDialog

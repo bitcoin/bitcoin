@@ -1,12 +1,12 @@
 //
 // Unit tests for block-chain checkpoints
 //
-#include <boost/assign/list_of.hpp> // for 'map_list_of()'
-#include <boost/test/unit_test.hpp>
-#include <boost/foreach.hpp>
 
-#include "../checkpoints.h"
-#include "../util.h"
+#include "checkpoints.h"
+
+#include "uint256.h"
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 

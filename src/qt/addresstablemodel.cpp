@@ -7,8 +7,8 @@
 #include "guiutil.h"
 #include "walletmodel.h"
 
-#include "wallet.h"
 #include "base58.h"
+#include "wallet.h"
 
 #include <QFont>
 #include <QDebug>

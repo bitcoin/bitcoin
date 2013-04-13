@@ -4,9 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "txdb.h"
-#include "main.h"
-#include "hash.h"
-#include "chainparams.h"
+
+#include "core.h"
+#include "uint256.h"
+
+#include <stdint.h>
 
 using namespace std;
 
@@ -115,7 +117,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = GetBestBlock()->GetBlockHash();
     ss << stats.hashBlock;
-    int64 nTotalAmount = 0;
+    int64_t nTotalAmount = 0;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {

@@ -1,12 +1,17 @@
 #define BOOST_TEST_MODULE Bitcoin Test Suite
-#include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
+
+
 
 #include "db.h"
-#include "txdb.h"
 #include "main.h"
-#include "wallet.h"
+#include "txdb.h"
+#include "ui_interface.h"
 #include "util.h"
+#include "wallet.h"
+
+#include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+
 
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
