@@ -104,7 +104,7 @@ void test_wnaf(const secp256k1_num_t *number, int w) {
     secp256k1_num_init(&t);
     secp256k1_num_set_int(&x, 0);
     secp256k1_num_set_int(&two, 2);
-    int wnaf[1024];
+    int wnaf[257];
     int bits = secp256k1_ecmult_wnaf(wnaf, number, w);
     int zeroes = -1;
     for (int i=bits-1; i>=0; i--) {
@@ -134,7 +134,7 @@ void test_run_wnaf() {
     secp256k1_num_init(&range);
     secp256k1_num_init(&min);
     secp256k1_num_init(&n);
-    secp256k1_num_set_hex(&range, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 256);
+    secp256k1_num_set_hex(&range, "01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 66);
     secp256k1_num_copy(&min, &range);
     secp256k1_num_shift(&min, 1);
     secp256k1_num_negate(&min);

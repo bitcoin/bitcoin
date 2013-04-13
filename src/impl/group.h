@@ -259,6 +259,12 @@ void static secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *
 }
 
 void static secp256k1_gej_split_exp(secp256k1_num_t *r1, secp256k1_num_t *r2, const secp256k1_num_t *a) {
+#ifdef VERIFY
+    secp256k1_num_t a2;
+    secp256k1_num_init(&a2);
+    secp256k1_num_copy(&a2, a);
+#endif
+
     const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
     secp256k1_num_t bnc1, bnc2, bnt1, bnt2, bnn2;
 
@@ -286,6 +292,20 @@ void static secp256k1_gej_split_exp(secp256k1_num_t *r1, secp256k1_num_t *r2, co
     secp256k1_num_mul(&bnt1, &bnc1, &c->b1);
     secp256k1_num_mul(&bnt2, &bnc2, &c->a1b2);
     secp256k1_num_sub(r2, &bnt1, &bnt2);
+
+#ifdef VERIFY
+    secp256k1_num_t check;
+    secp256k1_num_init(&check);
+    secp256k1_num_mul(&check, r2, &c->lambda);
+    secp256k1_num_add(&check, &check, r1);
+    secp256k1_num_mod(&check, &check, &c->order);
+    secp256k1_num_add(&check, &check, &c->order);
+    secp256k1_num_mod(&check, &check, &c->order);
+    secp256k1_num_mod(&a2, &a2, &c->order);
+    assert(secp256k1_num_cmp(&check, &a2) == 0);
+    secp256k1_num_free(&check);
+    secp256k1_num_free(&a2);
+#endif
 
     secp256k1_num_free(&bnc1);
     secp256k1_num_free(&bnc2);

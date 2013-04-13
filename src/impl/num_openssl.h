@@ -125,17 +125,14 @@ void static secp256k1_num_set_hex(secp256k1_num_t *r, const char *a, int alen) {
     free(str);
 }
 
-void static secp256k1_num_get_hex(char *r, int *rlen, const secp256k1_num_t *a) {
+void static secp256k1_num_get_hex(char *r, int rlen, const secp256k1_num_t *a) {
     char *str = BN_bn2hex(&a->bn);
-    int len = strlen(str) + 1;
-    if (len > *rlen) {
-        *rlen = strlen(str);
-        OPENSSL_free(str);
-        return;
-    }
-    memcpy(r, str, len);
+    int len = strlen(str);
+    assert(rlen >= len);
+    for (int i=0; i<rlen-len; i++)
+        r[i] = '0';
+    memcpy(r+rlen-len, str, len);
     OPENSSL_free(str);
-    *rlen = len;
 }
 
 void static secp256k1_num_split(secp256k1_num_t *rl, secp256k1_num_t *rh, const secp256k1_num_t *a, int bits) {

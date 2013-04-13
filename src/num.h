@@ -1,7 +1,9 @@
 #ifndef _SECP256K1_NUM_
 #define _SECP256K1_NUM_
 
-#if defined(USE_NUM_GMP)
+#if defined(USE_NUM_GMPN)
+#include "num_gmpn.h"
+#elif defined(USE_NUM_GMP)
 #include "num_gmp.h"
 #elif defined(USE_NUM_OPENSSL)
 #include "num_openssl.h"
@@ -33,7 +35,7 @@ int  static secp256k1_num_is_neg(const secp256k1_num_t *a);
 int  static secp256k1_num_get_bit(const secp256k1_num_t *a, int pos);
 void static secp256k1_num_inc(secp256k1_num_t *r);
 void static secp256k1_num_set_hex(secp256k1_num_t *r, const char *a, int alen);
-void static secp256k1_num_get_hex(char *r, int *rlen, const secp256k1_num_t *a);
+void static secp256k1_num_get_hex(char *r, int rlen, const secp256k1_num_t *a);
 void static secp256k1_num_split(secp256k1_num_t *rl, secp256k1_num_t *rh, const secp256k1_num_t *a, int bits);
 void static secp256k1_num_negate(secp256k1_num_t *r);
 void static secp256k1_num_set_rand(secp256k1_num_t *r, const secp256k1_num_t *a);

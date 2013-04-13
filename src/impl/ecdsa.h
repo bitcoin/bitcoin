@@ -130,6 +130,7 @@ int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_
     secp256k1_num_init(&n);
     secp256k1_num_mod_mul(&n, &sig->r, seckey, &c->order);
     secp256k1_num_add(&n, &n, message);
+    secp256k1_num_mod(&n, &n, &c->order);
     secp256k1_num_mod_inverse(&sig->s, nonce, &c->order);
     secp256k1_num_mod_mul(&sig->s, &sig->s, &n, &c->order);
     secp256k1_num_free(&n);
