@@ -1,13 +1,20 @@
-#include <boost/test/unit_test.hpp>
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_writer_template.h"
-#include "json/json_spirit_utils.h"
+#include "base58.h"
+
 #include "data/base58_encode_decode.json.h"
 #include "data/base58_keys_invalid.json.h"
 #include "data/base58_keys_valid.json.h"
 
-#include "base58.h"
+#include "key.h"
+#include "script.h"
+#include "uint256.h"
 #include "util.h"
+
+#include <boost/foreach.hpp>
+#include <boost/test/unit_test.hpp>
+#include "json/json_spirit_reader_template.h"
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_writer_template.h"
+
 using namespace json_spirit;
 extern Array read_json(const std::string& jsondata);
 

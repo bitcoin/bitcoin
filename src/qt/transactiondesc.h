@@ -5,8 +5,8 @@
 #ifndef TRANSACTIONDESC_H
 #define TRANSACTIONDESC_H
 
-#include <QString>
 #include <QObject>
+#include <QString>
 
 class CWallet;
 class CWalletTx;

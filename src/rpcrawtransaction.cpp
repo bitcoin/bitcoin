@@ -3,14 +3,20 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/assign/list_of.hpp>
+
 
 #include "base58.h"
 #include "bitcoinrpc.h"
-#include "db.h"
 #include "init.h"
 #include "net.h"
+#include "uint256.h"
 #include "wallet.h"
+
+#include <stdint.h>
+
+#include <boost/assign/list_of.hpp>
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
 
 using namespace std;
 using namespace boost;
@@ -188,7 +194,7 @@ Value listunspent(const Array& params, bool fHelp)
                 continue;
         }
 
-        int64 nValue = out.tx->vout[out.i].nValue;
+        int64_t nValue = out.tx->vout[out.i].nValue;
         const CScript& pk = out.tx->vout[out.i].scriptPubKey;
         Object entry;
         entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
@@ -269,7 +275,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
 
         CScript scriptPubKey;
         scriptPubKey.SetDestination(address.Get());
-        int64 nAmount = AmountFromValue(s.value_);
+        int64_t nAmount = AmountFromValue(s.value_);
 
         CTxOut out(nAmount, scriptPubKey);
         rawTx.vout.push_back(out);

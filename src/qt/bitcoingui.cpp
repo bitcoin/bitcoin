@@ -4,49 +4,54 @@
 
 #include "bitcoingui.h"
 
-#include "optionsdialog.h"
 #include "aboutdialog.h"
-#include "clientmodel.h"
-#include "walletmodel.h"
-#include "walletframe.h"
-#include "optionsmodel.h"
 #include "bitcoinunits.h"
+#include "clientmodel.h"
 #include "guiconstants.h"
-#include "notificator.h"
 #include "guiutil.h"
+#include "notificator.h"
+#include "optionsdialog.h"
+#include "optionsmodel.h"
 #include "rpcconsole.h"
-#include "ui_interface.h"
-#include "wallet.h"
-#include "init.h"
+#include "walletframe.h"
+#include "walletmodel.h"
 
 #ifdef Q_OS_MAC
 #include "macdockiconhandler.h"
 #endif
 
+#include "init.h"
+#include "ui_interface.h"
+
+#include <iostream>
+
 #include <QApplication>
-#include <QMenuBar>
-#include <QMenu>
-#include <QIcon>
-#include <QVBoxLayout>
-#include <QToolBar>
-#include <QStatusBar>
-#include <QLabel>
-#include <QMessageBox>
-#include <QProgressBar>
-#include <QStackedWidget>
 #include <QDateTime>
-#include <QMovie>
-#include <QTimer>
+#include <QDesktopWidget>
 #include <QDragEnterEvent>
+#include <QIcon>
+#include <QLabel>
+#include <QListWidget>
+#include <QMenu>
+#include <QMenuBar>
+#include <QMessageBox>
+#include <QMimeData>
+#include <QMovie>
+#include <QProgressBar>
+#include <QSettings>
+#include <QStackedWidget>
+#include <QStatusBar>
+#include <QStyle>
+#include <QTimer>
+#include <QToolBar>
+#include <QVBoxLayout>
+
 #if QT_VERSION < 0x050000
 #include <QUrl>
 #include <QTextDocument>
+#else
+#include <QUrlQuery>
 #endif
-#include <QMimeData>
-#include <QStyle>
-#include <QListWidget>
-
-#include <iostream>
 
 const QString BitcoinGUI::DEFAULT_WALLET = "~Default";
 

@@ -2,13 +2,12 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <openssl/bn.h>
-#include <openssl/ecdsa.h>
-#include <openssl/rand.h>
-#include <openssl/obj_mac.h>
-
 #include "key.h"
 
+#include <openssl/bn.h>
+#include <openssl/ecdsa.h>
+#include <openssl/obj_mac.h>
+#include <openssl/rand.h>
 
 // anonymous namespace with local implementation code (OpenSSL interaction)
 namespace {

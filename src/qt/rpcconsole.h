@@ -7,10 +7,11 @@
 
 #include <QDialog>
 
+class ClientModel;
+
 namespace Ui {
     class RPCConsole;
 }
-class ClientModel;
 
 /** Local Bitcoin RPC console. */
 class RPCConsole: public QDialog

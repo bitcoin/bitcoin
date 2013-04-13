@@ -9,11 +9,12 @@
 #include "bitcoin-config.h"
 #endif
 
-#include <QObject>
 #include <QIcon>
+#include <QObject>
 
 QT_BEGIN_NAMESPACE
 class QSystemTrayIcon;
+
 #ifdef USE_DBUS
 class QDBusInterface;
 #endif
