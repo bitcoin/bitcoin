@@ -3,25 +3,29 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "walletview.h"
-#include "bitcoingui.h"
-#include "transactiontablemodel.h"
-#include "addressbookpage.h"
-#include "sendcoinsdialog.h"
-#include "receivecoinsdialog.h"
-#include "signverifymessagedialog.h"
-#include "clientmodel.h"
-#include "walletmodel.h"
-#include "optionsmodel.h"
-#include "transactionview.h"
-#include "overviewpage.h"
-#include "askpassphrasedialog.h"
-#include "ui_interface.h"
-#include "guiutil.h"
 
-#include <QHBoxLayout>
-#include <QVBoxLayout>
+#include "addressbookpage.h"
+#include "askpassphrasedialog.h"
+#include "bitcoingui.h"
+#include "clientmodel.h"
+#include "guiutil.h"
+#include "optionsmodel.h"
+#include "overviewpage.h"
+#include "receivecoinsdialog.h"
+#include "sendcoinsdialog.h"
+#include "signverifymessagedialog.h"
+#include "transactiontablemodel.h"
+#include "transactionview.h"
+#include "walletmodel.h"
+
+#include "ui_interface.h"
+
 #include <QAction>
+#include <QActionGroup>
+#include <QFileDialog>
+#include <QHBoxLayout>
 #include <QPushButton>
+#include <QVBoxLayout>
 
 WalletView::WalletView(QWidget *parent):
     QStackedWidget(parent),

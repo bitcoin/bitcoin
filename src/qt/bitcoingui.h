@@ -6,32 +6,22 @@
 #define BITCOINGUI_H
 
 #include <QMainWindow>
-#include <QSystemTrayIcon>
 #include <QMap>
+#include <QSystemTrayIcon>
 
-class WalletFrame;
-class WalletView;
 class ClientModel;
-class WalletModel;
-class WalletStack;
-class OverviewPage;
-class SendCoinsDialog;
-class SendCoinsRecipient;
-class SignVerifyMessageDialog;
 class Notificator;
 class RPCConsole;
+class SendCoinsRecipient;
+class WalletFrame;
+class WalletModel;
 
 class CWallet;
 
 QT_BEGIN_NAMESPACE
-class QLabel;
-class QModelIndex;
-class QProgressBar;
-class QStackedWidget;
-class QUrl;
-class QListWidget;
-class QPushButton;
 class QAction;
+class QLabel;
+class QProgressBar;
 QT_END_NAMESPACE
 
 /**

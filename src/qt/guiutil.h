@@ -5,19 +5,19 @@
 #ifndef GUIUTIL_H
 #define GUIUTIL_H
 
-#include <QString>
-#include <QObject>
 #include <QMessageBox>
+#include <QObject>
+#include <QString>
 
 class SendCoinsRecipient;
 
 QT_BEGIN_NAMESPACE
+class QAbstractItemView;
+class QDateTime;
 class QFont;
 class QLineEdit;
-class QWidget;
-class QDateTime;
 class QUrl;
-class QAbstractItemView;
+class QWidget;
 QT_END_NAMESPACE
 
 /** Utility functions used by the Bitcoin Qt UI.

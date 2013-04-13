@@ -6,13 +6,14 @@
 #define INTRO_H
 
 #include <QDialog>
-#include <QThread>
 #include <QMutex>
+#include <QThread>
+
+class FreespaceChecker;
 
 namespace Ui {
 class Intro;
 }
-class FreespaceChecker;
 
 /** Introduction screen (pre-GUI startup).
   Allows the user to choose a data directory,

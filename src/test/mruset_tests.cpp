@@ -1,12 +1,15 @@
-#include <boost/test/unit_test.hpp>
-
-using namespace std;
-
 #include "mruset.h"
+
 #include "util.h"
+
+#include <set>
+
+#include <boost/test/unit_test.hpp>
 
 #define NUM_TESTS 16
 #define MAX_SIZE 100
+
+using namespace std;
 
 class mrutester
 {
