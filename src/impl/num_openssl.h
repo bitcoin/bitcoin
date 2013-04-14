@@ -80,9 +80,9 @@ void static secp256k1_num_div(secp256k1_num_t *r, const secp256k1_num_t *a, cons
     BN_CTX_free(ctx);
 }
 
-void static secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+void static secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *m) {
     BN_CTX *ctx = BN_CTX_new();
-    BN_nnmod(&r->bn, &a->bn, &b->bn, ctx);
+    BN_nnmod(&r->bn, &r->bn, &m->bn, ctx);
     BN_CTX_free(ctx);
 }
 

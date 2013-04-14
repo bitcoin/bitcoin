@@ -96,7 +96,7 @@ int static secp256k1_ecdsa_sig_recompute(secp256k1_num_t *r2, const secp256k1_ec
         secp256k1_fe_normalize(&xr);
         unsigned char xrb[32]; secp256k1_fe_get_b32(xrb, &xr);
         secp256k1_num_set_bin(r2, xrb, 32);
-        secp256k1_num_mod(r2, r2, &c->order);
+        secp256k1_num_mod(r2, &c->order);
         ret = 1;
     }
     secp256k1_num_free(&sn);
@@ -125,12 +125,12 @@ int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_
     secp256k1_fe_normalize(&rx);
     secp256k1_fe_get_b32(b, &rx);
     secp256k1_num_set_bin(&sig->r, b, 32);
-    secp256k1_num_mod(&sig->r, &sig->r, &c->order);
+    secp256k1_num_mod(&sig->r, &c->order);
     secp256k1_num_t n;
     secp256k1_num_init(&n);
     secp256k1_num_mod_mul(&n, &sig->r, seckey, &c->order);
     secp256k1_num_add(&n, &n, message);
-    secp256k1_num_mod(&n, &n, &c->order);
+    secp256k1_num_mod(&n, &c->order);
     secp256k1_num_mod_inverse(&sig->s, nonce, &c->order);
     secp256k1_num_mod_mul(&sig->s, &sig->s, &n, &c->order);
     secp256k1_num_free(&n);

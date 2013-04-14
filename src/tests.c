@@ -46,7 +46,7 @@ void test_run_ecmult_chain() {
         secp256k1_num_mod_mul(&ae, &ae, &xn, order);
         secp256k1_num_mod_mul(&ge, &ge, &xn, order);
         secp256k1_num_add(&ge, &ge, &gn);
-        secp256k1_num_mod(&ge, &ge, order);
+        secp256k1_num_mod(&ge, order);
         // modify xn and gn
         secp256k1_num_mod_mul(&xn, &xn, &xf, order);
         secp256k1_num_mod_mul(&gn, &gn, &gf, order);

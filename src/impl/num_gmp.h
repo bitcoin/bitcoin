@@ -70,20 +70,16 @@ void static secp256k1_num_set_int(secp256k1_num_t *r, int a) {
     r->data[0] = (a < 0) ? -a : a;
 }
 
-void static secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
-    secp256k1_num_sanity(a);
-    secp256k1_num_sanity(b);
+void static secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *m) {
+    secp256k1_num_sanity(r);
+    secp256k1_num_sanity(m);
 
-    r->neg = a->neg;
-    if (a->limbs >= b->limbs) {
-        mp_limb_t q[2*NUM_LIMBS+1];
-        mp_limb_t t[2*NUM_LIMBS+1];
-        mpn_tdiv_qr(t, q, 0, a->data, a->limbs, b->data, b->limbs);
-        r->limbs = b->limbs;
-        while (r->limbs > 1 && q[r->limbs-1]==0) r->limbs--;
-        mpn_copyi(r->data, q, r->limbs);
-    } else {
-        *r = *a;
+    if (r->limbs >= m->limbs) {
+        mp_limb_t t[2*NUM_LIMBS];
+        mpn_tdiv_qr(t, r->data, 0, r->data, r->limbs, m->data, m->limbs);
+        r->limbs = m->limbs;
+        while (r->limbs > 1 && r->data[r->limbs-1]==0) r->limbs--;
+        r->neg ^= m->neg;
     }
 }
 
@@ -281,9 +277,8 @@ void static secp256k1_num_div(secp256k1_num_t *r, const secp256k1_num_t *a, cons
 }
 
 void static secp256k1_num_mod_mul(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b, const secp256k1_num_t *m) {
-    secp256k1_num_t tmp;
-    secp256k1_num_mul(&tmp, a, b);
-    secp256k1_num_mod(r, &tmp, m);
+    secp256k1_num_mul(r, a, b);
+    secp256k1_num_mod(r, m);
 }
 
 
@@ -394,7 +389,7 @@ void static secp256k1_num_set_rand(secp256k1_num_t *r, const secp256k1_num_t *a)
     mpn_random(r->data, a->limbs);
     r->limbs = a->limbs;
     r->neg = 0;
-    secp256k1_num_mod(r, r, a);
+    secp256k1_num_mod(r, a);
 }
 
 #endif
