@@ -1231,7 +1231,7 @@ void ShrinkDebugFile()
             fclose(file);
         }
     }
-    else
+    else if(file != NULL)
 	fclose(file);
 }
 
