@@ -210,7 +210,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/txdb.h \
     src/leveldb.h \
     src/threadsafety.h \
-    src/limitedmap.h
+    src/limitedmap.h \
+    src/qt/splashscreen.h
 
 SOURCES += src/qt/bitcoin.cpp \
     src/qt/bitcoingui.cpp \
@@ -277,7 +278,8 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/rpcconsole.cpp \
     src/noui.cpp \
     src/leveldb.cpp \
-    src/txdb.cpp
+    src/txdb.cpp \
+    src/qt/splashscreen.cpp
 
 RESOURCES += src/qt/bitcoin.qrc
 
