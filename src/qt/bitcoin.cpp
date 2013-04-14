@@ -14,14 +14,16 @@
 #include "util.h"
 #include "ui_interface.h"
 #include "paymentserver.h"
+#include "splashscreen.h"
 
 #include <QMessageBox>
 #include <QTextCodec>
 #include <QLocale>
 #include <QTimer>
 #include <QTranslator>
-#include <QSplashScreen>
 #include <QLibraryInfo>
+#include <QPainter>
+
 
 #if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
 #define _BITCOIN_QT_PLUGINS_INCLUDED
@@ -36,7 +38,7 @@ Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 
 // Need a global reference for the notifications to find the GUI
 static BitcoinGUI *guiref;
-static QSplashScreen *splashref;
+static SplashScreen *splashref;
 
 static bool ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
@@ -82,7 +84,7 @@ static void InitMessage(const std::string &message)
 {
     if(splashref)
     {
-        splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(255,255,200));
+        splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(55,55,55));
         qApp->processEvents();
     }
     printf("init message: %s\n", message.c_str());
@@ -192,7 +194,16 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    QSplashScreen splash(QPixmap(":/images/splash"), 0);
+    QPixmap newPixmap;
+    if(GetBoolArg("-testnet")) {
+        newPixmap     = QPixmap(":/images/splash_testnet");
+    }
+    else {
+        newPixmap     = QPixmap(":/images/splash");
+    }
+
+
+    SplashScreen splash(newPixmap,0);
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
     {
         splash.show();
