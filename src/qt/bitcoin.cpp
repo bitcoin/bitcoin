@@ -140,12 +140,12 @@ int main(int argc, char *argv[])
 
     // Application identification (must be set before OptionsModel is initialized,
     // as it is used to locate QSettings)
-    app.setOrganizationName("Bitcoin");
-    app.setOrganizationDomain("bitcoin.org");
+    QApplication::setOrganizationName("Bitcoin");
+    QApplication::setOrganizationDomain("bitcoin.org");
     if(GetBoolArg("-testnet")) // Separate UI settings for testnet
-        app.setApplicationName("Bitcoin-Qt-testnet");
+        QApplication::setApplicationName("Bitcoin-Qt-testnet");
     else
-        app.setApplicationName("Bitcoin-Qt");
+        QApplication::setApplicationName("Bitcoin-Qt");
 
     // ... then GUI settings:
     OptionsModel optionsModel;
@@ -201,7 +201,6 @@ int main(int argc, char *argv[])
     }
 
     app.processEvents();
-
     app.setQuitOnLastWindowClosed(false);
 
     try
