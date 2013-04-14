@@ -14,15 +14,16 @@
 #include "util.h"
 #include "ui_interface.h"
 #include "paymentserver.h"
+#include "splashscreen.h"
 
 #include <QMessageBox>
 #include <QTextCodec>
 #include <QLocale>
 #include <QTimer>
 #include <QTranslator>
-#include <QSplashScreen>
 #include <QLibraryInfo>
 #include <QPainter>
+
 
 #if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
 #define _BITCOIN_QT_PLUGINS_INCLUDED
@@ -37,7 +38,7 @@ Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 
 // Need a global reference for the notifications to find the GUI
 static BitcoinGUI *guiref;
-static QSplashScreen *splashref;
+static SplashScreen *splashref;
 
 static bool ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
@@ -193,64 +194,16 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // set reference point, paddings
-    int paddingRight            = 50;
-    int paddingTop              = 50;
-    int titleVersionVSpace      = 17;
-    int titleCopyrightVSpace    = 40;
-
-    // define text to place
-    QString titleText       = QString(QApplication::applicationName()).replace(QString("-testnet"), QString(""), Qt::CaseSensitive);
-    QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion())); //!<set the version string without client model (it's not available yet)
-    QString copyrightText   = QChar(0xA9)+QString(" 2009-%1\n").arg(COPYRIGHT_YEAR) + QString(BitcoinGUI::tr("The Bitcoin developers")); //TODO: where we gonna place the copyright endyear (also check aboutdialog.cpp!)?
-    QString testnetAddText  = QString(BitcoinGUI::tr("[testnet]"));
-
-    // load the bitmap for writing some text over it
-    QPixmap pixmap;
+    QPixmap newPixmap;
     if(GetBoolArg("-testnet")) {
-        pixmap     = QPixmap(":/images/splash_testnet");
+        newPixmap     = QPixmap(":/images/splash_testnet");
     }
     else {
-        pixmap     = QPixmap(":/images/splash");
+        newPixmap     = QPixmap(":/images/splash");
     }
 
-    QPainter pixPaint(&pixmap);
-    pixPaint.setPen(QColor(100,100,100));
 
-    pixPaint.setFont(QFont("Helvetica", 33));
-    QFontMetrics fm = pixPaint.fontMetrics();
-    int titleTextWidth  = fm.width(titleText);
-    pixPaint.drawText(pixmap.width()-titleTextWidth-paddingRight,paddingTop,titleText);
-
-    pixPaint.setFont(QFont("Helvetica", 15));
-
-    // if the version string is to long, reduce size
-    fm = pixPaint.fontMetrics();
-    int versionTextWidth  = fm.width(versionText);
-    if(versionTextWidth > titleTextWidth+paddingRight-10) {
-        pixPaint.setFont(QFont("Helvetica", 10));
-        titleVersionVSpace -= 5;
-    }
-    pixPaint.drawText(pixmap.width()-titleTextWidth-paddingRight+2,paddingTop+titleVersionVSpace,versionText);
-
-    // draw copyright stuff
-    pixPaint.setFont(QFont("Helvetica", 10));
-    pixPaint.drawText(pixmap.width()-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace,copyrightText);
-
-    // draw testnet string if -testnet is on
-    if(QApplication::applicationName().contains(QString("-testnet"))) {
-        // draw copyright stuff
-        QFont boldFont = QFont("Helvetica", 10);
-        boldFont.setWeight(QFont::Bold);
-        pixPaint.setFont(boldFont);
-        fm = pixPaint.fontMetrics();
-        int testnetAddTextWidth  = fm.width(testnetAddText);
-        pixPaint.drawText(pixmap.width()-testnetAddTextWidth-10,15,testnetAddText);
-    }
-
-    pixPaint.end();
-
-    QSplashScreen splash(pixmap, 0);
+    SplashScreen splash(newPixmap,0);
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
     {
         splash.show();
