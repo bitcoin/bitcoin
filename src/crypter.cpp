@@ -17,12 +17,6 @@ bool CCrypter::SetKeyFromPassphrase(const SecureString& strKeyData, const std::v
     if (nRounds < 1 || chSalt.size() != WALLET_CRYPTO_SALT_SIZE)
         return false;
 
-    // Try to keep the keydata out of swap (and be a bit over-careful to keep the IV that we don't even use out of swap)
-    // Note that this does nothing about suspend-to-disk (which will put all our key data on disk)
-    // Note as well that at no point in this program is any attempt made to prevent stealing of keys by reading the memory of the running process.  
-    mlock(&chKey[0], sizeof chKey);
-    mlock(&chIV[0], sizeof chIV);
-
     int i = 0;
     if (nDerivationMethod == 0)
         i = EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha512(), &chSalt[0],
@@ -43,12 +37,6 @@ bool CCrypter::SetKey(const CKeyingMaterial& chNewKey, const std::vector<unsigne
 {
     if (chNewKey.size() != WALLET_CRYPTO_KEY_SIZE || chNewIV.size() != WALLET_CRYPTO_KEY_SIZE)
         return false;
-
-    // Try to keep the keydata out of swap
-    // Note that this does nothing about suspend-to-disk (which will put all our key data on disk)
-    // Note as well that at no point in this program is any attempt made to prevent stealing of keys by reading the memory of the running process.  
-    mlock(&chKey[0], sizeof chKey);
-    mlock(&chIV[0], sizeof chIV);
 
     memcpy(&chKey[0], &chNewKey[0], sizeof chKey);
     memcpy(&chIV[0], &chNewIV[0], sizeof chIV);

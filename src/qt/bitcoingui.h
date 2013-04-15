@@ -11,8 +11,9 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class SendCoinsDialog;
-class MessagePage;
+class SignVerifyMessageDialog;
 class Notificator;
+class RPCConsole;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -45,7 +46,7 @@ public:
         functionality.
     */
     void setWalletModel(WalletModel *walletModel);
-    
+
 protected:
     void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *event);
@@ -63,7 +64,7 @@ private:
     AddressBookPage *addressBookPage;
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
-    MessagePage *messagePage;
+    SignVerifyMessageDialog *signVerifyMessageDialog;
 
     QLabel *labelEncryptionIcon;
     QLabel *labelConnectionsIcon;
@@ -77,7 +78,8 @@ private:
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *addressBookAction;
-    QAction *messageAction;
+    QAction *signMessageAction;
+    QAction *verifyMessageAction;
     QAction *aboutAction;
     QAction *receiveCoinsAction;
     QAction *optionsAction;
@@ -87,16 +89,18 @@ private:
     QAction *backupWalletAction;
     QAction *changePassphraseAction;
     QAction *aboutQtAction;
+    QAction *openRPCConsoleAction;
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
     TransactionView *transactionView;
+    RPCConsole *rpcConsole;
 
     QMovie *syncIconMovie;
 
     /** Create the main UI actions. */
     void createActions();
-    /** Create the menu bar and submenus. */
+    /** Create the menu bar and sub-menus. */
     void createMenuBar();
     /** Create the toolbars */
     void createToolBars();
@@ -107,7 +111,7 @@ public slots:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks shown in the UI */
-    void setNumBlocks(int count);
+    void setNumBlocks(int count, int nTotalBlocks);
     /** Set the encryption status as shown in the UI.
        @param[in] status            current encryption status
        @see WalletModel::EncryptionStatus
@@ -119,16 +123,13 @@ public slots:
     /** Asks the user whether to pay the transaction fee or to cancel the transaction.
        It is currently not possible to pass a return value to another thread through
        BlockingQueuedConnection, so an indirected pointer is used.
-       http://bugreports.qt.nokia.com/browse/QTBUG-10440
+       https://bugreports.qt-project.org/browse/QTBUG-10440
 
       @param[in] nFeeRequired       the required fee
       @param[out] payFee            true to pay the fee, false to not pay the fee
     */
     void askFee(qint64 nFeeRequired, bool *payFee);
     void handleURI(QString strURI);
-
-    void gotoMessagePage();
-    void gotoMessagePage(QString);
 
 private slots:
     /** Switch to overview (home) page */
@@ -142,11 +143,16 @@ private slots:
     /** Switch to send coins page */
     void gotoSendCoinsPage();
 
+    /** Show Sign/Verify Message dialog and switch to sign message tab */
+    void gotoSignMessageTab(QString addr = "");
+    /** Show Sign/Verify Message dialog and switch to verify message tab */
+    void gotoVerifyMessageTab(QString addr = "");
+
     /** Show configuration dialog */
     void optionsClicked();
     /** Show about dialog */
     void aboutClicked();
-#ifndef Q_WS_MAC
+#ifndef Q_OS_MAC
     /** Handle tray icon clicked */
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
 #endif
@@ -161,12 +167,12 @@ private slots:
     void backupWallet();
     /** Change encrypted wallet passphrase */
     void changePassphrase();
-    /** Ask for pass phrase to unlock wallet temporarily */
+    /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
 
-    /** Show window if hidden, unminimize when minimized */
-    void showNormalIfMinimized();
-    /** Hide window if visible, show if hidden */
+    /** Show window if hidden, unminimize when minimized, rise when obscured or show if hidden and fToggleHidden is true */
+    void showNormalIfMinimized(bool fToggleHidden = false);
+    /** simply calls showNormalIfMinimized(true) for use in SLOT() macro */
     void toggleHidden();
 };
 

@@ -51,7 +51,7 @@ public:
     size_type max_size(size_type s)
     {
         if (s)
-            while (queue.size() >= s)
+            while (queue.size() > s)
             {
                 set.erase(queue.front());
                 queue.pop_front();

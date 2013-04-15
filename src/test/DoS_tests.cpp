@@ -34,13 +34,13 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 {
     CNode::ClearBanned();
     CAddress addr1(ip(0xa0b0c001));
-    CNode dummyNode1(INVALID_SOCKET, addr1, true);
+    CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
     dummyNode1.Misbehaving(100); // Should get banned
     BOOST_CHECK(CNode::IsBanned(addr1));
-    BOOST_CHECK(!CNode::IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different ip, not banned
+    BOOST_CHECK(!CNode::IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
 
     CAddress addr2(ip(0xa0b0c002));
-    CNode dummyNode2(INVALID_SOCKET, addr2, true);
+    CNode dummyNode2(INVALID_SOCKET, addr2, "", true);
     dummyNode2.Misbehaving(50);
     BOOST_CHECK(!CNode::IsBanned(addr2)); // 2 not banned yet...
     BOOST_CHECK(CNode::IsBanned(addr1));  // ... but 1 still should be
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     CNode::ClearBanned();
     mapArgs["-banscore"] = "111"; // because 11 is my favorite number
     CAddress addr1(ip(0xa0b0c001));
-    CNode dummyNode1(INVALID_SOCKET, addr1, true);
+    CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
     dummyNode1.Misbehaving(100);
     BOOST_CHECK(!CNode::IsBanned(addr1));
     dummyNode1.Misbehaving(10);
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     SetMockTime(nStartTime); // Overrides future calls to GetTime()
 
     CAddress addr(ip(0xa0b0c001));
-    CNode dummyNode(INVALID_SOCKET, addr, true);
+    CNode dummyNode(INVALID_SOCKET, addr, "", true);
 
     dummyNode.Misbehaving(100);
     BOOST_CHECK(CNode::IsBanned(addr));
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
-        tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
+        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
 
         CDataStream ds(SER_DISK, CLIENT_VERSION);
         ds << tx;
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin[0].prevout.hash = txPrev.GetHash();
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
-        tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
+        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
         SignSignature(keystore, txPrev, tx, 0);
 
         CDataStream ds(SER_DISK, CLIENT_VERSION);
@@ -195,9 +195,9 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         CTransaction tx;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
-        tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
+        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
         tx.vin.resize(500);
-        for (int j = 0; j < tx.vin.size(); j++)
+        for (unsigned int j = 0; j < tx.vin.size(); j++)
         {
             tx.vin[j].prevout.n = j;
             tx.vin[j].prevout.hash = txPrev.GetHash();
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         SignSignature(keystore, txPrev, tx, 0);
         // Re-use same signature for other inputs
         // (they don't have to be valid for this test)
-        for (int j = 1; j < tx.vin.size(); j++)
+        for (unsigned int j = 1; j < tx.vin.size(); j++)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
 
         CDataStream ds(SER_DISK, CLIENT_VERSION);
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
-        tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
+        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
 
         CDataStream ds(SER_DISK, CLIENT_VERSION);
         ds << tx;
@@ -255,16 +255,16 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     CTransaction tx;
     tx.vout.resize(1);
     tx.vout[0].nValue = 1*CENT;
-    tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
+    tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
     tx.vin.resize(NPREV);
-    for (int j = 0; j < tx.vin.size(); j++)
+    for (unsigned int j = 0; j < tx.vin.size(); j++)
     {
         tx.vin[j].prevout.n = 0;
         tx.vin[j].prevout.hash = orphans[j].GetHash();
     }
     // Creating signatures primes the cache:
     boost::posix_time::ptime mst1 = boost::posix_time::microsec_clock::local_time();
-    for (int j = 0; j < tx.vin.size(); j++)
+    for (unsigned int j = 0; j < tx.vin.size(); j++)
         BOOST_CHECK(SignSignature(keystore, orphans[j], tx, j));
     boost::posix_time::ptime mst2 = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration msdiff = mst2 - mst1;
@@ -276,8 +276,8 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     // uncached Verify takes ~250ms, cached Verify takes ~50ms
     // (for 100 single-signature inputs)
     mst1 = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 5; i++)
-        for (int j = 0; j < tx.vin.size(); j++)
+    for (unsigned int i = 0; i < 5; i++)
+        for (unsigned int j = 0; j < tx.vin.size(); j++)
             BOOST_CHECK(VerifySignature(orphans[j], tx, j, true, SIGHASH_ALL));
     mst2 = boost::posix_time::microsec_clock::local_time();
     msdiff = mst2 - mst1;
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     CScript oldSig = tx.vin[0].scriptSig;
     BOOST_CHECK(SignSignature(keystore, orphans[0], tx, 0));
     BOOST_CHECK(tx.vin[0].scriptSig != oldSig);
-    for (int j = 0; j < tx.vin.size(); j++)
+    for (unsigned int j = 0; j < tx.vin.size(); j++)
         BOOST_CHECK(VerifySignature(orphans[j], tx, j, true, SIGHASH_ALL));
     mapArgs.erase("-maxsigcachesize");
 

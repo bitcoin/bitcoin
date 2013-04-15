@@ -5,8 +5,8 @@
 
   This is:
   - All numbers except for '0'
-  - All uppercase letters except for 'I' and 'O'
-  - All lowercase letters except for 'l'
+  - All upper-case letters except for 'I' and 'O'
+  - All lower-case letters except for 'l'
 
   User friendly Base58 input can map
   - 'l' and 'I' to '1'
@@ -25,17 +25,11 @@ QValidator::State BitcoinAddressValidator::validate(QString &input, int &pos) co
     {
         bool removeChar = false;
         QChar ch = input.at(idx);
-        // Transform characters that are visually close
+        // Corrections made are very conservative on purpose, to avoid
+        // users unexpectedly getting away with typos that would normally
+        // be detected, and thus sending to the wrong address.
         switch(ch.unicode())
         {
-        case 'l':
-        case 'I':
-            input[idx] = QChar('1');
-            break;
-        case '0':
-        case 'O':
-            input[idx] = QChar('o');
-            break;
         // Qt categorizes these as "Other_Format" not "Separator_Space"
         case 0x200B: // ZERO WIDTH SPACE
         case 0xFEFF: // ZERO WIDTH NO-BREAK SPACE

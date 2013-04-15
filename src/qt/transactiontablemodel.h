@@ -60,6 +60,7 @@ private:
     WalletModel *walletModel;
     QStringList columns;
     TransactionTablePriv *priv;
+    int cachedNumBlocks;
 
     QString lookupAddress(const std::string &address, bool tooltip) const;
     QVariant addressColor(const TransactionRecord *wtx) const;
@@ -72,8 +73,10 @@ private:
     QVariant txStatusDecoration(const TransactionRecord *wtx) const;
     QVariant txAddressDecoration(const TransactionRecord *wtx) const;
 
-private slots:
-    void update();
+public slots:
+    void updateTransaction(const QString &hash, int status);
+    void updateConfirmations();
+    void updateDisplayUnit();
 
     friend class TransactionTablePriv;
 };

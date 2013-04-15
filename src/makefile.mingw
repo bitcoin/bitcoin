@@ -1,104 +1,58 @@
 # Copyright (c) 2009-2010 Satoshi Nakamoto
-# Copyright (c) 2012 The PPCoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
-# file license.txt or http://www.opensource.org/licenses/mit-license.php.
-
-# Windows commandline build procedure:
-# - Install MinGW following http://www.mingw.org/wiki/Getting_Started.
-#   Install with the C++ and MSYS options checked
-#
-# - Add/edit 'MAKE' environment variable with value '/c/MinGW32/bin/mingw32-make.exe'
-#
-# - Build openssl library version: 1.0.1b
-#   download from  http://www.openssl.org/source/
-#   Extract to c:\openssl-1.0.1b-mgw
-#   In MinGW MSYS:
-#     ./config
-#     make
-#
-# - Build Berkeley DB library version: 4.8.30.NC
-#   download from  http://www.oracle.com/technology/software/products/berkeley-db/index.html
-#   Extract to c:\db-4.8.30.NC-mgw
-#   In MinGW MSYS:
-#     cd build_unix
-#     sh ../dist/configure --disable-replication --enable-mingw --enable-cxx --prefix=/usr/local
-#   Edit db.h@113 in build_unix
-#   from
-#     typedef pthread_t db_threadid_t;
-#   to 
-#     typedef u_int32_t db_threadid_t;
-#   Then
-#     make
-#
-# - Build Boost C++ library version: 1.47.0
-#   download from http://www.boost.org/users/download/
-#   Extract to c:\boost-1.47.0-mgw
-#   Install Boost.Build:
-#     cd tools\build\v2
-#     bootstrap.bat
-#     b2 install --prefix=BOOST_BUILD_INSTALL_DIR
-#   Add BOOST_BUILD_INSTALL_DIR to your PATH system environment variable
-#   Build boost library in MSDOS:
-#     cd c:\boost-1.47.0-mgw
-#     bjam toolset=gcc --build-type=complete stage
-#
-# - Build Miniupnp library version: 1.6
-#   download from http://miniupnp.free.fr/files/
-#   file name is miniupnpc-1.6.20120509.tar.gz
-#   Extract to c:\miniupnpc-1.6-mgw
-#   In MinGW MSYS shell:
-#     cd /c/miniupnpc-1.6-mgw
-#     make -f Makefile.mingw
-#     mkdir miniupnpc
-#     cp *.h miniupnpc/
-#
-# - Build novacoind.exe
-#   in MinGW MSYS
-#     cd novacoin/src
-#     make novacoind.exe -f makefile.mingw USE_UPNP=1
-#
-#
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 USE_UPNP:=0
+USE_IPV6:=1
 
 INCLUDEPATHS= \
- -I"C:\boost-1.47.0-mgw" \
+ -I"C:\boost-1.50.0-mgw" \
  -I"C:\db-4.8.30.NC-mgw\build_unix" \
- -I"C:\openssl-1.0.1b-mgw\include"
+ -I"C:\openssl-1.0.1c-mgw\include"
 
 LIBPATHS= \
- -L"C:\boost-1.47.0-mgw\stage\lib" \
+ -L"C:\boost-1.50.0-mgw\stage\lib" \
  -L"C:\db-4.8.30.NC-mgw\build_unix" \
- -L"C:\openssl-1.0.1b-mgw"
+ -L"C:\openssl-1.0.1c-mgw"
 
 LIBS= \
- -l boost_system-mgw46-mt-s-1_47 \
- -l boost_filesystem-mgw46-mt-s-1_47 \
- -l boost_program_options-mgw46-mt-s-1_47 \
- -l boost_thread-mgw46-mt-s-1_47 \
+ -l boost_system-mgw45-mt-s-1_50 \
+ -l boost_filesystem-mgw45-mt-s-1_50 \
+ -l boost_program_options-mgw45-mt-s-1_50 \
+ -l boost_thread-mgw45-mt-s-1_50 \
+ -l boost_chrono-mgw45-mt-s-1_50 \
  -l db_cxx \
  -l ssl \
  -l crypto
 
 DEFS=-DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
 DEBUGFLAGS=-g
-CFLAGS=-mthreads -msse2 -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+CFLAGS=-mthreads -O2 -msse2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat
 
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
-ifdef USE_UPNP
+ifndef USE_UPNP
+	override USE_UPNP = -
+endif
+ifneq (${USE_UPNP}, -)
  INCLUDEPATHS += -I"C:\miniupnpc-1.6-mgw"
  LIBPATHS += -L"C:\miniupnpc-1.6-mgw"
  LIBS += -l miniupnpc -l iphlpapi
  DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
 endif
 
-LIBS += -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l shlwapi
+ifneq (${USE_IPV6}, -)
+	DEFS += -DUSE_IPV6=$(USE_IPV6)
+endif
+
+LIBS += -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l mswsock -l shlwapi
 
 # TODO: make the mingw builds smarter about dependencies, like the linux/osx builds are
 HEADERS = $(wildcard *.h)
 
 OBJS= \
+    obj/alert.o \
     obj/version.o \
     obj/checkpoints.o \
     obj/netbase.o \
@@ -114,7 +68,13 @@ OBJS= \
     obj/protocol.o \
     obj/bitcoinrpc.o \
     obj/rpcdump.o \
+    obj/rpcnet.o \
+    obj/rpcmining.o \
+    obj/rpcwallet.o \
+    obj/rpcblockchain.o \
+    obj/rpcrawtransaction.o \
     obj/script.o \
+    obj/sync.o \
     obj/util.o \
     obj/wallet.o \
     obj/walletdb.o \
@@ -125,8 +85,10 @@ OBJS= \
     obj/scrypt-x86.o \
     obj/scrypt-x86_64.o
 
-
 all: novacoind.exe
+
+test check: test_novacoin.exe FORCE
+	test_novacoin.exe
 
 obj/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
@@ -138,18 +100,19 @@ obj/scrypt-x86_64.o: scrypt-x86_64.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
 novacoind.exe: $(OBJS:obj/%=obj/%)
-	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+	g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
 obj-test/%.o: test/%.cpp $(HEADERS)
 	g++ -c $(TESTDEFS) $(CFLAGS) -o $@ $<
 
-test_novacoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
-	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework $(LIBS)
+test_bitcoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+	g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework $(LIBS)
 
 clean:
 	-del /Q novacoind test_novacoin
 	-del /Q obj\*
 	-del /Q obj-test\*
-	-del /Q build.h
+
+FORCE:

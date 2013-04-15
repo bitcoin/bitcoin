@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2013 NovaCoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,21 +11,6 @@
 # include <arpa/inet.h>
 #endif
 
-// The message start string is designed to be unlikely to occur in normal data.
-// The characters are rarely used upper ascii, not valid as UTF-8, and produce
-// a large 4-byte int at any alignment.
-
-static unsigned char pchMessageStartTestNew[4] = { 0xcd, 0xf2, 0xc0, 0xef };
-static unsigned char pchMessageStartPPCoin[4] = { 0xe4, 0xe8, 0xe9, 0xe5 };
-
-void GetMessageStart(unsigned char pchMessageStart[], bool fPersistent)
-{
-    if (fTestNet)
-        memcpy(pchMessageStart, pchMessageStartTestNew, sizeof(pchMessageStartTestNew));
-    else
-        memcpy(pchMessageStart, pchMessageStartPPCoin, sizeof(pchMessageStartPPCoin));
-}
-
 static const char* ppszTypeName[] =
 {
     "ERROR",
@@ -36,7 +20,7 @@ static const char* ppszTypeName[] =
 
 CMessageHeader::CMessageHeader()
 {
-    GetMessageStart(pchMessageStart);
+    memcpy(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart));
     memset(pchCommand, 0, sizeof(pchCommand));
     pchCommand[1] = 1;
     nMessageSize = -1;
@@ -45,7 +29,7 @@ CMessageHeader::CMessageHeader()
 
 CMessageHeader::CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn)
 {
-    GetMessageStart(pchMessageStart);
+    memcpy(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart));
     strncpy(pchCommand, pszCommand, COMMAND_SIZE);
     nMessageSize = nMessageSizeIn;
     nChecksum = 0;
@@ -62,9 +46,7 @@ std::string CMessageHeader::GetCommand() const
 bool CMessageHeader::IsValid() const
 {
     // Check start string
-    unsigned char pchMessageStartProtocol[4];
-    GetMessageStart(pchMessageStartProtocol);
-    if (memcmp(pchMessageStart, pchMessageStartProtocol, sizeof(pchMessageStart)) != 0)
+    if (memcmp(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart)) != 0)
         return false;
 
     // Check the command string for errors

@@ -23,7 +23,7 @@ public:
     void setDateRange(const QDateTime &from, const QDateTime &to);
     void setAddressPrefix(const QString &addrPrefix);
     /**
-      @note Type filter takes a bitfield created with TYPE() or ALL_TYPES
+      @note Type filter takes a bit field created with TYPE() or ALL_TYPES
      */
     void setTypeFilter(quint32 modes);
     void setMinAmount(qint64 minimum);
