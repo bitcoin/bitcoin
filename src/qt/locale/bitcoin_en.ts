@@ -994,6 +994,11 @@ Address: %4
         <translation>Balance:</translation>
     </message>
     <message>
+        <location line="+118"/>
+        <source>Stake:</source>
+        <translation>Stake:</translation>
+    </message>
+    <message>
         <location line="+58"/>
         <source>Number of transactions:</source>
         <translation>Number of transactions:</translation>
@@ -1032,6 +1037,11 @@ Address: %4
         <location line="+29"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
         <translation>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</translation>
+    </message>
+    <message>
+        <location line="+134"/>
+        <source>Total of coins that was staked, and do not yet count toward the current balance</source>
+        <translation>Total of coins that was staked, and do not yet count toward the current balance</translation>
     </message>
     <message>
         <location line="+20"/>
