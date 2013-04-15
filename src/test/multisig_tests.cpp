@@ -40,6 +40,25 @@ sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction,
     return result;
 }
 
+CScript
+sign_multisig(CScript scriptPubKey, vector<CKey> keys, vector<int> hashTypes, CTransaction transaction, int whichIn)
+{
+    CScript result;
+    result << OP_0; // CHECKMULTISIG bug workaround
+    size_t iHash = 0;
+    BOOST_FOREACH(CKey key, keys)
+    {
+        uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, hashTypes[iHash]);
+
+        vector<unsigned char> vchSig;
+        BOOST_CHECK(key.Sign(hash, vchSig));
+        vchSig.push_back((unsigned char)hashTypes[iHash]);
+        result << vchSig;
+        iHash = (iHash+1)%hashTypes.size();
+    }
+    return result;
+}
+
 BOOST_AUTO_TEST_CASE(multisig_verify)
 {
     unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
@@ -114,17 +133,24 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, flags, 0));
 
 
+    vector<int> hashTypes = list_of((int)SIGHASH_ALL)(SIGHASH_NONE)(SIGHASH_SINGLE)
+        (SIGHASH_ANYONECANPAY)(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY);
+
     for (int i = 0; i < 4; i++)
+    {
         for (int j = 0; j < 4; j++)
         {
             keys.clear();
             keys += key[i],key[j];
-            s = sign_multisig(escrow, keys, txTo[2], 0);
+            s = sign_multisig(escrow, keys, hashTypes, txTo[2], 0);
             if (i < j && i < 3 && j < 3)
                 BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, txTo[2], 0, flags, 0), strprintf("escrow 1: %d %d", i, j));
             else
                 BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, txTo[2], 0, flags, 0), strprintf("escrow 2: %d %d", i, j));
         }
+        // Mix up the hashTypes
+        std::swap(hashTypes[0], hashTypes[(i+1)%hashTypes.size()]);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(multisig_IsStandard)

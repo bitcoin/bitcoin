@@ -16,9 +16,12 @@ using namespace boost;
 #include "sync.h"
 #include "util.h"
 
-bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, int flags);
-
-
+uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
+bool PopHashType(vector<unsigned char>& vchSig, int& nHashType);
+bool CheckSigInner(const std::vector<unsigned char>& vchSig, const uint256& sighash,
+                   const vector<unsigned char>& vchPubKey, CKey& key, int flags);
+bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CScript scriptCode,
+              const CTransaction& txTo, unsigned int nIn, int nHashType, int flags);
 
 typedef vector<unsigned char> valtype;
 static const valtype vchFalse(0);
@@ -329,6 +332,10 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
         return false;
     int nOpCount = 0;
     bool fStrictEncodings = flags & SCRIPT_VERIFY_STRICTENC;
+
+    // This cache is used to avoid repeatedly recomputing signature hashes
+    // for the CHECKMULTISIG opcodes
+    map<int, uint256> mapSigHashCache;
 
     try
     {
@@ -1064,13 +1071,25 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     bool fSuccess = true;
                     while (fSuccess && nSigsCount > 0)
                     {
-                        valtype& vchSig    = stacktop(-isig);
+                        valtype vchSig     = stacktop(-isig);
                         valtype& vchPubKey = stacktop(-ikey);
 
                         // Check signature
                         bool fOk = (!fStrictEncodings || (IsCanonicalSignature(vchSig) && IsCanonicalPubKey(vchPubKey)));
                         if (fOk)
-                            fOk = CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags);
+                        {
+                            int nSigHT = nHashType;
+                            CKey key;
+                            if (PopHashType(vchSig, nSigHT) && key.SetPubKey(vchPubKey))
+                            {
+                                // This will change if there are ever more SIGHASH_ hash types:
+                                nSigHT = nSigHT & (SIGHASH_ALL|SIGHASH_NONE|SIGHASH_SINGLE|SIGHASH_ANYONECANPAY);
+                                if (mapSigHashCache.count(nSigHT) == 0)
+                                    mapSigHashCache[nSigHT] = SignatureHash(scriptCode, txTo, nIn, nSigHT);
+                                fOk = CheckSigInner(vchSig, mapSigHashCache[nSigHT], vchPubKey, key, flags);
+                            }
+                            else fOk = false;
+                        }
 
                         if (fOk) {
                             isig++;
@@ -1246,11 +1265,8 @@ public:
     }
 };
 
-bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CScript scriptCode,
-              const CTransaction& txTo, unsigned int nIn, int nHashType, int flags)
+bool PopHashType(vector<unsigned char>& vchSig, int& nHashType)
 {
-    static CSignatureCache signatureCache;
-
     // Hash type is one byte tacked on to the end of the signature
     if (vchSig.empty())
         return false;
@@ -1259,15 +1275,16 @@ bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CSc
     else if (nHashType != vchSig.back())
         return false;
     vchSig.pop_back();
+    return true;
+}
 
-    uint256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
+bool CheckSigInner(const std::vector<unsigned char>& vchSig, const uint256& sighash,
+                   const vector<unsigned char>& vchPubKey, CKey& key, int flags)
+{
+    static CSignatureCache signatureCache;
 
     if (signatureCache.Get(sighash, vchSig, vchPubKey))
         return true;
-
-    CKey key;
-    if (!key.SetPubKey(vchPubKey))
-        return false;
 
     if (!key.Verify(sighash, vchSig))
         return false;
@@ -1276,6 +1293,21 @@ bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CSc
         signatureCache.Set(sighash, vchSig, vchPubKey);
 
     return true;
+}
+
+bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CScript scriptCode,
+              const CTransaction& txTo, unsigned int nIn, int nHashType, int flags)
+{
+    if (!PopHashType(vchSig, nHashType))
+        return false;
+
+    CKey key;
+    if (!key.SetPubKey(vchPubKey))
+        return false;
+
+    uint256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
+
+    return CheckSigInner(vchSig, sighash, vchPubKey, key, flags);
 }
 
 
