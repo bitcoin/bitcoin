@@ -8,7 +8,6 @@
 #include <openssl/obj_mac.h>
 
 #include "key.h"
-#include "util.h"
 
 // Generate a private key from just the secret parameter
 int EC_KEY_regenerate_key(EC_KEY *eckey, BIGNUM *priv_key)
@@ -49,7 +48,7 @@ err:
 
 // Perform ECDSA key recovery (see SEC1 4.1.6) for curves over (mod p)-fields
 // recid selects which key is recovered
-// if check is nonzero, additional checks are performed
+// if check is non-zero, additional checks are performed
 int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned char *msg, int msglen, int recid, int check)
 {
     if (!eckey) return 0;
@@ -130,6 +129,8 @@ void CKey::SetCompressedPubKey()
 void CKey::Reset()
 {
     fCompressedPubKey = false;
+    if (pkey != NULL)
+        EC_KEY_free(pkey);
     pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
     if (pkey == NULL)
         throw key_error("CKey::CKey() : EC_KEY_new_by_curve_name failed");
@@ -138,6 +139,7 @@ void CKey::Reset()
 
 CKey::CKey()
 {
+    pkey = NULL;
     Reset();
 }
 
@@ -184,10 +186,24 @@ void CKey::MakeNewKey(bool fCompressed)
 bool CKey::SetPrivKey(const CPrivKey& vchPrivKey)
 {
     const unsigned char* pbegin = &vchPrivKey[0];
-    if (!d2i_ECPrivateKey(&pkey, &pbegin, vchPrivKey.size()))
-        return false;
-    fSet = true;
-    return true;
+    if (d2i_ECPrivateKey(&pkey, &pbegin, vchPrivKey.size()))
+    {
+        // In testing, d2i_ECPrivateKey can return true
+        // but fill in pkey with a key that fails
+        // EC_KEY_check_key, so:
+        if (EC_KEY_check_key(pkey))
+        {
+            fSet = true;
+            return true;
+        }
+    }
+    // If vchPrivKey data is bad d2i_ECPrivateKey() can
+    // leave pkey in a state where calling EC_KEY_free()
+    // crashes. To avoid that, set pkey to NULL and
+    // leak the memory (a leak is better than a crash)
+    pkey = NULL;
+    Reset();
+    return false;
 }
 
 bool CKey::SetSecret(const CSecret& vchSecret, bool fCompressed)
@@ -240,18 +256,22 @@ CPrivKey CKey::GetPrivKey() const
     return vchPrivKey;
 }
 
-bool CKey::SetPubKey(const std::vector<unsigned char>& vchPubKey)
+bool CKey::SetPubKey(const CPubKey& vchPubKey)
 {
-    const unsigned char* pbegin = &vchPubKey[0];
-    if (!o2i_ECPublicKey(&pkey, &pbegin, vchPubKey.size()))
-        return false;
-    fSet = true;
-    if (vchPubKey.size() == 33)
-        SetCompressedPubKey();
-    return true;
+    const unsigned char* pbegin = &vchPubKey.vchPubKey[0];
+    if (o2i_ECPublicKey(&pkey, &pbegin, vchPubKey.vchPubKey.size()))
+    {
+        fSet = true;
+        if (vchPubKey.vchPubKey.size() == 33)
+            SetCompressedPubKey();
+        return true;
+    }
+    pkey = NULL;
+    Reset();
+    return false;
 }
 
-std::vector<unsigned char> CKey::GetPubKey() const
+CPubKey CKey::GetPubKey() const
 {
     int nSize = i2o_ECPublicKey(pkey, NULL);
     if (!nSize)
@@ -260,7 +280,7 @@ std::vector<unsigned char> CKey::GetPubKey() const
     unsigned char* pbegin = &vchPubKey[0];
     if (i2o_ECPublicKey(pkey, &pbegin) != nSize)
         throw key_error("CKey::GetPubKey() : i2o_ECPublicKey returned unexpected size");
-    return vchPubKey;
+    return CPubKey(vchPubKey);
 }
 
 bool CKey::Sign(uint256 hash, std::vector<unsigned char>& vchSig)
@@ -373,6 +393,9 @@ bool CKey::VerifyCompact(uint256 hash, const std::vector<unsigned char>& vchSig)
 bool CKey::IsValid()
 {
     if (!fSet)
+        return false;
+
+    if (!EC_KEY_check_key(pkey))
         return false;
 
     bool fCompr;

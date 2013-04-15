@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>627</width>
-    <height>347</height>
+    <width>760</width>
+    <height>380</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <item>
     <widget class="QLabel" name="labelExplanation">
      <property name="text">
-      <string>These are your NovaCoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</string>
+      <string>These are your NovaCoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</string>
      </property>
      <property name="textFormat">
-      <enum>Qt::AutoText</enum>
+      <enum>Qt::PlainText</enum>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -29,8 +29,14 @@
    </item>
    <item>
     <widget class="QTableView" name="tableView">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
      <property name="toolTip">
       <string>Double-click to edit address or label</string>
+     </property>
+     <property name="tabKeyNavigation">
+      <bool>false</bool>
      </property>
      <property name="alternatingRowColors">
       <bool>true</bool>
@@ -57,7 +63,7 @@
         <string>Create a new address</string>
        </property>
        <property name="text">
-        <string>&amp;New Address...</string>
+        <string>&amp;New Address</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
@@ -71,7 +77,7 @@
         <string>Copy the currently selected address to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy to Clipboard</string>
+        <string>&amp;Copy Address</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
@@ -86,17 +92,17 @@
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
-         <normaloff>:/images/qrcode</normaloff>:/images/qrcode</iconset>
+         <normaloff>:/icons/qrcode</normaloff>:/icons/qrcode</iconset>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="signMessage">
        <property name="toolTip">
-        <string>Sign a message to prove you own this address</string>
+        <string>Sign a message to prove you own a NovaCoin address</string>
        </property>
        <property name="text">
-        <string>&amp;Sign Message</string>
+        <string>Sign &amp;Message</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
@@ -105,9 +111,23 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="verifyMessage">
+       <property name="toolTip">
+        <string>Verify a message to ensure it was signed with a specified NovaCoin address</string>
+       </property>
+       <property name="text">
+        <string>&amp;Verify Message</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/transaction_0</normaloff>:/icons/transaction_0</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="deleteButton">
        <property name="toolTip">
-        <string>Delete the currently selected address from the list. Only sending addresses can be deleted.</string>
+        <string>Delete the currently selected address from the list</string>
        </property>
        <property name="text">
         <string>&amp;Delete</string>

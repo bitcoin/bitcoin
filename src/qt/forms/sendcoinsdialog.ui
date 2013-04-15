@@ -64,11 +64,14 @@
         <string>Send to multiple recipients at once</string>
        </property>
        <property name="text">
-        <string>&amp;Add recipient...</string>
+        <string>Add &amp;Recipient</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -84,7 +87,7 @@
         <string>Remove all transaction fields</string>
        </property>
        <property name="text">
-        <string>Clear all</string>
+        <string>Clear &amp;All</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
@@ -92,6 +95,9 @@
        </property>
        <property name="autoRepeatDelay">
         <number>300</number>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -109,6 +115,9 @@
        </item>
        <item>
         <widget class="QLabel" name="labelBalance">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
          <property name="text">
           <string>123.456 BTC</string>
          </property>
@@ -144,7 +153,7 @@
         <string>Confirm the send action</string>
        </property>
        <property name="text">
-        <string>&amp;Send</string>
+        <string>S&amp;end</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">

@@ -1,22 +1,32 @@
 #define BOOST_TEST_MODULE Bitcoin Test Suite
 #include <boost/test/unit_test.hpp>
 
+#include "db.h"
 #include "main.h"
 #include "wallet.h"
 
 CWallet* pwalletMain;
+CClientUIInterface uiInterface;
 
 extern bool fPrintToConsole;
+extern void noui_connect();
+
 struct TestingSetup {
     TestingSetup() {
-        fPrintToConsole = true; // don't want to write to debug.log file
-        pwalletMain = new CWallet();
+        fPrintToDebugger = true; // don't want to write to debug.log file
+        noui_connect();
+        bitdb.MakeMock();
+        LoadBlockIndex(true);
+        bool fFirstRun;
+        pwalletMain = new CWallet("wallet.dat");
+        pwalletMain->LoadWallet(fFirstRun);
         RegisterWallet(pwalletMain);
     }
     ~TestingSetup()
     {
         delete pwalletMain;
         pwalletMain = NULL;
+        bitdb.Flush(true);
     }
 };
 

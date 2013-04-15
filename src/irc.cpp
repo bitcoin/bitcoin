@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2013 NovaCoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +12,6 @@ using namespace std;
 using namespace boost;
 
 int nGotIRCAddresses = 0;
-bool fGotExternalIP = false;
 
 void ThreadIRCSeed2(void* parg);
 
@@ -178,8 +176,6 @@ bool GetIPFromIRC(SOCKET hSocket, string strMyName, CNetAddr& ipRet)
     // Hybrid IRC used by lfnet always returns IP when you userhost yourself,
     // but in case another IRC is ever used this should work.
     printf("GetIPFromIRC() got userhost %s\n", strHost.c_str());
-    if (fUseProxy)
-        return false;
     CNetAddr addr(strHost, true);
     if (!addr.IsValid())
         return false;
@@ -192,7 +188,9 @@ bool GetIPFromIRC(SOCKET hSocket, string strMyName, CNetAddr& ipRet)
 
 void ThreadIRCSeed(void* parg)
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadIRCSeed(parg));
+    // Make this thread recognisable as the IRC seeding thread
+    RenameThread("bitcoin-ircseed");
+
     try
     {
         ThreadIRCSeed2(parg);
@@ -202,22 +200,27 @@ void ThreadIRCSeed(void* parg)
     } catch (...) {
         PrintExceptionContinue(NULL, "ThreadIRCSeed()");
     }
-    printf("ThreadIRCSeed exiting\n");
+    printf("ThreadIRCSeed exited\n");
 }
 
 void ThreadIRCSeed2(void* parg)
 {
-    /* Dont advertise on IRC if we don't allow incoming connections */
-    if (mapArgs.count("-connect") || fNoListen)
+    // Don't connect to IRC if we won't use IPv4 connections.
+    if (IsLimited(NET_IPV4))
         return;
 
+    // ... or if we won't make outbound connections and won't accept inbound ones.
+    if (mapArgs.count("-connect") && fNoListen)
+        return;
+
+    // ... or if IRC is not enabled.
     if (!GetBoolArg("-irc", true))
         return;
 
     printf("ThreadIRCSeed started\n");
     int nErrorWait = 10;
     int nRetryWait = 10;
-    bool fNameInUse = false;
+    int nNameRetry = 0;
 
     while (!fShutdown)
     {
@@ -249,11 +252,15 @@ void ThreadIRCSeed2(void* parg)
                 return;
         }
 
+        CNetAddr addrIPv4("1.2.3.4"); // arbitrary IPv4 address to make GetLocal prefer IPv4 addresses
+        CService addrLocal;
         string strMyName;
-        if (addrLocalHost.IsRoutable() && !fUseProxy && !fNameInUse)
-            strMyName = EncodeAddress(addrLocalHost);
-        else
-            strMyName = strprintf("x%u", GetRand(1000000000));
+        // Don't use our IP as our nick if we're not listening
+        // or if it keeps failing because the nick is already in use.
+        if (!fNoListen && GetLocal(addrLocal, &addrIPv4) && nNameRetry<3)
+            strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
+        if (strMyName == "")
+            strMyName = strprintf("x%"PRI64u"", GetRand(1000000000));
 
         Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
         Send(hSocket, strprintf("USER %s 8 * : %s\r", strMyName.c_str(), strMyName.c_str()).c_str());
@@ -266,7 +273,7 @@ void ThreadIRCSeed2(void* parg)
             if (nRet == 2)
             {
                 printf("IRC name already in use\n");
-                fNameInUse = true;
+                nNameRetry++;
                 Wait(10);
                 continue;
             }
@@ -276,6 +283,7 @@ void ThreadIRCSeed2(void* parg)
             else
                 return;
         }
+        nNameRetry = 0;
         Sleep(500);
 
         // Get our external IP from the IRC server and re-nick before joining the channel
@@ -283,23 +291,23 @@ void ThreadIRCSeed2(void* parg)
         if (GetIPFromIRC(hSocket, strMyName, addrFromIRC))
         {
             printf("GetIPFromIRC() returned %s\n", addrFromIRC.ToString().c_str());
-            if (!fUseProxy && addrFromIRC.IsRoutable())
+            // Don't use our IP as our nick if we're not listening
+            if (!fNoListen && addrFromIRC.IsRoutable())
             {
                 // IRC lets you to re-nick
-                fGotExternalIP = true;
-                addrLocalHost.SetIP(addrFromIRC);
-                strMyName = EncodeAddress(addrLocalHost);
+                AddLocal(addrFromIRC, LOCAL_IRC);
+                strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
                 Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
             }
         }
-        
+
         if (fTestNet) {
             Send(hSocket, "JOIN #novacoinTEST\r");
             Send(hSocket, "WHO #novacoinTEST\r");
         } else {
             // randomly join #novacoin00-#novacoin05
             // int channel_number = GetRandInt(5);
-            
+
             // Channel number is always 0 for initial release
             int channel_number = 0;
             Send(hSocket, strprintf("JOIN #novacoin%02d\r", channel_number).c_str());

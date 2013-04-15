@@ -78,19 +78,26 @@ public:
     {
         memset(&chKey, 0, sizeof chKey);
         memset(&chIV, 0, sizeof chIV);
-        munlock(&chKey, sizeof chKey);
-        munlock(&chIV, sizeof chIV);
         fKeySet = false;
     }
 
     CCrypter()
     {
         fKeySet = false;
+
+        // Try to keep the key data out of swap (and be a bit over-careful to keep the IV that we don't even use out of swap)
+        // Note that this does nothing about suspend-to-disk (which will put all our key data on disk)
+        // Note as well that at no point in this program is any attempt made to prevent stealing of keys by reading the memory of the running process.
+        LockedPageManager::instance.LockRange(&chKey[0], sizeof chKey);
+        LockedPageManager::instance.LockRange(&chIV[0], sizeof chIV);
     }
 
     ~CCrypter()
     {
         CleanKey();
+
+        LockedPageManager::instance.UnlockRange(&chKey[0], sizeof chKey);
+        LockedPageManager::instance.UnlockRange(&chIV[0], sizeof chIV);
     }
 };
 
