@@ -1002,7 +1002,7 @@ Address: %4
     <message>
         <location line="+118"/>
         <source>Stake:</source>
-        <translation>Stake:</translation>
+        <translation>Доля:</translation>
     </message>
     <message>
         <location line="+58"/>
