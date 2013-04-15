@@ -1,2 +1,2 @@
-debian/bin/bitcoind usr/bin
-src/bitcoind usr/lib/bitcoin
+debian/bin/novacoind usr/bin
+src/novacoind usr/lib/novacoin
