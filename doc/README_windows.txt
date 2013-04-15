@@ -1,4 +1,4 @@
-NovaCoin 0.3.0 BETA
+NovaCoin 0.4.0 BETA
 
 Copyright (c) 2013 NovaCoin Developers
 Copyright (c) 2011-2013 PPCoin Developers
