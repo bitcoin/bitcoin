@@ -925,10 +925,15 @@ unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
     if(fProofOfStake)
     {
         // Proof-of-Stake blocks has own target limit since nVersion=3 supermajority on mainNet and always on testNet
-        if(fTestNet || (pindexLast->nHeight + 1 > 15000))
-            bnTargetLimit = bnProofOfStakeLimit;
-        else if(pindexLast->nHeight + 1 > 14060)
+        if(fTestNet)
             bnTargetLimit = bnProofOfStakeHardLimit;
+        else
+        {
+            if(pindexLast->nHeight + 1 > 15000)
+                bnTargetLimit = bnProofOfStakeLimit;
+            else if(pindexLast->nHeight + 1 > 14060)
+                bnTargetLimit = bnProofOfStakeHardLimit;
+        }
     }
 
     if (pindexLast == NULL)
@@ -1972,7 +1977,7 @@ bool CBlock::AcceptBlock()
         return error("AcceptBlock() : rejected by synchronized checkpoint");
 
     // Reject block.nVersion < 3 blocks since 95% threshold on mainNet and always on testNet:
-    if (nVersion < 3 && ((!fTestNet && nHeight > 14060) || (fTestNet && nHeight > 0)))
+    if (nVersion < 3 && (nHeight > 14060))
         return error("CheckBlock() : rejected nVersion < 3 block");
 
     CScript expect = CScript() << nHeight;
