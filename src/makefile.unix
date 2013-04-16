@@ -41,14 +41,14 @@ TESTLIBS += \
    -l boost_unit_test_framework$(BOOST_LIB_SUFFIX)
 
 ifndef USE_UPNP
-	override USE_UPNP = -
+	override USE_UPNP = 0
 endif
-ifneq (${USE_UPNP}, -)
+ifneq (${USE_UPNP}, 0)
 	LIBS += -l miniupnpc
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
 endif
 
-ifneq (${USE_IPV6}, -)
+ifneq (${USE_IPV6}, 0)
 	DEFS += -DUSE_IPV6=$(USE_IPV6)
 endif
 
