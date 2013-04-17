@@ -2,7 +2,13 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+# :=0 --> UPnP support turned off by default at runtime
+# :=1 --> UPnP support turned on by default at runtime
+# :=- --> No UPnP support - miniupnp not required
 USE_UPNP:=0
+
+# :=1 --> Enable IPv6 support
+# :=0 --> Disable IPv6 support
 USE_IPV6:=1
 
 LINK:=$(CXX)
