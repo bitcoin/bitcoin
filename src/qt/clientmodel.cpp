@@ -122,9 +122,12 @@ enum BlockSource ClientModel::getBlockSource() const
 {
     if (fReindex)
         return BLOCK_SOURCE_REINDEX;
-    if (fImporting)
+    else if (fImporting)
         return BLOCK_SOURCE_DISK;
-    return BLOCK_SOURCE_NETWORK;
+    else if (getNumConnections() > 0)
+        return BLOCK_SOURCE_NETWORK;
+
+    return BLOCK_SOURCE_NONE;
 }
 
 int ClientModel::getNumBlocksOfPeers() const
