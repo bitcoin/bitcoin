@@ -44,11 +44,6 @@ Designer: Everaldo (Everaldo Coelho)
 License: GNU/GPL 
 Site: http://findicons.com/icon/17102/reload?id=17102
 
-Image: src/qt/res/images/splash2.jpg (Wallet image)
-Designer: Crobbo (forum)
-Site: https://bitcointalk.org/index.php?topic=32273.0
-License: Public domain
-
 Icon: src/qt/res/icons/debugwindow.png
 Designer: Vignoni David
 Site: http://www.oxygen-icons.org/
@@ -57,6 +52,7 @@ License: Oxygen icon theme is dual licensed. You may copy it under the Creative 
 Icon: src/qt/res/icons/bitcoin.icns, src/qt/res/src/bitcoin.svg,
       src/qt/res/src/bitcoin.ico, src/qt/res/src/bitcoin.png,
       src/qt/res/src/bitcoin_testnet.png, docs/bitcoin_logo_doxygen.png,
-      src/qt/res/icons/toolbar.png, src/qt/res/icons/toolbar_testnet.png
+      src/qt/res/icons/toolbar.png, src/qt/res/icons/toolbar_testnet.png,
+      src/qt/res/images/splash.png, src/qt/res/images/splash_testnet.png
 Designer: Jonas Schnelli (based on the original bitcoin logo from Bitboy)
 License: MIT
