@@ -1438,8 +1438,16 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
                 if (pvChecks) {
                     pvChecks->push_back(CScriptCheck());
                     check.swap(pvChecks->back());
-                } else if (!check())
+                } else if (!check()) {
+                    if (flags & SCRIPT_VERIFY_STRICTENC) {
+                        // For now, check whether the failure was caused by non-canonical
+                        // encodings or not; if so, don't trigger DoS protection.
+                        CScriptCheck check(coins, *this, i, flags & (~SCRIPT_VERIFY_STRICTENC), 0);
+                        if (check())
+                            return state.Invalid();
+                    }
                     return state.DoS(100,false);
+                }
             }
         }
     }
