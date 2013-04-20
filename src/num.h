@@ -11,12 +11,6 @@
 #error "Please select num implementation"
 #endif
 
-/** Initialize the num module. */
-void static secp256k1_num_start(void);
-
-/** De-initialize the num module. */
-void static secp256k1_num_stop(void);
-
 /** Initialize a number. */
 void static secp256k1_num_init(secp256k1_num_t *r);
 
@@ -92,8 +86,5 @@ void static secp256k1_num_split(secp256k1_num_t *rl, secp256k1_num_t *rh, const 
 
 /** Change a number's sign. */
 void static secp256k1_num_negate(secp256k1_num_t *r);
-
-/** Set a number to an random value below the passed number. */
-void static secp256k1_num_set_rand(secp256k1_num_t *r, const secp256k1_num_t *a);
 
 #endif

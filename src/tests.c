@@ -5,9 +5,23 @@
 #include "impl/group.h"
 #include "impl/ecmult.h"
 #include "impl/ecdsa.h"
+#include "impl/util.h"
 
 // #define COUNT 2
 #define COUNT 100
+
+void random_num_order(secp256k1_num_t *num) {
+    do {
+        unsigned char b32[32];
+        secp256k1_rand256_test(b32);
+        secp256k1_num_set_bin(num, b32, 32);
+        if (secp256k1_num_is_zero(num))
+            continue;
+        if (secp256k1_num_cmp(num, &secp256k1_ge_consts->order) >= 0)
+            continue;
+        break;
+    } while(1);
+}
 
 void test_run_ecmult_chain() {
     // random starting point A (on the curve)
@@ -130,21 +144,14 @@ void test_wnaf(const secp256k1_num_t *number, int w) {
 }
 
 void test_run_wnaf() {
-    secp256k1_num_t range, min, n;
-    secp256k1_num_init(&range);
-    secp256k1_num_init(&min);
+    secp256k1_num_t n;
     secp256k1_num_init(&n);
-    secp256k1_num_set_hex(&range, "01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 66);
-    secp256k1_num_copy(&min, &range);
-    secp256k1_num_shift(&min, 1);
-    secp256k1_num_negate(&min);
     for (int i=0; i<COUNT; i++) {
-        secp256k1_num_set_rand(&n, &range);
-        secp256k1_num_add(&n, &n, &min);
+        random_num_order(&n);
+        if (i % 1)
+            secp256k1_num_negate(&n);
         test_wnaf(&n, 4+(i%10));
     }
-    secp256k1_num_free(&range);
-    secp256k1_num_free(&min);
     secp256k1_num_free(&n);
 }
 
@@ -152,15 +159,15 @@ void test_ecdsa_sign_verify() {
     const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
     secp256k1_num_t msg, key, nonce;
     secp256k1_num_init(&msg);
-    secp256k1_num_set_rand(&msg, &c->order);
+    random_num_order(&msg);
     secp256k1_num_init(&key);
-    secp256k1_num_set_rand(&key, &c->order);
+    random_num_order(&key);
     secp256k1_num_init(&nonce);
     secp256k1_gej_t pub; secp256k1_ecmult_gen(&pub, &key);
     secp256k1_ecdsa_sig_t sig;
     secp256k1_ecdsa_sig_init(&sig);
     do {
-        secp256k1_num_set_rand(&nonce, &c->order);
+        random_num_order(&nonce);
     } while(!secp256k1_ecdsa_sig_sign(&sig, &key, &msg, &nonce));
     assert(secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));
     secp256k1_num_inc(&msg);
@@ -178,7 +185,6 @@ void test_run_ecdsa_sign_verify() {
 }
 
 int main(void) {
-    secp256k1_num_start();
     secp256k1_fe_start();
     secp256k1_ge_start();
     secp256k1_ecmult_start();
@@ -191,6 +197,5 @@ int main(void) {
     secp256k1_ecmult_stop();
     secp256k1_ge_stop();
     secp256k1_fe_stop();
-    secp256k1_num_stop();
     return 0;
 }

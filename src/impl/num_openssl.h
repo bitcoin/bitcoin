@@ -9,13 +9,6 @@
 
 #include "../num.h"
 
-void static secp256k1_num_start() {
-}
-
-void static secp256k1_num_stop() {
-}
-
-
 void static secp256k1_num_init(secp256k1_num_t *r) {
     BN_init(&r->bn);
 }
@@ -143,10 +136,6 @@ void static secp256k1_num_split(secp256k1_num_t *rl, secp256k1_num_t *rh, const 
 
 void static secp256k1_num_negate(secp256k1_num_t *r) {
     BN_set_negative(&r->bn, !BN_is_negative(&r->bn));
-}
-
-void static secp256k1_num_set_rand(secp256k1_num_t *r, const secp256k1_num_t *a) {
-    BN_pseudo_rand_range(&r->bn, &a->bn);
 }
 
 #endif

@@ -16,12 +16,6 @@ void static secp256k1_num_sanity(const secp256k1_num_t *a) {
 #define secp256k1_num_sanity(a) do { } while(0)
 #endif
 
-void static secp256k1_num_start(void) {
-}
-
-void static secp256k1_num_stop(void) {
-}
-
 void static secp256k1_num_init(secp256k1_num_t *r) {
     r->neg = 0;
     r->limbs = 1;
@@ -383,13 +377,6 @@ void static secp256k1_num_split(secp256k1_num_t *rl, secp256k1_num_t *rh, const 
 
 void static secp256k1_num_negate(secp256k1_num_t *r) {
     r->neg ^= 1;
-}
-
-void static secp256k1_num_set_rand(secp256k1_num_t *r, const secp256k1_num_t *a) {
-    mpn_random(r->data, a->limbs);
-    r->limbs = a->limbs;
-    r->neg = 0;
-    secp256k1_num_mod(r, a);
 }
 
 #endif

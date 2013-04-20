@@ -5,9 +5,22 @@
 #include "impl/group.h"
 #include "impl/ecmult.h"
 #include "impl/ecdsa.h"
+#include "impl/util.h"
+
+void random_num_order(secp256k1_num_t *num) {
+    do {
+        unsigned char b32[32];
+        secp256k1_rand256(b32);
+        secp256k1_num_set_bin(num, b32, 32);
+        if (secp256k1_num_is_zero(num))
+            continue;
+        if (secp256k1_num_cmp(num, &secp256k1_ge_consts->order) >= 0)
+            continue;
+        break;
+    } while(1);
+}
 
 int main() {
-    secp256k1_num_start();
     secp256k1_fe_start();
     secp256k1_ge_start();
     secp256k1_ecmult_start();
@@ -24,9 +37,9 @@ int main() {
     int cnt = 0;
     int good = 0;
     for (int i=0; i<1000000; i++) {
-        secp256k1_num_set_rand(&r, order);
-        secp256k1_num_set_rand(&s, order);
-        secp256k1_num_set_rand(&m, order);
+        random_num_order(&r);
+        random_num_order(&s);
+        random_num_order(&m);
         secp256k1_ecdsa_sig_set_rs(&sig, &r, &s);
         secp256k1_gej_t pubkey; secp256k1_gej_set_xo(&pubkey, &x, 1);
         if (secp256k1_gej_is_valid(&pubkey)) {
@@ -43,6 +56,5 @@ int main() {
     secp256k1_ecmult_stop();
     secp256k1_ge_stop();
     secp256k1_fe_stop();
-    secp256k1_num_stop();
     return 0;
 }
