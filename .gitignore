@@ -1,7 +1,7 @@
 src/*.exe
-src/bitcoin
-src/bitcoind
-src/test_bitcoin
+src/ppcoin
+src/ppcoind
+src/test_ppcoin
 src/build.h
 .*.swp
 *.*~*
@@ -10,7 +10,7 @@ src/build.h
 *.orig
 *.o
 *.patch
-.bitcoin
+.ppcoin
 #compilation and Qt preprocessor part
 *.qm
 Makefile
