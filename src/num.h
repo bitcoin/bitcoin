@@ -51,7 +51,8 @@ void static secp256k1_num_mul(secp256k1_num_t *r, const secp256k1_num_t *a, cons
 /** Divide two (signed) numbers. */
 void static secp256k1_num_div(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b);
 
-/** Replace a number by its modulus. */
+/** Replace a number by its remainder modulo m. M's sign is ignored. The result is a number between 0 and m-1,
+    even if r was negative. */
 void static secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *m);
 
 /** Calculate the number of bits in (the absolute value of) a number. */

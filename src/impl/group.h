@@ -299,8 +299,6 @@ void static secp256k1_gej_split_exp(secp256k1_num_t *r1, secp256k1_num_t *r2, co
     secp256k1_num_mul(&check, r2, &c->lambda);
     secp256k1_num_add(&check, &check, r1);
     secp256k1_num_mod(&check, &c->order);
-    secp256k1_num_add(&check, &check, &c->order);
-    secp256k1_num_mod(&check, &c->order);
     secp256k1_num_mod(&a2, &c->order);
     assert(secp256k1_num_cmp(&check, &a2) == 0);
     secp256k1_num_free(&check);

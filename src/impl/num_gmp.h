@@ -64,6 +64,22 @@ void static secp256k1_num_set_int(secp256k1_num_t *r, int a) {
     r->data[0] = (a < 0) ? -a : a;
 }
 
+void static secp256k1_num_add_abs(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+    mp_limb_t c = mpn_add(r->data, a->data, a->limbs, b->data, b->limbs);
+    r->limbs = a->limbs;
+    if (c != 0) {
+        assert(r->limbs < 2*NUM_LIMBS);
+        r->data[r->limbs++] = c;
+    }
+}
+
+void static secp256k1_num_sub_abs(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+    mp_limb_t c = mpn_sub(r->data, a->data, a->limbs, b->data, b->limbs);
+    assert(c == 0);
+    r->limbs = a->limbs;
+    while (r->limbs > 1 && r->data[r->limbs-1]==0) r->limbs--;
+}
+
 void static secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *m) {
     secp256k1_num_sanity(r);
     secp256k1_num_sanity(m);
@@ -73,7 +89,11 @@ void static secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *m) {
         mpn_tdiv_qr(t, r->data, 0, r->data, r->limbs, m->data, m->limbs);
         r->limbs = m->limbs;
         while (r->limbs > 1 && r->data[r->limbs-1]==0) r->limbs--;
-        r->neg ^= m->neg;
+    }
+
+    if (r->neg && (r->limbs > 1 || r->data[0] != 0)) {
+        secp256k1_num_sub_abs(r, m, r);
+        r->neg = 0;
     }
 }
 
@@ -140,22 +160,6 @@ int static secp256k1_num_cmp(const secp256k1_num_t *a, const secp256k1_num_t *b)
     if (a->limbs > b->limbs) return 1;
     if (a->limbs < b->limbs) return -1;
     return mpn_cmp(a->data, b->data, a->limbs);
-}
-
-void static secp256k1_num_add_abs(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
-    mp_limb_t c = mpn_add(r->data, a->data, a->limbs, b->data, b->limbs);
-    r->limbs = a->limbs;
-    if (c != 0) {
-        assert(r->limbs < 2*NUM_LIMBS);
-        r->data[r->limbs++] = c;
-    }
-}
-
-void static secp256k1_num_sub_abs(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
-    mp_limb_t c = mpn_sub(r->data, a->data, a->limbs, b->data, b->limbs);
-    assert(c == 0);
-    r->limbs = a->limbs;
-    while (r->limbs > 1 && r->data[r->limbs-1]==0) r->limbs--;
 }
 
 void static secp256k1_num_subadd(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b, int bneg) {
