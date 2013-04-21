@@ -42,10 +42,16 @@ int static secp256k1_num_bits(const secp256k1_num_t *a) {
 
 void static secp256k1_num_get_bin(unsigned char *r, unsigned int rlen, const secp256k1_num_t *a) {
     unsigned char tmp[65];
-    int len = mpn_get_str(tmp, 256, (mp_limb_t*)a->data, a->limbs);
-    assert(len <= rlen);
-    memset(r, 0, rlen - len);
-    memcpy(r + rlen - len, tmp, len);
+    int len = 0;
+    if (a->limbs>1 || a->data[0] != 0) {
+        len = mpn_get_str(tmp, 256, (mp_limb_t*)a->data, a->limbs);
+    }
+    int shift = 0;
+    while (shift < len && tmp[shift] == 0) shift++;
+    assert(len-shift <= rlen);
+    memset(r, 0, rlen - len + shift);
+    if (len > shift)
+        memcpy(r + rlen - len + shift, tmp + shift, len - shift);
 }
 
 void static secp256k1_num_set_bin(secp256k1_num_t *r, const unsigned char *a, unsigned int alen) {

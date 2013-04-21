@@ -7,10 +7,11 @@
 #include "impl/ecdsa.h"
 #include "impl/util.h"
 
-// #define COUNT 2
-#define COUNT 100
+static int count = 100;
 
-void random_num_order(secp256k1_num_t *num) {
+/***** NUM TESTS *****/
+
+void random_num_order_test(secp256k1_num_t *num) {
     do {
         unsigned char b32[32];
         secp256k1_rand256_test(b32);
@@ -23,7 +24,110 @@ void random_num_order(secp256k1_num_t *num) {
     } while(1);
 }
 
-void test_run_ecmult_chain() {
+void random_num_order(secp256k1_num_t *num) {
+    do {
+        unsigned char b32[32];
+        secp256k1_rand256(b32);
+        secp256k1_num_set_bin(num, b32, 32);
+        if (secp256k1_num_is_zero(num))
+            continue;
+        if (secp256k1_num_cmp(num, &secp256k1_ge_consts->order) >= 0)
+            continue;
+        break;
+    } while(1);
+}
+
+void test_num_copy_inc_cmp() {
+    secp256k1_num_t n1,n2;
+    secp256k1_num_init(&n1);
+    secp256k1_num_init(&n2);
+    random_num_order(&n1);
+    secp256k1_num_copy(&n2, &n1);
+    assert(secp256k1_num_cmp(&n1, &n2) == 0);
+    assert(secp256k1_num_cmp(&n2, &n1) == 0);
+    secp256k1_num_inc(&n2);
+    assert(secp256k1_num_cmp(&n1, &n2) != 0);
+    assert(secp256k1_num_cmp(&n2, &n1) != 0);
+    secp256k1_num_free(&n1);
+    secp256k1_num_free(&n2);
+}
+
+void run_num_copy_inc_cmp() {
+    for (int i=0; i<100*count; i++)
+        test_num_copy_inc_cmp();
+}
+
+void test_num_get_set_hex() {
+    secp256k1_num_t n1,n2;
+    secp256k1_num_init(&n1);
+    secp256k1_num_init(&n2);
+    random_num_order_test(&n1);
+    char c[64];
+    secp256k1_num_get_hex(c, 64, &n1);
+    secp256k1_num_set_hex(&n2, c, 64);
+    assert(secp256k1_num_cmp(&n1, &n2) == 0);
+    for (int i=0; i<64; i++) {
+        // check whether the lower 4 bits correspond to the last hex character
+        int low1 = secp256k1_num_shift(&n1, 4);
+        int lowh = c[63];
+        int low2 = (lowh>>6)*9+(lowh-'0')&15;
+        assert(low1 == low2);
+        // shift bits off the hex representation, and compare
+        memmove(c+1, c, 63);
+        c[0] = '0';
+        secp256k1_num_set_hex(&n2, c, 64);
+        assert(secp256k1_num_cmp(&n1, &n2) == 0);
+    }
+    secp256k1_num_free(&n2);
+    secp256k1_num_free(&n1);
+}
+
+void test_num_get_set_bin() {
+    secp256k1_num_t n1,n2;
+    secp256k1_num_init(&n1);
+    secp256k1_num_init(&n2);
+    random_num_order_test(&n1);
+    unsigned char c[32];
+    secp256k1_num_get_bin(c, 32, &n1);
+    secp256k1_num_set_bin(&n2, c, 32);
+    assert(secp256k1_num_cmp(&n1, &n2) == 0);
+    for (int i=0; i<32; i++) {
+        // check whether the lower 8 bits correspond to the last byte
+        int low1 = secp256k1_num_shift(&n1, 8);
+        int low2 = c[31];
+        assert(low1 == low2);
+        // shift bits off the byte representation, and compare
+        memmove(c+1, c, 31);
+        c[0] = 0;
+        secp256k1_num_set_bin(&n2, c, 32);
+        assert(secp256k1_num_cmp(&n1, &n2) == 0);
+    }
+    secp256k1_num_free(&n2);
+    secp256k1_num_free(&n1);
+}
+
+void run_num_get_set() {
+    for (int i=0; i<100*count; i++) {
+        test_num_get_set_hex();
+        test_num_get_set_bin();
+    }
+}
+
+void run_num_int() {
+    secp256k1_num_t n1;
+    secp256k1_num_init(&n1);
+    for (int i=-255; i<256; i++) {
+        unsigned char c1[3] = {};
+        c1[2] = abs(i);
+        unsigned char c2[3] = {0x11,0x22,0x33};
+        secp256k1_num_set_int(&n1, i);
+        secp256k1_num_get_bin(c2, 3, &n1);
+        assert(memcmp(c1, c2, 3) == 0);
+    }
+    secp256k1_num_free(&n1);
+}
+
+void run_ecmult_chain() {
     // random starting point A (on the curve)
     secp256k1_fe_t ax; secp256k1_fe_set_hex(&ax, "8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004", 64);
     secp256k1_fe_t ay; secp256k1_fe_set_hex(&ay, "a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f", 64);
@@ -52,7 +156,7 @@ void test_run_ecmult_chain() {
     // the point being computed
     secp256k1_gej_t x = a;
     const secp256k1_num_t *order = &secp256k1_ge_consts->order;
-    for (int i=0; i<200*COUNT; i++) {
+    for (int i=0; i<200*count; i++) {
         // in each iteration, compute X = xn*X + gn*G;
         secp256k1_ecmult(&x, &x, &xn, &gn);
         // also compute ae and ge: the actual accumulated factors for A and G
@@ -64,15 +168,19 @@ void test_run_ecmult_chain() {
         // modify xn and gn
         secp256k1_num_mod_mul(&xn, &xn, &xf, order);
         secp256k1_num_mod_mul(&gn, &gn, &gf, order);
-    }
-    char res[132]; int resl = 132;
-    secp256k1_gej_get_hex(res, &resl, &x);
-    if (COUNT == 100) {
-      assert(strcmp(res, "(D6E96687F9B10D092A6F35439D86CEBEA4535D0D409F53586440BD74B933E830,B95CBCA2C77DA786539BE8FD53354D2D3B4F566AE658045407ED6015EE1B2A88)") == 0);
+
+        // verify
+        if (i == 19999) {
+            char res[132]; int resl = 132;
+            secp256k1_gej_get_hex(res, &resl, &x);
+            assert(strcmp(res, "(D6E96687F9B10D092A6F35439D86CEBEA4535D0D409F53586440BD74B933E830,B95CBCA2C77DA786539BE8FD53354D2D3B4F566AE658045407ED6015EE1B2A88)") == 0);
+        }
     }
     // redo the computation, but directly with the resulting ae and ge coefficients:
     secp256k1_gej_t x2; secp256k1_ecmult(&x2, &a, &ae, &ge);
+    char res[132]; int resl = 132;
     char res2[132]; int resl2 = 132;
+    secp256k1_gej_get_hex(res, &resl, &x);
     secp256k1_gej_get_hex(res2, &resl2, &x2);
     assert(strcmp(res, res2) == 0);
     assert(strlen(res) == 131);
@@ -99,7 +207,7 @@ void test_point_times_order(const secp256k1_gej_t *point) {
     secp256k1_num_free(&zero);
 }
 
-void test_run_point_times_order() {
+void run_point_times_order() {
     secp256k1_fe_t x; secp256k1_fe_set_hex(&x, "02", 2);
     for (int i=0; i<500; i++) {
         secp256k1_gej_t j; secp256k1_gej_set_xo(&j, &x, 1);
@@ -143,10 +251,10 @@ void test_wnaf(const secp256k1_num_t *number, int w) {
     secp256k1_num_free(&t);
 }
 
-void test_run_wnaf() {
+void run_wnaf() {
     secp256k1_num_t n;
     secp256k1_num_init(&n);
-    for (int i=0; i<COUNT; i++) {
+    for (int i=0; i<count; i++) {
         random_num_order(&n);
         if (i % 1)
             secp256k1_num_negate(&n);
@@ -159,15 +267,15 @@ void test_ecdsa_sign_verify() {
     const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
     secp256k1_num_t msg, key, nonce;
     secp256k1_num_init(&msg);
-    random_num_order(&msg);
+    random_num_order_test(&msg);
     secp256k1_num_init(&key);
-    random_num_order(&key);
+    random_num_order_test(&key);
     secp256k1_num_init(&nonce);
     secp256k1_gej_t pub; secp256k1_ecmult_gen(&pub, &key);
     secp256k1_ecdsa_sig_t sig;
     secp256k1_ecdsa_sig_init(&sig);
     do {
-        random_num_order(&nonce);
+        random_num_order_test(&nonce);
     } while(!secp256k1_ecdsa_sig_sign(&sig, &key, &msg, &nonce));
     assert(secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));
     secp256k1_num_inc(&msg);
@@ -178,22 +286,35 @@ void test_ecdsa_sign_verify() {
     secp256k1_num_free(&nonce);
 }
 
-void test_run_ecdsa_sign_verify() {
-    for (int i=0; i<10*COUNT; i++) {
+void run_ecdsa_sign_verify() {
+    for (int i=0; i<10*count; i++) {
         test_ecdsa_sign_verify();
     }
 }
 
-int main(void) {
+int main(int argc, char **argv) {
+    if (argc > 1)
+        count = strtol(argv[1], NULL, 0)*50;
+
+    // initialize
     secp256k1_fe_start();
     secp256k1_ge_start();
     secp256k1_ecmult_start();
 
-    test_run_wnaf();
-    test_run_point_times_order();
-    test_run_ecmult_chain();
-    test_run_ecdsa_sign_verify();
+    // num tests
+    run_num_copy_inc_cmp();
+    run_num_get_set();
+    run_num_int();
 
+    // ecmult tests
+    run_wnaf();
+    run_point_times_order();
+    run_ecmult_chain();
+
+    // ecdsa tests
+    run_ecdsa_sign_verify();
+
+    // shutdown
     secp256k1_ecmult_stop();
     secp256k1_ge_stop();
     secp256k1_fe_stop();

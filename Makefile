@@ -27,7 +27,7 @@ bench: $(FILES) src/bench.c $(OBJS)
 	$(CC) -fPIC -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DNDEBUG -O2 src/bench.c $(OBJS) $(LDFLAGS_EXTRA) -o bench
 
 tests: $(FILES) src/tests.c $(OBJS)
-	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DVERIFY -O0 -ggdb3 src/tests.c $(OBJS) $(LDFLAGS_EXTRA) -o tests
+	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DVERIFY -fstack-protector-all -O1 -ggdb3 src/tests.c $(OBJS) $(LDFLAGS_EXTRA) -o tests
 
 libsecp256k1.a: obj/secp256k1.o $(OBJS)
 	$(AR) -rs $@ $(OBJS) obj/secp256k1.o

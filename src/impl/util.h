@@ -15,28 +15,22 @@ static inline uint32_t secp256k1_rand32(void) {
 
 static void secp256k1_rand256(unsigned char *b32) {
     for (int i=0; i<8; i++) {
-        uint32_t r = secp256k1_rand32();
-        b32[i*4 + 0] = (r >>  0) & 0xFF;
-        b32[i*4 + 1] = (r >>  8) & 0xFF;
-        b32[i*4 + 2] = (r >> 16) & 0xFF;
-        b32[i*4 + 3] = (r >> 24) & 0xFF;
+        uint32_t r1 = secp256k1_rand32();
+        b32[i*4 + 0] = (r1 >> 0) & 0xFF;
+        b32[i*4 + 1] = (r1 >> 8) & 0xFF;
+        uint32_t r2 = secp256k1_rand32();
+        b32[i*4 + 2] = (r2 >> 0) & 0xFF;
+        b32[i*4 + 3] = (r2 >> 8) & 0xFF;
     }
 }
 
 static void secp256k1_rand256_test(unsigned char *b32) {
     int bits=0;
-    uint32_t ent;
-    int entbits = 0;
     memset(b32, 0, 32);
     while (bits < 256) {
-        if (entbits < 15) {
-            ent = secp256k1_rand32();
-            entbits = 32;
-        }
+        uint32_t ent = secp256k1_rand32();
         int now = 1 + ((ent % 64)*((ent >> 6) % 32)+16)/31;
         uint32_t val = 1 & (ent >> 11);
-        ent -= 12;
-        entbits >>= 12;
         while (now > 0 && bits < 256) {
             b32[bits / 8] |= val << (bits % 8);
             now--;
