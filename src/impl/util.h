@@ -10,17 +10,16 @@ static inline uint32_t secp256k1_rand32(void) {
     static uint32_t Rz = 11, Rw = 11;
     Rz = 36969 * (Rz & 0xFFFF) + (Rz >> 16);
     Rw = 18000 * (Rw & 0xFFFF) + (Rw >> 16);
-    return (Rw << 16) + Rz;
+    return (Rw << 16) + (Rw >> 16) + Rz;
 }
 
 static void secp256k1_rand256(unsigned char *b32) {
     for (int i=0; i<8; i++) {
-        uint32_t r1 = secp256k1_rand32();
-        b32[i*4 + 0] = (r1 >> 0) & 0xFF;
-        b32[i*4 + 1] = (r1 >> 8) & 0xFF;
-        uint32_t r2 = secp256k1_rand32();
-        b32[i*4 + 2] = (r2 >> 0) & 0xFF;
-        b32[i*4 + 3] = (r2 >> 8) & 0xFF;
+        uint32_t r = secp256k1_rand32();
+        b32[i*4 + 0] = (r >>  0) & 0xFF;
+        b32[i*4 + 1] = (r >>  8) & 0xFF;
+        b32[i*4 + 2] = (r >> 16) & 0xFF;
+        b32[i*4 + 3] = (r >> 24) & 0xFF;
     }
 }
 

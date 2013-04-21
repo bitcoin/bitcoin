@@ -11,6 +11,11 @@ static int count = 100;
 
 /***** NUM TESTS *****/
 
+void random_num_negate(secp256k1_num_t *num) {
+    if (secp256k1_rand32() & 1)
+        secp256k1_num_negate(num);
+}
+
 void random_num_order_test(secp256k1_num_t *num) {
     do {
         unsigned char b32[32];
@@ -52,10 +57,6 @@ void test_num_copy_inc_cmp() {
     secp256k1_num_free(&n2);
 }
 
-void run_num_copy_inc_cmp() {
-    for (int i=0; i<100*count; i++)
-        test_num_copy_inc_cmp();
-}
 
 void test_num_get_set_hex() {
     secp256k1_num_t n1,n2;
@@ -106,13 +107,6 @@ void test_num_get_set_bin() {
     secp256k1_num_free(&n1);
 }
 
-void run_num_get_set() {
-    for (int i=0; i<100*count; i++) {
-        test_num_get_set_hex();
-        test_num_get_set_bin();
-    }
-}
-
 void run_num_int() {
     secp256k1_num_t n1;
     secp256k1_num_init(&n1);
@@ -125,6 +119,78 @@ void run_num_int() {
         assert(memcmp(c1, c2, 3) == 0);
     }
     secp256k1_num_free(&n1);
+}
+
+void test_num_negate() {
+    secp256k1_num_t n1;
+    secp256k1_num_t n2;
+    secp256k1_num_init(&n1);
+    secp256k1_num_init(&n2);
+    random_num_order_test(&n1); // n1 = R
+    random_num_negate(&n1);
+    secp256k1_num_copy(&n2, &n1); // n2 = R
+    secp256k1_num_sub(&n1, &n2, &n1); // n1 = n2-n1 = 0
+    assert(secp256k1_num_is_zero(&n1));
+    secp256k1_num_copy(&n1, &n2); // n1 = R
+    secp256k1_num_negate(&n1); // n1 = -R
+    assert(!secp256k1_num_is_zero(&n1));
+    secp256k1_num_add(&n1, &n2, &n1); // n1 = n2+n1 = 0
+    assert(secp256k1_num_is_zero(&n1));
+    secp256k1_num_copy(&n1, &n2); // n1 = R
+    secp256k1_num_negate(&n1); // n1 = -R
+    assert(secp256k1_num_is_neg(&n1) != secp256k1_num_is_neg(&n2));
+    secp256k1_num_negate(&n1); // n1 = R
+    assert(secp256k1_num_cmp(&n1, &n2) == 0);
+    assert(secp256k1_num_is_neg(&n1) == secp256k1_num_is_neg(&n2));
+    secp256k1_num_free(&n2);
+    secp256k1_num_free(&n1);
+}
+
+void test_num_add_sub() {
+    secp256k1_num_t n1;
+    secp256k1_num_t n2;
+    secp256k1_num_init(&n1);
+    secp256k1_num_init(&n2);
+    random_num_order_test(&n1); // n1 = R1
+    random_num_negate(&n1);
+    random_num_order_test(&n2); // n2 = R2
+    random_num_negate(&n2);
+    secp256k1_num_t n1p2, n2p1, n1m2, n2m1;
+    secp256k1_num_init(&n1p2);
+    secp256k1_num_init(&n2p1);
+    secp256k1_num_init(&n1m2);
+    secp256k1_num_init(&n2m1);
+    secp256k1_num_add(&n1p2, &n1, &n2); // n1p2 = R1 + R2
+    secp256k1_num_add(&n2p1, &n2, &n1); // n2p1 = R2 + R1
+    secp256k1_num_sub(&n1m2, &n1, &n2); // n1m2 = R1 - R2
+    secp256k1_num_sub(&n2m1, &n2, &n1); // n2m1 = R2 - R1
+    assert(secp256k1_num_cmp(&n1p2, &n2p1) == 0);
+    assert(secp256k1_num_cmp(&n1p2, &n1m2) != 0);
+    secp256k1_num_negate(&n2m1); // n2m1 = -R2 + R1
+    assert(secp256k1_num_cmp(&n2m1, &n1m2) == 0);
+    assert(secp256k1_num_cmp(&n2m1, &n1) != 0);
+    secp256k1_num_add(&n2m1, &n2m1, &n2); // n2m1 = -R2 + R1 + R2 = R1
+    assert(secp256k1_num_cmp(&n2m1, &n1) == 0);
+    assert(secp256k1_num_cmp(&n2p1, &n1) != 0);
+    secp256k1_num_sub(&n2p1, &n2p1, &n2); // n2p1 = R2 + R1 - R2 = R1
+    assert(secp256k1_num_cmp(&n2p1, &n1) == 0);
+    secp256k1_num_free(&n2m1);
+    secp256k1_num_free(&n1m2);
+    secp256k1_num_free(&n2p1);
+    secp256k1_num_free(&n1p2);
+    secp256k1_num_free(&n2);
+    secp256k1_num_free(&n1);
+}
+
+void run_num_smalltests() {
+    for (int i=0; i<100*count; i++) {
+        test_num_copy_inc_cmp();
+        test_num_get_set_hex();
+        test_num_get_set_bin();
+        test_num_negate();
+        test_num_add_sub();
+    }
+    run_num_int();
 }
 
 void run_ecmult_chain() {
@@ -294,7 +360,7 @@ void run_ecdsa_sign_verify() {
 
 int main(int argc, char **argv) {
     if (argc > 1)
-        count = strtol(argv[1], NULL, 0)*50;
+        count = strtol(argv[1], NULL, 0)*47;
 
     // initialize
     secp256k1_fe_start();
@@ -302,9 +368,7 @@ int main(int argc, char **argv) {
     secp256k1_ecmult_start();
 
     // num tests
-    run_num_copy_inc_cmp();
-    run_num_get_set();
-    run_num_int();
+    run_num_smalltests();
 
     // ecmult tests
     run_wnaf();
