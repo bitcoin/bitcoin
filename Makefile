@@ -31,7 +31,7 @@ tests: $(FILES) src/tests.c $(OBJS)
 
 coverage: $(FILES) src/tests.c $(OBJS)
 	rm -rf tests.gcno tests.gcda tests_cov
-	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DVERIFY --coverage -fstack-protector-all -O2 -ggdb3 src/tests.c $(OBJS) $(LDFLAGS_EXTRA) -o tests_cov
+	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DVERIFY --coverage -O0 -g src/tests.c $(OBJS) $(LDFLAGS_EXTRA) -o tests_cov
 	rm -rf lcov
 	mkdir -p lcov
 	cd lcov; lcov --directory ../ --zerocounters
