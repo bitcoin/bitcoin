@@ -29,6 +29,16 @@ bench: $(FILES) src/bench.c $(OBJS)
 tests: $(FILES) src/tests.c $(OBJS)
 	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DVERIFY -fstack-protector-all -O2 -ggdb3 src/tests.c $(OBJS) $(LDFLAGS_EXTRA) -o tests
 
+coverage: $(FILES) src/tests.c $(OBJS)
+	rm -rf tests.gcno tests.gcda tests_cov
+	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DVERIFY --coverage -fstack-protector-all -O2 -ggdb3 src/tests.c $(OBJS) $(LDFLAGS_EXTRA) -o tests_cov
+	rm -rf lcov
+	mkdir -p lcov
+	cd lcov; lcov --directory ../ --zerocounters
+	cd lcov; ../tests_cov
+	cd lcov; lcov --directory ../ --capture --output-file secp256k1.info
+	cd lcov; genhtml -o . secp256k1.info
+
 libsecp256k1.a: obj/secp256k1.o $(OBJS)
 	$(AR) -rs $@ $(OBJS) obj/secp256k1.o
 
