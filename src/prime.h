@@ -37,6 +37,7 @@ void TargetSetSophieGermain(bool fSophieGermain, unsigned int& nBits);
 bool TargetIsBiTwin(unsigned int nBits);
 void TargetSetBiTwin(bool fBiTwin, unsigned int& nBits);
 std::string TargetGetName(unsigned int nBits);
+bool TargetGetMint(unsigned int nBits, uint64& nMint);
 
 // Mine probable prime chain of form: n = h * p# +/- 1
 bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);

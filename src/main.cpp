@@ -1052,17 +1052,15 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock)
     return pblock->GetHash();
 }
 
-int64 static GetBlockValue(int nHeight, int64 nFees)
+int64 static GetBlockValue(int nBits, int64 nFees)
 {
-    int64 nSubsidy = 50 * COIN;
-
-    // Subsidy is cut in half every 210000 blocks, which will occur approximately every 4 years
-    nSubsidy >>= (nHeight / 210000);
-
-    return nSubsidy + nFees;
+    uint64 nSubsidy = 0;
+    if (!TargetGetMint(nBits, nSubsidy))
+        error("GetBlockValue() : invalid mint value");
+    return ((int64)nSubsidy) + nFees;
 }
 
-static const int64 nTargetTimespan = 7 * 24 * 60 * 60; // one week
+static const int64 nTargetTimespan = 3 * 24 * 60 * 60; // one week
 static const int64 nTargetSpacing = 9 * 60; // target spacing per type
 
 //
@@ -1633,8 +1631,8 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     if (fBenchmark)
         printf("- Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin)\n", (unsigned)vtx.size(), 0.001 * nTime, 0.001 * nTime / vtx.size(), nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs-1));
 
-    if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
-        return state.DoS(100, error("ConnectBlock() : coinbase pays too much (actual=%"PRI64d" vs limit=%"PRI64d")", vtx[0].GetValueOut(), GetBlockValue(pindex->nHeight, nFees)));
+    if (vtx[0].GetValueOut() > GetBlockValue(pindex->nBits, nFees))
+        return state.DoS(100, error("ConnectBlock() : coinbase pays too much (actual=%"PRI64d" vs limit=%"PRI64d")", vtx[0].GetValueOut(), GetBlockValue(pindex->nBits, nFees)));
 
     if (!control.Wait())
         return state.DoS(100, false);
@@ -4304,14 +4302,15 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
         nLastBlockSize = nBlockSize;
         printf("CreateNewBlock(): total size %"PRI64u"\n", nBlockSize);
 
-        pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
+        bool fSophieGermain = GetRandInt(2);
+        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, fSophieGermain, fSophieGermain? 0 : GetRandInt(2));
+
+        pblock->vtx[0].vout[0].nValue = GetBlockValue(pblock->nBits, nFees);
         pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         pblock->UpdateTime(pindexPrev);
-        bool fSophieGermain = GetRandInt(2);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, fSophieGermain, fSophieGermain? 0 : GetRandInt(2));
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
         pblocktemplate->vTxSigOps[0] = pblock->vtx[0].GetLegacySigOpCount();

@@ -109,6 +109,9 @@ static bool EulerLagrangeLifchitzPrimalityTest(const CBigNum& n, bool fSophieGer
 
 static const unsigned int TARGET_SOPHIE_GERMAIN = 0x80000000u;
 static const unsigned int TARGET_BI_TWIN        = 0x40000000u;
+
+static const unsigned int TARGET_MIN_LENGTH = 2;
+
 static unsigned int TargetGetLength(unsigned int nBits)
 {
     return ((nBits & 0x3ff00000u) >> 20);
@@ -185,6 +188,25 @@ std::string TargetGetName(unsigned int nBits)
 static unsigned int TargetLengthFromInt(unsigned int nLength)
 {
     return (nLength << 20);
+}
+
+// Get mint value from target
+// Primecoin mint rate is determined by target
+//   mint = 9999 / (length ** 3)
+// Inflation is controlled via Moore's Law
+bool TargetGetMint(unsigned int nBits, uint64& nMint)
+{
+    static uint64 nMintLimit = 9999llu * COIN;
+    CBigNum bnMint = nMintLimit;
+    if (TargetGetLength(nBits) < TARGET_MIN_LENGTH)
+        return error("TargetGetMint() : length below minimum required, nBits=%08x", nBits);
+    unsigned int nLengthWithFractional = TargetGetLengthWithFractional(nBits);
+    bnMint = (bnMint << 20) / nLengthWithFractional;
+    bnMint = (bnMint << 20) / nLengthWithFractional;
+    bnMint = (bnMint << 20) / nLengthWithFractional;
+    bnMint = (bnMint / CENT) * CENT;  // mint value rounded to cent
+    nMint = bnMint.getuint256().Get64();
+    return true;
 }
 
 // Test Probable Cunningham Chain for: n
@@ -339,7 +361,7 @@ bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnPr
     bool fBiTwin = TargetIsBiTwin(nBits);
     if (fSophieGermain && fBiTwin)
         return error("CheckPrimeProofOfWork() : invalid prime chain type");
-    if (TargetGetLength(nBits) < 2 || TargetGetLength(nBits) > 99)
+    if (TargetGetLength(nBits) < TARGET_MIN_LENGTH || TargetGetLength(nBits) > 99)
         return error("CheckPrimeProofOfWork() : invalid chain length target %u", TargetGetLength(nBits));
 
     // Check target for prime proof-of-work
