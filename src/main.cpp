@@ -1087,8 +1087,6 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
     if (pindexLast == NULL)
         return nBits;
 
-    if (fDebug && GetBoolArg("-printtarget"))
-        printf("GetNextWorkRequired() : lastindex=%u fSophieGermain=%u fBiTwin=%u ", pindexLast->nHeight, fSophieGermain, fBiTwin);
     const CBlockIndex* pindexPrev = NULL;
     if (!GetLastBlockIndex(pindexLast, fSophieGermain, fBiTwin, &pindexPrev))
         return error("GetNextWorkRequired() : failed to get pindexPrev");
@@ -1100,13 +1098,15 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
     if (pindexPrevPrev->pprev == NULL)
         return nBits; // second block of the type
 
+    if (fDebug && GetBoolArg("-printtarget"))
+        printf("GetNextWorkRequired() : lastindex=%u fSophieGermain=%u fBiTwin=%u ", pindexLast->nHeight, fSophieGermain, fBiTwin);
+
+    // Primecoin: continuous target adjustment on every block
     int64 nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
-
-    // Primecoin: target change every block
-    // Primecoin: retarget with exponential moving toward target spacing
-
     nBits = pindexPrev->nBits;
+    // Convert length into fractional difficulty
     uint64 nFractionalDifficulty = TargetGetFractionalDifficulty(nBits);
+    // Compute new difficulty via exponential moving toward target spacing
     int64 nInterval = nTargetTimespan / nTargetSpacing;
     CBigNum bnFractionalDifficulty = nFractionalDifficulty;
     bnFractionalDifficulty *= ((nInterval + 1) * nTargetSpacing);
@@ -1116,7 +1116,6 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
     if (bnFractionalDifficulty < nFractionalDifficultyMin)
         bnFractionalDifficulty = nFractionalDifficultyMin;
     uint64 nFractionalDifficultyNew = bnFractionalDifficulty.getuint256().Get64();
-
     // Convert back to length
     if (!TargetSetFractionalDifficulty(nFractionalDifficultyNew, nBits))
         return error("GetNextWorkRequired() : unable to set fractional difficulty prev=0x%016"PRI64x" new=0x%016"PRI64x, nFractionalDifficulty, nFractionalDifficultyNew);
@@ -4311,7 +4310,8 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         pblock->UpdateTime(pindexPrev);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, GetRandInt(2), GetRandInt(2));
+        bool fSophieGermain = GetRandInt(2);
+        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, fSophieGermain, fSophieGermain? 0 : GetRandInt(2));
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
         pblocktemplate->vTxSigOps[0] = pblock->vtx[0].GetLegacySigOpCount();

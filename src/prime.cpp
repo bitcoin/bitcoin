@@ -116,7 +116,7 @@ static unsigned int TargetGetLength(unsigned int nBits)
 
 bool TargetSetLength(unsigned int nLength, unsigned int& nBits)
 {
-    if (nLength >= 0xff || nLength < TargetGetLength(nProofOfWorkLimit))
+    if (nLength >= 0xff)
         return error("TargetSetLength() : invalid length=%u", nLength);
     nBits &= ~(0x3ff00000u);
     nBits |= (nLength << nFractionalBits);
@@ -273,10 +273,12 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTrie
 // Find last block index up to pindex of the given prime chain type
 bool GetLastBlockIndex(const CBlockIndex* pindex, bool fSophieGermain, bool fBiTwin, const CBlockIndex** pindexPrev)
 {
+    if (fSophieGermain && fBiTwin)
+        return error("GetLastBlockIndex() : ambiguous chain type");
     for (; pindex && pindex->pprev; pindex = pindex->pprev)
     {
-        if ((TargetIsSophieGermain(pindex->nBits) && fSophieGermain) ||
-            (TargetIsBiTwin(pindex->nBits) && fBiTwin))
+        if ((TargetIsSophieGermain(pindex->nBits) == fSophieGermain) &&
+            (TargetIsBiTwin(pindex->nBits) == fBiTwin))
             break;
     }
     *pindexPrev = pindex;
