@@ -4,7 +4,7 @@ bitcoind \- peer-to-peer network based digital currency
 .SH SYNOPSIS
 bitcoin [options] <command> [params]  
 .TP
-bitcoin [options] help <command> - Get help for a command
+bitcoin [options] help <command> \- Get help for a command
 .SH DESCRIPTION
 This  manual page documents the bitcoind program. Bitcoin is a peer-to-peer digital currency. Peer-to-peer (P2P) means that there is no central authority to issue new money or keep track of transactions. Instead, these tasks are managed collectively by the nodes of the network. Advantages:
 
@@ -75,7 +75,7 @@ Server certificate file (default: server.cert)
 Server private key (default: server.pem)
 .TP
 \fB\-rpcsslciphers=\fR<ciphers>
-Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)
+Acceptable ciphers (default: TLSv1+HIGH:\:!SSLv2:\:!aNULL:\:!eNULL:\:!AH:\:!3DES:\:@STRENGTH)
 .TP
 \-?
 This help message
@@ -115,7 +115,7 @@ Returns the proof-of-work difficulty as a multiple of the minimum difficulty.
 Returns boolean true if server is trying to generate bitcoins, false otherwise.
 .TP
 \fBsetgenerate 'generate' ['genproclimit']\fR
-Generation is limited to ['genproclimit'] processors, -1 is unlimited.
+Generation is limited to ['genproclimit'] processors, \-1 is unlimited.
 .TP
 \fBgethashespersec\fR
 Returns a recent hashes per second performance measurement while generating.
@@ -166,7 +166,7 @@ List accounts and their current balances.
     "confirmations" : number of confirmations of the most recent transaction included.
 .TP
 \fBlisttransactions 'account' ['count=10']\fR
-Returns a list of the last ['count'] transactions for 'account' - for all accounts if 'account' is not specified or is "*". Each entry in the list may contain:
+Returns a list of the last ['count'] transactions for 'account' \- for all accounts if 'account' is not specified or is "*". Each entry in the list may contain:
 
     "category"      : will be generate, send, receive, or move.
     "amount"        : amount of transaction.
