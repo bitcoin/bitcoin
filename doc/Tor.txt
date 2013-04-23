@@ -3,7 +3,7 @@ TOR SUPPORT IN BITCOIN
 
 It is possible to run Bitcoin as a Tor hidden service, and connect to such services.
 
-The following assumes you have a Tor proxy running on port 9050. Many distributions
+The following directions assume you have a Tor proxy running on port 9050. Many distributions
 default to having a SOCKS proxy listening on port 9050, but others may not.
 In particular, the Tor Browser Bundle defaults to listening on a random port. See
 https://www.torproject.org/docs/faq.html.en#TBBSocksPort for how to properly
@@ -77,7 +77,7 @@ In a typical situation, where you're only reachable via Tor, this should suffice
 
   ./bitcoind -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
 
-(obviously replace the Onion address with your own). If you don't care too much
+(obviously, replace the Onion address with your own). If you don't care too much
 about hiding your node, and want to be reachable on IPv4 as well, additionally
 specify:
 
