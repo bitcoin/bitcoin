@@ -46,19 +46,31 @@ Mac OS X
 
 - Download and install the `Qt Mac OS X SDK`_. It is recommended to also install Apple's Xcode with UNIX tools.
 
-- Download and install `MacPorts`_.
+- Download and install either `MacPorts`_ or `HomeBrew`_.
 
-- Execute the following commands in a terminal to get the dependencies:
+- Execute the following commands in a terminal to get the dependencies using MacPorts:
 
 ::
 
 	sudo port selfupdate
 	sudo port install boost db48 miniupnpc
 
+- Execute the following commands in a terminal to get the dependencies using HomeBrew:
+
+::
+
+	brew update
+	brew install boost miniupnpc openssl berkeley-db4
+
+- If using HomeBrew,  edit `bitcoin-qt.pro` to account for library location differences. There's a diff in `contrib/homebrew/bitcoin-qt-pro.patch` that shows what you need to change, or you can just patch by doing
+
+        patch -p1 < contrib/homebrew/bitcoin.qt.pro.patch
+
 - Open the bitcoin-qt.pro file in Qt Creator and build as normal (cmd-B)
 
 .. _`Qt Mac OS X SDK`: http://qt-project.org/downloads/
 .. _`MacPorts`: http://www.macports.org/install.php
+.. _`HomeBrew`: http://mxcl.github.io/homebrew/
 
 
 Build configuration options
