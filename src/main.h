@@ -439,6 +439,24 @@ public:
         return !(a == b);
     }
 
+    size_t size() const
+    {
+        return sizeof(nValue)+scriptPubKey.size();
+    }
+
+    bool IsDust() const
+    {
+        // "Dust" is defined in terms of MIN_RELAY_TX_FEE, which
+        // has units satoshis-per-kilobyte.
+        // If you'd pay more than 1/3 in fees
+        // to spend something, then we consider it dust.
+        // A typical txout is 32 bytes big, and will
+        // need a CTxIn of at least 148 bytes to spend, 
+        // so dust is a txout less than 54 uBTC
+        // (5400 satoshis)
+        return ((nValue*1000)/(3*(size()+148)) < MIN_RELAY_TX_FEE);
+    }
+
     std::string ToString() const
     {
         if (scriptPubKey.size() < 6)

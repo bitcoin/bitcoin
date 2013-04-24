@@ -21,13 +21,12 @@ static vector<COutput> vCoins;
 
 static void add_coin(int64 nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0)
 {
-    static int i;
-    CTransaction* tx = new CTransaction;
-    tx->nLockTime = i++;        // so all transactions get different hashes
-    tx->vout.resize(nInput+1);
-    tx->vout[nInput].nValue = nValue;
-    CWalletTx* wtx = new CWalletTx(&wallet, *tx);
-    delete tx;
+    static int nextLockTime = 0;
+    CTransaction tx;
+    tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
+    tx.vout.resize(nInput+1);
+    tx.vout[nInput].nValue = nValue;
+    CWalletTx* wtx = new CWalletTx(&wallet, tx);
     if (fIsFromMe)
     {
         // IsFromMe() returns (GetDebit() > 0), and GetDebit() is 0 if vin.empty(),
@@ -55,8 +54,8 @@ static bool equal_sets(CoinSet a, CoinSet b)
 
 BOOST_AUTO_TEST_CASE(coin_selection_tests)
 {
-    static CoinSet setCoinsRet, setCoinsRet2;
-    static int64 nValueRet;
+    CoinSet setCoinsRet, setCoinsRet2;
+    int64 nValueRet;
 
     // test multiple times to allow for differences in the shuffle order
     for (int i = 0; i < RUN_TESTS; i++)
