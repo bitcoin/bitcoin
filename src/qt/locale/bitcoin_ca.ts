@@ -41,7 +41,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Llibreta d&apos;adreçes</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+19"/>
         <source>Double-click to edit address or label</source>
         <translation type="unfinished"/>
     </message>
@@ -61,12 +61,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-46"/>
+        <location filename="../addressbookpage.cpp" line="+59"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+60"/>
+        <location filename="../forms/addressbookpage.ui" line="+14"/>
         <source>&amp;Copy Address</source>
         <translation type="unfinished"/>
     </message>
@@ -106,7 +106,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+66"/>
+        <location filename="../addressbookpage.cpp" line="-5"/>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Copy &amp;Label</source>
         <translation type="unfinished"/>
     </message>
@@ -121,7 +126,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+263"/>
+        <location line="+260"/>
         <source>Export Address Book Data</source>
         <translation type="unfinished"/>
     </message>
@@ -303,7 +308,7 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+231"/>
+        <location filename="../bitcoingui.cpp" line="+233"/>
         <source>Sign &amp;message...</source>
         <translation type="unfinished"/>
     </message>
@@ -313,7 +318,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-367"/>
+        <location line="-368"/>
         <source>&amp;Overview</source>
         <translation type="unfinished"/>
     </message>
@@ -373,7 +378,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation type="unfinished"/>
     </message>
@@ -403,7 +408,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Send coins to a Bitcoin address</source>
         <translation type="unfinished"/>
     </message>
@@ -413,7 +418,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished"/>
     </message>
@@ -443,13 +448,13 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-162"/>
-        <location line="+540"/>
+        <location line="-163"/>
+        <location line="+541"/>
         <source>Bitcoin</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-540"/>
+        <location line="-541"/>
         <source>Wallet</source>
         <translation type="unfinished"/>
     </message>
@@ -484,7 +489,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation type="unfinished"/>
     </message>
@@ -656,7 +661,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+108"/>
+        <location filename="../bitcoin.cpp" line="+104"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation type="unfinished"/>
     </message>
@@ -664,7 +669,7 @@ Address: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+96"/>
+        <location filename="../clientmodel.cpp" line="+98"/>
         <source>Network Alert</source>
         <translation type="unfinished"/>
     </message>
@@ -740,7 +745,7 @@ Address: %4
 <context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+422"/>
+        <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
         <source>Bitcoin-Qt</source>
         <translation type="unfinished"/>
@@ -1134,7 +1139,7 @@ Address: %4
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+344"/>
+        <location filename="../rpcconsole.cpp" line="+339"/>
         <source>N/A</source>
         <translation type="unfinished"/>
     </message>
@@ -2108,117 +2113,7 @@ Address: %4
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+95"/>
-        <source>&amp;Overview</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Show general overview of wallet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Send coins</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Receive coins</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Show the list of addresses for receiving payments</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Transactions</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Browse transaction history</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Address Book</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Edit the list of stored addresses and labels</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Backup wallet to another location</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>&amp;Verify message...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>&amp;Export...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+180"/>
+        <location filename="../walletview.cpp" line="+247"/>
         <source>Backup Wallet</source>
         <translation type="unfinished"/>
     </message>
@@ -2261,7 +2156,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-24"/>
+        <location line="-25"/>
         <source>Send command to -server or bitcoind</source>
         <translation type="unfinished"/>
     </message>
@@ -2281,7 +2176,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+23"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation type="unfinished"/>
     </message>
@@ -2291,12 +2186,12 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Generate coins</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-27"/>
         <source>Don&apos;t generate coins</source>
         <translation type="unfinished"/>
     </message>
@@ -2306,7 +2201,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-8"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation type="unfinished"/>
     </message>
@@ -2321,7 +2216,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-49"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation type="unfinished"/>
     </message>
@@ -2356,12 +2251,12 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+33"/>
         <source>Use the test network</source>
         <translation type="unfinished"/>
     </message>
@@ -2531,7 +2426,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Error: system error: </source>
         <translation type="unfinished"/>
     </message>
@@ -2611,7 +2506,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+16"/>
+        <source>Set the number of threads to service RPC calls (default: 4)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+22"/>
         <source>Verifying blocks...</source>
         <translation type="unfinished"/>
     </message>
@@ -2621,7 +2521,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-62"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation type="unfinished"/>
     </message>
@@ -2706,7 +2606,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation type="unfinished"/>
     </message>
@@ -2761,22 +2661,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-46"/>
         <source>Password for JSON-RPC connections</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-120"/>
+        <location line="-119"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation type="unfinished"/>
     </message>
@@ -2786,7 +2686,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-17"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation type="unfinished"/>
     </message>
@@ -2796,12 +2696,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-21"/>
+        <location line="-22"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation type="unfinished"/>
     </message>
@@ -2811,7 +2711,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-154"/>
+        <location line="-153"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation type="unfinished"/>
     </message>
@@ -2836,12 +2736,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+56"/>
         <source>Loading addresses...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-34"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation type="unfinished"/>
     </message>
@@ -2861,12 +2761,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+29"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+49"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
@@ -2886,17 +2786,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-24"/>
-        <source>Error: could not start node</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+25"/>
+        <location line="+1"/>
         <source>Invalid amount</source>
         <translation type="unfinished"/>
     </message>
@@ -2911,7 +2806,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-59"/>
+        <location line="-58"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation type="unfinished"/>
     </message>
@@ -2921,7 +2816,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+67"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation type="unfinished"/>
     </message>
@@ -2931,7 +2826,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-53"/>
         <source>Cannot downgrade wallet</source>
         <translation type="unfinished"/>
     </message>
@@ -2946,12 +2841,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+64"/>
+        <location line="+63"/>
         <source>Rescanning...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-55"/>
         <source>Done loading</source>
         <translation type="unfinished"/>
     </message>

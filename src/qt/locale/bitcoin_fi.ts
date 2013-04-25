@@ -31,12 +31,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../aboutdialog.cpp" line="+17"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>Tekijänoikeus</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>2009-%1 The Bitcoin developers</source>
-        <translation type="unfinished"/>
+        <translation>2009-%1 Bittirahan kehittäjät</translation>
     </message>
 </context>
 <context>
@@ -47,7 +47,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Osoitekirja</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+19"/>
         <source>Double-click to edit address or label</source>
         <translation>Kaksoisnapauta muokataksesi osoitetta tai nimeä</translation>
     </message>
@@ -67,12 +67,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>&amp;Uusi Osoite</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location filename="../addressbookpage.cpp" line="+59"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
         <translation>Nämä ovat Bitcoin-osoitteesi joihin voit vastaanottaa maksuja. Voit haluta antaa jokaiselle maksajalle omansa, että pystyt seuraamaan keneltä maksut tulevat.</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location filename="../forms/addressbookpage.ui" line="+14"/>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopioi Osoite</translation>
     </message>
@@ -112,7 +112,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>&amp;Poista</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+66"/>
+        <location filename="../addressbookpage.cpp" line="-5"/>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Copy &amp;Label</source>
         <translation>Kopioi &amp;Nimi</translation>
     </message>
@@ -124,10 +129,10 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="+1"/>
         <source>Send &amp;Coins</source>
-        <translation type="unfinished"/>
+        <translation>Lähetä &amp;Rahaa</translation>
     </message>
     <message>
-        <location line="+263"/>
+        <location line="+260"/>
         <source>Export Address Book Data</source>
         <translation>Vie osoitekirja</translation>
     </message>
@@ -170,12 +175,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="+26"/>
         <source>Passphrase Dialog</source>
-        <translation>Tunnuslause Dialogi</translation>
+        <translation>Tunnuslauseen Dialogi</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Enter passphrase</source>
-        <translation>Anna tunnuslause</translation>
+        <translation>Kirjoita tunnuslause</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -185,7 +190,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation>Toista uusi tunnuslause</translation>
+        <translation>Kiroita uusi tunnuslause uudelleen</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="+33"/>
@@ -230,12 +235,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation>Hyväksy lompakon salaus</translation>
+        <translation>Vahvista lompakon salaus</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Varoitus: Jos salaat lompakkosi ja menetät tunnuslauseesi, tulet &lt;b&gt;MENETTÄMÄÄN KAIKKI BITCOINISI&lt;/b&gt;!</translation>
+        <translation>Varoitus: Jos salaat lompakkosi ja menetät tunnuslauseesi, &lt;b&gt;MENETÄT KAIKKI BITCOINISI&lt;/b&gt;!</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -245,13 +250,13 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="+15"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"/>
+        <translation>TÄRKEÄÄ: Kaikki vanhat lompakon varmuuskopiot pitäisi korvata uusilla suojatuilla varmuuskopioilla. Turvallisuussyistä edelliset varmuuskopiot muuttuvat turhiksi, kun aloitat suojatun lompakon käytön.</translation>
     </message>
     <message>
         <location line="+100"/>
         <location line="+24"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Varoitus: Caps Lock on aktiivinen!</translation>
+        <translation>Varoitus: Caps Lock on käytössä!</translation>
     </message>
     <message>
         <location line="-130"/>
@@ -262,7 +267,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="-56"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin sulkeutuu lopettaakseen salausprosessin. Muista, että salattu lompakko ei täysin suojaa sitä haittaohjelmien aiheuttamilta varkauksilta.</translation>
+        <translation>Bitcoin sulkeutuu lopettaakseen salausprosessin. Muista, että salattukaan lompakko ei täysin suojaa sitä haittaohjelmien aiheuttamilta varkauksilta.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -275,7 +280,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="-54"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Lompakon salaaminen epäonnistui sisäisen virheen vuoksi. Lompakkoa ei salattu.</translation>
+        <translation>Lompakon salaaminen epäonnistui sisäisen virheen vuoksi. Lompakkoasi ei salattu.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -309,7 +314,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+231"/>
+        <location filename="../bitcoingui.cpp" line="+233"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Allekirjoita viesti...</translation>
     </message>
@@ -319,14 +324,14 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Synkronoidaan verkon kanssa...</translation>
     </message>
     <message>
-        <location line="-367"/>
+        <location line="-368"/>
         <source>&amp;Overview</source>
         <translation>&amp;Yleisnäkymä</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show general overview of wallet</source>
-        <translation>Näyttää kokonaiskatsauksen lompakon tilanteesta</translation>
+        <translation>Lompakon tilanteen yleiskatsaus</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -356,7 +361,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="+1"/>
         <source>Quit application</source>
-        <translation>Lopeta ohjelma</translation>
+        <translation>Sulje ohjelma</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -379,7 +384,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>&amp;Asetukset...</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Salaa lompakko...</translation>
     </message>
@@ -409,7 +414,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>&amp;Vie...</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Lähetä kolikoita Bitcoin-osoitteeseen</translation>
     </message>
@@ -419,7 +424,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Muuta Bitcoinin konfiguraatioasetuksia</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Vie auki olevan välilehden tiedot tiedostoon</translation>
     </message>
@@ -436,7 +441,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="+9"/>
         <source>&amp;Debug window</source>
-        <translation>&amp;Debug ikkuna</translation>
+        <translation>&amp;Testausikkuna</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -449,35 +454,35 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Varmista &amp;viesti...</translation>
     </message>
     <message>
-        <location line="-162"/>
-        <location line="+540"/>
+        <location line="-163"/>
+        <location line="+541"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-540"/>
+        <location line="-541"/>
         <source>Wallet</source>
         <translation>Lompakko</translation>
     </message>
     <message>
         <location line="+99"/>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Lähetä</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Receive</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Vastaanota</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>&amp;Addresses</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Osoitteet</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>&amp;About Bitcoin</source>
-        <translation>Tieto&amp;a Bitcoinista</translation>
+        <translation>&amp;Tietoa Bitcoinista</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -487,22 +492,22 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="+1"/>
         <source>Show or hide the main Window</source>
-        <translation>Näytä tai piillota Bitcoin-ikkuna</translation>
+        <translation>Näytä tai piilota Bitcoin-ikkuna</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
+        <translation>Suojaa yksityiset avaimet, jotka kuuluvat lompakkoosi</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Allekirjoita viesti todistaaksesi, että omistat Bitcoin-osoitteen</translation>
+        <translation>Allekirjoita viestisi omalla Bitcoin -osoitteellasi todistaaksesi, että omistat ne</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished"/>
+        <translation>Varmista, että viestisi on allekirjoitettu määritetyllä Bitcoin -osoitteella</translation>
     </message>
     <message>
         <location line="+31"/>
@@ -553,7 +558,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="+4"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation type="unfinished"/>
+        <translation>Käsitelty %1 lohkoa rahansiirtohistoriasta</translation>
     </message>
     <message numerus="yes">
         <location line="+20"/>
@@ -613,7 +618,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="+32"/>
         <source>Catching up...</source>
-        <translation>Kurotaan kiinni...</translation>
+        <translation>Saavutetaan verkkoa...</translation>
     </message>
     <message>
         <location line="+110"/>
@@ -665,7 +670,7 @@ Osoite: %4</translation>
         <translation>Lompakko on &lt;b&gt;salattu&lt;/b&gt; ja tällä hetkellä &lt;b&gt;lukittuna&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+108"/>
+        <location filename="../bitcoin.cpp" line="+104"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Peruuttamaton virhe on tapahtunut. Bitcoin ei voi enää jatkaa turvallisesti ja sammutetaan.</translation>
     </message>
@@ -673,7 +678,7 @@ Osoite: %4</translation>
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+96"/>
+        <location filename="../clientmodel.cpp" line="+98"/>
         <source>Network Alert</source>
         <translation>Verkkohälytys</translation>
     </message>
@@ -749,7 +754,7 @@ Osoite: %4</translation>
 <context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+422"/>
+        <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
         <source>Bitcoin-Qt</source>
         <translation>Bitcoin-Qt</translation>
@@ -1143,7 +1148,7 @@ Osoite: %4</translation>
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+344"/>
+        <location filename="../rpcconsole.cpp" line="+339"/>
         <source>N/A</source>
         <translation>Ei saatavilla</translation>
     </message>
@@ -1514,7 +1519,7 @@ Osoite: %4</translation>
     <message>
         <location line="+3"/>
         <source>Sign &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>Allekirjoita &amp;viesti</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -2117,117 +2122,7 @@ Osoite: %4</translation>
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+95"/>
-        <source>&amp;Overview</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Show general overview of wallet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Send coins</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Receive coins</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Show the list of addresses for receiving payments</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Transactions</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Browse transaction history</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Address Book</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Edit the list of stored addresses and labels</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Backup wallet to another location</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Allekirjoita viesti todistaaksesi, että omistat Bitcoin-osoitteen</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>&amp;Verify message...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>&amp;Export...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+180"/>
+        <location filename="../walletview.cpp" line="+247"/>
         <source>Backup Wallet</source>
         <translation type="unfinished"/>
     </message>
@@ -2270,7 +2165,7 @@ Osoite: %4</translation>
         <translation>Käyttö:</translation>
     </message>
     <message>
-        <location line="-24"/>
+        <location line="-25"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Lähetä käsky palvelimelle tai bitcoind:lle</translation>
     </message>
@@ -2290,7 +2185,7 @@ Osoite: %4</translation>
         <translation>Asetukset:</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+23"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Määritä asetustiedosto (oletus: bitcoin.conf)</translation>
     </message>
@@ -2300,12 +2195,12 @@ Osoite: %4</translation>
         <translation>Määritä pid-tiedosto (oletus: bitcoin.pid)</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Generate coins</source>
         <translation>Generoi kolikoita</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-27"/>
         <source>Don&apos;t generate coins</source>
         <translation>Älä generoi kolikoita</translation>
     </message>
@@ -2315,7 +2210,7 @@ Osoite: %4</translation>
         <translation>Määritä data-hakemisto</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-8"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>Aseta tietokannan välimuistin koko megatavuina (oletus: 25)</translation>
     </message>
@@ -2330,7 +2225,7 @@ Osoite: %4</translation>
         <translation>Pidä enintään &lt;n&gt; yhteyttä verkkoihin (oletus: 125)</translation>
     </message>
     <message>
-        <location line="-49"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Yhdistä noodiin hakeaksesi naapurien osoitteet ja katkaise yhteys</translation>
     </message>
@@ -2365,12 +2260,12 @@ Osoite: %4</translation>
         <translation>Hyväksy merkkipohjaiset- ja JSON-RPC-käskyt</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Aja taustalla daemonina ja hyväksy komennot</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+33"/>
         <source>Use the test network</source>
         <translation>Käytä test -verkkoa</translation>
     </message>
@@ -2397,7 +2292,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+17"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Virhe ilmennyt asetettaessa RPC-porttia %u IPv6:n kuuntelemiseksi, palataan takaisin IPv4:ään %s</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2540,7 +2435,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Error: system error: </source>
         <translation>Virhe: Järjestelmävirhe</translation>
     </message>
@@ -2620,7 +2515,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+16"/>
+        <source>Set the number of threads to service RPC calls (default: 4)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+22"/>
         <source>Verifying blocks...</source>
         <translation type="unfinished"/>
     </message>
@@ -2630,7 +2530,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-62"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Tuodaan lohkoja ulkoisesta blk000??.dat tiedostosta</translation>
     </message>
@@ -2715,7 +2615,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Asetan pienin lohkon koko tavuissa (vakioasetus: 0)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Pienennä debug.log tiedosto käynnistyksen yhteydessä (vakioasetus: 1 kun ei -debug)</translation>
     </message>
@@ -2770,22 +2670,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-46"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Salasana JSON-RPC-yhteyksille</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Salli JSON-RPC yhteydet tietystä ip-osoitteesta</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Lähetä käskyjä solmuun osoitteessa &lt;ip&gt; (oletus: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-120"/>
+        <location line="-119"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Suorita käsky kun paras lohko muuttuu (%s cmd on vaihdettu block hashin kanssa)</translation>
     </message>
@@ -2795,7 +2695,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Päivitä lompakko uusimpaan formaattiin</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-17"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Aseta avainpoolin koko arvoon &lt;n&gt; (oletus: 100)</translation>
     </message>
@@ -2805,12 +2705,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Skannaa uudelleen lohkoketju lompakon puuttuvien rahasiirtojen vuoksi</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Käytä OpenSSL:ää (https) JSON-RPC-yhteyksille</translation>
     </message>
     <message>
-        <location line="-21"/>
+        <location line="-22"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Palvelimen sertifikaatti-tiedosto (oletus: server.cert)</translation>
     </message>
@@ -2820,7 +2720,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Palvelimen yksityisavain (oletus: server.pem)</translation>
     </message>
     <message>
-        <location line="-154"/>
+        <location line="-153"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Hyväksyttävä salaus (oletus:
 TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
@@ -2846,12 +2746,12 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Salli DNS kyselyt -addnode, -seednode ja -connect yhteydessä</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+56"/>
         <source>Loading addresses...</source>
         <translation>Ladataan osoitteita...</translation>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-34"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa: Lompakko vioittunut</translation>
     </message>
@@ -2871,12 +2771,12 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+29"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Virheellinen proxy-osoite &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+49"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Tuntematon verkko -onlynet parametrina: &apos;%s&apos;</translation>
     </message>
@@ -2896,17 +2796,12 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>-externalip osoitteen &apos;%s&apos; selvittäminen epäonnistui</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>-paytxfee=&lt;amount&gt;: &apos;%s&apos; on virheellinen</translation>
     </message>
     <message>
-        <location line="-24"/>
-        <source>Error: could not start node</source>
-        <translation>Virhe: ei pystytty käynnistämään noodia.</translation>
-    </message>
-    <message>
-        <location line="+25"/>
+        <location line="+1"/>
         <source>Invalid amount</source>
         <translation>Virheellinen määrä</translation>
     </message>
@@ -2921,7 +2816,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Ladataan lohkoindeksiä...</translation>
     </message>
     <message>
-        <location line="-59"/>
+        <location line="-58"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Linää solmu mihin liittyä pitääksesi yhteyden auki</translation>
     </message>
@@ -2931,7 +2826,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Kytkeytyminen %s ei onnistu tällä tietokoneella. Bitcoin on todennäköisesti jo ajamassa.</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+67"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Rahansiirtopalkkio per KB lisätään lähettämääsi rahansiirtoon</translation>
     </message>
@@ -2941,7 +2836,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Ladataan lompakkoa...</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-53"/>
         <source>Cannot downgrade wallet</source>
         <translation>Et voi päivittää lompakkoasi vanhempaan versioon</translation>
     </message>
@@ -2956,12 +2851,12 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Oletusosoitetta ei voi kirjoittaa</translation>
     </message>
     <message>
-        <location line="+64"/>
+        <location line="+63"/>
         <source>Rescanning...</source>
         <translation>Skannataan uudelleen...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-55"/>
         <source>Done loading</source>
         <translation>Lataus on valmis</translation>
     </message>

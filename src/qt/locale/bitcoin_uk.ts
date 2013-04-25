@@ -46,7 +46,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Адресна книга</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+19"/>
         <source>Double-click to edit address or label</source>
         <translation>Двічі клікніть на адресу чи назву для їх зміни</translation>
     </message>
@@ -66,12 +66,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Створити адресу</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location filename="../addressbookpage.cpp" line="+59"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
         <translation>Це ваші адреси для отримання платежів. Ви можете давати різні адреси різним людям, таким чином маючи можливість відслідкувати хто конкретно і скільки вам заплатив.</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location filename="../forms/addressbookpage.ui" line="+14"/>
         <source>&amp;Copy Address</source>
         <translation>&amp;Скопіювати адресу</translation>
     </message>
@@ -111,7 +111,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Видалити</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+66"/>
+        <location filename="../addressbookpage.cpp" line="-5"/>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Copy &amp;Label</source>
         <translation>Скопіювати &amp;мітку</translation>
     </message>
@@ -126,7 +131,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+263"/>
+        <location line="+260"/>
         <source>Export Address Book Data</source>
         <translation>Експортувати адресну книгу</translation>
     </message>
@@ -308,7 +313,7 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+231"/>
+        <location filename="../bitcoingui.cpp" line="+233"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Підписати повідомлення...</translation>
     </message>
@@ -318,7 +323,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Синхронізація з мережею...</translation>
     </message>
     <message>
-        <location line="-367"/>
+        <location line="-368"/>
         <source>&amp;Overview</source>
         <translation>&amp;Огляд</translation>
     </message>
@@ -378,7 +383,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Параметри...</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Шифрування гаманця...</translation>
     </message>
@@ -408,7 +413,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Експорт...</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Відправити монети на вказану адресу</translation>
     </message>
@@ -418,7 +423,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Редагувати параметри</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Експортувати дані з поточної вкладки в файл</translation>
     </message>
@@ -448,13 +453,13 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Перевірити повідомлення...</translation>
     </message>
     <message>
-        <location line="-162"/>
-        <location line="+540"/>
+        <location line="-163"/>
+        <location line="+541"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-540"/>
+        <location line="-541"/>
         <source>Wallet</source>
         <translation>Гаманець</translation>
     </message>
@@ -489,7 +494,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Показує або приховує головне вікно</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation type="unfinished"/>
     </message>
@@ -665,7 +670,7 @@ Address: %4
         <translation>&lt;b&gt;Зашифрований&lt;/b&gt; гаманець &lt;b&gt;заблоковано&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+108"/>
+        <location filename="../bitcoin.cpp" line="+104"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation type="unfinished"/>
     </message>
@@ -673,7 +678,7 @@ Address: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+96"/>
+        <location filename="../clientmodel.cpp" line="+98"/>
         <source>Network Alert</source>
         <translation>Сповіщення мережі</translation>
     </message>
@@ -749,7 +754,7 @@ Address: %4
 <context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+422"/>
+        <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
         <source>Bitcoin-Qt</source>
         <translation>Bitcoin-Qt</translation>
@@ -1143,7 +1148,7 @@ Address: %4
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+344"/>
+        <location filename="../rpcconsole.cpp" line="+339"/>
         <source>N/A</source>
         <translation>Н/Д</translation>
     </message>
@@ -2117,117 +2122,7 @@ Address: %4
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+95"/>
-        <source>&amp;Overview</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Show general overview of wallet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Send coins</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Receive coins</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Show the list of addresses for receiving payments</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Transactions</source>
-        <translation>Транзакції</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Browse transaction history</source>
-        <translation>Переглянути історію транзакцій</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>&amp;Address Book</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Edit the list of stored addresses and labels</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Backup wallet to another location</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Підтвердіть, що Ви є власником повідомлення підписавши його Вашою Bitcoin-адресою </translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>&amp;Verify message...</source>
-        <translation>Перевірити повідомлення...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Перевірте повідомлення для впевненості, що воно підписано вказаною Bitcoin-адресою</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>&amp;Export...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+180"/>
+        <location filename="../walletview.cpp" line="+247"/>
         <source>Backup Wallet</source>
         <translation type="unfinished"/>
     </message>
@@ -2270,7 +2165,7 @@ Address: %4
         <translation>Використання:</translation>
     </message>
     <message>
-        <location line="-24"/>
+        <location line="-25"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Відправити команду серверу -server чи демону</translation>
     </message>
@@ -2290,7 +2185,7 @@ Address: %4
         <translation>Параметри:</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+23"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Вкажіть файл конфігурації (типово: bitcoin.conf)</translation>
     </message>
@@ -2300,12 +2195,12 @@ Address: %4
         <translation>Вкажіть pid-файл (типово: bitcoind.pid)</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Generate coins</source>
         <translation>Генерувати монети</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-27"/>
         <source>Don&apos;t generate coins</source>
         <translation>Не генерувати монети</translation>
     </message>
@@ -2315,7 +2210,7 @@ Address: %4
         <translation>Вкажіть робочий каталог</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-8"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>Встановити розмір кешу бази даних в мегабайтах (типово: 25)</translation>
     </message>
@@ -2330,7 +2225,7 @@ Address: %4
         <translation>Підтримувати не більше &lt;n&gt; зв&apos;язків з колегами (типово: 125)</translation>
     </message>
     <message>
-        <location line="-49"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation type="unfinished"/>
     </message>
@@ -2365,12 +2260,12 @@ Address: %4
         <translation>Приймати команди із командного рядка та команди JSON-RPC</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Запустити в фоновому режимі (як демон) та приймати команди</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+33"/>
         <source>Use the test network</source>
         <translation>Використовувати тестову мережу</translation>
     </message>
@@ -2540,7 +2435,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Помилка: Гаманець заблокований, неможливо створити транзакцію!</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Error: system error: </source>
         <translation>Помилка: системна помилка: </translation>
     </message>
@@ -2620,7 +2515,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+16"/>
+        <source>Set the number of threads to service RPC calls (default: 4)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+22"/>
         <source>Verifying blocks...</source>
         <translation type="unfinished"/>
     </message>
@@ -2630,7 +2530,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-62"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Імпорт блоків з зовнішнього файлу blk000??.dat</translation>
     </message>
@@ -2715,7 +2615,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Встановити мінімальний розмір блоку у байтах (типово: 0)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Стискати файл debug.log під час старту клієнта (типово: 1 коли відсутутній параметр -debug)</translation>
     </message>
@@ -2770,22 +2670,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>wallet.dat пошкоджено, відновлення не вдалося</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-46"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Пароль для JSON-RPC-з&apos;єднань</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Дозволити JSON-RPC-з&apos;єднання з вказаної IP-адреси</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Відправляти команди на вузол, запущений на &lt;ip&gt; (типово: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-120"/>
+        <location line="-119"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation type="unfinished"/>
     </message>
@@ -2795,7 +2695,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Модернізувати гаманець до останнього формату</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-17"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Встановити розмір пулу ключів &lt;n&gt; (типово: 100)</translation>
     </message>
@@ -2805,12 +2705,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Пересканувати ланцюжок блоків, в пошуку втрачених транзакцій</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Використовувати OpenSSL (https) для JSON-RPC-з&apos;єднань</translation>
     </message>
     <message>
-        <location line="-21"/>
+        <location line="-22"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Файл сертифіката сервера (типово: server.cert)</translation>
     </message>
@@ -2820,7 +2720,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Закритий ключ сервера (типово: server.pem)</translation>
     </message>
     <message>
-        <location line="-154"/>
+        <location line="-153"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Допустимі шифри (типово: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
@@ -2845,12 +2745,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Дозволити пошук в DNS для команд -addnode, -seednode та -connect</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+56"/>
         <source>Loading addresses...</source>
         <translation>Завантаження адрес...</translation>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-34"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Помилка при завантаженні wallet.dat: Гаманець пошкоджено</translation>
     </message>
@@ -2870,12 +2770,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Помилка при завантаженні wallet.dat</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+29"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Помилка в адресі проксі-сервера: «%s»</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+49"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Невідома мережа вказана в -onlynet: «%s»</translation>
     </message>
@@ -2895,17 +2795,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Помилка у величині комісії -paytxfee=&lt;amount&gt;: «%s»</translation>
     </message>
     <message>
-        <location line="-24"/>
-        <source>Error: could not start node</source>
-        <translation>Помилка: неможливо запустити вузол</translation>
-    </message>
-    <message>
-        <location line="+25"/>
+        <location line="+1"/>
         <source>Invalid amount</source>
         <translation>Некоректна кількість</translation>
     </message>
@@ -2920,7 +2815,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Завантаження індексу блоків...</translation>
     </message>
     <message>
-        <location line="-59"/>
+        <location line="-58"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Додати вузол до підключення і лишити його відкритим</translation>
     </message>
@@ -2930,7 +2825,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Неможливо прив&apos;язати до порту %s на цьому комп&apos;ютері. Можливо гаманець вже запущено.</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+67"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Комісія за КБ</translation>
     </message>
@@ -2940,7 +2835,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Завантаження гаманця...</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-53"/>
         <source>Cannot downgrade wallet</source>
         <translation type="unfinished"/>
     </message>
@@ -2955,12 +2850,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Неможливо записати типову адресу</translation>
     </message>
     <message>
-        <location line="+64"/>
+        <location line="+63"/>
         <source>Rescanning...</source>
         <translation>Сканування...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-55"/>
         <source>Done loading</source>
         <translation>Завантаження завершене</translation>
     </message>
