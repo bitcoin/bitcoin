@@ -4,13 +4,13 @@ set -e
 
 umask 077
 
-basedir=~/.novacoin
+basedir=~/.bitbar
 dbfile="$basedir/DB_CONFIG"
-cfgfile="$basedir/novacoin.conf"
+cfgfile="$basedir/bitbar.conf"
 
 [ -e "$basedir" ] || mkdir "$basedir"
 
-# Novacoin does not clean up DB log files by default
+# BitBar does not clean up DB log files by default
 [ -e "$dbfile" ] || echo 'set_flags DB_LOG_AUTOREMOVE' > "$dbfile"
 
-exec /usr/lib/novacoin/novacoin-qt "$@"
+exec /usr/lib/bitbar/bitbar-qt "$@"

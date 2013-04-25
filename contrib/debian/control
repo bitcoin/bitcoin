@@ -1,4 +1,4 @@
-Source: novacoin
+Source: bitbar
 Section: utils
 Priority: optional
 Maintainer: Jonas Smedegaard <dr@jones.dk>
@@ -19,15 +19,15 @@ Build-Depends: debhelper,
  libqt4-dev,
  libqrencode-dev
 Standards-Version: 3.9.2
-Homepage: http://www.novacoin.su/
-Vcs-Git: git://github.com/CryptoManiac/novacoin.git
-Vcs-Browser: http://github.com/CryptoManiac/novacoin
+Homepage: http://www.bitbar.com
+Vcs-Git: git://github.com/aLQ/bitbar.git
+Vcs-Browser: http://github.com/aLQ/bitbar
 
-Package: novacoind
+Package: bitbard
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Novacoin is a free open source peer-to-peer electronic cash system that
+ BitBar is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to
@@ -38,14 +38,14 @@ Description: peer-to-peer network based digital currency - daemon
  Full transaction history is stored locally at each client.  This
  requires 2+ GB of space, slowly growing.
  .
- This package provides novacoind, a combined daemon and CLI tool to
+ This package provides bitbard, a combined daemon and CLI tool to
  interact with the daemon.
 
-Package: novacoin-qt
+Package: bitbar-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Novacoin is a free open source peer-to-peer electronic cash system that
+ BitBar is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to
@@ -56,4 +56,4 @@ Description: peer-to-peer network based digital currency - Qt GUI
  Full transaction history is stored locally at each client.  This
  requires 2+ GB of space, slowly growing.
  .
- This package provides Novacoin-Qt, a GUI for Novacoin based on Qt.
+ This package provides BitBar-Qt, a GUI for BitBar based on Qt.

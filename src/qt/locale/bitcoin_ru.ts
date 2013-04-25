@@ -2157,13 +2157,13 @@ Address: %4
     </message>
     <message>
         <location line="+23"/>
-        <source>Specify configuration file (default: novacoin.conf)</source>
-        <translation>Указать конфигурационный файл (по умолчанию: novacoin.conf)</translation>
+        <source>Specify configuration file (default: bitbar.conf)</source>
+        <translation>Указать конфигурационный файл (по умолчанию: bitbar.conf)</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Specify pid file (default: novacoind.pid)</source>
-        <translation>Указать pid-файл (по умолчанию: novacoin.pid)</translation>
+        <source>Specify pid file (default: bitbard.pid)</source>
+        <translation>Указать pid-файл (по умолчанию: bitbar.pid)</translation>
     </message>
     <message>
         <location line="-47"/>

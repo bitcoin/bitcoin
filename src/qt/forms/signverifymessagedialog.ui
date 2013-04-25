@@ -145,7 +145,7 @@
          <item>
           <widget class="QPushButton" name="signMessageButton_SM">
            <property name="toolTip">
-            <string>Sign the message to prove you own this NovaCoin address</string>
+            <string>Sign the message to prove you own this BitBar address</string>
            </property>
            <property name="text">
             <string>&amp;Sign Message</string>
@@ -291,7 +291,7 @@
          <item>
           <widget class="QPushButton" name="verifyMessageButton_VM">
            <property name="toolTip">
-            <string>Verify the message to ensure it was signed with the specified NovaCoin address</string>
+            <string>Verify the message to ensure it was signed with the specified BitBar address</string>
            </property>
            <property name="text">
             <string>&amp;Verify Message</string>

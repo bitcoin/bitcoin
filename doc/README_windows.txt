@@ -21,9 +21,9 @@ Setup
 -----
 After completing windows setup then run windows command line (cmd)
   cd daemon
-  novacoind
-You would need to create a configuration file novacoin.conf in the default
-wallet directory. Grant access to novacoind.exe in anti-virus and firewall
+  bitbard
+You would need to create a configuration file bitbar.conf in the default
+wallet directory. Grant access to bitbard.exe in anti-virus and firewall
 applications if necessary.
 
 The software automatically finds other nodes to connect to.  You can
@@ -37,10 +37,10 @@ Upgrade
 -------
 All you existing coins/transactions should be intact with the upgrade.
 To upgrade from 0.2.x, first backup wallet
-novacoind backupwallet <destination_backup_file>
+bitbard backupwallet <destination_backup_file>
 Then shutdown ppcoind by
-novacoind stop
-Start up the new novacoind (0.3.0).
+bitbard stop
+Start up the new bitbard (0.3.0).
 
 
 ------------------

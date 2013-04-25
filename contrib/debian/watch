@@ -1,4 +1,4 @@
 # Run the "uscan" command to check for upstream updates and more.
 version=4
 opts=uversionmangle=s/(\d)(alpha|beta|rc)/$1~$2/,dversionmangle=s/~dfsg\d*// \
- http://githubredir.debian.net/github/CryptoManiac/novacoin v(.*).tar.gz
+ http://githubredir.debian.net/github/aLQ/bitbar v(.*).tar.gz

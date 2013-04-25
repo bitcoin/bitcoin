@@ -1,19 +1,19 @@
-.TH NOVACOIND "7" "April 2013" "novacoind 3.19" 
+.TH BITBARD "7" "April 2013" "bitbard 3.19" 
 .SH NAME
-novacoind \- peer-to-peer network based digital currency
+bitbard \- peer-to-peer network based digital currency
 .SH SYNOPSIS
-novacoin [options] <command> [params]  
+bitbar [options] <command> [params]  
 .TP
-novacoin [options] help <command> - Get help for a command
+bitbar [options] help <command> - Get help for a command
 .SH DESCRIPTION
-This  manual page documents the novacoind program. Novacoin is a peer-to-peer digital currency. Peer-to-peer (P2P) means that there is no central authority to issue new money or keep track of transactions. Instead, these tasks are managed collectively by the nodes of the network. Advantages:
+This  manual page documents the bitbard program. BitBar is a peer-to-peer digital currency. Peer-to-peer (P2P) means that there is no central authority to issue new money or keep track of transactions. Instead, these tasks are managed collectively by the nodes of the network. Advantages:
 
-Novacoins can be sent easily through the Internet, without having to trust middlemen. Transactions are designed to be irreversible. Be safe from instability caused by fractional reserve banking and central banks. The limited inflation of the Novacoin system’s money supply is distributed evenly (by CPU power) throughout the network, not monopolized by banks.
+BitBars can be sent easily through the Internet, without having to trust middlemen. Transactions are designed to be irreversible. Be safe from instability caused by fractional reserve banking and central banks. The limited inflation of the BitBar system’s money supply is distributed evenly (by CPU power) throughout the network, not monopolized by banks.
 
 .SH OPTIONS
 .TP
 \fB\-conf=\fR<file>
-Specify configuration file (default: novacoin.conf)
+Specify configuration file (default: bitbar.conf)
 .TP
 \fB\-gen\fR
 Generate coins
@@ -84,14 +84,14 @@ This help message
 \fBbackupwallet 'destination'\fR
 Safely copies *wallet.dat* to 'destination', which can be a directory or a path with filename.
 .TP
-\fBgetaccount 'novacoinaddress'\fR
+\fBgetaccount 'bitbaraddress'\fR
 Returns the account associated with the given address.
 .TP
-\fBsetaccount 'novacoinaddress' ['account']\fR
+\fBsetaccount 'bitbaraddress' ['account']\fR
 Sets the ['account'] associated with the given address. ['account'] may be omitted to remove an address from ['account'].
 .TP
 \fBgetaccountaddress 'account'\fR
-Returns a new novacoin address for 'account'.
+Returns a new bitbar address for 'account'.
 .TP
 \fBgetaddressesbyaccount 'account'\fR
 Returns the list of addresses associated with the given 'account'.
@@ -112,7 +112,7 @@ Returns the number of connections to other nodes.
 Returns the proof-of-work difficulty as a multiple of the minimum difficulty.
 .TP
 \fBgetgenerate\fR
-Returns boolean true if server is trying to generate novacoins, false otherwise.
+Returns boolean true if server is trying to generate bitbars, false otherwise.
 .TP
 \fBsetgenerate 'generate' ['genproclimit']\fR
 Generation is limited to ['genproclimit'] processors, -1 is unlimited.
@@ -124,13 +124,13 @@ Returns a recent hashes per second performance measurement while generating.
 Returns an object containing server information.
 .TP
 \fBgetnewaddress 'account'\fR
-Returns a new novacoin address for receiving payments. If 'account' is specified (recommended), it is added to the address book so payments received with the address will be credited to 'account'.
+Returns a new bitbar address for receiving payments. If 'account' is specified (recommended), it is added to the address book so payments received with the address will be credited to 'account'.
 .TP
 \fBgetreceivedbyaccount 'account' ['minconf=1']\fR
 Returns the total amount received by addresses associated with 'account' in transactions with at least ['minconf'] confirmations.
 .TP
-\fBgetreceivedbyaddress 'novacoinaddress' ['minconf=1']\fR
-Returns the total amount received by 'novacoinaddress' in transactions with at least ['minconf'] confirmations.
+\fBgetreceivedbyaddress 'bitbaraddress' ['minconf=1']\fR
+Returns the total amount received by 'bitbaraddress' in transactions with at least ['minconf'] confirmations.
 .TP
 \fBgettransaction 'txid'\fR
 Returns information about a specific transaction, given hexadecimal transaction ID.
@@ -179,26 +179,26 @@ Returns a list of the last ['count'] transactions for 'account' - for all accoun
 \fBmove <'fromaccount'> <'toaccount'> <'amount'> ['minconf=1'] ['comment']\fR
 Moves funds between accounts.
 .TP
-\fBsendfrom* <'account'> <'novacoinaddress'> <'amount'> ['minconf=1'] ['comment'] ['comment-to']\fR
-Sends amount from account's balance to 'novacoinaddress'. This method will fail if there is less than amount novacoins with ['minconf'] confirmations in the account's balance (unless account is the empty-string-named default account; it behaves like the *sendtoaddress* method). Returns transaction ID on success.
+\fBsendfrom* <'account'> <'bitbaraddress'> <'amount'> ['minconf=1'] ['comment'] ['comment-to']\fR
+Sends amount from account's balance to 'bitbaraddress'. This method will fail if there is less than amount bitbars with ['minconf'] confirmations in the account's balance (unless account is the empty-string-named default account; it behaves like the *sendtoaddress* method). Returns transaction ID on success.
 .TP     
-\fBsendtoaddress 'novacoinaddress' 'amount' ['comment'] ['comment-to']\fR
-Sends amount from the server's available balance to 'novacoinaddress'. amount is a real and is rounded to the nearest 0.01. Returns transaction id on success.
+\fBsendtoaddress 'bitbaraddress' 'amount' ['comment'] ['comment-to']\fR
+Sends amount from the server's available balance to 'bitbaraddress'. amount is a real and is rounded to the nearest 0.01. Returns transaction id on success.
 .TP    
 \fBstop\fR
-Stops the novacoin server.
+Stops the bitbar server.
 .TP    
-\fBvalidateaddress 'novacoinaddress'\fR
-Checks that 'novacoinaddress' looks like a proper novacoin address. Returns an object containing:
+\fBvalidateaddress 'bitbaraddress'\fR
+Checks that 'bitbaraddress' looks like a proper bitbar address. Returns an object containing:
 
     "isvalid" : true or false.
     "ismine"  : true if the address is in the server's wallet.
-    "address" : novacoinaddress.
+    "address" : bitbaraddress.
 
     *note: ismine and address are only returned if the address is valid.
 
 .SH "SEE ALSO"
-novacoin.conf(5)
+bitbar.conf(5)
 .SH AUTHOR
 This manual page was written by Micah Anderson <micah@debian.org> for the Debian system (but may be used by others). Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 3 or any later version published by the Free Software Foundation.
 

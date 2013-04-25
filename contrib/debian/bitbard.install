@@ -1,2 +1,2 @@
-debian/bin/novacoind usr/bin
-src/novacoind usr/lib/novacoin
+debian/bin/bitbard usr/bin
+src/bitbard usr/lib/bitbar
