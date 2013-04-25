@@ -74,6 +74,7 @@ extern bool fDiscover;
 extern uint64 nLocalServices;
 extern uint64 nLocalHostNonce;
 extern CAddrMan addrman;
+extern int nMaxConnections;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
