@@ -181,7 +181,8 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         CWalletTx wtx;
         CReserveKey keyChange(wallet);
         int64 nFeeRequired = 0;
-        bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired);
+        std::string strFailReason;
+        bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strFailReason);
 
         if(!fCreated)
         {
@@ -189,6 +190,8 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
             {
                 return SendCoinsReturn(AmountWithFeeExceedsBalance, nFeeRequired);
             }
+            emit message(tr("Send Coins"), QString::fromStdString(strFailReason),
+                         CClientUIInterface::MSG_ERROR);
             return TransactionCreationFailed;
         }
         if(!uiInterface.ThreadSafeAskFee(nFeeRequired))
