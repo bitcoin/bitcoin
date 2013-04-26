@@ -406,19 +406,22 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
     return true;
 }
 
-bool SetProxy(enum Network net, CService addrProxy) {
+bool SetProxy(enum Network net, CService addrProxy, bool fIsDefault)
+{
     assert(net >= 0 && net < NET_MAX);
     if (!addrProxy.IsValid())
         return false;
     LOCK(cs_proxyInfos);
-    proxyInfo[net] = addrProxy;
+    proxyInfo[net].addrProxy = addrProxy;
+    proxyInfo[net].fIsDefault = fIsDefault;
     return true;
 }
 
-bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
+bool GetProxy(enum Network net, proxyType &proxyInfoOut)
+{
     assert(net >= 0 && net < NET_MAX);
     LOCK(cs_proxyInfos);
-    if (!proxyInfo[net].IsValid())
+    if (!proxyInfo[net].addrProxy.IsValid())
         return false;
     proxyInfoOut = proxyInfo[net];
     return true;
@@ -445,10 +448,11 @@ bool HaveNameProxy() {
     return nameProxy.IsValid();
 }
 
-bool IsProxy(const CNetAddr &addr) {
+bool IsProxy(const CNetAddr &addr)
+{
     LOCK(cs_proxyInfos);
     for (int i = 0; i < NET_MAX; i++) {
-        if (addr == (CNetAddr)proxyInfo[i])
+        if (addr == (CNetAddr)proxyInfo[i].addrProxy)
             return true;
     }
     return false;
@@ -464,7 +468,7 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
     SOCKET hSocket = INVALID_SOCKET;
 
     // first connect to proxy server
-    if (!ConnectSocketDirectly(proxy, hSocket, nTimeout))
+    if (!ConnectSocketDirectly(proxy.addrProxy, hSocket, nTimeout))
         return false;
     // do socks negotiation
     if (!Socks5(addrDest.ToStringIP(), addrDest.GetPort(), hSocket))

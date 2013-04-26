@@ -231,7 +231,6 @@ std::string HelpMessage(HelpMessageMode mode)
 #endif
     strUsage += "  -txindex               " + _("Maintain a full transaction index (default: 0)") + "\n";
 
-
     strUsage += "\n" + _("Connection options:") + "\n";
     strUsage += "  -addnode=<ip>          " + _("Add a node to connect to and attempt to keep the connection open") + "\n";
     strUsage += "  -banscore=<n>          " + _("Threshold for disconnecting misbehaving peers (default: 100)") + "\n";
@@ -251,6 +250,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -permitbaremultisig    " + _("Relay non-P2SH multisig (default: 1)") + "\n";
     strUsage += "  -port=<port>           " + _("Listen for connections on <port> (default: 8333 or testnet: 18333)") + "\n";
     strUsage += "  -proxy=<ip:port>       " + _("Connect through SOCKS5 proxy") + "\n";
+    strUsage += "  -proxy6=<ip:port>      " + _("Use separate SOCKS5 proxy to reach peers via IPv6 (default: -proxy)") + "\n";
     strUsage += "  -seednode=<ip>         " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n";
     strUsage += "  -timeout=<n>           " + _("Specify connection timeout in milliseconds (default: 5000)") + "\n";
 #ifdef USE_UPNP
@@ -452,6 +452,30 @@ bool InitSanityCheck(void)
         return false;
 
     return true;
+}
+
+/** Initialize proxy servers
+ *  Check proxies and (if they are valid) set them to be used by the client
+ */
+bool ProxyInit(Network net, const std::string& strArg, bool fIsDefault)
+{
+    // if network is not limited and -no{proxy/proxy6/onion} was NOT specified
+    if (!IsLimited(net) && (GetArg(strArg, "0") != "0")) {
+        CService addrProxy = CService(mapArgs[strArg], 9050);
+
+        // try to set address as proxy
+        if (!SetProxy(net, addrProxy, fIsDefault))
+            return InitError(strprintf(_("Invalid proxy address '%s' for: %s"), mapArgs[strArg], strArg));
+        // special-case Tor, which needs to be set as reachable manually
+        if (net == NET_TOR)
+            SetReachable(NET_TOR);
+
+        // everything ok
+        return true;
+    }
+
+    // prerequisites failed (no error for default proxy)
+    return fIsDefault;
 }
 
 /** Initialize bitcoin.
@@ -801,34 +825,22 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     }
 
-    CService addrProxy;
-    bool fProxy = false;
-    if (mapArgs.count("-proxy")) {
-        addrProxy = CService(mapArgs["-proxy"], 9050);
-        if (!addrProxy.IsValid())
-            return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"]));
+    // check for presence of default proxy to reach peers via IPv4
+    if (!ProxyInit(NET_IPV4, "-proxy", true))
+        return false; // errors with default proxy lead to exit
+    // enable outgoing IPv6/Tor connections for default proxy (if no separate SOCKS5 proxy for IPv6/Tor will be used)
+    if (!ProxyInit(NET_IPV6, "-proxy6", false))
+        if (!ProxyInit(NET_IPV6, "-proxy", true))
+            return false;  // errors with default proxy lead to exit
+    if (!ProxyInit(NET_TOR, "-onion", false))
+        if (!ProxyInit(NET_TOR, "-proxy", true))
+            return false;  // errors with default proxy lead to exit
 
-        if (!IsLimited(NET_IPV4))
-            SetProxy(NET_IPV4, addrProxy);
-        if (!IsLimited(NET_IPV6))
-            SetProxy(NET_IPV6, addrProxy);
-        SetNameProxy(addrProxy);
-        fProxy = true;
-    }
-
-    // -onion can override normal proxy, -noonion disables tor entirely
-    if (!(mapArgs.count("-onion") && mapArgs["-onion"] == "0") &&
-        (fProxy || mapArgs.count("-onion"))) {
-        CService addrOnion;
-        if (!mapArgs.count("-onion"))
-            addrOnion = addrProxy;
-        else
-            addrOnion = CService(mapArgs["-onion"], 9050);
-        if (!addrOnion.IsValid())
-            return InitError(strprintf(_("Invalid -onion address: '%s'"), mapArgs["-onion"]));
-        SetProxy(NET_TOR, addrOnion);
-        SetReachable(NET_TOR);
-    }
+        // if -noproxy was not specified
+        if (GetArg("-proxy", "0") != "0")
+            // setup default name proxy and exit on error
+            if (!SetNameProxy(CService(mapArgs["-proxy"], 9050)))
+                return InitError(strprintf(_("Invalid name proxy address '%s' for: -proxy"), mapArgs["-proxy"].c_str()));
 
     // see Step 2: parameter interactions for more information about these
     fListen = GetBoolArg("-listen", DEFAULT_LISTEN);
