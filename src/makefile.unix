@@ -22,6 +22,10 @@ TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
 LMODE = dynamic
 LMODE2 = dynamic
+
+#STATIC=all
+STATIC=1
+
 ifdef STATIC
 	LMODE = static
 	ifeq (${STATIC}, all)
