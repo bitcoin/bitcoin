@@ -15,6 +15,7 @@ src/test_bitcoin
 *.qm
 Makefile
 bitcoin-qt
+Bitcoin-Qt.app
 
 # Unit-tests
 Makefile.test
