@@ -561,6 +561,30 @@ bool InitSanityCheck(void)
     return true;
 }
 
+/** Initialize proxy servers
+ *  Check proxies and (if they are valid) set them to be used by the client
+ */
+bool ProxyInit(Network net, const std::string& strArg, bool fIsDefault)
+{
+    // if -no{proxy/onion} was NOT specified
+    if (GetArg(strArg, "0") != "0") {
+        proxyType addrProxy = proxyType(CService(mapArgs[strArg], (unsigned short)9050), GetBoolArg("-proxyrandomize", true));
+
+        // try to set address as proxy
+        if (!SetProxy(net, addrProxy))
+            return InitError(strprintf(_("Invalid proxy address '%s' for: %s"), mapArgs[strArg], strArg));
+        // special-case Tor, which needs to be set as reachable manually
+        if (net == NET_TOR)
+            SetReachable(NET_TOR);
+
+        // everything ok
+        return true;
+    }
+
+    // prerequisites failed (no error for -proxy)
+    return fIsDefault;
+}
+
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
  */
@@ -952,32 +976,22 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     }
 
-    proxyType addrProxy;
-    bool fProxy = false;
-    if (mapArgs.count("-proxy")) {
-        addrProxy = proxyType(CService(mapArgs["-proxy"], 9050), GetBoolArg("-proxyrandomize", true));
-        if (!addrProxy.IsValid())
-            return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"]));
+    // try to enable outgoing IPv4 connections via default proxy
+    if (!ProxyInit(NET_IPV4, "-proxy", true))
+        return false; // errors with default proxy lead to exit
+    // try to enable outgoing IPv6 connections via default proxy
+    if (!ProxyInit(NET_IPV6, "-proxy", true))
+        return false; // errors with default proxy lead to exit
+    // try to enable outgoing Tor connections via separate proxy (on failure try default proxy)
+    if (!ProxyInit(NET_TOR, "-onion", false))
+        if (!ProxyInit(NET_TOR, "-proxy", true))
+            return false; // errors with default proxy lead to exit
 
-        SetProxy(NET_IPV4, addrProxy);
-        SetProxy(NET_IPV6, addrProxy);
-        SetNameProxy(addrProxy);
-        fProxy = true;
-    }
-
-    // -onion can override normal proxy, -noonion disables connecting to .onion entirely
-    if (!(mapArgs.count("-onion") && mapArgs["-onion"] == "0") &&
-        (fProxy || mapArgs.count("-onion"))) {
-        proxyType addrOnion;
-        if (!mapArgs.count("-onion"))
-            addrOnion = addrProxy;
-        else
-            addrOnion = proxyType(CService(mapArgs["-onion"], 9050), GetBoolArg("-proxyrandomize", true));
-        if (!addrOnion.IsValid())
-            return InitError(strprintf(_("Invalid -onion address: '%s'"), mapArgs["-onion"]));
-        SetProxy(NET_TOR, addrOnion);
-        SetReachable(NET_TOR);
-    }
+    // if -noproxy was not specified
+    if (GetArg("-proxy", "0") != "0")
+        // setup default name proxy and exit on error
+        if (!SetNameProxy(CService(mapArgs["-proxy"], (unsigned short)9050)))
+            return InitError(strprintf(_("Invalid name proxy address '%s' for: -proxy"), mapArgs["-proxy"]));
 
     // see Step 2: parameter interactions for more information about these
     fListen = GetBoolArg("-listen", DEFAULT_LISTEN);
