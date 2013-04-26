@@ -37,11 +37,11 @@ bool static ApplyProxySettings()
     if (nSocksVersion && !addrProxy.IsValid())
         return false;
     if (!IsLimited(NET_IPV4))
-        SetProxy(NET_IPV4, addrProxy, nSocksVersion);
+        SetProxy(NET_IPV4, addrProxy, nSocksVersion, true);
     if (nSocksVersion > 4) {
 #ifdef USE_IPV6
         if (!IsLimited(NET_IPV6))
-            SetProxy(NET_IPV6, addrProxy, nSocksVersion);
+            SetProxy(NET_IPV6, addrProxy, nSocksVersion, true);
 #endif
         SetNameProxy(addrProxy, nSocksVersion);
     }
@@ -63,12 +63,15 @@ void OptionsModel::Init()
 
     // These are shared with core Bitcoin; we want
     // command-line options to override the GUI settings:
+
+    // Network
     if (settings.contains("fUseUPnP"))
         SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool());
     if (settings.contains("addrProxy") && settings.value("fUseProxy").toBool())
         SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString());
     if (settings.contains("nSocksVersion") && settings.value("fUseProxy").toBool())
         SoftSetArg("-socks", settings.value("nSocksVersion").toString().toStdString());
+    // Display
     if (!language.isEmpty())
         SoftSetArg("-lang", language.toStdString());
 }
@@ -175,6 +178,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #endif
         case MinimizeOnClose:
             return QVariant(fMinimizeOnClose);
+
+        // base proxy
         case ProxyUse: {
             proxyType proxy;
             return QVariant(GetProxy(NET_IPV4, proxy));
@@ -182,21 +187,21 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case ProxyIP: {
             proxyType proxy;
             if (GetProxy(NET_IPV4, proxy))
-                return QVariant(QString::fromStdString(proxy.first.ToStringIP()));
+                return QVariant(QString::fromStdString(proxy.addrProxy.ToStringIP()));
             else
                 return QVariant(QString::fromStdString("127.0.0.1"));
         }
         case ProxyPort: {
             proxyType proxy;
             if (GetProxy(NET_IPV4, proxy))
-                return QVariant(proxy.first.GetPort());
+                return QVariant(proxy.addrProxy.GetPort());
             else
                 return QVariant(9050);
         }
         case ProxySocksVersion: {
             proxyType proxy;
             if (GetProxy(NET_IPV4, proxy))
-                return QVariant(proxy.second);
+                return QVariant(proxy.nSocksVersion);
             else
                 return QVariant(5);
         }
@@ -240,38 +245,39 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             fMinimizeOnClose = value.toBool();
             settings.setValue("fMinimizeOnClose", fMinimizeOnClose);
             break;
+        // base proxy
         case ProxyUse:
             settings.setValue("fUseProxy", value.toBool());
             successful = ApplyProxySettings();
             break;
         case ProxyIP: {
             proxyType proxy;
-            proxy.first = CService("127.0.0.1", 9050);
+            proxy.addrProxy = CService("127.0.0.1", 9050);
             GetProxy(NET_IPV4, proxy);
 
             CNetAddr addr(value.toString().toStdString());
-            proxy.first.SetIP(addr);
-            settings.setValue("addrProxy", proxy.first.ToStringIPPort().c_str());
+            proxy.addrProxy.SetIP(addr);
+            settings.setValue("addrProxy", proxy.addrProxy.ToStringIPPort().c_str());
             successful = ApplyProxySettings();
         }
         break;
         case ProxyPort: {
             proxyType proxy;
-            proxy.first = CService("127.0.0.1", 9050);
+            proxy.addrProxy = CService("127.0.0.1", 9050);
             GetProxy(NET_IPV4, proxy);
 
-            proxy.first.SetPort(value.toInt());
-            settings.setValue("addrProxy", proxy.first.ToStringIPPort().c_str());
+            proxy.addrProxy.SetPort(value.toInt());
+            settings.setValue("addrProxy", proxy.addrProxy.ToStringIPPort().c_str());
             successful = ApplyProxySettings();
         }
         break;
         case ProxySocksVersion: {
             proxyType proxy;
-            proxy.second = 5;
+            proxy.nSocksVersion = 5;
             GetProxy(NET_IPV4, proxy);
 
-            proxy.second = value.toInt();
-            settings.setValue("nSocksVersion", proxy.second);
+            proxy.nSocksVersion = value.toInt();
+            settings.setValue("nSocksVersion", proxy.nSocksVersion);
             successful = ApplyProxySettings();
         }
         break;

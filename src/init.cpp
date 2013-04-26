@@ -188,9 +188,10 @@ std::string HelpMessage(HelpMessageMode hmm)
         strUsage += "  -wallet=<file>         " + _("Specify wallet file (within data directory)") + "\n";
         strUsage += "  -dbcache=<n>           " + _("Set database cache size in megabytes (default: 25)") + "\n";
         strUsage += "  -timeout=<n>           " + _("Specify connection timeout in milliseconds (default: 5000)") + "\n";
-        strUsage += "  -proxy=<ip:port>       " + _("Connect through socks proxy") + "\n";
-        strUsage += "  -socks=<n>             " + _("Select the version of socks proxy to use (4-5, default: 5)") + "\n";
-        strUsage += "  -onion=<ip:port>         " + _("Use proxy to reach tor hidden services (default: same as -proxy)") + "\n";
+        strUsage += "  -proxy=<ip:port>       " + _("Connect through SOCKS proxy") + "\n";
+        strUsage += "  -socks=<n>             " + _("Select SOCKS version for -proxy (4 or 5, default: 5)") + "\n";
+        strUsage += "  -proxy6=<ip:port>      " + _("Use separate SOCKS5 proxy to reach peers via IPv6 (default: -proxy)") + "\n";
+        strUsage += "  -onion=<ip:port>       " + _("Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)") + "\n";
         strUsage += "  -dns                   " + _("Allow DNS lookups for -addnode, -seednode and -connect") + "\n";
         strUsage += "  -port=<port>           " + _("Listen for connections on <port> (default: 8333 or testnet: 18333)") + "\n";
         strUsage += "  -maxconnections=<n>    " + _("Maintain at most <n> connections to peers (default: 125)") + "\n";
@@ -361,6 +362,28 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
     }
 }
 
+// check proxies and (if they are valid) set them to be used by the client
+bool ProxyInit(Network net, const std::string& strArg, int nSocksVersion, bool fIsDefault)
+{
+    // if network is not limited and -no{proxy/proxy6/tor} was NOT specified
+    if (!IsLimited(net) && (GetArg(strArg, "0") != "0")) {
+        CService addrProxy = CService(mapArgs[strArg], 9050);
+
+        // try to set address as proxy
+        if (!SetProxy(net, addrProxy, nSocksVersion, fIsDefault))
+            return InitError(strprintf(_("Invalid proxy address '%s' for: %s"), mapArgs[strArg].c_str(), strArg.c_str()));
+        // special-case Tor, which needs to be set as reachable manually
+        if (net == NET_TOR)
+            SetReachable(NET_TOR);
+
+        // everything ok
+        return true;
+    }
+
+    // prerequisites failed (no error for default proxy)
+    return fIsDefault;
+}
+
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
  */
@@ -436,7 +459,7 @@ bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
     }
 
     if (mapArgs.count("-proxy")) {
-        // to protect privacy, do not listen by default if a proxy server is specified
+        // to protect privacy, do not listen by default if a default proxy server is specified
         SoftSetBoolArg("-listen", false);
     }
 
@@ -477,6 +500,9 @@ bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
     // Check for -debugnet (deprecated)
     if (GetBoolArg("-debugnet", false))
         InitWarning(_("Warning: Deprecated argument -debugnet ignored, use -debug=net"));
+    // Check for -tor (deprecated) - as this is a privacy risk to continue, exit here
+    if (GetBoolArg("-tor", false))
+        return InitError(_("Error: Deprecated argument -tor found, use -onion"));
 
     fBenchmark = GetBoolArg("-benchmark", false);
     mempool.setSanityCheck(GetBoolArg("-checkmempool", RegTest()));
@@ -663,41 +689,35 @@ bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
 #endif
 #endif
 
-    CService addrProxy;
-    bool fProxy = false;
-    if (mapArgs.count("-proxy")) {
-        addrProxy = CService(mapArgs["-proxy"], 9050);
-        if (!addrProxy.IsValid())
-            return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"].c_str()));
+    // check for presence of default proxy to reach peers via IPv4
+    if (!ProxyInit(NET_IPV4, "-proxy", nSocksVersion, true))
+        return false; // errors with default proxy lead to exit
 
-        if (!IsLimited(NET_IPV4))
-            SetProxy(NET_IPV4, addrProxy, nSocksVersion);
-        if (nSocksVersion > 4) {
+    if (nSocksVersion == 4) {
+        // disable outgoing IPv6/Tor connections for default proxy (if no separate SOCKS5 proxy will be used)
 #ifdef USE_IPV6
-            if (!IsLimited(NET_IPV6))
-                SetProxy(NET_IPV6, addrProxy, nSocksVersion);
+        if (!ProxyInit(NET_IPV6, "-proxy6", 5, false))
+            SetLimited(NET_IPV6);
 #endif
-            SetNameProxy(addrProxy, nSocksVersion);
-        }
-        fProxy = true;
+        if (!ProxyInit(NET_TOR, "-onion", 5, false))
+            SetLimited(NET_TOR);
     }
+    else if (nSocksVersion == 5) {
+        // enable outgoing IPv6/Tor connections for default proxy (if no separate SOCKS5 proxy will be used)
+#ifdef USE_IPV6
+        if (!ProxyInit(NET_IPV6, "-proxy6", 5, false))
+            if (!ProxyInit(NET_IPV6, "-proxy", 5, true))
+                return false;  // errors with default proxy lead to exit
+#endif
+        if (!ProxyInit(NET_TOR, "-onion", 5, false))
+            if (!ProxyInit(NET_TOR, "-proxy", 5, true))
+                return false;  // errors with default proxy lead to exit
 
-    // -onion can override normal proxy, -noonion disables tor entirely
-    // -tor here is a temporary backwards compatibility measure
-    if (mapArgs.count("-tor"))
-        printf("Notice: option -tor has been replaced with -onion and will be removed in a later version.\n");
-    if (!(mapArgs.count("-onion") && mapArgs["-onion"] == "0") &&
-        !(mapArgs.count("-tor") && mapArgs["-tor"] == "0") &&
-         (fProxy || mapArgs.count("-onion") || mapArgs.count("-tor"))) {
-        CService addrOnion;
-        if (!mapArgs.count("-onion") && !mapArgs.count("-tor"))
-            addrOnion = addrProxy;
-        else
-            addrOnion = mapArgs.count("-onion")?CService(mapArgs["-onion"], 9050):CService(mapArgs["-tor"], 9050);
-        if (!addrOnion.IsValid())
-            return InitError(strprintf(_("Invalid -onion address: '%s'"), mapArgs.count("-onion")?mapArgs["-onion"].c_str():mapArgs["-tor"].c_str()));
-        SetProxy(NET_TOR, addrOnion, 5);
-        SetReachable(NET_TOR);
+        // if -noproxy was not specified
+        if (GetArg("-proxy", "0") != "0")
+            // setup default name proxy and exit on error
+            if (!SetNameProxy(CService(mapArgs["-proxy"], 9050), 5))
+                return InitError(strprintf(_("Invalid name proxy address '%s' for: -proxy"), mapArgs["-proxy"].c_str()));
     }
 
     // see Step 2: parameter interactions for more information about these

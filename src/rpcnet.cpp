@@ -328,3 +328,51 @@ Value getnettotals(const Array& params, bool fHelp)
     obj.push_back(Pair("timemillis", static_cast<boost::int64_t>(GetTimeMillis())));
     return obj;
 }
+
+Value getproxyinfo(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getproxyinfo\n"
+            "Returns information about used proxy servers.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"proxy-default-ip\": xxxxx,                 (string)  ip of default proxy server\n"
+            "  \"proxy-default-socks\": n,                  (numeric) socks version of above proxy server\n"
+#ifdef USE_IPV6
+            "  \"proxy-ipv6-ip\": xxxxx,                    (string)  ip of proxy server for reaching peers via ipv6\n"
+            "  \"proxy-ipv6-socks\": n,                     (numeric) socks version of above proxy server\n"
+            "  \"proxy-ipv6-from-default\": true|false,     (boolean) is ip derived from default proxy server\n"
+#endif
+            "  \"proxy-onion-ip\": xxxxxx,                  (string)  ip of proxy server for reaching peers via tor hidden services\n"
+            "  \"proxy-onion-socks\": n,                    (numeric) socks version of above proxy server\n"
+            "  \"proxy-onion-from-default\": true|false,    (boolean) is ip derived from default proxy server\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getproxyinfo", "")
+            + HelpExampleRpc("getproxyinfo", "")
+        );
+
+    // collect current proxy settings
+    proxyType proxyIpv4;
+    GetProxy(NET_IPV4, proxyIpv4);
+#ifdef USE_IPV6
+    proxyType proxyIpv6;
+    GetProxy(NET_IPV6, proxyIpv6);
+#endif
+    proxyType proxyTor;
+    GetProxy(NET_TOR, proxyTor);
+
+    Object obj;
+    obj.push_back(Pair("proxy-default-ip",            proxyIpv4.addrProxy.IsValid() ? proxyIpv4.addrProxy.ToStringIPPort() : "none"));
+    obj.push_back(Pair("proxy-default-socks",         proxyIpv4.addrProxy.IsValid() ? proxyIpv4.nSocksVersion : 0));
+#ifdef USE_IPV6
+    obj.push_back(Pair("proxy-ipv6-ip",               proxyIpv6.addrProxy.IsValid() ? proxyIpv6.addrProxy.ToStringIPPort() : "none"));
+    obj.push_back(Pair("proxy-ipv6-socks",            proxyIpv6.addrProxy.IsValid() ? proxyIpv6.nSocksVersion : 0));
+    obj.push_back(Pair("proxy-ipv6-from-default",     proxyIpv6.fIsDefault));
+#endif
+    obj.push_back(Pair("proxy-onion-ip",              proxyTor.addrProxy.IsValid() ? proxyTor.addrProxy.ToStringIPPort() : "none"));
+    obj.push_back(Pair("proxy-onion-socks",           proxyTor.addrProxy.IsValid() ? proxyTor.nSocksVersion : 0));
+    obj.push_back(Pair("proxy-onion-from-default",    proxyTor.fIsDefault));
+    return obj;
+}

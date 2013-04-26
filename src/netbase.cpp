@@ -25,7 +25,7 @@ using namespace std;
 
 // Settings
 static proxyType proxyInfo[NET_MAX];
-static proxyType nameproxyInfo;
+static nameproxyType nameproxyInfo;
 static CCriticalSection cs_proxyInfos;
 int nConnectTimeout = 5000;
 bool fNameLookup = false;
@@ -424,21 +424,23 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
     return true;
 }
 
-bool SetProxy(enum Network net, CService addrProxy, int nSocksVersion) {
+bool SetProxy(enum Network net, CService addrProxy, int nSocksVersion, bool fIsDefault) {
     assert(net >= 0 && net < NET_MAX);
     if (nSocksVersion != 0 && nSocksVersion != 4 && nSocksVersion != 5)
         return false;
     if (nSocksVersion != 0 && !addrProxy.IsValid())
         return false;
     LOCK(cs_proxyInfos);
-    proxyInfo[net] = std::make_pair(addrProxy, nSocksVersion);
+    proxyInfo[net].addrProxy = addrProxy;
+    proxyInfo[net].nSocksVersion = nSocksVersion;
+    proxyInfo[net].fIsDefault = fIsDefault;
     return true;
 }
 
 bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
     assert(net >= 0 && net < NET_MAX);
     LOCK(cs_proxyInfos);
-    if (!proxyInfo[net].second)
+    if (!proxyInfo[net].nSocksVersion)
         return false;
     proxyInfoOut = proxyInfo[net];
     return true;
@@ -454,7 +456,7 @@ bool SetNameProxy(CService addrProxy, int nSocksVersion) {
     return true;
 }
 
-bool GetNameProxy(proxyType &nameproxyInfoOut) {
+bool GetNameProxy(nameproxyType &nameproxyInfoOut) {
     LOCK(cs_proxyInfos);
     if (!nameproxyInfo.second)
         return false;
@@ -470,7 +472,7 @@ bool HaveNameProxy() {
 bool IsProxy(const CNetAddr &addr) {
     LOCK(cs_proxyInfos);
     for (int i = 0; i < NET_MAX; i++) {
-        if (proxyInfo[i].second && (addr == (CNetAddr)proxyInfo[i].first))
+        if (proxyInfo[i].nSocksVersion && (addr == (CNetAddr)proxyInfo[i].addrProxy))
             return true;
     }
     return false;
@@ -487,11 +489,11 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
     SOCKET hSocket = INVALID_SOCKET;
 
     // first connect to proxy server
-    if (!ConnectSocketDirectly(proxy.first, hSocket, nTimeout))
+    if (!ConnectSocketDirectly(proxy.addrProxy, hSocket, nTimeout))
         return false;
 
     // do socks negotiation
-    switch (proxy.second) {
+    switch (proxy.nSocksVersion) {
     case 4:
         if (!Socks4(addrDest, hSocket))
             return false;
@@ -516,7 +518,7 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
 
     SOCKET hSocket = INVALID_SOCKET;
 
-    proxyType nameproxy;
+    nameproxyType nameproxy;
     GetNameProxy(nameproxy);
 
     CService addrResolved(CNetAddr(strDest, fNameLookup && !nameproxy.second), port);
