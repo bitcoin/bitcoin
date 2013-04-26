@@ -61,7 +61,9 @@ CFLAGS = -mmacosx-version-min=10.5 -O3
 # Compile for maximum compatibility and smallest size.
 # This requires that dependencies are compiled
 # the same way.
-ifdef 32BIT
+ifdef 64BIT
+CFLAGS += -arch x86_64
+else
 CFLAGS += -arch i386
 endif
 else

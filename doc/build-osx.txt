@@ -46,10 +46,10 @@ sudo port install qrencode
 
 4.  Now you should be able to build bitcoind:
 
-cd pcoin/src
+cd ppcoin/src
 make -f makefile.osx
-# To build 32-bit compatible binaies:
-make -f makefile.osx 32BIT=true
+# To build 64-bit binaies:
+make -f makefile.osx RELEASE=true 64BIT=true
 
 Run:
   ./ppcoind --help  # for a list of command-line options.
