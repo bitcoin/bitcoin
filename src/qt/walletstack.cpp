@@ -16,6 +16,7 @@ WalletStack::WalletStack(QWidget *parent) :
     clientModel(0),
     bOutOfSync(true)
 {
+    setContentsMargins(0,0,0,0);
 }
 
 WalletStack::~WalletStack()
