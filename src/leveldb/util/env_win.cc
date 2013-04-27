@@ -971,7 +971,7 @@ Status Win32Env::NewRandomAccessFile( const std::string& fname, RandomAccessFile
     if(!pFile->isEnable()){
         delete pFile;
         *result = NULL;
-        sRet = Status::IOError(path,"Could not create random access file.");
+        sRet = Status::IOError(path, Win32::GetLastErrSz());
     }else
         *result = pFile;
     return sRet;
