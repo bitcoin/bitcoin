@@ -462,8 +462,8 @@ bool Win32MapFile::_UnmapCurrentRegion()
             // Defer syncing this data until next Sync() call, if any
             _pending_sync = true;
         }
-        UnmapViewOfFile(_base);
-        CloseHandle(_base_handle);
+        if (!UnmapViewOfFile(_base) || !CloseHandle(_base_handle))
+            result = false;
         _file_offset += _limit - _base;
         _base = NULL;
         _base_handle = NULL;
