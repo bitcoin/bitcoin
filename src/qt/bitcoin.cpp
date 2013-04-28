@@ -15,6 +15,9 @@
 #include "ui_interface.h"
 #include "paymentserver.h"
 #include "splashscreen.h"
+#ifdef Q_OS_MAC
+#include "macdockiconhandler.h"
+#endif
 
 #include <QMessageBox>
 #include <QTextCodec>
@@ -22,10 +25,6 @@
 #include <QTimer>
 #include <QTranslator>
 #include <QLibraryInfo>
-
-#ifdef Q_OS_MAC
-#include "macdockiconhandler.h"
-#endif
 
 #if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
 #define _BITCOIN_QT_PLUGINS_INCLUDED
@@ -152,7 +151,7 @@ int main(int argc, char *argv[])
     // as it is used to locate QSettings)
     QApplication::setOrganizationName("Bitcoin");
     QApplication::setOrganizationDomain("bitcoin.org");
-    if(GetBoolArg("-testnet")) // Separate UI settings for testnet
+    if (GetBoolArg("-testnet", false)) // Separate UI settings for testnet
         QApplication::setApplicationName("Bitcoin-Qt-testnet");
     else
         QApplication::setApplicationName("Bitcoin-Qt");
@@ -204,13 +203,14 @@ int main(int argc, char *argv[])
 
 #ifdef Q_OS_MAC
     // on mac, also change the icon now because it would look strange to have a testnet splash (green) and a std app icon (orange)
-    if(GetBoolArg("-testnet")) {
+    if(GetBoolArg("-testnet", false))
+    {
         MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
     }
 #endif
 
     SplashScreen splash(QPixmap(), 0);
-    if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
+    if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
     {
         splash.show();
         splash.setAutoFillBackground(true);
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
                 window.setCurrentWallet("~Default");
 
                 // If -min option passed, start window minimized.
-                if(GetBoolArg("-min"))
+                if(GetBoolArg("-min", false))
                 {
                     window.showMinimized();
                 }

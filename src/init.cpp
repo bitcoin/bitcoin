@@ -198,7 +198,7 @@ bool AppInit(int argc, char* argv[])
             exit(ret);
         }
 #if !defined(WIN32)
-        fDaemon = GetBoolArg("-daemon");
+        fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
             // Daemonize
@@ -495,7 +495,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 2: parameter interactions
 
-    fTestNet = GetBoolArg("-testnet");
+    fTestNet = GetBoolArg("-testnet", false);
     Checkpoints::fEnabled = GetBoolArg("-checkpoints", true);
 
     if (mapArgs.count("-bind")) {
@@ -526,7 +526,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         SoftSetBoolArg("-discover", false);
     }
 
-    if (GetBoolArg("-salvagewallet")) {
+    if (GetBoolArg("-salvagewallet", false)) {
         // Rewrite just private keys: rescan to find transactions
         SoftSetBoolArg("-rescan", true);
     }
@@ -543,8 +543,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 
-    fDebug = GetBoolArg("-debug");
-    fBenchmark = GetBoolArg("-benchmark");
+    fDebug = GetBoolArg("-debug", false);
+    fBenchmark = GetBoolArg("-benchmark", false);
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
     nScriptCheckThreads = GetArg("-par", 0);
@@ -559,20 +559,20 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (fDebug)
         fDebugNet = true;
     else
-        fDebugNet = GetBoolArg("-debugnet");
+        fDebugNet = GetBoolArg("-debugnet", false);
 
     if (fDaemon)
         fServer = true;
     else
-        fServer = GetBoolArg("-server");
+        fServer = GetBoolArg("-server", false);
 
     /* force fServer when running without GUI */
 #if !defined(QT_GUI)
     fServer = true;
 #endif
-    fPrintToConsole = GetBoolArg("-printtoconsole");
-    fPrintToDebugger = GetBoolArg("-printtodebugger");
-    fLogTimestamps = GetBoolArg("-logtimestamps");
+    fPrintToConsole = GetBoolArg("-printtoconsole", false);
+    fPrintToDebugger = GetBoolArg("-printtodebugger", false);
+    fLogTimestamps = GetBoolArg("-logtimestamps", false);
 
     if (mapArgs.count("-timeout"))
     {
@@ -677,7 +677,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     }
 
-    if (GetBoolArg("-salvagewallet"))
+    if (GetBoolArg("-salvagewallet", false))
     {
         // Recover readable keypairs:
         if (!CWalletDB::Recover(bitdb, "wallet.dat", true))
@@ -799,7 +799,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 7: load block chain
 
-    fReindex = GetBoolArg("-reindex");
+    fReindex = GetBoolArg("-reindex", false);
 
     // Upgrading to 0.8; hard-link the old blknnnn.dat files into /blocks/
     filesystem::path blocksDir = GetDataDir() / "blocks";
@@ -922,7 +922,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
     printf(" block index %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
-    if (GetBoolArg("-printblockindex") || GetBoolArg("-printblocktree"))
+    if (GetBoolArg("-printblockindex", false) || GetBoolArg("-printblocktree", false))
     {
         PrintBlockTree();
         return false;
@@ -1018,7 +1018,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     RegisterWallet(pwalletMain);
 
     CBlockIndex *pindexRescan = pindexBest;
-    if (GetBoolArg("-rescan"))
+    if (GetBoolArg("-rescan", false))
         pindexRescan = pindexGenesisBlock;
     else
     {
