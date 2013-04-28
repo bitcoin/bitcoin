@@ -1537,18 +1537,6 @@ bool BindListenPort(const CService &addrBind, string& strError)
     strError = "";
     int nOne = 1;
 
-#ifdef WIN32
-    // Initialize Windows Sockets
-    WSADATA wsadata;
-    int ret = WSAStartup(MAKEWORD(2,2), &wsadata);
-    if (ret != NO_ERROR)
-    {
-        strError = strprintf("Error: TCP/IP socket library failed to start (WSAStartup returned error %d)", ret);
-        printf("%s\n", strError.c_str());
-        return false;
-    }
-#endif
-
     // Create socket for listening for incoming connections
 #ifdef USE_IPV6
     struct sockaddr_storage sockaddr;
