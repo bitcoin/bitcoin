@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = novacoin-qt
+TARGET = yacoin-qt
 VERSION = 0.7.2
 INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
@@ -275,7 +275,7 @@ SOURCES += src/qt/test/test_main.cpp \
 HEADERS += src/qt/test/uritests.h
 DEPENDPATH += src/qt/test
 QT += testlib
-TARGET = novacoin-qt_test
+TARGET = yacoin-qt_test
 DEFINES += BITCOIN_QT_TEST
 }
 

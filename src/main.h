@@ -45,7 +45,7 @@ static const int fHaveUPnP = true;
 static const int fHaveUPnP = false;
 #endif
 
-static const uint256 hashGenesisBlockOfficial("0x00000a060336cbb72fe969666d337b87198b1add2abaa59cca226820b32933a4");
+static const uint256 hashGenesisBlockOfficial("0x47e13f1b37a39ef9f85322a48ef84367b3b337fc28028b28ef80150356b647b8");
 static const uint256 hashGenesisBlockTestNet("0x00000a060336cbb72fe969666d337b87198b1add2abaa59cca226820b32933a4");
 
 static const int64 nMaxClockDrift = 2 * 60 * 60;        // two hours
@@ -925,7 +925,7 @@ public:
     unsigned int GetStakeEntropyBit(unsigned int nHeight) const
     {
         // Protocol switch to support p2pool at novacoin block #9689
-        if (nHeight >= 9689)
+//        if (nHeight >= 9689)
         {
             // Take last bit of block hash as entropy bit
             unsigned int nEntropyBit = ((GetHash().Get64()) & 1llu);
@@ -933,7 +933,7 @@ public:
                 printf("GetStakeEntropyBit: nHeight=%u hashBlock=%s nEntropyBit=%u\n", nHeight, GetHash().ToString().c_str(), nEntropyBit);
             return nEntropyBit;
         }
-        // Before novacoin block #9689 - old protocol
+/*        // Before novacoin block #9689 - old protocol
         uint160 hashSig = Hash160(vchBlockSig);
         if (fDebug && GetBoolArg("-printstakemodifier"))
             printf("GetStakeEntropyBit: hashSig=%s", hashSig.ToString().c_str());
@@ -941,6 +941,8 @@ public:
         if (fDebug && GetBoolArg("-printstakemodifier"))
             printf(" entropybit=%"PRI64d"\n", hashSig.Get64());
         return hashSig.Get64();
+*/
+// DIFF: protocol switch not needed as soon as newer version can be used
     }
 
     // ppcoin: two types of block: proof-of-work or proof-of-stake

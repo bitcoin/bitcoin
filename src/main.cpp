@@ -39,7 +39,7 @@ static CBigNum bnProofOfStakeHardLimit(~uint256(0) >> 30);
 static CBigNum bnInitialHashTarget(~uint256(0) >> 20);
 unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // minimum age for coin age
 unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // stake age of full weight
-unsigned int nStakeTargetSpacing = 10 * 60; // 10-minute block spacing
+unsigned int nStakeTargetSpacing = 1 * 60; // DIFF: 1-minute block spacing
 int nCoinbaseMaturity = 500;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
@@ -62,7 +62,7 @@ map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "NovaCoin Signed Message:\n";
+const string strMessageMagic = "YaCoin Signed Message:\n";
 
 double dHashesPerSec;
 int64 nHPSTimerStart;
@@ -1036,9 +1036,9 @@ unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
             bnTargetLimit = bnProofOfStakeHardLimit;
         else
         {
-            if(fTestNet || (pindexLast->nHeight + 1 > 15000))
+/*            if(fTestNet || (pindexLast->nHeight + 1 > 15000))
                 bnTargetLimit = bnProofOfStakeLimit;
-            else if(pindexLast->nHeight + 1 > 14060)
+            else if(pindexLast->nHeight + 1 > 14060)*/ // DIFF
                 bnTargetLimit = bnProofOfStakeHardLimit;
         }
     }
@@ -2114,7 +2114,8 @@ bool CBlock::AcceptBlock()
         return error("AcceptBlock() : rejected by synchronized checkpoint");
 
     // Reject block.nVersion < 3 blocks since 95% threshold on mainNet and always on testNet:
-    if (nVersion < 3 && ((!fTestNet && nHeight > 14060) || (fTestNet && nHeight > 0)))
+    // DIFF: will use only nVersion > 3
+    if (nVersion < 3) // && ((!fTestNet && nHeight > 14060) || (fTestNet && nHeight > 0)))
         return error("CheckBlock() : rejected nVersion < 3 block");
 
     // Enforce rule that the coinbase starts with serialized block height
@@ -2399,7 +2400,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
         string strMessage = _("Warning: Disk space is low!");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
-        uiInterface.ThreadSafeMessageBox(strMessage, "NovaCoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
+        uiInterface.ThreadSafeMessageBox(strMessage, "YaCoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
         StartShutdown();
         return false;
     }
@@ -2504,15 +2505,16 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1360105017;
+        block.nTime    = 1367057243;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
         block.nNonce   = 1575379;
 
         //// debug print
+        printf("block.GetHash() == %s\n", block.GetHash().ToString().c_str());
         assert(block.hashMerkleRoot == uint256("0x4cb33b3b6a861dcbc685d3e614a9cafb945738d6833f182855679f2fad02057b"));
         block.print();
         assert(block.GetHash() == hashGenesisBlock);
-        assert(block.CheckBlock());
+        //assert(block.CheckBlock()); // TODO: uncomment
 
         // Start new block file
         unsigned int nFile;
@@ -4270,6 +4272,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
             return;
         while (vNodes.empty() || IsInitialBlockDownload())
         {
+            printf("vNodes.size() == %d, IsInitialBlockDownload() == %d\n", vNodes.size(), IsInitialBlockDownload());
             Sleep(1000);
             if (fShutdown)
                 return;
