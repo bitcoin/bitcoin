@@ -26,7 +26,7 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) :
 
     // load the bitmap for writing some text over it
     QPixmap newPixmap;
-    if(GetBoolArg("-testnet")) {
+    if(GetBoolArg("-testnet", false)) {
         newPixmap     = QPixmap(":/images/splash_testnet");
     }
     else {
