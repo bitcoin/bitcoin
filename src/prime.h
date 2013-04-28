@@ -20,10 +20,13 @@ void Primorial(unsigned int p, CBigNum& bnPrimorial);
 void PrimorialAt(CBigNum& bn, CBigNum& bnPrimorial);
 
 // Test probable prime chain for: n
+// fFermatTest
+//   true - Use only Fermat tests
+//   false - Use Fermat-Euler-Lagrange-Lifchitz tests
 // Return value:
 //   true - Probable prime chain found (nProbableChainLength meeting target)
 //   false - prime chain too short (nProbableChainLength not meeting target)
-bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nBits, unsigned int& nProbableChainLength);
+bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nBits, bool fFermatTest, unsigned int& nProbableChainLength);
 
 static const unsigned int nFractionalBits = 20;
 static const uint64 nFractionalDifficultyMax = (1llu << (nFractionalBits + 32));

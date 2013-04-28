@@ -54,7 +54,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     bool fSophieGermain= TargetIsSophieGermain(block.nBits);
     bool fBiTwin = TargetIsBiTwin(block.nBits);
     CBigNum bnProbablePrime = (CBigNum(block.GetHash()) * block.bnPrimeChainMultiplier) + ((fSophieGermain || fBiTwin)? (-1) : 1);
-    ProbablePrimeChainTest(bnProbablePrime, block.nBits, nChainLength);
+    ProbablePrimeChainTest(bnProbablePrime, block.nBits, false, nChainLength);
     result.push_back(Pair("primechain", GetPrimeDifficulty(nChainLength)));
 
     if (blockindex->pprev)

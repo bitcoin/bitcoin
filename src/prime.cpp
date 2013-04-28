@@ -55,7 +55,7 @@ void PrimorialAt(CBigNum& bn, CBigNum& bnPrimorial)
 
 // Check Fermat probable primality test (2-PRP): 2 ** (n-1) = 1 (mod n)
 // true: n is probable prime
-// false: n is composite
+// false: n is composite; set fractional length in the nLength output
 static bool FermatProbablePrimalityTest(const CBigNum& n, unsigned int& nLength)
 {
     CAutoBN_CTX pctx;
@@ -64,21 +64,23 @@ static bool FermatProbablePrimalityTest(const CBigNum& n, unsigned int& nLength)
     CBigNum r;
     BN_mod_exp(&r, &a, &e, &n, pctx);
     if (r == 1)
-    {
         return true;
-    }
-    else
-    {
-        nLength = (nLength & 0xfff00000u) | ((((n-r) << nFractionalBits) / n).getuint());
-        return false;
-    }
+    // Failed Fermat test, calculate fractional length
+    unsigned int nFractionalLength = (((n-r) << nFractionalBits) / n).getuint();
+    if (nFractionalLength >= (1 << nFractionalBits))
+        return error("FermatProbablePrimalityTest() : fractional assert");
+    nLength = (nLength & 0xfff00000u) | nFractionalLength;
+    return false;
 }
 
 // Test probable primality of n = 2p +/- 1 based on Euler, Lagrange and Lifchitz
 // fSophieGermain:
 //   true:  n = 2p+1, p prime, aka Cunningham Chain of first kind
 //   false: n = 2p-1, p prime, aka Cunningham Chain of second kind
-static bool EulerLagrangeLifchitzPrimalityTest(const CBigNum& n, bool fSophieGermain)
+// Return values
+//   true: n is probable prime
+//   false: n is composite; set fractional length in the nLength output
+static bool EulerLagrangeLifchitzPrimalityTest(const CBigNum& n, bool fSophieGermain, unsigned int& nLength)
 {
     CAutoBN_CTX pctx;
     CBigNum a = 2;
@@ -86,15 +88,27 @@ static bool EulerLagrangeLifchitzPrimalityTest(const CBigNum& n, bool fSophieGer
     CBigNum r;
     BN_mod_exp(&r, &a, &e, &n, pctx);
     CBigNum nMod8 = n % 8;
+    bool fPassedTest = false;
     if (fSophieGermain && (nMod8 == 7)) // Euler & Lagrange
-        return (r == 1);
-    if (fSophieGermain && (nMod8 == 3)) // Lifchitz
-        return ((r+1) == n);
-    if ((!fSophieGermain) && (nMod8 == 5)) // Lifchitz
-        return ((r+1) == n);
-    if ((!fSophieGermain) && (nMod8 == 1)) // LifChitz
-        return (r == 1);
-    return error("EulerLagrangeLifchitzPrimalityTest() : invalid n %% 8 = %d, %s", nMod8.getint(), (fSophieGermain? "first kind" : "second kind"));
+        fPassedTest = (r == 1);
+    else if (fSophieGermain && (nMod8 == 3)) // Lifchitz
+        fPassedTest = ((r+1) == n);
+    else if ((!fSophieGermain) && (nMod8 == 5)) // Lifchitz
+        fPassedTest = ((r+1) == n);
+    else if ((!fSophieGermain) && (nMod8 == 1)) // LifChitz
+        fPassedTest = (r == 1);
+    else
+        return error("EulerLagrangeLifchitzPrimalityTest() : invalid n %% 8 = %d, %s", nMod8.getint(), (fSophieGermain? "first kind" : "second kind"));
+
+    if (fPassedTest)
+        return true;
+    // Failed test, calculate fractional length
+    r = (r * r) % n; // derive Fermat test remainder
+    unsigned int nFractionalLength = (((n-r) << nFractionalBits) / n).getuint();
+    if (nFractionalLength >= (1 << nFractionalBits))
+        return error("EulerLagrangeLifchitzPrimalityTest() : fractional assert");
+    nLength = (nLength & 0xfff00000u) | nFractionalLength;
+    return false;
 }
 
 // Proof-of-work Target (prime chain target):
@@ -114,7 +128,7 @@ static const unsigned int TARGET_MIN_LENGTH = 2;
 
 static unsigned int TargetGetLength(unsigned int nBits)
 {
-    return ((nBits & 0x3ff00000u) >> 20);
+    return ((nBits & 0x3ff00000u) >> nFractionalBits);
 }
 
 bool TargetSetLength(unsigned int nLength, unsigned int& nBits)
@@ -124,6 +138,11 @@ bool TargetSetLength(unsigned int nLength, unsigned int& nBits)
     nBits &= ~(0x3ff00000u);
     nBits |= (nLength << nFractionalBits);
     return true;
+}
+
+static void TargetIncrementLength(unsigned int& nBits)
+{
+    nBits += (1 << nFractionalBits);
 }
 
 static unsigned int TargetGetLengthWithFractional(unsigned int nBits)
@@ -146,8 +165,8 @@ bool TargetSetFractionalDifficulty(uint64 nFractionalDifficulty, unsigned int& n
     if (nFractionalDifficulty < nFractionalDifficultyMin)
         return error("TargetSetFractionalDifficulty() : difficulty below min");
     uint64 nFractional = (1llu << (nFractionalBits+32)) / nFractionalDifficulty;
-    if (nFractional >= 0x00100000u)
-        return error("TargetSetFractionalDifficulty() : difficulty overflow");
+    if (nFractional > 0x00100000u)
+        return error("TargetSetFractionalDifficulty() : fractional overflow: nFractionalDifficulty=%016"PRI64x, nFractionalDifficulty);
     nFractional = 0x00100000u - nFractional;
     nBits &= 0xfff00000u;
     nBits |= (unsigned int)nFractional;
@@ -187,7 +206,7 @@ std::string TargetGetName(unsigned int nBits)
 
 static unsigned int TargetLengthFromInt(unsigned int nLength)
 {
-    return (nLength << 20);
+    return (nLength << nFractionalBits);
 }
 
 // Get mint value from target
@@ -201,9 +220,9 @@ bool TargetGetMint(unsigned int nBits, uint64& nMint)
     if (TargetGetLength(nBits) < TARGET_MIN_LENGTH)
         return error("TargetGetMint() : length below minimum required, nBits=%08x", nBits);
     unsigned int nLengthWithFractional = TargetGetLengthWithFractional(nBits);
-    bnMint = (bnMint << 20) / nLengthWithFractional;
-    bnMint = (bnMint << 20) / nLengthWithFractional;
-    bnMint = (bnMint << 20) / nLengthWithFractional;
+    bnMint = (bnMint << nFractionalBits) / nLengthWithFractional;
+    bnMint = (bnMint << nFractionalBits) / nLengthWithFractional;
+    bnMint = (bnMint << nFractionalBits) / nLengthWithFractional;
     bnMint = (bnMint / CENT) * CENT;  // mint value rounded to cent
     nMint = bnMint.getuint256().Get64();
     return true;
@@ -214,9 +233,9 @@ bool TargetGetMint(unsigned int nBits, uint64& nMint)
 //   true - Test for Cunningham Chain of first kind (n, 2n+1, 4n+3, ...)
 //   false - Test for Cunningham Chain of second kind (n, 2n-1, 4n-3, ...)
 // Return value:
-//   true - Probable Cunningham Chain found (nProbableChainLength >= 2)
-//   false - Not Cunningham Chain (nProbableChainLength <= 1)
-static bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, unsigned int& nProbableChainLength)
+//   true - Probable Cunningham Chain found (length at least 2)
+//   false - Not Cunningham Chain
+static bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, bool fFermatTest, unsigned int& nProbableChainLength)
 {
     nProbableChainLength = 0;
     CBigNum N = n;
@@ -226,22 +245,31 @@ static bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, u
         return false;
 
     // Euler-Lagrange-Lifchitz test for the following numbers in chain
-    do
+    while (true)
     {
-        nProbableChainLength += (1 << nFractionalBits);
+        TargetIncrementLength(nProbableChainLength);
         N = N + N + (fSophieGermain? 1 : (-1));
+        if (fFermatTest)
+        {
+            if (!FermatProbablePrimalityTest(N, nProbableChainLength))
+                break;
+        }
+        else
+        {
+            if (!EulerLagrangeLifchitzPrimalityTest(N, fSophieGermain, nProbableChainLength))
+                break;
+        }
     }
-    while (EulerLagrangeLifchitzPrimalityTest(N, fSophieGermain));
 
     FermatProbablePrimalityTest(N, nProbableChainLength);
-    return (nProbableChainLength >= (2 << nFractionalBits));
+    return (TargetGetLength(nProbableChainLength) >= 2);
 }
 
 // Test probable prime chain for: n
 // Return value:
 //   true - Probable prime chain found (nProbableChainLength meeting target)
 //   false - prime chain too short (nProbableChainLength not meeting target)
-bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nBits, unsigned int& nProbableChainLength)
+bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nBits, bool fFermatTest, unsigned int& nProbableChainLength)
 {
     nProbableChainLength = 0;
     bool fSophieGermain= TargetIsSophieGermain(nBits);
@@ -252,12 +280,12 @@ bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nBits, unsigned int& 
         // BiTwin chain allows a single prime at the end for odd length chain
         unsigned int nLengthFirstKind = 0;
         unsigned int nLengthSecondKind = 0;
-        ProbableCunninghamChainTest(n, true, nLengthFirstKind);
-        ProbableCunninghamChainTest(n+2, false, nLengthSecondKind);
+        ProbableCunninghamChainTest(n, true, fFermatTest, nLengthFirstKind);
+        ProbableCunninghamChainTest(n+2, false, fFermatTest, nLengthSecondKind);
         nProbableChainLength = (TargetGetLength(nLengthFirstKind) > TargetGetLength(nLengthSecondKind))? (nLengthSecondKind + TargetLengthFromInt(TargetGetLength(nLengthSecondKind)+1)) : (nLengthFirstKind + TargetLengthFromInt(TargetGetLength(nLengthFirstKind)));
     }
     else
-        ProbableCunninghamChainTest(n, fSophieGermain, nProbableChainLength);
+        ProbableCunninghamChainTest(n, fSophieGermain, fFermatTest, nProbableChainLength);
     return (nProbableChainLength >= TargetGetLengthWithFractional(nBits));
 }
 
@@ -278,7 +306,7 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTrie
         nTests++;
         bnTried++;
         n = CBigNum(block.GetHash()) * bnPrimorial * bnTried + ((fSophieGermain || fBiTwin)? -1 : 1);
-        if (ProbablePrimeChainTest(n, block.nBits, nProbableChainLength))
+        if (ProbablePrimeChainTest(n, block.nBits, false, nProbableChainLength))
         {
             printf("Probable prime chain of type %s found for block=%s!! \n", TargetGetName(block.nBits).c_str(), block.GetHash().GetHex().c_str());
             block.bnPrimeChainMultiplier = bnPrimorial * bnTried;
@@ -373,16 +401,23 @@ bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnPr
         return error("CheckPrimeProofOfWork() : prime too big");
 
     // Check prime chain
-    unsigned int nChainLength;
-    if (ProbablePrimeChainTest(bnProbablePrime, nBits, nChainLength) && nChainLength >= TargetGetLengthWithFractional(nBits))
-        return true;
-    return error("CheckPrimeProofOfWork() : failed prime chain test type=%s nBits=%08x length=%08x", TargetGetName(nBits).c_str(), nBits, nChainLength);
+    unsigned int nChainLength = 0;
+    if ((!ProbablePrimeChainTest(bnProbablePrime, nBits, false, nChainLength)) || nChainLength < TargetGetLengthWithFractional(nBits))
+        return error("CheckPrimeProofOfWork() : failed prime chain test type=%s nBits=%08x length=%08x", TargetGetName(nBits).c_str(), nBits, nChainLength);
+
+    // Double check prime chain with Fermat tests only
+    unsigned int nChainLengthFermatTest = 0;
+    if (!ProbablePrimeChainTest(bnProbablePrime, nBits, true, nChainLengthFermatTest))
+        return error("CheckPrimeProofOfWork() : failed Fermat test");
+    if (nChainLength != nChainLengthFermatTest)
+        return error("CheckPrimeProofOfWork() : failed Fermat-only double check type=%s nBits=%08x length=%08x lengthFermat=%08x", TargetGetName(nBits).c_str(), nBits, nChainLength, nChainLengthFermatTest);
+    return true;
 }
 
 // prime target difficulty value for visualization
 double GetPrimeDifficulty(unsigned int nBits)
 {
-    return ((double) TargetGetLengthWithFractional(nBits) / (double) (1 << 20));
+    return ((double) TargetGetLengthWithFractional(nBits) / (double) (1 << nFractionalBits));
 }
 
 
