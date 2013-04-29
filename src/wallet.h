@@ -681,6 +681,8 @@ public:
 
     int64 GetTxTime() const;
     int GetRequestCount() const;
+    int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
+    int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
 
     void AddSupportingTransactions();
     bool AcceptWalletTransaction(bool fCheckInputs=true);
