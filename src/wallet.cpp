@@ -1846,7 +1846,7 @@ void CReserveKey::ReturnKey()
     vchPubKey = CPubKey();
 }
 
-void CWallet::GetAllReserveKeys(set<CKeyID>& setAddress)
+void CWallet::GetAllReserveKeys(set<CKeyID>& setAddress) const
 {
     setAddress.clear();
 
@@ -1908,3 +1908,53 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts)
     }
 }
 
+void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64> &mapKeyBirth) const {
+    mapKeyBirth.clear();
+
+    // get birth times for keys with metadata
+    for (std::map<CKeyID, CKeyMetadata>::const_iterator it = mapKeyMetadata.begin(); it != mapKeyMetadata.end(); it++)
+        if (it->second.nCreateTime)
+            mapKeyBirth[it->first] = it->second.nCreateTime;
+
+    // map in which we'll infer heights of other keys
+    CBlockIndex *pindexMax = FindBlockByHeight(std::max(0, nBestHeight - 144)); // the tip can be reorganised; use a 144-block safety margin
+    std::map<CKeyID, CBlockIndex*> mapKeyFirstBlock;
+    std::set<CKeyID> setKeys;
+    GetKeys(setKeys);
+    BOOST_FOREACH(const CKeyID &keyid, setKeys) {
+        if (mapKeyBirth.count(keyid) == 0)
+            mapKeyFirstBlock[keyid] = pindexMax;
+    }
+    setKeys.clear();
+
+    // if there are no such keys, we're done
+    if (mapKeyFirstBlock.empty())
+        return;
+
+    // find first block that affects those keys, if there are any left
+    std::vector<CKeyID> vAffected;
+    for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); it++) {
+        // iterate over all wallet transactions...
+        const CWalletTx &wtx = (*it).second;
+        std::map<uint256, CBlockIndex*>::const_iterator blit = mapBlockIndex.find(wtx.hashBlock);
+        if (blit != mapBlockIndex.end() && blit->second->IsInMainChain()) {
+            // ... which are already in a block
+            int nHeight = blit->second->nHeight;
+            BOOST_FOREACH(const CTxOut &txout, wtx.vout) {
+                // iterate over all their outputs
+                ::ExtractAffectedKeys(*this, txout.scriptPubKey, vAffected);
+                BOOST_FOREACH(const CKeyID &keyid, vAffected) {
+                    // ... and all their affected keys
+                    std::map<CKeyID, CBlockIndex*>::iterator rit = mapKeyFirstBlock.find(keyid);
+                    if (rit != mapKeyFirstBlock.end() && nHeight < rit->second->nHeight)
+                        rit->second = blit->second;
+                }
+                vAffected.clear();
+            }
+        }
+    }
+
+    // Extract block timestamps for those keys
+    for (std::map<CKeyID, CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); it++)
+        mapKeyBirth[it->first] = it->second->nTime - 7200; // block times can be 2h off
+}
