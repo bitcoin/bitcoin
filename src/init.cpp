@@ -349,7 +349,7 @@ std::string HelpMessage()
         "  -txindex               " + _("Maintain a full transaction index (default: 0)") + "\n" +
         "  -loadblock=<file>      " + _("Imports blocks from external blk000??.dat file") + "\n" +
         "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + "\n" +
-        "  -par=<n>               " + _("Set the number of script verification threads (1-16, 0=auto, default: 0)") + "\n" +
+        "  -par=N                 " + _("Set the number of script verification threads (up to 16, 0=auto, negative=leave N CPUs free, default: 0)") + "\n" +
 
         "\n" + _("Block creation options:") + "\n" +
         "  -blockminsize=<n>      "   + _("Set minimum block size in bytes (default: 0)") + "\n" +
@@ -525,8 +525,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
     nScriptCheckThreads = GetArg("-par", 0);
-    if (nScriptCheckThreads == 0)
-        nScriptCheckThreads = boost::thread::hardware_concurrency();
+    if (nScriptCheckThreads <= 0)
+        nScriptCheckThreads += boost::thread::hardware_concurrency();
     if (nScriptCheckThreads <= 1)
         nScriptCheckThreads = 0;
     else if (nScriptCheckThreads > MAX_SCRIPTCHECK_THREADS)
