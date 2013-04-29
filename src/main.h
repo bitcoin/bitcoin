@@ -9,6 +9,7 @@
 #include "sync.h"
 #include "net.h"
 #include "script.h"
+#include "base58.h"
 
 #include <list>
 
@@ -100,6 +101,8 @@ extern unsigned int nCoinCacheSize;
 
 // Settings
 extern int64 nTransactionFee;
+extern int64 nDustLimit;
+extern std::set<CBitcoinAddress> filteredAddresses;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;

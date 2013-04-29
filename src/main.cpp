@@ -66,6 +66,8 @@ int64 nHPSTimerStart = 0;
 
 // Settings
 int64 nTransactionFee = 0;
+int64 nDustLimit = 0;
+set<CBitcoinAddress> filteredAddresses;
 
 
 
@@ -652,6 +654,25 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
     // Rather not work on nonstandard transactions (unless -testnet)
     if (!fTestNet && !tx.IsStandard())
         return error("CTxMemPool::accept() : nonstandard transaction type");
+
+    // Further user defined acceptance tests
+    BOOST_FOREACH(const CTxOut& txout, tx.vout) {
+        if (txout.nValue <= nDustLimit)
+            return error("CTxMemPool::accept() : transaction output smaller than user defined limit");
+
+        txnouttype type;
+        vector<CTxDestination> addresses;
+        int nRequired;
+        if (!ExtractDestinations(txout.scriptPubKey, type, addresses, nRequired)) {
+            return error("CTxMemPool::accept() : unable to check transaction destinations");
+        }
+
+        BOOST_FOREACH(const CTxDestination& addr, addresses) {
+            if (filteredAddresses.find(CBitcoinAddress(addr)) != filteredAddresses.end()) {
+                return error("CTxMemPool::accept() : transaction destination filtered");
+            }
+        }
+    }
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
