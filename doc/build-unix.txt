@@ -72,21 +72,21 @@ If using Boost 1.37, append -mt to the boost libraries in the makefile.
 Dependency Build Instructions: Gentoo
 -------------------------------------
 
-Note: If you just want to install bitcoind on Gentoo, you can add the Bitcoin
-      overlay and use your package manager:
-          layman -a bitcoin && emerge bitcoind
+Note: Currently, there is no ppcoin ebuild available in overlay 
 
-emerge -av1 --noreplace boost glib openssl sys-libs/db:4.8
+emerge -av1 --noreplace dev-libs/boost dev-libs/glib dev-libs/openssl sys-libs/db:4.8
 
+Note: If you like to have UPnP support, you need to install net-libs/miniupnpc.
+ 
 Take the following steps to build (no UPnP support):
- cd ${BITCOIN_DIR}/src
+ cd ppcoin/src
  make -f makefile.unix USE_UPNP= BDB_INCLUDE_PATH='/usr/include/db4.8'
- strip bitcoind
+ strip ppcoind
 
 
 Notes
 -----
-The release is built with GCC and then "strip bitcoind" to strip the debug
+The release is built with GCC and then "strip ppcoind" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
 
