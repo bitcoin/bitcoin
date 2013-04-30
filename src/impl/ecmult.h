@@ -66,7 +66,7 @@ typedef struct {
     secp256k1_ge_t fin; // -(sum(prec[j][0], j=0..63))
 } secp256k1_ecmult_consts_t;
 
-static secp256k1_ecmult_consts_t *secp256k1_ecmult_consts = NULL;
+static const secp256k1_ecmult_consts_t *secp256k1_ecmult_consts = NULL;
 
 static void secp256k1_ecmult_start(void) {
     if (secp256k1_ecmult_consts != NULL)
@@ -109,7 +109,8 @@ static void secp256k1_ecmult_stop(void) {
     if (secp256k1_ecmult_consts == NULL)
         return;
 
-    free(secp256k1_ecmult_consts);
+    secp256k1_ecmult_consts_t *c = (secp256k1_ecmult_consts_t*)secp256k1_ecmult_consts;
+    free(c);
     secp256k1_ecmult_consts = NULL;
 }
 

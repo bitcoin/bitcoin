@@ -29,7 +29,7 @@ typedef struct {
     secp256k1_num_t lambda, a1b2, b1, a2;
 } secp256k1_ge_consts_t;
 
-static secp256k1_ge_consts_t *secp256k1_ge_consts = NULL;
+static const secp256k1_ge_consts_t *secp256k1_ge_consts = NULL;
 
 /** Initialize the group module. */
 void static secp256k1_ge_start(void);
