@@ -595,8 +595,20 @@ void CTransaction::ScanInputForDoubleSpends(unsigned int input) const
     if (!mempool.mapNextTx.count(prevout))
         return;
 
-    // conflict found!
+    // due to signature malleability, anyone can make variations of
+    // the original signatures, causing the transaction hash to change.
+    // ignore transactions where everything else is identical.
     CTransaction *ptxOld = mempool.mapNextTx[prevout].ptx;
+    CTransaction tx1(*ptxOld);
+    CTransaction tx2(*this);
+    for (unsigned int i = 0; i < tx1.vin.size(); i++)
+        tx1.vin[i].scriptSig = CScript();
+    for (unsigned int i = 0; i < tx2.vin.size(); i++)
+        tx2.vin[i].scriptSig = CScript();
+    if (tx1 == tx2)
+        return;
+
+    // conflict found!
     vector<CTransaction*> vAffected;
     vAffected.push_back(ptxOld);
 
