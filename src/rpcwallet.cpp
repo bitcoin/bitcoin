@@ -1457,7 +1457,7 @@ public:
         CPubKey vchPubKey;
         pwalletMain->GetPubKey(keyID, vchPubKey);
         obj.push_back(Pair("isscript", false));
-        obj.push_back(Pair("pubkey", HexStr(vchPubKey.Raw())));
+        obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
         obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
         return obj;
     }
