@@ -664,6 +664,10 @@ public:
     // Context-independent validity checks
     bool CheckTransaction(CValidationState &state) const;
 
+    // Scan for double spends and flag any affected wallet transactions
+    void ScanForDoubleSpends() const;
+    void ScanInputForDoubleSpends(unsigned int input) const;
+
     // Try to accept this transaction into the memory pool
     bool AcceptToMemoryPool(CValidationState &state, bool fCheckInputs=true, bool fLimitFree = true, bool* pfMissingInputs=NULL);
 
