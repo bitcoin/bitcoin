@@ -1895,10 +1895,11 @@ bool CScriptCompressor::Decompress(unsigned int nSize, const std::vector<unsigne
         if (!key.SetPubKey(CPubKey(vch)))
             return false;
         key.SetCompressedPubKey(false); // Decompress public key
-        CPubKey pubkey = key.GetPubKey();
+        const CPubKey pubkey = key.GetPubKey();
+        assert(pubkey.size() == 65);
         script.resize(67);
         script[0] = 65;
-        memcpy(&script[1], &pubkey.Raw()[0], 65);
+        memcpy(&script[1], pubkey.begin(), 65);
         script[66] = OP_CHECKSIG;
         return true;
     }
