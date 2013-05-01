@@ -22,3 +22,9 @@ qrc_*.cpp
 #mac specific
 .DS_Store
 build
+*.plist
+*.xcodeproj
+PortIndex*
+dist
+*.app
+*.dmg
