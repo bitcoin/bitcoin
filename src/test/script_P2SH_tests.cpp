@@ -145,19 +145,19 @@ BOOST_AUTO_TEST_CASE(set)
     // Test the CScript::Set* methods
     CBasicKeyStore keystore;
     CKey key[4];
-    std::vector<CKey> keys;
+    std::vector<CPubKey> keys;
     for (int i = 0; i < 4; i++)
     {
         key[i].MakeNewKey(true);
         keystore.AddKey(key[i]);
-        keys.push_back(key[i]);
+        keys.push_back(key[i].GetPubKey());
     }
 
     CScript inner[4];
     inner[0].SetDestination(key[0].GetPubKey().GetID());
-    inner[1].SetMultisig(2, std::vector<CKey>(keys.begin(), keys.begin()+2));
-    inner[2].SetMultisig(1, std::vector<CKey>(keys.begin(), keys.begin()+2));
-    inner[3].SetMultisig(2, std::vector<CKey>(keys.begin(), keys.begin()+3));
+    inner[1].SetMultisig(2, std::vector<CPubKey>(keys.begin(), keys.begin()+2));
+    inner[2].SetMultisig(1, std::vector<CPubKey>(keys.begin(), keys.begin()+2));
+    inner[3].SetMultisig(2, std::vector<CPubKey>(keys.begin(), keys.begin()+3));
 
     CScript outer[4];
     for (int i = 0; i < 4; i++)
@@ -248,12 +248,12 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     CCoinsViewCache coins(coinsDummy);
     CBasicKeyStore keystore;
     CKey key[3];
-    vector<CKey> keys;
+    vector<CPubKey> keys;
     for (int i = 0; i < 3; i++)
     {
         key[i].MakeNewKey(true);
         keystore.AddKey(key[i]);
-        keys.push_back(key[i]);
+        keys.push_back(key[i].GetPubKey());
     }
 
     CTransaction txFrom;

@@ -30,7 +30,7 @@ sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction,
 
     CScript result;
     result << OP_0; // CHECKMULTISIG bug workaround
-    BOOST_FOREACH(CKey key, keys)
+    BOOST_FOREACH(const CKey &key, keys)
     {
         vector<unsigned char> vchSig;
         BOOST_CHECK(key.Sign(hash, vchSig));
