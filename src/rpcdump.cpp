@@ -54,20 +54,18 @@ Value importprivkey(const Array& params, bool fHelp)
 
     if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
 
-    CKey key;
-    bool fCompressed;
-    CSecret secret = vchSecret.GetSecret(fCompressed);
-    key.SetSecret(secret, fCompressed);
-    CKeyID vchAddress = key.GetPubKey().GetID();
+    CKey key = vchSecret.GetKey();
+    CPubKey pubkey = key.GetPubKey();
+    CKeyID vchAddress = pubkey.GetID();
     {
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
         pwalletMain->MarkDirty();
         pwalletMain->SetAddressBookName(vchAddress, strLabel);
 
-        if (!pwalletMain->AddKey(key))
+        if (!pwalletMain->AddKeyPubKey(key, pubkey))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
-	
+
         if (fRescan) {
             pwalletMain->ScanForWalletTransactions(pindexGenesisBlock, true);
             pwalletMain->ReacceptWalletTransactions();
@@ -91,9 +89,8 @@ Value dumpprivkey(const Array& params, bool fHelp)
     CKeyID keyID;
     if (!address.GetKeyID(keyID))
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
-    CSecret vchSecret;
-    bool fCompressed;
-    if (!pwalletMain->GetSecret(keyID, vchSecret, fCompressed))
+    CKey vchSecret;
+    if (!pwalletMain->GetKey(keyID, vchSecret))
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
-    return CBitcoinSecret(vchSecret, fCompressed).ToString();
+    return CBitcoinSecret(vchSecret).ToString();
 }

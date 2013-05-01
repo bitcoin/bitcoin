@@ -2,12 +2,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <map>
-
 #include <openssl/ecdsa.h>
+#include <openssl/rand.h>
 #include <openssl/obj_mac.h>
 
 #include "key.h"
+
+
+// anonymous namespace with local implementation code (OpenSSL interaction)
+namespace {
 
 // Generate a private key from just the secret parameter
 int EC_KEY_regenerate_key(EC_KEY *eckey, BIGNUM *priv_key)
@@ -120,293 +123,273 @@ err:
     return ret;
 }
 
-void CKey::SetCompressedPubKey(bool fCompressed)
-{
-    EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
-    fCompressedPubKey = true;
-}
+// RAII Wrapper around OpenSSL's EC_KEY
+class CECKey {
+private:
+    EC_KEY *pkey;
 
-void CKey::Reset()
-{
-    fCompressedPubKey = false;
-    if (pkey != NULL)
+public:
+    CECKey() {
+        pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
+        assert(pkey != NULL);
+    }
+
+    ~CECKey() {
         EC_KEY_free(pkey);
-    pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
-    if (pkey == NULL)
-        throw key_error("CKey::CKey() : EC_KEY_new_by_curve_name failed");
-    fSet = false;
-}
+    }
 
-CKey::CKey()
-{
-    pkey = NULL;
-    Reset();
-}
+    void GetSecretBytes(unsigned char vch[32]) const {
+        const BIGNUM *bn = EC_KEY_get0_private_key(pkey);
+        assert(bn);
+        int nBytes = BN_num_bytes(bn);
+        int n=BN_bn2bin(bn,&vch[32 - nBytes]);
+        assert(n == nBytes);
+        memset(vch, 0, 32 - nBytes);
+    }
 
-CKey::CKey(const CKey& b)
-{
-    pkey = EC_KEY_dup(b.pkey);
-    if (pkey == NULL)
-        throw key_error("CKey::CKey(const CKey&) : EC_KEY_dup failed");
-    fSet = b.fSet;
-}
+    void SetSecretBytes(const unsigned char vch[32]) {
+        BIGNUM bn;
+        BN_init(&bn);
+        assert(BN_bin2bn(vch, 32, &bn));
+        assert(EC_KEY_regenerate_key(pkey, &bn));
+        BN_clear_free(&bn);
+    }
 
-CKey& CKey::operator=(const CKey& b)
-{
-    if (!EC_KEY_copy(pkey, b.pkey))
-        throw key_error("CKey::operator=(const CKey&) : EC_KEY_copy failed");
-    fSet = b.fSet;
-    return (*this);
-}
+    void GetPrivKey(CPrivKey &privkey) {
+        int nSize = i2d_ECPrivateKey(pkey, NULL);
+        assert(nSize);
+        privkey.resize(nSize);
+        unsigned char* pbegin = &privkey[0];
+        int nSize2 = i2d_ECPrivateKey(pkey, &pbegin);
+        assert(nSize == nSize2);
+    }
 
-CKey::~CKey()
-{
-    EC_KEY_free(pkey);
-}
-
-bool CKey::IsNull() const
-{
-    return !fSet;
-}
-
-bool CKey::IsCompressed() const
-{
-    return fCompressedPubKey;
-}
-
-void CKey::MakeNewKey(bool fCompressed)
-{
-    if (!EC_KEY_generate_key(pkey))
-        throw key_error("CKey::MakeNewKey() : EC_KEY_generate_key failed");
-    if (fCompressed)
-        SetCompressedPubKey();
-    fSet = true;
-}
-
-bool CKey::SetPrivKey(const CPrivKey& vchPrivKey)
-{
-    const unsigned char* pbegin = &vchPrivKey[0];
-    if (d2i_ECPrivateKey(&pkey, &pbegin, vchPrivKey.size()))
-    {
-        // In testing, d2i_ECPrivateKey can return true
-        // but fill in pkey with a key that fails
-        // EC_KEY_check_key, so:
-        if (EC_KEY_check_key(pkey))
-        {
-            fSet = true;
-            return true;
+    bool SetPrivKey(const CPrivKey &privkey) {
+        const unsigned char* pbegin = &privkey[0];
+        if (d2i_ECPrivateKey(&pkey, &pbegin, privkey.size())) {
+            // d2i_ECPrivateKey returns true if parsing succeeds.
+            // This doesn't necessarily mean the key is valid.
+            if (EC_KEY_check_key(pkey))
+                return true;
         }
+        return false;
     }
-    // If vchPrivKey data is bad d2i_ECPrivateKey() can
-    // leave pkey in a state where calling EC_KEY_free()
-    // crashes. To avoid that, set pkey to NULL and
-    // leak the memory (a leak is better than a crash)
-    pkey = NULL;
-    Reset();
-    return false;
-}
 
-bool CKey::SetSecret(const CSecret& vchSecret, bool fCompressed)
-{
-    EC_KEY_free(pkey);
-    pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
-    if (pkey == NULL)
-        throw key_error("CKey::SetSecret() : EC_KEY_new_by_curve_name failed");
-    if (vchSecret.size() != 32)
-        throw key_error("CKey::SetSecret() : secret must be 32 bytes");
-    BIGNUM *bn = BN_bin2bn(&vchSecret[0],32,BN_new());
-    if (bn == NULL)
-        throw key_error("CKey::SetSecret() : BN_bin2bn failed");
-    if (!EC_KEY_regenerate_key(pkey,bn))
-    {
-        BN_clear_free(bn);
-        throw key_error("CKey::SetSecret() : EC_KEY_regenerate_key failed");
+    void GetPubKey(CPubKey &pubkey, bool fCompressed) {
+        EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
+        int nSize = i2o_ECPublicKey(pkey, NULL);
+        assert(nSize);
+        assert(nSize <= 65);
+        unsigned char c[65];
+        unsigned char *pbegin = c;
+        int nSize2 = i2o_ECPublicKey(pkey, &pbegin);
+        assert(nSize == nSize2);
+        pubkey.Set(&c[0], &c[nSize]);
     }
-    BN_clear_free(bn);
-    fSet = true;
-    if (fCompressed || fCompressedPubKey)
-        SetCompressedPubKey();
-    return true;
-}
 
-CSecret CKey::GetSecret(bool &fCompressed) const
-{
-    CSecret vchRet;
-    vchRet.resize(32);
-    const BIGNUM *bn = EC_KEY_get0_private_key(pkey);
-    int nBytes = BN_num_bytes(bn);
-    if (bn == NULL)
-        throw key_error("CKey::GetSecret() : EC_KEY_get0_private_key failed");
-    int n=BN_bn2bin(bn,&vchRet[32 - nBytes]);
-    if (n != nBytes)
-        throw key_error("CKey::GetSecret(): BN_bn2bin failed");
-    fCompressed = fCompressedPubKey;
-    return vchRet;
-}
+    bool SetPubKey(const CPubKey &pubkey) {
+        const unsigned char* pbegin = pubkey.begin();
+        return o2i_ECPublicKey(&pkey, &pbegin, pubkey.size());
+    }
 
-CPrivKey CKey::GetPrivKey() const
-{
-    int nSize = i2d_ECPrivateKey(pkey, NULL);
-    if (!nSize)
-        throw key_error("CKey::GetPrivKey() : i2d_ECPrivateKey failed");
-    CPrivKey vchPrivKey(nSize, 0);
-    unsigned char* pbegin = &vchPrivKey[0];
-    if (i2d_ECPrivateKey(pkey, &pbegin) != nSize)
-        throw key_error("CKey::GetPrivKey() : i2d_ECPrivateKey returned unexpected size");
-    return vchPrivKey;
-}
-
-bool CKey::SetPubKey(const CPubKey& vchPubKey)
-{
-    const unsigned char* pbegin = vchPubKey.begin();
-    if (o2i_ECPublicKey(&pkey, &pbegin, vchPubKey.size()))
-    {
-        fSet = true;
-        if (vchPubKey.size() == 33)
-            SetCompressedPubKey();
+    bool Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) {
+        unsigned int nSize = ECDSA_size(pkey);
+        vchSig.resize(nSize); // Make sure it is big enough
+        assert(ECDSA_sign(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], &nSize, pkey));
+        vchSig.resize(nSize); // Shrink to fit actual size
         return true;
     }
-    pkey = NULL;
-    Reset();
-    return false;
-}
 
-CPubKey CKey::GetPubKey() const
-{
-    int nSize = i2o_ECPublicKey(pkey, NULL);
-    if (!nSize)
-        throw key_error("CKey::GetPubKey() : i2o_ECPublicKey failed");
-    assert(nSize <= 65);
-    CPubKey ret;
-    unsigned char *pbegin = ret.begin();
-    if (i2o_ECPublicKey(pkey, &pbegin) != nSize)
-        throw key_error("CKey::GetPubKey() : i2o_ECPublicKey returned unexpected size");
-    assert((int)ret.size() == nSize);
-    return ret;
-}
-
-bool CKey::Sign(uint256 hash, std::vector<unsigned char>& vchSig)
-{
-    unsigned int nSize = ECDSA_size(pkey);
-    vchSig.resize(nSize); // Make sure it is big enough
-    if (!ECDSA_sign(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], &nSize, pkey))
-    {
-        vchSig.clear();
-        return false;
+    bool Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
+        // -1 = error, 0 = bad sig, 1 = good
+        if (ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], vchSig.size(), pkey) != 1)
+            return false;
+        return true;
     }
-    vchSig.resize(nSize); // Shrink to fit actual size
+
+    bool SignCompact(const uint256 &hash, unsigned char *p64, int &rec) {
+        bool fOk = false;
+        ECDSA_SIG *sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
+        if (sig==NULL)
+            return false;
+        memset(p64, 0, 64);
+        int nBitsR = BN_num_bits(sig->r);
+        int nBitsS = BN_num_bits(sig->s);
+        if (nBitsR <= 256 && nBitsS <= 256) {
+            CPubKey pubkey;
+            GetPubKey(pubkey, true);
+            for (int i=0; i<4; i++) {
+                CECKey keyRec;
+                if (ECDSA_SIG_recover_key_GFp(keyRec.pkey, sig, (unsigned char*)&hash, sizeof(hash), i, 1) == 1) {
+                    CPubKey pubkeyRec;
+                    keyRec.GetPubKey(pubkeyRec, true);
+                    if (pubkeyRec == pubkey) {
+                        rec = i;
+                        fOk = true;
+                        break;
+                    }
+                }
+            }
+            assert(fOk);
+            BN_bn2bin(sig->r,&p64[32-(nBitsR+7)/8]);
+            BN_bn2bin(sig->s,&p64[64-(nBitsS+7)/8]);
+        }
+        ECDSA_SIG_free(sig);
+        return fOk;
+    }
+
+    // reconstruct public key from a compact signature
+    // This is only slightly more CPU intensive than just verifying it.
+    // If this function succeeds, the recovered public key is guaranteed to be valid
+    // (the signature is a valid signature of the given data for that key)
+    bool Recover(const uint256 &hash, const unsigned char *p64, int rec)
+    {
+        if (rec<0 || rec>=3)
+            return false;
+        ECDSA_SIG *sig = ECDSA_SIG_new();
+        BN_bin2bn(&p64[0],  32, sig->r);
+        BN_bin2bn(&p64[32], 32, sig->s);
+        bool ret = ECDSA_SIG_recover_key_GFp(pkey, sig, (unsigned char*)&hash, sizeof(hash), rec, 0) == 1;
+        ECDSA_SIG_free(sig);
+        return ret;
+    }
+};
+
+}; // end of anonymous namespace
+
+bool CKey::Check(const unsigned char *vch) {
+    // Do not convert to OpenSSL's data structures for range-checking keys,
+    // it's easy enough to do directly.
+    static const unsigned char vchMax[32] = {
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+        0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+        0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x40
+    };
+    bool fIsZero = true;
+    for (int i=0; i<32 && fIsZero; i++)
+        if (vch[i] != 0)
+            fIsZero = false;
+    if (fIsZero)
+        return false;
+    for (int i=0; i<32; i++) {
+        if (vch[i] < vchMax[i])
+            return true;
+        if (vch[i] > vchMax[i])
+            return false;
+    }
     return true;
 }
 
-// create a compact signature (65 bytes), which allows reconstructing the used public key
-// The format is one header byte, followed by two times 32 bytes for the serialized r and s values.
-// The header byte: 0x1B = first key with even y, 0x1C = first key with odd y,
-//                  0x1D = second key with even y, 0x1E = second key with odd y
-bool CKey::SignCompact(uint256 hash, std::vector<unsigned char>& vchSig)
-{
-    bool fOk = false;
-    ECDSA_SIG *sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
-    if (sig==NULL)
-        return false;
-    vchSig.clear();
-    vchSig.resize(65,0);
-    int nBitsR = BN_num_bits(sig->r);
-    int nBitsS = BN_num_bits(sig->s);
-    if (nBitsR <= 256 && nBitsS <= 256)
-    {
-        int nRecId = -1;
-        for (int i=0; i<4; i++)
-        {
-            CKey keyRec;
-            keyRec.fSet = true;
-            if (fCompressedPubKey)
-                keyRec.SetCompressedPubKey();
-            if (ECDSA_SIG_recover_key_GFp(keyRec.pkey, sig, (unsigned char*)&hash, sizeof(hash), i, 1) == 1)
-                if (keyRec.GetPubKey() == this->GetPubKey())
-                {
-                    nRecId = i;
-                    break;
-                }
-        }
-
-        if (nRecId == -1)
-        {
-            ECDSA_SIG_free(sig);
-            throw key_error("CKey::SignCompact() : unable to construct recoverable key");
-        }
-
-        vchSig[0] = nRecId+27+(fCompressedPubKey ? 4 : 0);
-        BN_bn2bin(sig->r,&vchSig[33-(nBitsR+7)/8]);
-        BN_bn2bin(sig->s,&vchSig[65-(nBitsS+7)/8]);
-        fOk = true;
-    }
-    ECDSA_SIG_free(sig);
-    return fOk;
+void CKey::MakeNewKey(bool fCompressedIn) {
+    do {
+        RAND_bytes(vch, sizeof(vch));
+    } while (!Check(vch));
+    fValid = true;
+    fCompressed = fCompressedIn;
 }
 
-// reconstruct public key from a compact signature
-// This is only slightly more CPU intensive than just verifying it.
-// If this function succeeds, the recovered public key is guaranteed to be valid
-// (the signature is a valid signature of the given data for that key)
-bool CKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>& vchSig)
-{
+bool CKey::SetPrivKey(const CPrivKey &privkey, bool fCompressedIn) {
+    CECKey key;
+    if (!key.SetPrivKey(privkey))
+        return false;
+    key.GetSecretBytes(vch);
+    fCompressed = fCompressedIn;
+    fValid = true;
+    return true;
+}
+
+CPrivKey CKey::GetPrivKey() const {
+    assert(fValid);
+    CECKey key;
+    key.SetSecretBytes(vch);
+    CPrivKey privkey;
+    key.GetPrivKey(privkey);
+    return privkey;
+}
+
+CPubKey CKey::GetPubKey() const {
+    assert(fValid);
+    CECKey key;
+    key.SetSecretBytes(vch);
+    CPubKey pubkey;
+    key.GetPubKey(pubkey, fCompressed);
+    return pubkey;
+}
+
+bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
+    if (!fValid)
+        return false;
+    CECKey key;
+    key.SetSecretBytes(vch);
+    return key.Sign(hash, vchSig);
+}
+
+bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
+    if (!fValid)
+        return false;
+    CECKey key;
+    key.SetSecretBytes(vch);
+    vchSig.resize(65);
+    int rec = -1;
+    if (!key.SignCompact(hash, &vchSig[1], rec))
+        return false;
+    assert(rec != -1);
+    vchSig[0] = 27 + rec + (fCompressed ? 4 : 0);
+    return true;
+}
+
+bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {
+    if (!IsValid())
+        return false;
+    CECKey key;
+    if (!key.SetPubKey(*this))
+        return false;
+    if (!key.Verify(hash, vchSig))
+        return false;
+    return true;
+}
+
+bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
     if (vchSig.size() != 65)
         return false;
-    int nV = vchSig[0];
-    if (nV<27 || nV>=35)
+    CECKey key;
+    if (!key.Recover(hash, &vchSig[1], (vchSig[0] - 27) & ~4))
         return false;
-    ECDSA_SIG *sig = ECDSA_SIG_new();
-    BN_bin2bn(&vchSig[1],32,sig->r);
-    BN_bin2bn(&vchSig[33],32,sig->s);
-
-    EC_KEY_free(pkey);
-    pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
-    if (nV >= 31)
-    {
-        SetCompressedPubKey();
-        nV -= 4;
-    }
-    if (ECDSA_SIG_recover_key_GFp(pkey, sig, (unsigned char*)&hash, sizeof(hash), nV - 27, 0) == 1)
-    {
-        fSet = true;
-        ECDSA_SIG_free(sig);
-        return true;
-    }
-    ECDSA_SIG_free(sig);
-    return false;
-}
-
-bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSig)
-{
-    // -1 = error, 0 = bad sig, 1 = good
-    if (ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], vchSig.size(), pkey) != 1)
-        return false;
-
+    key.GetPubKey(*this, (vchSig[0] - 27) & 4);
     return true;
 }
 
-bool CKey::VerifyCompact(uint256 hash, const std::vector<unsigned char>& vchSig)
-{
-    CKey key;
-    if (!key.SetCompactSignature(hash, vchSig))
+bool CPubKey::VerifyCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {
+    if (!IsValid())
         return false;
-    if (GetPubKey() != key.GetPubKey())
+    if (vchSig.size() != 65)
         return false;
-
+    CECKey key;
+    if (!key.Recover(hash, &vchSig[1], (vchSig[0] - 27) & ~4))
+        return false;
+    CPubKey pubkeyRec;
+    key.GetPubKey(pubkeyRec, IsCompressed());
+    if (*this != pubkeyRec)
+        return false;
     return true;
 }
 
-bool CKey::IsValid()
-{
-    if (!fSet)
+bool CPubKey::IsFullyValid() const {
+    if (!IsValid())
         return false;
-
-    if (!EC_KEY_check_key(pkey))
+    CECKey key;
+    if (!key.SetPubKey(*this))
         return false;
+    return true;
+}
 
-    bool fCompr;
-    CSecret secret = GetSecret(fCompr);
-    CKey key2;
-    key2.SetSecret(secret, fCompr);
-    return GetPubKey() == key2.GetPubKey();
+bool CPubKey::Decompress() {
+    if (!IsValid())
+        return false;
+    CECKey key;
+    if (!key.SetPubKey(*this))
+        return false;
+    key.GetPubKey(*this, false);
+    return true;
 }
