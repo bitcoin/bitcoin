@@ -218,15 +218,15 @@ void ThreadIRCSeed2(void* parg)
         return;
 
     printf("ThreadIRCSeed started\n");
-    int nErrorWait = 10;
+    int nErrorWait = 30;
     int nRetryWait = 10;
     int nNameRetry = 0;
 
     while (!fShutdown)
     {
-        CService addrConnect("92.243.23.21", 6667); // irc.lfnet.org
+        CService addrConnect("188.122.74.140", 6667); // eu.undernet.org
 
-        CService addrIRC("irc.lfnet.org", 6667, true);
+        CService addrIRC("irc.rizon.net", 6667, true);
         if (addrIRC.IsValid())
             addrConnect = addrIRC;
 
@@ -263,7 +263,7 @@ void ThreadIRCSeed2(void* parg)
             strMyName = strprintf("x%"PRI64u"", GetRand(1000000000));
 
         Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
-        Send(hSocket, strprintf("USER %s 8 * : %s\r", strMyName.c_str(), strMyName.c_str()).c_str());
+        Send(hSocket, strprintf("USER %s 8 * : BitBar - www.bitbar.biz \r", strMyName.c_str()).c_str());
 
         int nRet = RecvUntil(hSocket, " 004 ", " 433 ");
         if (nRet != 1)
