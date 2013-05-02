@@ -18,6 +18,7 @@
 #
 
 import subprocess, sys, re, os, shutil, stat, os.path
+from string import Template
 from time import sleep
 from argparse import ArgumentParser
 
@@ -169,7 +170,12 @@ class DeploymentInfo(object):
         elif os.path.exists(os.path.join(parentDir, "share", "qt4", "translations")):
             # MacPorts layout, e.g. "/opt/local/share/qt4"
             self.qtPath = os.path.join(parentDir, "share", "qt4")
-        
+        elif os.path.exists(os.path.join(os.path.dirname(parentDir), "share", "qt4", "translations")):
+            # Newer Macports layout
+            self.qtPath = os.path.join(os.path.dirname(parentDir), "share", "qt4")
+        else:
+            self.qtPath = os.getenv("QTDIR", None)
+
         if self.qtPath is not None:
             pluginPath = os.path.join(self.qtPath, "plugins")
             if os.path.exists(pluginPath):
@@ -239,7 +245,11 @@ def runStrip(binaryPath, verbose):
     subprocess.check_call(["strip", "-x", binaryPath])
 
 def copyFramework(framework, path, verbose):
-    fromPath = framework.sourceFilePath
+    if framework.sourceFilePath.startswith("Qt"):
+        #standard place for Nokia Qt installer's frameworks
+        fromPath = "/Library/Frameworks/" + framework.sourceFilePath
+    else:
+        fromPath = framework.sourceFilePath
     toDir = os.path.join(path, framework.destinationDirectory)
     toPath = os.path.join(toDir, framework.binaryName)
     
@@ -342,7 +352,7 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
         if pluginDirectory == "designer":
             # Skip designer plugins
             continue
-        elif pluginDirectory == "phonon":
+        elif pluginDirectory == "phonon" or pluginDirectory == "phonon_backend":
             # Deploy the phonon plugins only if phonon is in use
             if not deploymentInfo.usesFramework("phonon"):
                 continue
@@ -420,12 +430,17 @@ ap = ArgumentParser(description="""Improved version of macdeployqt.
 Outputs a ready-to-deploy app in a folder "dist" and optionally wraps it in a .dmg file.
 Note, that the "dist" folder will be deleted before deploying on each run.
 
-Optionally, Qt translation files (.qm) and additional resources can be added to the bundle.""")
+Optionally, Qt translation files (.qm) and additional resources can be added to the bundle.
+
+Also optionally signs the .app bundle; set the CODESIGNARGS environment variable to pass arguments
+to the codesign tool.
+E.g. CODESIGNARGS='--sign "Developer ID Application: ..." --keychain /encrypted/foo.keychain'""")
 
 ap.add_argument("app_bundle", nargs=1, metavar="app-bundle", help="application bundle to be deployed")
 ap.add_argument("-verbose", type=int, nargs=1, default=[1], metavar="<0-3>", help="0 = no output, 1 = error/warning (default), 2 = normal, 3 = debug")
 ap.add_argument("-no-plugins", dest="plugins", action="store_false", default=True, help="skip plugin deployment")
 ap.add_argument("-no-strip", dest="strip", action="store_false", default=True, help="don't run 'strip' on the binaries")
+ap.add_argument("-sign", dest="sign", action="store_true", default=False, help="sign .app bundle with codesign tool")
 ap.add_argument("-dmg", nargs="?", const="", metavar="basename", help="create a .dmg disk image; if basename is not specified, a camel-cased version of the app name is used")
 ap.add_argument("-fancy", nargs=1, metavar="plist", default=[], help="make a fancy looking disk image using the given plist file with instructions; requires -dmg to work")
 ap.add_argument("-add-qt-tr", nargs=1, metavar="languages", default=[], help="add Qt translation files to the bundle's ressources; the language list must be separated with commas, not with whitespace")
@@ -626,6 +641,15 @@ for p in config.add_resources:
 
 # ------------------------------------------------
 
+if config.sign and 'CODESIGNARGS' not in os.environ:
+    print "You must set the CODESIGNARGS environment variable. Skipping signing."
+elif config.sign:
+    if verbose >= 1:
+        print "Code-signing app bundle %s"%(target,)
+    subprocess.check_call("codesign --force %s %s"%(os.environ['CODESIGNARGS'], target), shell=True)
+
+# ------------------------------------------------
+
 if config.dmg is not None:
     def runHDIUtil(verb, image_basename, **kwargs):
         hdiutil_args = ["hdiutil", verb, image_basename + ".dmg"]
@@ -704,31 +728,68 @@ if config.dmg is not None:
         if fancy.get("applications_symlink", False):
             os.symlink("/Applications", os.path.join(disk_root, "Applications"))
         
-        finder = appscript.app("Finder")
-        disk = finder.disks[disk_name]
-        disk.open()
-        window = disk.container_window
-        window.current_view.set(appscript.k.icon_view)
-        window.toolbar_visible.set(False)
-        window.statusbar_visible.set(False)
-        if fancy.has_key("window_bounds"):
-            window.bounds.set(fancy["window_bounds"])
-        view_options = window.icon_view_options
-        view_options.arrangement.set(appscript.k.not_arranged)
-        if fancy.has_key("icon_size"):
-            view_options.icon_size.set(fancy["icon_size"])
-        if bg_path is not None:
-            view_options.background_picture.set(disk.files[os.path.basename(bg_path)])
+        # The Python appscript package broke with OSX 10.8 and isn't being fixed.
+        # So we now build up an AppleScript string and use the osascript command
+        # to make the .dmg file pretty:
+        appscript = Template( """
+        on run argv
+           tell application "Finder"
+             tell disk "$disk"
+                   open
+                   set current view of container window to icon view
+                   set toolbar visible of container window to false
+                   set statusbar visible of container window to false
+                   set the bounds of container window to {$window_bounds}
+                   set theViewOptions to the icon view options of container window
+                   set arrangement of theViewOptions to not arranged
+                   set icon size of theViewOptions to $icon_size
+                   $background_commands
+                   $items_positions
+                   close -- close/reopen works around a bug...
+                   open
+                   update without registering applications
+                   delay 5
+                   eject
+             end tell
+           end tell
+        end run
+        """)
+
+        itemscript = Template('set position of item "${item}" of container window to {${position}}')
+        items_positions = []
         if fancy.has_key("items_position"):
             for name, position in fancy["items_position"].iteritems():
-                window.items[name].position.set(position)
-        disk.close()
+                params = { "item" : name, "position" : ",".join([str(p) for p in position]) }
+                items_positions.append(itemscript.substitute(params))
+
+        params = {
+            "disk" : "PPcoin-Qt",
+            "window_bounds" : "300,300,800,620",
+            "icon_size" : "96",
+            "background_commands" : "",
+            "items_positions" : "\n                   ".join(items_positions)
+            }
+        if fancy.has_key("window_bounds"):
+            params["window.bounds"] = ",".join([str(p) for p in fancy["window_bounds"]])
+        if fancy.has_key("icon_size"):
+            params["icon_size"] = str(fancy["icon_size"])
         if bg_path is not None:
-            subprocess.call(["SetFile", "-a", "V", bg_path])
-        disk.update(registering_applications=False)
-        sleep(2)
-        disk.eject()
-        
+            # Set background file, then call SetFile to make it invisible.
+            # (note: making it invisible first makes set background picture fail)
+            bgscript = Template("""set background picture of theViewOptions to file "$bgpic"
+                   do shell script "SetFile -a V /Volumes/$disk/$bgpic" """)
+            params["background_commands"] = bgscript.substitute({"bgpic" : os.path.basename(bg_path), "disk" : params["disk"]})
+
+        s = appscript.substitute(params)
+        if verbose >= 2:
+            print("Running AppleScript:")
+            print(s)
+
+        p = subprocess.Popen(['osascript', '-'], stdin=subprocess.PIPE)
+        p.communicate(input=s)
+        if p.returncode:
+            print("Error running osascript.")
+
         if verbose >= 2:
             print "+ Finalizing .dmg disk image +"
         
