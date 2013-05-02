@@ -683,9 +683,10 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         return false;
                     valtype& vch = stacktop(-3);
                     int nBegin = CastToBigNum(stacktop(-2)).getint();
-                    int nEnd = nBegin + CastToBigNum(stacktop(-1)).getint();
-                    if (nBegin < 0 || nEnd < nBegin)
+                    int size = CastToBigNum(stacktop(-1)).getint();
+                    if (nBegin < 0 || size < 0 || size > INT_MAX - nBegin)
                         return false;
+                    int nEnd = nBegin + size;
                     if (nBegin > (int)vch.size())
                         nBegin = vch.size();
                     if (nEnd > (int)vch.size())
