@@ -83,6 +83,7 @@ bool fNoListen = false;
 bool fLogTimestamps = false;
 CMedianFilter<int64> vTimeOffsets(200,0);
 volatile bool fReopenDebugLog = false;
+bool fCachedPath[2] = {false, false};
 
 // Init OpenSSL library multithreading support
 static CCriticalSection** ppmutexOpenSSL;
@@ -1048,13 +1049,12 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 
     static fs::path pathCached[2];
     static CCriticalSection csPathCached;
-    static bool cachedPath[2] = {false, false};
 
     fs::path &path = pathCached[fNetSpecific];
 
     // This can be called during exceptions by printf, so we cache the
     // value so we don't have to do memory allocations after that.
-    if (cachedPath[fNetSpecific])
+    if (fCachedPath[fNetSpecific])
         return path;
 
     LOCK(csPathCached);
@@ -1073,7 +1073,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 
     fs::create_directory(path);
 
-    cachedPath[fNetSpecific] = true;
+    fCachedPath[fNetSpecific] = true;
     return path;
 }
 
@@ -1090,6 +1090,9 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
     boost::filesystem::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
         return; // No bitcoin.conf file is OK
+
+    // clear path cache after loading config file
+    fCachedPath[0] = fCachedPath[1] = false;
 
     set<string> setOptions;
     setOptions.insert("*");
