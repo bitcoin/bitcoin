@@ -74,6 +74,7 @@ extern bool fDiscover;
 extern uint64 nLocalServices;
 extern uint64 nLocalHostNonce;
 extern CAddrMan addrman;
+extern int nMaxConnections;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
@@ -255,7 +256,7 @@ public:
         pfilter = NULL;
 
         // Be shy and don't send version until we hear
-        if (!fInbound)
+        if (hSocket != INVALID_SOCKET && !fInbound)
             PushVersion();
     }
 
