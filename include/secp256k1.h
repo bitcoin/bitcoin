@@ -27,6 +27,13 @@ int secp256k1_ecdsa_verify(const unsigned char *msg, int msglen,
                            const unsigned char *sig, int siglen,
                            const unsigned char *pubkey, int pubkeylen);
 
+int secp256k1_ecdsa_sign(const unsigned char *msg, int msglen,
+                         unsigned char *sig, int* siglen,
+                         const unsigned char *seckey,
+                         const unsigned char *nonce);
+
+int secp256j1_ecdsa_seckey_verify(const unsigned char *seckey);
+
 /** Just validate a public key.
  *  Returns: 1: valid public key
  *           0: invalid public key
@@ -39,11 +46,15 @@ int secp256k1_ecdsa_pubkey_verify(const unsigned char *pubkey, int pubkeylen);
  *          seckey:     pointer to a 32-byte private key.
  *  Out:    pubkey:     pointer to a 33-byte (if compressed) or 65-byte (if uncompressed)
  *                      area to store the public key.
+ *          pubkeylen:  pointer to int that will be updated to contains the pubkey's
+ *                      length.
  *  Returns: 1: secret was valid, public key stores
  *           0: secret was invalid, try again.
  */
 /* NOT YET IMPLEMENTED */
-int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int compressed, const unsigned char *seckey)
+int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsigned char *seckey, int compressed)
+
+int secp256k1_ecdsa_pubkey_decompress(unsigned char *pubkey, int *pubkeylen);
 
 #ifdef __cplusplus
 }

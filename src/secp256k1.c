@@ -44,3 +44,23 @@ end:
     return ret;
 }
 
+int secp256k1_ecdsa_sign(const unsigned char *message, int messagelen, unsigned char *signature, int *signaturelen, const unsigned char *seckey, const unsigned char *nonce) {
+    secp256k1_num_t sec, non, msg;
+    secp256k1_num_init(&sec);
+    secp256k1_num_init(&non);
+    secp256k1_num_init(&msg);
+    secp256k1_num_set_bin(&sec, seckey, 32);
+    secp256k1_num_set_bin(&non, nonce, 32);
+    secp256k1_num_set_bin(&msg, message, messagelen);
+    secp256k1_ecdsa_sig_t sig;
+    secp256k1_ecdsa_sig_init(&sig);
+    int ret = secp256k1_ecdsa_sig_sign(&sig, &sec, &msg, &non);
+    if (ret) {
+        secp256k1_ecdsa_sig_serialize(signature, signaturelen, &sig);
+    }
+    secp256k1_ecdsa_sig_free(&sig);
+    secp256k1_num_free(&msg);
+    secp256k1_num_free(&non);
+    secp256k1_num_free(&sec);
+    return ret;
+}
