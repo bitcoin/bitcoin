@@ -29,14 +29,14 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
 </translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="+17"/>
+        <location filename="../aboutdialog.cpp" line="+14"/>
         <source>Copyright</source>
         <translation>Tekijänoikeus</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>2009-%1 The Bitcoin developers</source>
-        <translation>2009-%1 Bittirahan kehittäjät</translation>
+        <source>The Bitcoin developers</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -67,7 +67,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>&amp;Uusi Osoite</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+59"/>
+        <location filename="../addressbookpage.cpp" line="+63"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
         <translation>Nämä ovat Bitcoin-osoitteesi joihin voit vastaanottaa maksuja. Voit haluta antaa jokaiselle maksajalle omansa, että pystyt seuraamaan keneltä maksut tulevat.</translation>
     </message>
@@ -97,7 +97,17 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Poista valittu osoite listalta</translation>
     </message>
     <message>
-        <location line="-14"/>
+        <location line="+27"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Vie auki olevan välilehden tiedot tiedostoon</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Export</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-44"/>
         <source>Verify a message to ensure it was signed with a specified Bitcoin address</source>
         <translation>Tarkista viestin allekirjoitus varmistaaksesi, että se allekirjoitettiin tietyllä Bitcoin-osoitteella</translation>
     </message>
@@ -314,17 +324,17 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+233"/>
+        <location filename="../bitcoingui.cpp" line="+232"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Allekirjoita viesti...</translation>
     </message>
     <message>
-        <location line="+299"/>
+        <location line="+279"/>
         <source>Synchronizing with network...</source>
         <translation>Synkronoidaan verkon kanssa...</translation>
     </message>
     <message>
-        <location line="-368"/>
+        <location line="-348"/>
         <source>&amp;Overview</source>
         <translation>&amp;Yleisnäkymä</translation>
     </message>
@@ -399,7 +409,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>&amp;Vaihda Tunnuslause...</translation>
     </message>
     <message>
-        <location line="+304"/>
+        <location line="+284"/>
         <source>Importing blocks from disk...</source>
         <translation>Tuodaan lohkoja levyltä</translation>
     </message>
@@ -409,12 +419,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Ladataan lohkoindeksiä...</translation>
     </message>
     <message>
-        <location line="-300"/>
-        <source>&amp;Export...</source>
-        <translation>&amp;Vie...</translation>
-    </message>
-    <message>
-        <location line="-66"/>
+        <location line="-346"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Lähetä kolikoita Bitcoin-osoitteeseen</translation>
     </message>
@@ -424,12 +429,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Muuta Bitcoinin konfiguraatioasetuksia</translation>
     </message>
     <message>
-        <location line="+18"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Vie auki olevan välilehden tiedot tiedostoon</translation>
-    </message>
-    <message>
-        <location line="-9"/>
+        <location line="+9"/>
         <source>Backup wallet to another location</source>
         <translation>Varmuuskopioi lompakko toiseen sijaintiin</translation>
     </message>
@@ -439,7 +439,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Vaihda lompakon salaukseen käytettävä tunnuslause</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+6"/>
         <source>&amp;Debug window</source>
         <translation>&amp;Testausikkuna</translation>
     </message>
@@ -449,23 +449,23 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Avaa debuggaus- ja diagnostiikkakonsoli</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-4"/>
         <source>&amp;Verify message...</source>
         <translation>Varmista &amp;viesti...</translation>
     </message>
     <message>
-        <location line="-163"/>
-        <location line="+541"/>
+        <location line="-164"/>
+        <location line="+528"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-541"/>
+        <location line="-528"/>
         <source>Wallet</source>
         <translation>Lompakko</translation>
     </message>
     <message>
-        <location line="+99"/>
+        <location line="+100"/>
         <source>&amp;Send</source>
         <translation>&amp;Lähetä</translation>
     </message>
@@ -510,12 +510,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Varmista, että viestisi on allekirjoitettu määritetyllä Bitcoin -osoitteella</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Tiedosto</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>&amp;Settings</source>
         <translation>&amp;Asetukset</translation>
     </message>
@@ -530,12 +530,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Välilehtipalkki</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>Actions toolbar</source>
-        <translation>Toimintopalkki</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+17"/>
         <location line="+10"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
@@ -551,7 +546,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation><numerusform>%n aktiivinen yhteys Bitcoin-verkkoon</numerusform><numerusform>%n aktiivista yhteyttä Bitcoin-verkkoon</numerusform></translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+22"/>
+        <source>No block source available...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
         <translation type="unfinished"/>
     </message>
@@ -576,7 +576,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation><numerusform>%n viikko</numerusform><numerusform>%n viikkoa</numerusform></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>%1 behind</source>
         <translation type="unfinished"/>
     </message>
@@ -591,7 +591,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Error</source>
         <translation>Virhe</translation>
     </message>
@@ -606,22 +606,22 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Tietoa</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+70"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-138"/>
+        <location line="-140"/>
         <source>Up to date</source>
         <translation>Rahansiirtohistoria on ajan tasalla</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+31"/>
         <source>Catching up...</source>
         <translation>Saavutetaan verkkoa...</translation>
     </message>
     <message>
-        <location line="+110"/>
+        <location line="+113"/>
         <source>Confirm transaction fee</source>
         <translation>Vahvista maksukulu</translation>
     </message>
@@ -670,7 +670,7 @@ Osoite: %4</translation>
         <translation>Lompakko on &lt;b&gt;salattu&lt;/b&gt; ja tällä hetkellä &lt;b&gt;lukittuna&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+104"/>
+        <location filename="../bitcoin.cpp" line="+107"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Peruuttamaton virhe on tapahtunut. Bitcoin ei voi enää jatkaa turvallisesti ja sammutetaan.</translation>
     </message>
@@ -678,7 +678,7 @@ Osoite: %4</translation>
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+98"/>
+        <location filename="../clientmodel.cpp" line="+104"/>
         <source>Network Alert</source>
         <translation>Verkkohälytys</translation>
     </message>
@@ -1059,7 +1059,7 @@ Osoite: %4</translation>
         <translation>Niiden saapuvien rahansiirtojen määrä, joita Bitcoin-verkko ei vielä ole ehtinyt vahvistaa ja siten eivät vielä näy saldossa.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="+115"/>
+        <location filename="../overviewpage.cpp" line="+116"/>
         <location line="+1"/>
         <source>out of sync</source>
         <translation>Ei ajan tasalla</translation>
@@ -1646,6 +1646,19 @@ Osoite: %4</translation>
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    <message>
+        <location filename="../splashscreen.cpp" line="+22"/>
+        <source>The Bitcoin developers</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>[testnet]</source>
+        <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
     <name>TransactionDesc</name>
     <message>
         <location filename="../transactiondesc.cpp" line="+20"/>
@@ -2122,7 +2135,12 @@ Osoite: %4</translation>
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+247"/>
+        <location filename="../walletview.cpp" line="+43"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Vie auki olevan välilehden tiedot tiedostoon</translation>
+    </message>
+    <message>
+        <location line="+198"/>
         <source>Backup Wallet</source>
         <translation type="unfinished"/>
     </message>

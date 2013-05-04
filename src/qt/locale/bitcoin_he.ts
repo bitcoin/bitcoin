@@ -28,14 +28,14 @@ This product includes software developed by the OpenSSL Project for use in the O
 המוצר הזה כולל תוכנה שפותחה ע&quot;י פרויקט OpenSSL לשימוש בתיבת הכלים OpenSSL (http://www.openssl.org/) ותוכנה קריפטוגרפית שנכתבה ע&quot;י אריק יאנג (eay@cryptsoft.com) ותוכנת UPnP שנכתבה ע&quot;י תומס ברנרד.</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="+17"/>
+        <location filename="../aboutdialog.cpp" line="+14"/>
         <source>Copyright</source>
         <translation>זכויות יוצרים</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>2009-%1 The Bitcoin developers</source>
-        <translation>2009-%1 מפתחי ביטקוין</translation>
+        <source>The Bitcoin developers</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -66,7 +66,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>כתובת חדשה</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+59"/>
+        <location filename="../addressbookpage.cpp" line="+63"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
         <translation>אלה כתובת הביטקוין שלך עבור קבלת תשלומים. ייתכן ותרצה לתת כתובת שונה לכל שולח כדי שתוכל לעקוב אחר מי משלם לך.</translation>
     </message>
@@ -96,7 +96,17 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>מחק את הכתובת שנבחרה מהרשימה</translation>
     </message>
     <message>
-        <location line="-14"/>
+        <location line="+27"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>יצוא הנתונים בטאב הנוכחי לקובץ</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Export</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-44"/>
         <source>Verify a message to ensure it was signed with a specified Bitcoin address</source>
         <translation>אמת הודעה בכדי להבטיח שהיא נחתמה עם כתובת ביטקוין מסוימת.</translation>
     </message>
@@ -313,17 +323,17 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+233"/>
+        <location filename="../bitcoingui.cpp" line="+232"/>
         <source>Sign &amp;message...</source>
         <translation>חתום על הודעה</translation>
     </message>
     <message>
-        <location line="+299"/>
+        <location line="+279"/>
         <source>Synchronizing with network...</source>
         <translation>מסתנכרן עם הרשת...</translation>
     </message>
     <message>
-        <location line="-368"/>
+        <location line="-348"/>
         <source>&amp;Overview</source>
         <translation>&amp;סקירה</translation>
     </message>
@@ -398,7 +408,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>שנה סיסמא</translation>
     </message>
     <message>
-        <location line="+304"/>
+        <location line="+284"/>
         <source>Importing blocks from disk...</source>
         <translation>מייבא בלוקים מהדיסק...</translation>
     </message>
@@ -408,12 +418,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>מחדש את אינדקס הבלוקים בדיסק...</translation>
     </message>
     <message>
-        <location line="-300"/>
-        <source>&amp;Export...</source>
-        <translation>י&amp;צא לקובץ</translation>
-    </message>
-    <message>
-        <location line="-66"/>
+        <location line="-346"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>שלח מטבעות לכתובת ביטקוין</translation>
     </message>
@@ -423,12 +428,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>שנה אפשרויות תצורה עבור ביטקוין</translation>
     </message>
     <message>
-        <location line="+18"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation>יצוא הנתונים בטאב הנוכחי לקובץ</translation>
-    </message>
-    <message>
-        <location line="-9"/>
+        <location line="+9"/>
         <source>Backup wallet to another location</source>
         <translation>גיבוי הארנק למקום אחר</translation>
     </message>
@@ -438,7 +438,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>שנה את הסיסמה להצפנת הארנק</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+6"/>
         <source>&amp;Debug window</source>
         <translation>חלון ניפוי</translation>
     </message>
@@ -448,23 +448,23 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>פתח את לוח הבקרה לאבחון וניפוי</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-4"/>
         <source>&amp;Verify message...</source>
         <translation>אמת הודעה...</translation>
     </message>
     <message>
-        <location line="-163"/>
-        <location line="+541"/>
+        <location line="-164"/>
+        <location line="+528"/>
         <source>Bitcoin</source>
         <translation>ביטקוין</translation>
     </message>
     <message>
-        <location line="-541"/>
+        <location line="-528"/>
         <source>Wallet</source>
         <translation>ארנק</translation>
     </message>
     <message>
-        <location line="+99"/>
+        <location line="+100"/>
         <source>&amp;Send</source>
         <translation>ושלח</translation>
     </message>
@@ -509,12 +509,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>אמת הודעות כדי להבטיח שהן נחתמו עם כתובת ביטקוין מסוימות</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;קובץ</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>&amp;Settings</source>
         <translation>ה&amp;גדרות</translation>
     </message>
@@ -529,12 +529,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>סרגל כלים טאבים</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>Actions toolbar</source>
-        <translation>סרגל כלים פעולות</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+17"/>
         <location line="+10"/>
         <source>[testnet]</source>
         <translation>[רשת-בדיקה]</translation>
@@ -550,7 +545,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation><numerusform>חיבור פעיל אחד לרשת הביטקוין</numerusform><numerusform>%n חיבורים פעילים לרשת הביטקוין</numerusform></translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+22"/>
+        <source>No block source available...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
         <translation>1% מתוך 2% (משוער) בלוקים של הסטוריית פעולת עובדו </translation>
     </message>
@@ -575,7 +575,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation><numerusform>%n שבוע</numerusform><numerusform>%n שבועות</numerusform></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>%1 behind</source>
         <translation>1% מאחור</translation>
     </message>
@@ -590,7 +590,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>לאחר זאת פעולות נספות טרם יהיו גלויות</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Error</source>
         <translation>שגיאה</translation>
     </message>
@@ -605,22 +605,22 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>מידע</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+70"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
         <translation>פעולה זו חורגת מגבולות הגודל. עדיין באפשרותך לשלוח אותה תמורת עמלה של %1, המיועדת לצמתים שמעבדים את הפעולה שלך ועוזרת לתמוך ברשת. האם ברצונך לשלם את העמלה?</translation>
     </message>
     <message>
-        <location line="-138"/>
+        <location line="-140"/>
         <source>Up to date</source>
         <translation>עדכני</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+31"/>
         <source>Catching up...</source>
         <translation>מתעדכן...</translation>
     </message>
     <message>
-        <location line="+110"/>
+        <location line="+113"/>
         <source>Confirm transaction fee</source>
         <translation>אשר עמלת פעולה</translation>
     </message>
@@ -669,7 +669,7 @@ Address: %4
         <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt; וכרגע &lt;b&gt;נעול&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+104"/>
+        <location filename="../bitcoin.cpp" line="+107"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>שגיאה סופנית אירעה. ביטקוין אינו יכול להמשיך לפעול בבטחה ולכן ייסגר.</translation>
     </message>
@@ -677,7 +677,7 @@ Address: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+98"/>
+        <location filename="../clientmodel.cpp" line="+104"/>
         <source>Network Alert</source>
         <translation>אזעקת רשת</translation>
     </message>
@@ -1058,7 +1058,7 @@ Address: %4
         <translation>הסכום הכולל של פעולות שטרם אושרו, ועוד אינן נספרות בחישוב היתרה הנוכחית</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="+115"/>
+        <location filename="../overviewpage.cpp" line="+116"/>
         <location line="+1"/>
         <source>out of sync</source>
         <translation>לא מסונכרן</translation>
@@ -1645,6 +1645,19 @@ Address: %4
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    <message>
+        <location filename="../splashscreen.cpp" line="+22"/>
+        <source>The Bitcoin developers</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>[testnet]</source>
+        <translation>[רשת-בדיקה]</translation>
+    </message>
+</context>
+<context>
     <name>TransactionDesc</name>
     <message>
         <location filename="../transactiondesc.cpp" line="+20"/>
@@ -2121,7 +2134,12 @@ Address: %4
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+247"/>
+        <location filename="../walletview.cpp" line="+43"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>יצוא הנתונים בטאב הנוכחי לקובץ</translation>
+    </message>
+    <message>
+        <location line="+198"/>
         <source>Backup Wallet</source>
         <translation>גבה ארנק</translation>
     </message>

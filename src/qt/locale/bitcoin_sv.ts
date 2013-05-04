@@ -29,14 +29,14 @@ Distribuerad under mjukvarulicensen MIT/X11, se den medföljande filen COPYING e
 Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användning i OpenSSL Toolkit (http://www.openssl.org/) och kryptografisk mjukvara utvecklad av Eric Young (eay@cryptsoft.com) samt UPnP-mjukvara skriven av Thomas Bernard.</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="+17"/>
+        <location filename="../aboutdialog.cpp" line="+14"/>
         <source>Copyright</source>
         <translation>Copyright</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>2009-%1 The Bitcoin developers</source>
-        <translation>2009-%1 Bitcoin-utvecklarna</translation>
+        <source>The Bitcoin developers</source>
+        <translation>Bitcoin-utvecklarna</translation>
     </message>
 </context>
 <context>
@@ -67,7 +67,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>&amp;Ny adress</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+59"/>
+        <location filename="../addressbookpage.cpp" line="+63"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
         <translation>Detta är dina Bitcoin-adresser för att ta emot betalningar.  Du kan ge varje avsändare en egen adress så att du kan hålla reda på vem som betalar dig.</translation>
     </message>
@@ -97,7 +97,17 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Ta bort den valda adressen från listan</translation>
     </message>
     <message>
-        <location line="-14"/>
+        <location line="+27"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportera informationen i den nuvarande fliken till en fil</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Export</source>
+        <translation>&amp;Exportera</translation>
+    </message>
+    <message>
+        <location line="-44"/>
         <source>Verify a message to ensure it was signed with a specified Bitcoin address</source>
         <translation>Verifiera meddelandet för att vara säker på att den var signerad med den specificerade Bitcoin-adressen</translation>
     </message>
@@ -314,17 +324,17 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+233"/>
+        <location filename="../bitcoingui.cpp" line="+232"/>
         <source>Sign &amp;message...</source>
         <translation>Signera &amp;meddelande...</translation>
     </message>
     <message>
-        <location line="+299"/>
+        <location line="+279"/>
         <source>Synchronizing with network...</source>
         <translation>Synkroniserar med nätverk...</translation>
     </message>
     <message>
-        <location line="-368"/>
+        <location line="-348"/>
         <source>&amp;Overview</source>
         <translation>&amp;Översikt</translation>
     </message>
@@ -399,7 +409,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>&amp;Byt Lösenord...</translation>
     </message>
     <message>
-        <location line="+304"/>
+        <location line="+284"/>
         <source>Importing blocks from disk...</source>
         <translation>Importerar block från disk...</translation>
     </message>
@@ -409,12 +419,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Återindexerar block på disken...</translation>
     </message>
     <message>
-        <location line="-300"/>
-        <source>&amp;Export...</source>
-        <translation>&amp;Exportera...</translation>
-    </message>
-    <message>
-        <location line="-66"/>
+        <location line="-346"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Skicka mynt till en Bitcoin-adress</translation>
     </message>
@@ -424,12 +429,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Ändra konfigurationsalternativ för Bitcoin</translation>
     </message>
     <message>
-        <location line="+18"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Exportera informationen i den nuvarande fliken till en fil</translation>
-    </message>
-    <message>
-        <location line="-9"/>
+        <location line="+9"/>
         <source>Backup wallet to another location</source>
         <translation>Säkerhetskopiera plånboken till en annan plats</translation>
     </message>
@@ -439,7 +439,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Byt lösenord för kryptering av plånbok</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+6"/>
         <source>&amp;Debug window</source>
         <translation>&amp;Debug fönster</translation>
     </message>
@@ -449,23 +449,23 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Öppna debug- och diagnostikkonsolen</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-4"/>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verifiera meddelande...</translation>
     </message>
     <message>
-        <location line="-163"/>
-        <location line="+541"/>
+        <location line="-164"/>
+        <location line="+528"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-541"/>
+        <location line="-528"/>
         <source>Wallet</source>
         <translation>Plånbok</translation>
     </message>
     <message>
-        <location line="+99"/>
+        <location line="+100"/>
         <source>&amp;Send</source>
         <translation>&amp;Skicka</translation>
     </message>
@@ -510,12 +510,12 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Verifiera meddelanden för att vara säker på att de var signerade med den specificerade Bitcoin-adressen</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Arkiv</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>&amp;Settings</source>
         <translation>&amp;Inställningar</translation>
     </message>
@@ -530,12 +530,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Verktygsfält för Tabbar</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>Actions toolbar</source>
-        <translation>Verktygsfältet för Handlingar</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+17"/>
         <location line="+10"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
@@ -551,7 +546,12 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation><numerusform>%n aktiv anslutning till Bitcoin-nätverket</numerusform><numerusform>%n aktiva anslutningar till Bitcoin-nätverket</numerusform></translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+22"/>
+        <source>No block source available...</source>
+        <translation>Ingen block-källa tillgänglig...</translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
         <translation>Bearbetat %1 av %2 (uppskattade) block av transaktionshistorik.</translation>
     </message>
@@ -576,7 +576,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation><numerusform>%n vecka</numerusform><numerusform>%n veckor</numerusform></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>%1 behind</source>
         <translation>%1 efter</translation>
     </message>
@@ -591,7 +591,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Transaktioner efter denna kommer inte ännu vara synliga.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Error</source>
         <translation>Fel</translation>
     </message>
@@ -606,22 +606,22 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Information</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+70"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
         <translation>Transaktionen överskrider storleksgränsen. Du kan dock fortfarande skicka den mot en kostnad av %1, som går till noderna som behandlar din transaktion och bidrar till nätverket. Vill du betala denna avgift?</translation>
     </message>
     <message>
-        <location line="-138"/>
+        <location line="-140"/>
         <source>Up to date</source>
         <translation>Uppdaterad</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+31"/>
         <source>Catching up...</source>
         <translation>Hämtar senaste...</translation>
     </message>
     <message>
-        <location line="+110"/>
+        <location line="+113"/>
         <source>Confirm transaction fee</source>
         <translation>Bekräfta överföringsavgift</translation>
     </message>
@@ -671,7 +671,7 @@ Adress: %4
         <translation>Denna plånbok är &lt;b&gt;krypterad&lt;/b&gt; och för närvarande &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+104"/>
+        <location filename="../bitcoin.cpp" line="+107"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Ett allvarligt fel har uppstått. Bitcoin kan inte längre köras säkert och kommer att avslutas.</translation>
     </message>
@@ -679,7 +679,7 @@ Adress: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+98"/>
+        <location filename="../clientmodel.cpp" line="+104"/>
         <source>Network Alert</source>
         <translation>Nätverkslarm</translation>
     </message>
@@ -1060,7 +1060,7 @@ Adress: %4
         <translation>Totalt antal transaktioner som ännu inte bekräftats, och som ännu inte räknas med i aktuellt saldo</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="+115"/>
+        <location filename="../overviewpage.cpp" line="+116"/>
         <location line="+1"/>
         <source>out of sync</source>
         <translation>osynkroniserad</translation>
@@ -1647,6 +1647,19 @@ Adress: %4
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    <message>
+        <location filename="../splashscreen.cpp" line="+22"/>
+        <source>The Bitcoin developers</source>
+        <translation>Bitcoin-utvecklarna</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>[testnet]</source>
+        <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
     <name>TransactionDesc</name>
     <message>
         <location filename="../transactiondesc.cpp" line="+20"/>
@@ -2123,7 +2136,12 @@ Adress: %4
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+247"/>
+        <location filename="../walletview.cpp" line="+43"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportera informationen i den nuvarande fliken till en fil</translation>
+    </message>
+    <message>
+        <location line="+198"/>
         <source>Backup Wallet</source>
         <translation>Säkerhetskopiera Plånbok</translation>
     </message>
