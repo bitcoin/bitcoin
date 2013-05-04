@@ -43,8 +43,15 @@ void static secp256k1_ge_set_infinity(secp256k1_ge_t *r);
 /** Set a group element equal to the point with given X and Y coordinates */
 void static secp256k1_ge_set_xy(secp256k1_ge_t *r, const secp256k1_fe_t *x, const secp256k1_fe_t *y);
 
+/** Set a group element (jacobian) equal to the point with given X coordinate, and given oddness for Y.
+    The result is not guaranteed to be valid. */
+void static secp256k1_ge_set_xo(secp256k1_ge_t *r, const secp256k1_fe_t *x, int odd);
+
 /** Check whether a group element is the point at infinity. */
 int  static secp256k1_ge_is_infinity(const secp256k1_ge_t *a);
+
+/** Check whether a group element is valid (i.e., on the curve). */
+int  static secp256k1_ge_is_valid(const secp256k1_ge_t *a);
 
 void static secp256k1_ge_neg(secp256k1_ge_t *r, const secp256k1_ge_t *a);
 
@@ -61,10 +68,6 @@ void static secp256k1_gej_set_infinity(secp256k1_gej_t *r);
 /** Set a group element (jacobian) equal to the point with given X and Y coordinates. */
 void static secp256k1_gej_set_xy(secp256k1_gej_t *r, const secp256k1_fe_t *x, const secp256k1_fe_t *y);
 
-/** Set a group element (jacobian) equal to the point with given X coordinate, and given oddness for Y.
-    The result is not guaranteed to be valid. */
-void static secp256k1_gej_set_xo(secp256k1_gej_t *r, const secp256k1_fe_t *x, int odd);
-
 /** Set a group element (jacobian) equal to another which is given in affine coordinates. */
 void static secp256k1_gej_set_ge(secp256k1_gej_t *r, const secp256k1_ge_t *a);
 
@@ -76,9 +79,6 @@ void static secp256k1_gej_neg(secp256k1_gej_t *r, const secp256k1_gej_t *a);
 
 /** Check whether a group element is the point at infinity. */
 int  static secp256k1_gej_is_infinity(const secp256k1_gej_t *a);
-
-/** Check whether a group element (jacobian) is valid (i.e., on the curve). */
-int  static secp256k1_gej_is_valid(const secp256k1_gej_t *a);
 
 /** Set r equal to the double of a. */
 void static secp256k1_gej_double(secp256k1_gej_t *r, const secp256k1_gej_t *a);

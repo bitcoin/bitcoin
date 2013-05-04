@@ -276,7 +276,8 @@ void test_point_times_order(const secp256k1_gej_t *point) {
 void run_point_times_order() {
     secp256k1_fe_t x; secp256k1_fe_set_hex(&x, "02", 2);
     for (int i=0; i<500; i++) {
-        secp256k1_gej_t j; secp256k1_gej_set_xo(&j, &x, 1);
+        secp256k1_ge_t p; secp256k1_ge_set_xo(&p, &x, 1);
+        secp256k1_gej_t j; secp256k1_gej_set_ge(&j, &p);
         test_point_times_order(&j);
         secp256k1_fe_sqr(&x, &x);
     }
@@ -337,7 +338,8 @@ void test_ecdsa_sign_verify() {
     secp256k1_num_init(&key);
     random_num_order_test(&key);
     secp256k1_num_init(&nonce);
-    secp256k1_gej_t pub; secp256k1_ecmult_gen(&pub, &key);
+    secp256k1_gej_t pubj; secp256k1_ecmult_gen(&pubj, &key);
+    secp256k1_ge_t pub; secp256k1_ge_set_gej(&pub, &pubj);
     secp256k1_ecdsa_sig_t sig;
     secp256k1_ecdsa_sig_init(&sig);
     do {

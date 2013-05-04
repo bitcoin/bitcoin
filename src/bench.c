@@ -45,8 +45,8 @@ int main() {
         random_num_order(&s);
         random_num_order(&m);
         secp256k1_ecdsa_sig_set_rs(&sig, &r, &s);
-        secp256k1_gej_t pubkey; secp256k1_gej_set_xo(&pubkey, &x, 1);
-        if (secp256k1_gej_is_valid(&pubkey)) {
+        secp256k1_ge_t pubkey; secp256k1_ge_set_xo(&pubkey, &x, 1);
+        if (secp256k1_ge_is_valid(&pubkey)) {
             cnt++;
             good += secp256k1_ecdsa_sig_verify(&sig, &pubkey, &m);
         }
