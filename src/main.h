@@ -44,10 +44,6 @@ static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
-/** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
-static const int64 MIN_TX_FEE = 10000;
-/** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
-static const int64 MIN_RELAY_TX_FEE = 10000;
 /** No amount larger than this (in satoshi) is valid */
 static const int64 MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
@@ -439,6 +435,8 @@ public:
         return !(a == b);
     }
 
+    bool IsDust() const;
+
     std::string ToString() const
     {
         if (scriptPubKey.size() < 6)
@@ -467,6 +465,8 @@ enum GetMinFee_mode
 class CTransaction
 {
 public:
+    static int64 nMinTxFee;
+    static int64 nMinRelayTxFee;
     static const int CURRENT_VERSION=1;
     int nVersion;
     std::vector<CTxIn> vin;
