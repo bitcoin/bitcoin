@@ -28,14 +28,14 @@ Veröffentlicht unter der MIT/X11-Softwarelizenz, siehe beiligende Datei COPYING
 Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im OpenSSL-Toolkit (http://www.openssl.org/) entwickelt wurde, sowie kryptographische Software geschrieben von Eric Young (eay@cryptsoft.com) und UPnP-Software geschrieben von Thomas Bernard.</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="+17"/>
+        <location filename="../aboutdialog.cpp" line="+14"/>
         <source>Copyright</source>
         <translation>Copyright</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>2009-%1 The Bitcoin developers</source>
-        <translation>2009-%1 Die Bitcoinentwickler</translation>
+        <source>The Bitcoin developers</source>
+        <translation>Die Bitcoinentwickler</translation>
     </message>
 </context>
 <context>
@@ -66,7 +66,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>&amp;Neue Adresse</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+59"/>
+        <location filename="../addressbookpage.cpp" line="+63"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
         <translation>Dies sind Ihre Bitcoin-Adressen zum Empfangen von Zahlungen. Es steht Ihnen frei, jedem Absender eine Andere mitzuteilen, um einen besseren Überblick über eingehende Zahlungen zu erhalten.</translation>
     </message>
@@ -96,7 +96,17 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Die ausgewählte Adresse aus der Liste entfernen.</translation>
     </message>
     <message>
-        <location line="-14"/>
+        <location line="+27"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Daten der aktuellen Ansicht in eine Datei exportieren</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Export</source>
+        <translation>E&amp;xportieren</translation>
+    </message>
+    <message>
+        <location line="-44"/>
         <source>Verify a message to ensure it was signed with a specified Bitcoin address</source>
         <translation>Eine Nachricht verifizieren, um sicherzustellen, dass diese mit einer angegebenen Bitcoin-Adresse signiert wurde</translation>
     </message>
@@ -313,17 +323,17 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+233"/>
+        <location filename="../bitcoingui.cpp" line="+232"/>
         <source>Sign &amp;message...</source>
         <translation>Nachricht s&amp;ignieren...</translation>
     </message>
     <message>
-        <location line="+299"/>
+        <location line="+279"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronisiere mit Netzwerk...</translation>
     </message>
     <message>
-        <location line="-368"/>
+        <location line="-348"/>
         <source>&amp;Overview</source>
         <translation>&amp;Übersicht</translation>
     </message>
@@ -398,7 +408,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Passphrase &amp;ändern...</translation>
     </message>
     <message>
-        <location line="+304"/>
+        <location line="+284"/>
         <source>Importing blocks from disk...</source>
         <translation>Importiere Blöcke von Laufwerk...</translation>
     </message>
@@ -408,12 +418,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Reindiziere Blöcke auf Laufwerk...</translation>
     </message>
     <message>
-        <location line="-300"/>
-        <source>&amp;Export...</source>
-        <translation>&amp;Exportieren...</translation>
-    </message>
-    <message>
-        <location line="-66"/>
+        <location line="-346"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Bitcoins an eine Bitcoin-Adresse überweisen</translation>
     </message>
@@ -423,12 +428,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Die Konfiguration des Clients bearbeiten</translation>
     </message>
     <message>
-        <location line="+18"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Daten der aktuellen Ansicht in eine Datei exportieren</translation>
-    </message>
-    <message>
-        <location line="-9"/>
+        <location line="+9"/>
         <source>Backup wallet to another location</source>
         <translation>Eine Sicherungskopie der Brieftasche erstellen und abspeichern</translation>
     </message>
@@ -438,7 +438,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Ändert die Passphrase, die für die Verschlüsselung der Brieftasche benutzt wird</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+6"/>
         <source>&amp;Debug window</source>
         <translation>&amp;Debugfenster</translation>
     </message>
@@ -448,23 +448,23 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Debugging- und Diagnosekonsole öffnen</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-4"/>
         <source>&amp;Verify message...</source>
         <translation>Nachricht &amp;verifizieren...</translation>
     </message>
     <message>
-        <location line="-163"/>
-        <location line="+541"/>
+        <location line="-164"/>
+        <location line="+528"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-541"/>
+        <location line="-528"/>
         <source>Wallet</source>
         <translation>Brieftasche</translation>
     </message>
     <message>
-        <location line="+99"/>
+        <location line="+100"/>
         <source>&amp;Send</source>
         <translation>Überweisen</translation>
     </message>
@@ -509,12 +509,12 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Nachrichten verifizieren, um sicherzustellen, dass diese mit den angegebenen Bitcoin-Adressen signiert wurden</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Datei</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>&amp;Settings</source>
         <translation>&amp;Einstellungen</translation>
     </message>
@@ -529,12 +529,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Registerkartenleiste</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>Actions toolbar</source>
-        <translation>Aktionssymbolleiste</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+17"/>
         <location line="+10"/>
         <source>[testnet]</source>
         <translation>[Testnetz]</translation>
@@ -550,7 +545,12 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation><numerusform>%n aktive Verbindung zum Bitcoin-Netzwerk</numerusform><numerusform>%n aktive Verbindungen zum Bitcoin-Netzwerk</numerusform></translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+22"/>
+        <source>No block source available...</source>
+        <translation>Keine Blockquelle verfügbar...</translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
         <translation>%1 von (geschätzten) %2 Blöcken des Transaktionsverlaufs verarbeitet.</translation>
     </message>
@@ -575,7 +575,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation><numerusform>%n Woche</numerusform><numerusform>%n Wochen</numerusform></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>%1 behind</source>
         <translation>%1 im Rückstand</translation>
     </message>
@@ -590,7 +590,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Transaktionen hiernach werden noch nicht angezeigt.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Error</source>
         <translation>Fehler</translation>
     </message>
@@ -605,22 +605,22 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Hinweis</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+70"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
         <translation>Die Transaktion übersteigt das Größenlimit. Sie können sie trotzdem senden, wenn Sie eine zusätzliche Transaktionsgebühr in Höhe von %1 zahlen. Diese wird an die Knoten verteilt, die Ihre Transaktion bearbeiten und unterstützt damit das Bitcoin-Netzwerk. Möchten Sie die Gebühr bezahlen?</translation>
     </message>
     <message>
-        <location line="-138"/>
+        <location line="-140"/>
         <source>Up to date</source>
         <translation>Auf aktuellem Stand</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+31"/>
         <source>Catching up...</source>
         <translation>Hole auf...</translation>
     </message>
     <message>
-        <location line="+110"/>
+        <location line="+113"/>
         <source>Confirm transaction fee</source>
         <translation>Transaktionsgebühr bestätigen</translation>
     </message>
@@ -669,7 +669,7 @@ Adresse: %4</translation>
         <translation>Brieftasche ist &lt;b&gt;verschlüsselt&lt;/b&gt; und aktuell &lt;b&gt;gesperrt&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+104"/>
+        <location filename="../bitcoin.cpp" line="+107"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Ein schwerer Fehler ist aufgetreten. Bitcoin kann nicht stabil weiter ausgeführt werden und wird beendet.</translation>
     </message>
@@ -677,7 +677,7 @@ Adresse: %4</translation>
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+98"/>
+        <location filename="../clientmodel.cpp" line="+104"/>
         <source>Network Alert</source>
         <translation>Netzwerkalarm</translation>
     </message>
@@ -1058,7 +1058,7 @@ Adresse: %4</translation>
         <translation>Betrag aus unbestätigten Transaktionen, der noch nicht im aktuellen Kontostand enthalten ist</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="+115"/>
+        <location filename="../overviewpage.cpp" line="+116"/>
         <location line="+1"/>
         <source>out of sync</source>
         <translation>nicht synchron</translation>
@@ -1135,7 +1135,7 @@ Adresse: %4</translation>
     <message>
         <location filename="../forms/rpcconsole.ui" line="+46"/>
         <source>Client name</source>
-        <translation>Client Name</translation>
+        <translation>Clientname</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1154,7 +1154,7 @@ Adresse: %4</translation>
     <message>
         <location line="-217"/>
         <source>Client version</source>
-        <translation>Client Version</translation>
+        <translation>Clientversion</translation>
     </message>
     <message>
         <location line="-45"/>
@@ -1645,6 +1645,19 @@ Adresse: %4</translation>
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    <message>
+        <location filename="../splashscreen.cpp" line="+22"/>
+        <source>The Bitcoin developers</source>
+        <translation>Die Bitcoinentwickler</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>[testnet]</source>
+        <translation>[Testnetz]</translation>
+    </message>
+</context>
+<context>
     <name>TransactionDesc</name>
     <message>
         <location filename="../transactiondesc.cpp" line="+20"/>
@@ -2121,7 +2134,12 @@ Adresse: %4</translation>
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+247"/>
+        <location filename="../walletview.cpp" line="+43"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Daten der aktuellen Ansicht in eine Datei exportieren</translation>
+    </message>
+    <message>
+        <location line="+198"/>
         <source>Backup Wallet</source>
         <translation>Brieftasche sichern</translation>
     </message>

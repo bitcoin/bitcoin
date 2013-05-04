@@ -33,9 +33,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot obtain a lock on data directory %s. Bitcoin is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error initializing database environment %s! To recover, BACKUP THAT "
-"DIRECTORY, then remove everything from it except for wallet.dat."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: The transaction was rejected! This might happen if some of the coins "
 "in your wallet were already spent, such as if you used a copy of wallet.dat "
 "and coins were spent in the copy but not marked as spent here."),
@@ -60,7 +57,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Set maximum size of high-priority/low-fee transactions in bytes (default: "
 "27000)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Set the number of script verification threads (1-16, 0=auto, default: 0)"),
+"Set the number of script verification threads (up to 16, 0 = auto, <0 = "
+"leave that many cores free, default: 0)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "This is a pre-release test build - use at your own risk - do not use for "
 "mining or merchant applications"),
@@ -96,7 +94,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Attempt to recover private keys from a corrup
 QT_TRANSLATE_NOOP("bitcoin-core", "Bitcoin version"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Block creation options:"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Cannot downgrade wallet"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Cannot initialize keypool"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Cannot resolve -bind address: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Cannot resolve -externalip address: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Cannot write default address"),
@@ -106,7 +103,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Connect to a node to retrieve peer addresses,
 QT_TRANSLATE_NOOP("bitcoin-core", "Corrupted block database detected"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Discover own IP address (default: 1 when listening and no -externalip)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Do you want to rebuild the block database now?"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Don't generate coins"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Done loading"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error initializing block database"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error initializing wallet database environment %s!"),
@@ -133,7 +129,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Failed to write transaction index"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Failed to write undo data"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Fee per KB to add to transactions you send"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Find peers using DNS lookup (default: 1 unless -connect)"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Generate coins"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Generate coins (default: 0)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Get help for a command"),
 QT_TRANSLATE_NOOP("bitcoin-core", "How many blocks to check at startup (default: 288, 0 = all)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "How thorough the block verification is (0-4, default: 3)"),
@@ -153,6 +149,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Maintain a full transaction index (default: 0
 QT_TRANSLATE_NOOP("bitcoin-core", "Maintain at most <n> connections to peers (default: 125)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Maximum per-connection receive buffer, <n>*1000 bytes (default: 5000)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Maximum per-connection send buffer, <n>*1000 bytes (default: 1000)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Not enough file descriptors available."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Only accept block chain matching built-in checkpoints (default: 1)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Only connect to nodes in network <net> (IPv4, IPv6 or Tor)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Options:"),
