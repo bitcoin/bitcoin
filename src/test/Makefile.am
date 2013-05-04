@@ -34,7 +34,7 @@ test_bitcoin_SOURCES = accounting_tests.cpp alert_tests.cpp \
   netbase_tests.cpp pmt_tests.cpp rpc_tests.cpp script_P2SH_tests.cpp \
   script_tests.cpp serialize_tests.cpp sigopcount_tests.cpp test_bitcoin.cpp \
   transaction_tests.cpp uint160_tests.cpp uint256_tests.cpp util_tests.cpp \
-  wallet_tests.cpp $(JSON_TEST_FILES) $(RAW_TEST_FILES)
+  wallet_tests.cpp sighash_tests.cpp $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 nodist_test_bitcoin_SOURCES = $(BUILT_SOURCES)
 
