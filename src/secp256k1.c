@@ -64,3 +64,40 @@ int secp256k1_ecdsa_sign(const unsigned char *message, int messagelen, unsigned 
     secp256k1_num_free(&sec);
     return ret;
 }
+
+int secp256k1_ecdsa_seckey_verify(const unsigned char *seckey) {
+    secp256k1_num_t sec;
+    secp256k1_num_init(&sec);
+    secp256k1_num_set_bin(&sec, seckey, 32);
+    int ret = secp256k1_num_is_zero(&sec) ||
+              (secp256k1_num_cmp(&sec, &secp256k1_ge_consts->order) >= 0);
+    secp256k1_num_free(&sec);
+    return ret;
+}
+
+int secp256k1_ecdsa_pubkey_verify(const unsigned char *pubkey, int pubkeylen) {
+    secp256k1_gej_t q;
+    return secp256k1_ecdsa_pubkey_parse(&q, pubkey, pubkeylen);
+}
+
+int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsigned char *seckey, int compressed) {
+    secp256k1_num_t sec;
+    secp256k1_num_init(&sec);
+    secp256k1_num_set_bin(&sec, seckey, 32);
+    secp256k1_gej_t pj;
+    secp256k1_ecmult_gen(&pj, &sec);
+    secp256k1_ge_t p;
+    secp256k1_ge_set_gej(&p, &pj);
+    secp256k1_ecdsa_pubkey_serialize(&p, pubkey, pubkeylen, compressed);
+    return 1;
+}
+
+int secp256k1_ecdsa_pubkey_decompress(unsigned char *pubkey, int *pubkeylen) {
+    secp256k1_gej_t pj;
+    if (!secp256k1_ecdsa_pubkey_parse(&pj, pubkey, *pubkeylen))
+        return 0;
+    secp256k1_ge_t p;
+    secp256k1_ge_set_gej(&p, &pj);
+    secp256k1_ecdsa_pubkey_serialize(&p, pubkey, pubkeylen, 0);
+    return 1;
+}

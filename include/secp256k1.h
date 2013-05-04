@@ -27,18 +27,33 @@ int secp256k1_ecdsa_verify(const unsigned char *msg, int msglen,
                            const unsigned char *sig, int siglen,
                            const unsigned char *pubkey, int pubkeylen);
 
+/** Create an ECDSA signature.
+ *  Returns: 1: signature created
+ *           0: nonce invalid, try another one
+ *  In:      msg:    the message being signed
+ *           msglen: the length of the message being signed
+ *           seckey: pointer to a 32-byte secret key (assumed to be valid)
+ *           nonce:  pointer to a 32-byte nonce (generated with a cryptographic PRNG)
+ *  Out:     sig:    pointer to a 72-byte array where the signature will be placed.
+ *           siglen: pointer to an int, which will be updated to the signature length (<=72).
+ */
 int secp256k1_ecdsa_sign(const unsigned char *msg, int msglen,
-                         unsigned char *sig, int* siglen,
+                         unsigned char *sig, int *siglen,
                          const unsigned char *seckey,
                          const unsigned char *nonce);
 
+
+/** Verify an ECDSA secret key.
+ *  Returns: 1: secret key is valid
+ *           0: secret key is invalid
+ *  In:      seckey: pointer to a 32-byte secret key
+ */
 int secp256j1_ecdsa_seckey_verify(const unsigned char *seckey);
 
 /** Just validate a public key.
  *  Returns: 1: valid public key
  *           0: invalid public key
  */
-/* NOT YET IMPLEMENTED */
 int secp256k1_ecdsa_pubkey_verify(const unsigned char *pubkey, int pubkeylen);
 
 /** Compute the public key for a secret key.
@@ -51,8 +66,7 @@ int secp256k1_ecdsa_pubkey_verify(const unsigned char *pubkey, int pubkeylen);
  *  Returns: 1: secret was valid, public key stores
  *           0: secret was invalid, try again.
  */
-/* NOT YET IMPLEMENTED */
-int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsigned char *seckey, int compressed)
+int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsigned char *seckey, int compressed);
 
 int secp256k1_ecdsa_pubkey_decompress(unsigned char *pubkey, int *pubkeylen);
 

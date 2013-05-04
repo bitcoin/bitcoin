@@ -146,4 +146,18 @@ void static secp256k1_ecdsa_sig_set_rs(secp256k1_ecdsa_sig_t *sig, const secp256
     secp256k1_num_copy(&sig->s, s);
 }
 
+void static secp256k1_ecdsa_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, int *size, int compressed) {
+    secp256k1_fe_normalize(&elem->x);
+    secp256k1_fe_normalize(&elem->y);
+    secp256k1_fe_get_b32(&pub[1], &elem->x);
+    if (compressed) {
+        *size = 33;
+        pub[0] = 0x02 | (secp256k1_fe_is_odd(&elem->y) ? 0x01 : 0x00);
+    } else {
+        *size = 65;
+        pub[0] = 0x04;
+        secp256k1_fe_get_b32(&pub[33], &elem->y);
+    }
+}
+
 #endif
