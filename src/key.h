@@ -84,7 +84,7 @@ public:
         Set(vch.begin(), vch.end());
     }
 
-    // Simply read-only vector-like interface to the pubkey data.
+    // Simple read-only vector-like interface to the pubkey data.
     unsigned int size() const { return GetLen(vch[0]); }
     const unsigned char *begin() const { return vch; }
     const unsigned char *end() const { return vch+size(); }
@@ -109,12 +109,11 @@ public:
     }
     template<typename Stream> void Serialize(Stream &s, int nType, int nVersion) const {
         unsigned int len = size();
-        ::Serialize(s, VARINT(len), nType, nVersion);
+        ::WriteCompactSize(s, len);
         s.write((char*)vch, len);
     }
     template<typename Stream> void Unserialize(Stream &s, int nType, int nVersion) {
-        unsigned int len;
-        ::Unserialize(s, VARINT(len), nType, nVersion);
+        unsigned int len = ::ReadCompactSize(s);
         if (len <= 65) {
             s.read((char*)vch, len);
         } else {
