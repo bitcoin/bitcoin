@@ -1141,17 +1141,24 @@ bool CWallet::SelectCoins(int64 nTargetValue, set<pair<const CWalletTx*,unsigned
 
 
 
-bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet)
+bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
+                                CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason)
 {
     int64 nValue = 0;
     BOOST_FOREACH (const PAIRTYPE(CScript, int64)& s, vecSend)
     {
         if (nValue < 0)
+        {
+            strFailReason = _("Transaction amounts must be positive");
             return false;
+        }
         nValue += s.second;
     }
     if (vecSend.empty() || nValue < 0)
+    {
+        strFailReason = _("Transaction amounts must be positive");
         return false;
+    }
 
     wtxNew.BindWallet(this);
 
@@ -1169,13 +1176,24 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
                 double dPriority = 0;
                 // vouts to the payees
                 BOOST_FOREACH (const PAIRTYPE(CScript, int64)& s, vecSend)
-                    wtxNew.vout.push_back(CTxOut(s.second, s.first));
+                {
+                    CTxOut txout(s.second, s.first);
+                    if (txout.IsDust())
+                    {
+                        strFailReason = _("Transaction amount too small");
+                        return false;
+                    }
+                    wtxNew.vout.push_back(txout);
+                }
 
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 int64 nValueIn = 0;
                 if (!SelectCoins(nTotalValue, setCoins, nValueIn))
+                {
+                    strFailReason = _("Insufficient funds");
                     return false;
+                }
                 BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
                 {
                     int64 nCredit = pcoin.first->vout[pcoin.second].nValue;
@@ -1186,12 +1204,12 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
                 }
 
                 int64 nChange = nValueIn - nValue - nFeeRet;
-                // if sub-cent change is required, the fee must be raised to at least MIN_TX_FEE
+                // if sub-cent change is required, the fee must be raised to at least nMinTxFee
                 // or until nChange becomes zero
                 // NOTE: this depends on the exact behaviour of GetMinFee
-                if (nFeeRet < MIN_TX_FEE && nChange > 0 && nChange < CENT)
+                if (nFeeRet < CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
                 {
-                    int64 nMoveToFee = min(nChange, MIN_TX_FEE - nFeeRet);
+                    int64 nMoveToFee = min(nChange, CTransaction::nMinTxFee - nFeeRet);
                     nChange -= nMoveToFee;
                     nFeeRet += nMoveToFee;
                 }
@@ -1215,9 +1233,21 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
                     CScript scriptChange;
                     scriptChange.SetDestination(vchPubKey.GetID());
 
-                    // Insert change txn at random position:
-                    vector<CTxOut>::iterator position = wtxNew.vout.begin()+GetRandInt(wtxNew.vout.size()+1);
-                    wtxNew.vout.insert(position, CTxOut(nChange, scriptChange));
+                    CTxOut newTxOut(nChange, scriptChange);
+
+                    // Never create dust outputs; if we would, just
+                    // add the dust to the fee.
+                    if (newTxOut.IsDust())
+                    {
+                        nFeeRet += nChange;
+                        reservekey.ReturnKey();
+                    }
+                    else
+                    {
+                        // Insert change txn at random position:
+                        vector<CTxOut>::iterator position = wtxNew.vout.begin()+GetRandInt(wtxNew.vout.size()+1);
+                        wtxNew.vout.insert(position, newTxOut);
+                    }
                 }
                 else
                     reservekey.ReturnKey();
@@ -1230,12 +1260,18 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
                 int nIn = 0;
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
                     if (!SignSignature(*this, *coin.first, wtxNew, nIn++))
+                    {
+                        strFailReason = _("Signing transaction failed");
                         return false;
+                    }
 
                 // Limit size
                 unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK, PROTOCOL_VERSION);
                 if (nBytes >= MAX_STANDARD_TX_SIZE)
+                {
+                    strFailReason = _("Transaction too large");
                     return false;
+                }
                 dPriority /= nBytes;
 
                 // Check that enough fee is included
@@ -1259,11 +1295,12 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
     return true;
 }
 
-bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet)
+bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue,
+                                CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason)
 {
     vector< pair<CScript, int64> > vecSend;
     vecSend.push_back(make_pair(scriptPubKey, nValue));
-    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet);
+    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason);
 }
 
 // Call after CreateTransaction unless you want to abort
@@ -1329,14 +1366,12 @@ string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew,
         printf("SendMoney() : %s", strError.c_str());
         return strError;
     }
-    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired))
+    string strError;
+    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, strError))
     {
-        string strError;
         if (nValue + nFeeRequired > GetBalance())
             strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!"), FormatMoney(nFeeRequired).c_str());
-        else
-            strError = _("Error: Transaction creation failed!");
-        printf("SendMoney() : %s", strError.c_str());
+        printf("SendMoney() : %s\n", strError.c_str());
         return strError;
     }
 
