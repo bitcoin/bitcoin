@@ -107,11 +107,6 @@ void static secp256k1_num_mod_inverse(secp256k1_num_t *r, const secp256k1_num_t 
     secp256k1_num_sanity(a);
     secp256k1_num_sanity(m);
 
-#ifdef VERIFY
-    secp256k1_num_t a2 = *a;
-    secp256k1_num_t m2 = *m;
-#endif
-
     // mpn_gcdext computes: (G,S) = gcdext(U,V), where
     // * G = gcd(U,V)
     // * G = U*S + V*T
@@ -142,12 +137,6 @@ void static secp256k1_num_mod_inverse(secp256k1_num_t *r, const secp256k1_num_t 
     } else {
         r->limbs = sn;
     }
-
-#ifdef VERIFY
-    secp256k1_num_t c;
-    secp256k1_num_mod_mul(&c, &a2, r, m);
-    assert(c.limbs == 1 && c.data[0] == 1);
-#endif
 }
 
 int static secp256k1_num_is_zero(const secp256k1_num_t *a) {
@@ -190,44 +179,16 @@ void static secp256k1_num_subadd(secp256k1_num_t *r, const secp256k1_num_t *a, c
 void static secp256k1_num_add(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
     secp256k1_num_sanity(a);
     secp256k1_num_sanity(b);
-
-#ifdef VERIFY
-    secp256k1_num_t a2 = *a;
-    secp256k1_num_t b2 = *b;
-#endif
-
     secp256k1_num_subadd(r, a, b, 0);
-
-#ifdef VERIFY
-    secp256k1_num_t c = *r;
-    secp256k1_num_subadd(&c, &c, &b2, 1);
-    assert(secp256k1_num_cmp(&c, &a2) == 0);
-#endif
 }
 
 void static secp256k1_num_sub(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
-#ifdef VERIFY
-    secp256k1_num_t a2 = *a;
-    secp256k1_num_t b2 = *b;
-#endif
     secp256k1_num_sanity(a);
     secp256k1_num_sanity(b);
-
     secp256k1_num_subadd(r, a, b, 1);
-
-#ifdef VERIFY
-    secp256k1_num_t c;
-    secp256k1_num_subadd(&c, r, &b2, 0);
-    assert(secp256k1_num_cmp(&c, &a2) == 0);
-#endif
 }
 
 void static secp256k1_num_mul(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
-#ifdef VERIFY
-    secp256k1_num_t a2 = *a;
-    secp256k1_num_t b2 = *b;
-#endif
-
     secp256k1_num_sanity(a);
     secp256k1_num_sanity(b);
 
@@ -248,17 +209,6 @@ void static secp256k1_num_mul(secp256k1_num_t *r, const secp256k1_num_t *a, cons
     assert(r->limbs <= 2*NUM_LIMBS);
     mpn_copyi(r->data, tmp, r->limbs);
     r->neg = a->neg ^ b->neg;
-
-    secp256k1_num_sanity(&a2);
-    secp256k1_num_sanity(&b2);
-
-#ifdef VERIFY
-    secp256k1_num_t c;
-    secp256k1_num_div(&c, r, &b2);
-    assert(secp256k1_num_cmp(&a2, &c) == 0);
-    secp256k1_num_div(&c, r, &a2);
-    assert(secp256k1_num_cmp(&b2, &c) == 0);
-#endif
 }
 
 void static secp256k1_num_div(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
