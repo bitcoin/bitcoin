@@ -27,11 +27,11 @@ bench: $(FILES) src/bench.c $(OBJS)
 	$(CC) -fPIC -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DNDEBUG -O2 src/bench.c $(OBJS) $(LDFLAGS_EXTRA) -o bench
 
 tests: $(FILES) src/tests.c $(OBJS)
-	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DVERIFY -fstack-protector-all -O2 -ggdb3 src/tests.c $(OBJS) $(LDFLAGS_EXTRA) -o tests
+	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) $(CFLAGS_TEST_EXTRA) -DVERIFY -fstack-protector-all -O2 -ggdb3 src/tests.c $(OBJS) $(LDFLAGS_EXTRA) $(LDFLAGS_TEST_EXTRA) -o tests
 
 coverage: $(FILES) src/tests.c $(OBJS)
 	rm -rf tests.gcno tests.gcda tests_cov
-	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DVERIFY --coverage -O0 -g src/tests.c $(OBJS) $(LDFLAGS_EXTRA) -o tests_cov
+	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) $(CFLAGS_TEST_EXTRA) -DVERIFY --coverage -O0 -g src/tests.c $(OBJS) $(LDFLAGS_EXTRA) $(LDFLAGS_TEST_EXTRA) -o tests_cov
 	rm -rf lcov
 	mkdir -p lcov
 	cd lcov; lcov --directory ../ --zerocounters

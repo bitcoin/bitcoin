@@ -49,6 +49,26 @@ if [ "$?" = 0 ]; then
     HAVE_OPENSSL=1
 fi
 
+# test openssl/EC
+HAVE_OPENSSL_EC=0
+if [ "$HAVE_OPENSSL" = "1" ]; then
+$CC $CFLAGS -std=c99 -x c - -o /dev/null -lcrypto <<EOF
+#include <openssl/ec.h>
+#include <openssl/ecdsa.h>
+#include <openssl/obj_mac.h>
+int main() {
+    EC_KEY *eckey = EC_KEY_new_by_curve_name(NID_secp256k1);
+    ECDSA_sign(0, NULL, 0, NULL, NULL, eckey);
+    ECDSA_verify(0, NULL, 0, NULL, 0, eckey);
+    EC_KEY_free(eckey);
+    return 0;
+}
+EOF
+if [ "$?" = 0 ]; then
+    HAVE_OPENSSL_EC=1
+fi
+fi
+
 # test gmp
 HAVE_GMP=0
 $CC $CFLAGS -std=c99 -x c - -o /dev/null -lgmp 2>/dev/null <<EOF
@@ -127,10 +147,21 @@ if [ "$LINK_GMP" = "1" ]; then
 fi
 if [ "$LINK_OPENSSL" = "1" ]; then
     LDFLAGS_EXTRA="-lcrypto"
+else
+    if [ "$HAVE_OPENSSL_EC" = "1" ]; then
+        LDFLAGS_TEST_EXTRA="-lcrypto"
+    fi
+fi
+
+CFLAGS_TEST_EXTRA=""
+if [ "$HAVE_OPENSSL_EC" = "1" ]; then
+    CFLAGS_TEST_EXTRA="-DENABLE_OPENSSL_TESTS"
 fi
 
 echo "CC=$CC" > config.mk
 echo "YASM=$YASM" >>config.mk
 echo "CFLAGS_EXTRA=$CFLAGS_EXTRA" >> config.mk
+echo "CFLAGS_TEST_EXTRA=$CFLAGS_TEST_EXTRA" >> config.mk
 echo "LDFLAGS_EXTRA=$LDFLAGS_EXTRA" >> config.mk
+echo "LDFLAGS_TEST_EXTRA=$LDFLAGS_TEST_EXTRA" >> config.mk
 echo "USE_ASM=$USE_ASM" >>config.mk

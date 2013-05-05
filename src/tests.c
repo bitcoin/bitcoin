@@ -7,6 +7,13 @@
 #include "impl/ecdsa.h"
 #include "impl/util.h"
 
+#ifdef ENABLE_OPENSSL_TESTS
+#include "openssl/bn.h"
+#include "openssl/ec.h"
+#include "openssl/ecdsa.h"
+#include "openssl/obj_mac.h"
+#endif
+
 static int count = 100;
 
 /***** NUM TESTS *****/
@@ -330,28 +337,33 @@ void run_wnaf() {
     secp256k1_num_free(&n);
 }
 
+void random_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *key, const secp256k1_num_t *msg, int *recid) {
+    secp256k1_num_t nonce;
+    secp256k1_num_init(&nonce);
+    do {
+        random_num_order_test(&nonce);
+    } while(!secp256k1_ecdsa_sig_sign(sig, key, msg, &nonce, recid));
+    secp256k1_num_free(&nonce);
+}
+
 void test_ecdsa_sign_verify() {
     const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
-    secp256k1_num_t msg, key, nonce;
+    secp256k1_num_t msg, key;
     secp256k1_num_init(&msg);
     random_num_order_test(&msg);
     secp256k1_num_init(&key);
     random_num_order_test(&key);
-    secp256k1_num_init(&nonce);
     secp256k1_gej_t pubj; secp256k1_ecmult_gen(&pubj, &key);
     secp256k1_ge_t pub; secp256k1_ge_set_gej(&pub, &pubj);
     secp256k1_ecdsa_sig_t sig;
     secp256k1_ecdsa_sig_init(&sig);
-    do {
-        random_num_order_test(&nonce);
-    } while(!secp256k1_ecdsa_sig_sign(&sig, &key, &msg, &nonce, NULL));
+    random_sign(&sig, &key, &msg, NULL);
     assert(secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));
     secp256k1_num_inc(&msg);
     assert(!secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));
     secp256k1_ecdsa_sig_free(&sig);
     secp256k1_num_free(&msg);
     secp256k1_num_free(&key);
-    secp256k1_num_free(&nonce);
 }
 
 void run_ecdsa_sign_verify() {
@@ -360,9 +372,74 @@ void run_ecdsa_sign_verify() {
     }
 }
 
+#ifdef ENABLE_OPENSSL_TESTS
+EC_KEY *get_openssl_key(const secp256k1_num_t *key) {
+    EC_KEY *ec_key = EC_KEY_new_by_curve_name(NID_secp256k1);
+    BN_CTX *ctx = BN_CTX_new();
+    BN_CTX_start(ctx);
+    BIGNUM *priv_key = BN_CTX_get(ctx);
+    unsigned char keyb[32];
+    secp256k1_num_get_bin(keyb, 32, key);
+    BN_bin2bn(keyb, 32, priv_key);
+    const EC_GROUP *group = EC_KEY_get0_group(ec_key);
+    EC_POINT *pub_key = EC_POINT_new(group);
+    EC_POINT_mul(group, pub_key, priv_key, NULL, NULL, ctx);
+    EC_KEY_set_private_key(ec_key, priv_key);
+    EC_KEY_set_public_key(ec_key, pub_key);
+    EC_POINT_free(pub_key);
+    BN_CTX_end(ctx);
+    BN_CTX_free(ctx);
+    return ec_key;
+}
+
+void test_ecdsa_openssl() {
+    const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
+    secp256k1_num_t key, msg;
+    secp256k1_num_init(&msg);
+    unsigned char message[32];
+    secp256k1_rand256_test(message);
+    secp256k1_num_set_bin(&msg, message, 32);
+    secp256k1_num_init(&key);
+    random_num_order_test(&key);
+    secp256k1_gej_t qj;
+    secp256k1_ecmult_gen(&qj, &key);
+    secp256k1_ge_t q;
+    secp256k1_ge_set_gej(&q, &qj);
+    EC_KEY *ec_key = get_openssl_key(&key);
+    assert(ec_key);
+    unsigned char signature[80];
+    int sigsize = 80;
+    assert(ECDSA_sign(0, message, sizeof(message), signature, &sigsize, ec_key));
+    secp256k1_ecdsa_sig_t sig;
+    secp256k1_ecdsa_sig_init(&sig);
+    assert(secp256k1_ecdsa_sig_parse(&sig, signature, sigsize));
+    assert(secp256k1_ecdsa_sig_verify(&sig, &q, &msg));
+    secp256k1_num_inc(&sig.r);
+    assert(!secp256k1_ecdsa_sig_verify(&sig, &q, &msg));
+
+    random_sign(&sig, &key, &msg, NULL);
+    sigsize = 80;
+    assert(secp256k1_ecdsa_sig_serialize(signature, &sigsize, &sig));
+    assert(ECDSA_verify(0, message, sizeof(message), signature, sigsize, ec_key) == 1);
+
+    secp256k1_ecdsa_sig_free(&sig);
+    EC_KEY_free(ec_key);
+    secp256k1_num_free(&key);
+    secp256k1_num_free(&msg);
+}
+
+void run_ecdsa_openssl() {
+    for (int i=0; i<10*count; i++) {
+        test_ecdsa_openssl();
+    }
+}
+#endif
+
 int main(int argc, char **argv) {
     if (argc > 1)
         count = strtol(argv[1], NULL, 0)*47;
+
+    printf("test count = %i\n", count);
 
     // initialize
     secp256k1_fe_start();
@@ -379,6 +456,9 @@ int main(int argc, char **argv) {
 
     // ecdsa tests
     run_ecdsa_sign_verify();
+#ifdef ENABLE_OPENSSL_TESTS
+    run_ecdsa_openssl();
+#endif
 
     // shutdown
     secp256k1_ecmult_stop();
