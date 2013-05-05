@@ -141,3 +141,22 @@ int secp256k1_ecdsa_pubkey_decompress(unsigned char *pubkey, int *pubkeylen) {
     secp256k1_ecdsa_pubkey_serialize(&p, pubkey, pubkeylen, 0);
     return 1;
 }
+
+int secp256k1_ecdsa_privkey_export(const unsigned char *seckey, unsigned char *privkey, int *privkeylen, int compressed) {
+    secp256k1_num_t key;
+    secp256k1_num_init(&key);
+    secp256k1_num_set_bin(&key, seckey, 32);
+    int ret = secp256k1_ecdsa_privkey_serialize(privkey, privkeylen, &key, compressed);
+    secp256k1_num_free(&key);
+    return ret;
+}
+
+int secp256k1_ecdsa_privkey_import(unsigned char *seckey, const unsigned char *privkey, int privkeylen) {
+    secp256k1_num_t key;
+    secp256k1_num_init(&key);
+    int ret = secp256k1_ecdsa_privkey_parse(&key, privkey, privkeylen);
+    if (ret)
+        secp256k1_num_get_bin(seckey, 32, &key);
+    secp256k1_num_free(&key);
+    return ret;
+}

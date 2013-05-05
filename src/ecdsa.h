@@ -18,5 +18,7 @@ int static secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const se
 int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *seckey, const secp256k1_num_t *message, const secp256k1_num_t *nonce, int *recid);
 int static secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256k1_ge_t *pubkey, const secp256k1_num_t *message, int recid);
 void static secp256k1_ecdsa_sig_set_rs(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *r, const secp256k1_num_t *s);
+int static secp256k1_ecdsa_privkey_parse(secp256k1_num_t *key, const unsigned char *privkey, int privkeylen);
+int static secp256k1_ecdsa_privkey_serialize(unsigned char *privkey, int *privkeylen, const secp256k1_num_t *key, int compressed);
 
 #endif
