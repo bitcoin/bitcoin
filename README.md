@@ -70,8 +70,8 @@ Unit tests for the GUI code are in `src/qt/test/`. To compile and run them:
 
 Every pull request is built for both Windows and Linux on a dedicated server,
 and unit and sanity tests are automatically run. The binaries produced may be
-used for manual QA testing -- a link to them will appear in a comment on the
-pull request posted by 'BitcoinPullTester'. See `https://github.com/TheBlueMatt/test-scripts`
+used for manual QA testing — a link to them will appear in a comment on the
+pull request posted by [BitcoinPullTester](https://github.com/BitcoinPullTester). See https://github.com/TheBlueMatt/test-scripts
 for the build/test scripts.
 
 ### Manual Quality Assurance (QA) Testing
@@ -79,4 +79,4 @@ for the build/test scripts.
 Large changes should have a test plan, and should be tested by somebody other
 than the developer who wrote the code.
 
-See `https://github.com/bitcoin/QA/` for how to create a test plan.
+See https://github.com/bitcoin/QA/ for how to create a test plan.
