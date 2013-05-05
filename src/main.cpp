@@ -594,19 +594,7 @@ void CTransaction::ScanInputForDoubleSpends(unsigned int input) const
     const COutPoint &prevout = vin[input].prevout;
     if (!mempool.mapNextTx.count(prevout))
         return;
-
-    // due to signature malleability, anyone can make variations of
-    // the original signatures, causing the transaction hash to change.
-    // ignore transactions where everything else is identical.
     CTransaction *ptxOld = mempool.mapNextTx[prevout].ptx;
-    CTransaction tx1(*ptxOld);
-    CTransaction tx2(*this);
-    for (unsigned int i = 0; i < tx1.vin.size(); i++)
-        tx1.vin[i].scriptSig = CScript();
-    for (unsigned int i = 0; i < tx2.vin.size(); i++)
-        tx2.vin[i].scriptSig = CScript();
-    if (tx1 == tx2)
-        return;
 
     // conflict found!
     vector<CTransaction*> vAffected;
@@ -646,13 +634,21 @@ void CTransaction::ScanInputForDoubleSpends(unsigned int input) const
     if (!fFoundOne)
         return;
 
-    // now that we know it affects a wallet transaction,
-    // verify the signature, otherwise anyone could
-    // false alarm someone else's transaction
-    CCoinsViewMemPool view(*pcoinsTip, mempool);
+    // now we know it affects a wallet transaction
+    CCoinsView dummy;
+    CCoinsViewCache view(dummy);
+    CCoinsViewMemPool viewMemPool(*pcoinsTip, mempool);
+    view.SetBackend(viewMemPool);
     CCoins coins;
     if (!view.GetCoins(prevout.hash, coins))
         return;
+
+    // non-standard inputs are subject to signature malleability,
+    // which would allow anyone to false alarm someone else's transaction
+    if (!AreInputsStandard(view))
+        return;
+
+    // malleability in the signature encoding is caught by SCRIPT_VERIFY_STRICTENC
     if (!VerifySignature(coins, *this, input, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, 0))
         return;
 
