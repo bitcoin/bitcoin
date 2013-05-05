@@ -344,7 +344,7 @@ void test_ecdsa_sign_verify() {
     secp256k1_ecdsa_sig_init(&sig);
     do {
         random_num_order_test(&nonce);
-    } while(!secp256k1_ecdsa_sig_sign(&sig, &key, &msg, &nonce));
+    } while(!secp256k1_ecdsa_sig_sign(&sig, &key, &msg, &nonce, NULL));
     assert(secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));
     secp256k1_num_inc(&msg);
     assert(!secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));

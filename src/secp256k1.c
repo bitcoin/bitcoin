@@ -54,7 +54,7 @@ int secp256k1_ecdsa_sign(const unsigned char *message, int messagelen, unsigned 
     secp256k1_num_set_bin(&msg, message, messagelen);
     secp256k1_ecdsa_sig_t sig;
     secp256k1_ecdsa_sig_init(&sig);
-    int ret = secp256k1_ecdsa_sig_sign(&sig, &sec, &msg, &non);
+    int ret = secp256k1_ecdsa_sig_sign(&sig, &sec, &msg, &non, NULL);
     if (ret) {
         secp256k1_ecdsa_sig_serialize(signature, signaturelen, &sig);
     }
@@ -62,6 +62,48 @@ int secp256k1_ecdsa_sign(const unsigned char *message, int messagelen, unsigned 
     secp256k1_num_free(&msg);
     secp256k1_num_free(&non);
     secp256k1_num_free(&sec);
+    return ret;
+}
+
+int secp256k1_ecdsa_sign_compact(const unsigned char *message, int messagelen, unsigned char *sig64, const unsigned char *seckey, const unsigned char *nonce, int *recid) {
+    secp256k1_num_t sec, non, msg;
+    secp256k1_num_init(&sec);
+    secp256k1_num_init(&non);
+    secp256k1_num_init(&msg);
+    secp256k1_num_set_bin(&sec, seckey, 32);
+    secp256k1_num_set_bin(&non, nonce, 32);
+    secp256k1_num_set_bin(&msg, message, messagelen);
+    secp256k1_ecdsa_sig_t sig;
+    secp256k1_ecdsa_sig_init(&sig);
+    int ret = secp256k1_ecdsa_sig_sign(&sig, &sec, &msg, &non, recid);
+    if (ret) {
+        secp256k1_num_get_bin(sig64, 32, &sig.r);
+        secp256k1_num_get_bin(sig64 + 32, 32, &sig.s);
+    }
+    secp256k1_ecdsa_sig_free(&sig);
+    secp256k1_num_free(&msg);
+    secp256k1_num_free(&non);
+    secp256k1_num_free(&sec);
+    return ret;
+}
+
+int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen, const unsigned char *sig64, unsigned char *pubkey, int *pubkeylen, int compressed, int recid) {
+    int ret = 0;
+    secp256k1_num_t m; 
+    secp256k1_num_init(&m);
+    secp256k1_ecdsa_sig_t sig;
+    secp256k1_ecdsa_sig_init(&sig);
+    secp256k1_num_set_bin(&sig.r, sig64, 32);
+    secp256k1_num_set_bin(&sig.s, sig64 + 32, 32);
+    secp256k1_num_set_bin(&m, msg, msglen);
+
+    secp256k1_ge_t q;
+    if (secp256k1_ecdsa_sig_recover(&sig, &q, &m, recid)) {
+        secp256k1_ecdsa_pubkey_serialize(&q, pubkey, pubkeylen, compressed);
+        ret = 1;
+    }
+    secp256k1_ecdsa_sig_free(&sig);
+    secp256k1_num_free(&m);
     return ret;
 }
 

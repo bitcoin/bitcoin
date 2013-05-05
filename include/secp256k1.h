@@ -42,6 +42,26 @@ int secp256k1_ecdsa_sign(const unsigned char *msg, int msglen,
                          const unsigned char *seckey,
                          const unsigned char *nonce);
 
+/** Create a compact ECDSA signature (64 byte + recovery id).
+ *  Returns: 1: signature created
+ *           0: nonce invalid, try another one
+ *  In:      msg:    the message being signed
+ *           msglen: the length of the message being signed
+ *           seckey: pointer to a 32-byte secret key (assumed to be valid)
+ *           nonce:  pointer to a 32-byte nonce (generated with a cryptographic PRNG)
+ *  Out:     sig:    pointer to a 64-byte array where the signature will be placed.
+ *           recid:  pointer to an int, which will be updated to contain the recovery id.
+ */
+int secp256k1_ecdsa_sign_compact(const unsigned char *msg, int msglen,
+                                 unsigned char *sig64,
+                                 const unsigned char *seckey,
+                                 const unsigned char *nonce,
+                                 int *recid);
+
+int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen,
+                                    const unsigned char *sig64,
+                                    unsigned char *pubkey, int *pubkeylen,
+                                    int compressed, int recid);
 
 /** Verify an ECDSA secret key.
  *  Returns: 1: secret key is valid
