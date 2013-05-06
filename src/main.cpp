@@ -1060,7 +1060,7 @@ int64 static GetBlockValue(int nBits, int64 nFees)
     return ((int64)nSubsidy) + nFees;
 }
 
-static const int64 nTargetTimespan = 3 * 24 * 60 * 60; // one week
+static const int64 nTargetTimespan = 24 * 60 * 60; // one day
 static const int64 nTargetSpacing = 9 * 60; // target spacing per type
 
 //
@@ -1096,30 +1096,15 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
     if (pindexPrevPrev->pprev == NULL)
         return nBits; // second block of the type
 
-    if (fDebug && GetBoolArg("-printtarget"))
-        printf("GetNextWorkRequired() : lastindex=%u fSophieGermain=%u fBiTwin=%u ", pindexLast->nHeight, fSophieGermain, fBiTwin);
-
     // Primecoin: continuous target adjustment on every block
-    int64 nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
-    nBits = pindexPrev->nBits;
-    // Convert length into fractional difficulty
-    uint64 nFractionalDifficulty = TargetGetFractionalDifficulty(nBits);
-    // Compute new difficulty via exponential moving toward target spacing
     int64 nInterval = nTargetTimespan / nTargetSpacing;
-    CBigNum bnFractionalDifficulty = nFractionalDifficulty;
-    bnFractionalDifficulty *= ((nInterval + 1) * nTargetSpacing);
-    bnFractionalDifficulty /= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
-    if (bnFractionalDifficulty > nFractionalDifficultyMax)
-        bnFractionalDifficulty = nFractionalDifficultyMax;
-    if (bnFractionalDifficulty < nFractionalDifficultyMin)
-        bnFractionalDifficulty = nFractionalDifficultyMin;
-    uint64 nFractionalDifficultyNew = bnFractionalDifficulty.getuint256().Get64();
-    // Convert back to length
-    if (!TargetSetFractionalDifficulty(nFractionalDifficultyNew, nBits))
-        return error("GetNextWorkRequired() : unable to set fractional difficulty prev=0x%016"PRI64x" new=0x%016"PRI64x, nFractionalDifficulty, nFractionalDifficultyNew);
+    int64 nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
+    if (!TargetGetNext(pindexPrev->nBits, nInterval, nTargetSpacing, nActualSpacing, nBits))
+        return error("GetNextWorkRequired() : failed to get next target");
 
     if (fDebug && GetBoolArg("-printtarget"))
-        printf("prev=0x%08x new=0x%08x\n", pindexPrev->nBits, nBits);
+        printf("GetNextWorkRequired() : lastindex=%u fSophieGermain=%u fBiTwin=%u prev=0x%08x new=0x%08x\n",
+            pindexLast->nHeight, fSophieGermain, fBiTwin, pindexPrev->nBits, nBits);
     return nBits;
 }
 
@@ -4550,7 +4535,7 @@ void static BitcoinMiner(CWallet *pwallet)
                         if (GetTime() - nLogTime > 60)
                         {
                             nLogTime = GetTime();
-                            printf("primemeter %3d CPUs %9.0f prime/h %9.0f test/h\n", vnThreadsRunning[THREAD_MINER], dPrimesPerMinute * 60.0, dTestsPerMinute * 60.0);
+                            printf("%s primemeter %3d CPUs %9.0f prime/h %9.0f test/h\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nLogTime).c_str(), vnThreadsRunning[THREAD_MINER], dPrimesPerMinute * 60.0, dTestsPerMinute * 60.0);
                         }
                     }
                 }

@@ -31,6 +31,7 @@ bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nBits, bool fFermatTe
 static const unsigned int nFractionalBits = 20;
 static const uint64 nFractionalDifficultyMax = (1llu << (nFractionalBits + 32));
 static const uint64 nFractionalDifficultyMin = (1llu << 32);
+static const uint64 nFractionalDifficultyThreshold = (1llu << (10 + 32));
 bool TargetSetLength(unsigned int nLength, unsigned int& nBits);
 unsigned int TargetGetFractional(unsigned int nBits);
 uint64 TargetGetFractionalDifficulty(unsigned int nBits);
@@ -41,6 +42,7 @@ bool TargetIsBiTwin(unsigned int nBits);
 void TargetSetBiTwin(bool fBiTwin, unsigned int& nBits);
 std::string TargetGetName(unsigned int nBits);
 bool TargetGetMint(unsigned int nBits, uint64& nMint);
+bool TargetGetNext(unsigned int nBits, int64 nInterval, int64 nTargetSpacing, int64 nActualSpacing, unsigned int& nBitsNext);
 
 // Mine probable prime chain of form: n = h * p# +/- 1
 bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);

@@ -140,9 +140,15 @@ bool TargetSetLength(unsigned int nLength, unsigned int& nBits)
     return true;
 }
 
-static void TargetIncrementLength(unsigned int& nBits)
+void TargetIncrementLength(unsigned int& nBits)
 {
     nBits += (1 << nFractionalBits);
+}
+
+void TargetDecrementLength(unsigned int& nBits)
+{
+    if (TargetGetLength(nBits) > TARGET_MIN_LENGTH)
+        nBits -= (1 << nFractionalBits);
 }
 
 static unsigned int TargetGetLengthWithFractional(unsigned int nBits)
@@ -225,6 +231,39 @@ bool TargetGetMint(unsigned int nBits, uint64& nMint)
     bnMint = (bnMint << nFractionalBits) / nLengthWithFractional;
     bnMint = (bnMint / CENT) * CENT;  // mint value rounded to cent
     nMint = bnMint.getuint256().Get64();
+    return true;
+}
+
+// Get next target value
+bool TargetGetNext(unsigned int nBits, int64 nInterval, int64 nTargetSpacing, int64 nActualSpacing, unsigned int& nBitsNext)
+{
+    nBitsNext = nBits;
+    // Convert length into fractional difficulty
+    uint64 nFractionalDifficulty = TargetGetFractionalDifficulty(nBits);
+    // Compute new difficulty via exponential moving toward target spacing
+    CBigNum bnFractionalDifficulty = nFractionalDifficulty;
+    bnFractionalDifficulty *= ((nInterval + 1) * nTargetSpacing);
+    bnFractionalDifficulty /= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
+    if (bnFractionalDifficulty > nFractionalDifficultyMax)
+        bnFractionalDifficulty = nFractionalDifficultyMax;
+    if (bnFractionalDifficulty < nFractionalDifficultyMin)
+        bnFractionalDifficulty = nFractionalDifficultyMin;
+    uint64 nFractionalDifficultyNew = bnFractionalDifficulty.getuint256().Get64();
+    // Step up length if fractional past threshold
+    if (nFractionalDifficultyNew > nFractionalDifficultyThreshold)
+    {
+        nFractionalDifficultyNew = nFractionalDifficultyMin;
+        TargetIncrementLength(nBitsNext);
+    }
+    // Step down length if fractional at minimum
+    if (nFractionalDifficultyNew == nFractionalDifficultyMin && TargetGetLength(nBits) > TARGET_MIN_LENGTH)
+    {
+        nFractionalDifficultyNew = nFractionalDifficultyThreshold;
+        TargetDecrementLength(nBitsNext);
+    }
+    // Convert fractional difficulty back to length
+    if (!TargetSetFractionalDifficulty(nFractionalDifficultyNew, nBitsNext))
+        return error("TargetGetNext() : unable to set fractional difficulty prev=0x%016"PRI64x" new=0x%016"PRI64x, nFractionalDifficulty, nFractionalDifficultyNew);
     return true;
 }
 
@@ -312,7 +351,7 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTrie
             block.bnPrimeChainMultiplier = bnPrimorial * bnTried;
             return true;
         }
-        else if(nProbableChainLength > 0)
+        else if(TargetGetLength(nProbableChainLength) >= 1)
             nPrimesHit++;
 
         nCurrent = GetTimeMicros();
@@ -419,5 +458,3 @@ double GetPrimeDifficulty(unsigned int nBits)
 {
     return ((double) TargetGetLengthWithFractional(nBits) / (double) (1 << nFractionalBits));
 }
-
-
