@@ -16,7 +16,7 @@
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="91"/>
-        <source>Copyright © 2012-2013 PPCoin Developers
+        <source>Copyright © 2011-2013 PPCoin Developers
 
 This is experimental software.
 
