@@ -52,7 +52,7 @@ fi
 # test openssl/EC
 HAVE_OPENSSL_EC=0
 if [ "$HAVE_OPENSSL" = "1" ]; then
-$CC $CFLAGS -std=c99 -x c - -o /dev/null -lcrypto <<EOF
+$CC $CFLAGS -std=c99 -x c - -o /dev/null -lcrypto 2>/dev/null <<EOF
 #include <openssl/ec.h>
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>

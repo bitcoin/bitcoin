@@ -1,9 +1,3 @@
-* Convert to C
-* Add key generation, import/export of private keys, signing to secp256k1.h
-* Unit tests for num/fieldelem/groupelem, including ones intended to
+* Unit tests for fieldelem/groupelem, including ones intended to
   trigger fieldelem's boundary cases.
-* Build configuration
-* Which selectable parts?
-  * GMP/OpenSSL for num backend (add builtin version?)
-  * __int128/asm_amd64/generic version for fieldelem
 * Complete constant-time operations for signing/keygen
