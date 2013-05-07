@@ -1395,6 +1395,16 @@ void CheckForkWarningConditions()
 
     if (pindexBestForkTip || nBestInvalidWork > nBestChainWork + (pindexBest->GetBlockWork() * 6).getuint256())
     {
+        if (!fLargeWorkForkFound)
+        {
+            std::string strCmd = GetArg("-alertnotify", "");
+            if (!strCmd.empty())
+            {
+                std::string warning("'Warning: Large-work fork detected. You may need to upgrade, or other nodes may need to upgrade.'");
+                boost::replace_all(strCmd, "%s", warning);
+                boost::thread t(runCommand, strCmd); // thread runs free
+            }
+        }
         fLargeWorkForkFound = true;
         printf("CheckForkWarningConditions: Warning: Displayed transactions may not be correct! You may need to upgrade, or other nodes may need to upgrade.\n");
     } else
