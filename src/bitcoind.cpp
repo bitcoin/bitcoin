@@ -67,6 +67,10 @@ bool AppInit(int argc, char* argv[])
 
         if (fCommandLine)
         {
+            if (!SelectParamsFromCommandLine()) {
+                fprintf(stderr, "Error: invalid combination of -regtest and -testnet.\n");
+                return false;
+            }
             int ret = CommandLineRPC(argc, argv);
             exit(ret);
         }

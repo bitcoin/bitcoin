@@ -157,7 +157,7 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
     BOOST_FOREACH(string& strAddNode, laddedNodes)
     {
         vector<CService> vservNode(0);
-        if(Lookup(strAddNode.c_str(), vservNode, GetDefaultPort(), fNameLookup, 0))
+        if(Lookup(strAddNode.c_str(), vservNode, Params().GetDefaultPort(), fNameLookup, 0))
             laddedAddreses.push_back(make_pair(strAddNode, vservNode));
         else
         {

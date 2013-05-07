@@ -70,7 +70,6 @@ extern CCriticalSection cs_main;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
 extern std::vector<CBlockIndex*> vBlockIndexByHeight;
 extern std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid;
-extern uint256 hashGenesisBlock;
 extern CBlockIndex* pindexGenesisBlock;
 extern int nBestHeight;
 extern uint256 nBestChainWork;
@@ -86,7 +85,6 @@ extern int64 nHPSTimerStart;
 extern int64 nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
-extern unsigned char pchMessageStart[4];
 extern bool fImporting;
 extern bool fReindex;
 extern bool fBenchmark;
@@ -353,7 +351,7 @@ public:
 
         // Write index header
         unsigned int nSize = fileout.GetSerializeSize(*this);
-        fileout << FLATDATA(pchMessageStart) << nSize;
+        fileout << FLATDATA(Params().MessageStart()) << nSize;
 
         // Write undo data
         long fileOutPos = ftell(fileout);
@@ -692,7 +690,7 @@ public:
 
         // Write index header
         unsigned int nSize = fileout.GetSerializeSize(*this);
-        fileout << FLATDATA(pchMessageStart) << nSize;
+        fileout << FLATDATA(Params().MessageStart()) << nSize;
 
         // Write block
         long fileOutPos = ftell(fileout);

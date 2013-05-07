@@ -6,6 +6,7 @@
 #include "init.h"
 #include "main.h"
 #include "core.h"
+#include "chainparams.h"
 #include "txdb.h"
 #include "walletdb.h"
 #include "bitcoinrpc.h"
@@ -13,6 +14,7 @@
 #include "util.h"
 #include "ui_interface.h"
 #include "checkpoints.h"
+#include "chainparams.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -210,6 +212,8 @@ std::string HelpMessage()
     strUsage += "  -logtimestamps         " + _("Prepend debug output with timestamp") + "\n";
     strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
     strUsage += "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n";
+    strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be "
+                                                "solved instantly. This is intended for regression testing tools and app development.") + "\n";
 #ifdef WIN32
     strUsage += "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n";
 #endif
@@ -366,8 +370,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 2: parameter interactions
 
-    fTestNet = GetBoolArg("-testnet", false);
     Checkpoints::fEnabled = GetBoolArg("-checkpoints", true);
+    if (!SelectParamsFromCommandLine()) {
+        return InitError("Invalid combination of -testnet and -regtest.");
+    }
 
     if (mapArgs.count("-bind")) {
         // when specifying an explicit binding address, you want to listen on it
@@ -572,7 +578,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // ********************************************************* Step 6: network initialization
 
     RegisterNodeSignals(GetNodeSignals());
- 
+
     int nSocksVersion = GetArg("-socks", 5);
     if (nSocksVersion != 4 && nSocksVersion != 5)
         return InitError(strprintf(_("Unknown -socks proxy version requested: %i"), nSocksVersion));
@@ -937,7 +943,6 @@ bool AppInit2(boost::thread_group& threadGroup)
     nStart = GetTimeMillis();
 
     {
-        CAddrDB::SetMessageStart(pchMessageStart);
         CAddrDB adb;
         if (!adb.Read(addrman))
             printf("Invalid or missing peers.dat; recreating\n");
