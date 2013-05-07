@@ -323,17 +323,17 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+232"/>
+        <location filename="../bitcoingui.cpp" line="+233"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Assinar Mensagem...</translation>
     </message>
     <message>
-        <location line="+279"/>
+        <location line="+280"/>
         <source>Synchronizing with network...</source>
         <translation>Sincronizando com a rede...</translation>
     </message>
     <message>
-        <location line="-348"/>
+        <location line="-349"/>
         <source>&amp;Overview</source>
         <translation>&amp;Visão geral</translation>
     </message>
@@ -408,7 +408,7 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
         <translation>&amp;Mudar frase de segurança...</translation>
     </message>
     <message>
-        <location line="+284"/>
+        <location line="+285"/>
         <source>Importing blocks from disk...</source>
         <translation>Importando blocos do disco...</translation>
     </message>
@@ -418,7 +418,7 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
         <translation>Reindexando blocos no disco...</translation>
     </message>
     <message>
-        <location line="-346"/>
+        <location line="-347"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Enviar moedas para um endereço bitcoin</translation>
     </message>
@@ -453,18 +453,18 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
         <translation>&amp;Verificar mensagem...</translation>
     </message>
     <message>
-        <location line="-164"/>
-        <location line="+528"/>
+        <location line="-165"/>
+        <location line="+530"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-528"/>
+        <location line="-530"/>
         <source>Wallet</source>
         <translation>Carteira</translation>
     </message>
     <message>
-        <location line="+100"/>
+        <location line="+101"/>
         <source>&amp;Send</source>
         <translation>&amp;Enviar</translation>
     </message>
@@ -540,7 +540,7 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
         <translation>Cliente Bitcoin</translation>
     </message>
     <message numerus="yes">
-        <location line="+140"/>
+        <location line="+141"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n conexão ativa na rede Bitcoin</numerusform><numerusform>%n conexões ativas na rede Bitcoin</numerusform></translation>
     </message>
@@ -669,7 +669,7 @@ Endereço: %4</translation>
         <translation>Carteira está &lt;b&gt;criptografada&lt;/b&gt; e atualmente &lt;b&gt;bloqueada&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+107"/>
+        <location filename="../bitcoin.cpp" line="+111"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Um erro fatal ocorreu. Bitcoin não pode continuar em segurança e irá fechar.</translation>
     </message>
@@ -808,8 +808,8 @@ Endereço: %4</translation>
     </message>
     <message>
         <location line="+6"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation>Taxa opcional de transações por kB que ajuda a garantir que suas transações serão processadas rapidamente. A maior parte das transações é de 1 kB. Taxa de 0.01 recomendada.</translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+15"/>
@@ -2134,12 +2134,17 @@ Endereço: %4</translation>
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+43"/>
+        <location filename="../walletview.cpp" line="+42"/>
+        <source>&amp;Export</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar os dados na aba atual para um arquivo</translation>
     </message>
     <message>
-        <location line="+198"/>
+        <location line="+193"/>
         <source>Backup Wallet</source>
         <translation>Fazer cópia de segurança da Carteira</translation>
     </message>
@@ -2172,12 +2177,12 @@ Endereço: %4</translation>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+96"/>
+        <location filename="../bitcoinstrings.cpp" line="+94"/>
         <source>Bitcoin version</source>
         <translation>Versão do Bitcoin</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+97"/>
         <source>Usage:</source>
         <translation>Uso:</translation>
     </message>
@@ -2187,7 +2192,7 @@ Endereço: %4</translation>
         <translation>Enviar comando para -server ou bitcoind</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-23"/>
         <source>List commands</source>
         <translation>Lista de comandos</translation>
     </message>
@@ -2197,7 +2202,7 @@ Endereço: %4</translation>
         <translation>Obtenha ajuda sobre um comando</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Options:</source>
         <translation>Opções:</translation>
     </message>
@@ -2212,17 +2217,7 @@ Endereço: %4</translation>
         <translation>Especifique um arquivo de pid (padrão: bitcoind.pid)</translation>
     </message>
     <message>
-        <location line="-48"/>
-        <source>Generate coins</source>
-        <translation>Gerar bitcoins</translation>
-    </message>
-    <message>
-        <location line="-27"/>
-        <source>Don&apos;t generate coins</source>
-        <translation>Não gerar bitcoins</translation>
-    </message>
-    <message>
-        <location line="+74"/>
+        <location line="-1"/>
         <source>Specify data directory</source>
         <translation>Especificar diretório de dados</translation>
     </message>
@@ -2232,7 +2227,7 @@ Endereço: %4</translation>
         <translation>Definir o tamanho do cache do banco de dados em megabytes (padrão: 25)</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-28"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Procurar por conexões em &lt;port&gt; (padrão: 8333 ou testnet:18333)</translation>
     </message>
@@ -2242,7 +2237,7 @@ Endereço: %4</translation>
         <translation>Manter no máximo &lt;n&gt; conexões aos peers (padrão: 125)</translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-47"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Conectar a um nó para receber endereços de participantes, e desconectar.</translation>
     </message>
@@ -2262,22 +2257,22 @@ Endereço: %4</translation>
         <translation>Número de segundos para impedir que peers mal comportados reconectem (padrão: 86400)</translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-29"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation>Um erro ocorreu ao configurar a porta RPC %u para escuta em IPv4: %s</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+27"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Escutar conexões JSON-RPC na porta &lt;porta&gt; (padrão: 8332 ou testnet: 18332)</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Aceitar linha de comando e comandos JSON-RPC</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+75"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Rodar em segundo plano como serviço e aceitar comandos</translation>
     </message>
@@ -2287,12 +2282,12 @@ Endereço: %4</translation>
         <translation>Usar rede de teste</translation>
     </message>
     <message>
-        <location line="-108"/>
+        <location line="-107"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Aceitar conexões externas (padrão: 1 se opções -proxy ou -connect não estiverem presentes)</translation>
     </message>
     <message>
-        <location line="-82"/>
+        <location line="-80"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -2333,11 +2328,6 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+3"/>
-        <source>Error initializing database environment %s! To recover, BACKUP THAT DIRECTORY, then remove everything from it except for wallet.dat.</source>
-        <translation>Erro ao inicializar o ambiente de banco de dados %s! Para recuperar: FAÇA BACKUP DAQUELE DIRETÓRIO, e então remova tudo dele, exceto o arquivo wallet.dat.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Erro: A transação foi rejeitada. Isso pode acontecer se alguns dos bitcoins de sua carteira já haviam sido gastos, por exemplo se você usou uma cópia do arquivo wallet.dat e alguns bitcoins foram gastos na cópia mas não foram marcados como gastos aqui.</translation>
     </message>
@@ -2362,12 +2352,7 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Determinar tamanho máximo de transações de alta-prioridade/baixa-taxa em bytes (padrão: 27000)</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Set the number of script verification threads (1-16, 0=auto, default: 0)</source>
-        <translation>Definir número de threads de script de verificação (1-16, 0=auto, padrão: 0)</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+6"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Este pode ser um build de teste pré-lançamento - use por sua conta e risco - não use para mineração ou aplicações de comércio.</translation>
     </message>
@@ -2407,7 +2392,7 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Opções de criação de blocos:</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
         <source>Connect only to the specified node(s)</source>
         <translation>Conectar apenas a nó(s) específico(s)</translation>
     </message>
@@ -2427,7 +2412,7 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Você quer reconstruir o banco de dados de blocos agora?</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Error initializing block database</source>
         <translation>Erro ao inicializar banco de dados de blocos</translation>
     </message>
@@ -2527,7 +2512,12 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Procurar pares usando consulta de DNS (padrão: 1 a menos que a opção -connect esteja presente)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+1"/>
+        <source>Generate coins (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
         <translation>Quantos blocos checar ao inicializar (padrão: 288, 0 = todos)</translation>
     </message>
@@ -2537,7 +2527,12 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Quão minuciosa é a verificação dos blocos (0-4, padrão: 3)</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+17"/>
+        <source>Not enough file descriptors available.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Reconstruir índice de blockchain a partir dos arquivos atuais blk000??.dat</translation>
     </message>
@@ -2557,12 +2552,17 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Verificando carteira...</translation>
     </message>
     <message>
-        <location line="-62"/>
+        <location line="-63"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importar blocos de um arquivo externo blk000??.dat</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-77"/>
+        <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+78"/>
         <source>Information</source>
         <translation>Informação</translation>
     </message>
@@ -2587,7 +2587,7 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Buffer máximo de envio por conexão, &lt;n&gt;*1000 bytes (padrão: 1000)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
         <translation>Apenas aceitar cadeia de blocos correspondente a marcas de verificação internas (padrão: 1)</translation>
     </message>
@@ -2702,12 +2702,12 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Senha para conexões JSON-RPC</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-66"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Permitir conexões JSON-RPC de endereços IP específicos</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+75"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Enviar comando para nó rodando em &lt;ip&gt; (pardão: 127.0.0.1)</translation>
     </message>
@@ -2747,12 +2747,12 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Chave privada do servidor (padrão: server.pem)</translation>
     </message>
     <message>
-        <location line="-153"/>
+        <location line="-150"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Algoritmos de criptografia aceitos (padrão: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+166"/>
+        <location line="+163"/>
         <source>This help message</source>
         <translation>Esta mensagem de ajuda</translation>
     </message>
@@ -2767,12 +2767,12 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Conectar através de um proxy socks</translation>
     </message>
     <message>
-        <location line="-11"/>
+        <location line="-10"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Permitir consultas DNS para -addnode, -seednode e -connect</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+54"/>
         <source>Loading addresses...</source>
         <translation>Carregando endereços...</translation>
     </message>
@@ -2787,12 +2787,12 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Erro ao carregar wallet.dat: Carteira requer uma versão mais nova do Bitcoin</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+88"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>A Carteira precisou ser reescrita: reinicie o Bitcoin para completar</translation>
     </message>
     <message>
-        <location line="-89"/>
+        <location line="-90"/>
         <source>Error loading wallet.dat</source>
         <translation>Erro ao carregar wallet.dat</translation>
     </message>
@@ -2802,7 +2802,7 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Endereço -proxy inválido: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+50"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Rede desconhecida especificada em -onlynet: &apos;%s&apos;</translation>
     </message>
@@ -2822,7 +2822,7 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Impossível encontrar endereço -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+43"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Quantidade inválida para -paytxfee=&lt;quantidade&gt;: &apos;%s&apos;</translation>
     </message>
@@ -2842,7 +2842,7 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Carregando índice de blocos...</translation>
     </message>
     <message>
-        <location line="-58"/>
+        <location line="-56"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Adicionar um nó com o qual se conectar e tentar manter a conexão ativa</translation>
     </message>
@@ -2852,7 +2852,7 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Impossível vincular a %s neste computador. O Bitcoin provavelmente já está rodando.</translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+65"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Taxa por KB a ser acrescida nas transações que você enviar</translation>
     </message>
@@ -2862,14 +2862,9 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Carregando carteira...</translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-51"/>
         <source>Cannot downgrade wallet</source>
         <translation>Não é possível fazer downgrade da carteira</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Cannot initialize keypool</source>
-        <translation>Não foi possível inicializar o pool de chaves</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2882,22 +2877,22 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Re-escaneando...</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-56"/>
         <source>Done loading</source>
         <translation>Carregamento terminado</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+80"/>
         <source>To use the %s option</source>
         <translation>Para usar a opção %s</translation>
     </message>
     <message>
-        <location line="-71"/>
+        <location line="-72"/>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
     <message>
-        <location line="-33"/>
+        <location line="-31"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
