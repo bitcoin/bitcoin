@@ -96,6 +96,13 @@ DEBUGFLAGS=-g
 xCXXFLAGS=-O2 -msse2 -pthread -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter \
     $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
 
+# scrypt-jane specific parameters
+DEFS+=-DSCRYPT_KECCAK512 -DSCRYPT_CHACHA
+
+xCXXFLAGS_SCRYPT_JANE=-O3 -msse2 -pthread -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter \
+    $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
+
+
 # LDFLAGS can be specified on the make command line, so we use xLDFLAGS that only
 # adds some defaults in front. Unfortunately, LDFLAGS=... $(LDFLAGS) does not work.
 xLDFLAGS=$(LDHARDENING) $(LDFLAGS)
@@ -132,7 +139,8 @@ OBJS= \
     obj/pbkdf2.o \
     obj/scrypt_mine.o \
     obj/scrypt-x86.o \
-    obj/scrypt-x86_64.o
+    obj/scrypt-x86_64.o \
+    obj/scrypt-jane.o
 
 
 all: yacoind
@@ -154,6 +162,9 @@ obj/scrypt-x86.o: scrypt-x86.S
 
 obj/scrypt-x86_64.o: scrypt-x86_64.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+
+obj/scrypt-jane.o: scrypt-jane/scrypt-jane.c
+	gcc -c $(xCXXFLAGS_SCRYPT_JANE) -MMD -o $@ $<
 
 obj/%.o: %.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<

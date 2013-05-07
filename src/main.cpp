@@ -40,6 +40,7 @@ static CBigNum bnInitialHashTarget(~uint256(0) >> 20);
 unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // minimum age for coin age
 unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // stake age of full weight
 unsigned int nStakeTargetSpacing = 1 * 60; // DIFF: 1-minute block spacing
+int64 nChainStartTime = 1367872000;
 int nCoinbaseMaturity = 500;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
@@ -944,6 +945,37 @@ uint256 WantedByOrphan(const CBlock* pblockOrphan)
     while (mapOrphanBlocks.count(pblockOrphan->hashPrevBlock))
         pblockOrphan = mapOrphanBlocks[pblockOrphan->hashPrevBlock];
     return pblockOrphan->hashPrevBlock;
+}
+
+// yacoin: increasing Nfactor gradually
+const unsigned char minNfactor = 4;
+const unsigned char maxNfactor = 30;
+
+unsigned char GetNfactor(int64 nTimestamp) {
+    int l = 0;
+
+    if (nTimestamp <= nChainStartTime)
+        return 4;
+
+    int64 s = nTimestamp - nChainStartTime;
+    while ((s >> 1) > 3) {
+      l += 1;
+      s >>= 1;
+    }
+
+    s &= 3;
+
+    int n = (l * 170 + s * 25 - 2320) / 100;
+
+    if (n < 0) n = 0;
+
+    if (n > 255)
+        printf("GetNfactor(%d) - something wrong(n == %d)\n", nTimestamp, n);
+
+    unsigned char N = (unsigned char)n;
+    //printf("GetNfactor: %d -> %d %d : %d / %d\n", nTimestamp - nChainStartTime, l, s, n, min(max(N, minNfactor), maxNfactor));
+
+    return min(max(N, minNfactor), maxNfactor);
 }
 
 int64 GetProofOfWorkReward(unsigned int nBits)
@@ -2493,9 +2525,9 @@ bool LoadBlockIndex(bool fAllowNew)
         //   vMerkleTree: 4a5e1e
 
         // Genesis block
-        const char* pszTimestamp = "https://bitcointalk.org/index.php?topic=134179.msg1502196#msg1502196";
+        const char* pszTimestamp = "https://bitcointalk.org/index.php?topic=196196";
         CTransaction txNew;
-        txNew.nTime = 1360105017;
+        txNew.nTime = nChainStartTime;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(9999) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
@@ -2505,16 +2537,18 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1367057243;
+        block.nTime    = nChainStartTime + 19;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 1575379;
+        block.nNonce   = 136291;
 
         //// debug print
         printf("block.GetHash() == %s\n", block.GetHash().ToString().c_str());
-        assert(block.hashMerkleRoot == uint256("0x4cb33b3b6a861dcbc685d3e614a9cafb945738d6833f182855679f2fad02057b"));
+        printf("block.hashMerkleRoot == %s\n", block.hashMerkleRoot.ToString().c_str());
+        assert(block.hashMerkleRoot == uint256("0x01222b30def82d9b2ddae9f11e5860e0ce7506bac0ac58cb0703b3d0c578b990"));
         block.print();
+
         assert(block.GetHash() == hashGenesisBlock);
-        //assert(block.CheckBlock()); // TODO: uncomment
+        assert(block.CheckBlock());
 
         // Start new block file
         unsigned int nFile;
@@ -2811,7 +2845,7 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 // The message start string is designed to be unlikely to occur in normal data.
 // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
 // a large 4-byte int at any alignment.
-unsigned char pchMessageStart[4] = { 0xe4, 0xe8, 0xe9, 0xe5 };
+unsigned char pchMessageStart[4] = { 0xe8, 0xe7, 0xe9, 0xe3 };
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
@@ -4272,7 +4306,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
             return;
         while (vNodes.empty() || IsInitialBlockDownload())
         {
-            printf("vNodes.size() == %d, IsInitialBlockDownload() == %d\n", vNodes.size(), IsInitialBlockDownload());
+            //printf("vNodes.size() == %d, IsInitialBlockDownload() == %d\n", vNodes.size(), IsInitialBlockDownload());
             Sleep(1000);
             if (fShutdown)
                 return;
@@ -4351,11 +4385,11 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
             nNonceFound = scanhash_scrypt(
                         (block_header *)&pblock->nVersion,
-                        scratchbuf,
                         max_nonce,
                         nHashesDone,
                         UBEGIN(result),
-                        &res_header
+                        &res_header,
+                        GetNfactor(pblock->nTime)
             );
 
             // Check if something found

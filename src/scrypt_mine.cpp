@@ -31,6 +31,10 @@
 #include <stdint.h>
 #include <xmmintrin.h>
 
+extern "C" {
+#include "scrypt-jane/scrypt-jane.h"
+}
+
 #include "scrypt_mine.h"
 #include "pbkdf2.h"
 
@@ -46,7 +50,8 @@ extern uint32_t nTransactionsUpdated;
 
 #if defined(__x86_64__)
 
-#define SCRYPT_3WAY
+//#define SCRYPT_3WAY
+// yacoin: using scrypt-jane instead
 #define SCRYPT_BUFFER_SIZE (3 * 131072 + 63)
 
 extern "C" int scrypt_best_throughput();
@@ -89,9 +94,11 @@ static void scrypt(const void* input, size_t inputlen, uint32_t *res, void *scra
     PBKDF2_SHA256((const uint8_t*)input, inputlen, (uint8_t *)X, 128, 1, (uint8_t*)res, 32);
 }
 
-void scrypt_hash(const void* input, size_t inputlen, uint32_t *res, void *scratchpad)
+void scrypt_hash(const void* input, size_t inputlen, uint32_t *res, unsigned char Nfactor)
 {
-    return scrypt(input, inputlen, res, scratchpad);
+    return scrypt((const unsigned char*)input, inputlen,
+                  (const unsigned char*)input, inputlen,
+                  Nfactor, 0, 0, (unsigned char*)res, 32);
 }
 
 #ifdef SCRYPT_3WAY
@@ -130,9 +137,9 @@ static void scrypt_3way(const void *input1, const void *input2, const void *inpu
 }
 #endif
 
-unsigned int scanhash_scrypt(block_header *pdata, void *scratchbuf,
+unsigned int scanhash_scrypt(block_header *pdata,
     uint32_t max_nonce, uint32_t &hash_count,
-    void *result, block_header *res_header)
+    void *result, block_header *res_header, unsigned char Nfactor)
 {
     hash_count = 0;
     block_header data = *pdata;
@@ -189,7 +196,10 @@ unsigned int scanhash_scrypt(block_header *pdata, void *scratchbuf,
             hash_count += 1;
         }
 #else
-        scrypt(&data, 80, hash, scratchbuf);
+        //scrypt(&data, 80, hash, scratchbuf);
+        scrypt((const unsigned char*)&data, 80,
+               (const unsigned char*)&data, 80,
+               Nfactor, 0, 0, (unsigned char*)hash, 32);
         hash_count += 1;
 #endif
         if (hashc[31] == 0 && hashc[30] == 0) {

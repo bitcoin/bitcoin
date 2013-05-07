@@ -45,8 +45,8 @@ static const int fHaveUPnP = true;
 static const int fHaveUPnP = false;
 #endif
 
-static const uint256 hashGenesisBlockOfficial("0x47e13f1b37a39ef9f85322a48ef84367b3b337fc28028b28ef80150356b647b8");
-static const uint256 hashGenesisBlockTestNet("0x00000a060336cbb72fe969666d337b87198b1add2abaa59cca226820b32933a4");
+static const uint256 hashGenesisBlockOfficial("0x00000f8de7134bdf87c15d5682de1b3d813d5fce28adf07612f123c30951de54");
+static const uint256 hashGenesisBlockTestNet("0xfe20c2c2fc02b36d2473e1f51dba1fb455d41ff42966e2a4edabb98fdd7107e6");
 
 static const int64 nMaxClockDrift = 2 * 60 * 60;        // two hours
 
@@ -124,6 +124,8 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 void BitcoinMiner(CWallet *pwallet, bool fProofOfStake);
 void ResendWalletTransactions();
 
+// yacoin: calculate Nfactor using timestamp
+unsigned char GetNfactor(int64 nTimestamp);
 
 
 
@@ -905,11 +907,11 @@ public:
     uint256 GetHash() const
     {
         uint256 thash;
-        void * scratchbuff = scrypt_buffer_alloc();
+        //void * scratchbuff = scrypt_buffer_alloc();
 
-        scrypt_hash(CVOIDBEGIN(nVersion), sizeof(block_header), UINTBEGIN(thash), scratchbuff);
+        scrypt_hash(CVOIDBEGIN(nVersion), sizeof(block_header), UINTBEGIN(thash), GetNfactor(nTime));
 
-        scrypt_buffer_free(scratchbuff);
+        //scrypt_buffer_free(scratchbuff);
 
         return thash;
     }

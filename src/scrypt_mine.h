@@ -21,10 +21,10 @@ typedef struct
 void *scrypt_buffer_alloc();
 void scrypt_buffer_free(void *scratchpad);
 
-unsigned int scanhash_scrypt(block_header *pdata, void *scratchbuf,
+unsigned int scanhash_scrypt(block_header *pdata,
     uint32_t max_nonce, uint32_t &hash_count,
-    void *result, block_header *res_header);
+    void *result, block_header *res_header, unsigned char Nfactor);
 
-void scrypt_hash(const void* input, size_t inputlen, uint32_t *res, void *scratchpad);
+void scrypt_hash(const void* input, size_t inputlen, uint32_t *res, unsigned char Nfactor);
 
 #endif // SCRYPT_MINE_H

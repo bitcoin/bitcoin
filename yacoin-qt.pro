@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET = yacoin-qt
 VERSION = 0.7.2
 INCLUDEPATH += src src/json src/qt
-DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
+DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE SCRYPT_CHACHA SCRYPT_KECCAK512
 CONFIG += no_include_pwd
 CONFIG += thread
 
@@ -102,7 +102,7 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
 }
 
 QMAKE_CXXFLAGS += -msse2
-QMAKE_CFLAGS += -msse2
+QMAKE_CFLAGS += -O3 -msse2
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector
 
 # Input
@@ -245,7 +245,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/scrypt-x86.S \
     src/scrypt-x86_64.S \
     src/scrypt_mine.cpp \
-    src/pbkdf2.cpp
+    src/pbkdf2.cpp \
+    src/scrypt-jane/scrypt-jane.c
 
 RESOURCES += \
     src/qt/bitcoin.qrc
