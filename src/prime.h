@@ -55,7 +55,7 @@ bool GetLastBlockIndex(const CBlockIndex* pindex, bool fSophieGermain, bool fBiT
 bool LogScale(const CBigNum& bn, unsigned int& nLogScale);
 
 // Check prime proof-of-work
-bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier);
+bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier);
 
 // prime target difficulty value for visualization
 double GetPrimeDifficulty(unsigned int nBits);

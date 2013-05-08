@@ -1108,9 +1108,9 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
     return nBits;
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnProbablePrime)
+bool CheckProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnProbablePrime)
 {
-    if (!CheckPrimeProofOfWork(hash, nBits, bnProbablePrime))
+    if (!CheckPrimeProofOfWork(hashBlockHeader, nBits, bnProbablePrime))
         return error("CheckProofOfWork() : check failed for prime proof-of-work");
     return true;
 }
@@ -2150,7 +2150,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         return error("ProcessBlock() : CheckBlock FAILED");
 
     // Check proof of work matches claimed amount
-    if (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->bnPrimeChainMultiplier))
+    if (!CheckProofOfWork(pblock->GetHeaderHash(), pblock->nBits, pblock->bnPrimeChainMultiplier))
         return state.DoS(100, error("ProcessBlock() : proof of work failed"));
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
@@ -2681,7 +2681,7 @@ bool InitBlockIndex() {
         {
             CValidationState state;
             assert(block.CheckBlock(state, true, true));
-            assert(CheckProofOfWork(block.GetHash(), block.nBits, block.bnPrimeChainMultiplier));
+            assert(CheckProofOfWork(block.GetHeaderHash(), block.nBits, block.bnPrimeChainMultiplier));
         }
 
         // Start new block file
@@ -4383,7 +4383,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
     CBigNum bnTarget = CBigNum().SetCompact(pblock->nBits);
 
-    if (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->bnPrimeChainMultiplier))
+    if (!CheckProofOfWork(pblock->GetHeaderHash(), pblock->nBits, pblock->bnPrimeChainMultiplier))
         return error("PrimecoinMiner : failed proof-of-work check");
 
     //// debug print

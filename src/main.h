@@ -64,8 +64,8 @@ static const int fHaveUPnP = true;
 static const int fHaveUPnP = false;
 #endif
 
-static const uint256 hashGenesisBlockOfficial("0xd2c9a48b5b4994ccd0f0ad717332c3ad6d7519a4212f6d5445f0bf35acb63ddd");
-static const uint256 hashGenesisBlockTestNet("0xd2c9a48b5b4994ccd0f0ad717332c3ad6d7519a4212f6d5445f0bf35acb63ddd");
+static const uint256 hashGenesisBlockOfficial("0xe62ec6d9dd3ab76676b82102462ceb72ae84de82f35d0e0ece70b1349bddec70");
+static const uint256 hashGenesisBlockTestNet("0xe62ec6d9dd3ab76676b82102462ceb72ae84de82f35d0e0ece70b1349bddec70");
 
 extern CScript COINBASE_FLAGS;
 
@@ -171,7 +171,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 /** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier);
+bool CheckProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 /** Get the number of active peers */
@@ -1271,6 +1271,13 @@ public:
     unsigned int nBits;  // Primecoin: prime chain target, see prime.cpp
     unsigned int nNonce;
 
+    // Primecoin: proof-of-work certificate
+    // Multiplier to block hash to derive the probable prime chain (k=0, 1, ...)
+    // Cunningham Chain of first kind:  hash * multiplier * 2**k - 1
+    // Cunningham Chain of second kind: hash * multiplier * 2**k + 1
+    // BiTwin Chain:                    hash * multiplier * 2**k +/- 1
+    CBigNum bnPrimeChainMultiplier;
+
     CBlockHeader()
     {
         SetNull();
@@ -1285,6 +1292,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(bnPrimeChainMultiplier);
     )
 
     void SetNull()
@@ -1295,6 +1303,7 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        bnPrimeChainMultiplier = 0;
     }
 
     bool IsNull() const
@@ -1302,9 +1311,18 @@ public:
         return (nBits == 0);
     }
 
-    uint256 GetHash() const
+    // Primecoin: header hash does not include prime certificate
+    uint256 GetHeaderHash() const
     {
         return Hash(BEGIN(nVersion), END(nNonce));
+    }
+
+    // Primecoin: block hash includes prime certificate
+    uint256 GetHash() const
+    {
+        CDataStream ss(SER_GETHASH, 0);
+        ss << GetHeaderHash() << bnPrimeChainMultiplier;
+        return Hash(ss.begin(), ss.end());
     }
 
     int64 GetBlockTime() const
@@ -1320,13 +1338,6 @@ class CBlock : public CBlockHeader
 public:
     // network and disk
     std::vector<CTransaction> vtx;
-
-    // Primecoin: proof-of-work certificate
-    // Multiplier to block hash to derive the probable prime chain (k=0, 1, ...)
-    // Cunningham Chain of first kind:  hash * multiplier * 2**k - 1
-    // Cunningham Chain of second kind: hash * multiplier * 2**k + 1
-    // BiTwin Chain:                    hash * multiplier * 2**k +/- 1
-    CBigNum bnPrimeChainMultiplier;
 
     // memory only
     mutable std::vector<uint256> vMerkleTree;
@@ -1346,7 +1357,6 @@ public:
     (
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
-        READWRITE(bnPrimeChainMultiplier);
     )
 
     void SetNull()
@@ -1354,7 +1364,6 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         vMerkleTree.clear();
-        bnPrimeChainMultiplier = 0;
     }
 
     CBlockHeader GetBlockHeader() const
@@ -1469,7 +1478,7 @@ public:
         }
 
         // Check the header
-        if (!CheckProofOfWork(GetHash(), nBits, bnPrimeChainMultiplier))
+        if (!CheckProofOfWork(GetHeaderHash(), nBits, bnPrimeChainMultiplier))
             return error("CBlock::ReadFromDisk() : errors in block header");
 
         return true;
@@ -1479,8 +1488,9 @@ public:
 
     void print() const
     {
-        printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu")\n",
+        printf("CBlock(hash=%s, hashBlockHeader=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu")\n",
             BlockHashStr(GetHash()).c_str(),
+            BlockHashStr(GetHeaderHash()).c_str(),
             nVersion,
             BlockHashStr(hashPrevBlock).c_str(),
             hashMerkleRoot.ToString().substr(0,10).c_str(),
@@ -1822,13 +1832,16 @@ class CDiskBlockIndex : public CBlockIndex
 {
 public:
     uint256 hashPrev;
+    uint256 hashBlock; // primecoin: persist block hash as well
 
     CDiskBlockIndex() {
         hashPrev = 0;
+        hashBlock = 0;
     }
 
     explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex) {
         hashPrev = (pprev ? pprev->GetBlockHash() : 0);
+        hashBlock = (pindex ? pindex->GetBlockHash() : 0);
     }
 
     IMPLEMENT_SERIALIZE
@@ -1853,18 +1866,12 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(hashBlock);
     )
 
     uint256 GetBlockHash() const
     {
-        CBlockHeader block;
-        block.nVersion        = nVersion;
-        block.hashPrevBlock   = hashPrev;
-        block.hashMerkleRoot  = hashMerkleRoot;
-        block.nTime           = nTime;
-        block.nBits           = nBits;
-        block.nNonce          = nNonce;
-        return block.GetHash();
+        return hashBlock;
     }
 
 

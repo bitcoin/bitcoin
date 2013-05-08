@@ -344,7 +344,7 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTrie
     {
         nTests++;
         bnTried++;
-        n = CBigNum(block.GetHash()) * bnPrimorial * bnTried + ((fSophieGermain || fBiTwin)? -1 : 1);
+        n = CBigNum(block.GetHeaderHash()) * bnPrimorial * bnTried + ((fSophieGermain || fBiTwin)? -1 : 1);
         if (ProbablePrimeChainTest(n, block.nBits, false, nProbableChainLength))
         {
             printf("Probable prime chain of type %s found for block=%s!! \n", TargetGetName(block.nBits).c_str(), block.GetHash().GetHex().c_str());
@@ -421,7 +421,7 @@ static bool LogLogScale(const CBigNum& bn, unsigned int& nLogLogScale)
 }
 
 // Check prime proof-of-work
-bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier)
+bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier)
 {
     // Check type
     bool fSophieGermain= TargetIsSophieGermain(nBits);
@@ -432,7 +432,7 @@ bool CheckPrimeProofOfWork(uint256 hash, unsigned int nBits, const CBigNum& bnPr
         return error("CheckPrimeProofOfWork() : invalid chain length target %u", TargetGetLength(nBits));
 
     // Check target for prime proof-of-work
-    CBigNum bnProbablePrime = (CBigNum(hash) * bnPrimeChainMultiplier) + ((fSophieGermain || fBiTwin)? (-1) : 1);
+    CBigNum bnProbablePrime = (CBigNum(hashBlockHeader) * bnPrimeChainMultiplier) + ((fSophieGermain || fBiTwin)? (-1) : 1);
     if (bnProbablePrime < bnPrimeMin)
         return error("CheckPrimeProofOfWork() : prime too small");
     // First prime in chain must not exceed cap
