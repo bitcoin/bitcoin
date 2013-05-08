@@ -40,7 +40,7 @@ static CBigNum bnInitialHashTarget(~uint256(0) >> 20);
 unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // minimum age for coin age
 unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // stake age of full weight
 unsigned int nStakeTargetSpacing = 1 * 60; // DIFF: 1-minute block spacing
-int64 nChainStartTime = 1367872000;
+int64 nChainStartTime = 1367991200;
 int nCoinbaseMaturity = 500;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
@@ -2537,15 +2537,42 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = nChainStartTime;
+        block.nTime    = nChainStartTime + 20;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 6941;
+        block.nNonce   = 127357;
 
         //// debug print
         printf("block.GetHash() == %s\n", block.GetHash().ToString().c_str());
         printf("block.hashMerkleRoot == %s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == uint256("0x01222b30def82d9b2ddae9f11e5860e0ce7506bac0ac58cb0703b3d0c578b"));
+        assert(block.hashMerkleRoot == uint256("0x678b76419ff06676a591d3fa9d57d7f7b26d8021b7cc69dde925f39d4cf2244f"));
         block.print();
+
+        {
+                    unsigned int max_nonce = 0xffff0000;
+                    block_header res_header;
+                    uint256 result;
+                    unsigned int nHashesDone = 0;
+                    unsigned int nNonceFound;
+                    CBigNum bnTarget;
+                    bnTarget.SetCompact(block.nBits);
+
+                    do {
+                    nNonceFound = scanhash_scrypt(
+                                (block_header *)&block.nVersion,
+                                max_nonce,
+                                nHashesDone,
+                                UBEGIN(result),
+                                &res_header,
+                                GetNfactor(block.nTime)
+                    );
+                    if (-1 == nNonceFound || result > bnTarget.getuint256()) {
+                        block.nTime++;
+                        continue;
+                    }
+                    } while(result > bnTarget.getuint256());
+
+                    printf("hashfound: %s with nonce %d\n", result.ToString().c_str(), nNonceFound);
+                }
 
         assert(block.GetHash() == hashGenesisBlock);
         assert(block.CheckBlock());
@@ -2845,7 +2872,7 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 // The message start string is designed to be unlikely to occur in normal data.
 // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
 // a large 4-byte int at any alignment.
-unsigned char pchMessageStart[4] = { 0xe8, 0xe7, 0xe9, 0xe3 };
+unsigned char pchMessageStart[4] = { 0xd9, 0xe6, 0xe7, 0xe5 };
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
