@@ -2547,33 +2547,6 @@ bool LoadBlockIndex(bool fAllowNew)
         assert(block.hashMerkleRoot == uint256("0x678b76419ff06676a591d3fa9d57d7f7b26d8021b7cc69dde925f39d4cf2244f"));
         block.print();
 
-        {
-                    unsigned int max_nonce = 0xffff0000;
-                    block_header res_header;
-                    uint256 result;
-                    unsigned int nHashesDone = 0;
-                    unsigned int nNonceFound;
-                    CBigNum bnTarget;
-                    bnTarget.SetCompact(block.nBits);
-
-                    do {
-                    nNonceFound = scanhash_scrypt(
-                                (block_header *)&block.nVersion,
-                                max_nonce,
-                                nHashesDone,
-                                UBEGIN(result),
-                                &res_header,
-                                GetNfactor(block.nTime)
-                    );
-                    if (-1 == nNonceFound || result > bnTarget.getuint256()) {
-                        block.nTime++;
-                        continue;
-                    }
-                    } while(result > bnTarget.getuint256());
-
-                    printf("hashfound: %s with nonce %d\n", result.ToString().c_str(), nNonceFound);
-                }
-
         assert(block.GetHash() == hashGenesisBlock);
         assert(block.CheckBlock());
 
