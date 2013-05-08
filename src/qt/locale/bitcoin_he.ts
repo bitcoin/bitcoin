@@ -2132,6 +2132,14 @@ Address: %4
     </message>
 </context>
 <context>
+    <name>WalletModel</name>
+    <message>
+        <location filename="../walletmodel.cpp" line="+193"/>
+        <source>Send Coins</source>
+        <translation>שלח מטבעות</translation>
+    </message>
+</context>
+<context>
     <name>WalletView</name>
     <message>
         <location filename="../walletview.cpp" line="+42"/>
@@ -2182,12 +2190,12 @@ Address: %4
         <translation>גרסת ביטקוין</translation>
     </message>
     <message>
-        <location line="+97"/>
+        <location line="+102"/>
         <source>Usage:</source>
         <translation>שימוש:</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-29"/>
         <source>Send command to -server or bitcoind</source>
         <translation>שלח פקודה ל -server או bitcoind</translation>
     </message>
@@ -2197,17 +2205,17 @@ Address: %4
         <translation>רשימת פקודות</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-12"/>
         <source>Get help for a command</source>
         <translation>קבל עזרה עבור פקודה</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Options:</source>
         <translation>אפשרויות:</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>ציין קובץ הגדרות (ברירת מחדל: bitcoin.conf)</translation>
     </message>
@@ -2222,7 +2230,7 @@ Address: %4
         <translation>ציין תיקיית נתונים</translation>
     </message>
     <message>
-        <location line="-8"/>
+        <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>קבע את גודל המטמון של מסד הנתונים במגהבייט (ברירת מחדל: 25)</translation>
     </message>
@@ -2237,12 +2245,12 @@ Address: %4
         <translation>החזק לכל היותר &lt;n&gt; חיבורים לעמיתים (ברירת מחדל: 125)</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>התחבר לצומת כדי לדלות כתובות עמיתים, ואז התנתק</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>Specify your own public address</source>
         <translation>ציין את הכתובת הפומבית שלך</translation>
     </message>
@@ -2252,7 +2260,7 @@ Address: %4
         <translation>סף להתנתקות מעמיתים הנוהגים שלא כהלכה (ברירת מחדל: 100)</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-134"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>מספר שניות למנוע מעמיתים הנוהגים שלא כהלכה מלהתחבר מחדש (ברירת מחדל: 86400)</translation>
     </message>
@@ -2272,17 +2280,17 @@ Address: %4
         <translation>קבל פקודות משורת הפקודה ו- JSON-RPC</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>רוץ ברקע כדימון וקבל פקודות</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+37"/>
         <source>Use the test network</source>
         <translation>השתמש ברשת הבדיקה</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-112"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>קבל חיבורים מבחוץ (ברירת מחדל: 1 ללא -proxy או -connect)</translation>
     </message>
@@ -2438,11 +2446,6 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+1"/>
-        <source>Error: Transaction creation failed!</source>
-        <translation>שגיאה: יצירת הפעולה נכשלה!</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
         <translation>שגיאה: הארנק נעול, אין אפשרות ליצור פעולה!</translation>
     </message>
@@ -2527,7 +2530,7 @@ rpcpassword=%s
         <translation>מידת היסודיות של אימות הבלוקים (0-4, ברירת מחדל: 3)</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Not enough file descriptors available.</source>
         <translation type="unfinished"/>
     </message>
@@ -2542,7 +2545,7 @@ rpcpassword=%s
         <translation>קבע את מספר תהליכוני לשירות קריאות RPC (ברירת מחדל: 4)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+26"/>
         <source>Verifying blocks...</source>
         <translation>מאמת את שלמות מסד הנתונים...</translation>
     </message>
@@ -2552,17 +2555,17 @@ rpcpassword=%s
         <translation>מאמת את יושרת הארנק...</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-69"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>מייבא בלוקים מקובצי blk000??.dat חיצוניים</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-76"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+77"/>
         <source>Information</source>
         <translation>מידע</translation>
     </message>
@@ -2570,6 +2573,16 @@ rpcpassword=%s
         <location line="+3"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>כתובת לא תקינה ל -tor: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+8"/>
@@ -2647,6 +2660,11 @@ rpcpassword=%s
         <translation>כווץ את קובץ debug.log בהפעלת הקליינט (ברירת מחדל: 1 ללא -debug)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>ציין הגבלת זמן לחיבור במילישניות (ברירת מחדל: 5000)</translation>
@@ -2657,7 +2675,22 @@ rpcpassword=%s
         <translation>שגיאת מערכת:</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+4"/>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction amounts must be positive</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction too large</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>השתמש ב-UPnP כדי למפות את הפורט להאזנה (ברירת מחדל: 0)</translation>
     </message>
@@ -2697,32 +2730,32 @@ rpcpassword=%s
         <translation>קובץ wallet.dat מושחת, החילוץ נכשל</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-50"/>
         <source>Password for JSON-RPC connections</source>
         <translation>סיסמה לחיבורי JSON-RPC</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>אפשר חיבורי JSON-RPC מכתובת האינטרנט המצוינת</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>שלח פקודות לצומת ב-&lt;ip&gt; (ברירת מחדל: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-120"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>בצע פקודה זו כשהבלוק הטוב ביותר משתנה (%s בפקודה יוחלף בגיבוב הבלוק)</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+147"/>
         <source>Upgrade wallet to latest format</source>
         <translation>שדרג את הארנק לפורמט העדכני</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-21"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>קבע את גודל המאגר ל -&lt;n&gt; (ברירת מחדל: 100)</translation>
     </message>
@@ -2732,12 +2765,12 @@ rpcpassword=%s
         <translation>סרוק מחדש את שרשרת הבלוקים למציאת פעולות חסרות בארנק</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+35"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>השתמש ב-OpenSSL (https( עבור חיבורי JSON-RPC</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-26"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>קובץ תעודת שרת (ברירת מחדל: server.cert)</translation>
     </message>
@@ -2747,22 +2780,22 @@ rpcpassword=%s
         <translation>מפתח פרטי של השרת (ברירת מחדל: server.pem)</translation>
     </message>
     <message>
-        <location line="-150"/>
+        <location line="-151"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>צפנים קבילים (ברירת מחדל: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+165"/>
         <source>This help message</source>
         <translation>הודעת העזרה הזו</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>לא מסוגל לקשור ל-%s במחשב זה (הקשירה החזירה שגיאה %d, %s)</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-91"/>
         <source>Connect through socks proxy</source>
         <translation>התחבר דרך פרוקסי SOCKS</translation>
     </message>
@@ -2772,12 +2805,12 @@ rpcpassword=%s
         <translation>אפשר בדיקת DNS עבור -addnode, -seednode ו- -connect</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+55"/>
         <source>Loading addresses...</source>
         <translation>טוען כתובות...</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-35"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>שגיאה בטעינת הקובץ wallet.dat: הארנק מושחת</translation>
     </message>
@@ -2787,22 +2820,22 @@ rpcpassword=%s
         <translation>שגיאה בטעינת הקובץ wallet.dat: הארנק דורש גרסה חדשה יותר של ביטקוין</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+93"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>יש לכתוב מחדש את הארנק: אתחל את ביטקוין לסיום</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-95"/>
         <source>Error loading wallet.dat</source>
         <translation>שגיאה בטעינת הקובץ wallet.dat</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>כתובת -proxy לא תקינה: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>רשת לא ידועה צוינה ב- -onlynet: &apos;%s&apos;</translation>
     </message>
@@ -2812,7 +2845,7 @@ rpcpassword=%s
         <translation>התבקשה גרסת פרוקסי -socks לא ידועה: %i</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-96"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>לא מסוגל לפתור כתובת -bind: &apos;%s&apos;</translation>
     </message>
@@ -2822,7 +2855,7 @@ rpcpassword=%s
         <translation>לא מסוגל לפתור כתובת -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>כמות לא תקינה עבור -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
@@ -2832,17 +2865,17 @@ rpcpassword=%s
         <translation>כמות לא תקינה</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="-6"/>
         <source>Insufficient funds</source>
         <translation>אין מספיק כספים</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Loading block index...</source>
         <translation>טוען את אינדקס הבלוקים...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>הוסף צומת להתחברות ונסה לשמור את החיבור פתוח</translation>
     </message>
@@ -2852,17 +2885,17 @@ rpcpassword=%s
         <translation>לא ניתן לקשור ל-%s במחשב זה. ביטקוין כנראה עדיין רץ.</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+64"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>עמלה להוסיף לפעולות שאתה שולח עבור כל KB</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>טוען ארנק...</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-52"/>
         <source>Cannot downgrade wallet</source>
         <translation>לא יכול להוריד דרגת הארנק</translation>
     </message>
@@ -2872,22 +2905,22 @@ rpcpassword=%s
         <translation>לא יכול לכתוב את כתובת ברירת המחדל</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Rescanning...</source>
         <translation>סורק מחדש...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Done loading</source>
         <translation>טעינה הושלמה</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>To use the %s option</source>
         <translation>להשתמש באפשרות %s</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-74"/>
         <source>Error</source>
         <translation>שגיאה</translation>
     </message>

@@ -810,7 +810,7 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation type="unfinished"/>
+        <translation>Необязательная комиссия за каждый КБ транзакции, которая ускоряет обработку Ваших транзакций.  Большинство транзакций занимают 1КБ.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -2133,11 +2133,19 @@ Address: %4
     </message>
 </context>
 <context>
+    <name>WalletModel</name>
+    <message>
+        <location filename="../walletmodel.cpp" line="+193"/>
+        <source>Send Coins</source>
+        <translation>Отправка</translation>
+    </message>
+</context>
+<context>
     <name>WalletView</name>
     <message>
         <location filename="../walletview.cpp" line="+42"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Экспорт</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2183,12 +2191,12 @@ Address: %4
         <translation>Версия</translation>
     </message>
     <message>
-        <location line="+97"/>
+        <location line="+102"/>
         <source>Usage:</source>
         <translation>Использование:</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-29"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Отправить команду на -server или bitcoind</translation>
     </message>
@@ -2199,17 +2207,17 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-12"/>
         <source>Get help for a command</source>
         <translation>Получить помощь по команде</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Options:</source>
         <translation>Опции:</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Указать конфигурационный файл (по умолчанию: bitcoin.conf)</translation>
     </message>
@@ -2224,7 +2232,7 @@ Address: %4
         <translation>Задать каталог данных</translation>
     </message>
     <message>
-        <location line="-8"/>
+        <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>Установить размер кэша базы данных в мегабайтах (по умолчанию: 25)</translation>
     </message>
@@ -2239,12 +2247,12 @@ Address: %4
         <translation>Поддерживать не более &lt;n&gt; подключений к узлам (по умолчанию: 125)</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Подключиться к узлу, чтобы получить список адресов других участников и отключиться</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>Specify your own public address</source>
         <translation>Укажите ваш собственный публичный адрес</translation>
     </message>
@@ -2254,7 +2262,7 @@ Address: %4
         <translation>Порог для отключения неправильно ведущих себя узлов (по умолчанию: 100)</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-134"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Число секунд блокирования неправильно ведущих себя узлов (по умолчанию: 86400)</translation>
     </message>
@@ -2274,17 +2282,17 @@ Address: %4
         <translation>Принимать командную строку и команды JSON-RPC</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Запускаться в фоне как демон и принимать команды</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+37"/>
         <source>Use the test network</source>
         <translation>Использовать тестовую сеть</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-112"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Принимать подключения извне (по умолчанию: 1, если не используется -proxy или -connect)</translation>
     </message>
@@ -2440,11 +2448,6 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+1"/>
-        <source>Error: Transaction creation failed!</source>
-        <translation>Ошибка: не удалось создать транзакцию!</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
         <translation>Ошибка: бумажник заблокирован, невозможно создать транзакцию!</translation>
     </message>
@@ -2516,7 +2519,7 @@ rpcpassword=%s
     <message>
         <location line="+1"/>
         <source>Generate coins (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Включить добычу монет (по умолчанию: 0)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2529,9 +2532,9 @@ rpcpassword=%s
         <translation>Насколько тщательно проверять блок (0-4, по умолчанию: 3)</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation>Недостаточно файловых дескрипторов.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2544,7 +2547,7 @@ rpcpassword=%s
         <translation>Задать число потоков выполнения(по умолчанию: 4)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+26"/>
         <source>Verifying blocks...</source>
         <translation>Проверка блоков...</translation>
     </message>
@@ -2554,17 +2557,17 @@ rpcpassword=%s
         <translation>Проверка бумажника...</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-69"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Импортировать блоки из внешнего файла blk000??.dat</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-76"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Задать число потоков проверки скрипта (вплоть до 16, 0=авто, &lt;0 = оставить столько ядер свободными, по умолчанию: 0)</translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+77"/>
         <source>Information</source>
         <translation>Информация</translation>
     </message>
@@ -2572,6 +2575,16 @@ rpcpassword=%s
         <location line="+3"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Неверный адрес -tor: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Неверное количество в параметре -minrelaytxfee=&lt;кол-во&gt;: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Неверное количество в параметре -mintxfee=&lt;кол-во&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2650,6 +2663,11 @@ rpcpassword=%s
         <translation>Сжимать файл debug.log при запуске клиента (по умолчанию: 1, если нет -debug)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Signing transaction failed</source>
+        <translation>Не удалось подписать транзакцию</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>Таймаут соединения в миллисекундах (по умолчанию: 5000)</translation>
@@ -2660,7 +2678,22 @@ rpcpassword=%s
         <translation>Системная ошибка:</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+4"/>
+        <source>Transaction amount too small</source>
+        <translation>Объём транзакции слишком мал</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction amounts must be positive</source>
+        <translation>Объём транзакции должен быть положителен</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction too large</source>
+        <translation>Транзакция слишком большая</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Использовать UPnP для проброса порта (по умолчанию: 0)</translation>
     </message>
@@ -2700,32 +2733,32 @@ rpcpassword=%s
         <translation>wallet.dat повреждён, спасение данных не удалось</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-50"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Пароль для подключений JSON-RPC</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Разрешить подключения JSON-RPC с указанного IP</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Посылать команды узлу, запущенному на &lt;ip&gt; (по умолчанию: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-120"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Выполнить команду, когда появляется новый блок (%s в команде заменяется на хэш блока)</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+147"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Обновить бумажник до последнего формата</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-21"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Установить размер запаса ключей в &lt;n&gt; (по умолчанию: 100)</translation>
     </message>
@@ -2735,12 +2768,12 @@ rpcpassword=%s
         <translation>Перепроверить цепь блоков на предмет отсутствующих в бумажнике транзакций</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+35"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Использовать OpenSSL (https) для подключений JSON-RPC</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-26"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Файл серверного сертификата (по умолчанию: server.cert)</translation>
     </message>
@@ -2750,22 +2783,22 @@ rpcpassword=%s
         <translation>Приватный ключ сервера (по умолчанию: server.pem)</translation>
     </message>
     <message>
-        <location line="-150"/>
+        <location line="-151"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Разрешённые алгоритмы (по умолчанию: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+165"/>
         <source>This help message</source>
         <translation>Эта справка</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Невозможно привязаться к %s на этом компьютере (bind вернул ошибку %d, %s)</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-91"/>
         <source>Connect through socks proxy</source>
         <translation>Подключаться через socks прокси</translation>
     </message>
@@ -2775,12 +2808,12 @@ rpcpassword=%s
         <translation>Разрешить поиск в DNS для -addnode, -seednode и -connect</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+55"/>
         <source>Loading addresses...</source>
         <translation>Загрузка адресов...</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-35"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Ошибка загрузки wallet.dat: Бумажник поврежден</translation>
     </message>
@@ -2790,22 +2823,22 @@ rpcpassword=%s
         <translation>Ошибка загрузки wallet.dat: бумажник требует более новую версию Bitcoin</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+93"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Необходимо перезаписать бумажник, перезапустите Bitcoin для завершения операции.</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-95"/>
         <source>Error loading wallet.dat</source>
         <translation>Ошибка при загрузке wallet.dat</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Неверный адрес -proxy: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>В параметре -onlynet указана неизвестная сеть: &apos;%s&apos;</translation>
     </message>
@@ -2815,7 +2848,7 @@ rpcpassword=%s
         <translation>В параметре -socks запрошена неизвестная версия: %i</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-96"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Не удаётся разрешить адрес в параметре -bind: &apos;%s&apos;</translation>
     </message>
@@ -2825,7 +2858,7 @@ rpcpassword=%s
         <translation>Не удаётся разрешить адрес в параметре -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Неверное количество в параметре -paytxfee=&lt;кол-во&gt;: &apos;%s&apos;</translation>
     </message>
@@ -2835,17 +2868,17 @@ rpcpassword=%s
         <translation>Неверное количество</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="-6"/>
         <source>Insufficient funds</source>
         <translation>Недостаточно монет</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Loading block index...</source>
         <translation>Загрузка индекса блоков...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Добавить узел для подключения и пытаться поддерживать соединение открытым</translation>
     </message>
@@ -2855,17 +2888,17 @@ rpcpassword=%s
         <translation>Невозможно привязаться к %s на этом компьютере.  Возможно, Bitcoin уже работает.</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+64"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Комиссия на килобайт, добавляемая к вашим транзакциям</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>Загрузка бумажника...</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-52"/>
         <source>Cannot downgrade wallet</source>
         <translation>Не удаётся понизить версию бумажника</translation>
     </message>
@@ -2875,22 +2908,22 @@ rpcpassword=%s
         <translation>Не удаётся записать адрес по умолчанию</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Rescanning...</source>
         <translation>Сканирование...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Done loading</source>
         <translation>Загрузка завершена</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>To use the %s option</source>
         <translation>Чтобы использовать опцию %s</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-74"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>

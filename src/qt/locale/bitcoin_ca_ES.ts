@@ -2124,6 +2124,14 @@ Address: %4
     </message>
 </context>
 <context>
+    <name>WalletModel</name>
+    <message>
+        <location filename="../walletmodel.cpp" line="+193"/>
+        <source>Send Coins</source>
+        <translation>Enviar monedes</translation>
+    </message>
+</context>
+<context>
     <name>WalletView</name>
     <message>
         <location filename="../walletview.cpp" line="+42"/>
@@ -2174,12 +2182,12 @@ Address: %4
         <translation>Versió de Bitcoin</translation>
     </message>
     <message>
-        <location line="+97"/>
+        <location line="+102"/>
         <source>Usage:</source>
         <translation>Ús:</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-29"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Enviar comanda a -servidor o bitcoind</translation>
     </message>
@@ -2189,17 +2197,17 @@ Address: %4
         <translation>Llista d&apos;ordres</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-12"/>
         <source>Get help for a command</source>
         <translation>Obtenir ajuda per a un ordre.</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Options:</source>
         <translation>Opcions:</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Especificat arxiu de configuració (per defecte: bitcoin.conf)</translation>
     </message>
@@ -2214,7 +2222,7 @@ Address: %4
         <translation>Especificar directori de dades</translation>
     </message>
     <message>
-        <location line="-8"/>
+        <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>Establir tamany de la memoria cau en megabytes (per defecte: 25)</translation>
     </message>
@@ -2229,12 +2237,12 @@ Address: %4
         <translation>Mantenir com a molt &lt;n&gt; connexions a peers (per defecte: 125)</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Connectar al node per obtenir les adreces de les connexions, i desconectar</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>Specify your own public address</source>
         <translation>Especificar la teva adreça pública</translation>
     </message>
@@ -2244,7 +2252,7 @@ Address: %4
         <translation>Límit per a desconectar connexions errònies (per defecte: 100)</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-134"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Nombre de segons abans de reconectar amb connexions errònies (per defecte: 86400)</translation>
     </message>
@@ -2264,17 +2272,17 @@ Address: %4
         <translation>Acceptar línia d&apos;ordres i ordres JSON-RPC </translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Executar en segon pla com a programa dimoni i acceptar ordres</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+37"/>
         <source>Use the test network</source>
         <translation>Usar la xarxa de prova</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-112"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Aceptar connexions d&apos;afora (per defecte: 1 si no -proxy o -connect)</translation>
     </message>
@@ -2420,11 +2428,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+1"/>
-        <source>Error: Transaction creation failed!</source>
-        <translation>Error: La ceació de la transacció ha fallat!</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
         <translation>Error: El moneder està blocat, no és possible crear la transacció!</translation>
     </message>
@@ -2509,7 +2512,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Com verificar el bloc (0-4, per defecte 3)</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Not enough file descriptors available.</source>
         <translation type="unfinished"/>
     </message>
@@ -2524,7 +2527,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Estableix el nombre de fils per atendre trucades RPC (per defecte: 4)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+26"/>
         <source>Verifying blocks...</source>
         <translation>Verificant blocs...</translation>
     </message>
@@ -2534,17 +2537,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Verificant moneder...</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-69"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importa blocs de un fitxer blk000??.dat extern</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-76"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+77"/>
         <source>Information</source>
         <translation>&amp;Informació</translation>
     </message>
@@ -2552,6 +2555,16 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <location line="+3"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Adreça -tor invàlida: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+8"/>
@@ -2629,6 +2642,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Reduir l&apos;arxiu debug.log al iniciar el client (per defecte 1 quan no -debug)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>Especificar el temps limit per a un intent de connexió en milisegons (per defecte: 5000)</translation>
@@ -2639,7 +2657,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Error de sistema:</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+4"/>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction amounts must be positive</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction too large</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Utilitza UPnP per a mapejar els ports d&apos;escolta (per defecte: 0)</translation>
     </message>
@@ -2679,32 +2712,32 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>L&apos;arxiu wallet.data és corrupte, el rescat de les dades ha fallat</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-50"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Contrasenya per a connexions JSON-RPC</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Permetre connexions JSON-RPC d&apos;adreces IP específiques</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Enviar ordre al node en execució a &lt;ip&gt; (per defecte: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-120"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Executar orde quan el millor bloc canviï (%s al cmd es reemplaça per un bloc de hash)</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+147"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Actualitzar moneder a l&apos;últim format</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-21"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Establir límit de nombre de claus a &lt;n&gt; (per defecte: 100)</translation>
     </message>
@@ -2714,12 +2747,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Re-escanejar cadena de blocs en cerca de transaccions de moneder perdudes</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+35"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Utilitzar OpenSSL (https) per a connexions JSON-RPC</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-26"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Arxiu del certificat de servidor (per defecte: server.cert)</translation>
     </message>
@@ -2729,22 +2762,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Clau privada del servidor (per defecte: server.pem)</translation>
     </message>
     <message>
-        <location line="-150"/>
+        <location line="-151"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Xifrats acceptats (per defecte: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+165"/>
         <source>This help message</source>
         <translation>Aquest misatge d&apos;ajuda</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Impossible d&apos;unir %s a aquest ordinador (s&apos;ha retornat l&apos;error %d, %s)</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-91"/>
         <source>Connect through socks proxy</source>
         <translation>Connectar a través de socks proxy</translation>
     </message>
@@ -2754,12 +2787,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Permetre consultes DNS per a -addnode, -seednode i -connect</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+55"/>
         <source>Loading addresses...</source>
         <translation>Carregant adreces...</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-35"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Error carregant wallet.dat: Moneder corrupte</translation>
     </message>
@@ -2769,22 +2802,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Error carregant wallet.dat: El moneder requereix una versió de Bitcoin més moderna</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+93"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>El moneder necesita ser re-escrit: re-inicia Bitcoin per a completar la tasca</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-95"/>
         <source>Error loading wallet.dat</source>
         <translation>Error carregant wallet.dat</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Adreça -proxy invalida: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Xarxa desconeguda especificada a -onlynet: &apos;%s&apos;</translation>
     </message>
@@ -2794,7 +2827,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>S&apos;ha demanat una versió desconeguda de -socks proxy: %i</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-96"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>No es pot resoldre l&apos;adreça -bind: &apos;%s&apos;</translation>
     </message>
@@ -2804,7 +2837,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>No es pot resoldre l&apos;adreça -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Quantitat invalida per a -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
@@ -2814,17 +2847,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Quanitat invalida</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="-6"/>
         <source>Insufficient funds</source>
         <translation>Balanç insuficient</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Loading block index...</source>
         <translation>Carregant índex de blocs...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Afegir un node per a connectar&apos;s-hi i intentar mantenir la connexió oberta</translation>
     </message>
@@ -2834,17 +2867,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Impossible d&apos;unir %s en aquest ordinador. Probablement Bitcoin ja estigui en execució.</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+64"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Comisió a afegir per cada  KB de transaccions que enviïs</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>Carregant moneder...</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-52"/>
         <source>Cannot downgrade wallet</source>
         <translation>No es pot reduir la versió del moneder</translation>
     </message>
@@ -2854,22 +2887,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>No es pot escriure l&apos;adreça per defecte</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Rescanning...</source>
         <translation>Re-escanejant...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Done loading</source>
         <translation>Càrrega acabada</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>To use the %s option</source>
         <translation>Utilitza la opció %s</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-74"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>

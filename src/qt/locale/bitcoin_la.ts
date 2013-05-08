@@ -2132,6 +2132,14 @@ Inscriptio: %4
     </message>
 </context>
 <context>
+    <name>WalletModel</name>
+    <message>
+        <location filename="../walletmodel.cpp" line="+193"/>
+        <source>Send Coins</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>WalletView</name>
     <message>
         <location filename="../walletview.cpp" line="+42"/>
@@ -2182,12 +2190,12 @@ Inscriptio: %4
         <translation>Versio de Bitcoin</translation>
     </message>
     <message>
-        <location line="+97"/>
+        <location line="+102"/>
         <source>Usage:</source>
         <translation>Usus:</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-29"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Mitte mandatum ad -server vel bitcoind</translation>
     </message>
@@ -2197,17 +2205,17 @@ Inscriptio: %4
         <translation>Enumera mandata</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-12"/>
         <source>Get help for a command</source>
         <translation>Accipe auxilium pro mandato</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Options:</source>
         <translation>Optiones:</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Specifica configurationis plicam (praedefinitum: bitcoin.conf)</translation>
     </message>
@@ -2222,7 +2230,7 @@ Inscriptio: %4
         <translation>Specifica indicem datorum</translation>
     </message>
     <message>
-        <location line="-8"/>
+        <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>Constitue magnitudinem databasis cache in megabytes (praedefinitum: 25)</translation>
     </message>
@@ -2237,12 +2245,12 @@ Inscriptio: %4
         <translation>Manutene non plures quam &lt;n&gt; conexiones ad paria (praedefinitum: 125)</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Conecta ad nodum acceptare inscriptiones parium, et disconecte</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>Specify your own public address</source>
         <translation>Specifica tuam propriam publicam inscriptionem</translation>
     </message>
@@ -2252,7 +2260,7 @@ Inscriptio: %4
         <translation>Limen pro disconectendo paria improba (praedefinitum: 100)</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-134"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Numerum secundorum prohibere ne paria improba reconectant (praedefinitum: 86400)</translation>
     </message>
@@ -2272,17 +2280,17 @@ Inscriptio: %4
         <translation>Accipe terminalis et JSON-RPC mandata.</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Operare infere sicut daemon et mandata accipe</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+37"/>
         <source>Use the test network</source>
         <translation>Utere rete experimentale</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-112"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Accipe conexiones externas (praedefinitum: 1 nisi -proxy neque -connect)</translation>
     </message>
@@ -2438,11 +2446,6 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
     </message>
     <message>
         <location line="+1"/>
-        <source>Error: Transaction creation failed!</source>
-        <translation>Error: Creare transactionum abortum est!</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
         <translation>Error: Cassidile seratum, non posse transactionem creare!</translation>
     </message>
@@ -2527,7 +2530,7 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Quam perfecta frustorum verificatio est (0-4, praedefinitum: 3)</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Not enough file descriptors available.</source>
         <translation type="unfinished"/>
     </message>
@@ -2542,7 +2545,7 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Constitue numerum filorum ad tractandum RPC postulationes (praedefinitum: 4)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+26"/>
         <source>Verifying blocks...</source>
         <translation>Verificante frusta...</translation>
     </message>
@@ -2552,17 +2555,17 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Verificante cassidilem...</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-69"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importat frusta ab externa plica blk000??.dat</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-76"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+77"/>
         <source>Information</source>
         <translation>Informatio</translation>
     </message>
@@ -2570,6 +2573,16 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <location line="+3"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Inscriptio -tor non valida: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+8"/>
@@ -2647,6 +2660,11 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Diminue plicam debug.log ad initium clientis (praedefinitum: 1 nisi -debug)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>Specifica tempumfati conexionis in millisecundis (praedefinitum: 5000)</translation>
@@ -2657,7 +2675,22 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Systematis error:</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+4"/>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction amounts must be positive</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction too large</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Utere UPnP designare portam auscultandi (praedefinitum: 0)</translation>
     </message>
@@ -2697,32 +2730,32 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>wallet.dat corrupta, salvare abortum est</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-50"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Tessera pro conexionibus JSON-RPC</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Permitte conexionibus JSON-RPC ex inscriptione specificata</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Mitte mandata nodo operanti in &lt;ip&gt; (praedefinitum: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-120"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Pelle mandatum quando optissimum frustum mutat (%s in mandato substituitur ab hash frusti)</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+147"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Progredere cassidile ad formam recentissimam</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-21"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Constitue magnitudinem stagni clavium ad &lt;n&gt; (praedefinitum: 100)</translation>
     </message>
@@ -2732,12 +2765,12 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Iterum perlege catenam frustorum propter absentes cassidilis transactiones</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+35"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Utere OpenSSL (https) pro conexionibus JSON-RPC</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-26"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Plica certificationis daemonis moderantis (praedefinitum: server.cert)</translation>
     </message>
@@ -2747,22 +2780,22 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Clavis privata daemonis moderans (praedefinitum: server.pem)</translation>
     </message>
     <message>
-        <location line="-150"/>
+        <location line="-151"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Acceptabiles cifrae (praedefinitum: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+165"/>
         <source>This help message</source>
         <translation>Hic nuntius auxilii</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Non posse conglutinare ad %s in hoc computatro (conglutinare redidit errorem %d, %s)</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-91"/>
         <source>Connect through socks proxy</source>
         <translation>Conecte per socks vicarium</translation>
     </message>
@@ -2772,12 +2805,12 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Permitte quaerenda DNS pro -addnode, -seednode, et -connect</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+55"/>
         <source>Loading addresses...</source>
         <translation>Legens inscriptiones...</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-35"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Error legendi wallet.dat: Cassidile corruptum</translation>
     </message>
@@ -2787,22 +2820,22 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Error legendi wallet.dat: Cassidili necesse est recentior versio Bitcoin</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+93"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Cassidili necesse erat rescribi: Repelle Bitcoin ut compleas</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-95"/>
         <source>Error loading wallet.dat</source>
         <translation>Error legendi wallet.dat</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Inscriptio -proxy non valida: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Ignotum rete specificatum in -onlynet: &apos;%s&apos;</translation>
     </message>
@@ -2812,7 +2845,7 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Ignota -socks vicarii versio postulata: %i</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-96"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Non posse resolvere -bind inscriptonem: &apos;%s&apos;</translation>
     </message>
@@ -2822,7 +2855,7 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Non posse resolvere -externalip inscriptionem: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Quantitas non valida pro -paytxfee=&lt;quantitas&gt;: &apos;%s&apos;</translation>
     </message>
@@ -2832,17 +2865,17 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Quantitas non valida</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="-6"/>
         <source>Insufficient funds</source>
         <translation>Inopia nummorum</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Loading block index...</source>
         <translation>Legens indicem frustorum...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Adice nodum cui conectere et conare sustinere conexionem apertam</translation>
     </message>
@@ -2852,17 +2885,17 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Non posse conglutinare ad %s in hoc cumputatro.  Bitcoin probabiliter iam operatur.</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+64"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Merces per KB addere ad transactiones tu mittas</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>Legens cassidile...</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-52"/>
         <source>Cannot downgrade wallet</source>
         <translation>Non posse cassidile regredi</translation>
     </message>
@@ -2872,22 +2905,22 @@ exempli gratia: alertnotify=echo %%s | mail -s &quot;Bitcoin Notificatio&quot; a
         <translation>Non posse scribere praedefinitam inscriptionem</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Rescanning...</source>
         <translation>Iterum perlegens...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Done loading</source>
         <translation>Completo lengendi</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>To use the %s option</source>
         <translation>Ut utaris optione %s</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-74"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>

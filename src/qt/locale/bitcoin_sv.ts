@@ -2134,6 +2134,14 @@ Adress: %4
     </message>
 </context>
 <context>
+    <name>WalletModel</name>
+    <message>
+        <location filename="../walletmodel.cpp" line="+193"/>
+        <source>Send Coins</source>
+        <translation>Skicka pengar</translation>
+    </message>
+</context>
+<context>
     <name>WalletView</name>
     <message>
         <location filename="../walletview.cpp" line="+42"/>
@@ -2184,12 +2192,12 @@ Adress: %4
         <translation>Bitcoin version</translation>
     </message>
     <message>
-        <location line="+97"/>
+        <location line="+102"/>
         <source>Usage:</source>
         <translation>Användning:</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-29"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Skicka kommando till -server eller bitcoind</translation>
     </message>
@@ -2199,17 +2207,17 @@ Adress: %4
         <translation>Lista kommandon</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-12"/>
         <source>Get help for a command</source>
         <translation>Få hjälp med ett kommando</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Options:</source>
         <translation>Inställningar:</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Ange konfigurationsfil (förvalt: bitcoin.conf)</translation>
     </message>
@@ -2224,7 +2232,7 @@ Adress: %4
         <translation>Ange katalog för data</translation>
     </message>
     <message>
-        <location line="-8"/>
+        <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>Sätt databas cache storleken i megabyte (förvalt: 25)</translation>
     </message>
@@ -2239,12 +2247,12 @@ Adress: %4
         <translation>Ha som mest &lt;n&gt; anslutningar till andra klienter (förvalt: 125)</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Anslut till en nod för att hämta klientadresser, och koppla från</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>Specify your own public address</source>
         <translation>Ange din egen publika adress</translation>
     </message>
@@ -2254,7 +2262,7 @@ Adress: %4
         <translation>Tröskelvärde för att koppla ifrån klienter som missköter sig (förvalt: 100)</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-134"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Antal sekunder att hindra klienter som missköter sig från att ansluta (förvalt: 86400)</translation>
     </message>
@@ -2274,17 +2282,17 @@ Adress: %4
         <translation>Tillåt kommandon från kommandotolken och JSON-RPC-kommandon</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Kör i bakgrunden som tjänst och acceptera kommandon</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+37"/>
         <source>Use the test network</source>
         <translation>Använd testnätverket</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-112"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Acceptera anslutningar utifrån (förvalt: 1 om ingen -proxy eller -connect)</translation>
     </message>
@@ -2440,11 +2448,6 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+1"/>
-        <source>Error: Transaction creation failed!</source>
-        <translation>Fel: Transaktionen gick inte att skapa!</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
         <translation>Fel: Plånboken är låst, det går ej att skapa en transaktion!</translation>
     </message>
@@ -2529,7 +2532,7 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Hur grundlig blockverifikationen är (0-4, förvalt: 3)</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Not enough file descriptors available.</source>
         <translation>Inte tillräckligt med filbeskrivningar tillgängliga.</translation>
     </message>
@@ -2544,7 +2547,7 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Ange antalet trådar för att hantera RPC anrop (standard: 4)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+26"/>
         <source>Verifying blocks...</source>
         <translation>Verifierar block...</translation>
     </message>
@@ -2554,17 +2557,17 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Verifierar plånboken...</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-69"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importerar block från extern blk000??.dat fil</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-76"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
         <translation>Ange antalet skriptkontrolltrådar (upp till 16, 0 = auto, &lt;0 = lämna så många kärnor lediga, förval: 0)</translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+77"/>
         <source>Information</source>
         <translation>Information</translation>
     </message>
@@ -2572,6 +2575,16 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <location line="+3"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Ogiltig -tor adress: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Ogiltigt belopp för -minrelaytxfee=&lt;belopp&gt;: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Ogiltigt belopp för -mintxfee=&lt;belopp&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2649,6 +2662,11 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Krymp debug.log filen vid klient start (förvalt: 1 vid ingen -debug)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Signing transaction failed</source>
+        <translation>Signering av transaktion misslyckades</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>Ange timeout för uppkoppling i millisekunder (förvalt: 5000)</translation>
@@ -2659,7 +2677,22 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Systemfel:</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+4"/>
+        <source>Transaction amount too small</source>
+        <translation>Transaktions belopp för liten</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction amounts must be positive</source>
+        <translation>Transaktionens belopp måste vara positiva</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction too large</source>
+        <translation>Transaktionen är för stor</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Använd UPnP för att mappa den lyssnande porten (förvalt: 0)</translation>
     </message>
@@ -2699,32 +2732,32 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>wallet.dat korrupt, räddning misslyckades</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-50"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Lösenord för JSON-RPC-anslutningar</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Tillåt JSON-RPC-anslutningar från specifika IP-adresser</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Skicka kommandon till klient på &lt;ip&gt; (förvalt: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-120"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Exekvera kommando när det bästa blocket ändras (%s i cmd är utbytt av blockhash)</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+147"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Uppgradera plånboken till senaste formatet</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-21"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Sätt storleken på nyckelpoolen till &lt;n&gt; (förvalt: 100)</translation>
     </message>
@@ -2734,12 +2767,12 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Sök i blockkedjan efter saknade plånboks transaktioner</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+35"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Använd OpenSSL (https) för JSON-RPC-anslutningar</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-26"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Serverns certifikatfil (förvalt: server.cert)</translation>
     </message>
@@ -2749,22 +2782,22 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Serverns privata nyckel (förvalt: server.pem)</translation>
     </message>
     <message>
-        <location line="-150"/>
+        <location line="-151"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Accepterade krypteringsalgoritmer (förvalt: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+165"/>
         <source>This help message</source>
         <translation>Det här hjälp medelandet</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Det går inte att binda till %s på den här datorn (bind returnerade felmeddelande %d, %s)</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-91"/>
         <source>Connect through socks proxy</source>
         <translation>Anslut genom socks-proxy</translation>
     </message>
@@ -2774,12 +2807,12 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Tillåt DNS-sökningar för -addnode, -seednode och -connect</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+55"/>
         <source>Loading addresses...</source>
         <translation>Laddar adresser...</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-35"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Fel vid inläsningen av wallet.dat: Plånboken är skadad</translation>
     </message>
@@ -2789,22 +2822,22 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Fel vid inläsningen av wallet.dat: Plånboken kräver en senare version av Bitcoin</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+93"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Plånboken behöver skrivas om: Starta om Bitcoin för att färdigställa</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-95"/>
         <source>Error loading wallet.dat</source>
         <translation>Fel vid inläsning av plånboksfilen wallet.dat</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Ogiltig -proxy adress: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Okänt nätverk som anges i -onlynet: &apos;%s&apos;</translation>
     </message>
@@ -2814,7 +2847,7 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Okänd -socks proxy version begärd: %i</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-96"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kan inte matcha -bind adress: &apos;%s&apos;</translation>
     </message>
@@ -2824,7 +2857,7 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Kan inte matcha -externalip adress: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Ogiltigt belopp för -paytxfee=&lt;belopp&gt;:&apos;%s&apos;</translation>
     </message>
@@ -2834,17 +2867,17 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Ogiltig mängd</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="-6"/>
         <source>Insufficient funds</source>
         <translation>Otillräckligt med bitcoins</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Loading block index...</source>
         <translation>Laddar blockindex...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Lägg till en nod att koppla upp mot och försök att hålla anslutningen öppen</translation>
     </message>
@@ -2854,17 +2887,17 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Det går inte att binda till %s på den här datorn. Bitcoin är förmodligen redan igång.</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+64"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Avgift per KB att lägga till på transaktioner du skickar</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>Laddar plånbok...</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-52"/>
         <source>Cannot downgrade wallet</source>
         <translation>Kan inte nedgradera plånboken</translation>
     </message>
@@ -2874,22 +2907,22 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Kan inte skriva standardadress</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Rescanning...</source>
         <translation>Söker igen...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Done loading</source>
         <translation>Klar med laddning</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>To use the %s option</source>
         <translation>Att använda %s alternativet</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-74"/>
         <source>Error</source>
         <translation>Fel</translation>
     </message>
