@@ -378,21 +378,14 @@ void run_ecdsa_sign_verify() {
 
 #ifdef ENABLE_OPENSSL_TESTS
 EC_KEY *get_openssl_key(const secp256k1_num_t *key) {
+    unsigned char privkey[300];
+    int privkeylen;
+    int compr = secp256k1_rand32() & 1;
+    const unsigned char* pbegin = privkey;
     EC_KEY *ec_key = EC_KEY_new_by_curve_name(NID_secp256k1);
-    BN_CTX *ctx = BN_CTX_new();
-    BN_CTX_start(ctx);
-    BIGNUM *priv_key = BN_CTX_get(ctx);
-    unsigned char keyb[32];
-    secp256k1_num_get_bin(keyb, 32, key);
-    BN_bin2bn(keyb, 32, priv_key);
-    const EC_GROUP *group = EC_KEY_get0_group(ec_key);
-    EC_POINT *pub_key = EC_POINT_new(group);
-    EC_POINT_mul(group, pub_key, priv_key, NULL, NULL, ctx);
-    EC_KEY_set_private_key(ec_key, priv_key);
-    EC_KEY_set_public_key(ec_key, pub_key);
-    EC_POINT_free(pub_key);
-    BN_CTX_end(ctx);
-    BN_CTX_free(ctx);
+    assert(secp256k1_ecdsa_privkey_serialize(privkey, &privkeylen, key, compr));
+    assert(d2i_ECPrivateKey(&ec_key, &pbegin, privkeylen));
+    assert(EC_KEY_check_key(ec_key));
     return ec_key;
 }
 
