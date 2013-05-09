@@ -24,7 +24,7 @@ obj/secp256k1.o: $(FILES) src/secp256k1.c include/secp256k1.h
 	$(CC) -fPIC -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DNDEBUG -O2 src/secp256k1.c -c -o obj/secp256k1.o
 
 bench: $(FILES) src/bench.c $(OBJS)
-	$(CC) -fPIC -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) -DNDEBUG -O2 src/bench.c $(OBJS) $(LDFLAGS_EXTRA) -o bench
+	$(CC) -fPIC -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) $(CFLAGS_TEST_EXTRA) -DNDEBUG -O2 src/bench.c $(OBJS) $(LDFLAGS_EXTRA) $(LDFLAGS_TEST_EXTRA) -o bench
 
 tests: $(FILES) src/tests.c $(OBJS)
 	$(CC) -std=c99 $(CFLAGS) $(CFLAGS_EXTRA) $(CFLAGS_TEST_EXTRA) -DVERIFY -fstack-protector-all -O2 -ggdb3 src/tests.c $(OBJS) $(LDFLAGS_EXTRA) $(LDFLAGS_TEST_EXTRA) -o tests
