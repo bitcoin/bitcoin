@@ -1,32 +1,27 @@
-Bitcoin-Qt: Qt4 GUI for Bitcoin
-===============================
+Bitcoin-Qt: Qt4 GUI for Bitcoin - Build Instructions
+====================================================
 
-Build instructions
-===================
-
-Debian
--------
+Debian and Unbuntu
+==================
 
 First, make sure that the required packages for Qt4 development of your
-distribution are installed, these are
+distribution are installed
+
+for Debian and Ubuntu <= 11.10:
 
 ::
 
-for Debian and Ubuntu  <= 11.10 :
-
-::
-
-    apt-get install qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev \
-        libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev \
-        libssl-dev libdb4.8++-dev
+    apt-get install qt4-qmake libqt4-dev build-essential libboost-dev\
+    libboost-system-dev libboost-filesystem-dev\
+    libboost-program-options-dev libboost-thread-dev libssl-dev libdb4.8++-dev
 
 for Ubuntu >= 12.04 (please read the 'Berkely DB version warning' below):
 
 ::
 
-    apt-get install qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev \
-        libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev \
-        libssl-dev libdb++-dev libminiupnpc-dev
+    apt-get install qt4-qmake libqt4-dev build-essential libboost-dev\
+    libboost-system-dev libboost-filesystem-dev libboost-program-options-dev\
+    libboost-thread-dev libssl-dev libdb++-dev libminiupnpc-dev
 
 then execute the following:
 
@@ -42,36 +37,62 @@ An executable named `bitcoin-qt` will be built.
 .. _`Qt Creator`: http://qt-project.org/downloads/
 
 Mac OS X
+========
+
+Download and install  `Apple Xcode`_ for your OS X version and add command line tools if not installed by default.
+
+Download and install either `MacPorts`_ or `HomeBrew`_.
+
+MacPorts
 --------
 
-- Download and install the `Qt Mac OS X SDK`_. It is recommended to also install Apple's Xcode with UNIX tools.
-
-- Download and install either `MacPorts`_ or `HomeBrew`_.
-
-- Execute the following commands in a terminal to get the dependencies using MacPorts:
+Execute the following commands in a terminal to get the dependencies using MacPorts:
 
 ::
 
 	sudo port selfupdate
+	sudo port install qt4-mac
 	sudo port install boost db48 miniupnpc
 
-- Execute the following commands in a terminal to get the dependencies using HomeBrew:
+Confirm that `qmake` is in your path.
+
+HomeBrew
+--------
+
+Execute the following commands in a terminal to get the dependencies using HomeBrew:
 
 ::
 
 	brew update
+	brew install qt --build-from-source
 	brew install boost miniupnpc openssl berkeley-db4
 
-- If using HomeBrew,  edit `bitcoin-qt.pro` to account for library location differences. There's a diff in `contrib/homebrew/bitcoin-qt-pro.patch` that shows what you need to change, or you can just patch by doing
+Confirm that `qmake` is in your path.
 
-        patch -p1 < contrib/homebrew/bitcoin.qt.pro.patch
+Edit `bitcoin-qt.pro` to account for library location differences. There's a diff in `contrib/homebrew/bitcoin-qt-pro.patch` that shows what you need to change, or you can just patch by doing
 
-- Open the bitcoin-qt.pro file in Qt Creator and build as normal (cmd-B)
+::
 
-.. _`Qt Mac OS X SDK`: http://qt-project.org/downloads/
+	patch -p1 < contrib/homebrew/bitcoin.qt.pro.patch
+	
+The OS X Build
+--------------
+
+Execute the following commands in a terminal in the directory containing `bitcoin-qt.pro`:
+
+::
+
+    qmake
+    make
+
+Alternatively, install `Qt Creator`_ and open the `bitcoin-qt.pro` file.
+
+An executable named `bitcoin-qt` will be built.
+
+.. _`Apple Xcode`: https://developer.apple.com/xcode/
 .. _`MacPorts`: http://www.macports.org/install.php
 .. _`HomeBrew`: http://mxcl.github.io/homebrew/
-
+.. _`Qt Creator`: http://qt-project.org/downloads/
 
 Build configuration options
 ============================
