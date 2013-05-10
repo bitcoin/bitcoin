@@ -32,14 +32,19 @@ unsigned int nTransactionsUpdated = 0;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
-uint256 hashGenesisBlock = hashGenesisBlockOfficial;
+
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 20);
 static CBigNum bnProofOfStakeLimit(~uint256(0) >> 24);
-static CBigNum bnProofOfStakeHardLimit(~uint256(0) >> 30);
-static CBigNum bnInitialHashTarget(~uint256(0) >> 20);
+static CBigNum bnProofOfStakeHardLimit(~uint256(0) >> 30); // disabled temporarily, will be used in the future to fix minimum PoS difficulty at 0.25
+
+static CBigNum bnProofOfWorkLimitTestNet(~uint256(0) >> 16);
+static CBigNum bnProofOfStakeLimitTestNet(~uint256(0) >> 20);
+
 unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // minimum age for coin age
 unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // stake age of full weight
 unsigned int nStakeTargetSpacing = 10 * 60; // 10-minute block spacing
+unsigned int nModifierInterval = 6 * 60 * 60; // time to elapse before new modifier is computed
+
 int nCoinbaseMaturity = 500;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
@@ -470,9 +475,11 @@ bool CTransaction::CheckTransaction() const
         const CTxOut& txout = vout[i];
         if (txout.IsEmpty() && !IsCoinBase() && !IsCoinStake())
             return DoS(100, error("CTransaction::CheckTransaction() : txout empty for user transaction"));
+
         // ppcoin: enforce minimum output amount
         if ((!txout.IsEmpty()) && txout.nValue < MIN_TXOUT_AMOUNT)
             return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));
+
         if (txout.nValue > MAX_MONEY)
             return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue too high"));
         nValueOut += txout.nValue;
@@ -513,23 +520,6 @@ int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
     unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
     unsigned int nNewBlockSize = nBlockSize + nBytes;
     int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
-
-    if (fAllowFree)
-    {
-        if (nBlockSize == 1)
-        {
-            // Transactions under 10K are free
-            // (about 4500 BTC if made of 50 BTC inputs)
-            if (nBytes < 10000)
-                nMinFee = 0;
-        }
-        else
-        {
-            // Free transaction area
-            if (nNewBlockSize < 27000)
-                nMinFee = 0;
-        }
-    }
 
     // To limit dust spam, require MIN_TX_FEE/MIN_RELAY_TX_FEE if any output is less than 0.01
     if (nMinFee < nBaseFee)
@@ -946,6 +936,7 @@ uint256 WantedByOrphan(const CBlock* pblockOrphan)
     return pblockOrphan->hashPrevBlock;
 }
 
+// miner's coin base reward based on nBits
 int64 GetProofOfWorkReward(unsigned int nBits)
 {
     CBigNum bnSubsidyLimit = MAX_MINT_PROOF_OF_WORK;
@@ -954,7 +945,7 @@ int64 GetProofOfWorkReward(unsigned int nBits)
     CBigNum bnTargetLimit = bnProofOfWorkLimit;
     bnTargetLimit.SetCompact(bnTargetLimit.GetCompact());
 
-    // ppcoin: subsidy is cut in half every 64x multiply of difficulty
+    // NovaCoin: subsidy is cut in half every 64x multiply of PoW difficulty
     // A reasonably continuous curve is used to avoid shock to market
     // (nSubsidyLimit / nSubsidy) ** 6 == bnProofOfWorkLimit / bnTarget
     //
@@ -982,13 +973,54 @@ int64 GetProofOfWorkReward(unsigned int nBits)
     return min(nSubsidy, MAX_MINT_PROOF_OF_WORK);
 }
 
-// ppcoin: miner's coin stake is rewarded based on coin age spent (coin-days)
-int64 GetProofOfStakeReward(int64 nCoinAge)
+// miner's coin stake reward based on nBits and coin age spent (coin-days)
+int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTime)
 {
-    static int64 nRewardCoinYear = 5 * CENT;  // creation amount per coin-year
+    int64 nRewardCoinYear;
+
+    if(fTestNet || nTime > PROTOCOL_SWITCH_TIME)
+    {
+        // Stage 2 of emission process is PoS-based. It will be active on mainNet since 20 Jun 2013.
+
+        CBigNum bnRewardCoinYearLimit = MAX_MINT_PROOF_OF_STAKE; // Base stake mint rate, 100% year interest
+        CBigNum bnTarget;
+        bnTarget.SetCompact(nBits);
+        CBigNum bnTargetLimit = bnProofOfStakeLimit;
+        bnTargetLimit.SetCompact(bnTargetLimit.GetCompact());
+
+        // NovaCoin: reward for coin-year is cut in half every 64x multiply of PoS difficulty
+        // A reasonably continuous curve is used to avoid shock to market
+        // (nRewardCoinYearLimit / nRewardCoinYear) ** 6 == bnProofOfStakeLimit / bnTarget
+        //
+        // Human readable form:
+        //
+        // nRewardCoinYear = 1 / (posdiff ^ 1/6)
+
+        CBigNum bnLowerBound = 1 * CENT; // Lower interest bound is 1% per year
+        CBigNum bnUpperBound = bnRewardCoinYearLimit;
+        while (bnLowerBound + CENT <= bnUpperBound)
+        {
+            CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
+            if (fDebug && GetBoolArg("-printcreation"))
+                printf("GetProofOfStakeReward() : lower=%"PRI64d" upper=%"PRI64d" mid=%"PRI64d"\n", bnLowerBound.getuint64(), bnUpperBound.getuint64(), bnMidValue.getuint64());
+            if (bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnTargetLimit > bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnTarget)
+                bnUpperBound = bnMidValue;
+            else
+                bnLowerBound = bnMidValue;
+        }
+
+        nRewardCoinYear = bnUpperBound.getuint64();
+        nRewardCoinYear = min((nRewardCoinYear / CENT) * CENT, MAX_MINT_PROOF_OF_STAKE);
+    }
+    else
+    {
+        // Old creation amount per coin-year, 5% fixed stake mint rate
+        nRewardCoinYear = 5 * CENT;
+    }
+
     int64 nSubsidy = nCoinAge * 33 / (365 * 33 + 8) * nRewardCoinYear;
     if (fDebug && GetBoolArg("-printcreation"))
-        printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRI64d"\n", FormatMoney(nSubsidy).c_str(), nCoinAge);
+        printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRI64d" nBits=%d\n", FormatMoney(nSubsidy).c_str(), nCoinAge, nBits);
     return nSubsidy;
 }
 
@@ -1033,10 +1065,10 @@ unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
     {
         // Proof-of-Stake blocks has own target limit since nVersion=3 supermajority on mainNet and always on testNet
         if(fTestNet)
-            bnTargetLimit = bnProofOfStakeHardLimit;
+            bnTargetLimit = bnProofOfStakeLimit;
         else
         {
-            if(fTestNet || (pindexLast->nHeight + 1 > 15000))
+            if(pindexLast->nHeight + 1 > 15000)
                 bnTargetLimit = bnProofOfStakeLimit;
             else if(pindexLast->nHeight + 1 > 14060)
                 bnTargetLimit = bnProofOfStakeHardLimit;
@@ -1048,10 +1080,10 @@ unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
 
     const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake);
     if (pindexPrev->pprev == NULL)
-        return bnInitialHashTarget.GetCompact(); // first block
+        return bnTargetLimit.GetCompact(); // first block
     const CBlockIndex* pindexPrevPrev = GetLastBlockIndex(pindexPrev->pprev, fProofOfStake);
     if (pindexPrevPrev->pprev == NULL)
-        return bnInitialHashTarget.GetCompact(); // second block
+        return bnTargetLimit.GetCompact(); // second block
 
     int64 nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
 
@@ -1381,7 +1413,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
             if (!GetCoinAge(txdb, nCoinAge))
                 return error("ConnectInputs() : %s unable to get coin age for coinstake", GetHash().ToString().substr(0,10).c_str());
             int64 nStakeReward = GetValueOut() - nValueIn;
-            if (nStakeReward > GetProofOfStakeReward(nCoinAge) - GetMinFee() + MIN_TX_FEE)
+            if (nStakeReward > GetProofOfStakeReward(nCoinAge, pindexBlock->nBits, nTime) - GetMinFee() + MIN_TX_FEE)
                 return DoS(100, error("ConnectInputs() : %s stake reward exceeded", GetHash().ToString().substr(0,10).c_str()));
         }
         else
@@ -1736,7 +1768,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     if (!txdb.TxnBegin())
         return error("SetBestChain() : TxnBegin failed");
 
-    if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
+    if (pindexGenesisBlock == NULL && hash == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet))
     {
         txdb.WriteHashBestChain(hash);
         if (!txdb.TxnCommit())
@@ -2111,7 +2143,16 @@ bool CBlock::AcceptBlock()
 
     // ppcoin: check that the block satisfies synchronized checkpoint
     if (!Checkpoints::CheckSync(hash, pindexPrev))
-        return error("AcceptBlock() : rejected by synchronized checkpoint");
+    {
+        if(!GetBoolArg("-nosynccheckpoints", false))
+        {
+            return error("AcceptBlock() : rejected by synchronized checkpoint");
+        }
+        else
+        {
+            strMiscWarning = _("WARNING: syncronized checkpoint violation detected, but skipped!");
+        }
+    }
 
     // Reject block.nVersion < 3 blocks since 95% threshold on mainNet and always on testNet:
     if (nVersion < 3 && ((!fTestNet && nHeight > 14060) || (fTestNet && nHeight > 0)))
@@ -2337,7 +2378,7 @@ bool CBlock::SignBlock(const CKeyStore& keystore)
 // ppcoin: check block signature
 bool CBlock::CheckBlockSignature() const
 {
-    if (GetHash() == hashGenesisBlock)
+    if (GetHash() == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet))
         return vchBlockSig.empty();
 
     vector<valtype> vSolutions;
@@ -2462,10 +2503,12 @@ bool LoadBlockIndex(bool fAllowNew)
         pchMessageStart[2] = 0xc0;
         pchMessageStart[3] = 0xef;
 
-
-        hashGenesisBlock = hashGenesisBlockTestNet;
-        nStakeMinAge = 60 * 60 * 24; // test net min age is 1 day
-        nCoinbaseMaturity = 60;
+        bnProofOfStakeLimit = bnProofOfStakeLimitTestNet; // 0x00000fff PoS base target is fixed in testnet
+        bnProofOfWorkLimit = bnProofOfWorkLimitTestNet; // 0x0000ffff PoW base target is fixed in testnet
+        nStakeMinAge = 2 * 60 * 60; // test net min age is 2 hours
+        nModifierInterval = 20 * 60; // test modifier interval is 20 minutes
+        nCoinbaseMaturity = 10; // test maturity is 10 blocks
+        nStakeTargetSpacing = 3 * 60; // test block spacing is 3 minutes
     }
 
     //
@@ -2506,12 +2549,12 @@ bool LoadBlockIndex(bool fAllowNew)
         block.nVersion = 1;
         block.nTime    = 1360105017;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 1575379;
+        block.nNonce   = !fTestNet ? 1575379 : 46534;
 
         //// debug print
         assert(block.hashMerkleRoot == uint256("0x4cb33b3b6a861dcbc685d3e614a9cafb945738d6833f182855679f2fad02057b"));
         block.print();
-        assert(block.GetHash() == hashGenesisBlock);
+        assert(block.GetHash() == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet));
         assert(block.CheckBlock());
 
         // Start new block file
@@ -2523,7 +2566,7 @@ bool LoadBlockIndex(bool fAllowNew)
             return error("LoadBlockIndex() : genesis block not accepted");
 
         // ppcoin: initialize synchronized checkpoint
-        if (!Checkpoints::WriteSyncCheckpoint(hashGenesisBlock))
+        if (!Checkpoints::WriteSyncCheckpoint((!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet)))
             return error("LoadBlockIndex() : failed to init sync checkpoint");
     }
 
@@ -2711,14 +2754,13 @@ string GetWarnings(string strFor)
 
     if (GetBoolArg("-testsafemode"))
         strRPC = "test";
-/*
+
     // ppcoin: wallet lock warning for minting
     if (strMintWarning != "")
     {
         nPriority = 0;
         strStatusBar = strMintWarning;
     }
-*/
 
     // Misc warnings like out of disk space and clock is wrong
     if (strMiscWarning != "")
@@ -3879,8 +3921,6 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
     // Add our coinbase tx as first transaction
     pblock->vtx.push_back(txNew);
 
-
-
     // Largest block you're willing to create:
     unsigned int nBlockMaxSize = GetArg("-blockmaxsize", MAX_BLOCK_SIZE_GEN/2);
     // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
@@ -3909,7 +3949,7 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
     static int64 nLastCoinStakeSearchTime = GetAdjustedTime();  // only initialized at startup
     CBlockIndex* pindexPrev = pindexBest;
 
-    if (fProofOfStake)  // attemp to find a coinstake
+    if (fProofOfStake)  // attempt to find a coinstake
     {
         pblock->nBits = GetNextTargetRequired(pindexPrev, true);
         CTransaction txCoinStake;

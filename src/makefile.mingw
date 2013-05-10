@@ -16,11 +16,11 @@ LIBPATHS= \
  -L"C:\openssl-1.0.1c-mgw"
 
 LIBS= \
- -l boost_system-mgw45-mt-s-1_50 \
- -l boost_filesystem-mgw45-mt-s-1_50 \
- -l boost_program_options-mgw45-mt-s-1_50 \
- -l boost_thread-mgw45-mt-s-1_50 \
- -l boost_chrono-mgw45-mt-s-1_50 \
+ -l boost_system-mgw44-mt-1_53 \
+ -l boost_filesystem-mgw44-mt-1_53 \
+ -l boost_program_options-mgw44-mt-1_53 \
+ -l boost_thread-mgw44-mt-1_53 \
+ -l boost_chrono-mgw44-mt-1_53 \
  -l db_cxx \
  -l ssl \
  -l crypto

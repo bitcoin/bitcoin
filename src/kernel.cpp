@@ -12,16 +12,14 @@ using namespace std;
 extern int nStakeMaxAge;
 extern int nStakeTargetSpacing;
 
-// Modifier interval: time to elapse before new modifier is computed
-// Set to 6-hour for production network and 20-minute for test network
-unsigned int nModifierInterval = MODIFIER_INTERVAL;
-
 // Hard checkpoints of stake modifiers to ensure they are deterministic
 static std::map<int, unsigned int> mapStakeModifierCheckpoints =
     boost::assign::map_list_of
-    ( 0, 0x0e00670bu )
-    ( 6000, 0xb7cbc5d3u )
-    ( 12661, 0x5d84115du )
+        ( 0, 0x0e00670bu )
+        ( 6000, 0xb7cbc5d3u )
+        ( 9690, 0x97dcdafau )
+        ( 12661, 0x5d84115du )
+        ( 19600, 0xdded1b8du )
     ;
 
 // Get the last stake modifier and its generation time from a given block
@@ -367,7 +365,7 @@ bool CheckCoinStakeTimestamp(int64 nTimeBlock, int64 nTimeTx)
 // Get stake modifier checksum
 unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex)
 {
-    assert (pindex->pprev || pindex->GetBlockHash() == hashGenesisBlock);
+    assert (pindex->pprev || pindex->GetBlockHash() == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet));
     // Hash previous checksum with flags, hashProofOfStake and nStakeModifier
     CDataStream ss(SER_GETHASH, 0);
     if (pindex->pprev)

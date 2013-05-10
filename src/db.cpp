@@ -847,7 +847,7 @@ bool CTxDB::LoadBlockIndexGuts()
             pindexNew->nNonce         = diskindex.nNonce;
 
             // Watch for genesis block
-            if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
+            if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet))
                 pindexGenesisBlock = pindexNew;
 
             if (!pindexNew->CheckIndex())
