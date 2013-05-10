@@ -68,6 +68,17 @@ Mac OS X
 
 - Open the bitcoin-qt.pro file in Qt Creator and build as normal (cmd-B)
 
+::
+
+- QT Creator does not run on 32 bit OS X (eg Snow Leopard). QT4 needs to be ported.
+
+    sudo port install qt4-mac
+	
+- In the top directory which contains bitcoin-qt.pro
+
+    qmake
+    make
+
 .. _`Qt Mac OS X SDK`: http://qt-project.org/downloads/
 .. _`MacPorts`: http://www.macports.org/install.php
 .. _`HomeBrew`: http://mxcl.github.io/homebrew/
