@@ -2132,6 +2132,14 @@ Aadress: %4⏎</translation>
     </message>
 </context>
 <context>
+    <name>WalletModel</name>
+    <message>
+        <location filename="../walletmodel.cpp" line="+193"/>
+        <source>Send Coins</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>WalletView</name>
     <message>
         <location filename="../walletview.cpp" line="+42"/>
@@ -2182,12 +2190,12 @@ Aadress: %4⏎</translation>
         <translation>Bitcoini versioon</translation>
     </message>
     <message>
-        <location line="+97"/>
+        <location line="+102"/>
         <source>Usage:</source>
         <translation>Kasutus:</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-29"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Saada käsklus -serverile või bitcoindile</translation>
     </message>
@@ -2197,17 +2205,17 @@ Aadress: %4⏎</translation>
         <translation>Käskluste loetelu</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-12"/>
         <source>Get help for a command</source>
         <translation>Käskluste abiinfo</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Options:</source>
         <translation>Valikud:</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Täpsusta sätete fail (vaikimisi: bitcoin.conf)</translation>
     </message>
@@ -2222,7 +2230,7 @@ Aadress: %4⏎</translation>
         <translation>Täpsusta andmekataloog</translation>
     </message>
     <message>
-        <location line="-8"/>
+        <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>Sea andmebaasi vahemälu suurus MB (vaikeväärtus: 25)</translation>
     </message>
@@ -2237,12 +2245,12 @@ Aadress: %4⏎</translation>
         <translation>Säilita vähemalt &lt;n&gt; ühendust peeridega (vaikeväärtus: 125)</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Peeri aadressi saamiseks ühendu korraks node&apos;iga</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>Specify your own public address</source>
         <translation>Täpsusta enda avalik aadress</translation>
     </message>
@@ -2252,7 +2260,7 @@ Aadress: %4⏎</translation>
         <translation>Ulakate peeride valulävi (vaikeväärtus: 100)</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-134"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Mitme sekundi pärast ulakad peerid tagasi võivad tulla (vaikeväärtus: 86400)</translation>
     </message>
@@ -2272,17 +2280,17 @@ Aadress: %4⏎</translation>
         <translation>Luba käsurea ning JSON-RPC käsklusi</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Tööta taustal ning aktsepteeri käsklusi</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+37"/>
         <source>Use the test network</source>
         <translation>Testvõrgu kasutamine</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-112"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Luba välisühendusi (vaikeväärtus: 1 kui puudub -proxy või -connect)</translation>
     </message>
@@ -2438,11 +2446,6 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <location line="+1"/>
-        <source>Error: Transaction creation failed!</source>
-        <translation>Tõrge: Tehingu loomine ebaõnnestus!</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
         <translation>Tõrge: Rahakott on lukus, tehingu loomine ei ole võimalik!</translation>
     </message>
@@ -2527,7 +2530,7 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Blokkide kontrollimise põhjalikkus (0-4, vaikeväärtus: 3)</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Not enough file descriptors available.</source>
         <translation type="unfinished"/>
     </message>
@@ -2542,7 +2545,7 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Määra RPC kõnede haldurite arv (vaikeväärtus: 4)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+26"/>
         <source>Verifying blocks...</source>
         <translation>Kontrollin blokke...</translation>
     </message>
@@ -2552,17 +2555,17 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Kontrollin rahakotti...</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-69"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Impordi blokid välisest blk000??.dat failist</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-76"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+77"/>
         <source>Information</source>
         <translation>Informatsioon</translation>
     </message>
@@ -2570,6 +2573,16 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <location line="+3"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Vigane -tor aadress: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+8"/>
@@ -2647,6 +2660,11 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Kahanda programmi käivitamisel debug.log faili (vaikeväärtus: 1, kui ei ole -debug)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>Sea ühenduse timeout millisekundites (vaikeväärtus: 5000)</translation>
@@ -2657,7 +2675,22 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Süsteemi tõrge:</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+4"/>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction amounts must be positive</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction too large</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Kasuta kuulatava pordi määramiseks UPnP ühendust (vaikeväärtus: 0)</translation>
     </message>
@@ -2697,32 +2730,32 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>wallet.dat fail on katki, päästmine ebaõnnestus</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-50"/>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC ühenduste salasõna</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>JSON-RPC ühenduste lubamine kindla IP pealt</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Saada käsklusi node&apos;ile IP&apos;ga &lt;ip&gt; (vaikeväärtus: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-120"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Käivita käsklus, kui parim plokk muutub (käskluse %s asendatakse ploki hash&apos;iga)</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+147"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Uuenda rahakott uusimasse vormingusse</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-21"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Sea võtmete hulgaks &lt;n&gt; (vaikeväärtus: 100)</translation>
     </message>
@@ -2732,12 +2765,12 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Otsi ploki jadast rahakoti kadunud tehinguid</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+35"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Kasuta JSON-RPC ühenduste jaoks OpenSSL&apos;i (https)</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-26"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Serveri sertifikaadifail (vaikeväärtus: server.cert)</translation>
     </message>
@@ -2747,22 +2780,22 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Serveri privaatvõti (vaikeväärtus: server.pem)</translation>
     </message>
     <message>
-        <location line="-150"/>
+        <location line="-151"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Lubatud šiffrid (vaikeväärtus: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+165"/>
         <source>This help message</source>
         <translation>Käesolev abitekst</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Selle arvutiga ei ole võimalik siduda %s külge (katse nurjus %d, %s tõttu)</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-91"/>
         <source>Connect through socks proxy</source>
         <translation>Ühendu läbi turva proxi</translation>
     </message>
@@ -2772,12 +2805,12 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>-addnode, -seednode ja -connect tohivad kasutada DNS lookup&apos;i</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+55"/>
         <source>Loading addresses...</source>
         <translation>Aadresside laadimine...</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-35"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Viga wallet.dat käivitamisel. Vigane rahakkott</translation>
     </message>
@@ -2787,22 +2820,22 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Viga wallet.dat käivitamisel: Rahakott nõuab Bitcoini uusimat versiooni</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+93"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Rahakott tuli ümberkirjutada: toimingu lõpetamiseks taaskäivita Bitcoin</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-95"/>
         <source>Error loading wallet.dat</source>
         <translation>Viga wallet.dat käivitamisel</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Vigane -proxi aadress: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Kirjeldatud tundmatu võrgustik -onlynet&apos;is: &apos;%s&apos;</translation>
     </message>
@@ -2812,7 +2845,7 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Küsitud tundmatu -socks proxi versioon: %i</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-96"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Tundmatu -bind aadress: &apos;%s&apos;</translation>
     </message>
@@ -2822,7 +2855,7 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Tundmatu -externalip aadress: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>-paytxfee=&lt;amount&gt; jaoks vigane kogus: &apos;%s&apos;</translation>
     </message>
@@ -2832,17 +2865,17 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Kehtetu summa</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="-6"/>
         <source>Insufficient funds</source>
         <translation>Liiga suur summa</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Loading block index...</source>
         <translation>Klotside indeksi laadimine...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Lisa node ning hoia ühendus avatud</translation>
     </message>
@@ -2852,17 +2885,17 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>%s&apos;ga ei ole võimalik sellest arvutist siduda. Bitcoin juba töötab.</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+64"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Minu saadetavate tehingute lisatasu KB kohta</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>Rahakoti laadimine...</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-52"/>
         <source>Cannot downgrade wallet</source>
         <translation>Rahakoti vanandamine ebaõnnestus</translation>
     </message>
@@ -2872,22 +2905,22 @@ nt: alertnotify=echo %%s | email -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Tõrge vaikimisi aadressi kirjutamisel</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Rescanning...</source>
         <translation>Üleskaneerimine...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Done loading</source>
         <translation>Laetud</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>To use the %s option</source>
         <translation>%s valiku kasutamine</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-74"/>
         <source>Error</source>
         <translation>Tõrge</translation>
     </message>

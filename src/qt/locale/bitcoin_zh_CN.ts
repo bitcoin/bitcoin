@@ -2134,6 +2134,14 @@ Address: %4
     </message>
 </context>
 <context>
+    <name>WalletModel</name>
+    <message>
+        <location filename="../walletmodel.cpp" line="+193"/>
+        <source>Send Coins</source>
+        <translation>发送比特币</translation>
+    </message>
+</context>
+<context>
     <name>WalletView</name>
     <message>
         <location filename="../walletview.cpp" line="+42"/>
@@ -2184,12 +2192,12 @@ Address: %4
         <translation>比特币版本</translation>
     </message>
     <message>
-        <location line="+97"/>
+        <location line="+102"/>
         <source>Usage:</source>
         <translation>使用：</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-29"/>
         <source>Send command to -server or bitcoind</source>
         <translation>发送命令到服务器或者 bitcoind
 </translation>
@@ -2201,19 +2209,19 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-12"/>
         <source>Get help for a command</source>
         <translation>获得某条命令的帮助
 </translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Options:</source>
         <translation>选项：
 </translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>指定配置文件 (默认为 bitcoin.conf)
 </translation>
@@ -2231,7 +2239,7 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="-8"/>
+        <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>设置数据库缓冲区大小 (缺省: 25MB)</translation>
     </message>
@@ -2246,12 +2254,12 @@ Address: %4
         <translation>最大连接数 &lt;n&gt;  (缺省: 125)</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>连接一个节点并获取对端地址, 然后断开连接</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>Specify your own public address</source>
         <translation>指定您的公共地址</translation>
     </message>
@@ -2261,7 +2269,7 @@ Address: %4
         <translation>Threshold for disconnecting misbehaving peers (缺省: 100)</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-134"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Number of seconds to keep misbehaving peers from reconnecting (缺省: 86400)</translation>
     </message>
@@ -2282,20 +2290,20 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>在后台运行并接受命令
 
 </translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+37"/>
         <source>Use the test network</source>
         <translation>使用测试网络
 </translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-112"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>接受来自外部的连接 (缺省: 如果不带 -proxy or -connect 参数设置为1)</translation>
     </message>
@@ -2451,11 +2459,6 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+1"/>
-        <source>Error: Transaction creation failed!</source>
-        <translation>错误：创建交易失败！</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
         <translation>错误：钱包被锁定，无法创建交易！</translation>
     </message>
@@ -2540,7 +2543,7 @@ rpcpassword=%s
         <translation>How thorough the block verification is (0-4, default: 3)</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Not enough file descriptors available.</source>
         <translation type="unfinished"/>
     </message>
@@ -2555,7 +2558,7 @@ rpcpassword=%s
         <translation>设置使用调用服务 RPC 的线程数量（默认：4）</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+26"/>
         <source>Verifying blocks...</source>
         <translation>正在验证数据库的完整性...</translation>
     </message>
@@ -2565,17 +2568,17 @@ rpcpassword=%s
         <translation>正在检测钱包的完整性...</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-69"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>从blk000??.dat文件导入数据块</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-76"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+77"/>
         <source>Information</source>
         <translation>信息</translation>
     </message>
@@ -2583,6 +2586,16 @@ rpcpassword=%s
         <location line="+3"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>非法的 -tor 地址：&apos;%s&apos; </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+8"/>
@@ -2660,6 +2673,11 @@ rpcpassword=%s
         <translation>客户端启动时压缩debug.log文件(缺省：no-debug模式时为1)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>设置连接超时时间(缺省：5000毫秒)</translation>
@@ -2670,7 +2688,22 @@ rpcpassword=%s
         <translation>系统错误：</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+4"/>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction amounts must be positive</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction too large</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>使用UPnp映射监听端口(缺省: 0)</translation>
     </message>
@@ -2711,35 +2744,35 @@ rpcpassword=%s
         <translation>钱包文件wallet.dat损坏，抢救备份失败</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-50"/>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC连接密码
 </translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>允许从指定IP接受到的JSON-RPC连接
 </translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>向IP地址为 &lt;ip&gt; 的节点发送指令 (缺省: 127.0.0.1)
 </translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-120"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>当最佳数据块变化时执行命令 (命令行中的 %s 会被替换成数据块哈希值)</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+147"/>
         <source>Upgrade wallet to latest format</source>
         <translation>将钱包升级到最新的格式</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-21"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>设置密钥池大小为 &lt;n&gt; (缺省: 100)
 </translation>
@@ -2751,12 +2784,12 @@ rpcpassword=%s
 </translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+35"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>为 JSON-RPC 连接使用 OpenSSL (https)连接</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-26"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>服务器证书 (默认为 server.cert)
 </translation>
@@ -2768,24 +2801,24 @@ rpcpassword=%s
 </translation>
     </message>
     <message>
-        <location line="-150"/>
+        <location line="-151"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>可接受的加密器 (默认为 TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)
 </translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+165"/>
         <source>This help message</source>
         <translation>该帮助信息
 </translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>无法绑定本机端口 %s  (返回错误消息 %d, %s)</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-91"/>
         <source>Connect through socks proxy</source>
         <translation>通过 socks 代理连接</translation>
     </message>
@@ -2795,12 +2828,12 @@ rpcpassword=%s
         <translation>使用 -addnode, -seednode 和 -connect选项时允许DNS查找</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+55"/>
         <source>Loading addresses...</source>
         <translation>正在加载地址...</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-35"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>wallet.dat钱包文件加载错误：钱包损坏</translation>
     </message>
@@ -2810,22 +2843,22 @@ rpcpassword=%s
         <translation>wallet.dat钱包文件加载错误：请升级到最新Bitcoin客户端</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+93"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>钱包文件需要重写：请退出并重新启动Bitcoin客户端</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-95"/>
         <source>Error loading wallet.dat</source>
         <translation>wallet.dat钱包文件加载错误</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>非法的代理地址: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>被指定的是未知网络 -onlynet: &apos;%s&apos;</translation>
     </message>
@@ -2835,7 +2868,7 @@ rpcpassword=%s
         <translation>被指定的是未知socks代理版本: %i</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-96"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>无法解析 -bind 端口地址: &apos;%s&apos;</translation>
     </message>
@@ -2845,7 +2878,7 @@ rpcpassword=%s
         <translation>无法解析 -externalip 地址: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>非法金额 -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
@@ -2855,17 +2888,17 @@ rpcpassword=%s
         <translation>金额不对</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="-6"/>
         <source>Insufficient funds</source>
         <translation>金额不足</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Loading block index...</source>
         <translation>加载数据块索引...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>添加节点并与其保持连接</translation>
     </message>
@@ -2875,17 +2908,17 @@ rpcpassword=%s
         <translation>无法在本机绑定 %s 端口 . 比特币客户端软件可能已经在运行.</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+64"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>每发送1KB交易所需的费用</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>正在加载钱包...</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-52"/>
         <source>Cannot downgrade wallet</source>
         <translation>无法降级钱包格式</translation>
     </message>
@@ -2895,22 +2928,22 @@ rpcpassword=%s
         <translation>无法写入缺省地址</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Rescanning...</source>
         <translation>正在重新扫描...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Done loading</source>
         <translation>加载完成</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>To use the %s option</source>
         <translation>使用 %s 选项</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-74"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
