@@ -3,9 +3,9 @@ NovaCoin official development tree
 
 NovaCoin - a hybrid scrypt PoW + PoS based cryptocurrency.
 
-* 10 minute PoW block targets
-* 10 minute PoS block targets
-* The PoW subsidy halves every x64 multiply of difficulty
+* 10 minute block spacing
+* The PoW subsidy halves every x64 multiply of PoW difficulty
+* The PoS interest halves every x64 multiply of PoS difficulty
 * Maximum PoW reward is 100 coins
 * ~ 2 billion total coins
 
