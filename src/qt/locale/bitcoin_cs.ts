@@ -2133,6 +2133,14 @@ Adresa: %4
     </message>
 </context>
 <context>
+    <name>WalletModel</name>
+    <message>
+        <location filename="../walletmodel.cpp" line="+193"/>
+        <source>Send Coins</source>
+        <translation>Pošli mince</translation>
+    </message>
+</context>
+<context>
     <name>WalletView</name>
     <message>
         <location filename="../walletview.cpp" line="+42"/>
@@ -2183,12 +2191,12 @@ Adresa: %4
         <translation>Verze Bitcoinu</translation>
     </message>
     <message>
-        <location line="+97"/>
+        <location line="+102"/>
         <source>Usage:</source>
         <translation>Užití:</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-29"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Poslat příkaz pro -server nebo bitcoind</translation>
     </message>
@@ -2198,17 +2206,17 @@ Adresa: %4
         <translation>Výpis příkazů</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-12"/>
         <source>Get help for a command</source>
         <translation>Získat nápovědu pro příkaz</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Options:</source>
         <translation>Možnosti:</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Konfigurační soubor (výchozí: bitcoin.conf)</translation>
     </message>
@@ -2223,7 +2231,7 @@ Adresa: %4
         <translation>Adresář pro data</translation>
     </message>
     <message>
-        <location line="-8"/>
+        <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>Nastavit velikost databázové vyrovnávací paměti v megabajtech (výchozí: 25)</translation>
     </message>
@@ -2238,12 +2246,12 @@ Adresa: %4
         <translation>Povolit nejvýše &lt;n&gt; připojení k uzlům (výchozí: 125)</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Připojit se k uzlu, získat adresy jeho protějšků a odpojit se</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>Specify your own public address</source>
         <translation>Specifikuj svou veřejnou adresu</translation>
     </message>
@@ -2253,7 +2261,7 @@ Adresa: %4
         <translation>Práh pro odpojování zlobivých uzlů (výchozí: 100)</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-134"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Doba ve vteřinách, po kterou se nebudou moci zlobivé uzly znovu připojit (výchozí: 86400)</translation>
     </message>
@@ -2273,17 +2281,17 @@ Adresa: %4
         <translation>Akceptovat příkazy z příkazové řádky a přes JSON-RPC</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Běžet na pozadí jako démon a akceptovat příkazy</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+37"/>
         <source>Use the test network</source>
         <translation>Použít testovací síť (testnet)</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-112"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Přijímat spojení zvenčí (výchozí: 1, pokud není zadáno -proxy nebo -connect)</translation>
     </message>
@@ -2439,11 +2447,6 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+1"/>
-        <source>Error: Transaction creation failed!</source>
-        <translation>Chyba: Vytvoření transakce selhalo!</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
         <translation>Chyba: Peněženka je zamčená, nemohu vytvořit transakci!</translation>
     </message>
@@ -2528,7 +2531,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Jak moc důkladná má být verifikace bloků (0-4, výchozí: 3)</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Not enough file descriptors available.</source>
         <translation>Je nedostatek deskriptorů souborů.</translation>
     </message>
@@ -2543,7 +2546,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nastavení počtu vláken pro servisní RPC volání (výchozí: 4)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+26"/>
         <source>Verifying blocks...</source>
         <translation>Ověřuji bloky...</translation>
     </message>
@@ -2553,17 +2556,17 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Kontroluji peněženku...</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-69"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importovat bloky z externího souboru blk000??.dat</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-76"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
         <translation>Nastavení počtu vláken pro verifikaci skriptů (max. 16, 0 = automaticky, &lt;0 = nechat daný počet jader volný, výchozí: 0)</translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+77"/>
         <source>Information</source>
         <translation>Informace</translation>
     </message>
@@ -2571,6 +2574,16 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <location line="+3"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Neplatná -tor adresa: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Neplatná částka pro -minrelaytxfee=&lt;částka&gt;: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Neplatná částka pro -mintxfee=&lt;částka&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2648,6 +2661,11 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Při spuštění klienta zmenšit soubor debug.log (výchozí: 1, pokud není zadáno -debug)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Signing transaction failed</source>
+        <translation>Podepisování transakce selhalo</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>Zadej časový limit spojení v milisekundách (výchozí: 5000)</translation>
@@ -2658,7 +2676,22 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Systémová chyba: </translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+4"/>
+        <source>Transaction amount too small</source>
+        <translation>Částka v transakci je příliš malá</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction amounts must be positive</source>
+        <translation>Částky v transakci musí být kladné</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction too large</source>
+        <translation>Transace je příliš velká</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Použít UPnP k namapování naslouchacího portu (výchozí: 0)</translation>
     </message>
@@ -2698,32 +2731,32 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Soubor wallet.dat je poškozen, jeho záchrana se nezdařila</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-50"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Heslo pro JSON-RPC spojení</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Povolit JSON-RPC spojení ze specifikované IP adresy</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Posílat příkazy uzlu běžícím na &lt;ip&gt; (výchozí: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-120"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Spustit příkaz, když se změní nejlepší blok (%s se v příkazu nahradí hashem bloku)</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+147"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Převést peněženku na nejnovější formát</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-21"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Nastavit zásobník klíčů na velikost &lt;n&gt; (výchozí: 100)</translation>
     </message>
@@ -2733,12 +2766,12 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Přeskenovat řetězec bloků na chybějící transakce tvé pěněženky</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+35"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Použít OpenSSL (https) pro JSON-RPC spojení</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-26"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Soubor se serverovým certifikátem (výchozí: server.cert)</translation>
     </message>
@@ -2748,22 +2781,22 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Soubor se serverovým soukromým klíčem (výchozí: server.pem)</translation>
     </message>
     <message>
-        <location line="-150"/>
+        <location line="-151"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Akceptovatelné šifry (výchozí: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+165"/>
         <source>This help message</source>
         <translation>Tato nápověda</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Nedaří se mi připojit na %s na tomhle počítači (operace bind vrátila chybu %d, %s)</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-91"/>
         <source>Connect through socks proxy</source>
         <translation>Připojit se přes socks proxy</translation>
     </message>
@@ -2773,12 +2806,12 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Povolit DNS dotazy pro -addnode (přidání uzlu), -seednode a -connect (připojení)</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+55"/>
         <source>Loading addresses...</source>
         <translation>Načítám adresy...</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-35"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Chyba při načítání wallet.dat: peněženka je poškozená</translation>
     </message>
@@ -2788,22 +2821,22 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Chyba při načítání wallet.dat: peněženka vyžaduje novější verzi Bitcoinu</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+93"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Soubor s peněženkou potřeboval přepsat: restartuj Bitcoin, aby se operace dokončila</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-95"/>
         <source>Error loading wallet.dat</source>
         <translation>Chyba při načítání wallet.dat</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Neplatná -proxy adresa: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>V -onlynet byla uvedena neznámá síť: &apos;%s&apos;</translation>
     </message>
@@ -2813,7 +2846,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>V -socks byla požadována neznámá verze proxy: %i</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-96"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Nemohu přeložit -bind adresu: &apos;%s&apos;</translation>
     </message>
@@ -2823,7 +2856,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nemohu přeložit -externalip adresu: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Neplatná částka pro -paytxfee=&lt;částka&gt;: &apos;%s&apos;</translation>
     </message>
@@ -2833,17 +2866,17 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Neplatná částka</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="-6"/>
         <source>Insufficient funds</source>
         <translation>Nedostatek prostředků</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Loading block index...</source>
         <translation>Načítám index bloků...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Přidat uzel, ke kterému se připojit a snažit se spojení udržet</translation>
     </message>
@@ -2853,17 +2886,17 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nedaří se mi připojit na %s na tomhle počítači. Bitcoin už pravděpodobně jednou běží.</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+64"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Poplatek za kB, který se přidá ke každé odeslané transakci</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>Načítám peněženku...</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-52"/>
         <source>Cannot downgrade wallet</source>
         <translation>Nemohu převést peněženku do staršího formátu</translation>
     </message>
@@ -2873,22 +2906,22 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nemohu napsat výchozí adresu</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Rescanning...</source>
         <translation>Přeskenovávám...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Done loading</source>
         <translation>Načítání dokončeno</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>To use the %s option</source>
         <translation>K použití volby %s</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-74"/>
         <source>Error</source>
         <translation>Chyba</translation>
     </message>
