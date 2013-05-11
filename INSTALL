@@ -1,9 +1,9 @@
 Building Bitcoin
 
-See doc/readme-qt.rst for instructions on building Bitcoin QT,
+See doc/readme-qt.rst for instructions on building SolidCoin QT,
 the intended-for-end-users, nice-graphical-interface, reference
-implementation of Bitcoin.
+implementation of SolidCoin.
 
-See doc/build-*.txt for instructions on building bitcoind,
+See doc/build-*.txt for instructions on building solidcoind,
 the intended-for-services, no-graphical-interface, reference
-implementation of Bitcoin.
+implementation of SolidCoin.
