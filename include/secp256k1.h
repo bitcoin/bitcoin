@@ -58,6 +58,17 @@ int secp256k1_ecdsa_sign_compact(const unsigned char *msg, int msglen,
                                  const unsigned char *nonce,
                                  int *recid);
 
+/** Recover an ECDSA public key from a compact signature.
+ *  Returns: 1: public key succesfully recovered (which guarantees a correct signature).
+ *           0: otherwise.
+ *  In:      msg:        the message assumed to be signed
+ *           msglen:     the length of the message
+ *           compressed: whether to recover a compressed or uncompressed pubkey
+ *           recid:      the recovery id (as returned by ecdsa_sign_compact)
+ *  Out:     pubkey:     pointer to a 33 or 65 byte array to put the pubkey.
+ *           pubkeylen:  pointer to an int that will contain the pubkey length.
+ */
+
 int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen,
                                     const unsigned char *sig64,
                                     unsigned char *pubkey, int *pubkeylen,
@@ -68,7 +79,7 @@ int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen,
  *           0: secret key is invalid
  *  In:      seckey: pointer to a 32-byte secret key
  */
-int secp256j1_ecdsa_seckey_verify(const unsigned char *seckey);
+int secp256k1_ecdsa_seckey_verify(const unsigned char *seckey);
 
 /** Just validate a public key.
  *  Returns: 1: valid public key
@@ -96,6 +107,9 @@ int secp256k1_ecdsa_privkey_export(const unsigned char *seckey,
 
 int secp256k1_ecdsa_privkey_import(unsigned char *seckey,
                                    const unsigned char *privkey, int privkeylen);
+
+int secp256k1_ecdsa_privkey_tweak(unsigned char *seckey, const unsigned char *tweak);
+int secp256k1_ecdsa_pubkey_tweak(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak);
 
 #ifdef __cplusplus
 }
