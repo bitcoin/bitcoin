@@ -8,7 +8,7 @@
 #include "sync.h"
 #include "ui_interface.h"
 #include "base58.h"
-#include "bitcoinrpc.h"
+#include "olcoinrpc.h"
 #include "db.h"
 
 #undef printf
