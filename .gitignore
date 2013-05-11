@@ -1,7 +1,7 @@
 src/*.exe
-src/bitcoin
-src/bitcoind
-src/test_bitcoin
+src/olcoin
+src/olcoind
+src/test_olcoin
 src/build.h
 .*.swp
 *.*~*
@@ -10,11 +10,11 @@ src/build.h
 *.orig
 *.o
 *.patch
-.bitcoin
+.olcoin
 #compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
+olcoin-qt
 #resources cpp
 qrc_*.cpp
 #qt creator
