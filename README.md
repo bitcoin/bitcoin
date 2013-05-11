@@ -1,7 +1,7 @@
-SolidCoin
+OLCoin
 
-SolidCoin - a hybrid scrypt PoW + PoS based cryptocurrency. Implementing advances made by pocopoco and intergrating fixes
-and developments discussed at the NNU DEvelopers Conference.
+OlCoin - a hybrid scrypt PoW + PoS based cryptocurrency. Implementing advances made by pocopoco and intergrating fixes
+and developments discussed at the NNU DEvelopers Conference. It is my first try at solving the alternate currency issue.
 
 * 15 minute PoW block targets
 * 15 minute PoS block targets
@@ -22,7 +22,7 @@ or are controversial.
 
 The master branch is regularly built and tested, but is not guaranteed
 to be completely stable. Tags are regularly created to indicate new
-official, stable release versions of NovaCoin.
+official, stable release versions of OLCoin.
 
 Feature branches are created when there are major new features being
 worked on by several people.
