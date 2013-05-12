@@ -1,3 +1,9 @@
+bitcoin (0.8.1-natty3) natty; urgency=low
+
+  * New pixmaps
+
+ -- Jonas Schnelli <jonas.schnelli@include7.ch>  Mon, 13 May 2013 16:14:00 +0100
+
 bitcoin (0.8.1-natty2) natty; urgency=low
 
   * Remove dumb broken launcher script
