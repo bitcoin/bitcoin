@@ -2069,9 +2069,8 @@ bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerk
     if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return state.DoS(100, error("CheckBlock() : size limits failed"));
 
-    // Special short-term limits to avoid 10,000 BDB lock limit:
-    if (GetBlockTime() >= 1363867200 && // start enforcing 21 March 2013, noon GMT
-        GetBlockTime() < 1368576000)  // stop enforcing 15 May 2013 00:00:00
+    // Litecoin: Special short-term limits to avoid 10,000 BDB lock limit:
+    if (GetBlockTime() < 1376568000)  // stop enforcing 15 August 2013 00:00:00
     {
         // Rule is: #unique txids referenced <= 4,500
         // ... to prevent 10,000 BDB lock exhaustion on old clients
@@ -2085,7 +2084,7 @@ bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerk
         }
         size_t nTxids = setTxIn.size();
         if (nTxids > 4500)
-            return error("CheckBlock() : 15 May maxlocks violation");
+            return error("CheckBlock() : 15 August maxlocks violation");
     }
 
     // Check proof of work matches claimed amount
