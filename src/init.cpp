@@ -864,6 +864,11 @@ bool AppInit2(boost::thread_group& threadGroup)
                     break;
                 }
 
+                // If the loaded chain has a wrong genesis, bail out immediately
+                // (we're likely using a testnet datadir, or the other way around).
+                if (!mapBlockIndex.empty() && pindexGenesisBlock == NULL)
+                    return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
+
                 // Initialize the block index (no-op if non-empty database was already loaded)
                 if (!InitBlockIndex()) {
                     strLoadError = _("Error initializing block database");
