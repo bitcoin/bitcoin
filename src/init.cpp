@@ -869,6 +869,12 @@ bool AppInit2(boost::thread_group& threadGroup)
                 if (!mapBlockIndex.empty() && pindexGenesisBlock == NULL)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
 
+                // Check for changed -txindex state (only necessary if we are not reindexing anyway)
+                if (!fReindex && fTxIndex != GetBoolArg("-txindex", false)) {
+                    strLoadError = _("You need to rebuild the database using -reindex to change -txindex");
+                    break;
+                }
+
                 // Initialize the block index (no-op if non-empty database was already loaded)
                 if (!InitBlockIndex()) {
                     strLoadError = _("Error initializing block database");
@@ -892,7 +898,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             // first suggest a reindex
             if (!fReset) {
                 bool fRet = uiInterface.ThreadSafeMessageBox(
-                    strLoadError + ".\n" + _("Do you want to rebuild the block database now?"),
+                    strLoadError + ".\n\n" + _("Do you want to rebuild the block database now?"),
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
                     fReindex = true;
@@ -905,9 +911,6 @@ bool AppInit2(boost::thread_group& threadGroup)
             }
         }
     }
-
-    if (mapArgs.count("-txindex") && fTxIndex != GetBoolArg("-txindex", false))
-        return InitError(_("You need to rebuild the databases using -reindex to change -txindex"));
 
     // as LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill bitcoin-qt during the last operation. If so, exit.
