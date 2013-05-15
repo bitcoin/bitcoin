@@ -1,5 +1,5 @@
 diff --git a/bitcoin-qt.pro b/bitcoin-qt.pro
-index d938c07..e1dd4ec 100644
+index a217836..bb6d954 100644
 --- a/bitcoin-qt.pro
 +++ b/bitcoin-qt.pro
 @@ -353,7 +353,7 @@
@@ -11,7 +11,7 @@ index d938c07..e1dd4ec 100644
  }
  
  isEmpty(BDB_LIB_SUFFIX) {
-@@ -361,15 +361,15 @@
+@@ -361,17 +361,21 @@
  }
  
  isEmpty(BDB_INCLUDE_PATH) {
@@ -29,4 +29,10 @@ index d938c07..e1dd4ec 100644
 +    macx:BOOST_INCLUDE_PATH = /usr/local/opt/boost/include
  }
  
++macx:OPENSSL_LIB_PATH = /usr/local/opt/openssl
++
++macx:OPENSSL_LIB_PATH = /usr/local/opt/openssl/include
++
  win32:DEFINES += WIN32
+ win32:RC_FILE = src/qt/res/bitcoin-qt.rc
+ 
