@@ -217,7 +217,7 @@ if __name__ == '__main__':
 	if 'host' not in settings:
 		settings['host'] = '127.0.0.1'
 	if 'port' not in settings:
-		settings['port'] = 8332
+		settings['port'] = 9332
 	if 'threads' not in settings:
 		settings['threads'] = 1
 	if 'hashmeter' not in settings:
