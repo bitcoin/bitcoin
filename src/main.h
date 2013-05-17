@@ -52,6 +52,8 @@ static const int COINBASE_MATURITY = 100;
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
 /** Maximum number of script-checking threads allowed */
 static const int MAX_SCRIPTCHECK_THREADS = 16;
+/** Default amount of block size reserved for high-priority transactions (in bytes) */
+static const int DEFAULT_BLOCK_PRIORITY_SIZE = 27000;
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
 #else
@@ -262,12 +264,11 @@ struct CDiskTxPos : public CDiskBlockPos
 
 enum GetMinFee_mode
 {
-    GMF_BLOCK,
     GMF_RELAY,
     GMF_SEND,
 };
 
-int64 GetMinFee(const CTransaction& tx, unsigned int nBlockSize = 1, bool fAllowFree = true, enum GetMinFee_mode mode = GMF_BLOCK);
+int64 GetMinFee(const CTransaction& tx, bool fAllowFree, enum GetMinFee_mode mode);
 
 //
 // Check transaction inputs, and make sure any
