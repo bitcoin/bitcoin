@@ -1,4 +1,4 @@
-Name YaCoin
+Name OlCoin
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
@@ -6,11 +6,11 @@ SetCompressor /SOLID lzma
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
 !define VERSION 0.3.0
-!define COMPANY "Yet Another Coin (YaCoin) project"
+!define COMPANY "One last Coin (OlCoin) project"
 !define URL http://www.TODO: .ru/
 
 # MUI Symbol Definitions
-!define MUI_ICON "../share/pixmaps/yacoin.ico"
+!define MUI_ICON "../share/pixmaps/olcoin.ico"
 !define MUI_WELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard.bmp"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
@@ -19,8 +19,8 @@ SetCompressor /SOLID lzma
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
-!define MUI_STARTMENUPAGE_DEFAULTFOLDER YaCoin
-#!define MUI_FINISHPAGE_RUN $INSTDIR\yacoin-qt.exe
+!define MUI_STARTMENUPAGE_DEFAULTFOLDER OlCoin
+#!define MUI_FINISHPAGE_RUN $INSTDIR\olcoin-qt.exe
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard.bmp"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
@@ -45,14 +45,14 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile yacoin-0.3.0-win32-setup.exe
-InstallDir $PROGRAMFILES\YaCoin
+OutFile olcoin-0.3.0-win32-setup.exe
+InstallDir $PROGRAMFILES\OlCoin
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
 VIProductVersion 0.3.0.0
-VIAddVersionKey ProductName YaCoin
+VIAddVersionKey ProductName OlCoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
 VIAddVersionKey CompanyWebsite "${URL}"
@@ -66,18 +66,18 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    #File ../release/yacoin-qt.exe
+    #File ../release/olcoin-qt.exe
     File /oname=license.txt ../COPYING
     File /oname=readme.txt ../doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
-    File ../src/yacoind.exe
+    File ../src/olcoind.exe
     SetOutPath $INSTDIR\src
     File /r /x *.exe /x *.o ../src\*.*
     SetOutPath $INSTDIR
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 
     # Remove old wxwidgets-based-bitcoin executable and locales:
-    #Delete /REBOOTOK $INSTDIR\yacoin.exe
+    #Delete /REBOOTOK $INSTDIR\olcoin.exe
     #RMDir /r /REBOOTOK $INSTDIR\locale
 SectionEnd
 
@@ -87,7 +87,7 @@ Section -post SEC0001
     WriteUninstaller $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     CreateDirectory $SMPROGRAMS\$StartMenuGroup
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall YaCoin.lnk" $INSTDIR\uninstall.exe
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall olCoin.lnk" $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_END
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayName "$(^Name)"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayVersion "${VERSION}"
@@ -120,7 +120,7 @@ done${UNSECTION_ID}:
 
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
-    #Delete /REBOOTOK $INSTDIR\yacoin-qt.exe
+    #Delete /REBOOTOK $INSTDIR\olcoin-qt.exe
     Delete /REBOOTOK $INSTDIR\license.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
@@ -130,7 +130,7 @@ SectionEnd
 
 Section -un.post UNSEC0001
     DeleteRegKey HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall YaCoin.lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall olCoin.lnk"
     #Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Bitcoin.lnk"
     #Delete /REBOOTOK "$SMSTARTUP\Bitcoin.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
@@ -140,7 +140,7 @@ Section -un.post UNSEC0001
     DeleteRegValue HKCU "${REGKEY}" Path
     DeleteRegKey /IfEmpty HKCU "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKCU "${REGKEY}"
-    DeleteRegKey HKCR "yacoin"
+    DeleteRegKey HKCR "olcoin"
     RmDir /REBOOTOK $SMPROGRAMS\$StartMenuGroup
     RmDir /REBOOTOK $INSTDIR
     Push $R0

@@ -39,7 +39,7 @@ static CBigNum bnProofOfStakeHardLimit(~uint256(0) >> 30);
 static CBigNum bnInitialHashTarget(~uint256(0) >> 20);
 unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // minimum age for coin age
 unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // stake age of full weight
-unsigned int nStakeTargetSpacing = 1 * 60; // DIFF: 1-minute block spacing
+unsigned int nStakeTargetSpacing = 1 * 90; // DIFF: 1-minute block spacing
 int64 nChainStartTime = 1367991200;
 int nCoinbaseMaturity = 500;
 CBlockIndex* pindexGenesisBlock = NULL;
@@ -2432,7 +2432,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
         string strMessage = _("Warning: Disk space is low!");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
-        uiInterface.ThreadSafeMessageBox(strMessage, "YaCoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
+        uiInterface.ThreadSafeMessageBox(strMessage, "OlCoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
         StartShutdown();
         return false;
     }
@@ -2537,7 +2537,7 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = nChainStartTime + 20;
+        block.nTime    = 1368634334 + 86400;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
         block.nNonce   = 127357;
 
