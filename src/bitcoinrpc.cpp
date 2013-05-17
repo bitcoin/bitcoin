@@ -245,6 +245,7 @@ static const CRPCCommand vRPCCommands[] =
     { "signmessage",            &signmessage,            false,     false },
     { "verifymessage",          &verifymessage,          false,     false },
     { "getwork",                &getwork,                true,      false },
+    { "getworkex",              &getworkex,              true,      false },
     { "listaccounts",           &listaccounts,           false,     false },
     { "settxfee",               &settxfee,               false,     false },
     { "getblocktemplate",       &getblocktemplate,       true,      false },
@@ -889,7 +890,7 @@ void JSONRequest::parse(const Value& valRequest)
     if (valMethod.type() != str_type)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
     strMethod = valMethod.get_str();
-    if (strMethod != "getwork" && strMethod != "getblocktemplate")
+    if (strMethod != "getwork" && strMethod != "getworkex" && strMethod != "getblocktemplate")
         printf("ThreadRPCServer method=%s\n", strMethod.c_str());
 
     // Parse params
