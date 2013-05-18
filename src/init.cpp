@@ -183,6 +183,16 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
+        if (mapArgs.count("-v") || mapArgs.count("--version"))
+        {
+            // Identify version of bitcoind
+            std::string strVersion = _("Bitcoin version") + " " + FormatFullVersion() + "\n";
+
+            fprintf(stdout, "%s", strVersion.c_str());
+            return false;
+        }
+
+
         // Command-line RPC
         for (int i = 1; i < argc; i++)
             if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:"))
@@ -288,6 +298,7 @@ std::string HelpMessage()
 {
     string strUsage = _("Options:") + "\n" +
         "  -?                     " + _("This help message") + "\n" +
+        "  -v                     " + _("Show version and exit") + "\n" +
         "  -conf=<file>           " + _("Specify configuration file (default: bitcoin.conf)") + "\n" +
         "  -pid=<file>            " + _("Specify pid file (default: bitcoind.pid)") + "\n" +
         "  -gen                   " + _("Generate coins (default: 0)") + "\n" +
