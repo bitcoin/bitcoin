@@ -4,7 +4,7 @@
 JNIEXPORT jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ecdsa_1verify
   (JNIEnv* env, jclass classObject, jobject byteBufferObject)
 {
-	unsigned char* data = (unsigned char*) env->GetDirectBufferAddress(byteBufferObject);
+	unsigned char* data = (unsigned char*) (*env)->GetDirectBufferAddress(env, byteBufferObject);
 	int sigLen = *((int*)(data + 32));
 	int pubLen = *((int*)(data + 32 + 4));
 
