@@ -67,7 +67,7 @@ Threads
 
 - ThreadGetMyExternalIP : Determines outside-the-firewall IP address, sends addr message to connected peers when it determines it. 
 
-- ThreadSocketHandler : Sends/Receives data from peers on port 9333.
+- ThreadSocketHandler : Sends/Receives data from peers on port 8333.
  
 - ThreadMessageHandler : Higher-level message handling (sending and receiving).
  
