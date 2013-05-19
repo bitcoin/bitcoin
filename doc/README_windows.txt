@@ -1,4 +1,4 @@
-NovaCoin 0.4.0 BETA
+NovaCoin 0.4.2 BETA
 
 Copyright (c) 2013 NovaCoin Developers
 Copyright (c) 2011-2013 PPCoin Developers
@@ -11,9 +11,9 @@ cryptographic software written by Eric Young (eay@cryptsoft.com).
 
 Intro
 -----
-NovaCoin is a free open source project derived from PPCoin, with
+NovaCoin is a free open source project derived from Bitcoin, with
 the goal of providing a long-term energy-efficient scrypt-based crypto-currency.
-Built on the foundation of Bitcoin, innovations such as proof-of-stake and scrypt
+Built on the foundation of Bitcoin and PPCoin, innovations such as proof-of-stake and scrypt
 help further advance the field of crypto-currency.
 
 
