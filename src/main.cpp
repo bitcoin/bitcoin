@@ -33,16 +33,16 @@ unsigned int nTransactionsUpdated = 0;
 map<uint256, CBlockIndex*> mapBlockIndex;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 
-static CBigNum bnProofOfWorkLimit(~uint256(0) >> 20);
-static CBigNum bnProofOfStakeLimit(~uint256(0) >> 24);
-static CBigNum bnProofOfStakeHardLimit(~uint256(0) >> 30); // disabled temporarily, will be used in the future to fix minimum PoS difficulty at 0.25
+CBigNum bnProofOfWorkLimit(~uint256(0) >> 20); // "standard" scrypt target limit for proof of work, results with 0,000244140625 proof-of-work difficulty
+CBigNum bnProofOfStakeLegacyLimit(~uint256(0) >> 24); // proof of stake target limit from block #15000 and until 20 June 2013, results with 0,00390625 proof of stake difficulty
+CBigNum bnProofOfStakeLimit(~uint256(0) >> 27); // proof of stake target limit since 20 June 2013, equal to 0.03125  proof of stake difficulty
+CBigNum bnProofOfStakeHardLimit(~uint256(0) >> 30); // disabled temporarily, will be used in the future to fix minimal proof of stake difficulty at 0.25
 
-static CBigNum bnProofOfWorkLimitTestNet(~uint256(0) >> 16);
-static CBigNum bnProofOfStakeLimitTestNet(~uint256(0) >> 20);
+CBigNum bnProofOfWorkLimitTestNet(~uint256(0) >> 16);
 
-unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // minimum age for coin age
-unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // stake age of full weight
-unsigned int nStakeTargetSpacing = 10 * 60; // 10-minute block spacing
+unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // 30 days as minimum age for coin age
+unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // 90 days as stake age of full weight
+unsigned int nStakeTargetSpacing = 10 * 60; // 10-minute stakes spacing
 unsigned int nModifierInterval = 6 * 60 * 60; // time to elapse before new modifier is computed
 
 int nCoinbaseMaturity = 500;
@@ -936,10 +936,26 @@ uint256 WantedByOrphan(const CBlock* pblockOrphan)
     return pblockOrphan->hashPrevBlock;
 }
 
+// select stake target limit according to hard-coded conditions
+CBigNum static GetProofOfStakeLimit(int nHeight, unsigned int nTime)
+{
+    if(fTestNet) // separate proof of stake target limit for testnet
+        return bnProofOfStakeLimit;
+    if(nTime > TARGETS_SWITCH_TIME) // 27 bits since 20 July 2013
+        return bnProofOfStakeLimit;
+    if(nHeight + 1 > 15000) // 24 bits since block 15000
+        return bnProofOfStakeLegacyLimit;
+    if(nHeight + 1 > 14060) // 31 bits since block 14060 until 15000
+        return bnProofOfStakeHardLimit;
+
+    return bnProofOfWorkLimit; // return bnProofOfWorkLimit of none matched
+}
+
 // miner's coin base reward based on nBits
 int64 GetProofOfWorkReward(unsigned int nBits)
 {
     CBigNum bnSubsidyLimit = MAX_MINT_PROOF_OF_WORK;
+
     CBigNum bnTarget;
     bnTarget.SetCompact(nBits);
     CBigNum bnTargetLimit = bnProofOfWorkLimit;
@@ -978,14 +994,14 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
 {
     int64 nRewardCoinYear;
 
-    if(fTestNet || nTime > PROTOCOL_SWITCH_TIME)
+    if(fTestNet || nTime > STAKE_SWITCH_TIME)
     {
         // Stage 2 of emission process is PoS-based. It will be active on mainNet since 20 Jun 2013.
 
         CBigNum bnRewardCoinYearLimit = MAX_MINT_PROOF_OF_STAKE; // Base stake mint rate, 100% year interest
         CBigNum bnTarget;
         bnTarget.SetCompact(nBits);
-        CBigNum bnTargetLimit = bnProofOfStakeLimit;
+        CBigNum bnTargetLimit = GetProofOfStakeLimit(0, nTime);
         bnTargetLimit.SetCompact(bnTargetLimit.GetCompact());
 
         // NovaCoin: reward for coin-year is cut in half every 64x multiply of PoS difficulty
@@ -1025,7 +1041,18 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
 }
 
 static const int64 nTargetTimespan = 7 * 24 * 60 * 60;  // one week
-static const int64 nTargetSpacingWorkMax = 12 * nStakeTargetSpacing; // 2-hour
+
+// get proof of work blocks max spacing according to hard-coded conditions
+int64 static GetTargetSpacingWorkMax(int nHeight, unsigned int nTime)
+{
+    if(nTime > TARGETS_SWITCH_TIME)
+        return 3 * nStakeTargetSpacing; // 30 minutes on mainNet since 20 Jul 2013 00:00:00
+
+    if(fTestNet)
+        return 3 * nStakeTargetSpacing; // 15 minutes on testNet
+
+    return 12 * nStakeTargetSpacing; // 2 hours otherwise
+}
 
 //
 // minimum amount of work that could possibly be required nTime after
@@ -1057,23 +1084,9 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
     return pindex;
 }
 
-unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
+unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
-    CBigNum bnTargetLimit = bnProofOfWorkLimit;
-
-    if(fProofOfStake)
-    {
-        // Proof-of-Stake blocks has own target limit since nVersion=3 supermajority on mainNet and always on testNet
-        if(fTestNet)
-            bnTargetLimit = bnProofOfStakeLimit;
-        else
-        {
-            if(pindexLast->nHeight + 1 > 15000)
-                bnTargetLimit = bnProofOfStakeLimit;
-            else if(pindexLast->nHeight + 1 > 14060)
-                bnTargetLimit = bnProofOfStakeHardLimit;
-        }
-    }
+    CBigNum bnTargetLimit = !fProofOfStake ? bnProofOfWorkLimit : GetProofOfStakeLimit(pindexLast->nHeight, pindexLast->nTime);
 
     if (pindexLast == NULL)
         return bnTargetLimit.GetCompact(); // genesis block
@@ -1091,7 +1104,7 @@ unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
     // ppcoin: retarget with exponential moving toward target spacing
     CBigNum bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
-    int64 nTargetSpacing = fProofOfStake? nStakeTargetSpacing : min(nTargetSpacingWorkMax, (int64) nStakeTargetSpacing * (1 + pindexLast->nHeight - pindexPrev->nHeight));
+    int64 nTargetSpacing = fProofOfStake? nStakeTargetSpacing : min(GetTargetSpacingWorkMax(pindexLast->nHeight, pindexLast->nTime), (int64) nStakeTargetSpacing * (1 + pindexLast->nHeight - pindexPrev->nHeight));
     int64 nInterval = nTargetTimespan / nTargetSpacing;
     bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
     bnNew /= ((nInterval + 1) * nTargetSpacing);
@@ -2032,6 +2045,24 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
     if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return DoS(100, error("CheckBlock() : size limits failed"));
 
+    // Special short-term limits to avoid 10,000 BDB lock limit:
+    if (GetBlockTime() < LOCKS_SWITCH_TIME)
+    {
+        // Rule is: #unique txids referenced <= 4,500
+        // ... to prevent 10,000 BDB lock exhaustion on old clients
+        set<uint256> setTxIn;
+        for (size_t i = 0; i < vtx.size(); i++)
+        {
+            setTxIn.insert(vtx[i].GetHash());
+            if (i == 0) continue; // skip coinbase txin
+            BOOST_FOREACH(const CTxIn& txin, vtx[i].vin)
+                    setTxIn.insert(txin.prevout.hash);
+        }
+        size_t nTxids = setTxIn.size();
+        if (nTxids > 4500)
+            return error("CheckBlock() : maxlocks violation");
+    }
+
     // Check proof of work matches claimed amount
     if (fCheckPOW && IsProofOfWork() && !CheckProofOfWork(GetHash(), nBits))
         return DoS(50, error("CheckBlock() : proof of work failed"));
@@ -2503,12 +2534,11 @@ bool LoadBlockIndex(bool fAllowNew)
         pchMessageStart[2] = 0xc0;
         pchMessageStart[3] = 0xef;
 
-        bnProofOfStakeLimit = bnProofOfStakeLimitTestNet; // 0x00000fff PoS base target is fixed in testnet
-        bnProofOfWorkLimit = bnProofOfWorkLimitTestNet; // 0x0000ffff PoW base target is fixed in testnet
+        bnProofOfWorkLimit = bnProofOfWorkLimitTestNet; // 16 bits PoW target limit for testnet
         nStakeMinAge = 2 * 60 * 60; // test net min age is 2 hours
         nModifierInterval = 20 * 60; // test modifier interval is 20 minutes
         nCoinbaseMaturity = 10; // test maturity is 10 blocks
-        nStakeTargetSpacing = 3 * 60; // test block spacing is 3 minutes
+        nStakeTargetSpacing = 5 * 60; // test block spacing is 5 minutes
     }
 
     //
@@ -2527,14 +2557,24 @@ bool LoadBlockIndex(bool fAllowNew)
         if (!fAllowNew)
             return false;
 
-        // Genesis Block:
-        // CBlock(hash=000000000019d6, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=4a5e1e, nTime=1231006505, nBits=1d00ffff, nNonce=2083236893, vtx=1)
-        //   CTransaction(hash=4a5e1e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
-        //     CTxIn(COutPoint(000000, -1), coinbase 04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73)
-        //     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
-        //   vMerkleTree: 4a5e1e
-
         // Genesis block
+
+        // MainNet:
+
+        //CBlock(hash=00000a060336cbb72fe969666d337b87198b1add2abaa59cca226820b32933a4, ver=1, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, hashMerkleRoot=4cb33b3b6a861dcbc685d3e614a9cafb945738d6833f182855679f2fad02057b, nTime=1360105017, nBits=1e0fffff, nNonce=1575379, vtx=1, vchBlockSig=)
+        //  Coinbase(hash=4cb33b3b6a, nTime=1360105017, ver=1, vin.size=1, vout.size=1, nLockTime=0)
+        //    CTxIn(COutPoint(0000000000, 4294967295), coinbase 04ffff001d020f274468747470733a2f2f626974636f696e74616c6b2e6f72672f696e6465782e7068703f746f7069633d3133343137392e6d736731353032313936236d736731353032313936)
+        //    CTxOut(empty)
+        //  vMerkleTree: 4cb33b3b6a
+
+        // TestNet:
+
+        //CBlock(hash=0000c763e402f2436da9ed36c7286f62c3f6e5dbafce9ff289bd43d7459327eb, ver=1, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, hashMerkleRoot=4cb33b3b6a861dcbc685d3e614a9cafb945738d6833f182855679f2fad02057b, nTime=1360105017, nBits=1f00ffff, nNonce=46534, vtx=1, vchBlockSig=)
+        //  Coinbase(hash=4cb33b3b6a, nTime=1360105017, ver=1, vin.size=1, vout.size=1, nLockTime=0)
+        //    CTxIn(COutPoint(0000000000, 4294967295), coinbase 04ffff001d020f274468747470733a2f2f626974636f696e74616c6b2e6f72672f696e6465782e7068703f746f7069633d3133343137392e6d736731353032313936236d736731353032313936)
+        //    CTxOut(empty)
+        //  vMerkleTree: 4cb33b3b6a
+
         const char* pszTimestamp = "https://bitcointalk.org/index.php?topic=134179.msg1502196#msg1502196";
         CTransaction txNew;
         txNew.nTime = 1360105017;
@@ -3925,6 +3965,10 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
     unsigned int nBlockMaxSize = GetArg("-blockmaxsize", MAX_BLOCK_SIZE_GEN/2);
     // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
     nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SIZE-1000), nBlockMaxSize));
+
+    // Special compatibility rule before 20 Aug: limit size to 500,000 bytes:
+    if (GetAdjustedTime() < LOCKS_SWITCH_TIME)
+        nBlockMaxSize = std::min(nBlockMaxSize, (unsigned int)(MAX_BLOCK_SIZE_GEN));
 
     // How much of the block should be dedicated to high-priority transactions,
     // included regardless of the fees they pay

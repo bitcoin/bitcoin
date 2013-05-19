@@ -36,7 +36,9 @@ static const int64 MAX_MONEY = 2000000000 * COIN;
 static const int64 MAX_MINT_PROOF_OF_WORK = 100 * COIN;
 static const int64 MAX_MINT_PROOF_OF_STAKE = 1 * COIN;
 static const int64 MIN_TXOUT_AMOUNT = MIN_TX_FEE;
-static const unsigned int PROTOCOL_SWITCH_TIME = 1371686400; // 20 Jun 2013 00:00:00
+static const unsigned int STAKE_SWITCH_TIME = 1371686400; // 20 Jun 2013 00:00:00
+static const unsigned int TARGETS_SWITCH_TIME = 1374278400; // 20 Jul 2013 00:00:00
+static const unsigned int LOCKS_SWITCH_TIME = 1376956800; // 20 Aug 2013 00:00:00
 
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
@@ -832,7 +834,7 @@ class CBlock
 {
 public:
     // header
-    static const int CURRENT_VERSION=4;
+    static const int CURRENT_VERSION=5;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
