@@ -26,41 +26,41 @@ the rest of the network your transactions may never confirm.
 Bitcoin-Qt changes
 ------------------
 
-* New icon and splash screen
-* Improve reporting of synchronization process
-* Remove hardcoded fee recommendations
-* Improve metadata of executable on MacOSX and Windows
-* Move export button to individual tabs instead of toolbar
-* Add "send coins" command to context menu in address book
-* Add "copy txid" command to copy transaction IDs from transaction overview
-* Save & restore window size and position when showing & hiding window
-* New translations: Arabic (ar), Bosnian (bs), Catalan (ca), Welsh (cy),
-  Esperanto (eo), Interlingua (la), Latvian (lv) and many improvements
-  to current translations
+- New icon and splash screen
+- Improve reporting of synchronization process
+- Remove hardcoded fee recommendations
+- Improve metadata of executable on MacOSX and Windows
+- Move export button to individual tabs instead of toolbar
+- Add "send coins" command to context menu in address book
+- Add "copy txid" command to copy transaction IDs from transaction overview
+- Save & restore window size and position when showing & hiding window
+- New translations: Arabic (ar), Bosnian (bs), Catalan (ca), Welsh (cy), Esperanto (eo), Interlingua (la), Latvian (lv) and many improvements to current translations
 
 MacOSX:
-* OSX support for click-to-pay (bitcoin:) links
-* Fix GUI disappearing problem on MacOSX (issue #1522)
+
+- OSX support for click-to-pay (bitcoin:) links
+- Fix GUI disappearing problem on MacOSX (issue #1522)
 
 Linux/Unix:
-* Copy addresses to middle-mouse-button clipboard
+
+- Copy addresses to middle-mouse-button clipboard
 
 
 Command-line options
 --------------------
 
-* -walletnotify will call a command on receiving transactions that affect the wallet.
-* -alertnotify will call a command on receiving an alert from the network.
-* -par now takes a negative number, to leave a certain amount of cores free.
+* `-walletnotify` will call a command on receiving transactions that affect the wallet.
+* `-alertnotify` will call a command on receiving an alert from the network.
+* `-par` now takes a negative number, to leave a certain amount of cores free.
 
 JSON-RPC API changes
 --------------------
 
-* listunspent now lists account and address infromation.
-* getinfo now also returns the time adjustment estimated from your peers.
-* getpeerinfo now returns bytessent, bytesrecv and syncnode.
-* gettxoutsetinfo returns statistics about the unspent transaction output database.
-* gettxout returns information about a specific unspent transaction output.
+* `listunspent` now lists account and address infromation.
+* `getinfo` now also returns the time adjustment estimated from your peers.
+* `getpeerinfo` now returns bytessent, bytesrecv and syncnode.
+* `gettxoutsetinfo` returns statistics about the unspent transaction output database.
+* `gettxout` returns information about a specific unspent transaction output.
 
 
 Networking changes
@@ -76,5 +76,5 @@ Wallet compatibility/rescuing
 -----------------------------
 
 * Cases where wallets cannot be opened in another version/installation should be reduced.
-* -salvagewallet now works for encrypted wallets.
+* `-salvagewallet` now works for encrypted wallets.
 
