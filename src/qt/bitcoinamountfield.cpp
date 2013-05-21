@@ -60,7 +60,9 @@ bool BitcoinAmountField::validate()
     bool valid = true;
     if (amount->value() == 0.0)
         valid = false;
-    if (valid && !BitcoinUnits::parse(currentUnit, text(), 0))
+    else if (!BitcoinUnits::parse(currentUnit, text(), 0))
+        valid = false;
+    else if (amount->value() > BitcoinUnits::maxAmount(currentUnit))
         valid = false;
 
     setValid(valid);
@@ -115,7 +117,7 @@ qint64 BitcoinAmountField::value(bool *valid_out) const
 {
     qint64 val_out = 0;
     bool valid = BitcoinUnits::parse(currentUnit, text(), &val_out);
-    if(valid_out)
+    if (valid_out)
     {
         *valid_out = valid;
     }
@@ -145,12 +147,12 @@ void BitcoinAmountField::unitChanged(int idx)
     amount->setDecimals(BitcoinUnits::decimals(currentUnit));
     amount->setMaximum(qPow(10, BitcoinUnits::amountDigits(currentUnit)) - qPow(10, -amount->decimals()));
 
-    if(currentUnit == BitcoinUnits::uBTC)
+    if (currentUnit == BitcoinUnits::uBTC)
         amount->setSingleStep(0.01);
     else
         amount->setSingleStep(0.001);
 
-    if(valid)
+    if (valid)
     {
         // If value was valid, re-place it in the widget with the new unit
         setValue(currentValue);
