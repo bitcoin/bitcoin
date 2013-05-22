@@ -1870,7 +1870,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     }
 
     // Update best block in wallet (so we can detect restored wallets)
-    if (!fIsInitialDownload)
+    if ((pindexNew->nHeight % 20160) == 0 || (!fIsInitialDownload && (pindexNew->nHeight % 144) == 0))
     {
         const CBlockLocator locator(pindexNew);
         ::SetBestChain(locator);
