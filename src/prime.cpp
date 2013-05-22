@@ -10,10 +10,10 @@ std::vector<unsigned int> vPrimes;
 
 void GeneratePrimeTable()
 {
-    static const unsigned int nPrimeTableLimit = 1000000;
+    static const unsigned int nPrimeTableLimit = nMaxSieveSize;
     vPrimes.clear();
     // Generate prime table using sieve of Eratosthenes
-    std::vector<unsigned int> vfComposite (nPrimeTableLimit, false);
+    std::vector<bool> vfComposite (nPrimeTableLimit, false);
     for (unsigned int nFactor = 2; nFactor * nFactor < nPrimeTableLimit; nFactor++)
     {
         if (vfComposite[nFactor])
@@ -328,27 +328,57 @@ bool ProbablePrimeChainTest(const CBigNum& n, unsigned int nBits, bool fFermatTe
     return (nProbableChainLength >= TargetGetLengthWithFractional(nBits));
 }
 
+// Sieve for mining
+CSieveOfEratosthenes* psieve = NULL;
+
 // Mine probable prime chain of form: n = h * p# +/- 1
-bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
+bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
 {
+    nTests = 0;
+    nPrimesHit = 0;
+
+    if (fNewBlock && psieve != NULL)
+    {
+        // Must rebuild the sieve
+        delete psieve;
+        psieve = NULL;
+    }
+    fNewBlock = false;
+
+    int64 nStart, nCurrent; // microsecond timer
+    if (psieve == NULL)
+    {
+        // Build sieve
+        nStart = GetTimeMicros();
+        psieve = new CSieveOfEratosthenes(nMaxSieveSize, block.nBits, block.GetHeaderHash(), bnFixedMultiplier);
+        unsigned int nComposite = 0;
+        while (psieve->Weave(nComposite));
+        printf("MineProbablePrimeChain() : new sieve (%u%%) ready in %uus\n", psieve->GetCandidateCount()*100/nMaxSieveSize, (unsigned int) (GetTimeMicros() - nStart));
+    }
+
     CBigNum n;
     bool fSophieGermain = TargetIsSophieGermain(block.nBits);
     bool fBiTwin = TargetIsBiTwin(block.nBits);
 
-    int64 nStart = GetTimeMicros();
-    int64 nCurrent = nStart;
-    nTests = 0;
-    nPrimesHit = 0;
+    nStart = GetTimeMicros();
+    nCurrent = nStart;
 
     while (nCurrent < nStart + 10000 && nCurrent >= nStart)
     {
         nTests++;
-        bnTried++;
-        n = CBigNum(block.GetHeaderHash()) * bnPrimorial * bnTried + ((fSophieGermain || fBiTwin)? -1 : 1);
+        if (!psieve->GetNextCandidateMultiplier(nTriedMultiplier))
+        {
+            // power tests completed for the sieve
+            delete psieve;
+            psieve = NULL;
+            fNewBlock = true; // notify caller to change nonce
+            return false;
+        }
+        n = CBigNum(block.GetHeaderHash()) * bnFixedMultiplier * nTriedMultiplier + ((fSophieGermain || fBiTwin)? -1 : 1);
         if (ProbablePrimeChainTest(n, block.nBits, false, nProbableChainLength))
         {
             printf("Probable prime chain of type %s found for block=%s!! \n", TargetGetName(block.nBits).c_str(), block.GetHash().GetHex().c_str());
-            block.bnPrimeChainMultiplier = bnPrimorial * bnTried;
+            block.bnPrimeChainMultiplier = bnFixedMultiplier * nTriedMultiplier;
             return true;
         }
         else if(TargetGetLength(nProbableChainLength) >= 1)
@@ -424,7 +454,7 @@ static bool LogLogScale(const CBigNum& bn, unsigned int& nLogLogScale)
 bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier)
 {
     // Check type
-    bool fSophieGermain= TargetIsSophieGermain(nBits);
+    bool fSophieGermain = TargetIsSophieGermain(nBits);
     bool fBiTwin = TargetIsBiTwin(nBits);
     if (fSophieGermain && fBiTwin)
         return error("CheckPrimeProofOfWork() : invalid prime chain type");
@@ -458,3 +488,43 @@ double GetPrimeDifficulty(unsigned int nBits)
 {
     return ((double) TargetGetLengthWithFractional(nBits) / (double) (1 << nFractionalBits));
 }
+
+// Weave sieve for the next prime in table
+// Return values:
+//   True  - weaved another prime; nComposite - number of composites removed
+//   False - sieve already completed
+bool CSieveOfEratosthenes::Weave(unsigned int& nComposite)
+{
+    nComposite = 0;
+    if (nPrimeSeq >= vPrimes.size())
+        return false;  // sieve has been completed for all primes in table
+    CBigNum p = vPrimes[nPrimeSeq];
+    if (bnFixedFactor % p == 0)
+    {
+        // Nothing in the sieve is divisible by this prime
+        nPrimeSeq++;
+        return true;
+    }
+    // Find the modulo inverse of fixed factor
+    CAutoBN_CTX pctx;
+    CBigNum bnFixedInverse;
+    if (!BN_mod_inverse(&bnFixedInverse, &bnFixedFactor, &p, pctx))
+        return error("CSieveOfEratosthenes::Weave(): BN_mod_inverse failed for prime #%u=%u", nPrimeSeq, vPrimes[nPrimeSeq]);
+    // TODO: handle chain length > 1
+    // Find the first number that's divisible by this prime
+    unsigned int nVariableMultiplier = ((bnFixedInverse * (p - ((fSophieGermain || fBiTwin)? (-1) : 1))) % p).getuint();
+    // Weave the sieve for the prime
+    while (nVariableMultiplier < nSieveSize)
+    {
+        if (!vfCompositeInChain[nVariableMultiplier])
+        {
+            vfCompositeInChain[nVariableMultiplier] = true;
+            nComposite++;
+            nCandidates--;
+        }
+        nVariableMultiplier += vPrimes[nPrimeSeq];
+    }
+    nPrimeSeq++;
+    return true;
+}
+

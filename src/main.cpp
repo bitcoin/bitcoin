@@ -4468,41 +4468,34 @@ void static BitcoinMiner(CWallet *pwallet)
         // Search
         //
         int64 nStart = GetTime();
-        bool fHashFound = false;
-        CBigNum bnTried = 0;
+        bool fNewBlock = true;
+        unsigned int nTriedMultiplier = 0;
+
+        // Primecoin: try to find hash divisible by primorial
         CBigNum bnHashFactor = 2 * 3 * 5 * 7;
+        while (CBigNum(pblock->GetHeaderHash()) % bnHashFactor != 0 && pblock->nNonce < 0xffff0000)
+            pblock->nNonce++;
+        if (CBigNum(pblock->GetHeaderHash()) % bnHashFactor != 0)
+            continue;
+
         loop
         {
             unsigned int nTests = 0;
             unsigned int nPrimesHit = 0;
 
-            if (fHashFound)  // Primecoin: hash fixed, now look for prime
-            {
-                CBigNum bnPrimeTarget = CBigNum().SetCompact(pblock->nBits);
-                CBigNum bnMultiplierMin = (bnPrimeTarget + 1) / CBigNum(pblock->GetHash()) + 1;
-                CBigNum bnPrimorial;
-                PrimorialAt(bnMultiplierMin, bnPrimorial);
+            CBigNum bnPrimeTarget = CBigNum().SetCompact(pblock->nBits);
+            CBigNum bnMultiplierMin = (bnPrimeTarget + 1) * bnHashFactor / CBigNum(pblock->GetHeaderHash()) + 1;
+            CBigNum bnPrimorial;
+            PrimorialAt(bnMultiplierMin, bnPrimorial);
+            CBigNum bnFixedMultiplier = (bnPrimorial > bnHashFactor)? (bnPrimorial / bnHashFactor) : 1;
 
-                unsigned int nProbableChainLength;
-                if (MineProbablePrimeChain(*pblock, bnPrimorial, bnTried, nProbableChainLength, nTests, nPrimesHit))
-                {
-                    SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                    CheckWork(pblock, *pwalletMain, reservekey);
-                    SetThreadPriority(THREAD_PRIORITY_LOWEST);
-                    break;
-                }
-            }
-            else  // Primecoin: try to find hash divisible by primorial
+            unsigned int nProbableChainLength;
+            if (MineProbablePrimeChain(*pblock, bnFixedMultiplier, fNewBlock, nTriedMultiplier, nProbableChainLength, nTests, nPrimesHit))
             {
-                do
-                {
-                    pblock->nNonce++;
-                    if (CBigNum(pblock->GetHash()) % bnHashFactor == 0)
-                    {
-                        fHashFound = true;
-                        continue;
-                    }
-                } while ((pblock->nNonce & 0xffff));
+                SetThreadPriority(THREAD_PRIORITY_NORMAL);
+                CheckWork(pblock, *pwalletMain, reservekey);
+                SetThreadPriority(THREAD_PRIORITY_LOWEST);
+                break;
             }
 
             // Meter primes/sec
@@ -4550,16 +4543,12 @@ void static BitcoinMiner(CWallet *pwallet)
                 return;
             if (vNodes.empty())
                 break;
-            if (pblock->nNonce >= 0xffff0000)
+            if (fNewBlock || pblock->nNonce >= 0xffff0000)
                 break;
             if (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                 break;
             if (pindexPrev != pindexBest)
                 break;
-
-            // Update nTime every few seconds
-            if (!fHashFound)
-                pblock->UpdateTime(pindexPrev);
         }
     }
 }

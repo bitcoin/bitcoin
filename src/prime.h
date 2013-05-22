@@ -10,6 +10,7 @@
 static const CBigNum bnOne = 1;
 static const CBigNum bnPrimeMax = (bnOne << 2039) - 1;
 static const CBigNum bnPrimeMin = (bnOne << 256);
+static const unsigned int nMaxSieveSize = 1000000u;
 
 // Generate small prime table
 void GeneratePrimeTable();
@@ -45,7 +46,7 @@ bool TargetGetMint(unsigned int nBits, uint64& nMint);
 bool TargetGetNext(unsigned int nBits, int64 nInterval, int64 nTargetSpacing, int64 nActualSpacing, unsigned int& nBitsNext);
 
 // Mine probable prime chain of form: n = h * p# +/- 1
-bool MineProbablePrimeChain(CBlock& block, CBigNum& bnPrimorial, CBigNum& bnTried, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
+bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
 
 // Find last block index up to pindex of the given prime chain type
 bool GetLastBlockIndex(const CBlockIndex* pindex, bool fSophieGermain, bool fBiTwin, const CBlockIndex** pindexPrev);
@@ -59,5 +60,72 @@ bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CB
 
 // prime target difficulty value for visualization
 double GetPrimeDifficulty(unsigned int nBits);
+
+// Sieve of Eratosthenes for proof-of-work mining
+class CSieveOfEratosthenes
+{
+    unsigned int nSieveSize; // size of the sieve
+    unsigned int nBits; // target of the prime chain to search for
+    uint256 hashBlockHeader; // block header hash
+    CBigNum bnFixedFactor; // fixed factor to derive the chain
+    bool fSophieGermain; // is it for Cunningham Chain of first kind
+    bool fBiTwin; // is it for BiTwin Chain
+
+    // bitmap of the sieve, index represents the variable part of multiplier
+    std::vector<bool> vfCompositeInChain;
+
+    unsigned int nPrimeSeq; // prime sequence number currently being processed
+    unsigned int nCandidateMultiplier; // current candidate for power test
+    unsigned int nCandidates; // number of candidates for power tests
+
+public:
+    CSieveOfEratosthenes(unsigned int nSieveSize, unsigned int nBits, uint256 hashBlockHeader, CBigNum& bnFixedMultiplier)
+    {
+        this->nSieveSize = nSieveSize;
+        this->nBits = nBits;
+        this->hashBlockHeader = hashBlockHeader;
+        this->bnFixedFactor = bnFixedMultiplier * CBigNum(hashBlockHeader);
+        nPrimeSeq = 0;
+        fSophieGermain= TargetIsSophieGermain(nBits);
+        fBiTwin = TargetIsBiTwin(nBits);
+        vfCompositeInChain = std::vector<bool> (1000000, false);
+        nCandidateMultiplier = 0;
+        nCandidates = nSieveSize;
+    }
+
+    // Get total number of candidates for power test
+    unsigned int GetCandidateCount()
+    {
+        return nCandidates;
+    }
+
+    // Scan for the next candidate multiplier (variable part)
+    // Return values:
+    //   True - found next candidate; nVariableMultiplier has the candidate
+    //   False - scan complete, no more candidate and reset scan
+    bool GetNextCandidateMultiplier(unsigned int& nVariableMultiplier)
+    {
+        while (true)
+        {
+            nCandidateMultiplier++;
+            if (nCandidateMultiplier >= nSieveSize)
+            {
+                nCandidateMultiplier = 0;
+                return false;
+            }
+            if (!vfCompositeInChain[nCandidateMultiplier])
+            {
+                nVariableMultiplier = nCandidateMultiplier;
+                return true;
+            }
+        }
+    }
+
+    // Weave the sieve for the next prime in table
+    // Return values:
+    //   True  - weaved another prime; nComposite - number of composites removed
+    //   False - sieve already completed
+    bool Weave(unsigned int& nComposite);
+};
 
 #endif
