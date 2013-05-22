@@ -35,7 +35,7 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
     <message>
         <location line="+0"/>
         <source>The Bitcoin developers</source>
-        <translation type="unfinished"/>
+        <translation>Desenvolvedores do Bitcoin</translation>
     </message>
 </context>
 <context>
@@ -103,7 +103,7 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Exportar</translation>
     </message>
     <message>
         <location line="-44"/>
@@ -1649,7 +1649,7 @@ Endereço: %4</translation>
     <message>
         <location filename="../splashscreen.cpp" line="+22"/>
         <source>The Bitcoin developers</source>
-        <translation type="unfinished"/>
+        <translation>Desenvolvedores do Bitcoin</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2144,7 +2144,7 @@ Endereço: %4</translation>
     <message>
         <location filename="../walletview.cpp" line="+42"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Exportar</translation>
     </message>
     <message>
         <location line="+1"/>
