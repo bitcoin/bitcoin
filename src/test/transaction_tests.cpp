@@ -263,7 +263,8 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK(t.IsStandard());
 
     t.vout[0].nValue = 5011; // dust
-    BOOST_CHECK(!t.IsStandard());
+    // Litecoin does not enforce isDust().  Per dust fees are considered sufficient as deterrant.
+    // BOOST_CHECK(!t.IsStandard());
 
     t.vout[0].nValue = 6011; // not dust
     BOOST_CHECK(t.IsStandard());
