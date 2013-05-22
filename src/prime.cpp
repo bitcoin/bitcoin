@@ -496,8 +496,8 @@ double GetPrimeDifficulty(unsigned int nBits)
 bool CSieveOfEratosthenes::Weave(unsigned int& nComposite)
 {
     nComposite = 0;
-    if (nPrimeSeq >= vPrimes.size())
-        return false;  // sieve has been completed for all primes in table
+    if (nPrimeSeq >= vPrimes.size() || vPrimes[nPrimeSeq] >= nSieveSize)
+        return false;  // sieve has been completed
     CBigNum p = vPrimes[nPrimeSeq];
     if (bnFixedFactor % p == 0)
     {
@@ -509,20 +509,30 @@ bool CSieveOfEratosthenes::Weave(unsigned int& nComposite)
     CAutoBN_CTX pctx;
     CBigNum bnFixedInverse;
     if (!BN_mod_inverse(&bnFixedInverse, &bnFixedFactor, &p, pctx))
-        return error("CSieveOfEratosthenes::Weave(): BN_mod_inverse failed for prime #%u=%u", nPrimeSeq, vPrimes[nPrimeSeq]);
-    // TODO: handle chain length > 1
-    // Find the first number that's divisible by this prime
-    unsigned int nVariableMultiplier = ((bnFixedInverse * (p - ((fSophieGermain || fBiTwin)? (-1) : 1))) % p).getuint();
+        return error("CSieveOfEratosthenes::Weave(): BN_mod_inverse of fixed factor failed for prime #%u=%u", nPrimeSeq, vPrimes[nPrimeSeq]);
+    CBigNum bnTwo = 2;
+    CBigNum bnTwoInverse;
+    if (!BN_mod_inverse(&bnTwoInverse, &bnTwo, &p, pctx))
+        return error("CSieveOfEratosthenes::Weave(): BN_mod_inverse of 2 failed for prime #%u=%u", nPrimeSeq, vPrimes[nPrimeSeq]);
+
     // Weave the sieve for the prime
-    while (nVariableMultiplier < nSieveSize)
+    for (unsigned int nChainSeq = 0; nChainSeq < TargetGetLength(nBits); nChainSeq++)
     {
-        if (!vfCompositeInChain[nVariableMultiplier])
+        // Find the first number that's divisible by this prime
+        int nDelta = fSophieGermain? (-1) : (fBiTwin? ((nChainSeq % 2 == 0)? (-1) : 1) : 1);
+        unsigned int nVariableMultiplier = ((bnFixedInverse * (p - nDelta)) % p).getuint();
+        bnFixedInverse *= bnTwoInverse; // for next one in chain
+
+        while (nVariableMultiplier < nSieveSize)
         {
-            vfCompositeInChain[nVariableMultiplier] = true;
-            nComposite++;
-            nCandidates--;
+            if (!vfCompositeInChain[nVariableMultiplier])
+            {
+                vfCompositeInChain[nVariableMultiplier] = true;
+                nComposite++;
+                nCandidates--;
+            }
+            nVariableMultiplier += vPrimes[nPrimeSeq];
         }
-        nVariableMultiplier += vPrimes[nPrimeSeq];
     }
     nPrimeSeq++;
     return true;
