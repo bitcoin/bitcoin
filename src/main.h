@@ -64,8 +64,8 @@ static const int fHaveUPnP = true;
 static const int fHaveUPnP = false;
 #endif
 
-static const uint256 hashGenesisBlockOfficial("0xe62ec6d9dd3ab76676b82102462ceb72ae84de82f35d0e0ece70b1349bddec70");
-static const uint256 hashGenesisBlockTestNet("0xe62ec6d9dd3ab76676b82102462ceb72ae84de82f35d0e0ece70b1349bddec70");
+static const uint256 hashGenesisBlockOfficial("0x5e58c43ef30c998bbf4ead9c0b4d9bc2bdfe374486b1f089ba4871fd50e2652a");
+static const uint256 hashGenesisBlockTestNet("0x5e58c43ef30c998bbf4ead9c0b4d9bc2bdfe374486b1f089ba4871fd50e2652a");
 
 extern CScript COINBASE_FLAGS;
 
@@ -1745,11 +1745,7 @@ public:
         return (int64)nTime;
     }
 
-    CBigNum GetBlockWork() const
-    {
-        // Primecoin: all blocks have work value 1 for reorganization purpose
-        return (CBigNum(1));
-    }
+    CBigNum GetBlockWork() const;
 
     bool IsInMainChain() const
     {

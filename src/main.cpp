@@ -34,7 +34,6 @@ unsigned int nTransactionsUpdated = 0;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
 uint256 hashGenesisBlock = hashGenesisBlockOfficial;
-unsigned int nProofOfWorkLimit = 0x00200000u;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 CBigNum bnBestChainWork = 0;
@@ -1060,8 +1059,8 @@ int64 static GetBlockValue(int nBits, int64 nFees)
     return ((int64)nSubsidy) + nFees;
 }
 
-static const int64 nTargetTimespan = 24 * 60 * 60; // one day
-static const int64 nTargetSpacing = 9 * 60; // target spacing per type
+static const int64 nTargetTimespan = 8 * 60 * 60; // one week
+static const int64 nTargetSpacing = 3 * 60; // one minute block spacing
 
 //
 // minimum amount of work that could possibly be required nTime after
@@ -1074,27 +1073,20 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
     return nBase;
 }
 
-unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, bool fSophieGermain, bool fBiTwin)
+unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
     unsigned int nBits = nProofOfWorkLimit;
-
-    TargetSetSophieGermain(fSophieGermain, nBits);
-    TargetSetBiTwin(fBiTwin, nBits);
 
     // Genesis block
     if (pindexLast == NULL)
         return nBits;
 
-    const CBlockIndex* pindexPrev = NULL;
-    if (!GetLastBlockIndex(pindexLast, fSophieGermain, fBiTwin, &pindexPrev))
-        return error("GetNextWorkRequired() : failed to get pindexPrev");
+    const CBlockIndex* pindexPrev = pindexLast;
     if (pindexPrev->pprev == NULL)
-        return nBits; // first block of the type
-    const CBlockIndex* pindexPrevPrev = NULL;
-    if (!GetLastBlockIndex(pindexPrev->pprev, fSophieGermain, fBiTwin, &pindexPrevPrev))
-        return error("GetNextWorkRequired() : failed to get pindexPrevPrev");
+        return nBits; // first block
+    const CBlockIndex* pindexPrevPrev = pindexPrev->pprev;
     if (pindexPrevPrev->pprev == NULL)
-        return nBits; // second block of the type
+        return nBits; // second block
 
     // Primecoin: continuous target adjustment on every block
     int64 nInterval = nTargetTimespan / nTargetSpacing;
@@ -1103,8 +1095,8 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
         return error("GetNextWorkRequired() : failed to get next target");
 
     if (fDebug && GetBoolArg("-printtarget"))
-        printf("GetNextWorkRequired() : lastindex=%u fSophieGermain=%u fBiTwin=%u prev=0x%08x new=0x%08x\n",
-            pindexLast->nHeight, fSophieGermain, fBiTwin, pindexPrev->nBits, nBits);
+        printf("GetNextWorkRequired() : lastindex=%u prev=0x%08x new=0x%08x\n",
+            pindexLast->nHeight, pindexPrev->nBits, nBits);
     return nBits;
 }
 
@@ -2061,7 +2053,7 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
         nHeight = pindexPrev->nHeight+1;
 
         // Check proof of work
-        if (nBits != GetNextWorkRequired(pindexPrev, this, TargetIsSophieGermain(nBits), TargetIsBiTwin(nBits)))
+        if (nBits != GetNextWorkRequired(pindexPrev, this))
             return state.DoS(100, error("AcceptBlock() : incorrect proof of work"));
 
         // Check timestamp against prev
@@ -2124,6 +2116,14 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
     return true;
 }
 
+// Get block work value for main chain protocol
+CBigNum CBlockIndex::GetBlockWork() const
+{
+    // Primecoin: 256x difficulty for each additional prime in chain
+    uint64 nFractionalDifficulty = TargetGetFractionalDifficulty(nBits);
+    return (CBigNum(1) << (8u * TargetGetLength(nBits))) * nFractionalDifficulty / nFractionalDifficultyMin;
+}
+
 bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
 {
     unsigned int nFound = 0;
@@ -2162,13 +2162,10 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         {
             return state.DoS(100, error("ProcessBlock() : block with timestamp before last checkpoint"));
         }
-        CBigNum bnNewBlock;
-        bnNewBlock.SetCompact(pblock->nBits);
-        CBigNum bnRequired;
-        bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
-        if (bnNewBlock > bnRequired)
+        unsigned int nRequired = ComputeMinWork(pcheckpoint->nBits, deltaTime);
+        if (pblock->nBits < nRequired)
         {
-            return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work type=%s nBits=%08x required=%08x", TargetGetName(pblock->nBits).c_str(), pblock->nBits, bnRequired.GetCompact()));
+            return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work nBits=%s required=%s", TargetToString(pblock->nBits).c_str(), TargetToString(nRequired).c_str()));
         }
     }
 
@@ -2658,17 +2655,17 @@ bool InitBlockIndex() {
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
-        block.nTime    = 1365111006;
-        block.nBits    = 0x40000000u | (4 << nFractionalBits);
-        block.nNonce   = 0;
+        block.nTime    = 1369346002;
+        block.nBits    = TargetFromInt(4u);
+        block.nNonce   = 32;
 
         if (fTestNet)
         {
-            block.nTime    = 1365111006;
-            block.nNonce   = 0;
+            block.nTime    = 1369346002;
+            block.nNonce   = 32;
         }
 
-        block.bnPrimeChainMultiplier = 2 * 3 * 5 * 7 * 1760979;
+        block.bnPrimeChainMultiplier = 2 * 3 * 5 * 7 * 702873;
 
         //// debug print
         uint256 hash = block.GetHash();
@@ -2750,12 +2747,11 @@ void PrintBlockTree()
         // print item
         CBlock block;
         block.ReadFromDisk(pindex);
-        printf("%d (blk%05u.dat:0x%x)  %s  %s.%05x  tx %"PRIszu"",
+        printf("%d (blk%05u.dat:0x%x)  %s  %s  tx %"PRIszu"",
             pindex->nHeight,
             pindex->GetBlockPos().nFile, pindex->GetBlockPos().nPos,
             DateTimeStrFormat("%Y-%m-%d %H:%M:%S", block.GetBlockTime()).c_str(),
-            TargetGetName(block.nBits).c_str(), block.nBits & ((1<<nFractionalBits) - 1),
-            block.vtx.size());
+            TargetToString(block.nBits).c_str(), block.vtx.size());
 
         PrintWallets(block);
 
@@ -4287,10 +4283,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
         printf("CreateNewBlock(): total size %"PRI64u"\n", nBlockSize);
-
-        bool fSophieGermain = GetRandInt(2);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, fSophieGermain, fSophieGermain? 0 : GetRandInt(2));
-
+        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
         pblock->vtx[0].vout[0].nValue = GetBlockValue(pblock->nBits, nFees);
         pblocktemplate->vTxFees[0] = -nFees;
 
@@ -4388,7 +4381,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 
     //// debug print
     printf("PrimecoinMiner:\n");
-    printf("proof-of-work found  \n  type: %s\n  multiplier: %s\n  ", TargetGetName(pblock->nBits).c_str(), pblock->bnPrimeChainMultiplier.GetHex().c_str());
+    printf("proof-of-work found  \n  target: %s\n  multiplier: %s\n  ", TargetToString(pblock->nBits).c_str(), pblock->bnPrimeChainMultiplier.GetHex().c_str());
     pblock->print();
     printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
 

@@ -27,13 +27,14 @@ int main(int argc, char *argv[])
     block.vtx.push_back(txNew);
     block.hashPrevBlock = 0;
     block.hashMerkleRoot = block.BuildMerkleTree();
-    block.nBits    = (4u << nFractionalBits) | 0x40000000u;
+    block.nBits    = (4u << nFractionalBits);
     block.nTime    = GetAdjustedTime();
     block.nNonce   = 0;
 
     CBigNum bnTarget;
     bnTarget.SetCompact(block.nBits);
-    CBigNum bnTried = 0;
+    unsigned int nTried = 0;
+    bool fNewBlock = true;
 
     while (true)
     {
@@ -43,16 +44,13 @@ int main(int argc, char *argv[])
         unsigned int nProbableChainLength;
         unsigned int nPrimesHit;
         unsigned int nTests;
-        if (MineProbablePrimeChain(block, bnPrimorial, bnTried, nProbableChainLength, nTests, nPrimesHit))
+        if (MineProbablePrimeChain(block, bnPrimorial, fNewBlock, nTried, nProbableChainLength, nTests, nPrimesHit))
         {
-            printf("type=%s length=%08x multiplier=%u hash=%s\n", TargetGetName(block.nBits).c_str(), nProbableChainLength, bnTried.getuint(), block.GetHash().ToString().c_str());
+            printf("target=%s length=%s multiplier=%u hash=%s\n", TargetToString(block.nBits).c_str(), TargetToString(nProbableChainLength).c_str(), nTried, block.GetHash().ToString().c_str());
             break;
         }
-        else
-        {
-            if (block.nNonce == 0xffffffffu)
-                block.nNonce = 0;
-        }
+        if (fNewBlock)
+            block.nNonce++;
     }
 
     printf("Primecoin Found Genesis Block:\n");

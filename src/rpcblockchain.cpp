@@ -14,7 +14,7 @@ using namespace std;
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out);
 
 // Primecoin: get prime difficulty value (chain length)
-double GetDifficulty(bool fSophieGermain, bool fBiTwin, const CBlockIndex* blockindex)
+double GetDifficulty(const CBlockIndex* blockindex)
 {
     // Floating point number that is approximate log scale of prime target,
     // minimum difficulty = 256, maximum difficulty = 2039
@@ -23,7 +23,7 @@ double GetDifficulty(bool fSophieGermain, bool fBiTwin, const CBlockIndex* block
         if (pindexBest == NULL)
             return 256.0;
         else
-            GetLastBlockIndex(pindexBest, fSophieGermain, fBiTwin, &blockindex);
+            blockindex = pindexBest;
     }
 
     double dDiff = GetPrimeDifficulty(blockindex->nBits);
@@ -48,14 +48,9 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("time", (boost::int64_t)block.GetBlockTime()));
     result.push_back(Pair("nonce", (boost::uint64_t)block.nNonce));
     result.push_back(Pair("bits", HexBits(block.nBits)));
-    result.push_back(Pair("primetype", TargetGetName(block.nBits)));
-    result.push_back(Pair("primedifficulty", GetPrimeDifficulty(block.nBits)));
-    unsigned int nChainLength;
-    bool fSophieGermain= TargetIsSophieGermain(block.nBits);
-    bool fBiTwin = TargetIsBiTwin(block.nBits);
-    CBigNum bnProbablePrime = (CBigNum(block.GetHash()) * block.bnPrimeChainMultiplier) + ((fSophieGermain || fBiTwin)? (-1) : 1);
-    ProbablePrimeChainTest(bnProbablePrime, block.nBits, false, nChainLength);
-    result.push_back(Pair("primechain", GetPrimeDifficulty(nChainLength)));
+    result.push_back(Pair("difficulty", GetPrimeDifficulty(block.nBits)));
+    CBigNum bnPrimeChainOrigin = CBigNum(block.GetHeaderHash()) * block.bnPrimeChainMultiplier;
+    result.push_back(Pair("primechain", GetPrimeChainName(bnPrimeChainOrigin).c_str()));
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
@@ -81,14 +76,9 @@ Value getdifficulty(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getdifficulty\n"
-            "Returns the proof-of-work difficulties in prime chain length.");
+            "Returns the proof-of-work difficulty in prime chain length.");
 
-    Object result;
-    result.push_back(Pair("1CC", GetDifficulty(true, false)));
-    result.push_back(Pair("2CC", GetDifficulty(false, false)));
-    result.push_back(Pair("TWN", GetDifficulty(false, true)));
-
-    return result;
+    return GetDifficulty();
 }
 
 
