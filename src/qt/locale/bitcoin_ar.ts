@@ -38,7 +38,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="+14"/>
         <source>Address Book</source>
-        <translation>كتاب العنوانين</translation>
+        <translation>دفتر العناوين</translation>
     </message>
     <message>
         <location line="+19"/>
