@@ -208,6 +208,8 @@ bool TargetGetNext(unsigned int nBits, int64 nInterval, int64 nTargetSpacing, in
     if (bnFractionalDifficulty < nFractionalDifficultyMin)
         bnFractionalDifficulty = nFractionalDifficultyMin;
     uint64 nFractionalDifficultyNew = bnFractionalDifficulty.getuint256().Get64();
+    if (fDebug && GetBoolArg("-printtarget"))
+        printf("TargetGetNext() : nActualSpacing=%d nFractionDiff=%016"PRI64x" nFractionDiffNew=%016"PRI64x"\n", (int)nActualSpacing, nFractionalDifficulty, nFractionalDifficultyNew);
     // Step up length if fractional past threshold
     if (nFractionalDifficultyNew > nFractionalDifficultyThreshold)
     {
@@ -215,7 +217,7 @@ bool TargetGetNext(unsigned int nBits, int64 nInterval, int64 nTargetSpacing, in
         TargetIncrementLength(nBitsNext);
     }
     // Step down length if fractional at minimum
-    if (nFractionalDifficultyNew == nFractionalDifficultyMin && TargetGetLength(nBits) > nTargetMinLength)
+    else if (nFractionalDifficultyNew == nFractionalDifficultyMin && TargetGetLength(nBitsNext) > nTargetMinLength)
     {
         nFractionalDifficultyNew = nFractionalDifficultyThreshold;
         TargetDecrementLength(nBitsNext);
