@@ -239,10 +239,10 @@ int static secp256k1_ecdsa_privkey_parse(secp256k1_num_t *key, const unsigned ch
     if (end < privkey+3 || privkey[0] != 0x02 || privkey[1] != 0x01 || privkey[2] != 0x01)
         return 0;
     privkey += 3;
-    // sequence element 1: octet string, 32 bytes
-    if (end < privkey+34 || privkey[0] != 0x04 || privkey[1] != 0x20)
+    // sequence element 1: octet string, up to 32 bytes
+    if (end < privkey+2 || privkey[0] != 0x04 || privkey[1] > 0x20 || end < privkey+2+privkey[1])
         return 0;
-    secp256k1_num_set_bin(key, privkey+2, 32);
+    secp256k1_num_set_bin(key, privkey+2, privkey[1]);
     return 1;
 }
 
