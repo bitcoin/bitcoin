@@ -459,7 +459,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         if (fInsertedNew || fUpdated)
             if (!wtx.WriteToDisk())
                 return false;
-#ifndef QT_GUI
+
+        if (!fHaveGUI) {
         // If default receiving address gets used, replace it with a new one
         if (vchDefaultKey.IsValid()) {
             CScript scriptDefaultKey;
@@ -477,7 +478,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
                 }
             }
         }
-#endif
+        }
         // since AddToWallet is called directly for self-originating transactions, check for consumption of own coins
         WalletUpdateSpent(wtx);
 
