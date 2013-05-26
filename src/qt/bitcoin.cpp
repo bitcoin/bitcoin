@@ -113,6 +113,8 @@ static void handleRunawayException(std::exception *e)
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
+    fHaveGUI = true;
+
     // Command-line options take precedence:
     ParseParameters(argc, argv);
 
