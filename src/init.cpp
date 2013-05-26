@@ -194,11 +194,11 @@ std::string HelpMessage()
 #endif
 #endif
     strUsage += "  -paytxfee=<amt>        " + _("Fee per KB to add to transactions you send") + "\n";
-#ifdef QT_GUI
-    strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
-#endif
-#if !defined(WIN32) && !defined(QT_GUI)
-    strUsage += "  -daemon                " + _("Run in the background as a daemon and accept commands") + "\n";
+    if (fHaveGUI)
+        strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
+#if !defined(WIN32)
+    if (fHaveGUI)
+        strUsage += "  -daemon                " + _("Run in the background as a daemon and accept commands") + "\n";
 #endif
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
     strUsage += "  -debug                 " + _("Output extra debugging information. Implies all other -debug* options") + "\n";
@@ -213,9 +213,8 @@ std::string HelpMessage()
     strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
     strUsage += "  -rpcport=<port>        " + _("Listen for JSON-RPC connections on <port> (default: 8332 or testnet: 18332)") + "\n";
     strUsage += "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified IP address") + "\n";
-#ifndef QT_GUI
-    strUsage += "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n";
-#endif
+    if (!fHaveGUI)
+        strUsage += "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n";
     strUsage += "  -rpcthreads=<n>        " + _("Set the number of threads to service RPC calls (default: 4)") + "\n";
     strUsage += "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n";
     strUsage += "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n";
@@ -435,9 +434,8 @@ bool AppInit2(boost::thread_group& threadGroup)
         fServer = GetBoolArg("-server", false);
 
     /* force fServer when running without GUI */
-#if !defined(QT_GUI)
-    fServer = true;
-#endif
+    if (!fHaveGUI)
+        fServer = true;
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
     fPrintToDebugger = GetBoolArg("-printtodebugger", false);
     fLogTimestamps = GetBoolArg("-logtimestamps", false);
