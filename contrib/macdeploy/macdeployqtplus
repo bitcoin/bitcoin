@@ -651,6 +651,23 @@ elif config.sign:
 # ------------------------------------------------
 
 if config.dmg is not None:
+
+    #Patch in check_output for Python 2.6
+    if "check_output" not in dir( subprocess ):
+        def f(*popenargs, **kwargs):
+            if 'stdout' in kwargs:
+                raise ValueError('stdout argument not allowed, it will be overridden.')
+            process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+            output, unused_err = process.communicate()
+            retcode = process.poll()
+            if retcode:
+                cmd = kwargs.get("args")
+                if cmd is None:
+                    cmd = popenargs[0]
+                raise CalledProcessError(retcode, cmd)
+            return output
+        subprocess.check_output = f
+
     def runHDIUtil(verb, image_basename, **kwargs):
         hdiutil_args = ["hdiutil", verb, image_basename + ".dmg"]
         if kwargs.has_key("capture_stdout"):
