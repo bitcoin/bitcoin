@@ -312,7 +312,7 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
     {
         // Build sieve
         nStart = GetTimeMicros();
-        psieve = new CSieveOfEratosthenes(nMaxSieveSize, block.nBits, PRIME_CHAIN_BI_TWIN, block.GetHeaderHash(), bnFixedMultiplier);
+        psieve = new CSieveOfEratosthenes(nMaxSieveSize, block.nBits, block.GetHeaderHash(), bnFixedMultiplier);
         unsigned int nComposite = 0;
         while (psieve->Weave(nComposite));
         printf("MineProbablePrimeChain() : new sieve (%u%%) ready in %uus\n", psieve->GetCandidateCount()*100/nMaxSieveSize, (unsigned int) (GetTimeMicros() - nStart));
@@ -323,7 +323,7 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
     nStart = GetTimeMicros();
     nCurrent = nStart;
 
-    while (nCurrent < nStart + 10000 && nCurrent >= nStart)
+    while (nCurrent - nStart < 10000 && nCurrent >= nStart)
     {
         nTests++;
         if (!psieve->GetNextCandidateMultiplier(nTriedMultiplier))
@@ -501,18 +501,32 @@ bool CSieveOfEratosthenes::Weave(unsigned int& nComposite)
         return error("CSieveOfEratosthenes::Weave(): BN_mod_inverse of 2 failed for prime #%u=%u", nPrimeSeq, vPrimes[nPrimeSeq]);
 
     // Weave the sieve for the prime
-    for (unsigned int nChainSeq = 0; nChainSeq < TargetGetLength(nBits); nChainSeq++)
+    unsigned int nChainLength = TargetGetLength(nBits);
+    for (unsigned int nBiTwinSeq = 0; nBiTwinSeq < 2 * nChainLength; nBiTwinSeq++)
     {
         // Find the first number that's divisible by this prime
-        int nDelta = (nPrimeChainType==PRIME_CHAIN_CUNNINGHAM1)? (-1) : ((nPrimeChainType==PRIME_CHAIN_BI_TWIN)? ((nChainSeq % 2 == 0)? (-1) : 1) : 1);
+        int nDelta = ((nBiTwinSeq % 2 == 0)? (-1) : 1);
         unsigned int nVariableMultiplier = ((bnFixedInverse * (p - nDelta)) % p).getuint();
-        bnFixedInverse *= bnTwoInverse; // for next one in chain
+        if (nBiTwinSeq % 2 == 1)
+            bnFixedInverse *= bnTwoInverse; // for next number in chain
 
         while (nVariableMultiplier < nSieveSize)
         {
-            if (!vfCompositeInChain[nVariableMultiplier])
+            if (nBiTwinSeq < nChainLength && !vfCompositeBiTwin[nVariableMultiplier])
             {
-                vfCompositeInChain[nVariableMultiplier] = true;
+                vfCompositeBiTwin[nVariableMultiplier] = true;
+                nComposite++;
+                nCandidates--;
+            }
+            if (((nBiTwinSeq & 1u) == 0) && !vfCompositeCunningham1[nVariableMultiplier])
+            {
+                vfCompositeCunningham1[nVariableMultiplier] = true;
+                nComposite++;
+                nCandidates--;
+            }
+            if (((nBiTwinSeq & 1u) == 1u) && !vfCompositeCunningham2[nVariableMultiplier])
+            {
+                vfCompositeCunningham2[nVariableMultiplier] = true;
                 nComposite++;
                 nCandidates--;
             }

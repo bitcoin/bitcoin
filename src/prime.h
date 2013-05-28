@@ -73,27 +73,29 @@ class CSieveOfEratosthenes
     unsigned int nBits; // target of the prime chain to search for
     uint256 hashBlockHeader; // block header hash
     CBigNum bnFixedFactor; // fixed factor to derive the chain
-    unsigned int nPrimeChainType; // prime chain type being sieved
 
-    // bitmap of the sieve, index represents the variable part of multiplier
-    std::vector<bool> vfCompositeInChain;
+    // bitmaps of the sieve, index represents the variable part of multiplier
+    std::vector<bool> vfCompositeCunningham1;
+    std::vector<bool> vfCompositeCunningham2;
+    std::vector<bool> vfCompositeBiTwin;
 
     unsigned int nPrimeSeq; // prime sequence number currently being processed
     unsigned int nCandidateMultiplier; // current candidate for power test
     unsigned int nCandidates; // number of candidates for power tests
 
 public:
-    CSieveOfEratosthenes(unsigned int nSieveSize, unsigned int nBits, unsigned int nPrimeChainType, uint256 hashBlockHeader, CBigNum& bnFixedMultiplier)
+    CSieveOfEratosthenes(unsigned int nSieveSize, unsigned int nBits, uint256 hashBlockHeader, CBigNum& bnFixedMultiplier)
     {
         this->nSieveSize = nSieveSize;
         this->nBits = nBits;
-        this->nPrimeChainType = nPrimeChainType;
         this->hashBlockHeader = hashBlockHeader;
         this->bnFixedFactor = bnFixedMultiplier * CBigNum(hashBlockHeader);
         nPrimeSeq = 0;
-        vfCompositeInChain = std::vector<bool> (1000000, false);
+        vfCompositeCunningham1 = std::vector<bool> (1000000, false);
+        vfCompositeCunningham2 = std::vector<bool> (1000000, false);
+        vfCompositeBiTwin = std::vector<bool> (1000000, false);
         nCandidateMultiplier = 0;
-        nCandidates = nSieveSize;
+        nCandidates = 3 * nSieveSize;
     }
 
     // Get total number of candidates for power test
@@ -108,7 +110,7 @@ public:
     //   False - scan complete, no more candidate and reset scan
     bool GetNextCandidateMultiplier(unsigned int& nVariableMultiplier)
     {
-        while (true)
+        loop
         {
             nCandidateMultiplier++;
             if (nCandidateMultiplier >= nSieveSize)
@@ -116,7 +118,9 @@ public:
                 nCandidateMultiplier = 0;
                 return false;
             }
-            if (!vfCompositeInChain[nCandidateMultiplier])
+            if (!vfCompositeCunningham1[nCandidateMultiplier] ||
+                !vfCompositeCunningham2[nCandidateMultiplier] ||
+                !vfCompositeBiTwin[nCandidateMultiplier])
             {
                 nVariableMultiplier = nCandidateMultiplier;
                 return true;
