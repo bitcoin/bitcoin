@@ -123,13 +123,15 @@ void Shutdown()
 //
 void DetectShutdownThread(boost::thread_group* threadGroup)
 {
+    bool shutdown = ShutdownRequested();
     // Tell the main threads to shutdown.
-    while (!fRequestShutdown)
+    while (!shutdown)
     {
         MilliSleep(200);
-        if (fRequestShutdown)
-            threadGroup->interrupt_all();
+        shutdown = ShutdownRequested();
     }
+    if (threadGroup)
+        threadGroup->interrupt_all();
 }
 
 void HandleSIGTERM(int)
