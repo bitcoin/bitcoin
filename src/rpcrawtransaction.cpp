@@ -134,12 +134,13 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 
 Value getrawtransaction(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
-            "getrawtransaction <txid> [verbose=0]\n"
+            "getrawtransaction <txid> [verbose=0] [blockhash]\n"
             "If verbose=0, returns a string that is\n"
             "serialized, hex-encoded data for <txid>.\n"
             "If verbose is non-zero, returns an Object\n"
+            "If blockhash is provided, search into block \n"
             "with information about <txid>.");
 
     uint256 hash = ParseHashV(params[0], "parameter 1");
@@ -150,7 +151,16 @@ Value getrawtransaction(const Array& params, bool fHelp)
 
     CTransaction tx;
     uint256 hashBlock = 0;
-    if (!GetTransaction(hash, tx, hashBlock, true))
+    uint256 lookupHashBlock = 0;
+    if (params.size() > 2){
+        std::string strHash = params[2].get_str();
+        uint256 hash(strHash);
+        if (mapBlockIndex.count(hash) == 0)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Blockhash not found");
+        lookupHashBlock = hash;
+    }
+
+    if (!GetTransaction(hash, tx, hashBlock, true,lookupHashBlock))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);

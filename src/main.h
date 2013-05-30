@@ -169,7 +169,7 @@ bool IsInitialBlockDownload();
 /** Format a string that describes several potential problems detected by the core */
 std::string GetWarnings(std::string strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
-bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
+bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false, const uint256 lookupHashBlock = 0);
 /** Connect/disconnect blocks until pindexNew is the new tip of the active block chain */
 bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew);
 /** Find the best known block, and make it the tip of the block chain */

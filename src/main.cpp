@@ -961,7 +961,7 @@ bool CWalletTx::AcceptWalletTransaction(bool fCheckInputs)
 
 
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
-bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock, bool fAllowSlow)
+bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock, bool fAllowSlow, const uint256 lookupHashBlock)
 {
     CBlockIndex *pindexSlow = NULL;
     {
@@ -972,6 +972,18 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
             {
                 txOut = mempool.lookup(hash);
                 return true;
+            }
+        }
+
+        if (lookupHashBlock != 0) {
+            CBlock block;
+            CBlockIndex* pblockindex = mapBlockIndex[lookupHashBlock];
+            block.ReadFromDisk(pblockindex);
+            BOOST_FOREACH(const CTransaction&tx, block.vtx){
+                if( tx.GetHash() == hash ){
+                    txOut = tx;
+                    return true;
+                }
             }
         }
 
