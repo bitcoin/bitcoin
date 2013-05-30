@@ -30,6 +30,38 @@ void GeneratePrimeTable()
     printf("\n");
 }
 
+// Get next prime number of p
+bool PrimeTableGetNextPrime(unsigned int& p)
+{
+    BOOST_FOREACH(unsigned int nPrime, vPrimes)
+    {
+        if (nPrime > p)
+        {
+            p = nPrime;
+            return true;
+        }
+    }
+    return false;
+}
+
+// Get previous prime number of p
+bool PrimeTableGetPreviousPrime(unsigned int& p)
+{
+    unsigned int nPrevPrime = 0;
+    BOOST_FOREACH(unsigned int nPrime, vPrimes)
+    {
+        if (nPrime >= p)
+            break;
+        nPrevPrime = nPrime;
+    }
+    if (nPrevPrime)
+    {
+        p = nPrevPrime;
+        return true;
+    }
+    return false;
+}
+
 // Compute Primorial number p#
 void Primorial(unsigned int p, CBigNum& bnPrimorial)
 {

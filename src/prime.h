@@ -8,12 +8,16 @@
 #include "main.h"
 
 static const CBigNum bnOne = 1;
-static const CBigNum bnPrimeMax = (bnOne << 2039) - 1;
+static const CBigNum bnPrimeMax = (bnOne << 2000) - 1;
 static const CBigNum bnPrimeMin = (bnOne << 256);
 static const unsigned int nMaxSieveSize = 1000000u;
 
 // Generate small prime table
 void GeneratePrimeTable();
+// Get next prime number of p
+bool PrimeTableGetNextPrime(unsigned int& p);
+// Get previous prime number of p
+bool PrimeTableGetPreviousPrime(unsigned int& p);
 
 // Compute primorial number p#
 void Primorial(unsigned int p, CBigNum& bnPrimorial);
