@@ -313,9 +313,8 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         // Build sieve
         nStart = GetTimeMicros();
         psieve = new CSieveOfEratosthenes(nMaxSieveSize, block.nBits, block.GetHeaderHash(), bnFixedMultiplier);
-        unsigned int nComposite = 0;
-        while (psieve->Weave(nComposite));
-        printf("MineProbablePrimeChain() : new sieve (%u%%) ready in %uus\n", psieve->GetCandidateCount()*100/nMaxSieveSize, (unsigned int) (GetTimeMicros() - nStart));
+        while (psieve->Weave());
+        printf("MineProbablePrimeChain() : new sieve (%u/%u) ready in %uus\n", psieve->GetCandidateCount(), nMaxSieveSize, (unsigned int) (GetTimeMicros() - nStart));
     }
 
     CBigNum bnChainOrigin;
@@ -478,9 +477,8 @@ std::string GetPrimeChainName(CBigNum& bnPrimeChainOrigin)
 // Return values:
 //   True  - weaved another prime; nComposite - number of composites removed
 //   False - sieve already completed
-bool CSieveOfEratosthenes::Weave(unsigned int& nComposite)
+bool CSieveOfEratosthenes::Weave()
 {
-    nComposite = 0;
     if (nPrimeSeq >= vPrimes.size() || vPrimes[nPrimeSeq] >= nSieveSize)
         return false;  // sieve has been completed
     CBigNum p = vPrimes[nPrimeSeq];
@@ -506,32 +504,20 @@ bool CSieveOfEratosthenes::Weave(unsigned int& nComposite)
     {
         // Find the first number that's divisible by this prime
         int nDelta = ((nBiTwinSeq % 2 == 0)? (-1) : 1);
-        unsigned int nVariableMultiplier = ((bnFixedInverse * (p - nDelta)) % p).getuint();
+        unsigned int nSolvedMultiplier = ((bnFixedInverse * (p - nDelta)) % p).getuint();
         if (nBiTwinSeq % 2 == 1)
             bnFixedInverse *= bnTwoInverse; // for next number in chain
 
-        while (nVariableMultiplier < nSieveSize)
-        {
-            if (nBiTwinSeq < nChainLength && !vfCompositeBiTwin[nVariableMultiplier])
-            {
+        unsigned int nPrime = vPrimes[nPrimeSeq];
+        if (nBiTwinSeq < nChainLength)
+            for (unsigned int nVariableMultiplier = nSolvedMultiplier; nVariableMultiplier < nSieveSize; nVariableMultiplier += nPrime)
                 vfCompositeBiTwin[nVariableMultiplier] = true;
-                nComposite++;
-                nCandidates--;
-            }
-            if (((nBiTwinSeq & 1u) == 0) && !vfCompositeCunningham1[nVariableMultiplier])
-            {
+        if (((nBiTwinSeq & 1u) == 0))
+            for (unsigned int nVariableMultiplier = nSolvedMultiplier; nVariableMultiplier < nSieveSize; nVariableMultiplier += nPrime)
                 vfCompositeCunningham1[nVariableMultiplier] = true;
-                nComposite++;
-                nCandidates--;
-            }
-            if (((nBiTwinSeq & 1u) == 1u) && !vfCompositeCunningham2[nVariableMultiplier])
-            {
+        if (((nBiTwinSeq & 1u) == 1u))
+            for (unsigned int nVariableMultiplier = nSolvedMultiplier; nVariableMultiplier < nSieveSize; nVariableMultiplier += nPrime)
                 vfCompositeCunningham2[nVariableMultiplier] = true;
-                nComposite++;
-                nCandidates--;
-            }
-            nVariableMultiplier += vPrimes[nPrimeSeq];
-        }
     }
     nPrimeSeq++;
     return true;
