@@ -52,8 +52,6 @@ BOOST_AUTO_TEST_CASE(May15)
     if (read_block("Mar12Fork.dat", forkingBlock))
     {
         CValidationState state;
-        forkingBlock.nTime = tMay15-1; // Invalidates PoW
-        BOOST_CHECK(!forkingBlock.CheckBlock(state, false, false));
 
         // After May 15'th, big blocks are OK:
         forkingBlock.nTime = tMay15; // Invalidates PoW
