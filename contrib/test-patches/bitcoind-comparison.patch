@@ -3,9 +3,9 @@ index 04a8618..519429a 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
 @@ -31,8 +31,8 @@ CTxMemPool mempool;
- unsigned int nTransactionsUpdated = 0;
  
  map<uint256, CBlockIndex*> mapBlockIndex;
+ std::vector<CBlockIndex*> vBlockIndexByHeight;
 -uint256 hashGenesisBlock("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
 -static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 +uint256 hashGenesisBlock("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206");
