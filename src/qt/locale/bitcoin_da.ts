@@ -572,7 +572,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     <message numerus="yes">
         <location line="+4"/>
         <source>%n week(s)</source>
-        <translation><numerum>%n uge(r)</numerusform><numerusform>%n uge(r)</numerusform></translation>
+        <translation><numerusform>%n uge(r)</numerusform><numerusform>%n uge(r)</numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
