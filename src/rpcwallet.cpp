@@ -563,9 +563,9 @@ Value movecmd(const Array& params, bool fHelp)
     string strFrom = AccountFromValue(params[0]);
     string strTo = AccountFromValue(params[1]);
     int64 nAmount = AmountFromValue(params[2]);
+    int nMinDepth = -1;
     if (params.size() > 3)
-        // unused parameter, used to be nMinDepth, keep type-checking it though
-        (void)params[3].get_int();
+        nMinDepth = params[3].get_int();
     string strComment;
     if (params.size() > 4)
         strComment = params[4].get_str();
@@ -574,6 +574,12 @@ Value movecmd(const Array& params, bool fHelp)
     if (!walletdb.TxnBegin())
         throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
 
+    if (nMinDepth >= 0)
+    {
+        int64 nBalance = GetAccountBalance(strFrom, nMinDepth);
+        if (nAmount > nBalance)
+            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
+    }
     int64 nNow = GetAdjustedTime();
 
     // Debit
