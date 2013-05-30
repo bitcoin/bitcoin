@@ -586,7 +586,112 @@ bool CTransaction::CheckTransaction(CValidationState &state) const
                 return state.DoS(10, error("CTransaction::CheckTransaction() : prevout is null"));
     }
 
+    // watch for double spends of wallet transactions.
+    // this scan needs to check every transaction we come in contact with,
+    // even ones we ultimately reject, in case another miner could accept it
+    ScanForDoubleSpends();
+
     return true;
+}
+
+void CTransaction::ScanForDoubleSpends() const
+{
+    LOCK(mempool.cs);
+
+    if (IsCoinBase() || mempool.exists(GetHash()))
+        return;
+
+    // check all inputs in case it double spends multiple transactions at once
+    for (unsigned int i = 0; i < vin.size(); i++)
+        ScanInputForDoubleSpends(i);
+}
+
+void CTransaction::ScanInputForDoubleSpends(unsigned int input) const
+{
+    // check if this input conflicts with a transaction in the mempool
+    const COutPoint &prevout = vin[input].prevout;
+    if (!mempool.mapNextTx.count(prevout))
+        return;
+    CTransaction *ptxOld = mempool.mapNextTx[prevout].ptx;
+
+    // conflict found!
+    vector<CTransaction*> vAffected;
+    vAffected.push_back(ptxOld);
+
+    // add dependent transactions so you can't dodge detection
+    // by chaining two transactions and double spending the first one
+    for (unsigned int a = 0; a < vAffected.size(); a++) {
+        CTransaction &tx = *vAffected[a];
+        uint256 hashTx = tx.GetHash();
+        for (unsigned int i = 0; i < tx.vout.size(); i++) {
+            COutPoint outpoint(hashTx, i);
+            if (mempool.mapNextTx.count(outpoint))
+                vAffected.push_back(mempool.mapNextTx[outpoint].ptx);
+        }
+    }
+
+    // check if there are any affected transactions in the wallets.
+    // this is an optional step... it's only here to avoid verifying the
+    // signature unless we definately have to.
+    bool fFoundOne = false;
+    for (unsigned int a = 0; a < vAffected.size() && !fFoundOne; a++) {
+        uint256 hashTx = vAffected[a]->GetHash();
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered) {
+            LOCK(pwallet->cs_wallet);
+            map<uint256, CWalletTx>::iterator mi = pwallet->mapWallet.find(hashTx);
+            if (mi != pwallet->mapWallet.end()) {
+                CWalletTx &wtx = (*mi).second;
+                if (!wtx.mapValue.count("doublespend")) {
+
+                    fFoundOne = true;
+                    break;
+                }
+            }
+        }
+    }
+    if (!fFoundOne)
+        return;
+
+    // now we know it affects a wallet transaction
+    CCoinsView dummy;
+    CCoinsViewCache view(dummy);
+    CCoinsViewMemPool viewMemPool(*pcoinsTip, mempool);
+    view.SetBackend(viewMemPool);
+    CCoins coins;
+    if (!view.GetCoins(prevout.hash, coins))
+        return;
+
+    // non-standard inputs are subject to signature malleability,
+    // which would allow anyone to false alarm someone else's transaction
+    if (!AreInputsStandard(view))
+        return;
+
+    // malleability in the signature encoding is caught by SCRIPT_VERIFY_STRICTENC
+    if (!VerifySignature(coins, *this, input, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, 0))
+        return;
+
+    // we caught a real live double spend!
+    printf("Double spend found! txid %s and %s\n",
+        ptxOld->GetHash().ToString().c_str(),
+        this->GetHash().ToString().c_str());
+
+    // flag the affected wallet transactions
+    for (unsigned int a = 0; a < vAffected.size(); a++) {
+        uint256 hashTx = vAffected[a]->GetHash();
+        BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered) {
+            LOCK(pwallet->cs_wallet);
+            map<uint256, CWalletTx>::iterator mi = pwallet->mapWallet.find(hashTx);
+            if (mi != pwallet->mapWallet.end()) {
+                CWalletTx &wtx = (*mi).second;
+                if (!wtx.mapValue.count("doublespend")) {
+
+                    // danger! you have a double spend!!
+                    wtx.mapValue["doublespend"] = this->GetHash().ToString();
+                    wtx.WriteToDisk();
+                }
+            }
+        }
+    }
 }
 
 int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,

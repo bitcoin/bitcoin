@@ -631,6 +631,22 @@ int CWalletTx::GetRequestCount() const
     return nRequests;
 }
 
+int CWalletTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const
+{
+    int depth = CMerkleTx::GetDepthInMainChain(pindexRet);
+
+    if (mapValue.count("doublespend")) {
+        // put double spends on hold long enough to ride out a fork.
+        // during a fork, there could be double spends in another fork that
+        // the blockchain code ignores. the doublespend detection can detect
+        // double spends from other forks and put at-risk transactions on hold.
+        if (depth < 200)
+            return 0;
+    }
+
+    return depth;
+}
+
 void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
                            list<pair<CTxDestination, int64> >& listSent, int64& nFee, string& strSentAccount) const
 {
