@@ -17,11 +17,11 @@ Release Process
 
 ###tag version in git
 
-	git tag -a v0.8.0
+	git tag -a v(new version, e.g. 0.8.0)
 
 ###write release notes. git shortlog helps a lot, for example:
 
-	git shortlog --no-merges v0.7.2..v0.8.0
+	git shortlog --no-merges v(current version, e.g. 0.7.2)..v(new version, e.g. 0.8.0)
 
 * * *
 
@@ -30,7 +30,7 @@ Release Process
  From a directory containing the bitcoin source, gitian-builder and gitian.sigs
   
 	export SIGNER=(your gitian key, ie bluematt, sipa, etc)
-	export VERSION=0.8.0
+	export VERSION=(new version, e.g. 0.8.0)
 	cd ./gitian-builder
 
  Fetch and build inputs: (first time, or when dependency versions change)
@@ -134,7 +134,7 @@ Commit your signature to gitian.sigs:
 
 From a directory containing bitcoin source, gitian.sigs and gitian zips
 
-	export VERSION=0.5.1
+	export VERSION=(new version, e.g. 0.8.0)
 	mkdir bitcoin-${VERSION}-linux-gitian
 	pushd bitcoin-${VERSION}-linux-gitian
 	unzip ../bitcoin-${VERSION}-linux-gitian.zip
