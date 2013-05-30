@@ -123,7 +123,9 @@ public:
 };
 
 extern const CRPCTable tableRPC;
-extern CReserveKey* pMiningKey;
+
+extern void InitRPCMining();
+extern void ShutdownRPCMining();
 
 extern int64 nWalletUnlockTime;
 extern int64 AmountFromValue(const json_spirit::Value& value);
