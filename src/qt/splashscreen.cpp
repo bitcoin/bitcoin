@@ -3,6 +3,7 @@
 #include "util.h"
 
 #include <QPainter>
+#undef loop /* ugh, remove this when the #define loop is gone from util.h */
 #include <QApplication>
 
 SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) :
