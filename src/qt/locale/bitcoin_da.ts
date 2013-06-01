@@ -21,11 +21,11 @@ Distributed under the MIT/X11 software license, see the accompanying file COPYIN
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>
-Dette program er ekperimentielt.
+Dette program er eksperimentelt.
 
-Det er gjort tilgængeligt under MIT/X11-softwarelicensen. Se den tilhørende fil &quot;COPYING&quot; eller http://www.opensource.org/licenses/mit-license.php.
+Det er gjort tilgængeligt under MIT/X11-softwarelicensen. Se den medfølgende fil &quot;COPYING&quot; eller http://www.opensource.org/licenses/mit-license.php.
 
-Produktet indeholder software som er udviklet af OpenSSL Project til brug i OpenSSL Toolkit (http://www.openssl.org/), kryptografisk software skrevet af Eric Young (eay@cryptsoft.com) og UPnP-software skrevet af Thomas Bernard.</translation>
+Produktet indeholder software som er udviklet af OpenSSL Project til brug i OpenSSL Toolkit (http://www.openssl.org/), og kryptografisk software skrevet af Eric Young (eay@cryptsoft.com) og UPnP-software skrevet af Thomas Bernard.</translation>
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="+14"/>
@@ -108,12 +108,12 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     <message>
         <location line="-44"/>
         <source>Verify a message to ensure it was signed with a specified Bitcoin address</source>
-        <translation>Efterprøv en besked for at sikre, at den er underskrevet med den angivne Bitcoin-adresse</translation>
+        <translation>Verificér en besked for at sikre, at den er underskrevet med den angivne Bitcoin-adresse</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Verify Message</source>
-        <translation>Efterprøv besked</translation>
+        <translation>Verificér besked</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -450,7 +450,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     <message>
         <location line="-4"/>
         <source>&amp;Verify message...</source>
-        <translation>Efterprøv besked...</translation>
+        <translation>Verificér besked...</translation>
     </message>
     <message>
         <location line="-165"/>
@@ -486,7 +486,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     <message>
         <location line="+9"/>
         <source>&amp;Show / Hide</source>
-        <translation>Vis/skjul</translation>
+        <translation>Vis / skjul</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -506,7 +506,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     <message>
         <location line="+2"/>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Efterprøv beskeder for at sikre, at de er underskrevet med de(n) angivne Bitcoin-adresse(r)</translation>
+        <translation>Verificér beskeder for at sikre, at de er underskrevet med de(n) angivne Bitcoin-adresse(r)</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -552,12 +552,12 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     <message>
         <location line="+12"/>
         <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
-        <translation>%1 ud af %2 (estimeret) blokke af transaktionshistorikken er blevet behandlet.</translation>
+        <translation>Behandlet %1 ud af %2 (estimeret) blokke af transaktionshistorikken.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation>%1 blokke af transaktionshistorikken er blevet behandlet.</translation>
+        <translation>Behandlet %1 blokke af transaktionshistorikken.</translation>
     </message>
     <message numerus="yes">
         <location line="+20"/>
@@ -577,7 +577,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     <message>
         <location line="+4"/>
         <source>%1 behind</source>
-        <translation>%1 bagefter</translation>
+        <translation>%1 bagud</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -607,7 +607,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     <message>
         <location line="+70"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
-        <translation>Transaktionen overskrider størrelsesgrænsen. Du kan stadig sende den for et gebyr på %1, hvilket går til de knuder, der behandler din transaktion og hjælper med at understøtte netværket. Vil du betale gebyret?</translation>
+        <translation>Transaktionen overskrider størrelsesgrænsen. Du kan stadig sende den for et gebyr på %1, hvilket går til de enheder, der behandler din transaktion og hjælper med at understøtte netværket. Vil du betale gebyret?</translation>
     </message>
     <message>
         <location line="-140"/>
@@ -1165,7 +1165,7 @@ Adresse: %4
     <message>
         <location line="+68"/>
         <source>Using OpenSSL version</source>
-        <translation>Anvendt OpenSSL-version</translation>
+        <translation>Anvender OpenSSL-version</translation>
     </message>
     <message>
         <location line="+49"/>
@@ -1235,7 +1235,7 @@ Adresse: %4
     <message>
         <location line="-260"/>
         <source>Build date</source>
-        <translation>Byggedato</translation>
+        <translation>Oprettelsesdato</translation>
     </message>
     <message>
         <location line="-104"/>
@@ -1457,7 +1457,7 @@ Adresse: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="+14"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Underskrifter - Underskriv/efterprøv en besked</translation>
+        <translation>Underskrifter - Underskriv/verificér en besked</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1535,12 +1535,12 @@ Adresse: %4
     <message>
         <location line="-87"/>
         <source>&amp;Verify Message</source>
-        <translation>Efterprøv besked</translation>
+        <translation>Verificér besked</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Indtast den underskrevne adresse, beskeden (inkluder linjeskift, mellemrum mv. nøjagtigt, som de fremgår) og underskriften for at efterprøve beskeden. Vær forsigtig med ikke at lægge mere i underskriften end besked selv, så du undgår at blive narret af et man-in-the-middle-angreb.</translation>
+        <translation>Indtast den underskrevne adresse, beskeden (inkluder linjeskift, mellemrum mv. nøjagtigt, som de fremgår) og underskriften for at verificere beskeden. Vær forsigtig med ikke at lægge mere i underskriften end besked selv, så du undgår at blive narret af et man-in-the-middle-angreb.</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -1550,17 +1550,17 @@ Adresse: %4
     <message>
         <location line="+40"/>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Efterprøv beskeden for at sikre, at den er underskrevet med den angivne Bitcoin-adresse</translation>
+        <translation>Verificér beskeden for at sikre, at den er underskrevet med den angivne Bitcoin-adresse</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Verify &amp;Message</source>
-        <translation>Efterprøv besked</translation>
+        <translation>Verificér besked</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Reset all verify message fields</source>
-        <translation>Nulstil alle efterprøv besked-indtastningsfelter</translation>
+        <translation>Nulstil alle verificér besked-indtastningsfelter</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
@@ -1637,12 +1637,12 @@ Adresse: %4
     <message>
         <location line="+7"/>
         <source>Message verification failed.</source>
-        <translation>Efterprøvelse af besked mislykkedes.</translation>
+        <translation>Verificering af besked mislykkedes.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Message verified.</source>
-        <translation>Besked efterprøvet.</translation>
+        <translation>Besked verificeret.</translation>
     </message>
 </context>
 <context>
@@ -2528,7 +2528,7 @@ f.eks.: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     <message>
         <location line="+1"/>
         <source>How thorough the block verification is (0-4, default: 3)</source>
-        <translation>Grundighed af efterprøvning af blokke (0-4, standard: 3)</translation>
+        <translation>Grundighed af verificeringen af blokke (0-4, standard: 3)</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -2548,12 +2548,12 @@ f.eks.: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     <message>
         <location line="+26"/>
         <source>Verifying blocks...</source>
-        <translation>Efterprøver blokke...</translation>
+        <translation>Verificere blokke...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Verifying wallet...</source>
-        <translation>Efterprøver tegnebog...</translation>
+        <translation>Verificere tegnebog...</translation>
     </message>
     <message>
         <location line="-69"/>
@@ -2563,7 +2563,7 @@ f.eks.: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     <message>
         <location line="-76"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
-        <translation>Angiv nummeret af skriptefterprøvningstråde (op til 16, 0 = automatisk, &lt;0 = efterlad det antal kerner tilgængelige, standard: 0)</translation>
+        <translation>Angiv nummeret af tråde til verificering af script (op til 16, 0 = automatisk, &lt;0 = efterlad det antal kerner tilgængelige, standard: 0)</translation>
     </message>
     <message>
         <location line="+77"/>
