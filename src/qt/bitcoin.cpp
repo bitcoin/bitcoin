@@ -15,9 +15,6 @@
 #include "ui_interface.h"
 #include "paymentserver.h"
 #include "splashscreen.h"
-#ifdef Q_OS_MAC
-#include "macdockiconhandler.h"
-#endif
 
 #include <QMessageBox>
 #if QT_VERSION < 0x050000
@@ -205,14 +202,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-#ifdef Q_OS_MAC
-    // on mac, also change the icon now because it would look strange to have a testnet splash (green) and a std app icon (orange)
-    if(GetBoolArg("-testnet", false))
-    {
-        MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
-    }
-#endif
-
     SplashScreen splash(QPixmap(), 0);
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
     {
@@ -232,7 +221,7 @@ int main(int argc, char *argv[])
 
         boost::thread_group threadGroup;
 
-        BitcoinGUI window;
+        BitcoinGUI window(GetBoolArg("-testnet", false), 0);
         guiref = &window;
 
         QTimer* pollShutdownTimer = new QTimer(guiref);
