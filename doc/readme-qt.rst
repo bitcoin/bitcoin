@@ -28,6 +28,12 @@ for Ubuntu >= 12.04 (please read the 'Berkely DB version warning' below):
         libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev \
         libssl-dev libdb++-dev libminiupnpc-dev
 
+For Qt 5 you need the following, otherwise you get an error with lrelease when running qmake:
+
+::
+
+    apt-get install qt5-qmake libqt5gui5 libqt5core5 libqt5dbus5 qttools5-dev-tools
+
 then execute the following:
 
 ::
