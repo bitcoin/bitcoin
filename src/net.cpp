@@ -10,6 +10,10 @@
 #include "ui_interface.h"
 #include "script.h"
 
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 #ifdef WIN32
 #include <string.h>
 #endif

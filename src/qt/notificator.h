@@ -4,6 +4,10 @@
 #include <QObject>
 #include <QIcon>
 
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 QT_BEGIN_NAMESPACE
 class QSystemTrayIcon;
 #ifdef USE_DBUS
