@@ -17,15 +17,13 @@
 #include "splashscreen.h"
 
 #include <QMessageBox>
+#if QT_VERSION < 0x050000
 #include <QTextCodec>
+#endif
 #include <QLocale>
 #include <QTimer>
 #include <QTranslator>
 #include <QLibraryInfo>
-
-#ifdef Q_OS_MAC
-#include "macdockiconhandler.h"
-#endif
 
 #if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
 #define _BITCOIN_QT_PLUGINS_INCLUDED
@@ -118,9 +116,11 @@ int main(int argc, char *argv[])
     // Command-line options take precedence:
     ParseParameters(argc, argv);
 
+#if QT_VERSION < 0x050000
     // Internal string conversion is all UTF-8
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
     QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
+#endif
 
     Q_INIT_RESOURCE(bitcoin);
     QApplication app(argc, argv);
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
     // as it is used to locate QSettings)
     QApplication::setOrganizationName("Bitcoin");
     QApplication::setOrganizationDomain("bitcoin.org");
-    if(GetBoolArg("-testnet")) // Separate UI settings for testnet
+    if (GetBoolArg("-testnet", false)) // Separate UI settings for testnet
         QApplication::setApplicationName("Bitcoin-Qt-testnet");
     else
         QApplication::setApplicationName("Bitcoin-Qt");
@@ -202,15 +202,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-#ifdef Q_OS_MAC
-    // on mac, also change the icon now because it would look strange to have a testnet splash (green) and a std app icon (orange)
-    if(GetBoolArg("-testnet")) {
-        MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
-    }
-#endif
-
     SplashScreen splash(QPixmap(), 0);
-    if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
+    if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
     {
         splash.show();
         splash.setAutoFillBackground(true);
@@ -222,13 +215,16 @@ int main(int argc, char *argv[])
 
     try
     {
+#ifndef Q_OS_MAC
         // Regenerate startup link, to fix links to old versions
+        // OSX: makes no sense on mac and might also scan/mount external (and sleeping) volumes (can take up some secs)
         if (GUIUtil::GetStartOnSystemStartup())
             GUIUtil::SetStartOnSystemStartup(true);
+#endif
 
         boost::thread_group threadGroup;
 
-        BitcoinGUI window;
+        BitcoinGUI window(GetBoolArg("-testnet", false), 0);
         guiref = &window;
 
         QTimer* pollShutdownTimer = new QTimer(guiref);
@@ -254,7 +250,7 @@ int main(int argc, char *argv[])
                 window.setCurrentWallet("~Default");
 
                 // If -min option passed, start window minimized.
-                if(GetBoolArg("-min"))
+                if(GetBoolArg("-min", false))
                 {
                     window.showMinimized();
                 }

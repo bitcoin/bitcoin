@@ -44,7 +44,9 @@
 #include <QMovie>
 #include <QTimer>
 #include <QDragEnterEvent>
+#if QT_VERSION < 0x050000
 #include <QUrl>
+#endif
 #include <QMimeData>
 #include <QStyle>
 #include <QSettings>
@@ -55,7 +57,7 @@
 
 const QString BitcoinGUI::DEFAULT_WALLET = "~Default";
 
-BitcoinGUI::BitcoinGUI(QWidget *parent) :
+BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     QMainWindow(parent),
     clientModel(0),
     encryptWalletAction(0),
@@ -67,14 +69,30 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
     prevBlocks(0)
 {
     restoreWindowGeometry();
-    setWindowTitle(tr("Bitcoin") + " - " + tr("Wallet"));
+
 #ifndef Q_OS_MAC
-    QApplication::setWindowIcon(QIcon(":icons/bitcoin"));
-    setWindowIcon(QIcon(":icons/bitcoin"));
+    if (!fIsTestnet)
+    {
+        setWindowTitle(tr("Bitcoin") + " - " + tr("Wallet"));
+        QApplication::setWindowIcon(QIcon(":icons/bitcoin"));
+        setWindowIcon(QIcon(":icons/bitcoin"));
+    }
+    else
+    {
+        setWindowTitle(tr("Bitcoin") + " - " + tr("Wallet") + " " + tr("[testnet]"));
+        QApplication::setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+        setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+    }
 #else
     setUnifiedTitleAndToolBarOnMac(true);
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
+
+    if (!fIsTestnet)
+        MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin"));
+    else
+        MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
 #endif
+
     // Create wallet frame and make it the central widget
     walletFrame = new WalletFrame(this);
     setCentralWidget(walletFrame);
@@ -84,7 +102,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
 
     // Create actions for the toolbar, menu bar and tray/dock icon
     // Needs walletFrame to be initialized
-    createActions();
+    createActions(fIsTestnet);
 
     // Create application menu bar
     createMenuBar();
@@ -93,7 +111,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
     createToolBars();
 
     // Create system tray icon and notification
-    createTrayIcon();
+    createTrayIcon(fIsTestnet);
 
     // Create status bar
     statusBar();
@@ -157,7 +175,7 @@ BitcoinGUI::~BitcoinGUI()
 #endif
 }
 
-void BitcoinGUI::createActions()
+void BitcoinGUI::createActions(bool fIsTestnet)
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
@@ -211,7 +229,10 @@ void BitcoinGUI::createActions()
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Bitcoin"), this);
+    if (!fIsTestnet)
+        aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Bitcoin"), this);
+    else
+        aboutAction = new QAction(QIcon(":/icons/bitcoin_testnet"), tr("&About Bitcoin"), this);
     aboutAction->setStatusTip(tr("Show information about Bitcoin"));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
@@ -220,7 +241,10 @@ void BitcoinGUI::createActions()
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
     optionsAction->setStatusTip(tr("Modify configuration options for Bitcoin"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
-    toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Show / Hide"), this);
+    if (!fIsTestnet)
+        toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Show / Hide"), this);
+    else
+        toggleHideAction = new QAction(QIcon(":/icons/bitcoin_testnet"), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet..."), this);
@@ -297,27 +321,6 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
     this->clientModel = clientModel;
     if(clientModel)
     {
-        // Replace some strings and icons, when using the testnet
-        if(clientModel->isTestNet())
-        {
-            setWindowTitle(windowTitle() + QString(" ") + tr("[testnet]"));
-#ifndef Q_OS_MAC
-            QApplication::setWindowIcon(QIcon(":icons/bitcoin_testnet"));
-            setWindowIcon(QIcon(":icons/bitcoin_testnet"));
-#else
-            MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
-#endif
-            if(trayIcon)
-            {
-                // Just attach " [testnet]" to the existing tooltip
-                trayIcon->setToolTip(trayIcon->toolTip() + QString(" ") + tr("[testnet]"));
-                trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
-            }
-
-            toggleHideAction->setIcon(QIcon(":/icons/toolbar_testnet"));
-            aboutAction->setIcon(QIcon(":/icons/toolbar_testnet"));
-        }
-
         // Create system tray menu (or setup the dock menu) that late to prevent users from calling actions,
         // while the client has not yet fully loaded
         createTrayIconMenu();
@@ -352,13 +355,22 @@ void BitcoinGUI::removeAllWallets()
     walletFrame->removeAllWallets();
 }
 
-void BitcoinGUI::createTrayIcon()
+void BitcoinGUI::createTrayIcon(bool fIsTestnet)
 {
 #ifndef Q_OS_MAC
     trayIcon = new QSystemTrayIcon(this);
 
-    trayIcon->setToolTip(tr("Bitcoin client"));
-    trayIcon->setIcon(QIcon(":/icons/toolbar"));
+    if (!fIsTestnet)
+    {
+        trayIcon->setToolTip(tr("Bitcoin client"));
+        trayIcon->setIcon(QIcon(":/icons/toolbar"));
+    }
+    else
+    {
+        trayIcon->setToolTip(tr("Bitcoin client") + " " + tr("[testnet]"));
+        trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
+    }
+
     trayIcon->show();
 #endif
 

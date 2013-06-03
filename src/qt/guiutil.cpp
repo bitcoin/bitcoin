@@ -13,8 +13,12 @@
 #include <QDoubleValidator>
 #include <QFont>
 #include <QLineEdit>
+#if QT_VERSION >= 0x050000
+#include <QUrlQuery>
+#else
 #include <QUrl>
-#include <QTextDocument> // For Qt::escape
+#endif
+#include <QTextDocument> // for Qt::mightBeRichText
 #include <QAbstractItemView>
 #include <QClipboard>
 #include <QFileDialog>
@@ -86,7 +90,13 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
     SendCoinsRecipient rv;
     rv.address = uri.path();
     rv.amount = 0;
+
+#if QT_VERSION < 0x050000
     QList<QPair<QString, QString> > items = uri.queryItems();
+#else
+    QUrlQuery uriQuery(uri);
+    QList<QPair<QString, QString> > items = uriQuery.queryItems();
+#endif
     for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
     {
         bool fShouldReturnFalse = false;
@@ -139,7 +149,11 @@ bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 
 QString HtmlEscape(const QString& str, bool fMultiLine)
 {
+#if QT_VERSION < 0x050000
     QString escaped = Qt::escape(str);
+#else
+    QString escaped = str.toHtmlEscaped();
+#endif
     if(fMultiLine)
     {
         escaped = escaped.replace("\n", "<br>\n");
@@ -176,7 +190,11 @@ QString getSaveFileName(QWidget *parent, const QString &caption,
     QString myDir;
     if(dir.isEmpty()) // Default to user documents location
     {
+#if QT_VERSION < 0x050000
         myDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+#else
+        myDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+#endif
     }
     else
     {
@@ -408,10 +426,61 @@ bool SetStartOnSystemStartup(bool fAutoStart)
     }
     return true;
 }
-#else
 
-// TODO: OSX startup stuff; see:
-// https://developer.apple.com/library/mac/#documentation/MacOSX/Conceptual/BPSystemStartup/Articles/CustomLogin.html
+
+#elif defined(Q_OS_MAC)
+// based on: https://github.com/Mozketo/LaunchAtLoginController/blob/master/LaunchAtLoginController.m
+
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
+
+LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl);
+LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl)
+{
+    // loop through the list of startup items and try to find the bitcoin app
+    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(list, NULL);
+    for(int i = 0; i < CFArrayGetCount(listSnapshot); i++) {
+        LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(listSnapshot, i);
+        UInt32 resolutionFlags = kLSSharedFileListNoUserInteraction | kLSSharedFileListDoNotMountVolumes;
+        CFURLRef currentItemURL = NULL;
+        LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, NULL);
+        if(currentItemURL && CFEqual(currentItemURL, findUrl)) {
+            // found
+            CFRelease(currentItemURL);
+            return item;
+        }
+        if(currentItemURL) {
+            CFRelease(currentItemURL);
+        }
+    }
+    return NULL;
+}
+
+bool GetStartOnSystemStartup()
+{
+    CFURLRef bitcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
+    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
+    return !!foundItem; // return boolified object
+}
+
+bool SetStartOnSystemStartup(bool fAutoStart)
+{
+    CFURLRef bitcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
+    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
+
+    if(fAutoStart && !foundItem) {
+        // add bitcoin app to startup item list
+        LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemBeforeFirst, NULL, NULL, bitcoinAppUrl, NULL, NULL);
+    }
+    else if(!fAutoStart && foundItem) {
+        // remove item
+        LSSharedFileListItemRemove(loginItems, foundItem);
+    }
+    return true;
+}
+#else
 
 bool GetStartOnSystemStartup() { return false; }
 bool SetStartOnSystemStartup(bool fAutoStart) { return false; }
