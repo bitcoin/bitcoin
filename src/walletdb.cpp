@@ -5,6 +5,7 @@
 
 #include "walletdb.h"
 #include "wallet.h"
+#include "hash.h"
 #include <boost/filesystem.hpp>
 
 using namespace std;
@@ -191,6 +192,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         // Taking advantage of the fact that pair serialization
         // is just the two items serialized one after the other
         ssKey >> strType;
+        
         if (strType == "name")
         {
             string strAddress;
@@ -269,8 +271,11 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Error reading wallet database: CPubKey corrupt";
                 return false;
             }
+            
             CKey key;
             CPrivKey pkey;
+            uint256 hash = 0;
+            
             if (strType == "key")
                 ssValue >> pkey;
             else {
@@ -278,14 +283,29 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 ssValue >> wkey;
                 pkey = wkey.vchPrivKey;
             }
-            if (!key.SetPrivKey(pkey, vchPubKey.IsCompressed()))
+            
+            try
+            {
+                ssValue >> hash;
+            }
+            catch(...){}
+            
+            bool fSkipCheck = false;
+            
+            if (hash != 0)
+            {
+                if (Hash(pkey.begin(), pkey.end()) != hash)
+                {
+                    strErr = "Error reading wallet database: CPrivKey corrupt";
+                    return false;
+                }
+                
+                fSkipCheck = true;
+            }
+            
+            if (!key.Load(pkey, vchPubKey, fSkipCheck))
             {
                 strErr = "Error reading wallet database: CPrivKey corrupt";
-                return false;
-            }
-            if (key.GetPubKey() != vchPubKey)
-            {
-                strErr = "Error reading wallet database: CPrivKey pubkey inconsistency";
                 return false;
             }
             if (!pwallet->LoadKey(key, vchPubKey))
