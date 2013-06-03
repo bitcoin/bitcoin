@@ -3,6 +3,7 @@
 #include "util.h"
 
 #include <QPainter>
+#undef loop /* ugh, remove this when the #define loop is gone from util.h */
 #include <QApplication>
 
 SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) :
@@ -26,7 +27,7 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) :
 
     // load the bitmap for writing some text over it
     QPixmap newPixmap;
-    if(GetBoolArg("-testnet")) {
+    if(GetBoolArg("-testnet", false)) {
         newPixmap     = QPixmap(":/images/splash_testnet");
     }
     else {

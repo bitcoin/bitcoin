@@ -11,17 +11,17 @@
 #include "bitcoinrpc.h"
 #include "db.h"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ip/v6_only.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/foreach.hpp>
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/asio/ssl.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/shared_ptr.hpp>
 #include <list>
 
@@ -34,6 +34,7 @@ static std::string strRPCUserColonPass;
 
 // These are created by StartRPCThreads, destroyed in StopRPCThreads
 static asio::io_service* rpc_io_service = NULL;
+static map<string, boost::shared_ptr<deadline_timer> > deadlineTimers;
 static ssl::context* rpc_ssl_context = NULL;
 static boost::thread_group* rpc_worker_group = NULL;
 
@@ -756,7 +757,7 @@ void StartRPCThreads()
     rpc_io_service = new asio::io_service();
     rpc_ssl_context = new ssl::context(*rpc_io_service, ssl::context::sslv23);
 
-    const bool fUseSSL = GetBoolArg("-rpcssl");
+    const bool fUseSSL = GetBoolArg("-rpcssl", false);
 
     if (fUseSSL)
     {
@@ -843,12 +844,33 @@ void StopRPCThreads()
 {
     if (rpc_io_service == NULL) return;
 
+    deadlineTimers.clear();
     rpc_io_service->stop();
     rpc_worker_group->join_all();
     delete rpc_worker_group; rpc_worker_group = NULL;
     delete rpc_ssl_context; rpc_ssl_context = NULL;
     delete rpc_io_service; rpc_io_service = NULL;
 }
+
+void RPCRunHandler(const boost::system::error_code& err, boost::function<void(void)> func)
+{
+    if (!err)
+        func();
+}
+
+void RPCRunLater(const std::string& name, boost::function<void(void)> func, int64 nSeconds)
+{
+    assert(rpc_io_service != NULL);
+
+    if (deadlineTimers.count(name) == 0)
+    {
+        deadlineTimers.insert(make_pair(name,
+                                        boost::shared_ptr<deadline_timer>(new deadline_timer(*rpc_io_service))));
+    }
+    deadlineTimers[name]->expires_from_now(posix_time::seconds(nSeconds));
+    deadlineTimers[name]->async_wait(boost::bind(RPCRunHandler, _1, func));
+}
+
 
 class JSONRequest
 {
@@ -940,6 +962,11 @@ void ServiceConnection(AcceptedConnection *conn)
         // Read HTTP message headers and body
         ReadHTTPMessage(conn->stream(), mapHeaders, strRequest, nProto);
 
+        if (strURI != "/") {
+            conn->stream() << HTTPReply(HTTP_NOT_FOUND, "", false) << std::flush;
+            break;
+        }
+
         // Check authorization
         if (mapHeaders.count("authorization") == 0)
         {
@@ -1010,7 +1037,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
 
     // Observe safe mode
     string strWarning = GetWarnings("rpc");
-    if (strWarning != "" && !GetBoolArg("-disablesafemode") &&
+    if (strWarning != "" && !GetBoolArg("-disablesafemode", false) &&
         !pcmd->okSafeMode)
         throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, string("Safe mode: ") + strWarning);
 
@@ -1044,7 +1071,7 @@ Object CallRPC(const string& strMethod, const Array& params)
                 GetConfigFile().string().c_str()));
 
     // Connect to localhost
-    bool fUseSSL = GetBoolArg("-rpcssl");
+    bool fUseSSL = GetBoolArg("-rpcssl", false);
     asio::io_service io_service;
     ssl::context context(io_service, ssl::context::sslv23);
     context.set_options(ssl::context::no_sslv2);
