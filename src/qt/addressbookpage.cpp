@@ -8,6 +8,10 @@
 #include "csvmodelwriter.h"
 #include "guiutil.h"
 
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 #ifdef USE_QRCODE
 #include "qrcodedialog.h"
 #endif

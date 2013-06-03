@@ -7,6 +7,10 @@
 
 #include <QSettings>
 
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 OptionsModel::OptionsModel(QObject *parent) :
     QAbstractListModel(parent)
 {

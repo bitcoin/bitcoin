@@ -10,6 +10,10 @@
 #include "serialize.h"
 #include "compat.h"
 
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 extern int nConnectTimeout;
 
 #ifdef WIN32
