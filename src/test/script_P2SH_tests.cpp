@@ -78,7 +78,9 @@ BOOST_AUTO_TEST_CASE(sign)
     for (int i = 0; i < 4; i++)
     {
         txFrom.vout[i].scriptPubKey = evalScripts[i];
+        txFrom.vout[i].nValue = COIN;
         txFrom.vout[i+4].scriptPubKey = standardScripts[i];
+        txFrom.vout[i+4].nValue = COIN;
     }
     BOOST_CHECK(txFrom.IsStandard());
 
@@ -143,19 +145,19 @@ BOOST_AUTO_TEST_CASE(set)
     // Test the CScript::Set* methods
     CBasicKeyStore keystore;
     CKey key[4];
-    std::vector<CKey> keys;
+    std::vector<CPubKey> keys;
     for (int i = 0; i < 4; i++)
     {
         key[i].MakeNewKey(true);
         keystore.AddKey(key[i]);
-        keys.push_back(key[i]);
+        keys.push_back(key[i].GetPubKey());
     }
 
     CScript inner[4];
     inner[0].SetDestination(key[0].GetPubKey().GetID());
-    inner[1].SetMultisig(2, std::vector<CKey>(keys.begin(), keys.begin()+2));
-    inner[2].SetMultisig(1, std::vector<CKey>(keys.begin(), keys.begin()+2));
-    inner[3].SetMultisig(2, std::vector<CKey>(keys.begin(), keys.begin()+3));
+    inner[1].SetMultisig(2, std::vector<CPubKey>(keys.begin(), keys.begin()+2));
+    inner[2].SetMultisig(1, std::vector<CPubKey>(keys.begin(), keys.begin()+2));
+    inner[3].SetMultisig(2, std::vector<CPubKey>(keys.begin(), keys.begin()+3));
 
     CScript outer[4];
     for (int i = 0; i < 4; i++)
@@ -169,6 +171,7 @@ BOOST_AUTO_TEST_CASE(set)
     for (int i = 0; i < 4; i++)
     {
         txFrom.vout[i].scriptPubKey = outer[i];
+        txFrom.vout[i].nValue = CENT;
     }
     BOOST_CHECK(txFrom.IsStandard());
 
@@ -179,7 +182,7 @@ BOOST_AUTO_TEST_CASE(set)
         txTo[i].vout.resize(1);
         txTo[i].vin[0].prevout.n = i;
         txTo[i].vin[0].prevout.hash = txFrom.GetHash();
-        txTo[i].vout[0].nValue = 1;
+        txTo[i].vout[0].nValue = 1*CENT;
         txTo[i].vout[0].scriptPubKey = inner[i];
         BOOST_CHECK_MESSAGE(IsMine(keystore, txFrom.vout[i].scriptPubKey), strprintf("IsMine %d", i));
     }
@@ -245,12 +248,12 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     CCoinsViewCache coins(coinsDummy);
     CBasicKeyStore keystore;
     CKey key[3];
-    vector<CKey> keys;
+    vector<CPubKey> keys;
     for (int i = 0; i < 3; i++)
     {
         key[i].MakeNewKey(true);
         keystore.AddKey(key[i]);
-        keys.push_back(key[i]);
+        keys.push_back(key[i].GetPubKey());
     }
 
     CTransaction txFrom;

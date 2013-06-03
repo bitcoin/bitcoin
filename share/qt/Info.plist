@@ -7,7 +7,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Bitcoin-Qt</string>
+	<string>$VERSION, Copyright © 2009-$YEAR The Bitcoin developers</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$VERSION</string>
+	<key>CFBundleVersion</key>
+	<string>$VERSION</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleExecutable</key>
@@ -27,5 +31,7 @@
             </array>
           </dict>
         </array>
+	<key>NSHighResolutionCapable</key>
+	<true/>
 </dict>
 </plist>
