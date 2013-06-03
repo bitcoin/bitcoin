@@ -37,9 +37,9 @@ static QString ipcServerName()
     QString name("BitcoinQt");
 
     // Append a simple hash of the datadir
-    // Note that GetDataDir(true) returns a different path
+    // Note that GetDataDir() returns a different path
     // for -testnet versus main net
-    QString ddir(GetDataDir(true).string().c_str());
+    QString ddir(GetDataDir().string().c_str());
     name.append(QString::number(qHash(ddir)));
 
     return name;
