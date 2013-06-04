@@ -62,7 +62,7 @@ CScript COINBASE_FLAGS;
 
 const string strMessageMagic = "Bitcoin Signed Message:\n";
 
-double dHashesPerSec;
+double dPrimesPerSec;
 int64 nHPSTimerStart;
 
 // Settings
@@ -4427,6 +4427,12 @@ void static BitcoinMiner(CWallet *pwallet)
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
+    static const unsigned int nPrimorialHashFactor = 7;
+    unsigned int nPrimorialMultiplier = nPrimorialHashFactor;
+    int64 nTimeExpected = 0;   // time expected to prime chain (micro-second)
+    int64 nTimeExpectedPrev = 0; // time expected to prime chain last time
+    bool fIncrementPrimorial = true; // increase or decrease primorial factor
+
     while (fGenerateBitcoins)
     {
         if (fShutdown)
@@ -4465,7 +4471,6 @@ void static BitcoinMiner(CWallet *pwallet)
         unsigned int nTriedMultiplier = 0;
 
         // Primecoin: try to find hash divisible by primorial
-        static const unsigned int nPrimorialHashFactor = 7;
         CBigNum bnHashFactor;
         Primorial(nPrimorialHashFactor, bnHashFactor);
         while (CBigNum(pblock->GetHeaderHash()) % bnHashFactor != 0 && pblock->nNonce < 0xffff0000)
@@ -4475,15 +4480,10 @@ void static BitcoinMiner(CWallet *pwallet)
         if (pblock->GetHeaderHash() == 0)
             continue;
         // Primecoin: primorial fixed multiplier
-        static unsigned int nPrimorialMultiplier = nPrimorialHashFactor;
         CBigNum bnPrimorial;
-        Primorial(nPrimorialMultiplier, bnPrimorial);
         unsigned int nRoundTests = 0;
         unsigned int nRoundPrimesHit = 0;
         int64 nPrimeTimerStart = GetTimeMicros();
-        static int64 nTimeExpected = 0;
-        static int64 nTimeExpectedPrev = 0;
-        static bool fIncrementPrimorial = true;
         if (nTimeExpected > nTimeExpectedPrev)
             fIncrementPrimorial = !fIncrementPrimorial;
         nTimeExpectedPrev = nTimeExpected;
@@ -4492,14 +4492,13 @@ void static BitcoinMiner(CWallet *pwallet)
         {
             if (!PrimeTableGetNextPrime(nPrimorialMultiplier))
                 error("PrimecoinMiner() : primorial increment overflow");
-            Primorial(nPrimorialMultiplier, bnPrimorial);
         }
         else if (nPrimorialMultiplier > nPrimorialHashFactor)
         {
             if (!PrimeTableGetPreviousPrime(nPrimorialMultiplier))
                 error("PrimecoinMiner() : primorial decrement overflow");
-            Primorial(nPrimorialMultiplier, bnPrimorial);
         }
+        Primorial(nPrimorialMultiplier, bnPrimorial);
 
         loop
         {
@@ -4549,6 +4548,7 @@ void static BitcoinMiner(CWallet *pwallet)
                     if (GetTimeMillis() - nHPSTimerStart > 60000)
                     {
                         double dPrimesPerMinute = 60000.0 * nPrimeCounter / (GetTimeMillis() - nHPSTimerStart);
+                        dPrimesPerSec = dPrimesPerMinute / 60.0;
                         double dTestsPerMinute = 60000.0 * nTestCounter / (GetTimeMillis() - nHPSTimerStart);
                         nHPSTimerStart = GetTimeMillis();
                         nPrimeCounter = 0;
@@ -4607,7 +4607,7 @@ void static ThreadBitcoinMiner(void* parg)
     }
     nHPSTimerStart = 0;
     if (vnThreadsRunning[THREAD_MINER] == 0)
-        dHashesPerSec = 0;
+        dPrimesPerSec = 0;
     printf("ThreadBitcoinMiner exiting, %d threads remaining\n", vnThreadsRunning[THREAD_MINER]);
 }
 

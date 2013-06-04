@@ -322,7 +322,7 @@ bool ProbablePrimeChainTest(const CBigNum& bnPrimeChainOrigin, unsigned int nBit
 }
 
 // Sieve for mining
-CSieveOfEratosthenes* psieve = NULL;
+boost::thread_specific_ptr<CSieveOfEratosthenes> psieve;
 
 // Mine probable prime chain of form: n = h * p# +/- 1
 bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
@@ -331,20 +331,19 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
     nTests = 0;
     nPrimesHit = 0;
 
-    if (fNewBlock && psieve != NULL)
+    if (fNewBlock && psieve.get() != NULL)
     {
         // Must rebuild the sieve
-        delete psieve;
-        psieve = NULL;
+        psieve.reset();
     }
     fNewBlock = false;
 
     int64 nStart, nCurrent; // microsecond timer
-    if (psieve == NULL)
+    if (psieve.get() == NULL)
     {
         // Build sieve
         nStart = GetTimeMicros();
-        psieve = new CSieveOfEratosthenes(nMaxSieveSize, block.nBits, block.GetHeaderHash(), bnFixedMultiplier);
+        psieve.reset(new CSieveOfEratosthenes(nMaxSieveSize, block.nBits, block.GetHeaderHash(), bnFixedMultiplier));
         while (psieve->Weave());
         printf("MineProbablePrimeChain() : new sieve (%u/%u) ready in %uus\n", psieve->GetCandidateCount(), nMaxSieveSize, (unsigned int) (GetTimeMicros() - nStart));
     }
@@ -360,8 +359,7 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         if (!psieve->GetNextCandidateMultiplier(nTriedMultiplier))
         {
             // power tests completed for the sieve
-            delete psieve;
-            psieve = NULL;
+            psieve.reset();
             fNewBlock = true; // notify caller to change nonce
             return false;
         }

@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
+// Copyright (c) 2013 The Primecoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,16 +49,16 @@ Value setgenerate(const Array& params, bool fHelp)
 }
 
 
-Value gethashespersec(const Array& params, bool fHelp)
+Value getprimespersec(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
-            "gethashespersec\n"
-            "Returns a recent hashes per second performance measurement while generating.");
+            "getprimespersec\n"
+            "Returns a recent primes per second performance measurement while generating.");
 
-    if (GetTimeMillis() - nHPSTimerStart > 8000)
+    if (GetTimeMillis() - nHPSTimerStart > 120000)
         return (boost::int64_t)0;
-    return (boost::int64_t)dHashesPerSec;
+    return (boost::int64_t)dPrimesPerSec;
 }
 
 
@@ -75,7 +76,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     obj.push_back(Pair("generate",      GetBoolArg("-gen")));
     obj.push_back(Pair("genproclimit",  (int)GetArg("-genproclimit", -1)));
-    obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
+    obj.push_back(Pair("primespersec",  getprimespersec(params, false)));
     obj.push_back(Pair("pooledtx",      (uint64_t)mempool.size()));
     obj.push_back(Pair("testnet",       fTestNet));
     return obj;
