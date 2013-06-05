@@ -51,6 +51,7 @@ MacDockIconHandler::MacDockIconHandler() : QObject()
     this->m_dockIconClickEventHandler = [[DockIconClickEventHandler alloc] initWithDockIconHandler:this];
     this->m_dummyWidget = new QWidget();
     this->m_dockMenu = new QMenu(this->m_dummyWidget);
+    this->setMainWindow(NULL);
 
     [pool release];
 }
@@ -114,8 +115,11 @@ MacDockIconHandler *MacDockIconHandler::instance()
 
 void MacDockIconHandler::handleDockIconClickEvent()
 {
-    this->mainWindow->activateWindow();
-    this->mainWindow->show();
+    if (this->mainWindow)
+    {
+        this->mainWindow->activateWindow();
+        this->mainWindow->show();
+    }
 
     emit this->dockIconClicked();
 }
