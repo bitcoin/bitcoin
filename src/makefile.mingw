@@ -79,6 +79,7 @@ OBJS= \
     obj/key.o \
     obj/db.o \
     obj/init.o \
+    obj/bitcoind.o \
     obj/keystore.o \
     obj/main.o \
     obj/net.o \
@@ -127,7 +128,7 @@ TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 obj-test/%.o: test/%.cpp $(HEADERS)
 	$(CXX) -c $(TESTDEFS) $(CFLAGS) -o $@ $<
 
-test_bitcoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+test_bitcoin.exe: $(TESTOBJS) $(filter-out obj/init.o obj/bitcoind.o,$(OBJS:obj/%=obj/%))
 	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework$(BOOST_SUFFIX) $(LIBS)
 
 clean:
