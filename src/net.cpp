@@ -5,7 +5,7 @@
 
 #include "db.h"
 #include "net.h"
-#include "main.h"
+#include "core.h"
 #include "addrman.h"
 #include "ui_interface.h"
 #include "script.h"
@@ -1567,11 +1567,6 @@ void static StartSync(const vector<CNode*> &vNodes) {
     CNode *pnodeNewSync = NULL;
     double dBestScore = 0;
 
-    // fImporting and fReindex are accessed out of cs_main here, but only
-    // as an optimization - they are checked again in SendMessages.
-    if (fImporting || fReindex)
-        return;
-
     // Iterate over all nodes
     BOOST_FOREACH(CNode* pnode, vNodes) {
         // check preconditions for allowing a sync
@@ -1855,7 +1850,6 @@ bool StopNode()
 {
     printf("StopNode()\n");
     MapPort(false);
-    nTransactionsUpdated++;
     if (semOutbound)
         for (int i=0; i<MAX_OUTBOUND_CONNECTIONS; i++)
             semOutbound->post();

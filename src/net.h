@@ -23,6 +23,9 @@
 #include "hash.h"
 #include "bloom.h"
 
+/** The maximum number of entries in an 'inv' protocol message */
+static const unsigned int MAX_INV_SZ = 50000;
+
 class CNode;
 class CBlockIndex;
 extern int nBestHeight;
