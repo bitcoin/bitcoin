@@ -102,6 +102,9 @@ extern int64 nTransactionFee;
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;
 
+extern unsigned int nBlockMaxSize;
+extern unsigned int nBlockMinSize;
+extern unsigned int nBlockPrioritySize;
 
 class CReserveKey;
 class CCoinsDB;
