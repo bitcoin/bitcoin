@@ -616,8 +616,8 @@ int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
         }
         else
         {
-            // Free transaction area
-            if (nNewBlockSize < 27000)
+            // High priority (low-or-no-fee) transaction area
+            if (nNewBlockSize < nBlockPrioritySize)
                 nMinFee = 0;
         }
     }
