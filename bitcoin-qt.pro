@@ -212,7 +212,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/leveldb.h \
     src/threadsafety.h \
     src/limitedmap.h \
-    src/qt/macnotificationhandler.h \
     src/qt/splashscreen.h
 
 SOURCES += src/qt/bitcoin.cpp \
@@ -339,6 +338,7 @@ OTHER_FILES += README.md \
     doc/*.rst \
     doc/*.txt \
     doc/*.md \
+    src/bitcoind.cpp \
     src/qt/res/bitcoin-qt.rc \
     src/test/*.cpp \
     src/test/*.h \
