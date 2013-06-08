@@ -166,6 +166,7 @@ void static inline secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1_fe_t *a) 
     assert((c >> 64) == 0);
 }
 
+#if 0
 #define muladd_c3(a,b,c0,c1,c2) { \
     unsigned __int128 q1 = ((unsigned __int128)(a)) * (b) + (c0); \
     (c0) = q1; \
@@ -173,6 +174,8 @@ void static inline secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1_fe_t *a) 
     (c1) = q2; \
     (c2) = q2 >> 64; \
 }
+
+#define sqradd_c3(a,c0,c1,c2) muladd_c3(a,a,c0,c1,c2)
 
 /*#define muladd_c3(a,b,c0,c1,c2) { \
     unsigned __int128 q = (unsigned __int128)(a) * (b) + (c0); \
@@ -195,6 +198,64 @@ void static inline secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1_fe_t *a) 
     muladd_c3(a,b,c0,c1,c2); \
     muladd_c3(a,b,c0,c1,c2); \
 }*/
+#else
+
+#define muladd_c3(a,b,c0,c1,c2) {       \
+        register uint64_t t1, t2;       \
+        asm ("mulq %3"                  \
+                : "=a"(t1),"=d"(t2)     \
+                : "a"(a),"m"(b)         \
+                : "cc");                \
+        asm ("addq %2,%0; adcq %3,%1"   \
+                : "+r"(c0),"+d"(t2)     \
+                : "a"(t1),"g"(0)        \
+                : "cc");                \
+        asm ("addq %2,%0; adcq %3,%1"   \
+                : "+r"(c1),"+r"(c2)     \
+                : "d"(t2),"g"(0)        \
+                : "cc");                \
+        }
+
+#define sqradd_c3(a,c0,c1,c2) {         \
+        register uint64_t t1, t2;       \
+        asm ("mulq %2"                  \
+                : "=a"(t1),"=d"(t2)     \
+                : "a"(a)                \
+                : "cc");                \
+        asm ("addq %2,%0; adcq %3,%1"   \
+                : "+r"(c0),"+d"(t2)     \
+                : "a"(t1),"g"(0)        \
+                : "cc");                \
+        asm ("addq %2,%0; adcq %3,%1"   \
+                : "+r"(c1),"+r"(c2)     \
+                : "d"(t2),"g"(0)        \
+                : "cc");                \
+        }
+
+#define muladd2_c3(a,b,c0,c1,c2) {      \
+        register uint64_t t1, t2;       \
+        asm ("mulq %3"                  \
+                : "=a"(t1),"=d"(t2)     \
+                : "a"(a),"m"(b)         \
+                : "cc");                \
+        asm ("addq %0,%0; adcq %2,%1"   \
+                : "+d"(t2),"+r"(c2)     \
+                : "g"(0)                \
+                : "cc");                \
+        asm ("addq %0,%0; adcq %2,%1"   \
+                : "+a"(t1),"+d"(t2)     \
+                : "g"(0)                \
+                : "cc");                \
+        asm ("addq %2,%0; adcq %3,%1"   \
+                : "+r"(c0),"+d"(t2)     \
+                : "a"(t1),"g"(0)        \
+                : "cc");                \
+        asm ("addq %2,%0; adcq %3,%1"   \
+                : "+r"(c1),"+r"(c2)     \
+                : "d"(t2),"g"(0)        \
+                : "cc");                \
+        }
+#endif
 
 #define mul_c2(a,b,c0,c1) { \
     unsigned __int128 q = (unsigned __int128)(a) * (b); \
@@ -264,17 +325,17 @@ void static secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *ac) {
     muladd2_c3(a.n[0], a.n[1], c2, c3, c1);
     uint64_t r1 = c2; c2 = 0;
     muladd2_c3(a.n[2], a.n[0], c3, c1, c2);
-    muladd_c3(a.n[1], a.n[1], c3, c1, c2);
+    sqradd_c3(a.n[1], c3, c1, c2);
     uint64_t r2 = c3; c3 = 0;
     muladd2_c3(a.n[0], a.n[3], c1, c2, c3);
     muladd2_c3(a.n[1], a.n[2], c1, c2, c3);
     uint64_t r3 = c1; c1 = 0;
     muladd2_c3(a.n[3], a.n[1], c2, c3, c1);
-    muladd_c3(a.n[2], a.n[2], c2, c3, c1);
+    sqradd_c3(a.n[2], c2, c3, c1);
     uint64_t r4 = c2; c2 = 0;
     muladd2_c3(a.n[2], a.n[3], c3, c1, c2);
     uint64_t r5 = c3; c3 = 0;
-    muladd_c3(a.n[3], a.n[3], c1, c2, c3);
+    sqradd_c3(a.n[3], c1, c2, c3);
     uint64_t r6 = c1;
     uint64_t r7 = c2;
     assert(c3 == 0);
