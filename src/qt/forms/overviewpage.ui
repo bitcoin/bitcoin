@@ -103,7 +103,7 @@
             <item row="0" column="0">
              <widget class="QLabel" name="label">
               <property name="text">
-               <string>Balance:</string>
+               <string>Confirmed:</string>
               </property>
              </widget>
             </item>
@@ -119,7 +119,7 @@
                <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string>Your current balance</string>
+               <string>Your current spendable balance</string>
               </property>
               <property name="text">
                <string notr="true">0 BTC</string>
@@ -148,7 +148,7 @@
                <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</string>
+               <string>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</string>
               </property>
               <property name="text">
                <string notr="true">0 BTC</string>
@@ -181,6 +181,42 @@
               </property>
               <property name="textInteractionFlags">
                <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="labelTotalText">
+              <property name="text">
+               <string>Total:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLabel" name="labelTotal">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>IBeamCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Your current total balance</string>
+              </property>
+              <property name="text">
+               <string notr="true">0 BTC</string>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0" colspan="2">
+             <widget class="Line" name="line">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
              </widget>
             </item>
