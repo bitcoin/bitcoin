@@ -3,11 +3,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "init.h"
+#include "main.h"
+#include "core.h"
 #include "txdb.h"
 #include "walletdb.h"
 #include "bitcoinrpc.h"
 #include "net.h"
-#include "init.h"
 #include "util.h"
 #include "ui_interface.h"
 #include "checkpoints.h"
@@ -44,6 +46,7 @@ enum BindFlags {
     BF_EXPLICIT     = (1U << 0),
     BF_REPORT_ERROR = (1U << 1)
 };
+
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -99,6 +102,7 @@ void Shutdown()
     StopRPCThreads();
     ShutdownRPCMining();
     bitdb.Flush(false);
+    GenerateBitcoins(false, NULL);
     StopNode();
     {
         LOCK(cs_main);
@@ -567,6 +571,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 6: network initialization
 
+    RegisterNodeSignals(GetNodeSignals());
+ 
     int nSocksVersion = GetArg("-socks", 5);
     if (nSocksVersion != 4 && nSocksVersion != 5)
         return InitError(strprintf(_("Unknown -socks proxy version requested: %i"), nSocksVersion));
@@ -928,6 +934,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     nStart = GetTimeMillis();
 
     {
+        CAddrDB::SetMessageStart(pchMessageStart);
         CAddrDB adb;
         if (!adb.Read(addrman))
             printf("Invalid or missing peers.dat; recreating\n");

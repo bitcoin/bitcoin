@@ -8,6 +8,7 @@
 #include <deque>
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>
+#include <boost/signals2/signal.hpp>
 #include <openssl/rand.h>
 
 #ifndef WIN32
@@ -21,6 +22,9 @@
 #include "addrman.h"
 #include "hash.h"
 #include "bloom.h"
+
+/** The maximum number of entries in an 'inv' protocol message */
+static const unsigned int MAX_INV_SZ = 50000;
 
 class CNode;
 class CBlockIndex;
@@ -44,6 +48,16 @@ bool BindListenPort(const CService &bindAddr, std::string& strError=REF(std::str
 void StartNode(boost::thread_group& threadGroup);
 bool StopNode();
 void SocketSendData(CNode *pnode);
+
+// Signals for message handling
+struct CNodeSignals
+{
+    boost::signals2::signal<bool (CNode*)> ProcessMessages;
+    boost::signals2::signal<bool (CNode*, bool)> SendMessages;
+};
+
+CNodeSignals& GetNodeSignals();
+
 
 enum
 {
@@ -600,7 +614,6 @@ public:
         }
     }
 
-    void PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd);
     bool IsSubscribed(unsigned int nChannel);
     void Subscribe(unsigned int nChannel, unsigned int nHops=0);
     void CancelSubscribe(unsigned int nChannel);

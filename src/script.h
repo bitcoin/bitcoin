@@ -533,7 +533,7 @@ public:
 
     bool IsPayToScriptHash() const;
 
-    // Called by CTransaction::IsStandard
+    // Called by IsStandardTx
     bool IsPushOnly() const
     {
         const_iterator pc = begin();
