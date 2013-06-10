@@ -790,6 +790,13 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
         LOCK(cs_wallet);
         while (pindex)
         {
+            // no need to read and scan block, if block was created before
+            // our wallet birthday (as adjusted for block time variability)
+            if (nTimeFirstKey && (pindex->nTime < (nTimeFirstKey - 7200))) {
+                pindex = pindex->GetNextInMainChain();
+                continue;
+            }
+
             CBlock block;
             block.ReadFromDisk(pindex);
             BOOST_FOREACH(CTransaction& tx, block.vtx)
