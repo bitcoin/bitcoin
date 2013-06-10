@@ -55,7 +55,7 @@ public:
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey)
     {
         nWalletDBUpdated++;
-        return Write(std::make_pair(std::string("key"), vchPubKey), vchPrivKey, false);
+        return Write(std::make_pair(std::string("key"), vchPubKey), std::make_pair(vchPrivKey, Hash(vchPrivKey.begin(), vchPrivKey.end())), false);
     }
 
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, bool fEraseUnencryptedKey = true)

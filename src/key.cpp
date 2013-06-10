@@ -5,9 +5,13 @@
 #include <openssl/ecdsa.h>
 #include <openssl/rand.h>
 #include <openssl/obj_mac.h>
+#include <openssl/err.h>
+#include <openssl/asn1t.h>
+#include <openssl/objects.h>
+#include <openssl/evp.h>
 
 #include "key.h"
-
+#include "util.h"
 
 // anonymous namespace with local implementation code (OpenSSL interaction)
 namespace {
@@ -164,13 +168,56 @@ public:
         assert(nSize == nSize2);
     }
 
-    bool SetPrivKey(const CPrivKey &privkey) {
+    bool SetPrivKey(const CPrivKey &privkey, bool fSkipCheck=false) {
         const unsigned char* pbegin = &privkey[0];
         if (d2i_ECPrivateKey(&pkey, &pbegin, privkey.size())) {
             // d2i_ECPrivateKey returns true if parsing succeeds.
             // This doesn't necessarily mean the key is valid.
-            if (EC_KEY_check_key(pkey))
+            
+            if (fSkipCheck)
                 return true;
+            
+            const EC_GROUP *group = EC_KEY_get0_group(pkey);
+            const EC_POINT *pub_key = EC_KEY_get0_public_key(pkey);
+            const BIGNUM *priv_key = EC_KEY_get0_private_key(pkey);
+
+            BN_CTX	*ctx = NULL;
+            BIGNUM	*order  = NULL;
+            EC_POINT *point = NULL;
+
+            if (!pkey || !group || !pub_key || !priv_key)
+                goto err;
+            
+            order = BN_new();
+            
+            if ((ctx = BN_CTX_new()) == NULL)
+                goto err;
+            
+            if (!EC_GROUP_get_order(group, order, ctx))
+                goto err;
+            
+            // check if generator * priv_key == pub_key 
+            if (BN_cmp(priv_key, order) >= 0)
+                goto err;
+            
+            if ((point = EC_POINT_new(group)) == NULL)
+                goto err;
+            
+            if (!EC_POINT_mul(group, point, priv_key, NULL, NULL, ctx))
+                goto err;
+            
+            if (EC_POINT_cmp(group, point, pub_key, ctx) != 0)
+                goto err;
+            
+            return true;
+
+            err:
+                if (ctx   != NULL)
+                    BN_CTX_free(ctx);
+                if (point != NULL)
+                    EC_POINT_free(point);
+                return false;
+            
         }
         return false;
     }
@@ -391,5 +438,23 @@ bool CPubKey::Decompress() {
     if (!key.SetPubKey(*this))
         return false;
     key.GetPubKey(*this, false);
+    return true;
+}
+
+bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
+    CECKey key;
+    if (!key.SetPrivKey(privkey, fSkipCheck))
+        return false;
+    
+    key.GetSecretBytes(vch);
+    fCompressed = vchPubKey.IsCompressed();
+    fValid = true;
+    
+    // TODO maybe this can be skipped also
+    CPubKey pubkey;
+    key.GetPubKey(pubkey, fCompressed);
+    if (pubkey != vchPubKey)
+        return false;
+    
     return true;
 }
