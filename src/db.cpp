@@ -5,10 +5,12 @@
 
 #include "db.h"
 #include "util.h"
-#include "main.h"
+#include "hash.h"
+#include "addrman.h"
 #include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <openssl/rand.h>
 
 #ifndef WIN32
 #include "sys/stat.h"
@@ -486,6 +488,7 @@ void CDBEnv::Flush(bool fShutdown)
 // CAddrDB
 //
 
+unsigned char CAddrDB::pchMessageStart[4] = { 0x00, 0x00, 0x00, 0x00 };
 
 CAddrDB::CAddrDB()
 {
@@ -501,7 +504,7 @@ bool CAddrDB::Write(const CAddrMan& addr)
 
     // serialize addresses, checksum data up to that point, then append csum
     CDataStream ssPeers(SER_DISK, CLIENT_VERSION);
-    ssPeers << FLATDATA(pchMessageStart);
+    ssPeers << FLATDATA(CAddrDB::pchMessageStart);
     ssPeers << addr;
     uint256 hash = Hash(ssPeers.begin(), ssPeers.end());
     ssPeers << hash;
@@ -566,11 +569,11 @@ bool CAddrDB::Read(CAddrMan& addr)
 
     unsigned char pchMsgTmp[4];
     try {
-        // de-serialize file header (pchMessageStart magic number) and
+        // de-serialize file header (CAddrDB::pchMessageStart magic number) and
         ssPeers >> FLATDATA(pchMsgTmp);
 
         // verify the network matches ours
-        if (memcmp(pchMsgTmp, pchMessageStart, sizeof(pchMsgTmp)))
+        if (memcmp(pchMsgTmp, CAddrDB::pchMessageStart, sizeof(pchMsgTmp)))
             return error("CAddrman::Read() : invalid network magic number");
 
         // de-serialize address data into one CAddrMan object

@@ -9,10 +9,10 @@ using namespace std;
 using namespace boost;
 
 #include "script.h"
+#include "core.h"
 #include "keystore.h"
 #include "bignum.h"
 #include "key.h"
-#include "main.h"
 #include "sync.h"
 #include "util.h"
 

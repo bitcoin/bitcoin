@@ -5,22 +5,22 @@
 #ifndef BITCOIN_DB_H
 #define BITCOIN_DB_H
 
-#include "main.h"
+#include "sync.h"
+#include "serialize.h"
 
 #include <map>
 #include <string>
 #include <vector>
 
+#include <boost/filesystem.hpp>
 #include <db_cxx.h>
 
-class CAddress;
 class CAddrMan;
 class CBlockLocator;
 class CDiskBlockIndex;
 class CMasterKey;
 class COutPoint;
 class CWallet;
-class CWalletTx;
 
 extern unsigned int nWalletDBUpdated;
 
@@ -318,10 +318,14 @@ class CAddrDB
 {
 private:
     boost::filesystem::path pathAddr;
+    static unsigned char pchMessageStart[4];
+
 public:
     CAddrDB();
     bool Write(const CAddrMan& addr);
     bool Read(CAddrMan& addr);
+
+    static void SetMessageStart(unsigned char _pchMessageStart[]) { memcpy(CAddrDB::pchMessageStart, _pchMessageStart, sizeof(CAddrDB::pchMessageStart)); }
 };
 
 #endif // BITCOIN_DB_H
