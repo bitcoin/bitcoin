@@ -94,6 +94,12 @@ case "$TARGET_OS" in
         PLATFORM_LIBS="-lpthread"
         PORT_FILE=port/port_posix.cc
         ;;
+    GNU/kFreeBSD)
+        PLATFORM=OS_KFREEBSD
+        COMMON_FLAGS="$MEMCMP_FLAG -D_REENTRANT -DOS_KFREEBSD"
+        PLATFORM_LIBS="-lpthread"
+        PORT_FILE=port/port_posix.cc
+        ;;
     NetBSD)
         PLATFORM=OS_NETBSD
         COMMON_FLAGS="$MEMCMP_FLAG -D_REENTRANT -DOS_NETBSD"
