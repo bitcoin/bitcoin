@@ -51,6 +51,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("difficulty", GetPrimeDifficulty(block.nBits)));
     CBigNum bnPrimeChainOrigin = CBigNum(block.GetHeaderHash()) * block.bnPrimeChainMultiplier;
     result.push_back(Pair("primechain", GetPrimeChainName(bnPrimeChainOrigin).c_str()));
+    result.push_back(Pair("primeorigin", bnPrimeChainOrigin.ToString().c_str()));
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
