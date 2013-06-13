@@ -852,7 +852,7 @@ void CWallet::ReacceptWalletTransactions()
             {
                 // Re-accept any txes of ours that aren't already in a block
                 if (!wtx.IsCoinBase())
-                    wtx.AcceptWalletTransaction(false);
+                    wtx.AcceptWalletTransaction();
             }
         }
         if (fMissing)
@@ -1365,7 +1365,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
         mapRequestCount[wtxNew.GetHash()] = 0;
 
         // Broadcast
-        if (!wtxNew.AcceptToMemoryPool(true, false))
+        if (!wtxNew.AcceptToMemoryPool(false))
         {
             // This must not fail. The transaction has already been signed and recorded.
             printf("CommitTransaction() : Error: Transaction not valid");
