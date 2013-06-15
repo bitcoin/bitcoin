@@ -88,7 +88,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool fPri
 
     result.push_back(Pair("tx", txinfo));
 
-    if (!fTestNet && block.GetBlockTime() < CHAINCHECKS_SWITCH_TIME)
+    if ( block.IsProofOfStake() || (!fTestNet && block.GetBlockTime() < CHAINCHECKS_SWITCH_TIME) )
         result.push_back(Pair("signature", HexStr(block.vchBlockSig.begin(), block.vchBlockSig.end())));
 
     return result;
