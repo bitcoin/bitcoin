@@ -2088,28 +2088,35 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
         if (vtx[i].IsCoinBase())
             return DoS(100, error("CheckBlock() : more than one coinbase"));
 
-    // ppcoin: only the second transaction can be the optional coinstake
-    for (unsigned int i = 2; i < vtx.size(); i++)
-        if (vtx[i].IsCoinStake())
-            return DoS(100, error("CheckBlock() : coinstake in wrong position"));
-
-    // ppcoin: coinbase output should be empty if proof-of-stake block
-    if (IsProofOfStake() && (vtx[0].vout.size() != 1 || !vtx[0].vout[0].IsEmpty()))
-        return error("CheckBlock() : coinbase output not empty for proof-of-stake block");
-
     // Check coinbase timestamp
     if (GetBlockTime() > (int64)vtx[0].nTime + nMaxClockDrift)
         return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
 
-    // Check coinstake timestamp
-    if (IsProofOfStake() && !CheckCoinStakeTimestamp(GetBlockTime(), (int64)vtx[1].nTime))
-        return DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%"PRI64d" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
+    if (IsProofOfStake())
+    {
+        // ppcoin: coinbase output should be empty if proof-of-stake block
+        if (vtx[0].vout.size() != 1 || !vtx[0].vout[0].IsEmpty())
+            return error("CheckBlock() : coinbase output not empty for proof-of-stake block");
 
-    // Check coinbase reward
-    if (vtx[0].GetValueOut() > (IsProofOfWork()? (GetProofOfWorkReward(nBits) - vtx[0].GetMinFee() + MIN_TX_FEE) : 0))
-        return DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s", 
+        // Second transaction must be coinstake, the rest must not be
+        if (vtx.empty() || !vtx[1].IsCoinStake())
+            return DoS(100, error("CheckBlock() : second tx is not coinstake"));
+        for (unsigned int i = 2; i < vtx.size(); i++)
+            if (vtx[i].IsCoinStake())
+                return DoS(100, error("CheckBlock() : more than one coinstake"));
+
+        // Check coinstake timestamp
+        if (!CheckCoinStakeTimestamp(GetBlockTime(), (int64)vtx[1].nTime))
+            return DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%"PRI64d" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
+    }
+    else
+    {
+        // Check coinbase reward
+        if (vtx[0].GetValueOut() > (GetProofOfWorkReward(nBits) - vtx[0].GetMinFee() + MIN_TX_FEE))
+            return DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s", 
                    FormatMoney(vtx[0].GetValueOut()).c_str(),
                    FormatMoney(IsProofOfWork()? GetProofOfWorkReward(nBits) : 0).c_str()));
+    }
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, vtx)
