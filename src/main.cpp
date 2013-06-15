@@ -1161,14 +1161,20 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
         uiInterface.NotifyBlocksChanged();
     }
 
-    printf("InvalidChainFound: invalid block=%s  height=%d  trust=%s  date=%s\n",
+    CBigNum bnBestInvalidBlockTrust = pindexNew->bnChainTrust - pindexNew->pprev->bnChainTrust;
+    CBigNum bnBestBlockTrust = pindexBest->nHeight != 0 ? (pindexBest->bnChainTrust - pindexBest->pprev->bnChainTrust) : pindexBest->bnChainTrust;
+
+    printf("InvalidChainFound: invalid block=%s  height=%d  trust=%s  blocktrust=%s  date=%s\n",
       pindexNew->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->nHeight,
-      pindexNew->bnChainTrust.ToString().c_str(), DateTimeStrFormat("%x %H:%M:%S",
-      pindexNew->GetBlockTime()).c_str());
-    printf("InvalidChainFound:  current best=%s  height=%d  trust=%s  date=%s\n",
-      hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainTrust.ToString().c_str(),
+      pindexNew->bnChainTrust.ToString().c_str(), bnBestInvalidBlockTrust.ToString().c_str(),
+      DateTimeStrFormat("%x %H:%M:%S", pindexNew->GetBlockTime()).c_str());
+    printf("InvalidChainFound:  current best=%s  height=%d  trust=%s  blocktrust=%s  date=%s\n",
+      hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, 
+      bnBestChainTrust.ToString().c_str(),
+      bnBestBlockTrust.ToString().c_str(),
       DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()).c_str());
 }
+
 
 void CBlock::UpdateTime(const CBlockIndex* pindexPrev)
 {
@@ -1855,8 +1861,12 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     bnBestChainTrust = pindexNew->bnChainTrust;
     nTimeBestReceived = GetTime();
     nTransactionsUpdated++;
-    printf("SetBestChain: new best=%s  height=%d  trust=%s  date=%s\n",
+
+    CBigNum bnBestBlockTrust = pindexBest->nHeight != 0 ? (pindexBest->bnChainTrust - pindexBest->pprev->bnChainTrust) : pindexBest->bnChainTrust;
+
+    printf("SetBestChain: new best=%s  height=%d  trust=%s  blocktrust=%s  date=%s\n",
       hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainTrust.ToString().c_str(),
+      bnBestBlockTrust.ToString().c_str(),
       DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()).c_str());
 
     // Check the version of the last 100 blocks to see if we need to upgrade:
@@ -2218,6 +2228,75 @@ bool CBlock::AcceptBlock()
     Checkpoints::AcceptPendingSyncCheckpoint();
 
     return true;
+}
+
+CBigNum CBlockIndex::GetBlockTrust() const
+{
+    CBigNum bnTarget;
+
+    // Old protocol
+    if (!fTestNet && GetBlockTime() < CHAINCHECKS_SWITCH_TIME)
+    {
+        CBigNum bnTarget;
+        bnTarget.SetCompact(nBits);
+
+        if (bnTarget <= 0)
+            return 0;
+        return (IsProofOfStake()? (CBigNum(1)<<256) / (bnTarget+1) : 1);
+    }
+
+    // New protocol
+    if (pprev == NULL || pprev->nHeight < 10)
+        return 1;
+
+    const CBlockIndex* currentIndex = pprev;
+
+    if(IsProofOfStake())
+    {
+        bnTarget.SetCompact(nBits);
+        if (bnTarget <= 0)
+            return 0;
+
+        if (!pprev->IsProofOfWork())
+            return (CBigNum(1)<<256) / (3 * (bnTarget+1));
+
+        int nPoWCount = 0;
+
+        // Check last 12 blocks type
+        while (pprev->nHeight - currentIndex->nHeight < 12)
+        {
+            if (currentIndex->IsProofOfWork())
+                nPoWCount++;
+            currentIndex = currentIndex->pprev;
+        }
+
+        // Return 1/3 of score if less than 3 PoW blocks found
+        if (nPoWCount < 3)
+            return (CBigNum(1)<<256) / (3 * (bnTarget+1));
+
+        return (CBigNum(1)<<256) / (bnTarget+1);
+    }
+    else
+    {
+        if (!(pprev->IsProofOfStake() && pprev->pprev->IsProofOfStake()))
+            return 1 + (2 * (pprev->bnChainTrust - pprev->pprev->bnChainTrust) / 3);
+
+        int nPoSCount = 0;
+
+        // Check last 12 blocks type
+        while (pprev->nHeight - currentIndex->nHeight < 12)
+        {
+            if (currentIndex->IsProofOfStake())
+                nPoSCount++;
+            currentIndex = currentIndex->pprev;
+        }
+
+        // Return 2/3 of previous block score if less than 7 PoS blocks found
+        if (nPoSCount < 7)
+            return 1 + (2 * (pprev->bnChainTrust - pprev->pprev->bnChainTrust) / 3);
+
+        return (pprev->bnChainTrust - pprev->pprev->bnChainTrust);
+    }
 }
 
 bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)

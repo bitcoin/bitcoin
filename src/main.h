@@ -39,6 +39,7 @@ static const int64 MIN_TXOUT_AMOUNT = MIN_TX_FEE;
 static const unsigned int STAKE_SWITCH_TIME = 1371686400; // 20 Jun 2013 00:00:00
 static const unsigned int TARGETS_SWITCH_TIME = 1374278400; // 20 Jul 2013 00:00:00
 static const unsigned int LOCKS_SWITCH_TIME = 1376956800; // 20 Aug 2013 00:00:00
+static const unsigned int CHAINCHECKS_SWITCH_TIME = 1379635200; // 20 Sep 2013 00:00:00
 
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
@@ -1241,14 +1242,7 @@ public:
         return (int64)nTime;
     }
 
-    CBigNum GetBlockTrust() const
-    {
-        CBigNum bnTarget;
-        bnTarget.SetCompact(nBits);
-        if (bnTarget <= 0)
-            return 0;
-        return (IsProofOfStake()? (CBigNum(1)<<256) / (bnTarget+1) : 1);
-    }
+    CBigNum GetBlockTrust() const;
 
     bool IsInMainChain() const
     {
