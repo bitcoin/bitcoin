@@ -1376,10 +1376,15 @@ uint64 CWallet::GetStakeMintPower(const CKeyStore& keystore)
         if (pcoin.first->nTime + nStakeMaxAge > GetTime())
             continue;
 
-        uint64 unCoinAge;
-        pcoin.first->GetCoinAge(txdb, unCoinAge);
-        nCoinAge += unCoinAge;
+        CBigNum bnCentSecond = CBigNum(pcoin.first->GetValueOut()) * (GetTime()-pcoin.first->nTime) / CENT;
+        CBigNum bnCoinDay = bnCentSecond * CENT / COIN / (24 * 60 * 60);
+
+
+        nCoinAge += bnCoinDay.getuint64();
     }
+
+    if (fDebug && GetBoolArg("-printcoinage"))
+        printf("StakePower bnCoinDay=%"PRI64d"\n", nCoinAge);
 
     return nCoinAge;
 }
