@@ -4423,12 +4423,6 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     return true;
 }
 
-void static ThreadBitcoinMiner(void* parg);
-
-static bool fGenerateBitcoins = false;
-static bool fLimitProcessors = false;
-static int nLimitProcessors = -1;
-
 void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 {
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -4492,52 +4486,3 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     }
 }
 
-void static ThreadBitcoinMiner(void* parg)
-{
-    CWallet* pwallet = (CWallet*)parg;
-    try
-    {
-        vnThreadsRunning[THREAD_MINER]++;
-        BitcoinMiner(pwallet, false);
-        vnThreadsRunning[THREAD_MINER]--;
-    }
-    catch (std::exception& e) {
-        vnThreadsRunning[THREAD_MINER]--;
-        PrintException(&e, "ThreadBitcoinMiner()");
-    } catch (...) {
-        vnThreadsRunning[THREAD_MINER]--;
-        PrintException(NULL, "ThreadBitcoinMiner()");
-    }
-    nHPSTimerStart = 0;
-    if (vnThreadsRunning[THREAD_MINER] == 0)
-        dHashesPerSec = 0;
-    printf("ThreadBitcoinMiner exiting, %d threads remaining\n", vnThreadsRunning[THREAD_MINER]);
-}
-
-
-void GenerateBitcoins(bool fGenerate, CWallet* pwallet)
-{
-    fGenerateBitcoins = fGenerate;
-    nLimitProcessors = GetArg("-genproclimit", -1);
-    if (nLimitProcessors == 0)
-        fGenerateBitcoins = false;
-    fLimitProcessors = (nLimitProcessors != -1);
-
-    if (fGenerate)
-    {
-        int nProcessors = boost::thread::hardware_concurrency();
-        printf("%d processors\n", nProcessors);
-        if (nProcessors < 1)
-            nProcessors = 1;
-        if (fLimitProcessors && nProcessors > nLimitProcessors)
-            nProcessors = nLimitProcessors;
-        int nAddThreads = nProcessors - vnThreadsRunning[THREAD_MINER];
-        printf("Starting %d BitcoinMiner threads\n", nAddThreads);
-        for (int i = 0; i < nAddThreads; i++)
-        {
-            if (!NewThread(ThreadBitcoinMiner, pwallet))
-                printf("Error: NewThread(ThreadBitcoinMiner) failed\n");
-            Sleep(10);
-        }
-    }
-}
