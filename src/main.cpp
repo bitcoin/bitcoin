@@ -2262,7 +2262,7 @@ CBigNum CBlockIndex::GetBlockTrust() const
     }
 
     // New protocol
-    if (pprev == NULL || pprev->nHeight < 10)
+    if (pprev == NULL || pprev->nHeight < 12)
         return 1;
 
     const CBlockIndex* currentIndex = pprev;
