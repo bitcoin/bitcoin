@@ -11,6 +11,7 @@
 #include "../field.h"
 
 #include <stdio.h>
+#include "field_5x64_asm.h"
 
 /** Implements arithmetic modulo FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F,
  *  represented as 4 uint64_t's in base 2^64, and one overflow uint64_t.
@@ -264,9 +265,14 @@ void static inline secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1_fe_t *a) 
 }
 
 void static secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *ac, const secp256k1_fe_t *bc) {
+
     secp256k1_fe_t a = *ac, b = *bc;
     secp256k1_fe_reduce(&a);
     secp256k1_fe_reduce(&b);
+
+#ifdef USE_FIELD_5X64_ASM
+    secp256k1_fe_mul_inner((&a)->n,(&b)->n,r->n);
+#else
     uint64_t c1,c2,c3;
     c3=0;
     mul_c2(a.n[0], b.n[0], c1, c2);
@@ -303,6 +309,7 @@ void static secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *ac, const 
     c = (unsigned __int128)r7 * COMP_LIMB + r3 + (c >> 64);
     r->n[3] = c;
     r->n[4] = c >> 64;
+#endif
 
 #ifdef VERIFY
     r->normalized = 0;

@@ -314,7 +314,7 @@ common_exit_norm:
 	;; 		rbx	 = a.n[2] / t6
 	;; 		rcx	 = a.n[3] / t7
 	;; 		rbp	 = 0FFFFFFFFFFFFFh / t8
-	;; 		rsi	 = a.n[4] / a.n[4] /t9
+	;; 		rsi	 = a.n[4] / t9
 	GLOBAL secp256k1_fe_sqr_inner
 	ALIGN 32
 secp256k1_fe_sqr_inner:
