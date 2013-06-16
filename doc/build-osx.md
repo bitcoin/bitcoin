@@ -1,38 +1,15 @@
-Mac OS X bitcoind build instructions
+Mac OS X Build Instructions and Notes
 ====================================
-
-Authors
--------
-
-* Laszlo Hanyecz <solar@heliacal.net>
-* Douglas Huff <dhuff@jrbobdobbs.org>
-* Colin Dean <cad@cad.cx>
-* Gavin Andresen <gavinandresen@gmail.com>
-
-License
--------
-
-Copyright (c) 2009-2012 Bitcoin Developers
-
-Distributed under the MIT/X11 software license, see the accompanying
-file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-This product includes software developed by the OpenSSL Project for use in
-the OpenSSL Toolkit (http://www.openssl.org/).
-
-This product includes cryptographic software written by
-Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.
+This guide will show you how to build bitcoind(headless client) for OSX.
 
 Notes
 -----
 
-See `doc/readme-qt.rst` for instructions on building Bitcoin-Qt, the
+* See [readme-qt.rst](readme-qt.rst) for instructions on building Bitcoin-Qt, the
 graphical user interface.
-
-Tested on OS X 10.5 through 10.8 on Intel processors only. PPC is not
+* Tested on OS X 10.5 through 10.8 on Intel processors only. PPC is not
 supported because it is big-endian.
-
-All of the commands should be executed in a Terminal application. The
+* All of the commands should be executed in a Terminal application. The
 built-in one is located in `/Applications/Utilities`.
 
 Preparation
