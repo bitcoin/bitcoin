@@ -172,3 +172,4 @@ echo "LDFLAGS_EXTRA=$LDFLAGS_EXTRA" >> config.mk
 echo "LDFLAGS_TEST_EXTRA=$LDFLAGS_TEST_EXTRA" >> config.mk
 echo "USE_ASM=$USE_ASM" >>config.mk
 echo "HAVE_LIMB=$HAVE_LIMB" >>config.mk
+echo "OPTLEVEL=O2" >>config.mk

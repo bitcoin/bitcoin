@@ -82,7 +82,7 @@ secp256k1_fe_mul_inner:
 	add r9,rax
 	adc r10,rdx
 	adc r8,0
-	mov rbp,r9	; retire r[2]
+	mov rbp,r9		; retire r[2]
 	xor r9,r9
 
 	;; c+=a.n[0 1 2 3] * b.n[3 2 1 0]
@@ -153,7 +153,7 @@ secp256k1_fe_mul_inner:
 	mul r14
 	add r10,rax
 	adc r8,rdx
-	adc r9,0
+	
 	mov r14,r10
 	mov r15,r8
 	
@@ -216,7 +216,7 @@ secp256k1_fe_sqr_inner:
 	push r13
 	push r14
 	push r15
-	push rdx
+	push rsi
 
 	mov r11,[rdi+8*0]	; preload a.n[0]
 	
@@ -237,7 +237,7 @@ secp256k1_fe_sqr_inner:
 	adc rdx,rdx
 	adc r10,0
 	add r8,rax		; still the same :-)
-	adc r9,rdx		; 
+	adc r9,rdx		
 	adc r10,0		; mmm...
 	
 	mov rcx,r8		; retire r[1]
@@ -315,15 +315,14 @@ secp256k1_fe_sqr_inner:
 	adc r8,0
 
 	mov r13,r9
-	xor r13,r13
+	xor r9,r9
 
 	;; c+=a.n[3]²
 	mov rax,r14
 	mul rax
 	add r10,rax
 	adc r8,rdx
-	adc r9,0
-
+	
 	mov r14,r10
 	mov r15,r8
 	
