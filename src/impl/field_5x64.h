@@ -325,6 +325,10 @@ void static secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *ac, const 
 void static secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *ac) {
     secp256k1_fe_t a = *ac;
     secp256k1_fe_reduce(&a);
+
+#ifdef USE_FIELD_5X64_ASM
+    secp256k1_fe_sqr_inner((&a)->n,r->n);
+#else
     uint64_t c1,c2,c3;
     c3=0;
     mul_c2(a.n[0], a.n[0], c1, c2);
@@ -355,6 +359,7 @@ void static secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *ac) {
     c = (unsigned __int128)r7 * COMP_LIMB + r3 + (c >> 64);
     r->n[3] = c;
     r->n[4] = c >> 64;
+#endif
 
 #ifdef VERIFY
     r->normalized = 0;
