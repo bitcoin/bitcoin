@@ -1994,7 +1994,12 @@ Value getmemorypool(const Array& params, bool fHelp)
         CBlock pblock;
         ssBlock >> pblock;
 
-        return ProcessBlock(NULL, &pblock);
+        static CReserveKey reservekey(pwalletMain);
+
+        if (!pblock.SignBlock(*pwalletMain))
+            throw JSONRPCError(-100, "Unable to sign block, wallet locked?");
+
+        return CheckWork(&pblock, *pwalletMain, reservekey);
     }
 }
 
