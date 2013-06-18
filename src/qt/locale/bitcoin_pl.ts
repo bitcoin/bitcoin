@@ -1,3 +1,7 @@
+
+
+
+
 <?xml version="1.0" ?><!DOCTYPE TS><TS language="pl" version="2.0">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
@@ -440,7 +444,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+6"/>
         <source>&amp;Debug window</source>
-        <translation>&amp;Okno debudowania</translation>
+        <translation>&amp;Okno debugowania</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -547,7 +551,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+22"/>
         <source>No block source available...</source>
-        <translation type="unfinished"/>
+	<translation>Brak źródeł bloków...</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -587,7 +591,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+2"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished"/>
+	<translation>Późniejsze transakcje nie będą widoczne</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -810,7 +814,7 @@ Adres: %4
     <message>
         <location line="+6"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation type="unfinished"/>
+        <translation>Opcjonalna opłata za kB przyspieszy przetworzenie transakcji. Większość transakcji ma rozmiar 1kB.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1240,7 +1244,7 @@ Adres: %4
     <message>
         <location line="-104"/>
         <source>Bitcoin - Debug window</source>
-        <translation>Bitcoin - Okno debudowania</translation>
+        <translation>Bitcoin - Okno debugowania</translation>
     </message>
     <message>
         <location line="+25"/>
@@ -1250,12 +1254,12 @@ Adres: %4
     <message>
         <location line="+279"/>
         <source>Debug log file</source>
-        <translation type="unfinished"/>
+        <translation>Log debugowania</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished"/>
+        <translation>Otwórz plik debugowania Bitcoina z bieżącego katalogu. Może to zająć kilka sekund przy dużym logu.</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -2337,12 +2341,12 @@ na przykład: alertnotify=echo %%s | mail -s &quot;Alarm Bitcoin&quot; admin@foo
     <message>
         <location line="+3"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Transakcja została odrzucona! Taka sytuacja może mieć miejsce, jeśli któreś monety z Twojego portfela zostały już wydane, np. gdybyś użył kopii portfela i wydał monety w innym miejscu</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation type="unfinished"/>
+        <translation>Ta transakcja wymaga opłaty przynajmniej %s, z powodu jej wysokości, złożonści lub użycia niedawno dodanych środków.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2362,7 +2366,7 @@ na przykład: alertnotify=echo %%s | mail -s &quot;Alarm Bitcoin&quot; admin@foo
     <message>
         <location line="+6"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"/>
+        <translation>To jest wydanie przedpremierowe - używasz na własne ryzyko - nie do użytku dla wydobycia i e-commerce</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2532,7 +2536,7 @@ na przykład: alertnotify=echo %%s | mail -s &quot;Alarm Bitcoin&quot; admin@foo
     <message>
         <location line="+19"/>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation>Brak wolnych deskryptorów plików (inodów)</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2612,12 +2616,12 @@ na przykład: alertnotify=echo %%s | mail -s &quot;Alarm Bitcoin&quot; admin@foo
     <message>
         <location line="+2"/>
         <source>Output extra debugging information. Implies all other -debug* options</source>
-        <translation type="unfinished"/>
+        <translation>Pokaż więcej debugów. Wymusza wszystkie inne opcje -debug*</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Output extra network debugging information</source>
-        <translation type="unfinished"/>
+        <translation>Pokaż więcej debugów sieciowych</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2662,7 +2666,7 @@ na przykład: alertnotify=echo %%s | mail -s &quot;Alarm Bitcoin&quot; admin@foo
     <message>
         <location line="+1"/>
         <source>Signing transaction failed</source>
-        <translation type="unfinished"/>
+        <translation>Nieudane podpisanie transakcji</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2677,17 +2681,17 @@ na przykład: alertnotify=echo %%s | mail -s &quot;Alarm Bitcoin&quot; admin@foo
     <message>
         <location line="+4"/>
         <source>Transaction amount too small</source>
-        <translation type="unfinished"/>
+        <translation>Kwota transakcji zbyt mała</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
+        <translation>Kwota transakcji musi być większa od zera</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>Transakcja zbyt duża</translation>
     </message>
     <message>
         <location line="+7"/>
