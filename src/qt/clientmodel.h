@@ -15,15 +15,16 @@ QT_END_NAMESPACE
 
 enum BlockSource {
     BLOCK_SOURCE_NONE,
-    BLOCK_SOURCE_NETWORK,
+    BLOCK_SOURCE_REINDEX,
     BLOCK_SOURCE_DISK,
-    BLOCK_SOURCE_REINDEX
+    BLOCK_SOURCE_NETWORK
 };
 
 /** Model for Bitcoin network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
+
 public:
     explicit ClientModel(OptionsModel *optionsModel, QObject *parent = 0);
     ~ClientModel();
@@ -34,6 +35,7 @@ public:
     int getNumBlocks() const;
     int getNumBlocksAtStartup();
 
+    double getVerificationProgress() const;
     QDateTime getLastBlockDate() const;
 
     //! Return true if client connected to testnet
@@ -58,6 +60,8 @@ private:
 
     int cachedNumBlocks;
     int cachedNumBlocksOfPeers;
+	bool cachedReindexing;
+	bool cachedImporting;
 
     int numBlocksAtStartup;
 
@@ -65,6 +69,7 @@ private:
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
+
 signals:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count, int countOfPeers);

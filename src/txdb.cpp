@@ -5,6 +5,7 @@
 
 #include "txdb.h"
 #include "main.h"
+#include "hash.h"
 
 using namespace std;
 
@@ -22,17 +23,17 @@ void static BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
 CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe) {
 }
 
-bool CCoinsViewDB::GetCoins(uint256 txid, CCoins &coins) { 
+bool CCoinsViewDB::GetCoins(const uint256 &txid, CCoins &coins) { 
     return db.Read(make_pair('c', txid), coins); 
 }
 
-bool CCoinsViewDB::SetCoins(uint256 txid, const CCoins &coins) {
+bool CCoinsViewDB::SetCoins(const uint256 &txid, const CCoins &coins) {
     CLevelDBBatch batch;
     BatchWriteCoins(batch, txid, coins);
     return db.WriteBatch(batch);
 }
 
-bool CCoinsViewDB::HaveCoins(uint256 txid) {
+bool CCoinsViewDB::HaveCoins(const uint256 &txid) {
     return db.Exists(make_pair('c', txid)); 
 }
 
@@ -114,26 +115,40 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
     leveldb::Iterator *pcursor = db.NewIterator();
     pcursor->SeekToFirst();
 
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    stats.hashBlock = GetBestBlock()->GetBlockHash();
+    ss << stats.hashBlock;
+    int64 nTotalAmount = 0;
     while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
         try {
             leveldb::Slice slKey = pcursor->key();
             CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, CLIENT_VERSION);
             char chType;
             ssKey >> chType;
-            if (chType == 'c' && !fRequestShutdown) {
+            if (chType == 'c') {
                 leveldb::Slice slValue = pcursor->value();
                 CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CLIENT_VERSION);
                 CCoins coins;
                 ssValue >> coins;
                 uint256 txhash;
                 ssKey >> txhash;
-
+                ss << txhash;
+                ss << VARINT(coins.nVersion);
+                ss << (coins.fCoinBase ? 'c' : 'n'); 
+                ss << VARINT(coins.nHeight);
                 stats.nTransactions++;
-                BOOST_FOREACH(const CTxOut &out, coins.vout) {
-                    if (!out.IsNull())
+                for (unsigned int i=0; i<coins.vout.size(); i++) {
+                    const CTxOut &out = coins.vout[i];
+                    if (!out.IsNull()) {
                         stats.nTransactionOutputs++;
+                        ss << VARINT(i+1);
+                        ss << out;
+                        nTotalAmount += out.nValue;
+                    }
                 }
                 stats.nSerializedSize += 32 + slValue.size();
+                ss << VARINT(0);
             }
             pcursor->Next();
         } catch (std::exception &e) {
@@ -142,6 +157,8 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
     }
     delete pcursor;
     stats.nHeight = GetBestBlock()->nHeight;
+    stats.hashSerialized = ss.GetHash();
+    stats.nTotalAmount = nTotalAmount;
     return true;
 }
 
@@ -178,12 +195,13 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
 
     // Load mapBlockIndex
     while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
         try {
             leveldb::Slice slKey = pcursor->key();
             CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, CLIENT_VERSION);
             char chType;
             ssKey >> chType;
-            if (chType == 'b' && !fRequestShutdown) {
+            if (chType == 'b') {
                 leveldb::Slice slValue = pcursor->value();
                 CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CLIENT_VERSION);
                 CDiskBlockIndex diskindex;

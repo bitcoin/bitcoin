@@ -4,6 +4,16 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef WIN32
+// for posix_fallocate
+#ifdef __linux__
+#define _POSIX_C_SOURCE 200112L
+#endif
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/resource.h>
+#endif
+
 #include "util.h"
 #include "sync.h"
 #include "version.h"
@@ -65,8 +75,6 @@ bool fDebug = false;
 bool fDebugNet = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugger = false;
-volatile bool fRequestShutdown = false;
-bool fShutdown = false;
 bool fDaemon = false;
 bool fServer = false;
 bool fCommandLine = false;
@@ -76,6 +84,7 @@ bool fNoListen = false;
 bool fLogTimestamps = false;
 CMedianFilter<int64> vTimeOffsets(200,0);
 volatile bool fReopenDebugLog = false;
+bool fCachedPath[2] = {false, false};
 
 // Init OpenSSL library multithreading support
 static CCriticalSection** ppmutexOpenSSL;
@@ -1041,13 +1050,12 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 
     static fs::path pathCached[2];
     static CCriticalSection csPathCached;
-    static bool cachedPath[2] = {false, false};
 
     fs::path &path = pathCached[fNetSpecific];
 
     // This can be called during exceptions by printf, so we cache the
     // value so we don't have to do memory allocations after that.
-    if (cachedPath[fNetSpecific])
+    if (fCachedPath[fNetSpecific])
         return path;
 
     LOCK(csPathCached);
@@ -1066,7 +1074,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 
     fs::create_directory(path);
 
-    cachedPath[fNetSpecific]=true;
+    fCachedPath[fNetSpecific] = true;
     return path;
 }
 
@@ -1083,6 +1091,9 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
     boost::filesystem::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
         return; // No bitcoin.conf file is OK
+
+    // clear path cache after loading config file
+    fCachedPath[0] = fCachedPath[1] = false;
 
     set<string> setOptions;
     setOptions.insert("*");
@@ -1153,9 +1164,68 @@ int GetFilesize(FILE* file)
     return nFilesize;
 }
 
+bool TruncateFile(FILE *file, unsigned int length) {
+#if defined(WIN32)
+    return _chsize(_fileno(file), length) == 0;
+#else
+    return ftruncate(fileno(file), length) == 0;
+#endif
+}
+
+
+// this function tries to raise the file descriptor limit to the requested number.
+// It returns the actual file descriptor limit (which may be more or less than nMinFD)
+int RaiseFileDescriptorLimit(int nMinFD) {
+#if defined(WIN32)
+    return 2048;
+#else
+    struct rlimit limitFD;
+    if (getrlimit(RLIMIT_NOFILE, &limitFD) != -1) {
+        if (limitFD.rlim_cur < (rlim_t)nMinFD) {
+            limitFD.rlim_cur = nMinFD;
+            if (limitFD.rlim_cur > limitFD.rlim_max)
+                limitFD.rlim_cur = limitFD.rlim_max;
+            setrlimit(RLIMIT_NOFILE, &limitFD);
+            getrlimit(RLIMIT_NOFILE, &limitFD);
+        }
+        return limitFD.rlim_cur;
+    }
+    return nMinFD; // getrlimit failed, assume it's fine
+#endif
+}
+
 // this function tries to make a particular range of a file allocated (corresponding to disk space)
 // it is advisory, and the range specified in the arguments will never contain live data
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
+#if defined(WIN32)
+    // Windows-specific version
+    HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
+    LARGE_INTEGER nFileSize;
+    int64 nEndPos = (int64)offset + length;
+    nFileSize.u.LowPart = nEndPos & 0xFFFFFFFF;
+    nFileSize.u.HighPart = nEndPos >> 32;
+    SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN);
+    SetEndOfFile(hFile);
+#elif defined(MAC_OSX)
+    // OSX specific version
+    fstore_t fst;
+    fst.fst_flags = F_ALLOCATECONTIG;
+    fst.fst_posmode = F_PEOFPOSMODE;
+    fst.fst_offset = 0;
+    fst.fst_length = (off_t)offset + length;
+    fst.fst_bytesalloc = 0;
+    if (fcntl(fileno(file), F_PREALLOCATE, &fst) == -1) {
+        fst.fst_flags = F_ALLOCATEALL;
+        fcntl(fileno(file), F_PREALLOCATE, &fst);
+    }
+    ftruncate(fileno(file), fst.fst_length);
+#elif defined(__linux__)
+    // Version using posix_fallocate
+    off_t nEndPos = (off_t)offset + length;
+    posix_fallocate(fileno(file), 0, nEndPos);
+#else
+    // Fallback version
+    // TODO: just write one byte per block
     static const char buf[65536] = {};
     fseek(file, offset, SEEK_SET);
     while (length > 0) {
@@ -1165,6 +1235,7 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
         fwrite(buf, 1, now, file); // allowed to fail; this function is advisory anyway
         length -= now;
     }
+#endif
 }
 
 void ShrinkDebugFile()
@@ -1187,6 +1258,8 @@ void ShrinkDebugFile()
             fclose(file);
         }
     }
+    else if(file != NULL)
+	     fclose(file);
 }
 
 
@@ -1219,9 +1292,14 @@ void SetMockTime(int64 nMockTimeIn)
 
 static int64 nTimeOffset = 0;
 
+int64 GetTimeOffset()
+{
+    return nTimeOffset;
+}
+
 int64 GetAdjustedTime()
 {
-    return GetTime() + nTimeOffset;
+    return GetTime() + GetTimeOffset();
 }
 
 void AddTimeData(const CNetAddr& ip, int64 nTime)
@@ -1277,12 +1355,26 @@ void AddTimeData(const CNetAddr& ip, int64 nTime)
     }
 }
 
-
-
-
-
-
-
+uint32_t insecure_rand_Rz = 11;
+uint32_t insecure_rand_Rw = 11;
+void seed_insecure_rand(bool fDeterministic)
+{
+    //The seed values have some unlikely fixed points which we avoid.
+    if(fDeterministic)
+    {
+        insecure_rand_Rz = insecure_rand_Rw = 11;
+    } else {
+        uint32_t tmp;
+        do {
+            RAND_bytes((unsigned char*)&tmp, 4);
+        } while(tmp == 0 || tmp == 0x9068ffffU);
+        insecure_rand_Rz = tmp;
+        do {
+            RAND_bytes((unsigned char*)&tmp, 4);
+        } while(tmp == 0 || tmp == 0x464fffffU);
+        insecure_rand_Rw = tmp;
+    }
+}
 
 string FormatVersion(int nVersion)
 {
@@ -1366,9 +1458,12 @@ void RenameThread(const char* name)
     //       removed.
     pthread_set_name_np(pthread_self(), name);
 
-// This is XCode 10.6-and-later; bring back if we drop 10.5 support:
-// #elif defined(MAC_OSX)
-//    pthread_setname_np(name);
+#elif defined(MAC_OSX) && defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
+
+// pthread_setname_np is XCode 10.6-and-later
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
+    pthread_setname_np(name);
+#endif
 
 #else
     // Prevent warnings for unused parameters...

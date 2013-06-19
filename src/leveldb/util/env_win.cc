@@ -420,7 +420,7 @@ BOOL Win32RandomAccessFile::_Init( LPCWSTR path )
 {
     BOOL bRet = FALSE;
     if(!_hFile)
-        _hFile = ::CreateFileW(path,GENERIC_READ,0,NULL,OPEN_EXISTING,
+        _hFile = ::CreateFileW(path,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS,NULL);
     if(!_hFile || _hFile == INVALID_HANDLE_VALUE )
         _hFile = NULL;
@@ -462,8 +462,8 @@ bool Win32MapFile::_UnmapCurrentRegion()
             // Defer syncing this data until next Sync() call, if any
             _pending_sync = true;
         }
-        UnmapViewOfFile(_base);
-        CloseHandle(_base_handle);
+        if (!UnmapViewOfFile(_base) || !CloseHandle(_base_handle))
+            result = false;
         _file_offset += _limit - _base;
         _base = NULL;
         _base_handle = NULL;
@@ -971,7 +971,7 @@ Status Win32Env::NewRandomAccessFile( const std::string& fname, RandomAccessFile
     if(!pFile->isEnable()){
         delete pFile;
         *result = NULL;
-        sRet = Status::IOError(path,"Could not create random access file.");
+        sRet = Status::IOError(path, Win32::GetLastErrSz());
     }else
         *result = pFile;
     return sRet;

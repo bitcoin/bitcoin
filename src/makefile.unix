@@ -2,7 +2,13 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+# :=0 --> UPnP support turned off by default at runtime
+# :=1 --> UPnP support turned on by default at runtime
+# :=- --> No UPnP support - miniupnp not required
 USE_UPNP:=0
+
+# :=1 --> Enable IPv6 support
+# :=0 --> Disable IPv6 support
 USE_IPV6:=1
 
 LINK:=$(CXX)
@@ -35,6 +41,10 @@ LIBS += \
    -l db_cxx$(BDB_LIB_SUFFIX) \
    -l ssl \
    -l crypto
+
+TESTLIBS += \
+ -Wl,-B$(LMODE) \
+   -l boost_unit_test_framework$(BOOST_LIB_SUFFIX)
 
 ifndef USE_UPNP
 	override USE_UPNP = -
@@ -111,7 +121,6 @@ OBJS= \
     obj/key.o \
     obj/db.o \
     obj/init.o \
-    obj/irc.o \
     obj/keystore.o \
     obj/main.o \
     obj/net.o \
@@ -180,7 +189,7 @@ obj-test/%.o: test/%.cpp
 	  rm -f $(@:%.o=%.d)
 
 test_bitcoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
-	$(LINK) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-B$(LMODE) -lboost_unit_test_framework $(xLDFLAGS) $(LIBS)
+	$(LINK) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ $(TESTLIBS) $(xLDFLAGS) $(LIBS)
 
 clean:
 	-rm -f primecoind test_bitcoin

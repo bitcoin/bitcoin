@@ -1,3 +1,45 @@
+bitcoin (0.8.1-natty3) natty; urgency=low
+
+  * New pixmaps
+
+ -- Jonas Schnelli <jonas.schnelli@include7.ch>  Mon, 13 May 2013 16:14:00 +0100
+
+bitcoin (0.8.1-natty2) natty; urgency=low
+
+  * Remove dumb broken launcher script
+
+ -- Matt Corallo <matt@bluematt.me>  Sun, 24 Mar 2013 20:01:00 -0400
+
+bitcoin (0.8.1-natty1) natty; urgency=low
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Tue, 19 Mar 2013 13:03:00 -0400
+
+bitcoin (0.8.0-natty1) natty; urgency=low
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Sat, 23 Feb 2013 16:01:00 -0500
+
+bitcoin (0.7.2-natty1) natty; urgency=low
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Sat, 15 Dec 2012 10:59:00 -0400
+
+bitcoin (0.7.1-natty1) natty; urgency=low
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Wed, 24 Oct 2012 15:06:00 -0400
+
+bitcoin (0.7.0-natty1) natty; urgency=low
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Mon, 17 Sep 2012 13:45:00 +0200
+
 bitcoin (0.6.3-natty1) natty; urgency=low
 
   * New upstream release.

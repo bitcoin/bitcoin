@@ -91,7 +91,7 @@ public:
     bool AppliesToMe() const;
     bool RelayTo(CNode* pnode) const;
     bool CheckSignature() const;
-    bool ProcessAlert();
+    bool ProcessAlert(bool fThread = true);
 
     /*
      * Get copy of (active) alert object by hash. Returns a null alert if it is not found.

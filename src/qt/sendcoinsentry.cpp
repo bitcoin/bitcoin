@@ -1,5 +1,6 @@
 #include "sendcoinsentry.h"
 #include "ui_sendcoinsentry.h"
+
 #include "guiutil.h"
 #include "bitcoinunits.h"
 #include "addressbookpage.h"
@@ -150,6 +151,12 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
     ui->payTo->setText(value.address);
     ui->addAsLabel->setText(value.label);
     ui->payAmount->setValue(value.amount);
+}
+
+void SendCoinsEntry::setAddress(const QString &address)
+{
+    ui->payTo->setText(address);
+    ui->payAmount->setFocus();
 }
 
 bool SendCoinsEntry::isClear()

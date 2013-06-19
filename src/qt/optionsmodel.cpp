@@ -1,10 +1,11 @@
 #include "optionsmodel.h"
-#include "bitcoinunits.h"
-#include <QSettings>
 
+#include "bitcoinunits.h"
 #include "init.h"
 #include "walletdb.h"
 #include "guiutil.h"
+
+#include <QSettings>
 
 OptionsModel::OptionsModel(QObject *parent) :
     QAbstractListModel(parent)
@@ -218,9 +219,8 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             settings.setValue("fMinimizeToTray", fMinimizeToTray);
             break;
         case MapPortUPnP:
-            fUseUPnP = value.toBool();
-            settings.setValue("fUseUPnP", fUseUPnP);
-            MapPort();
+            settings.setValue("fUseUPnP", value.toBool());
+            MapPort(value.toBool());
             break;
         case MinimizeOnClose:
             fMinimizeOnClose = value.toBool();

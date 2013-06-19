@@ -1,5 +1,8 @@
 Icon: src/qt/res/icons/clock*.png, src/qt/res/icons/tx*.png,
-      src/qt/res/src/*.svg
+      src/qt/res/src/clock_green.svg, src/qt/res/src/clock1.svg,
+      src/qt/res/src/clock2.svg, src/qt/res/src/clock3.svg,
+      src/qt/res/src/clock4.svg, src/qt/res/src/clock5.svg,
+      src/qt/res/src/inout.svg, src/qt/res/src/questionmark.svg
 Designer: Wladimir van der Laan
 License: MIT
 
@@ -35,23 +38,21 @@ Designer: http://www.everaldo.com
 Icon Pack: Crystal SVG
 License: LGPL
 
-Icon: src/qt/res/icons/bitcoin.png, src/qt/res/icons/toolbar.png
-Designer: Bitboy (optimized for 16x16 by Wladimir van der Laan)
-License: Public Domain
-Site: https://bitcointalk.org/?topic=1756.0
-
-Icon:  scripts/img/reload.xcf (modified),src/qt/res/movies/update_spinner.mng
+Icon:  scripts/img/reload.xcf (modified), src/qt/res/movies/update_spinner.mng
 Icon Pack: Kids
 Designer: Everaldo (Everaldo Coelho)
 License: GNU/GPL 
 Site: http://findicons.com/icon/17102/reload?id=17102
 
-Image: src/qt/res/images/splash2.jpg (Wallet image)
-Designer: Crobbo (forum)
-Site: https://bitcointalk.org/index.php?topic=32273.0
-License: Public domain
-
 Icon: src/qt/res/icons/debugwindow.png
 Designer: Vignoni David
 Site: http://www.oxygen-icons.org/
 License: Oxygen icon theme is dual licensed. You may copy it under the Creative Common Attribution-ShareAlike 3.0 License or the GNU Library General Public License.
+
+Icon: src/qt/res/icons/bitcoin.icns, src/qt/res/src/bitcoin.svg,
+      src/qt/res/src/bitcoin.ico, src/qt/res/src/bitcoin.png,
+      src/qt/res/src/bitcoin_testnet.png, docs/bitcoin_logo_doxygen.png,
+      src/qt/res/icons/toolbar.png, src/qt/res/icons/toolbar_testnet.png,
+      src/qt/res/images/splash.png, src/qt/res/images/splash_testnet.png
+Designer: Jonas Schnelli (based on the original bitcoin logo from Bitboy)
+License: MIT

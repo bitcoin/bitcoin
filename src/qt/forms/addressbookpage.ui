@@ -16,9 +16,6 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="labelExplanation">
-     <property name="text">
-      <string>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</string>
-     </property>
      <property name="textFormat">
       <enum>Qt::PlainText</enum>
      </property>
@@ -58,7 +55,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="newAddressButton">
+      <widget class="QPushButton" name="newAddress">
        <property name="toolTip">
         <string>Create a new address</string>
        </property>
@@ -72,7 +69,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="copyToClipboard">
+      <widget class="QPushButton" name="copyAddress">
        <property name="toolTip">
         <string>Copy the currently selected address to the system clipboard</string>
        </property>
@@ -125,7 +122,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="deleteButton">
+      <widget class="QPushButton" name="deleteAddress">
        <property name="toolTip">
         <string>Delete the currently selected address from the list</string>
        </property>
@@ -150,6 +147,20 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="exportButton">
+       <property name="toolTip">
+        <string>Export the data in the current tab to a file</string>
+       </property>
+       <property name="text">
+        <string>&amp;Export</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/export</normaloff>:/icons/export</iconset>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QDialogButtonBox" name="buttonBox">

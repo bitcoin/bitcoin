@@ -8,6 +8,7 @@
 class TransactionFilterProxy : public QSortFilterProxyModel
 {
     Q_OBJECT
+
 public:
     explicit TransactionFilterProxy(QObject *parent = 0);
 
@@ -32,6 +33,7 @@ public:
     void setLimit(int limit);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
+
 protected:
     bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
 
@@ -42,11 +44,6 @@ private:
     quint32 typeFilter;
     qint64 minAmount;
     int limitRows;
-
-signals:
-
-public slots:
-
 };
 
 #endif // TRANSACTIONFILTERPROXY_H

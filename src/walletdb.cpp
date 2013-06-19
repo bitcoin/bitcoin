@@ -240,7 +240,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             //printf(" %12"PRI64d"  %s  %s  %s\n",
             //    wtx.vout[0].nValue,
             //    DateTimeStrFormat("%Y-%m-%d %H:%M:%S", wtx.GetBlockTime()).c_str(),
-            //    wtx.hashBlock.ToString().substr(0,20).c_str(),
+            //    wtx.hashBlock.ToString().c_str(),
             //    wtx.mapValue["message"].c_str());
         }
         else if (strType == "acentry")
@@ -451,8 +451,10 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
         }
         pcursor->close();
     }
-    catch (...)
-    {
+    catch (boost::thread_interrupted) {
+        throw;
+    }
+    catch (...) {
         result = DB_CORRUPT;
     }
 
@@ -482,12 +484,11 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     return result;
 }
 
-void ThreadFlushWalletDB(void* parg)
+void ThreadFlushWalletDB(const string& strFile)
 {
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("bitcoin-wallet");
 
-    const string& strFile = ((const string*)parg)[0];
     static bool fOneThread;
     if (fOneThread)
         return;
@@ -498,9 +499,9 @@ void ThreadFlushWalletDB(void* parg)
     unsigned int nLastSeen = nWalletDBUpdated;
     unsigned int nLastFlushed = nWalletDBUpdated;
     int64 nLastWalletUpdate = GetTime();
-    while (!fShutdown)
+    while (true)
     {
-        Sleep(500);
+        MilliSleep(500);
 
         if (nLastSeen != nWalletDBUpdated)
         {
@@ -522,8 +523,9 @@ void ThreadFlushWalletDB(void* parg)
                     mi++;
                 }
 
-                if (nRefCount == 0 && !fShutdown)
+                if (nRefCount == 0)
                 {
+                    boost::this_thread::interruption_point();
                     map<string, int>::iterator mi = bitdb.mapFileUseCount.find(strFile);
                     if (mi != bitdb.mapFileUseCount.end())
                     {
@@ -548,7 +550,7 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
 {
     if (!wallet.fFileBacked)
         return false;
-    while (!fShutdown)
+    while (true)
     {
         {
             LOCK(bitdb.cs_db);
@@ -579,7 +581,7 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
                 }
             }
         }
-        Sleep(100);
+        MilliSleep(100);
     }
     return false;
 }
@@ -620,11 +622,11 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
 
     bool fSuccess = allOK;
     Db* pdbCopy = new Db(&dbenv.dbenv, 0);
-    int ret = pdbCopy->open(NULL,                 // Txn pointer
+    int ret = pdbCopy->open(NULL,               // Txn pointer
                             filename.c_str(),   // Filename
-                            "main",    // Logical db name
-                            DB_BTREE,  // Database type
-                            DB_CREATE,    // Flags
+                            "main",             // Logical db name
+                            DB_BTREE,           // Database type
+                            DB_CREATE,          // Flags
                             0);
     if (ret > 0)
     {

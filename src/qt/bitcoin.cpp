@@ -1,6 +1,9 @@
 /*
  * W.J. van der Laan 2011-2012
  */
+
+#include <QApplication>
+
 #include "bitcoingui.h"
 #include "clientmodel.h"
 #include "walletmodel.h"
@@ -8,16 +11,21 @@
 #include "guiutil.h"
 #include "guiconstants.h"
 #include "init.h"
+#include "util.h"
 #include "ui_interface.h"
-#include "qtipcserver.h"
+#include "paymentserver.h"
+#include "splashscreen.h"
 
-#include <QApplication>
 #include <QMessageBox>
 #include <QTextCodec>
 #include <QLocale>
+#include <QTimer>
 #include <QTranslator>
-#include <QSplashScreen>
 #include <QLibraryInfo>
+
+#ifdef Q_OS_MAC
+#include "macdockiconhandler.h"
+#endif
 
 #if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
 #define _BITCOIN_QT_PLUGINS_INCLUDED
@@ -30,9 +38,12 @@ Q_IMPORT_PLUGIN(qkrcodecs)
 Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 #endif
 
+// Declare meta types used for QMetaObject::invokeMethod
+Q_DECLARE_METATYPE(bool*)
+
 // Need a global reference for the notifications to find the GUI
 static BitcoinGUI *guiref;
-static QSplashScreen *splashref;
+static SplashScreen *splashref;
 
 static bool ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
@@ -62,7 +73,7 @@ static bool ThreadSafeAskFee(int64 nFeeRequired)
 {
     if(!guiref)
         return false;
-    if(nFeeRequired < MIN_TX_FEE || nFeeRequired <= nTransactionFee || fDaemon)
+    if(nFeeRequired < CTransaction::nMinTxFee || nFeeRequired <= nTransactionFee || fDaemon)
         return true;
 
     bool payFee = false;
@@ -74,28 +85,14 @@ static bool ThreadSafeAskFee(int64 nFeeRequired)
     return payFee;
 }
 
-static void ThreadSafeHandleURI(const std::string& strURI)
-{
-    if(!guiref)
-        return;
-
-    QMetaObject::invokeMethod(guiref, "handleURI", GUIUtil::blockingGUIThreadConnection(),
-                               Q_ARG(QString, QString::fromStdString(strURI)));
-}
-
 static void InitMessage(const std::string &message)
 {
     if(splashref)
     {
-        splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(255,255,200));
-        QApplication::instance()->processEvents();
+        splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(55,55,55));
+        qApp->processEvents();
     }
     printf("init message: %s\n", message.c_str());
-}
-
-static void QueueShutdown()
-{
-    QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
 }
 
 /*
@@ -121,20 +118,21 @@ int main(int argc, char *argv[])
     // Command-line options take precedence:
     ParseParameters(argc, argv);
 
-    if(GetBoolArg("-testnet")) // Separate message queue name for testnet
-        strBitcoinURIQueueName = BITCOINURI_QUEUE_NAME_TESTNET;
-    else
-        strBitcoinURIQueueName = BITCOINURI_QUEUE_NAME_MAINNET;
-
-    // Do this early as we don't want to bother initializing if we are just calling IPC
-    ipcScanRelay(argc, argv);
-
     // Internal string conversion is all UTF-8
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
     QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
 
     Q_INIT_RESOURCE(bitcoin);
     QApplication app(argc, argv);
+
+    // Register meta types used for QMetaObject::invokeMethod
+    qRegisterMetaType< bool* >();
+
+    // Do this early as we don't want to bother initializing if we are just calling IPC
+    // ... but do it after creating app, so QCoreApplication::arguments is initialized:
+    if (PaymentServer::ipcSendCommandLine())
+        exit(0);
+    PaymentServer* paymentServer = new PaymentServer(&app);
 
     // Install global event filter that makes sure that long tooltips can be word-wrapped
     app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
@@ -152,12 +150,12 @@ int main(int argc, char *argv[])
 
     // Application identification (must be set before OptionsModel is initialized,
     // as it is used to locate QSettings)
-    app.setOrganizationName("Bitcoin");
-    app.setOrganizationDomain("bitcoin.org");
+    QApplication::setOrganizationName("Bitcoin");
+    QApplication::setOrganizationDomain("bitcoin.org");
     if(GetBoolArg("-testnet")) // Separate UI settings for testnet
-        app.setApplicationName("Bitcoin-Qt-testnet");
+        QApplication::setApplicationName("Bitcoin-Qt-testnet");
     else
-        app.setApplicationName("Bitcoin-Qt");
+        QApplication::setApplicationName("Bitcoin-Qt");
 
     // ... then GUI settings:
     OptionsModel optionsModel;
@@ -192,9 +190,7 @@ int main(int argc, char *argv[])
     // Subscribe to global signals from core
     uiInterface.ThreadSafeMessageBox.connect(ThreadSafeMessageBox);
     uiInterface.ThreadSafeAskFee.connect(ThreadSafeAskFee);
-    uiInterface.ThreadSafeHandleURI.connect(ThreadSafeHandleURI);
     uiInterface.InitMessage.connect(InitMessage);
-    uiInterface.QueueShutdown.connect(QueueShutdown);
     uiInterface.Translate.connect(Translate);
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
@@ -206,7 +202,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    QSplashScreen splash(QPixmap(":/images/splash"), 0);
+#ifdef Q_OS_MAC
+    // on mac, also change the icon now because it would look strange to have a testnet splash (green) and a std app icon (orange)
+    if(GetBoolArg("-testnet")) {
+        MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
+    }
+#endif
+
+    SplashScreen splash(QPixmap(), 0);
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
     {
         splash.show();
@@ -215,7 +218,6 @@ int main(int argc, char *argv[])
     }
 
     app.processEvents();
-
     app.setQuitOnLastWindowClosed(false);
 
     try
@@ -224,9 +226,16 @@ int main(int argc, char *argv[])
         if (GUIUtil::GetStartOnSystemStartup())
             GUIUtil::SetStartOnSystemStartup(true);
 
+        boost::thread_group threadGroup;
+
         BitcoinGUI window;
         guiref = &window;
-        if(AppInit2())
+
+        QTimer* pollShutdownTimer = new QTimer(guiref);
+        QObject::connect(pollShutdownTimer, SIGNAL(timeout()), guiref, SLOT(detectShutdown()));
+        pollShutdownTimer->start(200);
+
+        if(AppInit2(threadGroup))
         {
             {
                 // Put this in a block, so that the Model objects are cleaned up before
@@ -241,7 +250,8 @@ int main(int argc, char *argv[])
                 WalletModel walletModel(pwalletMain, &optionsModel);
 
                 window.setClientModel(&clientModel);
-                window.setWalletModel(&walletModel);
+                window.addWallet("~Default", &walletModel);
+                window.setCurrentWallet("~Default");
 
                 // If -min option passed, start window minimized.
                 if(GetBoolArg("-min"))
@@ -253,21 +263,28 @@ int main(int argc, char *argv[])
                     window.show();
                 }
 
-                // Place this here as guiref has to be defined if we don't want to lose URIs
-                ipcInit(argc, argv);
+                // Now that initialization/startup is done, process any command-line
+                // bitcoin: URIs
+                QObject::connect(paymentServer, SIGNAL(receivedURI(QString)), &window, SLOT(handleURI(QString)));
+                QTimer::singleShot(100, paymentServer, SLOT(uiReady()));
 
                 app.exec();
 
                 window.hide();
                 window.setClientModel(0);
-                window.setWalletModel(0);
+                window.removeAllWallets();
                 guiref = 0;
             }
             // Shutdown the core and its threads, but don't exit Bitcoin-Qt here
-            Shutdown(NULL);
+            threadGroup.interrupt_all();
+            threadGroup.join_all();
+            Shutdown();
         }
         else
         {
+            threadGroup.interrupt_all();
+            threadGroup.join_all();
+            Shutdown();
             return 1;
         }
     } catch (std::exception& e) {

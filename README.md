@@ -3,7 +3,7 @@ Bitcoin integration/staging tree
 
 http://www.bitcoin.org
 
-Copyright (c) 2009-2012 Bitcoin Developers
+Copyright (c) 2009-2013 Bitcoin Developers
 
 What is Bitcoin?
 ----------------
@@ -60,18 +60,18 @@ submit new unit tests for old code.
 
 Unit tests for the core code are in `src/test/`. To compile and run them:
 
-    cd src; make -f makefile.linux test
+    cd src; make -f makefile.unix test
 
 Unit tests for the GUI code are in `src/qt/test/`. To compile and run them:
 
     qmake BITCOIN_QT_TEST=1 -o Makefile.test bitcoin-qt.pro
     make -f Makefile.test
-    ./Bitcoin-Qt
+    ./bitcoin-qt_test
 
 Every pull request is built for both Windows and Linux on a dedicated server,
 and unit and sanity tests are automatically run. The binaries produced may be
-used for manual QA testing -- a link to them will appear in a comment on the
-pull request posted by 'BitcoinPullTester'. See `https://github.com/TheBlueMatt/test-scripts`
+used for manual QA testing — a link to them will appear in a comment on the
+pull request posted by [BitcoinPullTester](https://github.com/BitcoinPullTester). See https://github.com/TheBlueMatt/test-scripts
 for the build/test scripts.
 
 ### Manual Quality Assurance (QA) Testing
@@ -79,4 +79,4 @@ for the build/test scripts.
 Large changes should have a test plan, and should be tested by somebody other
 than the developer who wrote the code.
 
-See `https://github.com/bitcoin/QA/` for how to create a test plan.
+See https://github.com/bitcoin/QA/ for how to create a test plan.

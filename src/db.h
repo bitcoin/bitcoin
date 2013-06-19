@@ -24,7 +24,7 @@ class CWalletTx;
 
 extern unsigned int nWalletDBUpdated;
 
-void ThreadFlushWalletDB(void* parg);
+void ThreadFlushWalletDB(const std::string& strWalletFile);
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 
 
@@ -33,7 +33,7 @@ class CDBEnv
 private:
     bool fDbEnvInit;
     bool fMockDb;
-    std::string strPath;
+    boost::filesystem::path path;
 
     void EnvShutdown();
 

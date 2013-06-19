@@ -13,12 +13,7 @@
         <translation>&lt;b&gt;Bitcoin&lt;/b&gt; versjon</translation>
     </message>
     <message>
-        <location line="+41"/>
-        <source>Copyright © 2009-2012 The Bitcoin developers</source>
-        <translation>Copyright © 2009-2012 Bitcoin Utviklerne</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+57"/>
         <source>
 This is experimental software.
 
@@ -32,6 +27,16 @@ Distribuert under MIT/X11 programvarelisensen, se medfølgende fil COPYING eller
 
 Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i OpenSSL Toolkit (http://www.openssl.org/) og kryptografisk programvare skrevet av Eric Young (eay@cryptsoft.com) og UPnP programvare skrevet av Thomas Bernard.</translation>
     </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="+14"/>
+        <source>Copyright</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>The Bitcoin developers</source>
+        <translation type="unfinished"/>
+    </message>
 </context>
 <context>
     <name>AddressBookPage</name>
@@ -41,7 +46,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>Adressebok</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+19"/>
         <source>Double-click to edit address or label</source>
         <translation>Dobbeltklikk for å redigere adresse eller merkelapp</translation>
     </message>
@@ -61,12 +66,12 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>&amp;Ny Adresse</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location filename="../addressbookpage.cpp" line="+63"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
         <translation>Dette er dine Bitcoin-adresser for mottak av betalinger. Du kan gi forskjellige adresser til alle som skal betale deg for å holde bedre oversikt.</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location filename="../forms/addressbookpage.ui" line="+14"/>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopier Adresse</translation>
     </message>
@@ -88,10 +93,20 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     <message>
         <location line="+25"/>
         <source>Delete the currently selected address from the list</source>
+        <translation>Slett den valgte adressen fra listen.</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporter data fra nåværende fane til fil</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Export</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-14"/>
+        <location line="-44"/>
         <source>Verify a message to ensure it was signed with a specified Bitcoin address</source>
         <translation>Verifiser en melding for å være sikker på at den ble signert av en angitt Bitcoin-adresse</translation>
     </message>
@@ -106,17 +121,27 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>&amp;Slett</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+65"/>
+        <location filename="../addressbookpage.cpp" line="-5"/>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Copy &amp;Label</source>
         <translation>Kopier &amp;Merkelapp</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>&amp;Edit</source>
         <translation>&amp;Rediger</translation>
     </message>
     <message>
-        <location line="+250"/>
+        <location line="+1"/>
+        <source>Send &amp;Coins</source>
+        <translation>Send &amp;Coins</translation>
+    </message>
+    <message>
+        <location line="+260"/>
         <source>Export Address Book Data</source>
         <translation>Eksporter adressebok</translation>
     </message>
@@ -139,7 +164,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="+142"/>
+        <location filename="../addresstablemodel.cpp" line="+144"/>
         <source>Label</source>
         <translation>Merkelapp</translation>
     </message>
@@ -234,7 +259,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     <message>
         <location line="+15"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"/>
+        <translation>VIKTIG: Tidligere sikkerhetskopier av din lommebok-fil, bør erstattes med den nylig genererte, krypterte filen, da de blir ugyldiggjort av sikkerhetshensyn så snart du begynner å bruke den nye krypterte lommeboken.</translation>
     </message>
     <message>
         <location line="+100"/>
@@ -298,17 +323,17 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+267"/>
+        <location filename="../bitcoingui.cpp" line="+233"/>
         <source>Sign &amp;message...</source>
         <translation>Signer &amp;melding...</translation>
     </message>
     <message>
-        <location line="+254"/>
+        <location line="+280"/>
         <source>Synchronizing with network...</source>
         <translation>Synkroniserer med nettverk...</translation>
     </message>
     <message>
-        <location line="-322"/>
+        <location line="-349"/>
         <source>&amp;Overview</source>
         <translation>&amp;Oversikt</translation>
     </message>
@@ -328,32 +353,17 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>Vis transaksjonshistorikk</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>&amp;Address Book</source>
-        <translation>&amp;Adressebok</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+7"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Rediger listen over adresser og deres merkelapper</translation>
     </message>
     <message>
-        <location line="-15"/>
-        <source>&amp;Receive coins</source>
-        <translation>&amp;Motta bitcoins</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="-14"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Vis listen over adresser for mottak av betalinger</translation>
     </message>
     <message>
-        <location line="-8"/>
-        <source>&amp;Send coins</source>
-        <translation>&amp;Send bitcoins</translation>
-    </message>
-    <message>
-        <location line="+39"/>
+        <location line="+31"/>
         <source>E&amp;xit</source>
         <translation>&amp;Avslutt</translation>
     </message>
@@ -383,7 +393,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>&amp;Innstillinger...</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Krypter Lommebok...</translation>
     </message>
@@ -398,27 +408,17 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>&amp;Endre Adgangsfrase...</translation>
     </message>
     <message>
-        <location line="+259"/>
+        <location line="+285"/>
         <source>Importing blocks from disk...</source>
-        <translation type="unfinished"/>
+        <translation>Importere blokker...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Reindexing blocks on disk...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message numerus="yes">
-        <location line="+10"/>
-        <source>~%n block(s) remaining</source>
-        <translation><numerusform>~%n blokk gjenstår</numerusform><numerusform>~%n blokker gjenstår</numerusform></translation>
+        <translation>Re-indekserer blokker på disk...</translation>
     </message>
     <message>
-        <location line="-265"/>
-        <source>&amp;Export...</source>
-        <translation>&amp;Eksporter...</translation>
-    </message>
-    <message>
-        <location line="-65"/>
+        <location line="-347"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Send til en Bitcoin-adresse</translation>
     </message>
@@ -428,12 +428,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>Endre oppsett for Bitcoin</translation>
     </message>
     <message>
-        <location line="+17"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Eksporter data fra nåværende fane til fil</translation>
-    </message>
-    <message>
-        <location line="-9"/>
+        <location line="+9"/>
         <source>Backup wallet to another location</source>
         <translation>Sikkerhetskopiér lommebok til annet sted</translation>
     </message>
@@ -443,7 +438,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>Endre adgangsfrasen brukt for kryptering av lommebok</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+6"/>
         <source>&amp;Debug window</source>
         <translation>&amp;Feilsøkingsvindu</translation>
     </message>
@@ -453,23 +448,38 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>Åpne konsoll for feilsøk og diagnostikk</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-4"/>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verifiser melding...</translation>
     </message>
     <message>
-        <location line="-196"/>
-        <location line="+538"/>
+        <location line="-165"/>
+        <location line="+530"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-538"/>
+        <location line="-530"/>
         <source>Wallet</source>
         <translation>Lommebok</translation>
     </message>
     <message>
-        <location line="+176"/>
+        <location line="+101"/>
+        <source>&amp;Send</source>
+        <translation>&amp;Send</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Receive</source>
+        <translation>&amp;Motta</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>&amp;Addresses</source>
+        <translation>&amp;Adressebok</translation>
+    </message>
+    <message>
+        <location line="+22"/>
         <source>&amp;About Bitcoin</source>
         <translation>&amp;Om Bitcoin</translation>
     </message>
@@ -481,30 +491,30 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     <message>
         <location line="+1"/>
         <source>Show or hide the main Window</source>
-        <translation type="unfinished"/>
+        <translation>Vis eller skjul hovedvinduet</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
+        <translation>Krypter de private nøklene som tilhører lommeboken din</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>Signér en melding for å bevise at du eier denne adressen</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished"/>
+        <translation>Bekreft meldinger for å være sikker på at de ble signert av en angitt Bitcoin-adresse</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Fil</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>&amp;Settings</source>
         <translation>&amp;Innstillinger</translation>
     </message>
@@ -519,38 +529,68 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>Verktøylinje for faner</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>Actions toolbar</source>
-        <translation>Verktøylinje for handlinger</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+17"/>
         <location line="+10"/>
         <source>[testnet]</source>
         <translation>[testnett]</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+47"/>
         <source>Bitcoin client</source>
         <translation>Bitcoinklient</translation>
     </message>
     <message numerus="yes">
-        <location line="+79"/>
+        <location line="+141"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n aktiv forbindelse til Bitcoin-nettverket</numerusform><numerusform>%n aktive forbindelser til Bitcoin-nettverket</numerusform></translation>
     </message>
     <message>
-        <location line="+45"/>
-        <source>Processed %1 of %2 blocks of transaction history (%3% done).</source>
+        <location line="+22"/>
+        <source>No block source available...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+12"/>
+        <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Processed %1 blocks of transaction history.</source>
+        <translation>Lastet %1 blokker med transaksjonshistorikk.</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+20"/>
+        <source>%n hour(s)</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n day(s)</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n week(s)</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>%1 behind</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+14"/>
+        <source>Last received block was generated %1 ago.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Transaksjoner etter dette vil ikke være synlige enda.</translation>
+    </message>
+    <message>
+        <location line="+22"/>
         <source>Error</source>
         <translation type="unfinished"/>
     </message>
@@ -565,62 +605,27 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+66"/>
+        <location line="+70"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
-        <translation type="unfinished"/>
+        <translation>Denne transaksjonen overstiger størrelsesbegrensningen.  Du kan likevel sende den med et gebyr på %1, som går til nodene som prosesserer transaksjonen din og støtter nettverket.  Vil du betale gebyret?</translation>
     </message>
     <message>
-        <location line="+210"/>
-        <source>Backup Successful</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>The wallet data was successfully saved to the new location.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message numerus="yes">
-        <location line="-338"/>
-        <source>%n second(s) ago</source>
-        <translation><numerusform>for %n sekund siden</numerusform><numerusform>for %n sekunder siden</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location line="+4"/>
-        <source>%n minute(s) ago</source>
-        <translation><numerusform>for %n minutt siden</numerusform><numerusform>for %n minutter siden</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location line="+4"/>
-        <source>%n hour(s) ago</source>
-        <translation><numerusform>for %n time siden</numerusform><numerusform>for %n timer siden</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location line="+4"/>
-        <source>%n day(s) ago</source>
-        <translation><numerusform>for %n dag siden</numerusform><numerusform>for %n dager siden</numerusform></translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="-140"/>
         <source>Up to date</source>
         <translation>Ajour</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+31"/>
         <source>Catching up...</source>
         <translation>Kommer ajour...</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>Last received block was generated %1.</source>
-        <translation>Siste mottatte blokk ble generert %1.</translation>
-    </message>
-    <message>
-        <location line="+97"/>
+        <location line="+113"/>
         <source>Confirm transaction fee</source>
         <translation>Bekreft transaksjonsgebyr</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+8"/>
         <source>Sent transaction</source>
         <translation>Sendt transaksjon</translation>
     </message>
@@ -643,14 +648,14 @@ Adresse: %4
 </translation>
     </message>
     <message>
-        <location line="+99"/>
-        <location line="+28"/>
+        <location line="+33"/>
+        <location line="+23"/>
         <source>URI handling</source>
         <translation>URI håndtering</translation>
     </message>
     <message>
-        <location line="-28"/>
-        <location line="+28"/>
+        <location line="-23"/>
+        <location line="+23"/>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
         <translation>URI kunne ikke tolkes! Dette kan forårsakes av en ugyldig Bitcoin-adresse eller feil i URI-parametere.</translation>
     </message>
@@ -665,27 +670,7 @@ Adresse: %4
         <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="+23"/>
-        <source>Backup Wallet</source>
-        <translation>Sikkerhetskopiér Lommebok</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Lommeboksdata (*.dat)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Backup Failed</source>
-        <translation>Sikkerhetskopiering feilet</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation>En feil oppstod ved lagring av lommebok til nytt sted</translation>
-    </message>
-    <message>
-        <location filename="../bitcoin.cpp" line="+109"/>
+        <location filename="../bitcoin.cpp" line="+111"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>En fatal feil har inntruffet. Det er ikke trygt å fortsette og Bitcoin må derfor avslutte.</translation>
     </message>
@@ -693,7 +678,7 @@ Adresse: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+86"/>
+        <location filename="../clientmodel.cpp" line="+104"/>
         <source>Network Alert</source>
         <translation>Nettverksvarsel</translation>
     </message>
@@ -726,7 +711,7 @@ Adresse: %4
         <translation>Adressen til denne oppføringen i adresseboken. Denne kan kun endres for utsendingsadresser.</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="+20"/>
+        <location filename="../editaddressdialog.cpp" line="+21"/>
         <source>New receiving address</source>
         <translation>Ny mottaksadresse</translation>
     </message>
@@ -746,17 +731,17 @@ Adresse: %4
         <translation>Rediger utsendingsadresse</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+76"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
         <translation>Den oppgitte adressen &quot;%1&quot; er allerede i adresseboken.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-5"/>
         <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
         <translation>Den angitte adressed &quot;%1&quot; er ikke en gyldig Bitcoin-adresse.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+10"/>
         <source>Could not unlock wallet.</source>
         <translation>Kunne ikke låse opp lommeboken.</translation>
     </message>
@@ -769,7 +754,7 @@ Adresse: %4
 <context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+419"/>
+        <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
         <source>Bitcoin-Qt</source>
         <translation>Bitcoin-Qt</translation>
@@ -825,8 +810,8 @@ Adresse: %4
     </message>
     <message>
         <location line="+6"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation>Valgfritt transaksjonsgebyr per kB som sikrer at dine transaksjoner blir raskt prosessert. De fleste transaksjoner er 1 kB. Et gebyr på 0.01 er anbefalt.</translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+15"/>
@@ -984,7 +969,7 @@ Adresse: %4
         <translation>&amp;Bruk</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+55"/>
+        <location filename="../optionsdialog.cpp" line="+53"/>
         <source>default</source>
         <translation>standardverdi</translation>
     </message>
@@ -1029,23 +1014,18 @@ Adresse: %4
         <translation>Skjema</translation>
     </message>
     <message>
-        <location line="+51"/>
-        <location line="+183"/>
+        <location line="+50"/>
+        <location line="+166"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Informasjonen som vises kan være foreldet. Din lommebok synkroniseres automatisk med Bitcoin-nettverket etter at tilkobling er opprettet, men denne prosessen er ikke ferdig enda.</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-124"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="+58"/>
-        <source>Number of transactions:</source>
-        <translation>Antall transaksjoner:</translation>
-    </message>
-    <message>
-        <location line="-29"/>
+        <location line="+29"/>
         <source>Unconfirmed:</source>
         <translation>Ubekreftet</translation>
     </message>
@@ -1055,7 +1035,7 @@ Adresse: %4
         <translation>Lommebok</translation>
     </message>
     <message>
-        <location line="+124"/>
+        <location line="+107"/>
         <source>Immature:</source>
         <translation>Umoden:</translation>
     </message>
@@ -1070,7 +1050,7 @@ Adresse: %4
         <translation>&lt;b&gt;Siste transaksjoner&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="-118"/>
+        <location line="-101"/>
         <source>Your current balance</source>
         <translation>Din nåværende saldo</translation>
     </message>
@@ -1080,15 +1060,18 @@ Adresse: %4
         <translation>Totalt antall ubekreftede transaksjoner som ikke telles med i saldo enda</translation>
     </message>
     <message>
-        <location line="+20"/>
-        <source>Total number of transactions in wallet</source>
-        <translation>Totalt antall transaksjoner i lommeboken</translation>
-    </message>
-    <message>
-        <location filename="../overviewpage.cpp" line="+115"/>
+        <location filename="../overviewpage.cpp" line="+116"/>
         <location line="+1"/>
         <source>out of sync</source>
         <translation>ute av synk</translation>
+    </message>
+</context>
+<context>
+    <name>PaymentServer</name>
+    <message>
+        <location filename="../paymentserver.cpp" line="+107"/>
+        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <translation>Kan ikke starte Bit-coin: klikk-og-betal håndterer</translation>
     </message>
 </context>
 <context>
@@ -1166,7 +1149,7 @@ Adresse: %4
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+344"/>
+        <location filename="../rpcconsole.cpp" line="+339"/>
         <source>N/A</source>
         <translation>-</translation>
     </message>
@@ -1348,7 +1331,7 @@ Adresse: %4
     <message>
         <location line="+3"/>
         <source>S&amp;end</source>
-        <translation type="unfinished"/>
+        <translation>S&amp;avslutt</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-59"/>
@@ -1398,7 +1381,7 @@ Adresse: %4
     <message>
         <location line="+5"/>
         <source>Error: Transaction creation failed!</source>
-        <translation type="unfinished"/>
+        <translation>Feil: Opprettelse av transaksjon feilet  </translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1426,11 +1409,11 @@ Adresse: %4
     <message>
         <location line="+34"/>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>Adressen betalingen skal sendes til  (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+60"/>
-        <location filename="../sendcoinsentry.cpp" line="+25"/>
+        <location filename="../sendcoinsentry.cpp" line="+26"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>Skriv inn en merkelapp for denne adressen for å legge den til i din adressebok</translation>
     </message>
@@ -1664,9 +1647,22 @@ Adresse: %4
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    <message>
+        <location filename="../splashscreen.cpp" line="+22"/>
+        <source>The Bitcoin developers</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>[testnet]</source>
+        <translation>[testnett]</translation>
+    </message>
+</context>
+<context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+19"/>
+        <location filename="../transactiondesc.cpp" line="+20"/>
         <source>Open until %1</source>
         <translation>Åpen til %1</translation>
     </message>
@@ -1853,7 +1849,7 @@ Adresse: %4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+226"/>
+        <location filename="../transactiontablemodel.cpp" line="+225"/>
         <source>Date</source>
         <translation>Dato</translation>
     </message>
@@ -1971,7 +1967,7 @@ Adresse: %4
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+55"/>
+        <location filename="../transactionview.cpp" line="+52"/>
         <location line="+16"/>
         <source>All</source>
         <translation>Alle</translation>
@@ -2058,6 +2054,11 @@ Adresse: %4
     </message>
     <message>
         <location line="+1"/>
+        <source>Copy transaction ID</source>
+        <translation>Kopier transaksjons-ID</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Edit label</source>
         <translation>Rediger merkelapp</translation>
     </message>
@@ -2067,7 +2068,7 @@ Adresse: %4
         <translation>Vis transaksjonsdetaljer</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+139"/>
         <source>Export Transaction Data</source>
         <translation>Eksporter transaksjonsdata</translation>
     </message>
@@ -2122,7 +2123,7 @@ Adresse: %4
         <translation>Kunne ikke skrive til filen %1.</translation>
     </message>
     <message>
-        <location line="+95"/>
+        <location line="+100"/>
         <source>Range:</source>
         <translation>Intervall:</translation>
     </message>
@@ -2133,39 +2134,90 @@ Adresse: %4
     </message>
 </context>
 <context>
+    <name>WalletModel</name>
+    <message>
+        <location filename="../walletmodel.cpp" line="+193"/>
+        <source>Send Coins</source>
+        <translation>Send Bitcoins</translation>
+    </message>
+</context>
+<context>
+    <name>WalletView</name>
+    <message>
+        <location filename="../walletview.cpp" line="+42"/>
+        <source>&amp;Export</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporter data fra nåværende fane til fil</translation>
+    </message>
+    <message>
+        <location line="+193"/>
+        <source>Backup Wallet</source>
+        <translation>Sikkerhetskopier lommebok</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Wallet Data (*.dat)</source>
+        <translation>Lommebokdata (*.dat)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Backup Failed</source>
+        <translation>Sikkerhetskopiering feilet</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>There was an error trying to save the wallet data to the new location.</source>
+        <translation>En feil oppstod under lagringen av lommeboken til den nye plasseringen.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Backup Successful</source>
+        <translation>Sikkerhetskopiering fullført</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>The wallet data was successfully saved to the new location.</source>
+        <translation>Lommebokdata ble lagret til den nye plasseringen. </translation>
+    </message>
+</context>
+<context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+88"/>
+        <location filename="../bitcoinstrings.cpp" line="+94"/>
         <source>Bitcoin version</source>
         <translation>Bitcoin versjon</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+102"/>
         <source>Usage:</source>
         <translation>Bruk:</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-29"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Send kommando til -server eller bitcoind</translation>
     </message>
     <message>
-        <location line="-21"/>
+        <location line="-23"/>
         <source>List commands</source>
         <translation>List opp kommandoer</translation>
     </message>
     <message>
-        <location line="-11"/>
+        <location line="-12"/>
         <source>Get help for a command</source>
         <translation>Vis hjelpetekst for en kommando</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+24"/>
         <source>Options:</source>
         <translation>Innstillinger:</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Angi konfigurasjonsfil (standardverdi: bitcoin.conf)</translation>
     </message>
@@ -2175,121 +2227,112 @@ Adresse: %4
         <translation>Angi pid-fil (standardverdi: bitcoind.pid)</translation>
     </message>
     <message>
-        <location line="-47"/>
-        <source>Generate coins</source>
-        <translation>Generér bitcoins</translation>
-    </message>
-    <message>
-        <location line="-15"/>
-        <source>Don&apos;t generate coins</source>
-        <translation>Ikke generér bitcoins</translation>
-    </message>
-    <message>
-        <location line="+61"/>
+        <location line="-1"/>
         <source>Specify data directory</source>
         <translation>Angi mappe for datafiler</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>Sett størrelse på mellomlager for database i megabytes (standardverdi: 25)</translation>
     </message>
     <message>
-        <location line="-26"/>
+        <location line="-28"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Lytt etter tilkoblinger på &lt;port&gt; (standardverdi: 8333 eller testnet: 18333)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation>Hold maks &lt;n&gt; koblinger åpne til andre noder (standardverdi: 125)</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-48"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Koble til node for å hente adresser til andre noder, koble så fra igjen</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+82"/>
         <source>Specify your own public address</source>
         <translation>Angi din egen offentlige adresse</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Grenseverdi for å koble fra noder med dårlig oppførsel (standardverdi: 100)</translation>
     </message>
     <message>
-        <location line="-114"/>
+        <location line="-134"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Antall sekunder noder med dårlig oppførsel hindres fra å koble til på nytt (standardverdi: 86400)</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-29"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation>En feil oppstod ved opprettelse av RPC port %u for lytting: %s</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+27"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Lytt etter JSON-RPC tilkoblinger på &lt;port&gt; (standardverdi: 8332 or testnet: 18332)</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+37"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Ta imot kommandolinje- og JSON-RPC-kommandoer</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+76"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Kjør i bakgrunnen som daemon og ta imot kommandoer</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+37"/>
         <source>Use the test network</source>
         <translation>Bruk testnettverket</translation>
     </message>
     <message>
-        <location line="-92"/>
+        <location line="-112"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Ta imot tilkoblinger fra utsiden (standardverdi: 1 hvis uten -proxy eller -connect)</translation>
     </message>
     <message>
-        <location line="-74"/>
+        <location line="-80"/>
         <source>%s, you must set a rpcpassword in the configuration file:
- %s
+%s
 It is recommended you use the following random password:
 rpcuser=bitcoinrpc
 rpcpassword=%s
 (you do not need to remember this password)
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
 </source>
-        <translation type="unfinished"/>
+        <translation>%s, du må angi rpcpassord i konfigurasjonsfilen.
+%s
+Det anbefales at du bruker det følgende tilfeldige passordet:
+rpcbruker=bitcoinrpc
+rpcpassord=%s
+(du behøver ikke å huske passordet)
+Brukernavnet og passordet MÅ IKKE være like.
+Om filen ikke eksisterer, opprett den nå med eier-kun-les filrettigheter.
+Det er også anbefalt at å sette varselsmelding slik du får melding om problemer.
+For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@foo.com</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>En feil oppstod under oppsettet av RPC port %u for IPv6, tilbakestilles til IPv4: %s</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
+        <translation>Bind til angitt adresse. Bruk [vertsmaskin]:port notasjon for IPv6</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Corrupted block database detected. Please restart the client with -reindex.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Error initializing database environment %s! To recover, BACKUP THAT DIRECTORY, then remove everything from it except for wallet.dat.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -2303,12 +2346,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Execute command when a relevant alert is received (%s in cmd is replaced by message)</source>
+        <translation>Kjør kommando når relevant varsel blir mottatt (%s i cmd er erstattet med TxID)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation>Kjør kommando når en lommeboktransaksjon endres (%s i cmd er erstattet med TxID)</translation>
+    </message>
+    <message>
         <location line="+11"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
         <translation>Sett maks størrelse for transaksjoner med høy prioritet / lavt gebyr, i bytes (standardverdi: 27000)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation type="unfinished"/>
     </message>
@@ -2348,28 +2401,48 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Valg for opprettelse av blokker:</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
         <source>Connect only to the specified node(s)</source>
         <translation>Koble kun til angitt(e) node(r)</translation>
     </message>
     <message>
         <location line="+3"/>
+        <source>Corrupted block database detected</source>
+        <translation>Oppdaget korrupt blokkdatabase</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation>Oppdag egen IP-adresse (standardverdi: 1 ved lytting og uten -externalip)</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Error loading block database</source>
-        <translation type="unfinished"/>
+        <location line="+1"/>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation>Ønsker du å gjenopprette blokkdatabasen nå?</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Error: Disk space is low!</source>
+        <location line="+2"/>
+        <source>Error initializing block database</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
-        <source>Error: Transaction creation failed!</source>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation>Feil under oppstart av lommebokdatabasemiljø %s!</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error loading block database</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Error opening block database</source>
+        <translation>Feil under åpning av blokkdatabase</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Error: Disk space is low!</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -2378,9 +2451,64 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
+        <source>Error: system error: </source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Kunne ikke lytte på noen port. Bruk -listen=0 hvis det er dette du vil.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to read block info</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to read block</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to sync block index</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write block index</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write block info</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write block</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write file info</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write to coin database</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write transaction index</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to write undo data</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -2388,22 +2516,57 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Finn andre noder gjennom DNS-oppslag (standardverdi: 1 med mindre -connect er oppgit)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+1"/>
+        <source>Generate coins (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>How thorough the block verification is (0-4, default: 3)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Importing blocks from block database...</source>
+        <location line="+19"/>
+        <source>Not enough file descriptors available.</source>
         <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+8"/>
+        <source>Rebuild block chain index from current blk000??.dat files</source>
+        <translation>Gjenopprett blokkjedeindex fra blk000??.dat filer</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Set the number of threads to service RPC calls (default: 4)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Verifying blocks...</source>
+        <translation>Verifiserer blokker...</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>Verifying wallet...</source>
+        <translation>Verifiserer lommebok...</translation>
+    </message>
+    <message>
+        <location line="-69"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-76"/>
+        <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+77"/>
         <source>Information</source>
         <translation type="unfinished"/>
     </message>
@@ -2413,7 +2576,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Ugyldig -tor adresse: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+1"/>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Maintain a full transaction index (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
         <translation>Maks mottaksbuffer per forbindelse, &lt;n&gt;*1000 bytes (standardverdi: 5000)</translation>
     </message>
@@ -2423,7 +2601,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Maks sendebuffer per forbindelse, &lt;n&gt;*1000 bytes (standardverdi: 1000)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
         <translation type="unfinished"/>
     </message>
@@ -2448,12 +2626,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Sett tidsstempel på debugmeldinger</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Rebuild blockchain index from current blk000??.dat files</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>SSL valg: (se Bitcoin Wiki for instruksjoner for oppsett av SSL)</translation>
     </message>
@@ -2483,9 +2656,14 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Sett minimum blokkstørrelse i bytes (standardverdi: 0)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Krymp debug.log filen når klienten starter (standardverdi: 1 hvis uten -debug)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -2493,7 +2671,27 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Angi tidsavbrudd for forbindelse i millisekunder (standardverdi: 5000)</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+4"/>
+        <source>System error: </source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction amounts must be positive</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction too large</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Bruk UPnP for lytteport (standardverdi: 0)</translation>
     </message>
@@ -2524,36 +2722,41 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location line="+1"/>
+        <source>You need to rebuild the databases using -reindex to change -txindex</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-50"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Passord for JSON-RPC forbindelser</translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-67"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Tillat JSON-RPC tilkoblinger fra angitt IP-adresse</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+76"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Send kommandoer til node på &lt;ip&gt; (standardverdi: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-103"/>
+        <location line="-120"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Eksekvér kommando når beste blokk endrer seg (%s i kommandoen erstattes med blokkens hash)</translation>
     </message>
     <message>
-        <location line="+124"/>
+        <location line="+147"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Oppgradér lommebok til nyeste format</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-21"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Angi størrelse på nøkkel-lager til &lt;n&gt; (standardverdi: 100)</translation>
     </message>
@@ -2563,17 +2766,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Se gjennom blokk-kjeden etter manglende lommeboktransaksjoner</translation>
     </message>
     <message>
-        <location line="-26"/>
-        <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
-        <translation>Hvor mange blokker som skal sjekkes ved oppstart (standardverdi: 2500, 0 = alle)</translation>
-    </message>
-    <message>
-        <location line="+55"/>
+        <location line="+35"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Bruk OpenSSL (https) for JSON-RPC forbindelser</translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="-26"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Servers sertifikat (standardverdi: server.cert)</translation>
     </message>
@@ -2583,37 +2781,37 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Servers private nøkkel (standardverdi: server.pem)</translation>
     </message>
     <message>
-        <location line="-133"/>
+        <location line="-151"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Akseptable krypteringsmetoder (standardverdi: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+144"/>
+        <location line="+165"/>
         <source>This help message</source>
         <translation>Denne hjelpemeldingen</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Kan ikke binde til %s på denne datamaskinen (bind returnerte feil %d, %s)</translation>
     </message>
     <message>
-        <location line="-70"/>
+        <location line="-91"/>
         <source>Connect through socks proxy</source>
         <translation>Koble til gjennom socks proxy</translation>
     </message>
     <message>
-        <location line="-11"/>
+        <location line="-10"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Tillat DNS oppslag for -addnode, -seednode og -connect</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+55"/>
         <source>Loading addresses...</source>
         <translation>Laster adresser...</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-35"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Feil ved lasting av wallet.dat: Lommeboken er skadet</translation>
     </message>
@@ -2623,32 +2821,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Feil ved lasting av wallet.dat: Lommeboken krever en nyere versjon av Bitcoin</translation>
     </message>
     <message>
-        <location line="+73"/>
-        <source>Verifying block database integrity...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Verifying wallet integrity...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+93"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Lommeboken måtte skrives om: start Bitcoin på nytt for å fullføre</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-95"/>
         <source>Error loading wallet.dat</source>
         <translation>Feil ved lasting av wallet.dat</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+28"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Ugyldig -proxy adresse: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Ukjent nettverk angitt i -onlynet &apos;%s&apos;</translation>
     </message>
@@ -2658,7 +2846,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Ukjent -socks proxy versjon angitt: %i</translation>
     </message>
     <message>
-        <location line="-75"/>
+        <location line="-96"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kunne ikke slå opp -bind adresse: &apos;%s&apos;</translation>
     </message>
@@ -2668,32 +2856,27 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Kunne ikke slå opp -externalip adresse: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+44"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Ugyldig beløp for -paytxfee=&lt;beløp&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-15"/>
-        <source>Error: could not start node</source>
-        <translation>Feil: kunne ikke starte node</translation>
-    </message>
-    <message>
-        <location line="+16"/>
+        <location line="+1"/>
         <source>Invalid amount</source>
         <translation>Ugyldig beløp</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="-6"/>
         <source>Insufficient funds</source>
         <translation>Utilstrekkelige midler</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Loading block index...</source>
         <translation>Laster blokkindeks...</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-57"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Legg til node for tilkobling og hold forbindelsen åpen</translation>
     </message>
@@ -2703,12 +2886,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Kan ikke binde til %s på denne datamaskinen. Sannsynligvis kjører Bitcoin allerede.</translation>
     </message>
     <message>
-        <location line="+54"/>
-        <source>Find peers using internet relay chat (default: 0)</source>
-        <translation>Finn andre noder via internet relay chat (standardverdi: 0)</translation>
-    </message>
-    <message>
-        <location line="-2"/>
+        <location line="+64"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Gebyr per KB for transaksjoner du sender</translation>
     </message>
@@ -2718,14 +2896,9 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Laster lommebok...</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-52"/>
         <source>Cannot downgrade wallet</source>
         <translation>Kan ikke nedgradere lommebok</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Cannot initialize keypool</source>
-        <translation>Kan ikke initialisere nøkkellager</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2733,27 +2906,27 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Kan ikke skrive standardadresse</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+64"/>
         <source>Rescanning...</source>
         <translation>Leser gjennom...</translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-57"/>
         <source>Done loading</source>
         <translation>Ferdig med lasting</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+82"/>
         <source>To use the %s option</source>
         <translation>For å bruke %s opsjonen</translation>
     </message>
     <message>
-        <location line="-60"/>
+        <location line="-74"/>
         <source>Error</source>
         <translation>Feil</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-31"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>

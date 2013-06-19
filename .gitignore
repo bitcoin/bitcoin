@@ -15,6 +15,11 @@ src/test_primecoin
 *.qm
 Makefile
 primecoin-qt
+Primecoin-Qt.app
+
+# Unit-tests
+Makefile.test
+primecoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
