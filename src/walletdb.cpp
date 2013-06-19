@@ -344,11 +344,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "keymeta")
         {
-            vector<unsigned char> vchPubKey;
+            CPubKey vchPubKey;
             ssKey >> vchPubKey;
             CKeyMetadata keyMeta;
             ssValue >> keyMeta;
             wss.nKeyMeta++;
+
+            pwallet->LoadKeyMetadata(vchPubKey, keyMeta);
 
             // find earliest key creation time, as wallet birthday
             if (!pwallet->nTimeFirstKey ||
@@ -483,7 +485,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 
     // nTimeFirstKey is only reliable if all keys have metadata
     if ((wss.nKeys + wss.nCKeys) != wss.nKeyMeta)
-        pwallet->nTimeFirstKey = 0;
+        pwallet->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
     BOOST_FOREACH(uint256 hash, wss.vWalletUpgrade)
         WriteTx(hash, pwallet->mapWallet[hash]);
