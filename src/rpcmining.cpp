@@ -21,7 +21,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     int64 nTargetSpacingWorkMin = 30;
     int64 nTargetSpacingWork = nTargetSpacingWorkMin;
     int64 nPoWInterval = 72;
-    int64 nTargetSpacingStake = 10;
+    int64 nTargetSpacingStake = 600;
 
     CBlockIndex* pindex = pindexGenesisBlock;
     CBlockIndex* pindexPrevWork = pindexGenesisBlock;
