@@ -2644,7 +2644,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
         return true;
 
     // Verify blocks in the best chain
-    if (nCheckDepth == 0)
+    if (nCheckDepth <= 0)
         nCheckDepth = 1000000000; // suffices until the year 19000
     if (nCheckDepth > nBestHeight)
         nCheckDepth = nBestHeight;
