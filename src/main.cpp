@@ -3432,6 +3432,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
+        // Truncate messages to the size of the tx in them
+        unsigned int nSize = ::GetSerializeSize(tx,SER_NETWORK, PROTOCOL_VERSION);
+        if (nSize < vMsg.size()){
+            vMsg.resize(nSize);
+        }
+
         bool fMissingInputs = false;
         if (tx.AcceptToMemoryPool(txdb, true, &fMissingInputs))
         {
