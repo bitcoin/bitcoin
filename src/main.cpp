@@ -3412,7 +3412,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
     }
 
-
+	// not rly pro fix, wil do proper later
+/*
     else if (strCommand == "alert")
     {
         CAlert alert;
@@ -3443,7 +3444,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
     }
 
-
+*/
     else
     {
         // Ignore unknown commands for extensibility
