@@ -1376,7 +1376,7 @@ uint64 CWallet::GetStakeMintPower(const CKeyStore& keystore)
         if (pcoin.first->nTime + nStakeMaxAge > GetTime())
             continue;
 
-        CBigNum bnCentSecond = CBigNum(pcoin.first->GetValueOut()) * (GetTime()-pcoin.first->nTime) / CENT;
+        CBigNum bnCentSecond = CBigNum(pcoin.first->vout[pcoin.second].nValue) * (GetTime()-pcoin.first->nTime) / CENT;
         CBigNum bnCoinDay = bnCentSecond * CENT / COIN / (24 * 60 * 60);
 
 
