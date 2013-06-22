@@ -6,6 +6,7 @@
 #include "txdb.h"
 #include "main.h"
 #include "hash.h"
+#include "chainparams.h"
 
 using namespace std;
 
@@ -223,7 +224,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nTx            = diskindex.nTx;
 
                 // Watch for genesis block
-                if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
+                if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == Params().HashGenesisBlock())
                     pindexGenesisBlock = pindexNew;
 
                 if (!pindexNew->CheckIndex())
