@@ -30,7 +30,7 @@ class CKeyMetadata
 public:
     static const int CURRENT_VERSION=1;
     int nVersion;
-    int64 nCreateTime;
+    int64 nCreateTime; // 0 means unknown
 
     CKeyMetadata()
     {
@@ -52,7 +52,7 @@ public:
     void SetNull()
     {
         nVersion = CKeyMetadata::CURRENT_VERSION;
-        nCreateTime = GetTime();
+        nCreateTime = 0;
     }
 };
 
@@ -84,13 +84,12 @@ public:
     }
 
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey,
-                  int64 nCreateTime)
+                  const CKeyMetadata &keyMeta)
     {
         nWalletDBUpdated++;
 
-        CKeyMetadata keyMeta(nCreateTime);
         if (!Write(std::make_pair(std::string("keymeta"), vchPubKey),
-                   keyMeta, false))
+                   keyMeta))
             return false;
 
         return Write(std::make_pair(std::string("key"), vchPubKey), vchPrivKey, false);
@@ -98,14 +97,13 @@ public:
 
     bool WriteCryptedKey(const CPubKey& vchPubKey,
                          const std::vector<unsigned char>& vchCryptedSecret,
-                         int64 nCreateTime)
+                         const CKeyMetadata &keyMeta)
     {
         const bool fEraseUnencryptedKey = true;
         nWalletDBUpdated++;
 
-        CKeyMetadata keyMeta(nCreateTime);
         if (!Write(std::make_pair(std::string("keymeta"), vchPubKey),
-                   keyMeta, false))
+                   keyMeta))
             return false;
 
         if (!Write(std::make_pair(std::string("ckey"), vchPubKey), vchCryptedSecret, false))
