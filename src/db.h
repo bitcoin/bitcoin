@@ -318,14 +318,10 @@ class CAddrDB
 {
 private:
     boost::filesystem::path pathAddr;
-    static unsigned char pchMessageStart[4];
-
 public:
     CAddrDB();
     bool Write(const CAddrMan& addr);
     bool Read(CAddrMan& addr);
-
-    static void SetMessageStart(unsigned char _pchMessageStart[]) { memcpy(CAddrDB::pchMessageStart, _pchMessageStart, sizeof(CAddrDB::pchMessageStart)); }
 };
 
 #endif // BITCOIN_DB_H
