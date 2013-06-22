@@ -2175,8 +2175,14 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         uint256 hashProofOfStake = 0;
         if (!CheckProofOfStake(pblock->vtx[1], pblock->nBits, hashProofOfStake))
         {
-            printf("WARNING: ProcessBlock(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
-            return false; // do not error here as we expect this during initial block download
+            //12392,12246
+            if(!  (
+                  ( hash==uint256("0xfe66d7b9059a5f2592fa2d2dba78347bdc37aa0396fb577b1f599c7748c8bc62") )
+               || ( hash==uint256("0x69d771b1f34861e0a2ca8ae20ab0e5f84285f2aa1687ad55eb35f9d52698cc77") )
+                  )) {
+                printf("WARNING: ProcessBlock(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
+                return false; // do not error here as we expect this during initial block download
+            }
         }
         if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
             mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
@@ -3412,8 +3418,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
     }
 
-	// not rly pro fix, wil do proper later
-/*
+
     else if (strCommand == "alert")
     {
         CAlert alert;
@@ -3444,7 +3449,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
     }
 
-*/
+
     else
     {
         // Ignore unknown commands for extensibility
