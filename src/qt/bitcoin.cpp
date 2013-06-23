@@ -117,6 +117,11 @@ int main(int argc, char *argv[])
 
     // Command-line options take precedence:
     ParseParameters(argc, argv);
+    // Check for -testnet or -regtest parameter
+    if (!SelectParamsFromCommandLine()) {
+        QMessageBox::critical(0, QObject::tr("Bitcoin"), QObject::tr("Invalid combination of -testnet and -regtest."));
+        return 1;
+    }
 
 #if QT_VERSION < 0x050000
     // Internal string conversion is all UTF-8
