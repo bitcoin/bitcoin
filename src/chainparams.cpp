@@ -9,6 +9,10 @@
 #include "main.h"
 #include "util.h"
 
+#include <boost/assign/list_of.hpp>
+
+using namespace boost::assign;
+
 //
 // Main network
 //
@@ -140,9 +144,9 @@ public:
         vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.bitcoin.dashjr.org"));
         vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = 0;
-        base58Prefixes[SCRIPT_ADDRESS] = 5;
-        base58Prefixes[SECRET_KEY] = 128;
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(0);
+        base58Prefixes[SCRIPT_ADDRESS] = list_of(5);
+        base58Prefixes[SECRET_KEY] =     list_of(128);
 
         // Convert the pnSeeds array into usable address objects.
         for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++)
@@ -202,10 +206,9 @@ public:
         vSeeds.push_back(CDNSSeedData("bitcoin.petertodd.org", "testnet-seed.bitcoin.petertodd.org"));
         vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = 111;
-        base58Prefixes[SCRIPT_ADDRESS] = 196;
-        base58Prefixes[SECRET_KEY] = 239;
-
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(111);
+        base58Prefixes[SCRIPT_ADDRESS] = list_of(196);
+        base58Prefixes[SECRET_KEY]     = list_of(239);
     }
     virtual Network NetworkID() const { return CChainParams::TESTNET; }
 };
@@ -233,10 +236,6 @@ public:
         assert(hashGenesisBlock == uint256("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
 
         vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
-
-        base58Prefixes[PUBKEY_ADDRESS] = 0;
-        base58Prefixes[SCRIPT_ADDRESS] = 5;
-        base58Prefixes[SECRET_KEY] = 128;
     }
 
     virtual bool RequireRPCPassword() const { return false; }
