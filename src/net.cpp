@@ -1858,7 +1858,6 @@ void StartNode(boost::thread_group& threadGroup)
 bool StopNode()
 {
     printf("StopNode()\n");
-    GenerateBitcoins(false, NULL);
     MapPort(false);
     nTransactionsUpdated++;
     if (semOutbound)
