@@ -260,16 +260,17 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     key.MakeNewKey(true);
     t.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
 
-    BOOST_CHECK(IsStandardTx(t));
+    string reason;
+    BOOST_CHECK(IsStandardTx(t, reason));
 
     t.vout[0].nValue = 5011; // dust
-    BOOST_CHECK(!IsStandardTx(t));
+    BOOST_CHECK(!IsStandardTx(t, reason));
 
     t.vout[0].nValue = 6011; // not dust
-    BOOST_CHECK(IsStandardTx(t));
+    BOOST_CHECK(IsStandardTx(t, reason));
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
-    BOOST_CHECK(!IsStandardTx(t));
+    BOOST_CHECK(!IsStandardTx(t, reason));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
