@@ -104,7 +104,8 @@ OBJS= \
     obj/bloom.o \
     obj/noui.o \
     obj/leveldb.o \
-    obj/txdb.o
+    obj/txdb.o \
+    obj/chainparams.o
 
 ifndef USE_UPNP
 	override USE_UPNP = -
