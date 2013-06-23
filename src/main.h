@@ -13,6 +13,10 @@
 
 #include <list>
 
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 class CWallet;
 class CBlock;
 class CBlockIndex;
