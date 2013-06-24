@@ -16,7 +16,7 @@ remotes:
   "dir": "primecoin"
 files:
 - "qt-win32-4.8.3-gitian-r1.zip"
-- "boost-win32-1.50.0-gitian2.zip"
+- "boost-win32-1.50.0-gitian.zip"
 - "primecoin-deps-0.0.1.zip"
 script: |
   #
@@ -29,7 +29,7 @@ script: |
   mkdir boost_1_50_0
   cd boost_1_50_0
   mkdir -p stage/lib
-  unzip ../boost-win32-1.50.0-gitian2.zip
+  unzip ../boost-win32-1.50.0-gitian.zip
   cd bin/$GBUILD_BITS
   for lib in *; do
     i586-mingw32msvc-ar rc ../../stage/lib/libboost_${lib}-mt-s.a $lib/*.o
