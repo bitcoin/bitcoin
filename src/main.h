@@ -703,9 +703,6 @@ public:
     }
 
 
-    // Apply the effects of this block (with given index) on the UTXO set represented by coins
-    bool ConnectBlock(CValidationState &state, CBlockIndex *pindex, CCoinsViewCache &coins, bool fJustCheck=false);
-
     // Add this block to the block index, and if necessary, switch the active block chain to this
     bool AddToBlockIndex(CValidationState &state, const CDiskBlockPos &pos);
 
@@ -731,6 +728,10 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
 bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool* pfClean = NULL);
+
+// Apply the effects of this block (with given index) on the UTXO set represented by coins
+bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool fJustCheck = false);
+
 
 
 
