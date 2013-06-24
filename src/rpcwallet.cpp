@@ -1202,6 +1202,34 @@ Value listsinceblock(const Array& params, bool fHelp)
     return ret;
 }
 
+Value listtransactionsofblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "listtransactionsofblock [blockhash]\n"
+            "Get all transactions in block with bockhash [blockhash]");
+
+    CBlockIndex *pindex = NULL;
+
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    Array transactions;
+
+    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); it++)
+    {
+        CWalletTx tx = (*it).second;
+
+        if (tx.hashBlock == hash)
+            ListTransactions(tx, "*", 0, true, transactions);
+    }
+
+    Object ret;
+    ret.push_back(Pair("transactions", transactions));
+
+    return ret;
+}
+
 Value gettransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
