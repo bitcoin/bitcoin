@@ -11,6 +11,48 @@
 #include <boost/thread/condition_variable.hpp>
 #include "threadsafety.h"
 
+
+////////////////////////////////////////////////
+//                                            //
+// THE SIMPLE DEFINITON, EXCLUDING DEBUG CODE //
+//                                            //
+////////////////////////////////////////////////
+
+/*
+ 
+ 
+ 
+CCriticalSection mutex;
+    boost::recursive_mutex mutex;
+
+LOCK(mutex);
+    boost::unique_lock<boost::recursive_mutex> criticalblock(mutex);
+
+LOCK2(mutex1, mutex2);
+    boost::unique_lock<boost::recursive_mutex> criticalblock1(mutex1);
+    boost::unique_lock<boost::recursive_mutex> criticalblock2(mutex2);
+
+TRY_LOCK(mutex, name);
+    boost::unique_lock<boost::recursive_mutex> name(mutex, boost::try_to_lock_t);
+
+ENTER_CRITICAL_SECTION(mutex); // no RAII
+    mutex.lock();
+
+LEAVE_CRITICAL_SECTION(mutex); // no RAII
+    mutex.unlock();
+ 
+ 
+ 
+ */
+
+
+
+///////////////////////////////
+//                           //
+// THE ACTUAL IMPLEMENTATION //
+//                           //
+///////////////////////////////
+
 // Template mixin that adds -Wthread-safety locking annotations to a
 // subset of the mutex API.
 template <typename PARENT>
