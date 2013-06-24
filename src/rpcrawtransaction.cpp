@@ -9,7 +9,6 @@
 #include "bitcoinrpc.h"
 #include "db.h"
 #include "init.h"
-#include "main.h"
 #include "net.h"
 #include "wallet.h"
 

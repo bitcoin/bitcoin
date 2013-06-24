@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include "bloom.h"
-#include "main.h"
+#include "core.h"
 #include "script.h"
 
 #define LN2SQUARED 0.4804530139182014246671025263266649717305529515945455
