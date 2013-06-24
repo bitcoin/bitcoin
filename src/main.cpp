@@ -1603,7 +1603,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 
 
 
-bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoinsViewCache &view, bool *pfClean)
+bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool* pfClean)
 {
     assert(pindex == view.GetBestBlock());
 
@@ -1619,12 +1619,12 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
     if (!blockUndo.ReadFromDisk(pos, pindex->pprev->GetBlockHash()))
         return error("DisconnectBlock() : failure reading undo data");
 
-    if (blockUndo.vtxundo.size() + 1 != vtx.size())
+    if (blockUndo.vtxundo.size() + 1 != block.vtx.size())
         return error("DisconnectBlock() : block and undo data inconsistent");
 
     // undo transactions in reverse order
-    for (int i = vtx.size() - 1; i >= 0; i--) {
-        const CTransaction &tx = vtx[i];
+    for (int i = block.vtx.size() - 1; i >= 0; i--) {
+        const CTransaction &tx = block.vtx[i];
         uint256 hash = tx.GetHash();
 
         // check that all outputs are available
@@ -1913,7 +1913,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
         if (!ReadBlockFromDisk(block, pindex))
             return state.Abort(_("Failed to read block"));
         int64 nStart = GetTimeMicros();
-        if (!block.DisconnectBlock(state, pindex, view))
+        if (!DisconnectBlock(block, state, pindex, view))
             return error("SetBestBlock() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().c_str());
         if (fBenchmark)
             printf("- Disconnect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
@@ -2777,7 +2777,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
         // check level 3: check for inconsistencies during memory-only disconnect of tip blocks
         if (nCheckLevel >= 3 && pindex == pindexState && (coins.GetCacheSize() + pcoinsTip->GetCacheSize()) <= 2*nCoinCacheSize + 32000) {
             bool fClean = true;
-            if (!block.DisconnectBlock(state, pindex, coins, &fClean))
+            if (!DisconnectBlock(block, state, pindex, coins, &fClean))
                 return error("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
             pindexState = pindex->pprev;
             if (!fClean) {

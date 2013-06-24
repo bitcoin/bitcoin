@@ -703,12 +703,6 @@ public:
     }
 
 
-    /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
-     *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
-     *  will be true if no problems were found. Otherwise, the return value will be false in case
-     *  of problems. Note that in any case, coins may be modified. */
-    bool DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoinsViewCache &coins, bool *pfClean = NULL);
-
     // Apply the effects of this block (with given index) on the UTXO set represented by coins
     bool ConnectBlock(CValidationState &state, CBlockIndex *pindex, CCoinsViewCache &coins, bool fJustCheck=false);
 
@@ -728,6 +722,16 @@ public:
 bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos);
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
+
+
+/** Functions for validating blocks and updating the block tree */
+
+/** Undo the effects of this block (with given index) on the UTXO set represented by coins.
+ *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
+ *  will be true if no problems were found. Otherwise, the return value will be false in case
+ *  of problems. Note that in any case, coins may be modified. */
+bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool* pfClean = NULL);
+
 
 
 class CBlockFileInfo
