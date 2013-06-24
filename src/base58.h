@@ -58,7 +58,7 @@ inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char
         str += pszBase58[c];
     }
 
-    // Leading zeroes encoded as base58 zeros
+    // Leading zeroes encoded as base58 ones
     for (const unsigned char* p = pbegin; p < pend && *p == 0; p++)
         str += pszBase58[0];
 
