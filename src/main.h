@@ -701,11 +701,6 @@ public:
             printf("%s ", vMerkleTree[i].ToString().c_str());
         printf("\n");
     }
-
-
-    // Store block on disk
-    // if dbp is provided, the file is known to already reside on disk
-    bool AcceptBlock(CValidationState &state, CDiskBlockPos *dbp = NULL);
 };
 
 
@@ -731,6 +726,10 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
 
 // Context-independent validity checks
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+
+// Store block on disk
+// if dbp is provided, the file is known to already reside on disk
+bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp = NULL);
 
 
 
