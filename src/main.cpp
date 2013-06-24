@@ -1720,7 +1720,7 @@ void ThreadScriptCheck() {
 bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck)
 {
     // Check it again in case a previous version let a bad block in
-    if (!block.CheckBlock(state, !fJustCheck, !fJustCheck))
+    if (!CheckBlock(block, state, !fJustCheck, !fJustCheck))
         return false;
 
     // verify that the view's current state corresponds to the previous block
@@ -2188,51 +2188,51 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 }
 
 
-bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerkleRoot) const
+bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context
     // that can be verified before saving an orphan block.
 
     // Size limits
-    if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return state.DoS(100, error("CheckBlock() : size limits failed"));
 
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(GetHash(), nBits))
+    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits))
         return state.DoS(50, error("CheckBlock() : proof of work failed"));
 
     // Check timestamp
-    if (GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
+    if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
         return state.Invalid(error("CheckBlock() : block timestamp too far in the future"));
 
     // First transaction must be coinbase, the rest must not be
-    if (vtx.empty() || !vtx[0].IsCoinBase())
+    if (block.vtx.empty() || !block.vtx[0].IsCoinBase())
         return state.DoS(100, error("CheckBlock() : first tx is not coinbase"));
-    for (unsigned int i = 1; i < vtx.size(); i++)
-        if (vtx[i].IsCoinBase())
+    for (unsigned int i = 1; i < block.vtx.size(); i++)
+        if (block.vtx[i].IsCoinBase())
             return state.DoS(100, error("CheckBlock() : more than one coinbase"));
 
     // Check transactions
-    BOOST_FOREACH(const CTransaction& tx, vtx)
+    BOOST_FOREACH(const CTransaction& tx, block.vtx)
         if (!CheckTransaction(tx, state))
             return error("CheckBlock() : CheckTransaction failed");
 
     // Build the merkle tree already. We need it anyway later, and it makes the
     // block cache the transaction hashes, which means they don't need to be
     // recalculated many times during this block's validation.
-    BuildMerkleTree();
+    block.BuildMerkleTree();
 
     // Check for duplicate txids. This is caught by ConnectInputs(),
     // but catching it earlier avoids a potential DoS attack:
     set<uint256> uniqueTx;
-    for (unsigned int i=0; i<vtx.size(); i++) {
-        uniqueTx.insert(GetTxHash(i));
+    for (unsigned int i = 0; i < block.vtx.size(); i++) {
+        uniqueTx.insert(block.GetTxHash(i));
     }
-    if (uniqueTx.size() != vtx.size())
+    if (uniqueTx.size() != block.vtx.size())
         return state.DoS(100, error("CheckBlock() : duplicate transaction"));
 
     unsigned int nSigOps = 0;
-    BOOST_FOREACH(const CTransaction& tx, vtx)
+    BOOST_FOREACH(const CTransaction& tx, block.vtx)
     {
         nSigOps += GetLegacySigOpCount(tx);
     }
@@ -2240,7 +2240,7 @@ bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerk
         return state.DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
 
     // Check merkle root
-    if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
+    if (fCheckMerkleRoot && block.hashMerkleRoot != block.BuildMerkleTree())
         return state.DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
 
     return true;
@@ -2366,7 +2366,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         return state.Invalid(error("ProcessBlock() : already have block (orphan) %s", hash.ToString().c_str()));
 
     // Preliminary checks
-    if (!pblock->CheckBlock(state))
+    if (!CheckBlock(*pblock, state))
         return error("ProcessBlock() : CheckBlock FAILED");
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
@@ -2763,7 +2763,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
         if (!ReadBlockFromDisk(block, pindex))
             return error("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
         // check level 1: verify block validity
-        if (nCheckLevel >= 1 && !block.CheckBlock(state))
+        if (nCheckLevel >= 1 && !CheckBlock(block, state))
             return error("VerifyDB() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
