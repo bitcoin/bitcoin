@@ -427,16 +427,28 @@ bool CTransaction::IsStandard(string& strReason) const
             return false;
         }
     }
+
+    unsigned int nDataOut = 0;
+    txnouttype whichType;
     BOOST_FOREACH(const CTxOut& txout, vout) {
-        if (!::IsStandard(txout.scriptPubKey)) {
+        if (!::IsStandard(txout.scriptPubKey, whichType)) {
             strReason = "scriptpubkey";
             return false;
         }
-        if (txout.IsDust()) {
+        if (whichType == TX_NULL_DATA)
+            nDataOut++;
+        else if (txout.IsDust()) {
             strReason = "dust";
             return false;
         }
     }
+
+    // only one OP_RETURN txout is permitted
+    if (nDataOut > 1) {
+        strReason = "mucho-data";
+        return false;
+    }
+
     return true;
 }
 
