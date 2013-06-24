@@ -820,7 +820,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             {
                 CBlockIndex* pindex = (*mi).second;
                 CBlock block;
-                block.ReadFromDisk(pindex);
+                ReadBlockFromDisk(block, pindex);
                 block.BuildMerkleTree();
                 block.print();
                 printf("\n");
