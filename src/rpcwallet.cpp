@@ -1253,17 +1253,24 @@ Value backupwallet(const Array& params, bool fHelp)
 
 Value keypoolrefill(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 0)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
-            "keypoolrefill\n"
+            "keypoolrefill [new-size]\n"
             "Fills the keypool."
             + HelpRequiringPassphrase());
 
+    unsigned int kpSize = max(GetArg("-keypool", 100), 0LL);
+    if (params.size() > 0) {
+        if (params[0].get_int() < 0)
+            throw JSONRPCError(-8, "Invalid parameter, expected valid size");
+        kpSize = (unsigned int) params[0].get_int();
+    }
+
     EnsureWalletIsUnlocked();
 
-    pwalletMain->TopUpKeyPool();
+    pwalletMain->TopUpKeyPool(kpSize);
 
-    if (pwalletMain->GetKeyPoolSize() < GetArg("-keypool", 100))
+    if (pwalletMain->GetKeyPoolSize() < kpSize)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
 
     return Value::null;
