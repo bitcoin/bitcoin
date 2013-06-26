@@ -39,6 +39,7 @@ static const uint64 nFractionalDifficultyMin = (1llu << 32);
 static const uint64 nFractionalDifficultyThreshold = (1llu << (8 + 32));
 static const unsigned int nTargetMinLength = 2;
 static const unsigned int nProofOfWorkLimit = (nTargetMinLength << nFractionalBits);
+static const unsigned int nWorkTransitionRatio = 32;
 unsigned int TargetGetLength(unsigned int nBits);
 bool TargetSetLength(unsigned int nLength, unsigned int& nBits);
 unsigned int TargetGetFractional(unsigned int nBits);

@@ -2163,7 +2163,10 @@ CBigNum CBlockIndex::GetBlockWork() const
 {
     // Primecoin: 256x difficulty for each additional prime in chain
     uint64 nFractionalDifficulty = TargetGetFractionalDifficulty(nBits);
-    return (CBigNum(1) << (8u * TargetGetLength(nBits))) * nFractionalDifficulty / nFractionalDifficultyMin;
+    CBigNum bnWork = 1;
+    for (unsigned int nCount = nTargetMinLength; nCount < TargetGetLength(nBits); nCount++)
+        bnWork *= nWorkTransitionRatio;
+    return (bnWork * min(nFractionalDifficulty, nFractionalDifficultyMin * (uint64) nWorkTransitionRatio) / nFractionalDifficultyMin);
 }
 
 bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
