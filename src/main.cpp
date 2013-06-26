@@ -936,6 +936,14 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fLimitFr
         EraseFromWallets(ptxOld->GetHash());
     SyncWithWallets(hash, tx, NULL, true);
 
+    // notify an external script when mempool accept a transaction
+    std::string strCmd = GetArg("-memtxnotify", "");
+    if (!strCmd.empty())
+    {
+        boost::replace_all(strCmd, "%s", hash.ToString().c_str());
+        boost::thread t(runCommand, strCmd); // thread runs free
+    }
+
     printf("CTxMemPool::accept() : accepted %s (poolsz %"PRIszu")\n",
            hash.ToString().c_str(),
            mapTx.size());
