@@ -213,6 +213,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
                 pindexNew->nPrimeChainType   = diskindex.nPrimeChainType;
                 pindexNew->nPrimeChainLength = diskindex.nPrimeChainLength;
+                pindexNew->nMoneySupply      = diskindex.nMoneySupply;
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;
                 pindexNew->nDataPos       = diskindex.nDataPos;

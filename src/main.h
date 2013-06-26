@@ -1648,6 +1648,7 @@ public:
 
     unsigned int nPrimeChainType;   // primecoin: chain type
     unsigned int nPrimeChainLength; // primecoin: chain length
+    int64 nMoneySupply;             // primecoin: money supply
 
     // Number of transactions in this block.
     // Note: in a potential headers-first mode, this number cannot be relied upon
@@ -1680,6 +1681,7 @@ public:
         nWorkTransition = 0;
         nPrimeChainType = 0;
         nPrimeChainLength = 0;
+        nMoneySupply = 0;
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
@@ -1704,6 +1706,7 @@ public:
         nWorkTransition = 0;
         nPrimeChainType = 0;
         nPrimeChainLength = 0;
+        nMoneySupply = 0;
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
@@ -1858,6 +1861,7 @@ public:
 
         READWRITE(VARINT(nPrimeChainType));
         READWRITE(VARINT(nPrimeChainLength));
+        READWRITE(VARINT(nMoneySupply));
         READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nStatus));
         READWRITE(VARINT(nTx));
