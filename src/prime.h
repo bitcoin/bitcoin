@@ -63,12 +63,14 @@ enum // prime chain type
     PRIME_CHAIN_CUNNINGHAM2 = 2u,
     PRIME_CHAIN_BI_TWIN     = 3u,
 };
-bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier);
+bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier, unsigned int& nChainType, unsigned int& nChainLength);
 
 // prime target difficulty value for visualization
 double GetPrimeDifficulty(unsigned int nBits);
+// Estimate work transition target to longer prime chain
+unsigned int EstimateWorkTransition(unsigned int nPrevWorkTransition, unsigned int nBits, unsigned int nChainLength);
 // prime chain type and length value
-std::string GetPrimeChainName(CBigNum& bnPrimeChainOrigin);
+std::string GetPrimeChainName(unsigned int nChainType, unsigned int nChainLength);
 
 // Sieve of Eratosthenes for proof-of-work mining
 class CSieveOfEratosthenes

@@ -162,7 +162,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 /** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier);
+bool CheckProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier, unsigned int& nChainType, unsigned int& nChainLength);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 /** Get the number of active peers */
@@ -1340,6 +1340,8 @@ public:
 
     // memory only
     mutable std::vector<uint256> vMerkleTree;
+    unsigned int nPrimeChainType;   // primecoin: chain type (memory-only)
+    unsigned int nPrimeChainLength; // primecoin: chain length (memory-only)
 
     CBlock()
     {
@@ -1363,6 +1365,8 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         vMerkleTree.clear();
+        nPrimeChainType = 0;
+        nPrimeChainLength = 0;
     }
 
     CBlockHeader GetBlockHeader() const
@@ -1476,10 +1480,8 @@ public:
             return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
         }
 
+        // Primecoin: no proof-of-work check here unlike bitcoin
         // Check the header
-        if (!CheckProofOfWork(GetHeaderHash(), nBits, bnPrimeChainMultiplier))
-            return error("CBlock::ReadFromDisk() : errors in block header");
-
         return true;
     }
 
@@ -1642,6 +1644,10 @@ public:
 
     // (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     uint256 nChainWork;
+    unsigned int nWorkTransition; // primecoin: work transition ratio (memory-only)
+
+    unsigned int nPrimeChainType;   // primecoin: chain type
+    unsigned int nPrimeChainLength; // primecoin: chain length
 
     // Number of transactions in this block.
     // Note: in a potential headers-first mode, this number cannot be relied upon
@@ -1671,6 +1677,9 @@ public:
         nDataPos = 0;
         nUndoPos = 0;
         nChainWork = 0;
+        nWorkTransition = 0;
+        nPrimeChainType = 0;
+        nPrimeChainLength = 0;
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
@@ -1692,6 +1701,9 @@ public:
         nDataPos = 0;
         nUndoPos = 0;
         nChainWork = 0;
+        nWorkTransition = 0;
+        nPrimeChainType = 0;
+        nPrimeChainLength = 0;
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
@@ -1844,6 +1856,8 @@ public:
         if (!(nType & SER_GETHASH))
             READWRITE(VARINT(nVersion));
 
+        READWRITE(VARINT(nPrimeChainType));
+        READWRITE(VARINT(nPrimeChainLength));
         READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nStatus));
         READWRITE(VARINT(nTx));

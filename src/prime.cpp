@@ -431,7 +431,7 @@ static bool LogLogScale(const CBigNum& bn, unsigned int& nLogLogScale)
 }
 
 // Check prime proof-of-work
-bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier)
+bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier, unsigned int& nChainType, unsigned int& nChainLength)
 {
     // Check target
     if (TargetGetLength(nBits) < nTargetMinLength || TargetGetLength(nBits) > 99)
@@ -471,25 +471,8 @@ bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CB
             TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str(),
             TargetToString(nChainLengthCunningham1FermatTest).c_str(), TargetToString(nChainLengthCunningham2FermatTest).c_str(), TargetToString(nChainLengthBiTwinFermatTest).c_str());
 
-    return true;
-}
-
-// prime target difficulty value for visualization
-double GetPrimeDifficulty(unsigned int nBits)
-{
-    return ((double) nBits / (double) (1 << nFractionalBits));
-}
-
-// prime chain type and length value
-std::string GetPrimeChainName(CBigNum& bnPrimeChainOrigin)
-{
-    unsigned int nChainLengthCunningham1 = 0;
-    unsigned int nChainLengthCunningham2 = 0;
-    unsigned int nChainLengthBiTwin = 0;
-    unsigned int nChainLength = 0;
-    ProbablePrimeChainTest(bnPrimeChainOrigin, nProofOfWorkLimit, false, nChainLengthCunningham1, nChainLengthCunningham2, nChainLengthBiTwin);
     nChainLength = nChainLengthCunningham1;
-    unsigned int nChainType = PRIME_CHAIN_CUNNINGHAM1;
+    nChainType = PRIME_CHAIN_CUNNINGHAM1;
     if (nChainLengthCunningham2 > nChainLength)
     {
         nChainLength = nChainLengthCunningham2;
@@ -500,6 +483,36 @@ std::string GetPrimeChainName(CBigNum& bnPrimeChainOrigin)
         nChainLength = nChainLengthBiTwin;
         nChainType = PRIME_CHAIN_BI_TWIN;
     }
+    return true;
+}
+
+// prime target difficulty value for visualization
+double GetPrimeDifficulty(unsigned int nBits)
+{
+    return ((double) nBits / (double) (1 << nFractionalBits));
+}
+
+// Estimate work transition target to longer prime chain
+unsigned int EstimateWorkTransition(unsigned int nPrevWorkTransition, unsigned int nBits, unsigned int nChainLength)
+{
+    int64 nInterval = 500;
+    int64 nWorkTransition = nPrevWorkTransition;
+    unsigned int nBitsCeiling = 0;
+    TargetSetLength(TargetGetLength(nBits)+1, nBitsCeiling);
+    unsigned int nBitsFloor = 0;
+    TargetSetLength(TargetGetLength(nBits), nBitsFloor);
+    uint64 nFractionalDifficulty = TargetGetFractionalDifficulty(nBits);
+    bool fLonger = (TargetGetLength(nChainLength) > TargetGetLength(nBits));
+    if (fLonger)
+        nWorkTransition = (nWorkTransition * (((nInterval - 1) * nFractionalDifficulty) >> 32) + 2 * ((uint64) nBitsFloor)) / ((((nInterval - 1) * nFractionalDifficulty) >> 32) + 2);
+    else
+        nWorkTransition = ((nInterval - 1) * nWorkTransition + 2 * ((uint64) nBitsCeiling)) / (nInterval + 1);
+    return nWorkTransition;
+}
+
+// prime chain type and length value
+std::string GetPrimeChainName(unsigned int nChainType, unsigned int nChainLength)
+{
     return strprintf("%s%s", (nChainType==PRIME_CHAIN_CUNNINGHAM1)? "1CC" : ((nChainType==PRIME_CHAIN_CUNNINGHAM2)? "2CC" : "TWN"), TargetToString(nChainLength).c_str());
 }
 

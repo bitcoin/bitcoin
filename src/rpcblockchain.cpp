@@ -49,8 +49,9 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("nonce", (boost::uint64_t)block.nNonce));
     result.push_back(Pair("bits", HexBits(block.nBits)));
     result.push_back(Pair("difficulty", GetPrimeDifficulty(block.nBits)));
+    result.push_back(Pair("transition", GetPrimeDifficulty(blockindex->nWorkTransition)));
     CBigNum bnPrimeChainOrigin = CBigNum(block.GetHeaderHash()) * block.bnPrimeChainMultiplier;
-    result.push_back(Pair("primechain", GetPrimeChainName(bnPrimeChainOrigin).c_str()));
+    result.push_back(Pair("primechain", GetPrimeChainName(blockindex->nPrimeChainType, blockindex->nPrimeChainLength).c_str()));
     result.push_back(Pair("primeorigin", bnPrimeChainOrigin.ToString().c_str()));
 
     if (blockindex->pprev)
