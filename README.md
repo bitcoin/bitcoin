@@ -1,42 +1,26 @@
 
-PPCoin official development tree
+PPCoin Official Development Repo
+================================
 
-Bitcoin development process
-===========================
+### What is PPCoin?
+[PPCoin](http://ppcoin.org/) (abbreviated PPC), also known as Peercoin and Peer-to-Peer Coin is the first known [cryptocurrency](https://en.wikipedia.org/wiki/Cryptocurrency) based on an implementation of a [combined proof-of-stake](https://en.wikipedia.org/wiki/Proof-of-stake)/[proof-of-work system](https://en.wikipedia.org/wiki/Proof-of-work_system). As of May 24 2013, one PPCoin had a value of approximately 0.21 USD, giving PPCoin a money supply with a value of $4 million USD, making it the third largest cryptocurrency. 
 
-Developers work in their own trees, then submit pull requests when
-they think their feature or bug fix is ready.
+### PPC Resources
+* [PPCoin Whitepaper](http://ppcoin.org/static/ppcoin-paper.pdf)
+* [Source Code](https://github.com/ppcoin/ppcoin)
+* [Client Binaries](http://sourceforge.net/projects/ppcoin/files/)
+* [Wiki](https://github.com/ppcoin/ppcoin/wiki)
+* [Forum](http://www.ppcointalk.org/)
+* [Other Sites and Links...](http://www.ppcointalk.org/index.php?topic=4.0;topicseen)
 
-If it is a simple/trivial/non-controversial change, then one of the
-bitcoin development team members simply pulls it.
+Differences from Bitcoin
+================================
 
-If it is a more complicated or potentially controversial
-change, then the patch submitter will be asked to start a
-discussion (if they haven't already) on the mailing list:
-http://sourceforge.net/mailarchive/forum.php?forum_name=bitcoin-development
+### Proof of Stake
+PPCoin's major difference from Bitcoin is that it uses a proof-of-stake/proof-of-work hybrid system for coin generation. With this system, coins are generated based on proof-of-stake blocks in addition to proof-of-work blocks. Proof-of-stake block generation is based on coins held by individuals. In other words, someone holding 1% of the currency will generate 1% of all proof-of-stake coin blocks.
 
-The patch will be accepted if there is broad consensus that it is a
-good thing.  Developers should expect to rework and resubmit patches
-if they don't match the project's coding conventions (see coding.txt)
-or are controversial.
+### Potential for Increased Security
+Proof-of-stake block generation could reduce the risk of 51% attacks for at least two reasons. First, the cost of acquiring 51% of all stake could in theory be much higher than the cost of acquiring 51% of all mining power, thus raising the cost of attack. Second, in a 51% stake attack the attacker's investment would be directly at risk of losing value. By contrast, with a 51% mining attack the attacker would still own the mining hardware which could either be sold or used to mine a different cryptocurrency following the attack.
 
-The master branch is regularly built and tested, but is not guaranteed
-to be completely stable. Tags are regularly created to indicate new
-official, stable release versions of Bitcoin. If you would like to
-help test the Bitcoin core, please contact QA@BitcoinTesting.org.
-
-Feature branches are created when there are major new features being
-worked on by several people.
-
-From time to time a pull request will become outdated. If this occurs, and
-the pull is no longer automatically mergeable; a comment on the pull will
-be used to issue a warning of closure. The pull will be closed 15 days
-after the warning if action is not taken by the author. Pull requests closed
-in this manner will have their corresponding issue labeled 'stagnant'.
-
-Issues with no commits will be given a similar warning, and closed after
-15 days from their last activity. Issues closed in this manner will be 
-labeled 'stale'. 
-
-Requests to reopen closed pull requests and/or issues can be submitted to 
-QA@BitcoinTesting.org. 
+###Energy Efficiency
+Proof-of-stake blocks require minimal energy consumption. Thus, with PPCoin energy consumption would decrease over time as proof-of-work blocks become less rewarding and coin generation becomes increasingly based on proof-of-stake block generation.
