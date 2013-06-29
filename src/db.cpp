@@ -95,7 +95,7 @@ bool CDBEnv::Open(boost::filesystem::path pathEnv_)
     dbenv.set_errfile(fopen(pathErrorFile.string().c_str(), "a")); /// debug
     dbenv.set_flags(DB_AUTO_COMMIT, 1);
     dbenv.set_flags(DB_TXN_WRITE_NOSYNC, 1);
-//    dbenv.log_set_config(DB_LOG_AUTO_REMOVE, 1);
+    dbenv.log_set_config(DB_LOG_AUTO_REMOVE, 1);
     int ret = dbenv.open(strPath.c_str(),
                      DB_CREATE     |
                      DB_INIT_LOCK  |
