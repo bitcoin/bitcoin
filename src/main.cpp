@@ -37,6 +37,7 @@ CBigNum bnProofOfWorkLimit(~uint256(0) >> 20); // "standard" scrypt target limit
 CBigNum bnProofOfStakeLegacyLimit(~uint256(0) >> 24); // proof of stake target limit from block #15000 and until 20 June 2013, results with 0,00390625 proof of stake difficulty
 CBigNum bnProofOfStakeLimit(~uint256(0) >> 27); // proof of stake target limit since 20 June 2013, equal to 0.03125  proof of stake difficulty
 CBigNum bnProofOfStakeHardLimit(~uint256(0) >> 30); // disabled temporarily, will be used in the future to fix minimal proof of stake difficulty at 0.25
+CBigNum bnPoWBase = CBigNum(uint256("0x00000000ffff0000000000000000000000000000000000000000000000000000")); // difficulty-1 target
 
 CBigNum bnProofOfWorkLimitTestNet(~uint256(0) >> 16);
 
@@ -2249,30 +2250,32 @@ bool CBlock::AcceptBlock()
 CBigNum CBlockIndex::GetBlockTrust() const
 {
     CBigNum bnTarget;
+    bnTarget.SetCompact(nBits);
 
-    // Old protocol
+    if (bnTarget <= 0)
+        return 0;
+
+    /* Old protocol, will be removed later */
     if (!fTestNet && GetBlockTime() < CHAINCHECKS_SWITCH_TIME)
-    {
-        CBigNum bnTarget;
-        bnTarget.SetCompact(nBits);
-
-        if (bnTarget <= 0)
-            return 0;
         return (IsProofOfStake()? (CBigNum(1)<<256) / (bnTarget+1) : 1);
-    }
 
-    // New protocol
+    /* New protocol */
+
+    // Calculate work amount for block
+    CBigNum bnPoWTrust = bnPoWBase / (bnTarget+1);
+
+    // Set bnPowTrust to 1 if we are checking PoS block or PoW difficulty is too low
+    bnPoWTrust = (IsProofOfStake() || bnPoWTrust < 1) ? 1 : bnPoWTrust;
+
+    // Return bnPoWTrust for the first 12 blocks
     if (pprev == NULL || pprev->nHeight < 12)
-        return 1;
+        return bnPoWTrust;
 
     const CBlockIndex* currentIndex = pprev;
 
     if(IsProofOfStake())
     {
-        bnTarget.SetCompact(nBits);
-        if (bnTarget <= 0)
-            return 0;
-
+        // Return 1/3 of score if parent block is not the PoW block
         if (!pprev->IsProofOfWork())
             return (CBigNum(1)<<256) / (3 * (bnTarget+1));
 
@@ -2294,8 +2297,9 @@ CBigNum CBlockIndex::GetBlockTrust() const
     }
     else
     {
+        // Return bnPoWTrust + 2/3 of previous block score if two parent blocks are not PoS blocks
         if (!(pprev->IsProofOfStake() && pprev->pprev->IsProofOfStake()))
-            return 1 + (2 * (pprev->bnChainTrust - pprev->pprev->bnChainTrust) / 3);
+            return bnPoWTrust + (2 * (pprev->bnChainTrust - pprev->pprev->bnChainTrust) / 3);
 
         int nPoSCount = 0;
 
@@ -2307,11 +2311,17 @@ CBigNum CBlockIndex::GetBlockTrust() const
             currentIndex = currentIndex->pprev;
         }
 
-        // Return 2/3 of previous block score if less than 7 PoS blocks found
+        // Return bnPoWTrust + 2/3 of previous block score if less than 7 PoS blocks found
         if (nPoSCount < 7)
-            return 1 + (2 * (pprev->bnChainTrust - pprev->pprev->bnChainTrust) / 3);
+            return bnPoWTrust + (2 * (pprev->bnChainTrust - pprev->pprev->bnChainTrust) / 3);
 
-        return (pprev->bnChainTrust - pprev->pprev->bnChainTrust);
+        bnTarget.SetCompact(pprev->nBits);
+
+        if (bnTarget <= 0)
+            return 0;
+
+        // Return bnPoWTrust + full trust score for previous block nBits
+        return bnPoWTrust + (CBigNum(1)<<256) / (bnTarget+1);
     }
 }
 
