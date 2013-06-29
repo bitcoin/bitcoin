@@ -996,7 +996,7 @@ int64 GetProofOfWorkReward(unsigned int nBits)
 // miner's coin stake reward based on nBits and coin age spent (coin-days)
 int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTime, bool bCoinYearOnly)
 {
-    int64 nRewardCoinYear;
+    int64 nRewardCoinYear, nSubsidy;
 
     if(fTestNet || nTime > STAKE_SWITCH_TIME)
     {
@@ -1041,7 +1041,11 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
     if(bCoinYearOnly)
         return nRewardCoinYear;
 
-    int64 nSubsidy = nCoinAge * 33 / (365 * 33 + 8) * nRewardCoinYear;
+    // Fix problem with proof-of-stake rewards calculation since 20 Sep 2013
+    if(nTime < CHAINCHECKS_SWITCH_TIME)
+        nSubsidy = nCoinAge * 33 / (365 * 33 + 8) * nRewardCoinYear;
+    else
+        nSubsidy = nCoinAge * nRewardCoinYear * 33 / (365 * 33 + 8);
 
     if (fDebug && GetBoolArg("-printcreation"))
         printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRI64d" nBits=%d\n", FormatMoney(nSubsidy).c_str(), nCoinAge, nBits);
