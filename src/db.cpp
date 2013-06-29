@@ -154,7 +154,7 @@ void CDBEnv::MakeMock()
     dbenv.set_lk_max_locks(10000);
     dbenv.set_lk_max_objects(10000);
     dbenv.set_flags(DB_AUTO_COMMIT, 1);
-//    dbenv.log_set_config(DB_LOG_IN_MEMORY, 1);
+    dbenv.log_set_config(DB_LOG_IN_MEMORY, 1);
     int ret = dbenv.open(NULL,
                      DB_CREATE     |
                      DB_INIT_LOCK  |
