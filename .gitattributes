@@ -1,1 +1,2 @@
 src/version.cpp export-subst
+share/genbuild.sh export-subst

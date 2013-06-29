@@ -11,15 +11,20 @@ else
     exit 1
 fi
 
-if [ -e "$(which git)" ]; then
-    # clean 'dirty' status of touched files that haven't been modified
-    git diff >/dev/null 2>/dev/null 
+TIME=""
+TRY_GIT=1
+# This will add a line 'TRY_GIT=0' to exported archives. $Format:%nTRY_GIT=0$
+if [ $TRY_GIT -eq 1 ]; then
+    if [ -e "$(which git)" ]; then
+        # clean 'dirty' status of touched files that haven't been modified
+        git diff >/dev/null 2>/dev/null 
 
-    # get a string like "v0.6.0-66-g59887e8-dirty"
-    DESC="$(git describe --dirty 2>/dev/null)"
+        # get a string like "v0.6.0-66-g59887e8-dirty"
+        DESC="$(git describe --dirty 2>/dev/null)"
 
-    # get a string like "2012-04-10 16:27:19 +0200"
-    TIME="$(git log -n 1 --format="%ci")"
+        # get a string like "2012-04-10 16:27:19 +0200"
+        TIME="$(git log -n 1 --format="%ci")"
+    fi
 fi
 
 if [ -n "$DESC" ]; then
@@ -31,5 +36,7 @@ fi
 # only update build.h if necessary
 if [ "$INFO" != "$NEWINFO" ]; then
     echo "$NEWINFO" >"$FILE"
-    echo "#define BUILD_DATE \"$TIME\"" >>"$FILE"
+    if [ -n "$TIME" ]; then
+        echo "#define BUILD_DATE \"$TIME\"" >>"$FILE"
+    fi
 fi
