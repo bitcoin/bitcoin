@@ -36,6 +36,7 @@ LIBS += \
  $(DEPSDIR)/lib/libboost_filesystem-mt.a \
  $(DEPSDIR)/lib/libboost_program_options-mt.a \
  $(DEPSDIR)/lib/libboost_thread-mt.a \
+ $(DEPSDIR)/lib/libboost_regex-mt.a \
  $(DEPSDIR)/lib/libboost_chrono-mt.a \
  $(DEPSDIR)/lib/libssl.a \
  $(DEPSDIR)/lib/libcrypto.a \
@@ -49,6 +50,7 @@ LIBS += \
  -lboost_filesystem-mt \
  -lboost_program_options-mt \
  -lboost_thread-mt \
+ -lboost_regex-mt \
  -lboost_chrono-mt \
  -lssl \
  -lcrypto \
@@ -100,6 +102,7 @@ OBJS= \
     obj/util.o \
     obj/wallet.o \
     obj/walletdb.o \
+    obj/walletmanager.o \
     obj/hash.o \
     obj/bloom.o \
     obj/noui.o \
