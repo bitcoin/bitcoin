@@ -42,6 +42,7 @@ TESTS = \
 	env_test \
 	filename_test \
 	filter_block_test \
+	issue178_test \
 	log_test \
 	memenv_test \
 	skiplist_test \
@@ -69,7 +70,7 @@ SHARED = $(SHARED1)
 else
 # Update db.h if you change these.
 SHARED_MAJOR = 1
-SHARED_MINOR = 9
+SHARED_MINOR = 12
 SHARED1 = libleveldb.$(PLATFORM_SHARED_EXT)
 SHARED2 = $(SHARED1).$(SHARED_MAJOR)
 SHARED3 = $(SHARED1).$(SHARED_MAJOR).$(SHARED_MINOR)
@@ -145,6 +146,9 @@ filename_test: db/filename_test.o $(LIBOBJECTS) $(TESTHARNESS)
 
 filter_block_test: table/filter_block_test.o $(LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) table/filter_block_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
+
+issue178_test: issues/issue178_test.o $(LIBOBJECTS) $(TESTHARNESS)
+	$(CXX) $(LDFLAGS) issues/issue178_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
 
 log_test: db/log_test.o $(LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) db/log_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
