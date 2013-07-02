@@ -10,6 +10,7 @@ packages:
 - "unzip"
 - "nsis"
 - "faketime"
+- "xz-utils"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
@@ -45,7 +46,11 @@ script: |
   #
   cd bitcoin
   mkdir -p $OUTDIR/src
+  VERSION=$(git describe)
+  if [ "d${VERSION:0:1}" == "dv" ]; then VERSION="${VERSION:1}"; fi
   git archive HEAD | tar -x -C $OUTDIR/src
+  git archive HEAD --prefix=bitcoin-${VERSION}/ | gzip -cn >$OUTDIR/bitcoin-${VERSION}-src.tar.gz
+  gunzip <$OUTDIR/bitcoin-${VERSION}-src.tar.gz | xz -7e >$OUTDIR/bitcoin-${VERSION}-src.tar.xz
   cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
   cp $OUTDIR/src/COPYING $OUTDIR/COPYING.txt
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1

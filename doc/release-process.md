@@ -63,6 +63,7 @@ Release Process
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win32.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-win32 --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win32.yml
 	pushd build/out
+	mv bitcoin-*-src.tar.* ../..
 	zip -r bitcoin-${VERSION}-win32-gitian.zip *
 	mv bitcoin-${VERSION}-win32-gitian.zip ../../
 	popd
@@ -71,7 +72,8 @@ Release Process
 
   1. linux 32-bit and 64-bit binaries + source (bitcoin-${VERSION}-linux-gitian.zip)
   2. windows 32-bit binary, installer + source (bitcoin-${VERSION}-win32-gitian.zip)
-  3. Gitian signatures (in gitian.sigs/${VERSION}[-win32]/(your gitian key)/
+  3. source tarballs (bitcoin-${VERSION}-src.tar.{gz,xz})
+  4. Gitian signatures (in gitian.sigs/${VERSION}[-win32]/(your gitian key)/
 
 repackage gitian builds for release as stand-alone zip/tar/installer exe
 
