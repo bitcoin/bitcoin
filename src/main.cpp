@@ -1839,8 +1839,9 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     nBestChainWork = pindexNew->nChainWork;
     nTimeBestReceived = GetTime();
     nTransactionsUpdated++;
-    printf("SetBestChain: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f\n",
-      hashBestChain.ToString().c_str(), nBestHeight, log(nBestChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
+    uint256 nBlockWork = pindexNew->nChainWork - (pindexNew->pprev? pindexNew->pprev->nChainWork : 0);
+    printf("SetBestChain: new best=%s  height=%d  difficulty=%.8g log2Work=%.8g  log2ChainWork=%.8g  tx=%lu  date=%s progress=%f\n",
+      hashBestChain.ToString().c_str(), nBestHeight, GetPrimeDifficulty(pindexNew->nBits), log(nBlockWork.getdouble())/log(2.0), log(nBestChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
       DateTimeStrFormat("%Y-%m-%d %H:%M:%S", pindexBest->GetBlockTime()).c_str(),
       Checkpoints::GuessVerificationProgress(pindexBest));
 
@@ -2197,12 +2198,24 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
 // Get block work value for main chain protocol
 CBigNum CBlockIndex::GetBlockWork() const
 {
-    // Primecoin: 256x difficulty for each additional prime in chain
+    // Primecoin: 
+    // Difficulty multiplier of extra prime is estimated by nWorkTransitionRatio
+    // Difficulty multiplier of fractional is estimated by
+    //   r = 1/TransitionRatio
+    //   length >= n discovery rate = 1
+    //   length > n discovery rate = 1/TransitionRatio
+    //   length == n discovery rate: 1 - 1/TransitionRatio
+    //   meeting target rate 1/FractionalDiff * (1 - 1/TransitionRatio) + 1/TranstionRatio
+    //   fractionalDiff = nFractionalDiffculty / nFractionalDifficultyMin
+    //   fractional multiplier = 1 / meeting target rate
+    //       = (TransitionRatio * FractionalDiff) / (TransitionRatio - 1 + FractionalDiff)
     uint64 nFractionalDifficulty = TargetGetFractionalDifficulty(nBits);
-    CBigNum bnWork = 1;
+    CBigNum bnWork = 256;
     for (unsigned int nCount = nTargetMinLength; nCount < TargetGetLength(nBits); nCount++)
         bnWork *= nWorkTransitionRatio;
-    return (bnWork * min(nFractionalDifficulty, nFractionalDifficultyMin * (uint64) nWorkTransitionRatio) / nFractionalDifficultyMin);
+    bnWork *= ((uint64) nWorkTransitionRatio) * nFractionalDifficulty;
+    bnWork /= (((uint64) nWorkTransitionRatio - 1) * nFractionalDifficultyMin + nFractionalDifficulty);
+    return bnWork;
 }
 
 bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
