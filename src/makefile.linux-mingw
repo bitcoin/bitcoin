@@ -1,7 +1,7 @@
 # Copyright (c) 2009-2010 Satoshi Nakamoto
 # Copyright (c) 2013 Primecoin Developers
-# Distributed under the MIT/X11 software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# Distributed under the conditional MIT/X11 software license,
+# see the accompanying file COPYING
 
 DEPSDIR:=/usr/i586-mingw32msvc
 
@@ -93,7 +93,8 @@ OBJS= \
     obj/bloom.o \
     obj/leveldb.o \
     obj/txdb.o \
-    obj/prime.o
+    obj/prime.o \
+    obj/checkpointsync.o
 
 all: primecoind.exe
 

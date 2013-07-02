@@ -1,6 +1,7 @@
 # Copyright (c) 2009-2010 Satoshi Nakamoto
-# Distributed under the MIT/X11 software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# Copyright (c) 2013 Primecoind developers
+# Distributed under conditional MIT/X11 software license,
+# see the accompanying file COPYING
 
 # :=0 --> UPnP support turned off by default at runtime
 # :=1 --> UPnP support turned on by default at runtime
@@ -142,8 +143,8 @@ OBJS= \
     obj/noui.o \
     obj/leveldb.o \
     obj/txdb.o \
-    obj/prime.o
-
+    obj/prime.o \
+    obj/checkpointsync.o
 
 all: primecoind
 

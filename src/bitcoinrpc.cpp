@@ -252,6 +252,9 @@ static const CRPCCommand vRPCCommands[] =
     { "listsinceblock",         &listsinceblock,         false,     false },
     { "dumpprivkey",            &dumpprivkey,            true,      false },
     { "importprivkey",          &importprivkey,          false,     false },
+    { "getcheckpoint",          &getcheckpoint,          true,      false },
+    { "sendcheckpoint",         &sendcheckpoint,         true,      false },
+    { "enforcecheckpoint",      &enforcecheckpoint,      true,      false },
     { "makekeypair",            &makekeypair,            true,      false },
     { "sendalert",              &sendalert,              true,      false },
     { "listunspent",            &listunspent,            false,     false },
@@ -1173,6 +1176,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "sendalert"              && n > 4) ConvertTo<boost::int64_t>(params[4]);
     if (strMethod == "sendalert"              && n > 5) ConvertTo<boost::int64_t>(params[5]);
     if (strMethod == "sendalert"              && n > 6) ConvertTo<boost::int64_t>(params[6]);
+    if (strMethod == "enforcecheckpoint"      && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "sendmany"               && n > 1) ConvertTo<Object>(params[1]);
     if (strMethod == "sendmany"               && n > 2) ConvertTo<boost::int64_t>(params[2]);
     if (strMethod == "addmultisigaddress"     && n > 0) ConvertTo<boost::int64_t>(params[0]);

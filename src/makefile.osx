@@ -1,8 +1,8 @@
 # -*- mode: Makefile; -*-
 # Copyright (c) 2011 Bitcoin Developers
 # Copyright (c) 2013 Primecoin Developers
-# Distributed under the MIT/X11 software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# Distributed under conditional MIT/X11 software license,
+# see the accompanying file COPYING.
 
 # Mac OS X makefile for bitcoin
 # Originally by Laszlo Hanyecz (solar@heliacal.net)
@@ -104,7 +104,8 @@ OBJS= \
     obj/noui.o \
     obj/leveldb.o \
     obj/txdb.o \
-    obj/prime.o
+    obj/prime.o \
+    obj/checkpointsync.o
 
 ifndef USE_UPNP
 	override USE_UPNP = -

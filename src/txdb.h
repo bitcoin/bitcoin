@@ -1,7 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2011-2013 PPCoin developers
+// Copyright (c) 2013 Primecoin developers
+// Distributed under conditional MIT/X11 software license,
+// see the accompanying file COPYING.
 #ifndef BITCOIN_TXDB_LEVELDB_H
 #define BITCOIN_TXDB_LEVELDB_H
 
@@ -48,6 +50,12 @@ public:
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts();
+
+    // ppcoin sync checkpoint related data
+    bool ReadSyncCheckpoint(uint256& hashCheckpoint);
+    bool WriteSyncCheckpoint(uint256 hashCheckpoint);
+    bool ReadCheckpointPubKey(std::string& strPubKey);
+    bool WriteCheckpointPubKey(const std::string& strPubKey);
 };
 
 #endif // BITCOIN_TXDB_LEVELDB_H
