@@ -144,7 +144,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         }
         setAddress.insert(rcp.address);
 
-        if(rcp.amount <= 0)
+        if(rcp.amount <= MIN_TXOUT_AMOUNT)
         {
             return InvalidAmount;
         }

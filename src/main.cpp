@@ -52,9 +52,9 @@ bool fTxIndex = false;
 unsigned int nCoinCacheSize = 5000;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
-int64 CTransaction::nMinTxFee = 10000;  // Override with -mintxfee
+int64 CTransaction::nMinTxFee = MIN_TX_FEE;  // Override with -mintxfee
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
-int64 CTransaction::nMinRelayTxFee = 10000;
+int64 CTransaction::nMinRelayTxFee = MIN_TX_FEE;
 
 CMedianFilter<int> cPeerBlockCounts(8, 0); // Amount of blocks that other nodes claim to have
 
@@ -559,8 +559,8 @@ bool CTransaction::CheckTransaction(CValidationState &state) const
     int64 nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
-        if (txout.nValue < 0)
-            return state.DoS(100, error("CTransaction::CheckTransaction() : txout.nValue negative"));
+        if (txout.nValue < MIN_TXOUT_AMOUNT)
+            return state.DoS(100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));
         if (txout.nValue > MAX_MONEY)
             return state.DoS(100, error("CTransaction::CheckTransaction() : txout.nValue too high"));
         nValueOut += txout.nValue;
@@ -758,7 +758,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
         // Don't accept it if it can't get into a block
-        int64 txMinFee = tx.GetMinFee(1000, true, GMF_RELAY);
+        int64 txMinFee = tx.GetMinFee(1000, false, GMF_RELAY);
         if (fLimitFree && nFees < txMinFee)
             return error("CTxMemPool::accept() : not enough fees %s, %"PRI64d" < %"PRI64d,
                          hash.ToString().c_str(),
@@ -1370,6 +1370,9 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
         int64 nTxFee = nValueIn - GetValueOut();
         if (nTxFee < 0)
             return state.DoS(100, error("CheckInputs() : %s nTxFee < 0", GetHash().ToString().c_str()));
+        // ppcoin: enforce transaction fees for every block
+        if (nTxFee < GetMinFee())
+            return state.DoS(100, error("CheckInputs() : %s not paying required fee=%s, paid=%s", GetHash().ToString().substr(0,10).c_str(), FormatMoney(GetMinFee()).c_str(), FormatMoney(nTxFee).c_str()));
         nFees += nTxFee;
         if (!MoneyRange(nFees))
             return state.DoS(100, error("CheckInputs() : nFees out of range"));
@@ -1647,8 +1650,8 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     if (fBenchmark)
         printf("- Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin)\n", (unsigned)vtx.size(), 0.001 * nTime, 0.001 * nTime / vtx.size(), nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs-1));
 
-    if (vtx[0].GetValueOut() > GetBlockValue(pindex->nBits, nFees))
-        return state.DoS(100, error("ConnectBlock() : coinbase pays too much (actual=%"PRI64d" vs limit=%"PRI64d")", vtx[0].GetValueOut(), GetBlockValue(pindex->nBits, nFees)));
+    if (vtx[0].GetValueOut() > GetBlockValue(pindex->nBits, nFees) - vtx[0].GetMinFee() + MIN_TX_FEE)
+        return state.DoS(100, error("ConnectBlock() : coinbase pays too much (actual=%s vs limit=%s)", FormatMoney(vtx[0].GetValueOut()).c_str(), FormatMoney(GetBlockValue(pindex->nBits, nFees) - vtx[0].GetMinFee() + MIN_TX_FEE).c_str()));
 
     if (!control.Wait())
         return state.DoS(100, false);
@@ -2760,31 +2763,31 @@ bool InitBlockIndex() {
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
-        txNew.vin[0].scriptSig = CScript() << 0 << CBigNum(99) << vector<unsigned char>((const unsigned char*)pszDedication, (const unsigned char*)pszDedication + strlen(pszDedication));
-        txNew.vout[0].nValue = 0 * COIN;
+        txNew.vin[0].scriptSig = CScript() << 0 << CBigNum(999) << vector<unsigned char>((const unsigned char*)pszDedication, (const unsigned char*)pszDedication + strlen(pszDedication));
+        txNew.vout[0].nValue = COIN;
         txNew.vout[0].scriptPubKey = CScript();
         CBlock block;
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
-        block.nTime    = 1369346002;
+        block.nTime    = 1372887417;
         block.nBits    = TargetFromInt(4u);
-        block.nNonce   = 32;
+        block.nNonce   = 0;
 
         if (fTestNet)
         {
-            block.nTime    = 1369346002;
-            block.nNonce   = 32;
+            block.nTime    = 1372887417;
+            block.nNonce   = 0;
         }
 
-        block.bnPrimeChainMultiplier = 2 * 3 * 5 * 7 * 702873;
+        block.bnPrimeChainMultiplier = 2 * 3 * 5 * 7 * 77755;
 
         //// debug print
         uint256 hash = block.GetHash();
         printf("%s\n", hash.ToString().c_str());
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == uint256("0x655added37f58786f2d769b01f28b6b152476417db99b9697a7dc5eb55f3568c"));
+        assert(block.hashMerkleRoot == uint256("0xaca30eb61dffbb9412d0ae743c3d74554f710853daec40ebd2514e830e05c9ff"));
         block.print();
         assert(hash == hashGenesisBlock);
         {

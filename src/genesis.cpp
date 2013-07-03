@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
     CTransaction txNew;
     txNew.vin.resize(1);
     txNew.vout.resize(1);
-    txNew.vin[0].scriptSig = CScript() << 0 << CBigNum(99) << vector<unsigned char>((const unsigned char*)pszDedication, (const unsigned char*)pszDedication + strlen(pszDedication));
-    txNew.vout[0].nValue = 0;
+    txNew.vin[0].scriptSig = CScript() << 0 << CBigNum(999) << vector<unsigned char>((const unsigned char*)pszDedication, (const unsigned char*)pszDedication + strlen(pszDedication));
+    txNew.vout[0].nValue = COIN;
     txNew.vout[0].scriptPubKey = CScript();
     CBlock block;
     block.vtx.push_back(txNew);

@@ -1,8 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
+// Copyright (c) 2011-2013 PPCoin developers
 // Copyright (c) 2013 Primecoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Distributed under conditional MIT/X11 software license,
+// see the accompanying file COPYING
 #ifndef BITCOIN_MAIN_H
 #define BITCOIN_MAIN_H
 
@@ -46,8 +47,11 @@ static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 /** No amount larger than this (in satoshi) is valid */
-static const int64 MAX_MONEY = 21000000 * COIN;
+static const int64 MAX_MONEY = 2000000000u * COIN;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+static const int64 MIN_TX_FEE = CENT;
+static const int64 MIN_RELAY_TX_FEE = MIN_TX_FEE;
+static const int64 MIN_TXOUT_AMOUNT = MIN_TX_FEE;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
@@ -60,8 +64,8 @@ static const int fHaveUPnP = true;
 static const int fHaveUPnP = false;
 #endif
 
-static const uint256 hashGenesisBlockOfficial("0x5e58c43ef30c998bbf4ead9c0b4d9bc2bdfe374486b1f089ba4871fd50e2652a");
-static const uint256 hashGenesisBlockTestNet("0x5e58c43ef30c998bbf4ead9c0b4d9bc2bdfe374486b1f089ba4871fd50e2652a");
+static const uint256 hashGenesisBlockOfficial("0x69b988d741c862e027a61f93e38c3a6d071fd361d3a8a9c3999d1234f986c568");
+static const uint256 hashGenesisBlockTestNet("0x69b988d741c862e027a61f93e38c3a6d071fd361d3a8a9c3999d1234f986c568");
 
 extern CScript COINBASE_FLAGS;
 
@@ -614,7 +618,7 @@ public:
         return dPriority > COIN * 144 / 250;
     }
 
-    int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true, enum GetMinFee_mode mode=GMF_BLOCK) const;
+    int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=false, enum GetMinFee_mode mode=GMF_BLOCK) const;
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
