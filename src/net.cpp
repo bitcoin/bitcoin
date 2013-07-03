@@ -1,8 +1,8 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Copyright (c) 2013 The Primecoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Distributed under conditional MIT/X11 software license,
+// see the accompanying file COPYING
 
 #include "db.h"
 #include "net.h"
@@ -1189,7 +1189,8 @@ void MapPort(bool)
 // The first name is used as information source for addrman.
 // The second name should resolve to a list of seed addresses.
 static const char *strMainNetDNSSeed[][2] = {
-    {"primecoin.net", "tnseed.ppcoin.net"},
+    {"primecoin.net", "seed.ppcoin.net"},
+    {"altcointech.net", "dnsseed.xpm.altcointech.net"},
     {NULL, NULL}
 };
 
@@ -1243,12 +1244,12 @@ void ThreadDNSAddressSeed()
 
 unsigned int pnSeedMainNet[] =
 {
-    0x231621b2,
+    0x201621b2,
 };
 
 unsigned int pnSeedTestNet[] =
 {
-    0x141621b2,
+    0x0a1621b2,
 };
 
 void DumpAddresses()
