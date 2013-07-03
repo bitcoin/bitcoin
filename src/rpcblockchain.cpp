@@ -81,6 +81,15 @@ Value getblockcount(const Array& params, bool fHelp)
     return nBestHeight;
 }
 
+Value getbestblockhash(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getbestblockhash\n"
+            "Returns the hash of the best (tip) block in the longest block chain.");
+
+    return hashBestChain.GetHex();
+}
 
 Value getdifficulty(const Array& params, bool fHelp)
 {
