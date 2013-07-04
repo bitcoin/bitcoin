@@ -46,12 +46,12 @@ bitcoind_SOURCES = bitcoind.cpp
 #
 
 leveldb/libleveldb.a:
-	@echo "Building LevelDB ..." && cd leveldb && CXX=$(CXX) CC=$(CC) \
-	  PLATFORM=$(TARGET_OS) AR=$(AR) $(MAKE) $(LEVELDB_TARGET_FLAGS) OPT="$(CXXFLAGS) $(CPPFLAGS)" libleveldb.a
+	@echo "Building LevelDB ..." && cd leveldb && CXX="$(CXX)" CC="$(CC)" \
+	  PLATFORM=$(TARGET_OS) AR="$(AR)" $(MAKE) $(LEVELDB_TARGET_FLAGS) OPT="$(CXXFLAGS) $(CPPFLAGS)" libleveldb.a
 
 leveldb/libmemenv.a:
-	@echo "Building LevelDB ..." && cd leveldb && CXX=$(CXX) CC=$(CC) \
-	  PLATFORM=$(TARGET_OS) AR=$(AR) $(MAKE) $(LEVELDB_TARGET_FLAGS) OPT="$(CXXFLAGS) $(CPPFLAGS)" libmemenv.a
+	@echo "Building LevelDB ..." && cd leveldb && CXX="$(CXX)" CC="$(CC)" \
+	  PLATFORM=$(TARGET_OS) AR="$(AR)" $(MAKE) $(LEVELDB_TARGET_FLAGS) OPT="$(CXXFLAGS) $(CPPFLAGS)" libmemenv.a
 
 CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a
 
