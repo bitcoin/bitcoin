@@ -1096,7 +1096,8 @@ public:
         assert(nSumTxSize >= 0);
 
         if (nSumTxSize > 0)
-            return (double)nSumTxFees / ((double)nSumTxSize/1000);
+            // The +1 makes the order meaningful even for zero-fee txs
+            return (double)(nSumTxFees+1) / ((double)nSumTxSize/1000);
         else
             return 0;
     }

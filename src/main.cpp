@@ -1133,7 +1133,7 @@ void CTxMemPool::updatePriorities(std::set<uint256> &setChangedHashes)
         std::swap(dirty, next_dirty);
     }
 
-    printf("CTxMemPool::updatePriorities() : updated priorities for %d transactions", n);
+    printf("CTxMemPool::updatePriorities() : updated priorities for %d transactions\n", n);
 }
 
 void CTxMemPool::clear()

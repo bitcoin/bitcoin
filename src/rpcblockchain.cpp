@@ -130,6 +130,7 @@ Value getrawmempool(const Array& params, bool fHelp)
 
         CMemPoolTx &tx = *(mempool.mapTx[hash]);
 
+        rtx.push_back(Pair("priority",tx.priority()));
         rtx.push_back(Pair("nFees",(boost::int64_t)tx.nFees));
         rtx.push_back(Pair("nDepth",(boost::int64_t)tx.nDepth));
         rtx.push_back(Pair("nSumTxFees",(boost::int64_t)tx.nSumTxFees));
