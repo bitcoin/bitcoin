@@ -87,6 +87,12 @@ AC_ARG_ENABLE([hardening],
   [use_hardening=$enableval],
   [use_hardening=yes])
 
+AC_ARG_ENABLE([ccache],
+  [AS_HELP_STRING([--enable-ccache],
+  [enable building with ccache (default is yes if ccache is found)])],
+  [use_ccache=$enableval],
+  [use_ccache=auto])
+
 AC_ARG_WITH([qt-incdir],[AS_HELP_STRING([--with-qt-incdir=INC_DIR],[specify qt include path (overridden by pkgconfig)])], [qt_include_path=$withval], [qt_include_path=])
 AC_ARG_WITH([qt-libdir],[AS_HELP_STRING([--with-qt-libdir=LIB_DIR],[specify qt lib path (overridden by pkgconfig)])], [qt_lib_path=$withval], [qt_lib_path=])
 AC_ARG_WITH([qt-bindir],[AS_HELP_STRING([--with-qt-bindir=BIN_DIR],[specify qt bin path (overridden by pkgconfig)])], [qt_bin_path=$withval], [qt_bin_path=])
@@ -109,6 +115,7 @@ AC_PATH_PROGS([MOC], [moc moc-qt4], moc, $qt_bin_path:$PATH)
 AC_PATH_PROGS([UIC], [uic uic-qt4], uic, $qt_bin_path:$PATH)
 AC_PATH_PROG([RCC], [rcc], rcc, $qt_bin_path:$PATH)
 AC_PATH_PROG([LRELEASE], [lrelease], lrelease, $qt_bin_path:$PATH)
+AC_PATH_PROG(CCACHE,ccache,none)
 
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
@@ -370,6 +377,23 @@ if test x$use_ipv6 = xyes; then
   [AC_MSG_RESULT(no)]; have_ipv6=no)
 fi
 AC_LANG_POP
+
+if test "x$use_ccache" != "xno"; then
+  AC_MSG_CHECKING(if ccache should be enabled)
+  if test x"$CCACHE" = x"none"; then
+    if test "x$use_ccache" = "xyes"; then
+      AC_MSG_ERROR([ccache not found.]);
+    else
+      AC_MSG_NOTICE([ccache not found. Falling back to default CC])
+      use_ccache=no
+    fi
+  else
+    use_ccache=yes
+    CC="$ac_cv_path_CCACHE $CC"
+    CXX="$ac_cv_path_CCACHE $CXX"
+  fi
+  AC_MSG_RESULT($use_ccache)
+fi
 
 dnl enable ipv6 support
 AC_MSG_CHECKING([if ipv6 should be enabled])
