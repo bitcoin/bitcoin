@@ -1,8 +1,8 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Copyright (c) 2013 The Primecoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Distributed under conditional MIT/X11 software license,
+// see the accompanying file COPYING
 
 #include <boost/assign/list_of.hpp>
 
@@ -71,7 +71,7 @@ Value getinfo(const Array& params, bool fHelp)
     GetProxy(NET_IPV4, proxy);
 
     Object obj;
-    obj.push_back(Pair("version",       (int)CLIENT_VERSION));
+    obj.push_back(Pair("version",       FormatFullVersion()));
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
     obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
     obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
