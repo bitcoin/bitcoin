@@ -1,6 +1,17 @@
 (note: this is a temporary file, to be added-to by anybody, and deleted at
 release time)
 
+0.8.3 changes
+=============
+
+Fix a memory exhaustion attack that could crash low-memory nodes.
+
+Fix a regression that caused excessive writing of the peers.dat file.
+
+
+0.8.2 changes
+=============
+
 Fee Policy changes
 ------------------
 
