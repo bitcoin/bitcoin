@@ -939,6 +939,15 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fLimitFr
     printf("CTxMemPool::accept() : accepted %s (poolsz %"PRIszu")\n",
            hash.ToString().c_str(),
            mapTx.size());
+    
+    // send notification
+    std::string strCmd = GetArg("-txnotify", "");
+    if (!strCmd.empty())
+    {
+        boost::replace_all(strCmd, "%s", hash.ToString());
+        boost::thread t(runCommand, strCmd); // thread runs free
+    }
+    
     return true;
 }
 
