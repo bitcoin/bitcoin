@@ -1,6 +1,6 @@
 // Copyright (c) 2013 Primecoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Distributed under conditional MIT/X11 software license,
+// see the accompanying file COPYING
 
 #include "prime.h"
 
@@ -213,6 +213,7 @@ unsigned int TargetFromInt(unsigned int nLength)
 // Inflation is controlled via Moore's Law
 bool TargetGetMint(unsigned int nBits, uint64& nMint)
 {
+    nMint = 0;
     static uint64 nMintLimit = 999llu * COIN;
     CBigNum bnMint = nMintLimit;
     if (TargetGetLength(nBits) < nTargetMinLength)
@@ -221,7 +222,11 @@ bool TargetGetMint(unsigned int nBits, uint64& nMint)
     bnMint = (bnMint << nFractionalBits) / nBits;
     bnMint = (bnMint / CENT) * CENT;  // mint value rounded to cent
     nMint = bnMint.getuint256().Get64();
-    nMint = std::min(nMint, nMintLimit);  // should never exceed mint limit
+    if (nMint > nMintLimit)
+    {
+        nMint = 0;
+        return error("TargetGetMint() : mint value over limit, nBits=%08x", nBits);
+    }
     return true;
 }
 
