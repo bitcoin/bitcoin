@@ -1095,7 +1095,7 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
 
 unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-    unsigned int nBits = nProofOfWorkLimit;
+    unsigned int nBits = TargetGetLimit();
 
     // Genesis block
     if (pindexLast == NULL)
@@ -1103,10 +1103,10 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
 
     const CBlockIndex* pindexPrev = pindexLast;
     if (pindexPrev->pprev == NULL)
-        return nBits; // first block
+        return TargetGetInitial(); // first block
     const CBlockIndex* pindexPrevPrev = pindexPrev->pprev;
     if (pindexPrevPrev->pprev == NULL)
-        return nBits; // second block
+        return TargetGetInitial(); // second block
 
     // Primecoin: continuous target adjustment on every block
     int64 nInterval = nTargetTimespan / nTargetSpacing;
@@ -1908,7 +1908,7 @@ bool CBlock::AddToBlockIndex(CValidationState &state, const CDiskBlockPos &pos)
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + pindexNew->GetBlockWork().getuint256();
     pindexNew->nPrimeChainType = nPrimeChainType;
     pindexNew->nPrimeChainLength = nPrimeChainLength;
-    pindexNew->nWorkTransition = EstimateWorkTransition((pindexNew->pprev ? pindexNew->pprev->nWorkTransition : nProofOfWorkLimit), nBits, nPrimeChainLength);
+    pindexNew->nWorkTransition = EstimateWorkTransition((pindexNew->pprev ? pindexNew->pprev->nWorkTransition : TargetGetInitial()), nBits, nPrimeChainLength);
     pindexNew->nChainTx = (pindexNew->pprev ? pindexNew->pprev->nChainTx : 0) + pindexNew->nTx;
     pindexNew->nFile = pos.nFile;
     pindexNew->nDataPos = pos.nPos;
@@ -2578,7 +2578,7 @@ bool static LoadBlockIndexDB()
     {
         CBlockIndex* pindex = item.second;
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + pindex->GetBlockWork().getuint256();
-        pindex->nWorkTransition = EstimateWorkTransition((pindex->pprev ? pindex->pprev->nWorkTransition : nProofOfWorkLimit), pindex->nBits, pindex->nPrimeChainLength);
+        pindex->nWorkTransition = EstimateWorkTransition((pindex->pprev ? pindex->pprev->nWorkTransition : TargetGetInitial()), pindex->nBits, pindex->nPrimeChainLength);
         pindex->nChainTx = (pindex->pprev ? pindex->pprev->nChainTx : 0) + pindex->nTx;
         if ((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS && !(pindex->nStatus & BLOCK_FAILED_MASK))
             setBlockIndexValid.insert(pindex);
@@ -2727,6 +2727,8 @@ bool LoadBlockIndex()
         pchMessageStart[2] = 0xcb;
         pchMessageStart[3] = 0xc3;
         hashGenesisBlock = hashGenesisBlockTestNet;
+        nTargetInitialLength = 3; // primecoin: initial prime chain target
+        nTargetMinLength = 2;     // primecoin: minimum prime chain target
     }
 
     //

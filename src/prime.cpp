@@ -149,6 +149,19 @@ static bool EulerLagrangeLifchitzPrimalityTest(const CBigNum& n, bool fSophieGer
 static const unsigned int TARGET_FRACTIONAL_MASK = (1u<<nFractionalBits) - 1;
 static const unsigned int TARGET_LENGTH_MASK = ~TARGET_FRACTIONAL_MASK;
 
+unsigned int nTargetInitialLength = 4; // initial chain length target
+unsigned int nTargetMinLength = 3;     // minimum chain length target
+
+unsigned int TargetGetLimit()
+{
+    return (nTargetMinLength << nFractionalBits);
+}
+
+unsigned int TargetGetInitial()
+{
+    return (nTargetInitialLength << nFractionalBits);
+}
+
 unsigned int TargetGetLength(unsigned int nBits)
 {
     return ((nBits & TARGET_LENGTH_MASK) >> nFractionalBits);

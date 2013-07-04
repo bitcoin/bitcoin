@@ -13,6 +13,8 @@ static const CBigNum bnOne = 1;
 static const CBigNum bnPrimeMax = (bnOne << 2000) - 1;
 static const CBigNum bnPrimeMin = (bnOne << 255);
 
+extern unsigned int nTargetInitialLength;
+extern unsigned int nTargetMinLength;
 
 // Generate small prime table
 void GeneratePrimeTable();
@@ -39,9 +41,9 @@ static const unsigned int nFractionalBits = 24;
 static const uint64 nFractionalDifficultyMax = (1llu << (nFractionalBits + 32));
 static const uint64 nFractionalDifficultyMin = (1llu << 32);
 static const uint64 nFractionalDifficultyThreshold = (1llu << (8 + 32));
-static const unsigned int nTargetMinLength = 2;
-static const unsigned int nProofOfWorkLimit = (nTargetMinLength << nFractionalBits);
 static const unsigned int nWorkTransitionRatio = 32;
+unsigned int TargetGetLimit();
+unsigned int TargetGetInitial();
 unsigned int TargetGetLength(unsigned int nBits);
 bool TargetSetLength(unsigned int nLength, unsigned int& nBits);
 unsigned int TargetGetFractional(unsigned int nBits);
