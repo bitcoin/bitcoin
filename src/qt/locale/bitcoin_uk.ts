@@ -9,8 +9,8 @@
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;Primecoin&lt;/b&gt; version</source>
-        <translation>Версія &lt;b&gt;Primecoin&apos;a&lt;b&gt;</translation>
+        <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
+        <translation>Версія &lt;b&gt;Bitcoin&apos;a&lt;b&gt;</translation>
     </message>
     <message>
         <location line="+57"/>

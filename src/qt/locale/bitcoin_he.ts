@@ -9,7 +9,7 @@
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;Primecoin&lt;/b&gt; version</source>
+        <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
         <translation>גרסת &lt;b&gt;ביטקוין&lt;/b&gt;</translation>
     </message>
     <message>
