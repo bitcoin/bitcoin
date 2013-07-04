@@ -1088,8 +1088,8 @@ static const int64 nTargetSpacing = 3 * 60; // one minute block spacing
 //
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
 {
-    // primecoin: min work take current whole number length for now
-    TargetSetFractionalDifficulty(nFractionalDifficultyMin, nBase);
+    // primecoin: min work for orphan block takes min work for now
+    TargetSetLength(nTargetMinLength, nBase);
     return nBase;
 }
 
