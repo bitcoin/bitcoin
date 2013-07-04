@@ -29,10 +29,10 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) :
     // load the bitmap for writing some text over it
     QPixmap newPixmap;
     if(GetBoolArg("-testnet")) {
-        newPixmap     = QPixmap(":/images/splash_testnet");
+        newPixmap     = QPixmap(":/images/splash_primecoin");
     }
     else {
-        newPixmap     = QPixmap(":/images/splash");
+        newPixmap     = QPixmap(":/images/splash_primecoin");
     }
 
     QPainter pixPaint(&newPixmap);
