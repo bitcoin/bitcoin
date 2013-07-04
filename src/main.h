@@ -12,6 +12,7 @@
 #include "script.h"
 
 #include <list>
+#include <boost/heap/fibonacci_heap.hpp>
 
 class CWallet;
 class CBlock;
@@ -1076,23 +1077,74 @@ public:
 };
 
 
+class CTxMemPool;
 
+/*** A transaction with the priority/profit information needed by the mempool */
+class CMemPoolTx : public CTransaction
+{
+public:
+    int64 nFees;
+    int64 nDepth;
+    int64 nRecvTime;
+    int64 nSumTxFees;
+    int   nSumTxSize;
 
+    boost::heap::fibonacci_heap<CMemPoolTx>::handle_type handle;
 
+    double FeesPerKB() const{
+        assert(nSumTxFees >= 0);
+        assert(nSumTxSize >= 0);
 
+        if (nSumTxSize > 0)
+            return (double)nSumTxFees / ((double)nSumTxSize/1000);
+        else
+            return 0;
+    }
 
+    double priority() const{
+        return FeesPerKB();
+    }
+
+    inline bool operator<(const CMemPoolTx& rhs) const{
+        return priority() < rhs.priority();
+    }
+
+    void calcPrioritySums(const CTxMemPool &mempool);
+
+    CMemPoolTx(const CTransaction &old_tx, int64 nFees){
+        CTransaction();
+        *((CTransaction *)this) = old_tx;
+        this->nFees = nFees;
+        nRecvTime = GetTime();
+    }
+};
+
+/** An inpoint - a combination of a transaction pointer and an index n into its vin */
+class CInPoint
+{
+public:
+    CMemPoolTx* ptx;
+    unsigned int n;
+
+    CInPoint() { SetNull(); }
+    CInPoint(CMemPoolTx* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
+    void SetNull() { ptx = NULL; n = (unsigned int) -1; }
+    bool IsNull() const { return (ptx == NULL && n == (unsigned int) -1); }
+};
 
 class CTxMemPool
 {
 public:
     mutable CCriticalSection cs;
-    std::map<uint256, CTransaction> mapTx;
+    boost::heap::fibonacci_heap<CMemPoolTx> heapTx;
+    std::map<uint256, CMemPoolTx *> mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
 
     bool accept(CValidationState &state, CTransaction &tx, bool fLimitFree, bool* pfMissingInputs);
-    bool addUnchecked(const uint256& hash, CTransaction &tx);
-    bool remove(const CTransaction &tx, bool fRecursive = false);
+    bool addUnchecked(const CTransaction &tx, int64 nFees);
+    bool remove(const uint256 hash, bool fRecursive = true);
     bool removeConflicts(const CTransaction &tx);
+    void updatePriorities(std::set<uint256> &setChangedHashes);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
@@ -1100,7 +1152,7 @@ public:
     unsigned long size()
     {
         LOCK(cs);
-        return mapTx.size();
+        return heapTx.size();
     }
 
     bool exists(uint256 hash)
@@ -1108,9 +1160,28 @@ public:
         return (mapTx.count(hash) != 0);
     }
 
-    CTransaction& lookup(uint256 hash)
+    CMemPoolTx& lookup(uint256 hash)
     {
-        return mapTx[hash];
+        return *(mapTx[hash]->handle);
+    }
+
+    void getTxParents(const CTransaction &tx, std::set<CMemPoolTx *> &parents)
+    {
+        BOOST_FOREACH(const CTxIn txin, tx.vin) {
+            std::map<uint256, CMemPoolTx *>::iterator it = mapTx.find(txin.prevout.hash);
+            if (it != mapTx.end())
+                parents.insert(it->second);
+        }
+    }
+
+    void getTxChildren(const CTransaction &tx, std::set<CMemPoolTx *> &children)
+    {
+        uint256 hash = tx.GetHash();
+        for (unsigned int i = 0; i < tx.vout.size(); i++) {
+            std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
+            if (it != mapNextTx.end())
+                children.insert(it->second.ptx);
+        }
     }
 };
 

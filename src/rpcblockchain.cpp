@@ -117,12 +117,27 @@ Value getrawmempool(const Array& params, bool fHelp)
             "getrawmempool\n"
             "Returns all transaction ids in memory pool.");
 
+    LOCK(mempool.cs);
+
     vector<uint256> vtxid;
     mempool.queryHashes(vtxid);
 
     Array a;
-    BOOST_FOREACH(const uint256& hash, vtxid)
-        a.push_back(hash.ToString());
+    BOOST_FOREACH(const uint256& hash, vtxid){
+        Object rtx;
+
+        rtx.push_back(Pair("txid",hash.ToString()));
+
+        CMemPoolTx &tx = *(mempool.mapTx[hash]);
+
+        rtx.push_back(Pair("nFees",(boost::int64_t)tx.nFees));
+        rtx.push_back(Pair("nDepth",(boost::int64_t)tx.nDepth));
+        rtx.push_back(Pair("nSumTxFees",(boost::int64_t)tx.nSumTxFees));
+        rtx.push_back(Pair("nSumTxSize",(boost::int64_t)tx.nSumTxSize));
+        rtx.push_back(Pair("nRecvTime",(boost::int64_t)tx.nRecvTime));
+
+        a.push_back(rtx);
+    }
 
     return a;
 }
