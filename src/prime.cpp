@@ -492,6 +492,7 @@ bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CB
             TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str(),
             TargetToString(nChainLengthCunningham1FermatTest).c_str(), TargetToString(nChainLengthCunningham2FermatTest).c_str(), TargetToString(nChainLengthBiTwinFermatTest).c_str());
 
+    // Select the longest primechain from the three chain types
     nChainLength = nChainLengthCunningham1;
     nChainType = PRIME_CHAIN_CUNNINGHAM1;
     if (nChainLengthCunningham2 > nChainLength)
@@ -504,6 +505,23 @@ bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CB
         nChainLength = nChainLengthBiTwin;
         nChainType = PRIME_CHAIN_BI_TWIN;
     }
+
+    // Check that the certificate (bnPrimeChainMultiplier) is normalized
+    if (bnPrimeChainMultiplier % 2 == 0 && bnPrimeChainOrigin % 4 == 0)
+    {
+        unsigned int nChainLengthCunningham1Extended = 0;
+        unsigned int nChainLengthCunningham2Extended = 0;
+        unsigned int nChainLengthBiTwinExtended = 0;
+        if (ProbablePrimeChainTest(bnPrimeChainOrigin / 2, nBits, false, nChainLengthCunningham1Extended, nChainLengthCunningham2Extended, nChainLengthBiTwinExtended))
+        { // try extending down the primechain with a halved multiplier
+            if (nChainLengthCunningham1Extended > nChainLength || nChainLengthCunningham2Extended > nChainLength || nChainLengthBiTwinExtended > nChainLength)
+                return error("CheckPrimeProofOfWork() : prime certificate not normalzied target=%s length=(%s %s %s) extend=(%s %s %s)",
+                    TargetToString(nBits).c_str(),
+                    TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str(),
+                    TargetToString(nChainLengthCunningham1Extended).c_str(), TargetToString(nChainLengthCunningham2Extended).c_str(), TargetToString(nChainLengthBiTwinExtended).c_str());
+        }
+    }
+
     return true;
 }
 
