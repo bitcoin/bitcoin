@@ -13,6 +13,7 @@ packages:
 - "libboost-filesystem-dev"
 - "libboost-program-options-dev"
 - "libboost-thread-dev"
+- "libboost-test-dev"
 - "libssl-dev"
 - "git-core"
 - "unzip"
