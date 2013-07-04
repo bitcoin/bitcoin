@@ -38,6 +38,12 @@ int main(int argc, char *argv[])
 
     while (true)
     {
+        if (block.GetHeaderHash() < hashBlockHeaderLimit)
+        {
+            block.nNonce++;
+            fNewBlock = true;
+            continue;
+        }
         unsigned int p = 7;
         CBigNum bnPrimorial;
         Primorial(p, bnPrimorial);

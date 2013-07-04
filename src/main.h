@@ -64,8 +64,8 @@ static const int fHaveUPnP = true;
 static const int fHaveUPnP = false;
 #endif
 
-static const uint256 hashGenesisBlockOfficial("0x69b988d741c862e027a61f93e38c3a6d071fd361d3a8a9c3999d1234f986c568");
-static const uint256 hashGenesisBlockTestNet("0x69b988d741c862e027a61f93e38c3a6d071fd361d3a8a9c3999d1234f986c568");
+static const uint256 hashGenesisBlockOfficial("0x3b1c7074fcc727484fdf84a1296a124615e556f4d972ce06ebd1590098c21cec");
+static const uint256 hashGenesisBlockTestNet("0x3b1c7074fcc727484fdf84a1296a124615e556f4d972ce06ebd1590098c21cec");
 
 extern CScript COINBASE_FLAGS;
 
@@ -1325,7 +1325,7 @@ public:
     uint256 GetHash() const
     {
         CDataStream ss(SER_GETHASH, 0);
-        ss << GetHeaderHash() << bnPrimeChainMultiplier;
+        ss << nVersion << hashPrevBlock << hashMerkleRoot << nTime << nBits << nNonce << bnPrimeChainMultiplier;
         return Hash(ss.begin(), ss.end());
     }
 

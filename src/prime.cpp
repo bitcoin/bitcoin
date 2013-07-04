@@ -442,12 +442,15 @@ bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CB
     if (TargetGetLength(nBits) < nTargetMinLength || TargetGetLength(nBits) > 99)
         return error("CheckPrimeProofOfWork() : invalid chain length target %s", TargetToString(nBits).c_str());
 
+    // Check header hash limit
+    if (hashBlockHeader < hashBlockHeaderLimit)
+        return error("CheckPrimeProofOfWork() : block header hash under limit");
     // Check target for prime proof-of-work
     CBigNum bnPrimeChainOrigin = CBigNum(hashBlockHeader) * bnPrimeChainMultiplier;
-    if (bnPrimeChainOrigin <= bnPrimeMin)
+    if (bnPrimeChainOrigin < bnPrimeMin)
         return error("CheckPrimeProofOfWork() : prime too small");
     // First prime in chain must not exceed cap
-    if (bnPrimeChainOrigin >= bnPrimeMax)
+    if (bnPrimeChainOrigin > bnPrimeMax)
         return error("CheckPrimeProofOfWork() : prime too big");
 
     // Check prime chain

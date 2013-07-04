@@ -2770,17 +2770,17 @@ bool InitBlockIndex() {
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
-        block.nTime    = 1372887417;
+        block.nTime    = 1372909928;
         block.nBits    = TargetFromInt(4u);
-        block.nNonce   = 0;
+        block.nNonce   = 2;
 
         if (fTestNet)
         {
-            block.nTime    = 1372887417;
-            block.nNonce   = 0;
+            block.nTime    = 1372909928;
+            block.nNonce   = 2;
         }
 
-        block.bnPrimeChainMultiplier = 2 * 3 * 5 * 7 * 77755;
+        block.bnPrimeChainMultiplier = 2 * 3 * 5 * 7 * 887334;
 
         //// debug print
         uint256 hash = block.GetHash();
@@ -4620,11 +4620,9 @@ void static BitcoinMiner(CWallet *pwallet)
         // Primecoin: try to find hash divisible by primorial
         CBigNum bnHashFactor;
         Primorial(nPrimorialHashFactor, bnHashFactor);
-        while (CBigNum(pblock->GetHeaderHash()) % bnHashFactor != 0 && pblock->nNonce < 0xffff0000)
+        while ((pblock->GetHeaderHash() < hashBlockHeaderLimit || CBigNum(pblock->GetHeaderHash()) % bnHashFactor != 0) && pblock->nNonce < 0xffff0000)
             pblock->nNonce++;
-        if (CBigNum(pblock->GetHeaderHash()) % bnHashFactor != 0)
-            continue;
-        if (pblock->GetHeaderHash() == 0)
+        if (pblock->nNonce >= 0xffff0000)
             continue;
         // Primecoin: primorial fixed multiplier
         CBigNum bnPrimorial;

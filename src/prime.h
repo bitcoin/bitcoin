@@ -7,10 +7,12 @@
 
 #include "main.h"
 
+static const unsigned int nMaxSieveSize = 1000000u;
+static const uint256 hashBlockHeaderLimit = (uint256(1) << 255);
 static const CBigNum bnOne = 1;
 static const CBigNum bnPrimeMax = (bnOne << 2000) - 1;
-static const CBigNum bnPrimeMin = (bnOne << 256);
-static const unsigned int nMaxSieveSize = 1000000u;
+static const CBigNum bnPrimeMin = (bnOne << 255);
+
 
 // Generate small prime table
 void GeneratePrimeTable();
