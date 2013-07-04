@@ -3,7 +3,7 @@ PPCoin Official Development Repo
 ================================
 
 ### What is PPCoin?
-[PPCoin](http://ppcoin.org/) (abbreviated PPC), also known as Peercoin and Peer-to-Peer Coin is the first known [cryptocurrency](https://en.wikipedia.org/wiki/Cryptocurrency) based on an implementation of a [combined proof-of-stake](https://en.wikipedia.org/wiki/Proof-of-stake)/[proof-of-work system](https://en.wikipedia.org/wiki/Proof-of-work_system). PPCoin is build upon [Bitcoin](http://bitcoin.org/en/), but unique in the fact that it is more energy efficiency, as proof-of-stake blocks require minimal energy consumption. Thus, with PPCoin energy consumption would decrease over time as proof-of-work blocks become less rewarding and coin generation becomes increasingly based on proof-of-stake block generation.
+[PPCoin](http://ppcoin.org/) (abbreviated PPC), also known as Peercoin and Peer-to-Peer Coin is the first known [cryptocurrency](https://en.wikipedia.org/wiki/Cryptocurrency)  designed as a combined [proof-of-stake](http://ppcoin.org/static/ppcoin-paper.pdf)/[proof-of-work](https://en.wikipedia.org/wiki/Proof-of-work_system) system. PPCoin is build upon [Bitcoin](http://bitcoin.org/en/), but unique in the fact that it is more energy efficiency, as proof-of-stake blocks require minimal energy consumption. Thus, with PPCoin energy consumption would decrease over time as proof-of-work blocks become less rewarding and coin generation becomes increasingly based on proof-of-stake block generation.
 
 ### PPCoin Resources
 * Client and Source:
