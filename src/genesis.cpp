@@ -27,9 +27,9 @@ int main(int argc, char *argv[])
     block.vtx.push_back(txNew);
     block.hashPrevBlock = 0;
     block.hashMerkleRoot = block.BuildMerkleTree();
-    block.nBits    = (4u << nFractionalBits);
-    block.nTime    = GetAdjustedTime();
-    block.nNonce   = 0;
+    block.nBits    = (6u << nFractionalBits);
+    block.nTime    = 1373220000; //GetAdjustedTime();
+    block.nNonce   = 280;
 
     CBigNum bnTarget;
     bnTarget.SetCompact(block.nBits);
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
             fNewBlock = true;
             continue;
         }
-        unsigned int p = 7;
+        unsigned int p = 23;
         CBigNum bnPrimorial;
         Primorial(p, bnPrimorial);
         unsigned int nProbableChainLength;

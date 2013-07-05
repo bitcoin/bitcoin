@@ -2065,7 +2065,7 @@ bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerk
     // Primecoin: proof of work is checked in ProcessBlock()
 
     // Check timestamp
-    if (GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
+    if (GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60 && GetHash() != hashGenesisBlock)
         return state.Invalid(error("CheckBlock() : block timestamp too far in the future"));
 
     // First transaction must be coinbase, the rest must not be
@@ -2772,17 +2772,17 @@ bool InitBlockIndex() {
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
-        block.nTime    = 1372909928;
-        block.nBits    = TargetFromInt(4u);
-        block.nNonce   = 2;
+        block.nTime    = 1373220000;
+        block.nBits    = TargetFromInt(6);
+        block.nNonce   = 2857;
+        block.bnPrimeChainMultiplier = ((uint64) 592663) * (uint64)(2 * 3 * 5 * 7 * 11 * 13 * 17 * 19 * 23);
 
         if (fTestNet)
         {
-            block.nTime    = 1372909928;
-            block.nNonce   = 2;
+            block.nTime    = 1373220000;
+            block.nNonce   = 279;
+            block.bnPrimeChainMultiplier = ((uint64) 636147) * (uint64)(2 * 3 * 5 * 7 * 11 * 13 * 17 * 19 * 23);
         }
-
-        block.bnPrimeChainMultiplier = 2 * 3 * 5 * 7 * 887334;
 
         //// debug print
         uint256 hash = block.GetHash();

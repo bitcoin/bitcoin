@@ -387,9 +387,9 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         unsigned int nChainLengthBiTwin = 0;
         if (ProbablePrimeChainTest(bnChainOrigin, block.nBits, false, nChainLengthCunningham1, nChainLengthCunningham2, nChainLengthBiTwin))
         {
+            block.bnPrimeChainMultiplier = bnFixedMultiplier * nTriedMultiplier;
             printf("Probable prime chain found for block=%s!!\n  Target: %s\n  Length: (%s %s %s)\n", block.GetHash().GetHex().c_str(),
             TargetToString(block.nBits).c_str(), TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str());
-            block.bnPrimeChainMultiplier = bnFixedMultiplier * nTriedMultiplier;
             nProbableChainLength = std::max(std::max(nChainLengthCunningham1, nChainLengthCunningham2), nChainLengthBiTwin);
             return true;
         }
