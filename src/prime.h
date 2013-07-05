@@ -38,6 +38,8 @@ void PrimorialAt(CBigNum& bn, CBigNum& bnPrimorial);
 bool ProbablePrimeChainTest(const CBigNum& bnPrimeChainOrigin, unsigned int nBits, bool fFermatTest, unsigned int& nChainLengthCunningham1, unsigned int& nChainLengthCunningham2, unsigned int& nChainLengthBiTwin);
 
 static const unsigned int nFractionalBits = 24;
+static const unsigned int TARGET_FRACTIONAL_MASK = (1u<<nFractionalBits) - 1;
+static const unsigned int TARGET_LENGTH_MASK = ~TARGET_FRACTIONAL_MASK;
 static const uint64 nFractionalDifficultyMax = (1llu << (nFractionalBits + 32));
 static const uint64 nFractionalDifficultyMin = (1llu << 32);
 static const uint64 nFractionalDifficultyThreshold = (1llu << (8 + 32));

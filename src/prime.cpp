@@ -101,7 +101,7 @@ static bool FermatProbablePrimalityTest(const CBigNum& n, unsigned int& nLength)
     unsigned int nFractionalLength = (((n-r) << nFractionalBits) / n).getuint();
     if (nFractionalLength >= (1 << nFractionalBits))
         return error("FermatProbablePrimalityTest() : fractional assert");
-    nLength = (nLength & 0xfff00000u) | nFractionalLength;
+    nLength = (nLength & TARGET_LENGTH_MASK) | nFractionalLength;
     return false;
 }
 
@@ -139,15 +139,12 @@ static bool EulerLagrangeLifchitzPrimalityTest(const CBigNum& n, bool fSophieGer
     unsigned int nFractionalLength = (((n-r) << nFractionalBits) / n).getuint();
     if (nFractionalLength >= (1 << nFractionalBits))
         return error("EulerLagrangeLifchitzPrimalityTest() : fractional assert");
-    nLength = (nLength & 0xfff00000u) | nFractionalLength;
+    nLength = (nLength & TARGET_LENGTH_MASK) | nFractionalLength;
     return false;
 }
 
 // Proof-of-work Target (prime chain target):
 //   format - 32 bit, 8 length bits, 24 fractional length bits
-
-static const unsigned int TARGET_FRACTIONAL_MASK = (1u<<nFractionalBits) - 1;
-static const unsigned int TARGET_LENGTH_MASK = ~TARGET_FRACTIONAL_MASK;
 
 unsigned int nTargetInitialLength = 7; // initial chain length target
 unsigned int nTargetMinLength = 6;     // minimum chain length target
@@ -311,7 +308,6 @@ static bool ProbableCunninghamChainTest(const CBigNum& n, bool fSophieGermain, b
         }
     }
 
-    FermatProbablePrimalityTest(N, nProbableChainLength);
     return (TargetGetLength(nProbableChainLength) >= 2);
 }
 
