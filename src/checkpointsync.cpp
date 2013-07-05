@@ -77,8 +77,8 @@ using namespace std;
 
 
 // ppcoin: sync-checkpoint master key
-const std::string CSyncCheckpoint::strMasterPubKey = "04c0c1815811b4fd1bbb74f6e7519f8a9fc01f8e714d8c6191faaeb9dde48c09163a7236cdd42d96db391736ae04e04cb229dd9958b0e2e63399cadc7526256b3b";
-
+const std::string CSyncCheckpoint::strMainPubKey = "04c0c44f7e3bc58c734e65bb0e97860b2f5e53d12a5e1ea30ec6d73df821349f83ff0a061221dfcab3f1235d5b2fff85587a72f8f74f4c56d9e17087a1e8c28b04";
+const std::string CSyncCheckpoint::strTestPubKey = "0400c9611d333d6ddfc5dbfcb6ab3a7c00d56959cfda1ff2d94a8dc4c88050be18d0aa4b6c547ff4db33d708866c85616926278b05bcb80b66974280774720303b";
 std::string CSyncCheckpoint::strMasterPrivKey = "";
 
 
@@ -288,10 +288,11 @@ void AskForPendingSyncCheckpoint(CNode* pfrom)
 bool CheckCheckpointPubKey()
 {
     std::string strPubKey = "";
-    if (!pblocktree->ReadCheckpointPubKey(strPubKey) || strPubKey != CSyncCheckpoint::strMasterPubKey)
+    std::string strMasterPubKey = fTestNet? CSyncCheckpoint::strTestPubKey : CSyncCheckpoint::strMainPubKey;
+    if (!pblocktree->ReadCheckpointPubKey(strPubKey) || strPubKey != strMasterPubKey)
     {
         // write checkpoint master key to db
-        if (!pblocktree->WriteCheckpointPubKey(CSyncCheckpoint::strMasterPubKey))
+        if (!pblocktree->WriteCheckpointPubKey(strMasterPubKey))
             return error("CheckCheckpointPubKey() : failed to write new checkpoint master key to db");
         if (!pblocktree->Sync())
             return error("CheckCheckpointPubKey() : failed to commit new checkpoint master key to db");
@@ -393,7 +394,8 @@ uint256 WantedByOrphan(const CBlock* pblockOrphan)
 bool CSyncCheckpoint::CheckSignature()
 {
     CKey key;
-    if (!key.SetPubKey(ParseHex(CSyncCheckpoint::strMasterPubKey)))
+    std::string strMasterPubKey = fTestNet? CSyncCheckpoint::strTestPubKey : CSyncCheckpoint::strMainPubKey;
+    if (!key.SetPubKey(ParseHex(strMasterPubKey)))
         return error("CSyncCheckpoint::CheckSignature() : SetPubKey failed");
     if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
         return error("CSyncCheckpoint::CheckSignature() : verify signature failed");
