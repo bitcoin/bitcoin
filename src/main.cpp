@@ -931,7 +931,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase())
         return 0;
-    return max(0, (COINBASE_MATURITY+20) - GetDepthInMainChain());
+    return max(0, (COINBASE_MATURITY+200) - GetDepthInMainChain());
 }
 
 
@@ -1079,8 +1079,8 @@ int64 static GetBlockValue(int nBits, int64 nFees)
     return ((int64)nSubsidy) + nFees;
 }
 
-static const int64 nTargetTimespan = 8 * 60 * 60; // one week
-static const int64 nTargetSpacing = 3 * 60; // one minute block spacing
+static const int64 nTargetTimespan = 7 * 24 * 60 * 60; // one week
+static const int64 nTargetSpacing = 60; // one minute block spacing
 
 //
 // minimum amount of work that could possibly be required nTime after
@@ -2727,7 +2727,7 @@ bool LoadBlockIndex()
         pchMessageStart[2] = 0xcb;
         pchMessageStart[3] = 0xc3;
         hashGenesisBlock = hashGenesisBlockTestNet;
-        nTargetInitialLength = 3; // primecoin: initial prime chain target
+        nTargetInitialLength = 5; // primecoin: initial prime chain target
         nTargetMinLength = 2;     // primecoin: minimum prime chain target
     }
 
