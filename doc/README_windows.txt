@@ -1,6 +1,39 @@
+Primecoin 0.1.0 BETA
+====================
+
+Copyright (c) 2013 Primecoin Developers
+
+Distributed under conditional MIT/X11 software license, see the accompanying
+file COPYING.
+This product includes software developed by the OpenSSL Project for use in
+the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
+cryptographic software written by Eric Young (eay@cryptsoft.com).
+
+Intro
+---------------------
+Primecoin is a free open source cryptocurrency that implements the first
+scientific computing proof-of-work for cryptocurrencies. The unique
+proof-of-work design searches for rare prime formations, providing
+experimental value for mathematicians to further understand the nature and
+distribution related to prime number, a simple yet mysterious construct of
+arithmetic that continues to baffle the top minds of mankind.
+
+Setup
+-----
+Complete windows setup procedure and run Primecoin (Qt).
+
+Website: http://primecoin.org
+Forum: http://ppcointalk.org
+Github (source code + sig + wiki): https://github.com/primecoin/primecoin
+Sourceforge (release builds): https://sourceforge.net/projects/primecoin
+
+
+
 Bitcoin 0.8.3 BETA
+==================
 
 Copyright (c) 2009-2013 Bitcoin Developers
+
 Distributed under the MIT/X11 software license, see the accompanying
 file COPYING or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
