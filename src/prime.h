@@ -57,10 +57,6 @@ bool TargetGetNext(unsigned int nBits, int64 nInterval, int64 nTargetSpacing, in
 // Mine probable prime chain of form: n = h * p# +/- 1
 bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
 
-// Size of a big number (in bits), times 65536
-// Can be used as an approximate log scale for numbers up to 2 ** 65536 - 1
-bool LogScale(const CBigNum& bn, unsigned int& nLogScale);
-
 // Check prime proof-of-work
 enum // prime chain type
 {

@@ -402,52 +402,6 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
     return false; // stop as timed out
 }
 
-// Binary logarithm scale of a big number, times 65536
-// Can be used as an approximate log scale for numbers up to 2 ** 65536 - 1
-bool LogScale(const CBigNum& bn, unsigned int& nLogScale)
-{
-    // Get number of bits
-    if (bn < 1)
-        return error("LogScale() : not positive number");
-    unsigned int nBytes = BN_num_bytes(&bn);
-    if (nBytes < 1)
-        return error("LogScale() : zero size");
-    CBigNum bnMantissa;
-    BN_rshift(&bnMantissa, &bn, 8 * (nBytes - 1));
-    unsigned int nByte = BN_get_word(&bnMantissa);
-    unsigned int nBits = 8 * (nBytes - 1);
-    for (; nByte ; nByte >>= 1)
-        nBits++;
-    if (nBits < 1)
-        return error("LogScale() : zero bits");
-    // Get 17-bit mantissa
-    bnMantissa = ((bn << 17) >> nBits);
-    unsigned int nMantissa = BN_get_word(&bnMantissa);
-    // Combine to form approximate log scale
-    nLogScale = (nMantissa & 0xffff);
-    nLogScale |= ((nBits - 1) << 16);
-    return true;
-}
-
-// Binary log log scale of a big number, times 65536
-// Can be used as an approximate log log scale for numbers up to 2 ** 65536 - 1
-static bool LogLogScale(const CBigNum& bn, unsigned int& nLogLogScale)
-{
-    if (bn < 2)
-        return error("LogLogScale() : undefined for log log; must be at least 2");
-    unsigned int nLogScale;
-    if (!LogScale(bn, nLogScale))
-        return error("LogLogScale() : unable to calculate log scale");
-    if (!LogScale(CBigNum(nLogScale), nLogLogScale))
-        return error("LogLogScale() : unable to calculate log log scale");
-    // Here log refers to base 2 (binary) logarithm
-    // nLogLogScale ~ 65536 * (16 + log(log(bn)))
-    if (nLogLogScale < (1 << 20))
-        return error("GetProofOfWorkHashTarget() : log log scale below mininum");
-    nLogLogScale -= (1 << 20); // ~ 65536 * log(log(bn))
-    return true;
-}
-
 // Check prime proof-of-work
 bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier, unsigned int& nChainType, unsigned int& nChainLength)
 {
