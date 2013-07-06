@@ -1339,7 +1339,7 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& w
 }
 
 // NovaCoin: get current stake generation power
-uint64 CWallet::GetStakeMintPower(const CKeyStore& keystore)
+uint64 CWallet::GetStakeMintPower(const CKeyStore& keystore, enum StakeWeightMode mode)
 {
     LOCK2(cs_main, cs_wallet);
 
@@ -1372,9 +1372,31 @@ uint64 CWallet::GetStakeMintPower(const CKeyStore& keystore)
         if (!txdb.ReadTxIndex(pcoin.first->GetHash(), txindex))
             continue;
 
-        // Do not count input that is still too young
-        if (pcoin.first->nTime + nStakeMaxAge > GetTime())
-            continue;
+        switch(mode)
+        {
+            case STAKE_NORMAL:
+                // Do not count input that is still less than 30 days old
+                if (pcoin.first->nTime + nStakeMinAge > GetTime())
+                    continue;
+            break;
+            case STAKE_MAXWEIGHT:
+                // Do not count input that is still less than 90 days old
+                if (pcoin.first->nTime + nStakeMaxAge > GetTime())
+                    continue;
+            break;
+            case STAKE_MINWEIGHT:
+                // Count only inputs with suitable age (from 30 to 90 days old)
+                if (pcoin.first->nTime + nStakeMaxAge < GetTime())
+                    continue;
+                if (pcoin.first->nTime + nStakeMinAge > GetTime())
+                    continue;
+            break;
+            case STAKE_BELOWMIN:
+                // Count only inputs with suitable age (less than 30 days old)
+                if (pcoin.first->nTime + nStakeMinAge < GetTime())
+                    continue;
+            break;
+        }
 
         CBigNum bnCentSecond = CBigNum(pcoin.first->vout[pcoin.second].nValue) * (GetTime()-pcoin.first->nTime) / CENT;
         CBigNum bnCoinDay = bnCentSecond * CENT / COIN / (24 * 60 * 60);
