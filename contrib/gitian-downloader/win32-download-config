@@ -35,4 +35,8 @@ signers:
     weight: 40
     name: "Wladimir J. van der Laan"
     key: laanwj
+  9692B91BBF0E8D34DFD33B1882C5C009628ECF0C:
+    weight: 1
+    name: michagogo
+    key: michagogo
 minimum_weight: 120
