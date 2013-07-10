@@ -339,7 +339,6 @@ QMAKE_EXTRA_COMPILERS += TSQM
 
 # "Other files" to show in Qt Creator
 OTHER_FILES += README.md \
-    doc/*.rst \
     doc/*.txt \
     doc/*.md \
     src/bitcoind.cpp \
