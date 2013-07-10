@@ -143,6 +143,9 @@ public:
         }
     }
 
+    // Get progress percentage of the sieve
+    unsigned int GetProgressPercentage();
+
     // Weave the sieve for the next prime in table
     // Return values:
     //   True  - weaved another prime; nComposite - number of composites removed

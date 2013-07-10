@@ -6,11 +6,10 @@
 
 // Prime Table
 std::vector<unsigned int> vPrimes;
-
+static const unsigned int nPrimeTableLimit = nMaxSieveSize;
 
 void GeneratePrimeTable()
 {
-    static const unsigned int nPrimeTableLimit = nMaxSieveSize;
     vPrimes.clear();
     // Generate prime table using sieve of Eratosthenes
     std::vector<bool> vfComposite (nPrimeTableLimit, false);
@@ -358,8 +357,8 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         // Build sieve
         nStart = GetTimeMicros();
         psieve.reset(new CSieveOfEratosthenes(nMaxSieveSize, block.nBits, block.GetHeaderHash(), bnFixedMultiplier));
-        while (psieve->Weave());
-        printf("MineProbablePrimeChain() : new sieve (%u/%u) ready in %uus\n", psieve->GetCandidateCount(), nMaxSieveSize, (unsigned int) (GetTimeMicros() - nStart));
+        while (psieve->Weave() && (GetTimeMicros() - nStart < 3000000));
+        printf("MineProbablePrimeChain() : new sieve (%u/%u@%u%%) ready in %uus\n", psieve->GetCandidateCount(), nMaxSieveSize, psieve->GetProgressPercentage(), (unsigned int) (GetTimeMicros() - nStart));
     }
 
     CBigNum bnChainOrigin;
@@ -503,6 +502,13 @@ unsigned int EstimateWorkTransition(unsigned int nPrevWorkTransition, unsigned i
 std::string GetPrimeChainName(unsigned int nChainType, unsigned int nChainLength)
 {
     return strprintf("%s%s", (nChainType==PRIME_CHAIN_CUNNINGHAM1)? "1CC" : ((nChainType==PRIME_CHAIN_CUNNINGHAM2)? "2CC" : "TWN"), TargetToString(nChainLength).c_str());
+}
+
+
+// Get progress percentage of the sieve
+unsigned int CSieveOfEratosthenes::GetProgressPercentage()
+{
+    return std::min(100u, (((nPrimeSeq >= vPrimes.size())? nPrimeTableLimit : vPrimes[nPrimeSeq]) * 100 / nSieveSize));
 }
 
 // Weave sieve for the next prime in table
