@@ -352,13 +352,16 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
     fNewBlock = false;
 
     int64 nStart, nCurrent; // microsecond timer
+    CBlockIndex* pindexPrev = pindexBest;
     if (psieve.get() == NULL)
     {
         // Build sieve
         nStart = GetTimeMicros();
         psieve.reset(new CSieveOfEratosthenes(nMaxSieveSize, block.nBits, block.GetHeaderHash(), bnFixedMultiplier));
-        while (psieve->Weave() && (GetTimeMicros() - nStart < 3000000));
-        printf("MineProbablePrimeChain() : new sieve (%u/%u@%u%%) ready in %uus\n", psieve->GetCandidateCount(), nMaxSieveSize, psieve->GetProgressPercentage(), (unsigned int) (GetTimeMicros() - nStart));
+        int64 nSieveRoundLimit = (int)GetArg("-gensieveroundlimitms", 1000);
+        while (psieve->Weave() && pindexPrev == pindexBest && (GetTimeMicros() - nStart < 1000 * nSieveRoundLimit));
+        if (fDebug && GetBoolArg("-printmining"))
+            printf("MineProbablePrimeChain() : new sieve (%u/%u@%u%%) ready in %uus\n", psieve->GetCandidateCount(), nMaxSieveSize, psieve->GetProgressPercentage(), (unsigned int) (GetTimeMicros() - nStart));
     }
 
     CBigNum bnChainOrigin;
@@ -366,7 +369,7 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
     nStart = GetTimeMicros();
     nCurrent = nStart;
 
-    while (nCurrent - nStart < 10000 && nCurrent >= nStart)
+    while (nCurrent - nStart < 10000 && nCurrent >= nStart && pindexPrev == pindexBest)
     {
         nTests++;
         if (!psieve->GetNextCandidateMultiplier(nTriedMultiplier))

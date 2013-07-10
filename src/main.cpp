@@ -4435,7 +4435,8 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
 
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
-        printf("CreateNewBlock(): total size %"PRI64u"\n", nBlockSize);
+        if (fDebug && GetBoolArg("-printmining"))
+            printf("CreateNewBlock(): total size %"PRI64u"\n", nBlockSize);
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
         pblock->vtx[0].vout[0].nValue = GetBlockValue(pblock->nBits, nFees);
         pblocktemplate->vTxFees[0] = -nFees;
@@ -4594,7 +4595,8 @@ void static BitcoinMiner(CWallet *pwallet)
         CBlock *pblock = &pblocktemplate->block;
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
-        printf("Running PrimecoinMiner with %"PRIszu" transactions in block (%u bytes)\n", pblock->vtx.size(),
+        if (fDebug && GetBoolArg("-printmining"))
+            printf("Running PrimecoinMiner with %"PRIszu" transactions in block (%u bytes)\n", pblock->vtx.size(),
                ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
 
         //
@@ -4712,7 +4714,8 @@ void static BitcoinMiner(CWallet *pwallet)
         nTimeExpected = nTimeExpected * max(1u, nRoundTests) / max(1u, nRoundPrimesHit);
         for (unsigned int n = 1; n < TargetGetLength(pblock->nBits); n++)
              nTimeExpected = nTimeExpected * max(1u, nRoundTests) * 3 / max(1u, nRoundPrimesHit);
-        printf("PrimecoinMiner() : Round primorial=%u tests=%u primes=%u expected=%us\n", nPrimorialMultiplier, nRoundTests, nRoundPrimesHit, (unsigned int)(nTimeExpected/1000000));
+        if (fDebug && GetBoolArg("-printmining"))
+            printf("PrimecoinMiner() : Round primorial=%u tests=%u primes=%u expected=%us\n", nPrimorialMultiplier, nRoundTests, nRoundPrimesHit, (unsigned int)(nTimeExpected/1000000));
     } }
     catch (boost::thread_interrupted)
     {
