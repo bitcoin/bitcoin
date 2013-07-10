@@ -1,7 +1,7 @@
 WINDOWS BUILD NOTES
 ===================
 
-See [readme-qt.rst](readme-qt.rst) for instructions on building Bitcoin-Qt, the
+See [readme-qt.md](readme-qt.md) for instructions on building Bitcoin-Qt, the
 graphical user interface.
 
 Compilers Supported
