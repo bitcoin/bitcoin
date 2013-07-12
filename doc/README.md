@@ -1,4 +1,4 @@
-Primecoin 0.1.0 BETA
+Primecoin 0.1.1 BETA
 ====================
 
 Copyright (c) 2013 Primecoin Developers
@@ -16,6 +16,11 @@ proof-of-work design searches for rare prime formations, providing
 experimental value for mathematicians to further understand the nature and
 distribution related to prime number, a simple yet mysterious construct of
 arithmetic that continues to baffle the top minds of mankind.
+
+Upgrade
+--------------------
+First backup wallet. Then follow setup instructions. Double check balance
+after completing setup and starting up client.
 
 Setup
 --------------------
