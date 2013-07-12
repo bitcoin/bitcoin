@@ -115,8 +115,8 @@ int secp256k1_ecdsa_seckey_verify(const unsigned char *seckey) {
     secp256k1_num_t sec;
     secp256k1_num_init(&sec);
     secp256k1_num_set_bin(&sec, seckey, 32);
-    int ret = secp256k1_num_is_zero(&sec) ||
-              (secp256k1_num_cmp(&sec, &secp256k1_ge_consts->order) >= 0);
+    int ret = !secp256k1_num_is_zero(&sec) &&
+              (secp256k1_num_cmp(&sec, &secp256k1_ge_consts->order) < 0);
     secp256k1_num_free(&sec);
     return ret;
 }
