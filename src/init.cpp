@@ -131,6 +131,10 @@ void DetectShutdownThread(boost::thread_group* threadGroup)
         if (fRequestShutdown)
             threadGroup->interrupt_all();
     }
+ 
+   // and tell the bitcoin generation thread to shutdown cleanly, so that
+   // we don't segfault :-)
+   GenerateBitcoins(false, NULL);
 }
 
 void HandleSIGTERM(int)
