@@ -122,10 +122,6 @@ private:
     void createTrayIcon(bool fIsTestnet);
     /** Create system tray menu (or setup the dock menu) */
     void createTrayIconMenu();
-    /** Save window size and position */
-    void saveWindowGeometry();
-    /** Restore window size and position */
-    void restoreWindowGeometry();
 
 public slots:
     /** Set number of connections shown in the UI */
