@@ -108,8 +108,10 @@ int secp256k1_ecdsa_privkey_export(const unsigned char *seckey,
 int secp256k1_ecdsa_privkey_import(unsigned char *seckey,
                                    const unsigned char *privkey, int privkeylen);
 
-int secp256k1_ecdsa_privkey_tweak(unsigned char *seckey, const unsigned char *tweak);
-int secp256k1_ecdsa_pubkey_tweak(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak);
+int secp256k1_ecdsa_privkey_tweak_add(unsigned char *seckey, const unsigned char *tweak);
+int secp256k1_ecdsa_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak);
+int secp256k1_ecdsa_privkey_tweak_mul(unsigned char *seckey, const unsigned char *tweak);
+int secp256k1_ecdsa_pubkey_tweak_mul(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak);
 
 #ifdef __cplusplus
 }
