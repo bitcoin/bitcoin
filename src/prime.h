@@ -148,9 +148,45 @@ public:
 
     // Weave the sieve for the next prime in table
     // Return values:
-    //   True  - weaved another prime; nComposite - number of composites removed
+    //   True  - weaved another prime
     //   False - sieve already completed
     bool Weave();
+};
+
+class CSieveControl
+{
+    int64 nSievePrimalityRoundOptimal;
+    bool fSieveRoundShrink;
+
+ public:
+    // Power test time cost in microsecond
+    int64 nPrimalityTestCost;
+
+    // Optimal sieve round preparation time in microsecond
+    int64 nSieveRoundOptimal;
+
+    CSieveControl()
+    {
+        nPrimalityTestCost = 0;
+        nSieveRoundOptimal = 1000000;
+        nSievePrimalityRoundOptimal = 0;
+        fSieveRoundShrink = true;
+    }
+
+    void SetSievePrimalityRoundCost(int64 nSievePrimalityRoundCost)
+    {
+        if (nSievePrimalityRoundCost > nSievePrimalityRoundOptimal)
+            fSieveRoundShrink = (!fSieveRoundShrink); // reverse adjustment direction
+        nSievePrimalityRoundOptimal = nSievePrimalityRoundCost;
+    }
+
+    void AdjustSieveRoundOptimal()
+    {
+        if (fSieveRoundShrink)
+            nSieveRoundOptimal = nSieveRoundOptimal * 99 / 100;
+        else
+            nSieveRoundOptimal = nSieveRoundOptimal * 100 / 99 + 1;
+    }
 };
 
 #endif
