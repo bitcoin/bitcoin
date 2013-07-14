@@ -155,7 +155,8 @@ public:
         BN_clear_free(&bn);
     }
 
-    void GetPrivKey(CPrivKey &privkey) {
+    void GetPrivKey(CPrivKey &privkey, bool fCompressed) {
+        EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
         int nSize = i2d_ECPrivateKey(pkey, NULL);
         assert(nSize);
         privkey.resize(nSize);
@@ -304,7 +305,7 @@ CPrivKey CKey::GetPrivKey() const {
     CECKey key;
     key.SetSecretBytes(vch);
     CPrivKey privkey;
-    key.GetPrivKey(privkey);
+    key.GetPrivKey(privkey, fCompressed);
     return privkey;
 }
 
