@@ -950,6 +950,19 @@ void CMemPoolTx::calcPrioritySums(const CTxMemPool &mempool)
     nSumTxFees = nFees;
     nDepth = 1;
 
+    // FIXME: shouldn't change sums unless we're at a higher priority than our
+    // parent, otherwise we're essentially free-riding on their priority
+    //
+    // So logic should be if we have a higher priority than any parent, then we
+    // can sum parent fees.
+    //
+    // Idea: have a -debugcreateblock flag that can dump the mempool to a log
+    // file so that the createnewblock decisions can be analyzed after the
+    // fact.
+    //
+    // Idea2: have a -changemempooltxfee, like luke did, to bump up fees for
+    // transactions artificially.
+
     LOCK(mempool.cs);
     int64 max_parent_fees = 0;
     BOOST_FOREACH(const CTxIn txin, this->vin){
