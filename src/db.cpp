@@ -8,7 +8,6 @@
 #include "util.h"
 #include "hash.h"
 #include "addrman.h"
-#include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <openssl/rand.h>
