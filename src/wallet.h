@@ -73,11 +73,6 @@ public:
     CAddressBookData()
     {
     }
-
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(name);
-    )
 };
 
 /** A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
@@ -229,6 +224,8 @@ public:
 
     std::set< std::set<CTxDestination> > GetAddressGroupings();
     std::map<CTxDestination, int64> GetAddressBalances();
+
+    std::set<CTxDestination> GetAccountAddresses(std::string strAccount) const;
 
     bool IsMine(const CTxIn& txin) const;
     int64 GetDebit(const CTxIn& txin) const;
