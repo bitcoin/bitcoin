@@ -196,7 +196,7 @@ Value setaccount(const Array& params, bool fHelp)
     // Detect when changing the account of an address that is the 'unused current key' of another account:
     if (pwalletMain->mapAddressBook.count(address.Get()))
     {
-        string strOldAccount = pwalletMain->mapAddressBook[address.Get()];
+        string strOldAccount = pwalletMain->mapAddressBook[address.Get()].name;
         if (address == GetAccountAddress(strOldAccount))
             GetAccountAddress(strOldAccount, true);
     }
@@ -219,9 +219,9 @@ Value getaccount(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
 
     string strAccount;
-    map<CTxDestination, string>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
-    if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.empty())
-        strAccount = (*mi).second;
+    map<CTxDestination, CAddressBookData>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
+    if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.name.empty())
+        strAccount = (*mi).second.name;
     return strAccount;
 }
 
@@ -237,10 +237,10 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 
     // Find all addresses that have the given account
     Array ret;
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, string)& item, pwalletMain->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
     {
         const CBitcoinAddress& address = item.first;
-        const string& strName = item.second;
+        const string& strName = item.second.name;
         if (strName == strAccount)
             ret.push_back(address.ToString());
     }
@@ -301,7 +301,7 @@ Value listaddressgroupings(const Array& params, bool fHelp)
             {
                 LOCK(pwalletMain->cs_wallet);
                 if (pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get()) != pwalletMain->mapAddressBook.end())
-                    addressInfo.push_back(pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second);
+                    addressInfo.push_back(pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second.name);
             }
             jsonGrouping.push_back(addressInfo);
         }
@@ -423,10 +423,10 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 
 void GetAccountAddresses(string strAccount, set<CTxDestination>& setAddress)
 {
-    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& item, pwalletMain->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& item, pwalletMain->mapAddressBook)
     {
         const CTxDestination& address = item.first;
-        const string& strName = item.second;
+        const string& strName = item.second.name;
         if (strName == strAccount)
             setAddress.insert(address);
     }
@@ -862,10 +862,10 @@ Value ListReceived(const Array& params, bool fByAccounts)
     // Reply
     Array ret;
     map<string, tallyitem> mapAccountTally;
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, string)& item, pwalletMain->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
     {
         const CBitcoinAddress& address = item.first;
-        const string& strAccount = item.second;
+        const string& strAccount = item.second.name;
         map<CBitcoinAddress, tallyitem>::iterator it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
@@ -988,7 +988,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         {
             string account;
             if (pwalletMain->mapAddressBook.count(r.first))
-                account = pwalletMain->mapAddressBook[r.first];
+                account = pwalletMain->mapAddressBook[r.first].name;
             if (fAllAccounts || (account == strAccount))
             {
                 Object entry;
@@ -1101,9 +1101,9 @@ Value listaccounts(const Array& params, bool fHelp)
         nMinDepth = params[0].get_int();
 
     map<string, int64> mapAccountBalances;
-    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
+    BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& entry, pwalletMain->mapAddressBook) {
         if (IsMine(*pwalletMain, entry.first)) // This address belongs to me
-            mapAccountBalances[entry.second] = 0;
+            mapAccountBalances[entry.second.name] = 0;
     }
 
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
@@ -1121,7 +1121,7 @@ Value listaccounts(const Array& params, bool fHelp)
         {
             BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64)& r, listReceived)
                 if (pwalletMain->mapAddressBook.count(r.first))
-                    mapAccountBalances[pwalletMain->mapAddressBook[r.first]] += r.second;
+                    mapAccountBalances[pwalletMain->mapAddressBook[r.first].name] += r.second;
                 else
                     mapAccountBalances[""] += r.second;
         }
@@ -1470,7 +1470,7 @@ Value validateaddress(const Array& params, bool fHelp)
             ret.insert(ret.end(), detail.begin(), detail.end());
         }
         if (pwalletMain->mapAddressBook.count(dest))
-            ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest]));
+            ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest].name));
     }
     return ret;
 }
