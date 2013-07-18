@@ -330,9 +330,9 @@ if test x$use_pkgconfig = xyes; then
         if test x$use_dbus != xno; then
           PKG_CHECK_MODULES([QT_DBUS], [QtDBus], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
         fi
-      fi
-      if test x$use_qr != xno; then
-        PKG_CHECK_MODULES([QR], [libqrencode], [INCLUDES="$QR_CFLAGS"; LIBS="$LIBS $QR_LIBS"; have_qrencode=yes], [have_qrencode=no])
+        if test x$use_qr != xno; then
+          PKG_CHECK_MODULES([QR], [libqrencode], [INCLUDES="$QR_CFLAGS"; LIBS="$LIBS $QR_LIBS"; have_qrencode=yes], [have_qrencode=no])
+        fi
       fi
     ]
   )
