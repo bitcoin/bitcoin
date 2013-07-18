@@ -35,4 +35,24 @@ signers:
     weight: 40
     name: "Wladimir J. van der Laan"
     key: laanwj
+  AEC1884398647C47413C1C3FB1179EB7347DC10D:
+    weight: 40
+    name: "Warren Togami"
+    key: wtogami
+  E084FE305BDF0C476F779792657EB016521670C0:
+    weight: 40
+    name: "Rama McIntosh"
+    key: face
+  1A2511E978239E491A096D0A828AC1F94EF26053:
+    weight: 40
+    name: "Charles Lee"
+    key: coblee
+  EFDFCBD38FFF68B49160C7D3A1596566F87BE631:
+    weight: 40
+    name: "Anton Yemelyanov"
+    key: aspect
+  59CAF0E96F23F53747945FD4FE3348877809386C:
+    weight: 40
+    name: "Adrian Gallagher"
+    key: thrasher
 minimum_weight: 120
