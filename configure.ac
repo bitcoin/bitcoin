@@ -31,8 +31,8 @@ AM_MAINTAINER_MODE([enable])
 dnl make the compilation flags quiet unless V=1 is used
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-AC_ARG_ENABLE([upnp],
-  [AS_HELP_STRING([--enable-upnp],
+AC_ARG_WITH([miniupnpc],
+  [AS_HELP_STRING([--with-miniupnpc],
   [enable UPNP (default is yes if libminiupnpc is found)])],
   [use_upnp=$enableval],
   [use_upnp=auto])
@@ -51,8 +51,8 @@ AC_ARG_ENABLE([ipv6],
   [use_ipv6=yes])
 
 dnl enable qt support
-AC_ARG_ENABLE([qt],
-  [AS_HELP_STRING([--enable-qt],
+AC_ARG_WITH([qt],
+  [AS_HELP_STRING([--with-qt],
   [enable qt (default is yes)])],
   [use_qt=$enableval],
   [use_qt=yes])
@@ -69,14 +69,14 @@ AC_ARG_ENABLE(tests,
     [use_tests=$enableval],
     [use_tests=yes])
 
-AC_ARG_ENABLE([qr],
-  [AS_HELP_STRING([--enable-qr],
+AC_ARG_WITH([qrencode],
+  [AS_HELP_STRING([--with-qrencode],
   [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
   [use_qr=$enableval],
   [use_qr=auto])
 
-AC_ARG_ENABLE([dbus],
-  [AS_HELP_STRING([--enable-dbus],
+AC_ARG_WITH([qtdbus],
+  [AS_HELP_STRING([--with-qtdbus],
   [enable DBus support (default is yes if qt is enabled and QtDBus is found)])],
   [use_dbus=$enableval],
   [use_dbus=auto])
@@ -354,14 +354,14 @@ else
       QT_LIBS="$QT_LIBS -L$qt_plugin_path/codecs"
       LIBS="$QT_LIBS"
     fi
-    AC_CHECK_LIB([qcncodecs],      [main],, AC_MSG_ERROR(libqcncodecs not found. Install it or use --disable-qt.))
-    AC_CHECK_LIB([qjpcodecs],      [main],, AC_MSG_ERROR(libqjpcodecs not found. Install it or use --disable-qt.))
-    AC_CHECK_LIB([qkrcodecs],      [main],, AC_MSG_ERROR(libqkrcodecs not found. Install it or use --disable-qt.))
-    AC_CHECK_LIB([qtwcodecs],      [main],, AC_MSG_ERROR(libqtwcodecs not found. Install it or use --disable-qt.))
-    AC_CHECK_LIB([imm32],      [main],, AC_MSG_ERROR(libimm32 not found. Install it or use --disable-qt.))
-    AC_CHECK_LIB([QtCore],      [main],, AC_MSG_ERROR(libQtCore not found. Install it or use --disable-qt.))
-    AC_CHECK_LIB([QtGui],      [main],, AC_MSG_ERROR(libQtGui not found. Install it or use --disable-qt.))
-    AC_CHECK_LIB([QtNetwork],      [main],, AC_MSG_ERROR(libQtNetwork not found. Install it or use --disable-qt.))
+    AC_CHECK_LIB([qcncodecs],      [main],, AC_MSG_ERROR(libqcncodecs not found. Install it or use --without-qt.))
+    AC_CHECK_LIB([qjpcodecs],      [main],, AC_MSG_ERROR(libqjpcodecs not found. Install it or use --without-qt.))
+    AC_CHECK_LIB([qkrcodecs],      [main],, AC_MSG_ERROR(libqkrcodecs not found. Install it or use --without-qt.))
+    AC_CHECK_LIB([qtwcodecs],      [main],, AC_MSG_ERROR(libqtwcodecs not found. Install it or use --without-qt.))
+    AC_CHECK_LIB([imm32],      [main],, AC_MSG_ERROR(libimm32 not found. Install it or use --without-qt.))
+    AC_CHECK_LIB([QtCore],      [main],, AC_MSG_ERROR(libQtCore not found. Install it or use --without-qt.))
+    AC_CHECK_LIB([QtGui],      [main],, AC_MSG_ERROR(libQtGui not found. Install it or use --without-qt.))
+    AC_CHECK_LIB([QtNetwork],      [main],, AC_MSG_ERROR(libQtNetwork not found. Install it or use --without-qt.))
     QT_LIBS="$LIBS"
     LIBS="$TEMP_LIBS"
 
@@ -370,9 +370,9 @@ else
       QT_INCLUDES="-I$qt_include_path -I$qt_include_path/QtCore -I$qt_include_path/QtGui -I$qt_include_path/QtNetwork -I$qt_include_path/QtTest -I$qt_include_path/QtDBus"
       CPPFLAGS="$CPPFLAGS $QT_INCLUDES"
     fi
-    AC_CHECK_HEADER([QtPlugin],, AC_MSG_ERROR(QtCore headers missing. Install them or use --disable-qt.),)
-    AC_CHECK_HEADER([QApplication],, AC_MSG_ERROR(QtGUI headers missing. Install them or use --disable-qt.),)
-    AC_CHECK_HEADER([QLocalSocket],, AC_MSG_ERROR(QtNetwork headers missing. Install them or use --disable-qt.),)
+    AC_CHECK_HEADER([QtPlugin],, AC_MSG_ERROR(QtCore headers missing. Install them or use --without-qt.),)
+    AC_CHECK_HEADER([QApplication],, AC_MSG_ERROR(QtGUI headers missing. Install them or use --without-qt.),)
+    AC_CHECK_HEADER([QLocalSocket],, AC_MSG_ERROR(QtNetwork headers missing. Install them or use --without-qt.),)
 
     if test x$use_tests = xyes; then
       TEMP_LIBS="$LIBS"
@@ -463,7 +463,7 @@ dnl enable upnp support
 AC_MSG_CHECKING([if upnp should be enabled])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
-     AC_MSG_ERROR("upnp requested but cannot be built. use --disable-upnp")
+     AC_MSG_ERROR("upnp requested but cannot be built. use --without-miniupnpc")
   fi
   AC_MSG_RESULT(no)
 else
@@ -490,10 +490,10 @@ dnl enable qt support
 AC_MSG_CHECKING([if qt should be enabled])
 if test x$use_qt = xyes; then
   if test x$have_qt = xno; then
-     AC_MSG_ERROR("qt support requested but qt could not be located. use --disable-qt")
+     AC_MSG_ERROR("qt support requested but qt could not be located. use --without-qt")
   fi
   if test x$MOC = x; then
-    AC_MSG_ERROR("qt support requested but moc was not found. use --disable-qt")
+    AC_MSG_ERROR("qt support requested but moc was not found. use --without-qt")
   fi
   if test x$UIC = x; then
     AC_MSG_WARN("qt support requested but uic was not found.")
@@ -506,13 +506,13 @@ if test x$use_qt = xyes; then
   fi
   if test x$use_tests = xyes; then
     if test x$have_qt_test = xno; then
-      AC_MSG_ERROR("libQtTest not found. Use --disable-tests or --disable-qt.")
+      AC_MSG_ERROR("libQtTest not found. Use --disable-tests or --without-qt.")
     fi
   fi
   if test x$have_qt_dbus = xno;  then
     use_dbus=no
     if test x$use_dbus = xyes; then
-      AC_MSG_ERROR("libQtDBus not found. Use --disable-dbus.")
+      AC_MSG_ERROR("libQtDBus not found. Use --without-qtdbus.")
     fi
   fi
   BUILD_QT=qt
@@ -537,7 +537,7 @@ if test x$use_qt = xyes; then
   AC_MSG_CHECKING([if qr should be enabled])
   if test x$have_qrencode = xno; then
     if test x$use_qr != xno; then
-     AC_MSG_ERROR("QR support requested but cannot be built. use --disable-qr")
+     AC_MSG_ERROR("QR support requested but cannot be built. use --without-qrencode")
     fi
     AC_MSG_RESULT(no)
   else
