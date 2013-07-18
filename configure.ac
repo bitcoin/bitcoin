@@ -516,6 +516,8 @@ if test x$use_qt = xyes; then
     fi
   fi
   BUILD_QT=qt
+else
+  use_qt=no
 fi
 
 AC_MSG_RESULT($use_qt)
