@@ -25,7 +25,7 @@ dnl ==============================================================
 AM_INIT_AUTOMAKE([no-define subdir-objects foreign])
 
 dnl faketime messes with timestamps and causes configure to be re-run.
-dnl maintainer-mode can be used to bypass this.
+dnl --disable-maintainer-mode can be used to bypass this.
 AM_MAINTAINER_MODE([enable])
 
 dnl make the compilation flags quiet unless V=1 is used
