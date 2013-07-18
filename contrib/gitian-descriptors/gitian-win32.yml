@@ -42,7 +42,7 @@ script: |
   export TZ=UTC
   cd src
   ./autogen.sh
-  CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" ./configure --prefix=$STAGING --host=i586-mingw32msvc --with-qt-bindir=$STAGING/bin --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking
+  ./configure CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" --prefix=$STAGING --host=i586-mingw32msvc --with-qt-bindir=$STAGING/bin --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking
   make $MAKEOPTS
   i586-mingw32msvc-strip bitcoind.exe
   mkdir $OUTDIR/daemon
