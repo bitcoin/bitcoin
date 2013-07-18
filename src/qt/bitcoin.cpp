@@ -197,6 +197,12 @@ int main(int argc, char *argv[])
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
+    // Do this early as we don't want to bother initializing if we are just calling IPC
+    // ... but do it after creating app and setting up translations, so errors are
+    // translated properly.
+    if (PaymentServer::ipcSendCommandLine())
+        exit(0);
+
     // Now that translations are initialized check for errors and allow a translatable error message
     if (fMissingDatadir) {
         QMessageBox::critical(0, QObject::tr("Bitcoin"),
@@ -208,14 +214,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Start up the payment server early, too, so impatient users that click on
+    // bitcoin: links repeatedly have their payment requests routed to this process:
+    PaymentServer* paymentServer = new PaymentServer(&app);
+
     // User language is set up: pick a data directory
     Intro::pickDataDirectory();
-
-    // Do this early as we don't want to bother initializing if we are just calling IPC
-    // ... but do it after creating app, so QCoreApplication::arguments is initialized:
-    if (PaymentServer::ipcSendCommandLine())
-        exit(0);
-    PaymentServer* paymentServer = new PaymentServer(&app);
 
     // Install global event filter that makes sure that long tooltips can be word-wrapped
     app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
