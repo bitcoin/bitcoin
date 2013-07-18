@@ -120,7 +120,7 @@ AC_PATH_PROG(CCACHE,ccache,none)
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
 ##
-CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -frandom-seed=bitcoin"
+CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
 CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO"
 DEBUG_CXXFLAGS="-g -ggdb"
 RELEASE_CXXFLAGS="-O2"
