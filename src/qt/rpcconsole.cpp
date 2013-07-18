@@ -8,7 +8,9 @@
 #include <QTime>
 #include <QThread>
 #include <QKeyEvent>
+#if QT_VERSION < 0x050000
 #include <QUrl>
+#endif
 #include <QScrollBar>
 
 #include <openssl/crypto.h>

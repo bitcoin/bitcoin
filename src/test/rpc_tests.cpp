@@ -79,6 +79,35 @@ static Value CallRPC(string args)
     }
 }
 
+BOOST_AUTO_TEST_CASE(rpc_wallet)
+{
+    // Test RPC calls for various wallet statistics
+    Value r;
+
+    BOOST_CHECK_NO_THROW(CallRPC("listunspent"));
+    BOOST_CHECK_THROW(CallRPC("listunspent string"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("listunspent 0 string"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("listunspent 0 1 not_array"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("listunspent 0 1 [] extra"), runtime_error);
+    BOOST_CHECK_NO_THROW(r=CallRPC("listunspent 0 1 []"));
+    BOOST_CHECK(r.get_array().empty());
+
+    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaddress"));
+    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaddress 0"));
+    BOOST_CHECK_THROW(CallRPC("listreceivedbyaddress not_int"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("listreceivedbyaddress 0 not_bool"), runtime_error);
+    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaddress 0 true"));
+    BOOST_CHECK_THROW(CallRPC("listreceivedbyaddress 0 true extra"), runtime_error);
+
+    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaccount"));
+    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaccount 0"));
+    BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount not_int"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount 0 not_bool"), runtime_error);
+    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaccount 0 true"));
+    BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount 0 true extra"), runtime_error);
+}
+
+
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
 {
     // Test raw transaction API argument handling
@@ -87,14 +116,6 @@ BOOST_AUTO_TEST_CASE(rpc_rawparams)
     BOOST_CHECK_THROW(CallRPC("getrawtransaction"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("getrawtransaction not_hex"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("getrawtransaction a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed not_int"), runtime_error);
-
-    BOOST_CHECK_NO_THROW(CallRPC("listunspent"));
-    BOOST_CHECK_THROW(CallRPC("listunspent string"), runtime_error);
-    BOOST_CHECK_THROW(CallRPC("listunspent 0 string"), runtime_error);
-    BOOST_CHECK_THROW(CallRPC("listunspent 0 1 not_array"), runtime_error);
-    BOOST_CHECK_NO_THROW(r=CallRPC("listunspent 0 1 []"));
-    BOOST_CHECK_THROW(r=CallRPC("listunspent 0 1 [] extra"), runtime_error);
-    BOOST_CHECK(r.get_array().empty());
 
     BOOST_CHECK_THROW(CallRPC("createrawtransaction"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("createrawtransaction null null"), runtime_error);

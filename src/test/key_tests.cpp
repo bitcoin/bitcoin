@@ -26,8 +26,8 @@ static const string strAddressBad("LRjyUS2uuieEPkhZNdQz8hE5YycxVEqSXA");
 #ifdef KEY_TESTS_DUMPINFO
 void dumpKeyInfo(uint256 privkey)
 {
-    CSecret secret;
-    secret.resize(32);
+    CKey key;
+    key.resize(32);
     memcpy(&secret[0], &privkey, 32);
     vector<unsigned char> sec;
     sec.resize(32);
@@ -62,29 +62,24 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK( bsecret2C.SetString(strSecret2C));
     BOOST_CHECK(!baddress1.SetString(strAddressBad));
 
-    bool fCompressed;
-    CSecret secret1  = bsecret1.GetSecret (fCompressed);
-    BOOST_CHECK(fCompressed == false);
-    CSecret secret2  = bsecret2.GetSecret (fCompressed);
-    BOOST_CHECK(fCompressed == false);
-    CSecret secret1C = bsecret1C.GetSecret(fCompressed);
-    BOOST_CHECK(fCompressed == true);
-    CSecret secret2C = bsecret2C.GetSecret(fCompressed);
-    BOOST_CHECK(fCompressed == true);
+    CKey key1  = bsecret1.GetKey();
+    BOOST_CHECK(key1.IsCompressed() == false);
+    CKey key2  = bsecret2.GetKey();
+    BOOST_CHECK(key2.IsCompressed() == false);
+    CKey key1C = bsecret1C.GetKey();
+    BOOST_CHECK(key1C.IsCompressed() == true);
+    CKey key2C = bsecret2C.GetKey();
+    BOOST_CHECK(key1C.IsCompressed() == true);
 
-    BOOST_CHECK(secret1 == secret1C);
-    BOOST_CHECK(secret2 == secret2C);
+    CPubKey pubkey1  = key1. GetPubKey();
+    CPubKey pubkey2  = key2. GetPubKey();
+    CPubKey pubkey1C = key1C.GetPubKey();
+    CPubKey pubkey2C = key2C.GetPubKey();
 
-    CKey key1, key2, key1C, key2C;
-    key1.SetSecret(secret1, false);
-    key2.SetSecret(secret2, false);
-    key1C.SetSecret(secret1, true);
-    key2C.SetSecret(secret2, true);
-
-    BOOST_CHECK(addr1.Get()  == CTxDestination(key1.GetPubKey().GetID()));
-    BOOST_CHECK(addr2.Get()  == CTxDestination(key2.GetPubKey().GetID()));
-    BOOST_CHECK(addr1C.Get() == CTxDestination(key1C.GetPubKey().GetID()));
-    BOOST_CHECK(addr2C.Get() == CTxDestination(key2C.GetPubKey().GetID()));
+    BOOST_CHECK(addr1.Get()  == CTxDestination(pubkey1.GetID()));
+    BOOST_CHECK(addr2.Get()  == CTxDestination(pubkey2.GetID()));
+    BOOST_CHECK(addr1C.Get() == CTxDestination(pubkey1C.GetID()));
+    BOOST_CHECK(addr2C.Get() == CTxDestination(pubkey2C.GetID()));
 
     for (int n=0; n<16; n++)
     {
@@ -100,25 +95,25 @@ BOOST_AUTO_TEST_CASE(key_test1)
         BOOST_CHECK(key1C.Sign(hashMsg, sign1C));
         BOOST_CHECK(key2C.Sign(hashMsg, sign2C));
 
-        BOOST_CHECK( key1.Verify(hashMsg, sign1));
-        BOOST_CHECK(!key1.Verify(hashMsg, sign2));
-        BOOST_CHECK( key1.Verify(hashMsg, sign1C));
-        BOOST_CHECK(!key1.Verify(hashMsg, sign2C));
+        BOOST_CHECK( pubkey1.Verify(hashMsg, sign1));
+        BOOST_CHECK(!pubkey1.Verify(hashMsg, sign2));
+        BOOST_CHECK( pubkey1.Verify(hashMsg, sign1C));
+        BOOST_CHECK(!pubkey1.Verify(hashMsg, sign2C));
 
-        BOOST_CHECK(!key2.Verify(hashMsg, sign1));
-        BOOST_CHECK( key2.Verify(hashMsg, sign2));
-        BOOST_CHECK(!key2.Verify(hashMsg, sign1C));
-        BOOST_CHECK( key2.Verify(hashMsg, sign2C));
+        BOOST_CHECK(!pubkey2.Verify(hashMsg, sign1));
+        BOOST_CHECK( pubkey2.Verify(hashMsg, sign2));
+        BOOST_CHECK(!pubkey2.Verify(hashMsg, sign1C));
+        BOOST_CHECK( pubkey2.Verify(hashMsg, sign2C));
 
-        BOOST_CHECK( key1C.Verify(hashMsg, sign1));
-        BOOST_CHECK(!key1C.Verify(hashMsg, sign2));
-        BOOST_CHECK( key1C.Verify(hashMsg, sign1C));
-        BOOST_CHECK(!key1C.Verify(hashMsg, sign2C));
+        BOOST_CHECK( pubkey1C.Verify(hashMsg, sign1));
+        BOOST_CHECK(!pubkey1C.Verify(hashMsg, sign2));
+        BOOST_CHECK( pubkey1C.Verify(hashMsg, sign1C));
+        BOOST_CHECK(!pubkey1C.Verify(hashMsg, sign2C));
 
-        BOOST_CHECK(!key2C.Verify(hashMsg, sign1));
-        BOOST_CHECK( key2C.Verify(hashMsg, sign2));
-        BOOST_CHECK(!key2C.Verify(hashMsg, sign1C));
-        BOOST_CHECK( key2C.Verify(hashMsg, sign2C));
+        BOOST_CHECK(!pubkey2C.Verify(hashMsg, sign1));
+        BOOST_CHECK( pubkey2C.Verify(hashMsg, sign2));
+        BOOST_CHECK(!pubkey2C.Verify(hashMsg, sign1C));
+        BOOST_CHECK( pubkey2C.Verify(hashMsg, sign2C));
 
         // compact signatures (with key recovery)
 
@@ -129,18 +124,17 @@ BOOST_AUTO_TEST_CASE(key_test1)
         BOOST_CHECK(key1C.SignCompact(hashMsg, csign1C));
         BOOST_CHECK(key2C.SignCompact(hashMsg, csign2C));
 
-        CKey rkey1, rkey2, rkey1C, rkey2C;
+        CPubKey rkey1, rkey2, rkey1C, rkey2C;
 
-        BOOST_CHECK(rkey1.SetCompactSignature (hashMsg, csign1));
-        BOOST_CHECK(rkey2.SetCompactSignature (hashMsg, csign2));
-        BOOST_CHECK(rkey1C.SetCompactSignature(hashMsg, csign1C));
-        BOOST_CHECK(rkey2C.SetCompactSignature(hashMsg, csign2C));
+        BOOST_CHECK(rkey1.RecoverCompact (hashMsg, csign1));
+        BOOST_CHECK(rkey2.RecoverCompact (hashMsg, csign2));
+        BOOST_CHECK(rkey1C.RecoverCompact(hashMsg, csign1C));
+        BOOST_CHECK(rkey2C.RecoverCompact(hashMsg, csign2C));
 
-
-        BOOST_CHECK(rkey1.GetPubKey()  == key1.GetPubKey());
-        BOOST_CHECK(rkey2.GetPubKey()  == key2.GetPubKey());
-        BOOST_CHECK(rkey1C.GetPubKey() == key1C.GetPubKey());
-        BOOST_CHECK(rkey2C.GetPubKey() == key2C.GetPubKey());
+        BOOST_CHECK(rkey1  == pubkey1);
+        BOOST_CHECK(rkey2  == pubkey2);
+        BOOST_CHECK(rkey1C == pubkey1C);
+        BOOST_CHECK(rkey2C == pubkey2C);
     }
 }
 
