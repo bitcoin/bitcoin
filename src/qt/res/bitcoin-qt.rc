@@ -20,14 +20,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "Bitcoin-Qt (OSS GUI client for Bitcoin)"
+            VALUE "CompanyName",        "Primecoin"
+            VALUE "FileDescription",    "Primecoin-Qt (OSS GUI client for Primecoin)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "bitcoin-qt"
+            VALUE "InternalName",       "primecoin-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "bitcoin-qt.exe"
-            VALUE "ProductName",        "Bitcoin-Qt"
+            VALUE "OriginalFilename",   "primecoin-qt.exe"
+            VALUE "ProductName",        "Primecoin-Qt"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

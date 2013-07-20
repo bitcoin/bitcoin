@@ -96,7 +96,7 @@
      <item>
       <widget class="QPushButton" name="signMessage">
        <property name="toolTip">
-        <string>Sign a message to prove you own a Bitcoin address</string>
+        <string>Sign a message to prove you own a Primecoin address</string>
        </property>
        <property name="text">
         <string>Sign &amp;Message</string>
@@ -110,7 +110,7 @@
      <item>
       <widget class="QPushButton" name="verifyMessage">
        <property name="toolTip">
-        <string>Verify a message to ensure it was signed with a specified Bitcoin address</string>
+        <string>Verify a message to ensure it was signed with a specified Primecoin address</string>
        </property>
        <property name="text">
         <string>&amp;Verify Message</string>
