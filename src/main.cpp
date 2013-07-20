@@ -1402,12 +1402,21 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
         printf("InvalidChainFound: Warning: Displayed transactions may not be correct! You may need to upgrade, or other nodes may need to upgrade.\n");
 }
 
-void static InvalidBlockFound(CBlockIndex *pindex) {
+void InvalidBlockFound(CBlockIndex *pindex) {
     pindex->nStatus |= BLOCK_FAILED_VALID;
     pblocktree->WriteBlockIndex(CDiskBlockIndex(pindex));
     setBlockIndexValid.erase(pindex);
     InvalidChainFound(pindex);
+    CBlockIndex *pindexWalk = pindex;
+    do {
+        CBlockIndex *pindexNext = pindexWalk->GetNextInMainChain();
+        if (!pindexNext) break;
+        pindexWalk = pindexNext;
+        pindexWalk->nStatus |= BLOCK_FAILED_CHILD;
+        printf("Marked %s as descending from invalid\n", pindexWalk->GetBlockHash().ToString().c_str());
+    } while(true);
     if (pindex->GetNextInMainChain()) {
+        setBlockIndexValid.insert(pindex->pprev);
         CValidationState stateDummy;
         ConnectBestBlock(stateDummy); // reorganise away from the failed block
     }
@@ -1419,12 +1428,16 @@ bool ConnectBestBlock(CValidationState &state) {
 
         {
             std::set<CBlockIndex*,CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
+            while (it != setBlockIndexValid.rend() && (*it)->nStatus & BLOCK_FAILED_MASK) {
+                printf("Not considering failed %s (%i)\n", (*it)->GetBlockHash().ToString().c_str(), (*it)->nHeight);
+                it++;
+            }
             if (it == setBlockIndexValid.rend())
                 return true;
             pindexNewBest = *it;
         }
 
-        if (pindexNewBest == pindexBest || (pindexBest && pindexNewBest->nChainWork == pindexBest->nChainWork))
+        if ((pindexNewBest == pindexBest || (pindexBest && pindexNewBest->nChainWork == pindexBest->nChainWork)) && !(pindexBest->nStatus & BLOCK_FAILED_MASK))
             return true; // nothing to do
 
         // check ancestry
@@ -1444,7 +1457,7 @@ bool ConnectBestBlock(CValidationState &state) {
                 break;
             }
 
-            if (pindexBest == NULL || pindexTest->nChainWork > pindexBest->nChainWork)
+            if (pindexBest == NULL || pindexTest->nChainWork > pindexBest->nChainWork || (pindexBest->nStatus & BLOCK_FAILED_MASK))
                 vAttach.push_back(pindexTest);
 
             if (pindexTest->pprev == NULL || pindexTest->GetNextInMainChain()) {
