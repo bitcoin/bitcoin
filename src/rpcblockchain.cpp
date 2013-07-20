@@ -207,6 +207,27 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
     return ret;
 }
 
+Value blacklistblock(const Array &params, bool fHelp)
+{
+    if (fHelp || params.size() < 1)
+        throw runtime_error(
+            "blacklistblock <blkid>\n"
+            "Blacklist a block, and reorganize away from it.\n"
+            "WARNING: USE ONLY IN EMERGENCY SITUATIONS.\n");
+
+    std::string strHash = params[0].get_str();
+    uint256 hash(strHash);
+    
+    if (mapBlockIndex.count(hash) == 0)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+    CBlockIndex* pblockindex = mapBlockIndex[hash];
+
+    InvalidBlockFound(pblockindex);
+
+    return Value::null;
+}
+
 Value gettxout(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
