@@ -38,6 +38,7 @@ LIBS= \
  -l boost_filesystem$(BOOST_SUFFIX) \
  -l boost_program_options$(BOOST_SUFFIX) \
  -l boost_thread$(BOOST_SUFFIX) \
+ -l boost_regex$(BOOST_SUFFIX) \
  -l boost_chrono$(BOOST_SUFFIX) \
  -l db_cxx \
  -l ssl \
@@ -97,6 +98,7 @@ OBJS= \
     obj/util.o \
     obj/wallet.o \
     obj/walletdb.o \
+    obj/walletmanager.o \
     obj/hash.o \
     obj/bloom.o \
     obj/noui.o \

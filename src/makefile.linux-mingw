@@ -29,6 +29,7 @@ LIBS= \
  -l boost_filesystem-mt-s \
  -l boost_program_options-mt-s \
  -l boost_thread_win32-mt-s \
+ -l boost_regex-mt-s \
  -l boost_chrono-mt-s \
  -l db_cxx \
  -l ssl \
@@ -89,6 +90,7 @@ OBJS= \
     obj/util.o \
     obj/wallet.o \
     obj/walletdb.o \
+    obj/walletmanager.o \
     obj/noui.o \
     obj/hash.o \
     obj/bloom.o \

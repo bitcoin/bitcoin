@@ -9,6 +9,7 @@
 #include "chainparams.h"
 #include "txdb.h"
 #include "walletdb.h"
+#include "walletmanager.h"
 #include "bitcoinrpc.h"
 #include "net.h"
 #include "util.h"
@@ -29,6 +30,9 @@
 using namespace std;
 using namespace boost;
 
+CWalletManager g_walletManager;
+
+// TODO: eliminate pwalletMain and request wallet objects from g_walletManager throughout instead.
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
 
@@ -119,8 +123,6 @@ void Shutdown()
     }
     bitdb.Flush(true);
     boost::filesystem::remove(GetPidFile());
-    UnregisterAllWallets();
-    delete pwalletMain;
 }
 
 //
@@ -832,93 +834,24 @@ bool AppInit2(boost::thread_group& threadGroup)
         return false;
     }
 
-    // ********************************************************* Step 8: load wallet
+    // ********************************************************* Step 8: load default wallet
 
-    uiInterface.InitMessage(_("Loading wallet..."));
+    uiInterface.InitMessage(_("Loading default wallet..."));
 
-    nStart = GetTimeMillis();
-    bool fFirstRun = true;
-    pwalletMain = new CWallet("wallet.dat");
-    DBErrors nLoadWalletRet = pwalletMain->LoadWallet(fFirstRun);
-    if (nLoadWalletRet != DB_LOAD_OK)
+    try
     {
-        if (nLoadWalletRet == DB_CORRUPT)
-            strErrors << _("Error loading wallet.dat: Wallet corrupted") << "\n";
-        else if (nLoadWalletRet == DB_NONCRITICAL_ERROR)
-        {
-            string msg(_("Warning: error reading wallet.dat! All keys read correctly, but transaction data"
-                         " or address book entries might be missing or incorrect."));
-            InitWarning(msg);
-        }
-        else if (nLoadWalletRet == DB_TOO_NEW)
-            strErrors << _("Error loading wallet.dat: Wallet requires newer version of Bitcoin") << "\n";
-        else if (nLoadWalletRet == DB_NEED_REWRITE)
-        {
-            strErrors << _("Wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
-            printf("%s", strErrors.str().c_str());
-            return InitError(strErrors.str());
-        }
-        else
-            strErrors << _("Error loading wallet.dat") << "\n";
+        g_walletManager.LoadDefaultWallet();
+
+        // pwalletMain needs to be eliminated throughout the application.
+        // Wallet objects should always be requested from g_walletManager instead.
+        pwalletMain = g_walletManager.GetDefaultWallet().get();
     }
-
-    if (GetBoolArg("-upgradewallet", fFirstRun))
+    catch (const std::exception& e)
     {
-        int nMaxVersion = GetArg("-upgradewallet", 0);
-        if (nMaxVersion == 0) // the -upgradewallet without argument case
-        {
-            printf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
-            nMaxVersion = CLIENT_VERSION;
-            pwalletMain->SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
-        }
-        else
-            printf("Allowing wallet upgrade up to %i\n", nMaxVersion);
-        if (nMaxVersion < pwalletMain->GetVersion())
-            strErrors << _("Cannot downgrade wallet") << "\n";
-        pwalletMain->SetMaxVersion(nMaxVersion);
-    }
-
-    if (fFirstRun)
-    {
-        // Create new keyUser and set as default key
-        RandAddSeedPerfmon();
-
-        CPubKey newDefaultKey;
-        if (pwalletMain->GetKeyFromPool(newDefaultKey, false)) {
-            pwalletMain->SetDefaultKey(newDefaultKey);
-            if (!pwalletMain->SetAddressBookName(pwalletMain->vchDefaultKey.GetID(), ""))
-                strErrors << _("Cannot write default address") << "\n";
-        }
-
-        pwalletMain->SetBestChain(CBlockLocator(pindexBest));
-    }
-
-    printf("%s", strErrors.str().c_str());
-    printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
-
-    RegisterWallet(pwalletMain);
-
-    CBlockIndex *pindexRescan = pindexBest;
-    if (GetBoolArg("-rescan", false))
-        pindexRescan = pindexGenesisBlock;
-    else
-    {
-        CWalletDB walletdb("wallet.dat");
-        CBlockLocator locator;
-        if (walletdb.ReadBestBlock(locator))
-            pindexRescan = locator.GetBlockIndex();
-        else
-            pindexRescan = pindexGenesisBlock;
-    }
-    if (pindexBest && pindexBest != pindexRescan)
-    {
-        uiInterface.InitMessage(_("Rescanning..."));
-        printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
-        nStart = GetTimeMillis();
-        pwalletMain->ScanForWalletTransactions(pindexRescan, true);
-        printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
-        pwalletMain->SetBestChain(CBlockLocator(pindexBest));
-        nWalletDBUpdated++;
+        ostringstream err;
+        err << _("Failed to load default wallet. Error: ") << e.what() << _(" Exiting...");
+        printf("%s\n", err.str().c_str());
+        return false;
     }
 
     // ********************************************************* Step 9: import blocks
