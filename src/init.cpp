@@ -855,7 +855,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     nStart = GetTimeMillis();
     bool fFirstRun = true;
-    pwalletMain = new CWallet(strWalletFile);
+    pwalletMain = new CWallet(strWalletFile, !GetBoolArg("-noautofillkeypool", false));
     DBErrors nLoadWalletRet = pwalletMain->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DB_LOAD_OK)
     {

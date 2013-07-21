@@ -96,6 +96,8 @@ private:
     int64 nNextResend;
     int64 nLastResend;
 
+    bool fAutoFillKeyPool;
+
 public:
     mutable CCriticalSection cs_wallet;
 
@@ -109,7 +111,7 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
-    CWallet()
+    CWallet(bool _fAutoFillKeyPool = true)
     {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
@@ -119,8 +121,9 @@ public:
         nOrderPosNext = 0;
         nNextResend = 0;
         nLastResend = 0;
+        fAutoFillKeyPool = _fAutoFillKeyPool;
     }
-    CWallet(std::string strWalletFileIn)
+    CWallet(std::string strWalletFileIn, bool _fAutoFillKeyPool = true)
     {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
@@ -131,6 +134,7 @@ public:
         nOrderPosNext = 0;
         nNextResend = 0;
         nLastResend = 0;
+        fAutoFillKeyPool = _fAutoFillKeyPool;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -223,6 +227,7 @@ public:
     bool GetKeyFromPool(CPubKey &key);
     int64 GetOldestKeyPoolTime();
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
+    bool AutoFillKeyPool() const { return fAutoFillKeyPool; }
 
     std::set< std::set<CTxDestination> > GetAddressGroupings();
     std::map<CTxDestination, int64> GetAddressBalances();
