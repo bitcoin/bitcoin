@@ -250,6 +250,8 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     encryptWalletAction->setCheckable(true);
     backupWalletAction = new QAction(QIcon(":/icons/filesave"), tr("&Backup Wallet..."), this);
     backupWalletAction->setStatusTip(tr("Backup wallet to another location"));
+    refillKeyPoolAction = new QAction(QIcon(":/icons/keypair"), tr("Refill &Key Pool..."), this);
+    refillKeyPoolAction->setStatusTip(tr("Refill the key pool"));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Passphrase..."), this);
     changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
     signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
@@ -267,6 +269,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
     connect(encryptWalletAction, SIGNAL(triggered(bool)), walletFrame, SLOT(encryptWallet(bool)));
     connect(backupWalletAction, SIGNAL(triggered()), walletFrame, SLOT(backupWallet()));
+    connect(refillKeyPoolAction, SIGNAL(triggered()), walletFrame, SLOT(refillKeyPool()));
     connect(changePassphraseAction, SIGNAL(triggered()), walletFrame, SLOT(changePassphrase()));
     connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
     connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
@@ -285,6 +288,7 @@ void BitcoinGUI::createMenuBar()
     // Configure the menus
     QMenu *file = appMenuBar->addMenu(tr("&File"));
     file->addAction(backupWalletAction);
+    file->addAction(refillKeyPoolAction);
     file->addAction(signMessageAction);
     file->addAction(verifyMessageAction);
     file->addSeparator();

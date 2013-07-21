@@ -254,6 +254,18 @@ void WalletView::backupWallet()
     }
 }
 
+void WalletView::refillKeyPool()
+{
+    if (!walletModel->refillKeyPool()) {
+        gui->message(tr("Refill Key Pool Failed"), tr("There was an error trying to refill the keypool."),
+                  CClientUIInterface::MSG_ERROR);
+    }
+    else {
+        gui->message(tr("Key Pool Refilled"), tr("Do not forget to make wallet backups."),
+                  CClientUIInterface::MSG_INFORMATION);
+    }
+}
+
 void WalletView::changePassphrase()
 {
     AskPassphraseDialog dlg(AskPassphraseDialog::ChangePass, this);
