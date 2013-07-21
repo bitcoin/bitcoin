@@ -143,8 +143,6 @@ public:
 
     std::map<CTxDestination, CAddressBookData> mapAddressBook;
 
-    CPubKey vchDefaultKey;
-
     std::set<COutPoint> setLockedCoins;
 
     int64 nTimeFirstKey;
@@ -299,7 +297,7 @@ public:
     }
     void SetBestChain(const CBlockLocator& loc);
 
-    DBErrors LoadWallet(bool& fFirstRunRet);
+    DBErrors LoadWallet();
 
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
@@ -325,8 +323,6 @@ public:
     }
 
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
-
-    bool SetDefaultKey(const CPubKey &vchPubKey);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
     bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
