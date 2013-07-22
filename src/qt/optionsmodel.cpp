@@ -290,3 +290,14 @@ qint64 OptionsModel::getTransactionFee()
 {
     return nTransactionFee;
 }
+
+bool OptionsModel::getProxySettings(QString& proxyIP, quint16 &proxyPort) const
+{
+    std::string proxy = GetArg("-proxy", "");
+    if (proxy.empty()) return false;
+
+    CService addrProxy(proxy);
+    proxyIP = QString(addrProxy.ToStringIP().c_str());
+    proxyPort = addrProxy.GetPort();
+    return true;
+}

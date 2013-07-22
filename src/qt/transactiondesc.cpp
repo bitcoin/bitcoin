@@ -7,6 +7,7 @@
 #include "db.h"
 #include "ui_interface.h"
 #include "base58.h"
+#include "paymentserver.h"
 
 #include <string>
 
@@ -215,6 +216,21 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
             strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["comment"], true) + "<br>";
 
         strHTML += "<b>" + tr("Transaction ID") + ":</b> " + wtx.GetHash().ToString().c_str() + "<br>";
+
+        //
+        // PaymentRequest info:
+        //
+        foreach (const PAIRTYPE(string, string)& r, wtx.vOrderForm)
+        {
+            if (r.first == "PaymentRequest")
+            {
+                PaymentRequestPlus req;
+                req.parse(QByteArray::fromRawData(r.second.c_str(), r.second.size()));
+                QString merchant;
+                if (req.getMerchant(PaymentServer::getCertStore(), merchant))
+                    strHTML += "<b>" + tr("Merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
+            }
+        }
 
         if (wtx.IsCoinBase())
             strHTML += "<br>" + tr("Generated coins must mature 120 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.") + "<br>";
