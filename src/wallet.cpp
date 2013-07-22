@@ -496,7 +496,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
                         if (GetKeyFromPool(newDefaultKey, false))
                         {
                             SetDefaultKey(newDefaultKey);
-                            SetAddressBookName(vchDefaultKey.GetID(), "");
+                            SetAddressBook(vchDefaultKey.GetID(), "", "receive");
                         }
                     }
                 }
@@ -1457,25 +1457,27 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 }
 
 
-bool CWallet::SetAddressBookName(const CTxDestination& address, const string& strName)
+bool CWallet::SetAddressBook(const CTxDestination& address, const string& strName, const string& strPurpose)
 {
     std::map<CTxDestination, CAddressBookData>::iterator mi = mapAddressBook.find(address);
     mapAddressBook[address].name = strName;
     NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, address), (mi == mapAddressBook.end()) ? CT_NEW : CT_UPDATED);
     if (!fFileBacked)
         return false;
+    if (!strPurpose.empty() && !CWalletDB(strWalletFile).WritePurpose(CBitcoinAddress(address).ToString(), strPurpose))
+        return false;
     return CWalletDB(strWalletFile).WriteName(CBitcoinAddress(address).ToString(), strName);
 }
 
-bool CWallet::DelAddressBookName(const CTxDestination& address)
+bool CWallet::DelAddressBook(const CTxDestination& address)
 {
     mapAddressBook.erase(address);
     NotifyAddressBookChanged(this, address, "", ::IsMine(*this, address), CT_DELETED);
     if (!fFileBacked)
         return false;
+    CWalletDB(strWalletFile).ErasePurpose(CBitcoinAddress(address).ToString());
     return CWalletDB(strWalletFile).EraseName(CBitcoinAddress(address).ToString());
 }
-
 
 void CWallet::PrintWallet(const CBlock& block)
 {

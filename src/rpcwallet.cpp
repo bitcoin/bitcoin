@@ -114,7 +114,7 @@ Value getnewaddress(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     CKeyID keyID = newKey.GetID();
 
-    pwalletMain->SetAddressBookName(keyID, strAccount);
+    pwalletMain->SetAddressBook(keyID, strAccount, "receive");
 
     return CBitcoinAddress(keyID).ToString();
 }
@@ -151,7 +151,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
         if (!pwalletMain->GetKeyFromPool(account.vchPubKey, false))
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
 
-        pwalletMain->SetAddressBookName(account.vchPubKey.GetID(), strAccount);
+        pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, "receive");
         walletdb.WriteAccount(strAccount, account);
     }
 
@@ -201,7 +201,7 @@ Value setaccount(const Array& params, bool fHelp)
             GetAccountAddress(strOldAccount, true);
     }
 
-    pwalletMain->SetAddressBookName(address.Get(), strAccount);
+    pwalletMain->SetAddressBook(address.Get(), strAccount, "receive");
 
     return Value::null;
 }
@@ -768,7 +768,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
     CScriptID innerID = inner.GetID();
     pwalletMain->AddCScript(inner);
 
-    pwalletMain->SetAddressBookName(innerID, strAccount);
+    pwalletMain->SetAddressBook(innerID, strAccount, "send");
     return CBitcoinAddress(innerID).ToString();
 }
 

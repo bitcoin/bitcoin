@@ -4,6 +4,7 @@
 #include <QObject>
 
 #include "allocators.h" /* for SecureString */
+#include "paymentrequestplus.h"
 
 class OptionsModel;
 class AddressTableModel;
@@ -17,9 +18,15 @@ QT_END_NAMESPACE
 class SendCoinsRecipient
 {
 public:
+    SendCoinsRecipient() : amount(0) { }
+
     QString address;
     QString label;
     qint64 amount;
+
+    // If from a payment request, paymentRequest.IsInitialized() will be true
+    PaymentRequestPlus paymentRequest;
+    QString authenticatedMerchant; // Empty if no authentication or invalid signature/cert/etc.
 };
 
 /** Interface to Bitcoin wallet from Qt view code. */
@@ -68,12 +75,10 @@ public:
     struct SendCoinsReturn
     {
         SendCoinsReturn(StatusCode status,
-                         qint64 fee=0,
-                         QString hex=QString()):
-            status(status), fee(fee), hex(hex) {}
+                        qint64 fee=0):
+            status(status), fee(fee) {}
         StatusCode status;
         qint64 fee; // is used in case status is "AmountWithFeeExceedsBalance"
-        QString hex; // is filled with the transaction hash if status is "OK"
     };
 
     // Send coins to a list of recipients
@@ -150,6 +155,9 @@ signals:
 
     // Asynchronous message notification
     void message(const QString &title, const QString &message, unsigned int style);
+
+    // Coins sent: from wallet, to recipient, in (serialized) transaction:
+    void coinsSent(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
 
 public slots:
     /* Wallet status might have changed */

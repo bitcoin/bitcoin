@@ -16,21 +16,29 @@ CONFIG += thread
 # or when linking against a specific BerkelyDB version: BDB_LIB_SUFFIX=-4.8
 
 # Dependency library locations can be customized with:
-#    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,
-#    BDB_LIB_PATH, OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively
+#    BOOST_INCLUDE_PATH BOOST_LIB_PATH,
+#    BDB_INCLUDE_PATH BDB_LIB_PATH,
+#    OPENSSL_INCLUDE_PATH OPENSSL_LIB_PATH
+#    PROTOBUF_INCLUDE_PATH PROTOBUF_LIB_PATH
+#    PROTOC : protocol buffer compiler tool
 
 OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
+PROTO_DIR = build
+PROTO_PATH = src/qt
 
 contains(BITCOIN_QT_TEST, 1) {
 OBJECTS_DIR = build_test
 MOC_DIR = build_test
 UI_DIR = build_test
+PROTO_DIR = build_test
 
 SOURCES += src/qt/test/test_main.cpp \
-    src/qt/test/uritests.cpp
-HEADERS += src/qt/test/uritests.h
+    src/qt/test/uritests.cpp \
+    src/qt/test/paymentservertests.cpp
+HEADERS += src/qt/test/uritests.h \
+    src/qt/test/paymentservertests.h
 DEPENDPATH += src/qt/test
 QT += testlib
 TARGET = bitcoin-qt_test
@@ -219,6 +227,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/askpassphrasedialog.h \
     src/protocol.h \
     src/qt/notificator.h \
+    src/qt/paymentrequestplus.h \
     src/qt/paymentserver.h \
     src/allocators.h \
     src/ui_interface.h \
@@ -297,6 +306,7 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/askpassphrasedialog.cpp \
     src/protocol.cpp \
     src/qt/notificator.cpp \
+    src/qt/paymentrequestplus.cpp \
     src/qt/paymentserver.cpp \
     src/qt/rpcconsole.cpp \
     src/noui.cpp \
@@ -320,12 +330,14 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/optionsdialog.ui \
     src/qt/forms/intro.ui
 
+PROTOS = src/qt/paymentrequest.proto
+include(share/qt/protobuf.pri)
+
 contains(USE_QRCODE, 1) {
 HEADERS += src/qt/qrcodedialog.h
 SOURCES += src/qt/qrcodedialog.cpp
 FORMS += src/qt/forms/qrcodedialog.ui
 }
-
 
 # Todo: Remove this line when switching to Qt5, as that option was removed
 CODECFORTR = UTF-8
@@ -420,9 +432,9 @@ macx:QMAKE_CXXFLAGS_THREAD += -pthread
 macx:QMAKE_INFO_PLIST = share/qt/Info.plist
 
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
-INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH
-LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,) $$join(QRENCODE_LIB_PATH,,-L,)
-LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
+INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$PROTOBUF_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH
+LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,) $$join(PROTOBUF_LIB_PATH,,-L,) $$join(QRENCODE_LIB_PATH,,-L,)
+LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX -lprotobuf
 # -lgdi32 has to happen after -lcrypto (see  #681)
 win32:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
