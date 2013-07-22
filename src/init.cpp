@@ -125,9 +125,13 @@ void Shutdown()
 void DetectShutdownThread(boost::thread_group* threadGroup)
 {
     // Tell the main threads to shutdown.
-    while (!fRequestShutdown) MilliSleep(200);
- 
-    if(fGenerate) GenerateBitcoins(false, NULL);
+    while (!fRequestShutdown)
+        MilliSleep(200);
+
+    // Primecoin: allow miner threads to exit gracefully 
+    if(GetBoolArg("-gen"))
+        GenerateBitcoins(false, NULL);
+
     threadGroup->interrupt_all();
 
 }
