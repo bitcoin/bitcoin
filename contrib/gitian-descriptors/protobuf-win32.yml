@@ -1,0 +1,37 @@
+---
+name: "protobuf-win32"
+suites:
+- "lucid"
+architectures:
+- "i386"
+packages:
+- "mingw32"
+- "zip"
+- "faketime"
+reference_datetime: "2013-04-15 00:00:00"
+remotes: []
+files:
+- "protobuf-2.5.0.tar.bz2"
+script: |
+  #
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  #
+  tar xjf protobuf-2.5.0.tar.bz2
+  cd protobuf-2.5.0
+  # First: build a native (linux) protoc
+  ./configure --enable-shared=no --disable-dependency-tracking
+  make
+  mkdir -p host
+  cp src/protoc host
+  # Now recompile with the mingw cross-compiler:
+  make distclean
+  ./configure --enable-shared=no --disable-dependency-tracking --with-protoc=$(pwd)/host/protoc --host=i586-mingw32msvc CXXFLAGS=-frandom-seed=11
+  make
+  cd ..
+  mkdir -p protobuf-win32
+  cp protobuf-2.5.0/host/protoc protobuf-win32/protoc
+  cp protobuf-2.5.0/src/.libs/libprotobuf.a protobuf-win32/libprotobuf.a
+  cp -r protobuf-2.5.0/src/google protobuf-win32/
+  zip -r $OUTDIR/protobuf-win32-2.5.0-gitian-r1.zip protobuf-win32

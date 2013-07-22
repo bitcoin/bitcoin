@@ -69,9 +69,11 @@ class CAddressBookData
 {
 public:
     std::string name;
+    std::string purpose;
 
     CAddressBookData()
     {
+        purpose = "unknown";
     }
 };
 
@@ -294,9 +296,9 @@ public:
 
     DBErrors LoadWallet(bool& fFirstRunRet);
 
-    bool SetAddressBookName(const CTxDestination& address, const std::string& strName);
+    bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
-    bool DelAddressBookName(const CTxDestination& address);
+    bool DelAddressBook(const CTxDestination& address);
 
     void UpdatedTransaction(const uint256 &hashTx);
 

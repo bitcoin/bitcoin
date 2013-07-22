@@ -16,6 +16,7 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class SendCoinsDialog;
+class SendCoinsRecipient;
 class SignVerifyMessageDialog;
 class RPCConsole;
 
@@ -49,7 +50,7 @@ public:
     */
     void setWalletModel(WalletModel *walletModel);
 
-    bool handleURI(const QString &uri);
+    bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
     void showOutOfSyncWarning(bool fShow);
 
