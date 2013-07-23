@@ -479,8 +479,14 @@ bool HTTPAuthorized(map<string, string>& mapHeaders)
     string strUserPass = DecodeBase64(strUserPass64);
 
     //Begin constant-time comparison
-    if (strUserPass.length() != strRPCUserColonPass.length())
-        return false;
+    if (strUserPass.length() != strRPCUserColonPass.length()) 
+    {
+        for (size_t i = 0; i < strUserPass.length(); i++) //Stops timing-leaks for the length of the password
+        { 
+            nResult |= strUserPass.at(i) ^ strUserPass.at(i); 
+        }
+        return ++nResult == 0;
+    }
 
     //XOR's chars in each password together, and then adds either 0 or 1 (0 if the chars match) to nResult
     for (size_t i = 0; i < strUserPass.length(); i++)
