@@ -1,9 +1,9 @@
 #include "notificator.h"
 
+#include <QApplication>
 #include <QMetaType>
 #include <QVariant>
 #include <QIcon>
-#include <QApplication>
 #include <QStyle>
 #include <QByteArray>
 #include <QSystemTrayIcon>
