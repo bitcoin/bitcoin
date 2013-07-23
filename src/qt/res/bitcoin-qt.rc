@@ -4,11 +4,11 @@ IDI_ICON2 ICON DISCARDABLE "icons/primecoin-testnet.ico"
 #include <windows.h>             // needed for VERSIONINFO
 #include "../../clientversion.h" // holds the needed client version information
 
-#define VER_PRODUCTVERSION     CLIENT_VERSION_MAJOR,CLIENT_VERSION_MINOR,CLIENT_VERSION_REVISION,CLIENT_VERSION_BUILD
-#define VER_PRODUCTVERSION_STR STRINGIZE(CLIENT_VERSION_MAJOR) "." STRINGIZE(CLIENT_VERSION_MINOR) "." STRINGIZE(CLIENT_VERSION_REVISION) "." STRINGIZE(CLIENT_VERSION_BUILD)
+#define VER_PRODUCTVERSION     PRIMECOIN_VERSION_MAJOR,PRIMECOIN_VERSION_MINOR,PRIMECOIN_VERSION_REVISION,PRIMECOIN_VERSION_BUILD
+#define VER_PRODUCTVERSION_STR STRINGIZE(PRIMECOIN_VERSION_MAJOR) "." STRINGIZE(PRIMECOIN_VERSION_MINOR) "." STRINGIZE(PRIMECOIN_VERSION_REVISION) "." STRINGIZE(PRIMECOIN_VERSION_BUILD)
 #define VER_FILEVERSION        VER_PRODUCTVERSION
 #define VER_FILEVERSION_STR    VER_PRODUCTVERSION_STR
-#define COPYRIGHT_STR          "2009-" STRINGIZE(COPYRIGHT_YEAR) " The Bitcoin developers"
+#define COPYRIGHT_STR          "2013-" STRINGIZE(COPYRIGHT_YEAR) " The Primecoin developers"
 
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION     VER_FILEVERSION
@@ -25,7 +25,7 @@ BEGIN
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "primecoin-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR
-            VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
+            VALUE "LegalTrademarks1",   "Distributed under conditional MIT/X11 software license, see the accompanying file COPYING."
             VALUE "OriginalFilename",   "primecoin-qt.exe"
             VALUE "ProductName",        "Primecoin-Qt"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR

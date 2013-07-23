@@ -22,12 +22,6 @@ extern const std::string CLIENT_NAME;
 extern const std::string CLIENT_BUILD;
 extern const std::string CLIENT_DATE;
 
-// primecoin version - intended for display purpose ONLY
-#define PRIMECOIN_VERSION_MAJOR       0
-#define PRIMECOIN_VERSION_MINOR       1
-#define PRIMECOIN_VERSION_REVISION    1
-#define PRIMECOIN_VERSION_BUILD       0
-
 //
 // network protocol versioning
 //
