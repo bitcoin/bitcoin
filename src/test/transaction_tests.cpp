@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
-        string strTest = write_string(tv, false);
+        string strTest = write_string(tv, raw_utf8);
         if (test[0].type() == array_type)
         {
             if (test.size() != 3 || test[1].type() != str_type || test[2].type() != bool_type)
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
-        string strTest = write_string(tv, false);
+        string strTest = write_string(tv, raw_utf8);
         if (test[0].type() == array_type)
         {
             if (test.size() != 3 || test[1].type() != str_type || test[2].type() != bool_type)
