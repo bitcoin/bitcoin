@@ -1,10 +1,10 @@
 #ifndef JSON_SPIRIT_READ_STREAM
 #define JSON_SPIRIT_READ_STREAM
 
-//          Copyright John W. Wilkinson 2007 - 2009.
+//          Copyright John W. Wilkinson 2007 - 2013
 // Distributed under the MIT License, see accompanying file LICENSE.txt
 
-// json spirit version 4.03
+// json spirit version 4.06
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 # pragma once
