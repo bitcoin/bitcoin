@@ -25,6 +25,7 @@ static const uint64 BLOCK_CHAIN_SIZE = 10LL * GB_BYTES;
 class FreespaceChecker : public QObject
 {
     Q_OBJECT
+
 public:
     FreespaceChecker(Intro *intro);
 
@@ -61,9 +62,16 @@ void FreespaceChecker::check()
 
     /* Find first parent that exists, so that fs::space does not fail */
     fs::path parentDir = dataDir;
+    fs::path parentDirOld = fs::path();
     while(parentDir.has_parent_path() && !fs::exists(parentDir))
     {
         parentDir = parentDir.parent_path();
+
+        /* Check if we make any progress, break if not to prevent an infinite loop here */
+        if (parentDirOld == parentDir)
+            break;
+
+        parentDirOld = parentDir;
     }
 
     try {
@@ -201,7 +209,7 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
         } else {
             ui->freeSpace->setStyleSheet("");
         }
-        ui->freeSpace->setText(freeString+".");
+        ui->freeSpace->setText(freeString + ".");
     }
     /* Don't allow confirm in ERROR state */
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(status != FreespaceChecker::ST_ERROR);
