@@ -5,8 +5,6 @@
  * The Bitcoin Developers 2011-2012
  */
 
-#include <QApplication>
-
 #include "bitcoingui.h"
 
 #include "transactiontablemodel.h"
@@ -30,6 +28,8 @@
 #include "macdockiconhandler.h"
 #endif
 
+#undef loop /* Todo: ugh, remove this when the #define loop is gone from util.h */
+#include <QApplication>
 #include <QMenuBar>
 #include <QMenu>
 #include <QIcon>

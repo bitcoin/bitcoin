@@ -2,9 +2,9 @@
 #include "clientversion.h"
 #include "util.h"
 
-#include <QPainter>
-#undef loop /* ugh, remove this when the #define loop is gone from util.h */
+#undef loop /* Todo: ugh, remove this when the #define loop is gone from util.h */
 #include <QApplication>
+#include <QPainter>
 
 SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) :
     QSplashScreen(pixmap, f)
