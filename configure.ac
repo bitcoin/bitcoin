@@ -10,6 +10,9 @@ AC_INIT([Bitcoin],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_R
 AC_CONFIG_AUX_DIR([src/build-aux])
 AC_CONFIG_MACRO_DIR([src/m4])
 AC_CANONICAL_HOST
+AH_TOP([#ifndef BITCOIN_CONFIG_H])
+AH_TOP([#define BITCOIN_CONFIG_H])
+AH_BOTTOM([#endif //BITCOIN_CONFIG_H])
 
 dnl reset CXXFLAGS if empty (autoconf adds its own defaults otherwise)
 :${CFLAGS=""}
