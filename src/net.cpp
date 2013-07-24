@@ -3,6 +3,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 #include "chainparams.h"
 #include "db.h"
 #include "net.h"
@@ -10,10 +14,6 @@
 #include "addrman.h"
 #include "ui_interface.h"
 #include "script.h"
-
-#if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
-#endif
 
 #ifdef WIN32
 #include <string.h>

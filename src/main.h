@@ -5,6 +5,10 @@
 #ifndef BITCOIN_MAIN_H
 #define BITCOIN_MAIN_H
 
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 #include "core.h"
 #include "bignum.h"
 #include "sync.h"
@@ -12,10 +16,6 @@
 #include "script.h"
 
 #include <list>
-
-#if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
-#endif
 
 class CWallet;
 class CBlock;

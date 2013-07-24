@@ -3,6 +3,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 #include "init.h"
 #include "main.h"
 #include "core.h"
@@ -21,10 +25,6 @@
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <openssl/crypto.h>
-
-#if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
-#endif
 
 #ifndef WIN32
 #include <signal.h>

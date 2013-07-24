@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 #include "optionsdialog.h"
 #include "ui_optionsdialog.h"
 
@@ -10,10 +14,6 @@
 #include <QIntValidator>
 #include <QLocale>
 #include <QMessageBox>
-
-#if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
-#endif
 
 OptionsDialog::OptionsDialog(QWidget *parent) :
     QDialog(parent),

@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 #include "optionsmodel.h"
 
 #include "bitcoinunits.h"
@@ -6,10 +10,6 @@
 #include "guiutil.h"
 
 #include <QSettings>
-
-#if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
-#endif
 
 OptionsModel::OptionsModel(QObject *parent) :
     QAbstractListModel(parent)
