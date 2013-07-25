@@ -226,6 +226,11 @@ public:
     /// Look up a destination data tuple in the store, return true if found false otherwise
     bool GetDestData(const CTxDestination &dest, const std::string &key, std::string *value) const;
 
+    // Adds a watch-only address to the store, and saves it to disk.
+    bool AddWatchOnly(const CTxDestination &dest);
+    // Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
+    bool LoadWatchOnly(const CTxDestination &dest);
+
     bool Unlock(const SecureString& strWalletPassphrase);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
     bool EncryptWallet(const SecureString& strWalletPassphrase);
@@ -279,9 +284,9 @@ public:
 
     std::set<CTxDestination> GetAccountAddresses(std::string strAccount) const;
 
-    bool IsMine(const CTxIn& txin) const;
+    isminetype IsMine(const CTxIn& txin) const;
     int64_t GetDebit(const CTxIn& txin) const;
-    bool IsMine(const CTxOut& txout) const
+    isminetype IsMine(const CTxOut& txout) const
     {
         return ::IsMine(*this, txout.scriptPubKey);
     }
@@ -722,10 +727,11 @@ public:
     const CWalletTx *tx;
     int i;
     int nDepth;
+    bool fSpendable;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn)
+    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn)
     {
-        tx = txIn; i = iIn; nDepth = nDepthIn;
+        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn;
     }
 
     std::string ToString() const
