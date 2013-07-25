@@ -20,12 +20,18 @@ $(LIBBITCOINQT):
 
 ui_%.h: %.ui
 	@test -f $(UIC) && $(UIC) -o $@ $< || echo error: could not build $@
+	sed -i '/^\*\*.*Created:/d' $@
+	sed -i '/^\*\*.*by:/d' $@
 
 %.moc: %.cpp
 	$(MOC) $(QT_INCLUDES) $(MOC_DEFS) -o $@ $<
+	sed -i '/^\*\*.*Created:/d' $@
+	sed -i '/^\*\*.*by:/d' $@
 
 moc_%.cpp: %.h
 	$(MOC) $(QT_INCLUDES) $(MOC_DEFS) -o $@ $<
+	sed -i '/^\*\*.*Created:/d' $@
+	sed -i '/^\*\*.*by:/d' $@
 
 %.qm: %.ts
 	@test -f $(LRELEASE) && $(LRELEASE) $< $@ || \

@@ -127,6 +127,8 @@ bitcoin_qt_LDADD = libbitcoinqt.a $(LIBBITCOIN) $(LIBLEVELDB) $(LIBMEMENV) \
 $(QT_QRC_CPP): $(QT_QRC) $(QT_QM)
 	@test -f $(RCC) && $(RCC) -name bitcoin -o $@ $< || \
 	  echo error: could not build $@
+	sed -i '/^\*\*.*Created:/d' $@
+	sed -i '/^\*\*.*by:/d' $@
 
 CLEANFILES = $(BUILT_SOURCES)
 
