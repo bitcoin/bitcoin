@@ -37,7 +37,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
   [enable UPNP (default is yes if libminiupnpc is found)])],
-  [use_upnp=$enableval],
+  [use_upnp=$withval],
   [use_upnp=auto])
 
 AC_ARG_ENABLE([upnp-default],
@@ -57,7 +57,7 @@ dnl enable qt support
 AC_ARG_WITH([qt],
   [AS_HELP_STRING([--with-qt],
   [enable qt (default is yes)])],
-  [use_qt=$enableval],
+  [use_qt=$withval],
   [use_qt=yes])
 
 dnl compile with full warnings and debugging symbols
@@ -75,13 +75,13 @@ AC_ARG_ENABLE(tests,
 AC_ARG_WITH([qrencode],
   [AS_HELP_STRING([--with-qrencode],
   [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
-  [use_qr=$enableval],
+  [use_qr=$withval],
   [use_qr=auto])
 
 AC_ARG_WITH([qtdbus],
   [AS_HELP_STRING([--with-qtdbus],
   [enable DBus support (default is yes if qt is enabled and QtDBus is found)])],
-  [use_dbus=$enableval],
+  [use_dbus=$withval],
   [use_dbus=auto])
 
 AC_ARG_ENABLE([hardening],
