@@ -336,11 +336,12 @@ boost::thread_specific_ptr<CSieveOfEratosthenes> psieve;
 boost::thread_specific_ptr<CSieveControl> psievectrl;
 
 // Mine probable prime chain of form: n = h * p# +/- 1
-bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
+bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit, unsigned int& nChainsHit)
 {
     nProbableChainLength = 0;
     nTests = 0;
     nPrimesHit = 0;
+    nChainsHit = 0;
 
     if (psievectrl.get() == NULL)
         psievectrl.reset(new CSieveControl()); // init sieve control object
@@ -407,6 +408,8 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         nProbableChainLength = std::max(std::max(nChainLengthCunningham1, nChainLengthCunningham2), nChainLengthBiTwin);
         if(TargetGetLength(nProbableChainLength) >= 1)
             nPrimesHit++;
+        if(TargetGetLength(nProbableChainLength) >= nStatsChainLength)
+            nChainsHit++;
 
         psievectrl->nPrimalityTestCost = GetTimeMicros() - nCurrent;
         nCurrent += psievectrl->nPrimalityTestCost;

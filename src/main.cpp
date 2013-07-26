@@ -4624,6 +4624,7 @@ void static BitcoinMiner(CWallet *pwallet)
         {
             unsigned int nTests = 0;
             unsigned int nPrimesHit = 0;
+            unsigned int nChainsHit = 0;
 
             CBigNum bnMultiplierMin = bnPrimeMin * bnHashFactor / CBigNum(pblock->GetHeaderHash()) + 1;
             while (bnPrimorial < bnMultiplierMin)
@@ -4636,7 +4637,7 @@ void static BitcoinMiner(CWallet *pwallet)
 
             // Primecoin: mine for prime chain
             unsigned int nProbableChainLength;
-            if (MineProbablePrimeChain(*pblock, bnFixedMultiplier, fNewBlock, nTriedMultiplier, nProbableChainLength, nTests, nPrimesHit))
+            if (MineProbablePrimeChain(*pblock, bnFixedMultiplier, fNewBlock, nTriedMultiplier, nProbableChainLength, nTests, nPrimesHit, nChainsHit))
             {
                 SetThreadPriority(THREAD_PRIORITY_NORMAL);
                 CheckWork(pblock, *pwalletMain, reservekey);
@@ -4650,17 +4651,20 @@ void static BitcoinMiner(CWallet *pwallet)
             static int64 nPrimeCounter;
             static int64 nSieveCounter;
             static int64 nTestCounter;
+            static int64 nChainCounter;
             if (nHPSTimerStart == 0)
             {
                 nHPSTimerStart = GetTimeMillis();
                 nPrimeCounter = 0;
                 nSieveCounter = 0;
                 nTestCounter = 0;
+                nChainCounter = 0;
             }
             else
             {
                 nPrimeCounter += nPrimesHit;
                 nTestCounter += nTests;
+                nChainCounter += nChainsHit;
                 if (fNewBlock)
                     nSieveCounter++;
             }
@@ -4675,15 +4679,17 @@ void static BitcoinMiner(CWallet *pwallet)
                         dPrimesPerSec = dPrimesPerMinute / 60.0;
                         double dTestsPerMinute = 60000.0 * nTestCounter / (GetTimeMillis() - nHPSTimerStart);
                         double dSievesPerHour = 3600000.0 * nSieveCounter / (GetTimeMillis() - nHPSTimerStart);
+                        double dChainsPerHour = 3600000.0 * nChainCounter / (GetTimeMillis() - nHPSTimerStart);
                         nHPSTimerStart = GetTimeMillis();
                         nPrimeCounter = 0;
                         nSieveCounter = 0;
                         nTestCounter = 0;
+                        nChainCounter = 0;
                         static int64 nLogTime = 0;
                         if (GetTime() - nLogTime > 60)
                         {
                             nLogTime = GetTime();
-                            printf("%s primemeter %9.0f prime/h %9.0f test/h %6.0f sieve/h\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nLogTime).c_str(), dPrimesPerMinute * 60.0, dTestsPerMinute * 60.0, dSievesPerHour);
+                            printf("%s primemeter %9.0f prime/h %9.0f test/h %6.0f sieve/h %6.0f %d-chain/h\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nLogTime).c_str(), dPrimesPerMinute * 60.0, dTestsPerMinute * 60.0, dSievesPerHour, dChainsPerHour, nStatsChainLength);
                         }
                     }
                 }
