@@ -154,6 +154,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/uint256.h \
     src/serialize.h \
     src/main.h \
+    src/prime.h \
     src/net.h \
     src/key.h \
     src/db.h \

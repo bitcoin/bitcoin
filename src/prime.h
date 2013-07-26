@@ -99,9 +99,9 @@ public:
         this->hashBlockHeader = hashBlockHeader;
         this->bnFixedFactor = bnFixedMultiplier * CBigNum(hashBlockHeader);
         nPrimeSeq = 0;
-        vfCompositeCunningham1 = std::vector<bool> (1000000, false);
-        vfCompositeCunningham2 = std::vector<bool> (1000000, false);
-        vfCompositeBiTwin = std::vector<bool> (1000000, false);
+        vfCompositeCunningham1 = std::vector<bool> (nMaxSieveSize, false);
+        vfCompositeCunningham2 = std::vector<bool> (nMaxSieveSize, false);
+        vfCompositeBiTwin = std::vector<bool> (nMaxSieveSize, false);
         nCandidateMultiplier = 0;
     }
 
