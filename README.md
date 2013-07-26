@@ -4,7 +4,9 @@ Primecoin integration/staging tree
 http://primecoin.org
 
 Copyright (c) 2013 Primecoin Developers
+
 Copyright (c) 2009-2013 Bitcoin Developers
+
 Copyright (c) 2011-2013 PPCoin Developers
 
 What is Primecoin?
