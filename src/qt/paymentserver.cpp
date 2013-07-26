@@ -2,14 +2,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <QApplication>
-
 #include "paymentserver.h"
 
 #include "guiconstants.h"
 #include "ui_interface.h"
 #include "util.h"
 
+#undef loop /* Todo: ugh, remove this when the #define loop is gone from util.h */
+#include <QApplication>
 #include <QByteArray>
 #include <QDataStream>
 #include <QDebug>

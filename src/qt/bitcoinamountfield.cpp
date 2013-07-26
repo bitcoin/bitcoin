@@ -4,10 +4,11 @@
 #include "bitcoinunits.h"
 #include "guiconstants.h"
 
+#include <QApplication>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QDoubleSpinBox>
-#include <QApplication>
+
 #include <qmath.h> // for qPow()
 
 BitcoinAmountField::BitcoinAmountField(QWidget *parent):

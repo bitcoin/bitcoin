@@ -2,8 +2,6 @@
  * W.J. van der Laan 2011-2012
  */
 
-#include <QApplication>
-
 #include "bitcoingui.h"
 #include "clientmodel.h"
 #include "walletmodel.h"
@@ -17,6 +15,8 @@
 #include "splashscreen.h"
 #include "intro.h"
 
+#undef loop /* Todo: ugh, remove this when the #define loop is gone from util.h */
+#include <QApplication>
 #include <QMessageBox>
 #if QT_VERSION < 0x050000
 #include <QTextCodec>

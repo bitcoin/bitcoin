@@ -1,5 +1,3 @@
-#include <QApplication>
-
 #include "guiutil.h"
 
 #include "bitcoinaddressvalidator.h"
@@ -9,6 +7,8 @@
 #include "util.h"
 #include "init.h"
 
+#undef loop /* Todo: ugh, remove this when the #define loop is gone from util.h */
+#include <QApplication>
 #include <QDateTime>
 #include <QDoubleValidator>
 #include <QFont>
