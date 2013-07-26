@@ -155,37 +155,33 @@ public:
 
 class CSieveControl
 {
-    int64 nSievePrimalityRoundOptimal;
     bool fSieveRoundShrink;
 
  public:
     // Power test time cost in microsecond
     int64 nPrimalityTestCost;
 
-    // Optimal sieve round preparation time in microsecond
-    int64 nSieveRoundOptimal;
+    // Optimal sieve weave times (index to prime table)
+    unsigned int nSieveWeaveOptimal;
 
     CSieveControl()
     {
         nPrimalityTestCost = 0;
-        nSieveRoundOptimal = 1000000;
-        nSievePrimalityRoundOptimal = 0;
+        nSieveWeaveOptimal = 1000;
         fSieveRoundShrink = true;
     }
 
-    void SetSievePrimalityRoundCost(int64 nSievePrimalityRoundCost)
+    void SetSieveWeaveCost(int64 nSieveWeaveCost, unsigned int nSieveWeaveComposites)
     {
-        if (nSievePrimalityRoundCost > nSievePrimalityRoundOptimal)
-            fSieveRoundShrink = (!fSieveRoundShrink); // reverse adjustment direction
-        nSievePrimalityRoundOptimal = nSievePrimalityRoundCost;
+        fSieveRoundShrink = (nSieveWeaveCost > nSieveWeaveComposites * nPrimalityTestCost);
     }
 
-    void AdjustSieveRoundOptimal()
+    void AdjustSieveWeaveOptimal()
     {
         if (fSieveRoundShrink)
-            nSieveRoundOptimal = nSieveRoundOptimal * 99 / 100;
+            nSieveWeaveOptimal--;
         else
-            nSieveRoundOptimal = nSieveRoundOptimal * 100 / 99 + 1;
+            nSieveWeaveOptimal++;
     }
 };
 

@@ -23,10 +23,7 @@ void GeneratePrimeTable()
     for (unsigned int n = 2; n < nPrimeTableLimit; n++)
         if (!vfComposite[n])
             vPrimes.push_back(n);
-    printf("GeneratePrimeTable() : prime table [1, %d] generated with %lu primes", nPrimeTableLimit, vPrimes.size());
-    //BOOST_FOREACH(unsigned int nPrime, vPrimes)
-    //    printf(" %u", nPrime);
-    printf("\n");
+    printf("GeneratePrimeTable() : prime table [1, %d] generated with %lu primes\n", nPrimeTableLimit, vPrimes.size());
 }
 
 // Get next prime number of p
@@ -363,14 +360,21 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         psieve.reset(new CSieveOfEratosthenes(nMaxSieveSize, block.nBits, block.GetHeaderHash(), bnFixedMultiplier));
         int64 nSieveRoundLimit = (int)GetArg("-gensieveroundlimitms", 1000);
         nStart = GetTimeMicros();
-        while (psieve->Weave() && pindexPrev == pindexBest && (GetTimeMicros() - nStart < std::min(1000 * nSieveRoundLimit, psievectrl->nSieveRoundOptimal)));
+        unsigned int nWeaveTimes = 0;
+        while (psieve->Weave() && pindexPrev == pindexBest && (GetTimeMicros() - nStart < 1000 * nSieveRoundLimit) && (++nWeaveTimes < psievectrl->nSieveWeaveOptimal));
         unsigned int nCandidateCount = psieve->GetCandidateCount();
         nCurrent = GetTimeMicros();
-        int64 nSievePrimalityRoundCost = nCurrent - nStart + psievectrl->nPrimalityTestCost * nCandidateCount;
-        psievectrl->SetSievePrimalityRoundCost(nSievePrimalityRoundCost);
-        psievectrl->AdjustSieveRoundOptimal();
+        psieve->Weave(); // weave once more to find out about cost
+        int64 nSieveWeaveCost = nCurrent;
+        nCurrent = GetTimeMicros();
+        nSieveWeaveCost = nCurrent - nSieveWeaveCost; // last weave cost in us
+        unsigned int nSieveWeaveComposites = nCandidateCount;
+        nCandidateCount = psieve->GetCandidateCount();
+        nSieveWeaveComposites = nCandidateCount - nSieveWeaveComposites; // number of composite chains found in last weave
+        psievectrl->SetSieveWeaveCost(nSieveWeaveCost, nSieveWeaveComposites);
+        psievectrl->AdjustSieveWeaveOptimal();
         if (fDebug && GetBoolArg("-printmining"))
-            printf("MineProbablePrimeChain() : new sieve (%u/%u@%u%%) ready in %uus test cost=%uus\n", psieve->GetCandidateCount(), nMaxSieveSize, psieve->GetProgressPercentage(), (unsigned int) (GetTimeMicros() - nStart), (unsigned int)psievectrl->nPrimalityTestCost);
+            printf("MineProbablePrimeChain() : new sieve (%u/%u@%u) ready in %uus test cost=%uus\n", psieve->GetCandidateCount(), nMaxSieveSize, (nWeaveTimes < vPrimes.size())? vPrimes[nWeaveTimes] : 1000000u, (unsigned int) (GetTimeMicros() - nStart), (unsigned int)psievectrl->nPrimalityTestCost);
     }
 
     CBigNum bnChainOrigin;
@@ -573,4 +577,3 @@ bool CSieveOfEratosthenes::Weave()
     nPrimeSeq++;
     return true;
 }
-

@@ -4648,17 +4648,21 @@ void static BitcoinMiner(CWallet *pwallet)
 
             // Meter primes/sec
             static int64 nPrimeCounter;
+            static int64 nSieveCounter;
             static int64 nTestCounter;
             if (nHPSTimerStart == 0)
             {
                 nHPSTimerStart = GetTimeMillis();
                 nPrimeCounter = 0;
+                nSieveCounter = 0;
                 nTestCounter = 0;
             }
             else
             {
                 nPrimeCounter += nPrimesHit;
                 nTestCounter += nTests;
+                if (fNewBlock)
+                    nSieveCounter++;
             }
             if (GetTimeMillis() - nHPSTimerStart > 60000)
             {
@@ -4670,14 +4674,16 @@ void static BitcoinMiner(CWallet *pwallet)
                         double dPrimesPerMinute = 60000.0 * nPrimeCounter / (GetTimeMillis() - nHPSTimerStart);
                         dPrimesPerSec = dPrimesPerMinute / 60.0;
                         double dTestsPerMinute = 60000.0 * nTestCounter / (GetTimeMillis() - nHPSTimerStart);
+                        double dSievesPerHour = 3600000.0 * nSieveCounter / (GetTimeMillis() - nHPSTimerStart);
                         nHPSTimerStart = GetTimeMillis();
                         nPrimeCounter = 0;
+                        nSieveCounter = 0;
                         nTestCounter = 0;
                         static int64 nLogTime = 0;
                         if (GetTime() - nLogTime > 60)
                         {
                             nLogTime = GetTime();
-                            printf("%s primemeter %9.0f prime/h %9.0f test/h\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nLogTime).c_str(), dPrimesPerMinute * 60.0, dTestsPerMinute * 60.0);
+                            printf("%s primemeter %9.0f prime/h %9.0f test/h %6.0f sieve/h\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nLogTime).c_str(), dPrimesPerMinute * 60.0, dTestsPerMinute * 60.0, dSievesPerHour);
                         }
                     }
                 }
@@ -4703,7 +4709,7 @@ void static BitcoinMiner(CWallet *pwallet)
                 for (unsigned int n = 1; n < TargetGetLength(pblock->nBits); n++)
                     nTimeExpected = nTimeExpected * max(1u, nRoundTests) * 3 / max(1u, nRoundPrimesHit);
                 if (fDebug && GetBoolArg("-printmining"))
-                    printf("PrimecoinMiner() : Round primorial=%u tests=%u primes=%u time=%uus expect=%us\n", nPrimorialMultiplier, nRoundTests, nRoundPrimesHit, (unsigned int) nRoundTime, (unsigned int)(nTimeExpected/1000000));
+                    printf("PrimecoinMiner() : Round primorial=%u tests=%u primes=%u time=%uus expect=%6.3fd\n", nPrimorialMultiplier, nRoundTests, nRoundPrimesHit, (unsigned int) nRoundTime, ((double)(nTimeExpected/1000000))/86400.0);
 
                 // Primecoin: update time and nonce
                 pblock->nTime = max(pblock->nTime, (unsigned int) GetAdjustedTime());
