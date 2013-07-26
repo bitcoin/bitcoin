@@ -1193,7 +1193,8 @@ void MapPort(bool)
 // The second name should resolve to a list of seed addresses.
 static const char *strMainNetDNSSeed[][2] = {
     {"primecoin.net", "seed.ppcoin.net"},
-    {"altcointech.net", "dnsseed.xpm.altcointech.net"},
+    {"xpm.altcointech.net", "dnsseed.xpm.altcointech.net"},
+    {"xpm2.altcointech.net", "dnsseed.xpm2.altcointech.net"},
     {NULL, NULL}
 };
 
@@ -1247,7 +1248,8 @@ void ThreadDNSAddressSeed()
 
 unsigned int pnSeedMainNet[] =
 {
-    0x201621b2,
+    0x201621b2, 0x3a38be58, 0xde3cc718, 0x732dfb54, 0xf3c645d3, 0x48926257,
+    0x746f1f4e, 0xaed7175e,
 };
 
 unsigned int pnSeedTestNet[] =
