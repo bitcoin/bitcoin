@@ -1,27 +1,33 @@
-Bitcoin integration/staging tree
-================================
+Primecoin integration/staging tree
+==================================
 
-http://www.bitcoin.org
+http://primecoin.org
 
+Copyright (c) 2013 Primecoin Developers
 Copyright (c) 2009-2013 Bitcoin Developers
+Copyright (c) 2011-2013 PPCoin Developers
 
-What is Bitcoin?
-----------------
+What is Primecoin?
+------------------
 
-Bitcoin is an experimental new digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin is also the name of the open source
-software which enables the use of this currency.
+Primecoin is an experimental cryptocurrency that introduces the first
+scientific computing proof-of-work to cryptocurrency technology. Primecoin's
+proof-of-work is an innovative design based on searching for prime number
+chains, providing potential scientific value in addition to minting and
+security for the network. Similar to Bitcoin, Primecoin enables instant payments
+to anyone, anywhere in the world. It also uses peer-to-peer technology to 
+operate with no central authority: managing transactions and issuing money are 
+carried out collectively by the network. Primecoin is also the name of the open
+source software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Bitcoin client sofware, see http://www.bitcoin.org.
+the Primecoin client sofware, see http://primecoin.org.
 
 License
 -------
 
-Bitcoin is released under the terms of the MIT license. See `COPYING` for more
-information or see http://opensource.org/licenses/MIT.
+Primecoin is released under conditional MIT license. See  COPYING` for more
+information.
 
 Development process
 -------------------
@@ -34,7 +40,7 @@ development team members simply pulls it.
 
 If it is a *more complicated or potentially controversial* change, then the patch
 submitter will be asked to start a discussion (if they haven't already) on the
-[mailing list](http://sourceforge.net/mailarchive/forum.php?forum_name=bitcoin-development).
+ppcoin/primecoin forum (http://ppcointalk.org).
 
 The patch will be accepted if there is broad consensus that it is a good thing.
 Developers should expect to rework and resubmit patches if the code doesn't
@@ -42,8 +48,9 @@ match the project's coding conventions (see `doc/coding.txt`) or are
 controversial.
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly to indicate new official, stable release versions of Bitcoin.
+completely stable. [Tags](https://github.com/primecoin/primecoin/tags) are
+created regularly to indicate new official, stable release versions of
+Primecoin.
 
 Testing
 -------
@@ -67,12 +74,6 @@ Unit tests for the GUI code are in `src/qt/test/`. To compile and run them:
     qmake BITCOIN_QT_TEST=1 -o Makefile.test bitcoin-qt.pro
     make -f Makefile.test
     ./bitcoin-qt_test
-
-Every pull request is built for both Windows and Linux on a dedicated server,
-and unit and sanity tests are automatically run. The binaries produced may be
-used for manual QA testing — a link to them will appear in a comment on the
-pull request posted by [BitcoinPullTester](https://github.com/BitcoinPullTester). See https://github.com/TheBlueMatt/test-scripts
-for the build/test scripts.
 
 ### Manual Quality Assurance (QA) Testing
 
