@@ -94,6 +94,15 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool fPri
     return result;
 }
 
+Value getbestblockhash(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getbestblockhash\n"
+            "Returns the hash of the best block in the longest block chain.");
+
+    return hashBestChain.GetHex();
+}
 
 Value getblockcount(const Array& params, bool fHelp)
 {
