@@ -43,24 +43,19 @@ double GetDifficulty(const CBlockIndex* blockindex)
 }
 
 
-Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
+Object blockHeaderToJSON(const CBlockIndex* blockindex)
 {
     Object result;
-    result.push_back(Pair("hash", block.GetHash().GetHex()));
-    CMerkleTx txGen(block.vtx[0]);
-    txGen.SetMerkleBranch(&block);
-    result.push_back(Pair("confirmations", (int)txGen.GetDepthInMainChain()));
-    result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
+
+    result.push_back(Pair("hash", blockindex->GetBlockHash().GetHex()));
+    int nConfirmations = blockindex->IsInMainChain() ? std::max(0, pindexBest->nHeight - blockindex->nHeight + 1) : 0;
+    result.push_back(Pair("confirmations", nConfirmations));
     result.push_back(Pair("height", blockindex->nHeight));
-    result.push_back(Pair("version", block.nVersion));
-    result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
-    Array txs;
-    BOOST_FOREACH(const CTransaction&tx, block.vtx)
-        txs.push_back(tx.GetHash().GetHex());
-    result.push_back(Pair("tx", txs));
-    result.push_back(Pair("time", (boost::int64_t)block.GetBlockTime()));
-    result.push_back(Pair("nonce", (boost::uint64_t)block.nNonce));
-    result.push_back(Pair("bits", HexBits(block.nBits)));
+    result.push_back(Pair("merkleroot", blockindex->hashMerkleRoot.GetHex()));
+    result.push_back(Pair("version", blockindex->nVersion));
+    result.push_back(Pair("time", (boost::int64_t)blockindex->GetBlockTime()));
+    result.push_back(Pair("nonce", (boost::uint64_t)blockindex->nNonce));
+    result.push_back(Pair("bits", HexBits(blockindex->nBits)));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
 
@@ -69,6 +64,18 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     CBlockIndex *pnext = blockindex->GetNextInMainChain();
     if (pnext)
         result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
+    return result;
+}
+
+Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
+{
+    Object result = blockHeaderToJSON(blockindex);
+
+    result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
+    Array txs;
+    BOOST_FOREACH(const CTransaction&tx, block.vtx)
+        txs.push_back(tx.GetHash().GetHex());
+    result.push_back(Pair("tx", txs));
     return result;
 }
 
@@ -150,6 +157,37 @@ Value getblockhash(const Array& params, bool fHelp)
 
     CBlockIndex* pblockindex = FindBlockByHeight(nHeight);
     return pblockindex->phashBlock->GetHex();
+}
+
+Value getblockheader(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "getblockheader <hash> [verbose=true]\n"
+            "If verbose is false, returns a string that is the serialized, base64-encoded form of a block header.\n"
+            "If verbose is true, returns an Object with information contained in block header <hash>.\n"
+        );
+
+    std::string strHash = params[0].get_str();
+    uint256 hash(strHash);
+
+    bool fVerbose = true;
+    if (params.size() > 1)
+        fVerbose = params[1].get_bool();
+
+    if (mapBlockIndex.count(hash) == 0)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+    CBlockIndex *pindex = mapBlockIndex[hash];
+
+    if (!fVerbose)
+    {
+        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+        ss << pindex->GetBlockHeader();
+        return EncodeBase64((unsigned char*)&ss[0], ss.size());
+    }
+
+    return blockHeaderToJSON(pindex);
 }
 
 Value getblock(const Array& params, bool fHelp)
