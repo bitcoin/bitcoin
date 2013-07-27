@@ -1036,7 +1036,7 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
             else
             {
                 //
-                // Until 20 Oct 2013: reward for coin-year is cut in half every 8x multiply of PoS difficulty
+                // Since 20 Oct 2013: reward for coin-year is cut in half every 8x multiply of PoS difficulty
                 //
                 // (nRewardCoinYearLimit / nRewardCoinYear) ** 3 == bnProofOfStakeLimit / bnTarget
                 //
