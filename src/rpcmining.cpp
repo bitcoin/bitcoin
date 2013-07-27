@@ -56,7 +56,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("minweight",    (uint64_t)pwalletMain->GetStakeMintPower(*pwalletMain, STAKE_MINWEIGHT)));
     obj.push_back(Pair("maxweight",    (uint64_t)pwalletMain->GetStakeMintPower(*pwalletMain, STAKE_MAXWEIGHT)));
     obj.push_back(Pair("passiveweight",    (uint64_t)pwalletMain->GetStakeMintPower(*pwalletMain, STAKE_BELOWMIN)));
-    obj.push_back(Pair("stakeinterest",    (uint64_t)GetProofOfStakeReward(0, GetLastBlockIndex(pindexBest, true)->nBits, GetTime(), true)));
+    obj.push_back(Pair("stakeinterest",    (uint64_t)GetProofOfStakeReward(0, GetLastBlockIndex(pindexBest, true)->nBits, GetLastBlockIndex(pindexBest, true)->nTime, true)));
     obj.push_back(Pair("testnet",       fTestNet));
     return obj;
 }
