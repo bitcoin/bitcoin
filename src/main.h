@@ -58,6 +58,11 @@ static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20
 static const int MAX_SCRIPTCHECK_THREADS = 16;
 /** Default amount of block size reserved for high-priority transactions (in bytes) */
 static const int DEFAULT_BLOCK_PRIORITY_SIZE = 27000;
+/** Number of blocks that can be requested at any given time. */
+static const int MAX_BLOCKS_IN_TRANSIT = 1008;
+/** Number of blocks that can be requested at any given time. */
+static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 32;
+
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
 #else
@@ -76,12 +81,10 @@ extern CCriticalSection cs_main;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
 extern std::vector<CBlockIndex*> vBlockIndexByHeight;
 extern std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid;
-extern CBlockIndex* pindexGenesisBlock;
-extern int nBestHeight;
-extern uint256 nBestChainWork;
-extern uint256 nBestInvalidWork;
-extern uint256 hashBestChain;
-extern CBlockIndex* pindexBest;
+extern CBlockIndex* pindexGenesisBlock; // Pointer to the genesis block index entry.
+extern CBlockIndex* pindexBest; // Pointer to the block index entry corresponding to pcoinsTip (until where we are synchronized).
+extern CBlockIndex* pindexBestHeader; // Pointer to the block index entry corresponding to the best known header (until where we are headers-synchronized).
+extern CBlockIndex* pindexBestInvalid; // Pointer to the invalid block index entry with the highest nChainWork (if any).
 extern unsigned int nTransactionsUpdated;
 extern uint64 nLastBlockTx;
 extern uint64 nLastBlockSize;
@@ -131,10 +134,10 @@ void RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */
 void UnregisterNodeSignals(CNodeSignals& nodeSignals);
 
-void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd);
-
+/** Process an incoming block header */
+bool ProcessBlockHeader(CValidationState &state, const CBlockHeader* pheader);
 /** Process an incoming block */
-bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp = NULL);
+bool ProcessBlock(CValidationState &state, CBlock* pblock);
 /** Check whether enough disk space is available for an incoming block */
 bool CheckDiskSpace(uint64 nAdditionalBytes = 0);
 /** Open a block file (blk?????.dat) */
@@ -165,8 +168,6 @@ void ThreadScriptCheck();
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
-/** Get the number of active peers */
-int GetNumBlocksOfPeers();
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
 bool IsInitialBlockDownload();
 /** Format a string that describes several potential problems detected by the core */
@@ -174,16 +175,16 @@ std::string GetWarnings(std::string strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
 bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
 /** Connect/disconnect blocks until pindexNew is the new tip of the active block chain */
-bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew);
+bool SwitchToBestHeader(CValidationState &state);
 /** Find the best known block, and make it the tip of the block chain */
-bool ConnectBestBlock(CValidationState &state);
+bool SwitchToBestBlock(CValidationState &state);
 int64 GetBlockValue(int nHeight, int64 nFees);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 
 void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev);
 
 /** Create a new block index entry for a given block hash */
-CBlockIndex * InsertBlockIndex(uint256 hash);
+CBlockIndex * InsertBlockIndex(const uint256 &hash, const CBlockHeader &header);
 /** Verify a signature */
 bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 /** Abort with a message */
@@ -597,15 +598,9 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
 bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool fJustCheck = false);
 
-// Add this block to the block index, and if necessary, switch the active block chain to this
-bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos& pos);
-
 // Context-independent validity checks
+bool CheckBlockHeader(const CBlockHeader& header, CValidationState& state, bool fCheckPOW = true);
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
-
-// Store block on disk
-// if dbp is provided, the file is known to already reside on disk
-bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp = NULL);
 
 
 
@@ -735,7 +730,7 @@ public:
     {
         phashBlock = NULL;
         pprev = NULL;
-        nHeight = 0;
+        nHeight = -1;
         nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
@@ -751,7 +746,7 @@ public:
         nNonce         = 0;
     }
 
-    CBlockIndex(CBlockHeader& block)
+    CBlockIndex(const CBlockHeader& block)
     {
         phashBlock = NULL;
         pprev = NULL;
@@ -828,11 +823,6 @@ public:
 
     CBlockIndex *GetNextInMainChain() const {
         return nHeight+1 >= (int)vBlockIndexByHeight.size() ? NULL : vBlockIndexByHeight[nHeight+1];
-    }
-
-    bool CheckIndex() const
-    {
-        return CheckProofOfWork(GetBlockHash(), nBits);
     }
 
     enum { nMedianTimeSpan=11 };
@@ -937,18 +927,21 @@ public:
         READWRITE(nNonce);
     )
 
-    uint256 GetBlockHash() const
-    {
-        CBlockHeader block;
-        block.nVersion        = nVersion;
-        block.hashPrevBlock   = hashPrev;
-        block.hashMerkleRoot  = hashMerkleRoot;
-        block.nTime           = nTime;
-        block.nBits           = nBits;
-        block.nNonce          = nNonce;
-        return block.GetHash();
+    CBlockHeader GetBlockHeader() const {
+        CBlockHeader ret = CBlockIndex::GetBlockHeader();
+        ret.hashPrevBlock = hashPrev;
+        return ret;
     }
 
+    uint256 GetBlockHash() const
+    {
+        return GetBlockHeader().GetHash();
+    }
+
+    bool CheckIndex() const
+    {
+        return CheckProofOfWork(GetBlockHash(), nBits);
+    }
 
     std::string ToString() const
     {

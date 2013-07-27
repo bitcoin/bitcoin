@@ -80,7 +80,7 @@ Value getblockcount(const Array& params, bool fHelp)
             "getblockcount\n"
             "Returns the number of blocks in the longest block chain.");
 
-    return nBestHeight;
+    return pindexBest->nHeight;
 }
 
 Value getbestblockhash(const Array& params, bool fHelp)
@@ -90,7 +90,7 @@ Value getbestblockhash(const Array& params, bool fHelp)
             "getbestblockhash\n"
             "Returns the hash of the best (tip) block in the longest block chain.");
 
-    return hashBestChain.GetHex();
+    return pindexBest->GetBlockHash().GetHex();
 }
 
 Value getdifficulty(const Array& params, bool fHelp)
@@ -145,7 +145,7 @@ Value getblockhash(const Array& params, bool fHelp)
             "Returns hash of block in best-block-chain at <index>.");
 
     int nHeight = params[0].get_int();
-    if (nHeight < 0 || nHeight > nBestHeight)
+    if (nHeight < 0 || nHeight > pindexBestHeader->nHeight)
         throw runtime_error("Block number out of range.");
 
     CBlockIndex* pblockindex = FindBlockByHeight(nHeight);
@@ -173,6 +173,9 @@ Value getblock(const Array& params, bool fHelp)
 
     CBlock block;
     CBlockIndex* pblockindex = mapBlockIndex[hash];
+    if (!(pblockindex->nStatus & BLOCK_HAVE_DATA))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block data not available");
+
     ReadBlockFromDisk(block, pblockindex);
 
     if (!fVerbose)

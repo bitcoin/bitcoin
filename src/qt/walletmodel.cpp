@@ -73,10 +73,10 @@ void WalletModel::updateStatus()
 
 void WalletModel::pollBalanceChanged()
 {
-    if(nBestHeight != cachedNumBlocks)
+    if(pindexBest->nHeight != cachedNumBlocks)
     {
         // Balance and number of transactions might have changed
-        cachedNumBlocks = nBestHeight;
+        cachedNumBlocks = pindexBest->nHeight;
         checkBalanceChanged();
     }
 }

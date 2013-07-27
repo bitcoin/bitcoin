@@ -208,27 +208,19 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 CDiskBlockIndex diskindex;
                 ssValue >> diskindex;
 
+                if (!diskindex.CheckIndex()) {
+                    error("LoadBlockIndex() : CheckIndex failed: %s", diskindex.GetBlockHash().ToString().c_str());
+                    pcursor->Next();
+                    continue;
+                }
+
                 // Construct block index object
-                CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
-                pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
-                pindexNew->nHeight        = diskindex.nHeight;
+                CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash(), diskindex.GetBlockHeader());
                 pindexNew->nFile          = diskindex.nFile;
                 pindexNew->nDataPos       = diskindex.nDataPos;
                 pindexNew->nUndoPos       = diskindex.nUndoPos;
-                pindexNew->nVersion       = diskindex.nVersion;
-                pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
-                pindexNew->nTime          = diskindex.nTime;
-                pindexNew->nBits          = diskindex.nBits;
-                pindexNew->nNonce         = diskindex.nNonce;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
-
-                // Watch for genesis block
-                if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == Params().HashGenesisBlock())
-                    pindexGenesisBlock = pindexNew;
-
-                if (!pindexNew->CheckIndex())
-                    return error("LoadBlockIndex() : CheckIndex failed: %s", pindexNew->ToString().c_str());
 
                 pcursor->Next();
             } else {
