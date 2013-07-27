@@ -1008,22 +1008,46 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
         CBigNum bnTargetLimit = GetProofOfStakeLimit(0, nTime);
         bnTargetLimit.SetCompact(bnTargetLimit.GetCompact());
 
-        // NovaCoin: reward for coin-year is cut in half every 64x multiply of PoS difficulty
-        // A reasonably continuous curve is used to avoid shock to market
-        // (nRewardCoinYearLimit / nRewardCoinYear) ** 6 == bnProofOfStakeLimit / bnTarget
-        //
-        // Human readable form:
-        //
-        // nRewardCoinYear = 1 / (posdiff ^ 1/6)
+        // NovaCoin: A reasonably continuous curve is used to avoid shock to market
 
-        CBigNum bnLowerBound = 1 * CENT; // Lower interest bound is 1% per year
-        CBigNum bnUpperBound = bnRewardCoinYearLimit;
+        CBigNum bnLowerBound = 1 * CENT, // Lower interest bound is 1% per year
+            bnUpperBound = bnRewardCoinYearLimit, // Upper interest bound is 100% per year
+            bnMidPart, bnRewardPart;
+
         while (bnLowerBound + CENT <= bnUpperBound)
         {
             CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
             if (fDebug && GetBoolArg("-printcreation"))
                 printf("GetProofOfStakeReward() : lower=%"PRI64d" upper=%"PRI64d" mid=%"PRI64d"\n", bnLowerBound.getuint64(), bnUpperBound.getuint64(), bnMidValue.getuint64());
-            if (bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnTargetLimit > bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnTarget)
+
+            if(!fTestNet && nTime < STAKECURVE_SWITCH_TIME)
+            {
+                //
+                // Until 20 Oct 2013: reward for coin-year is cut in half every 64x multiply of PoS difficulty
+                //
+                // (nRewardCoinYearLimit / nRewardCoinYear) ** 6 == bnProofOfStakeLimit / bnTarget
+                //
+                // Human readable form: nRewardCoinYear = 1 / (posdiff ^ 1/6)
+                //
+
+                bnMidPart = bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnTargetLimit;
+                bnRewardPart = bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnTarget;
+            }
+            else
+            {
+                //
+                // Until 20 Oct 2013: reward for coin-year is cut in half every 8x multiply of PoS difficulty
+                //
+                // (nRewardCoinYearLimit / nRewardCoinYear) ** 3 == bnProofOfStakeLimit / bnTarget
+                //
+                // Human readable form: nRewardCoinYear = 1 / (posdiff ^ 1/3)
+                //
+
+                bnMidPart = bnMidValue * bnMidValue * bnMidValue * bnTargetLimit;
+                bnRewardPart = bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnTarget;
+            }
+
+            if (bnMidPart > bnRewardPart)
                 bnUpperBound = bnMidValue;
             else
                 bnLowerBound = bnMidValue;
