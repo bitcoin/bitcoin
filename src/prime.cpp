@@ -331,6 +331,40 @@ bool ProbablePrimeChainTest(const CBigNum& bnPrimeChainOrigin, unsigned int nBit
     return (nChainLengthCunningham1 >= nBits || nChainLengthCunningham2 >= nBits || nChainLengthBiTwin >= nBits);
 }
 
+
+// Test probable prime chain for: nOrigin (miner version - for miner use only)
+// Return value:
+//   true - Probable prime chain found (nChainLength meeting target)
+//   false - prime chain too short (nChainLength not meeting target)
+static bool ProbablePrimeChainTestForMiner(const CBigNum& bnPrimeChainOrigin, unsigned int nBits, unsigned nCandidateType, unsigned int& nChainLength)
+{
+    nChainLength = 0;
+
+    // Test for Cunningham Chain of first kind
+    if (nCandidateType == PRIME_CHAIN_CUNNINGHAM1)
+        ProbableCunninghamChainTest(bnPrimeChainOrigin-1, true, false, nChainLength);
+    // Test for Cunningham Chain of second kind
+    else if (nCandidateType == PRIME_CHAIN_CUNNINGHAM2)
+        ProbableCunninghamChainTest(bnPrimeChainOrigin+1, false, false, nChainLength);
+    else
+    {
+        unsigned int nChainLengthCunningham1 = 0;
+        unsigned int nChainLengthCunningham2 = 0;
+        if (ProbableCunninghamChainTest(bnPrimeChainOrigin-1, true, false, nChainLengthCunningham1))
+        {
+            ProbableCunninghamChainTest(bnPrimeChainOrigin+1, false, false, nChainLengthCunningham2);
+            // Figure out BiTwin Chain length
+            // BiTwin Chain allows a single prime at the end for odd length chain
+            nChainLength =
+                (TargetGetLength(nChainLengthCunningham1) > TargetGetLength(nChainLengthCunningham2))?
+                    (nChainLengthCunningham2 + TargetFromInt(TargetGetLength(nChainLengthCunningham2)+1)) :
+                    (nChainLengthCunningham1 + TargetFromInt(TargetGetLength(nChainLengthCunningham1)));
+        }
+    }
+
+    return (nChainLength >= nBits);
+}
+
 // Sieve for mining
 boost::thread_specific_ptr<CSieveOfEratosthenes> psieve;
 boost::thread_specific_ptr<CSieveControl> psievectrl;
@@ -386,7 +420,8 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
     while (nCurrent - nStart < 10000 && nCurrent >= nStart && pindexPrev == pindexBest)
     {
         nTests++;
-        if (!psieve->GetNextCandidateMultiplier(nTriedMultiplier))
+        unsigned int nCandidateType;
+        if (!psieve->GetNextCandidateMultiplier(nTriedMultiplier, nCandidateType))
         {
             // power tests completed for the sieve
             psieve.reset();
@@ -394,18 +429,16 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
             return false;
         }
         bnChainOrigin = CBigNum(block.GetHeaderHash()) * bnFixedMultiplier * nTriedMultiplier;
-        unsigned int nChainLengthCunningham1 = 0;
-        unsigned int nChainLengthCunningham2 = 0;
-        unsigned int nChainLengthBiTwin = 0;
-        if (ProbablePrimeChainTest(bnChainOrigin, block.nBits, false, nChainLengthCunningham1, nChainLengthCunningham2, nChainLengthBiTwin))
+        unsigned int nChainLength = 0;
+        if (ProbablePrimeChainTestForMiner(bnChainOrigin, block.nBits, nCandidateType, nChainLength))
         {
             block.bnPrimeChainMultiplier = bnFixedMultiplier * nTriedMultiplier;
-            printf("Probable prime chain found for block=%s!!\n  Target: %s\n  Length: (%s %s %s)\n", block.GetHash().GetHex().c_str(),
-            TargetToString(block.nBits).c_str(), TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str());
-            nProbableChainLength = std::max(std::max(nChainLengthCunningham1, nChainLengthCunningham2), nChainLengthBiTwin);
+            printf("Probable prime chain found for block=%s!!\n  Target: %s\n  Chain: %s\n", block.GetHash().GetHex().c_str(),
+                TargetToString(block.nBits).c_str(), GetPrimeChainName(nCandidateType, nChainLength).c_str());
+            nProbableChainLength = nChainLength;
             return true;
         }
-        nProbableChainLength = std::max(std::max(nChainLengthCunningham1, nChainLengthCunningham2), nChainLengthBiTwin);
+        nProbableChainLength = nChainLength;
         if(TargetGetLength(nProbableChainLength) >= 1)
             nPrimesHit++;
         if(TargetGetLength(nProbableChainLength) >= nStatsChainLength)

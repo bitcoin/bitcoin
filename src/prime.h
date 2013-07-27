@@ -126,7 +126,7 @@ public:
     // Return values:
     //   True - found next candidate; nVariableMultiplier has the candidate
     //   False - scan complete, no more candidate and reset scan
-    bool GetNextCandidateMultiplier(unsigned int& nVariableMultiplier)
+    bool GetNextCandidateMultiplier(unsigned int& nVariableMultiplier, unsigned int& nCandidateType)
     {
         loop
         {
@@ -136,11 +136,22 @@ public:
                 nCandidateMultiplier = 0;
                 return false;
             }
-            if (!vfCompositeCunningham1[nCandidateMultiplier] ||
-                !vfCompositeCunningham2[nCandidateMultiplier] ||
-                !vfCompositeBiTwin[nCandidateMultiplier])
+            if (!vfCompositeBiTwin[nCandidateMultiplier])
             {
                 nVariableMultiplier = nCandidateMultiplier;
+                nCandidateType = PRIME_CHAIN_BI_TWIN;
+                return true;
+            }
+            if (!vfCompositeCunningham1[nCandidateMultiplier])
+            {
+                nVariableMultiplier = nCandidateMultiplier;
+                nCandidateType = PRIME_CHAIN_CUNNINGHAM1;
+                return true;
+            }
+            if (!vfCompositeCunningham2[nCandidateMultiplier])
+            {
+                nVariableMultiplier = nCandidateMultiplier;
+                nCandidateType = PRIME_CHAIN_CUNNINGHAM2;
                 return true;
             }
         }
