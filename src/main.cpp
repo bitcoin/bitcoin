@@ -940,7 +940,7 @@ uint256 WantedByOrphan(const CBlock* pblockOrphan)
 }
 
 // select stake target limit according to hard-coded conditions
-CBigNum static GetProofOfStakeLimit(int nHeight, unsigned int nTime)
+CBigNum inline GetProofOfStakeLimit(int nHeight, unsigned int nTime)
 {
     if(fTestNet) // separate proof of stake target limit for testnet
         return bnProofOfStakeLimit;
@@ -1055,7 +1055,7 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
 static const int64 nTargetTimespan = 7 * 24 * 60 * 60;  // one week
 
 // get proof of work blocks max spacing according to hard-coded conditions
-int64 static GetTargetSpacingWorkMax(int nHeight, unsigned int nTime)
+int64 inline GetTargetSpacingWorkMax(int nHeight, unsigned int nTime)
 {
     if(nTime > TARGETS_SWITCH_TIME)
         return 3 * nStakeTargetSpacing; // 30 minutes on mainNet since 20 Jul 2013 00:00:00
