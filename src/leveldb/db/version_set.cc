@@ -1331,14 +1331,19 @@ Compaction* VersionSet::CompactRange(
   }
 
   // Avoid compacting too much in one shot in case the range is large.
-  const uint64_t limit = MaxFileSizeForLevel(level);
-  uint64_t total = 0;
-  for (size_t i = 0; i < inputs.size(); i++) {
-    uint64_t s = inputs[i]->file_size;
-    total += s;
-    if (total >= limit) {
-      inputs.resize(i + 1);
-      break;
+  // But we cannot do this for level-0 since level-0 files can overlap
+  // and we must not pick one file and drop another older file if the
+  // two files overlap.
+  if (level > 0) {
+    const uint64_t limit = MaxFileSizeForLevel(level);
+    uint64_t total = 0;
+    for (size_t i = 0; i < inputs.size(); i++) {
+      uint64_t s = inputs[i]->file_size;
+      total += s;
+      if (total >= limit) {
+        inputs.resize(i + 1);
+        break;
+      }
     }
   }
 
