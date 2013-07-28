@@ -7,14 +7,15 @@
 
 #include "main.h"
 
+/**********************/
+/* PRIMECOIN PROTOCOL */
+/**********************/
+
 static const unsigned int nMaxSieveSize = 1000000u;
 static const uint256 hashBlockHeaderLimit = (uint256(1) << 255);
 static const CBigNum bnOne = 1;
 static const CBigNum bnPrimeMax = (bnOne << 2000) - 1;
 static const CBigNum bnPrimeMin = (bnOne << 255);
-
-// Estimate how many 5-chains are found per hour
-static const unsigned int nStatsChainLength = 5;
 
 extern unsigned int nTargetInitialLength;
 extern unsigned int nTargetMinLength;
@@ -59,9 +60,6 @@ unsigned int TargetFromInt(unsigned int nLength);
 bool TargetGetMint(unsigned int nBits, uint64& nMint);
 bool TargetGetNext(unsigned int nBits, int64 nInterval, int64 nTargetSpacing, int64 nActualSpacing, unsigned int& nBitsNext);
 
-// Mine probable prime chain of form: n = h * p# +/- 1
-bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit, unsigned int& nChainsHit);
-
 // Check prime proof-of-work
 enum // prime chain type
 {
@@ -77,6 +75,17 @@ double GetPrimeDifficulty(unsigned int nBits);
 unsigned int EstimateWorkTransition(unsigned int nPrevWorkTransition, unsigned int nBits, unsigned int nChainLength);
 // prime chain type and length value
 std::string GetPrimeChainName(unsigned int nChainType, unsigned int nChainLength);
+
+
+/********************/
+/* PRIMECOIN MINING */
+/********************/
+
+// Mine probable prime chain of form: n = h * p# +/- 1
+bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
+
+// Estimate the probability of primality for a number in a candidate chain
+double EstimateCandidatePrimeProbability();
 
 // Sieve of Eratosthenes for proof-of-work mining
 class CSieveOfEratosthenes
@@ -157,9 +166,6 @@ public:
         }
     }
 
-    // Get progress percentage of the sieve
-    unsigned int GetProgressPercentage();
-
     // Weave the sieve for the next prime in table
     // Return values:
     //   True  - weaved another prime
@@ -167,19 +173,24 @@ public:
     bool Weave();
 };
 
-class CSieveControl
+class CPrimeMiner
 {
     bool fSieveRoundShrink;
 
  public:
+
+    // Primorial multiplier
+    unsigned int nPrimorialMultiplier;
+
     // Power test time cost in microsecond
     int64 nPrimalityTestCost;
 
     // Optimal sieve weave times (index to prime table)
     unsigned int nSieveWeaveOptimal;
 
-    CSieveControl()
+    CPrimeMiner()
     {
+        nPrimorialMultiplier = 7;
         nPrimalityTestCost = 0;
         nSieveWeaveOptimal = 1000;
         fSieveRoundShrink = true;
@@ -198,5 +209,7 @@ class CSieveControl
             nSieveWeaveOptimal++;
     }
 };
+
+extern boost::thread_specific_ptr<CPrimeMiner> pminer;
 
 #endif

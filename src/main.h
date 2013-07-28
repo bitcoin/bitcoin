@@ -89,6 +89,7 @@ extern uint64 nLastBlockTx;
 extern uint64 nLastBlockSize;
 extern const std::string strMessageMagic;
 extern double dPrimesPerSec;
+extern double dChainsPerDay;
 extern int64 nHPSTimerStart;
 extern int64 nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;

@@ -367,18 +367,14 @@ static bool ProbablePrimeChainTestForMiner(const CBigNum& bnPrimeChainOrigin, un
 
 // Sieve for mining
 boost::thread_specific_ptr<CSieveOfEratosthenes> psieve;
-boost::thread_specific_ptr<CSieveControl> psievectrl;
+boost::thread_specific_ptr<CPrimeMiner> pminer;
 
 // Mine probable prime chain of form: n = h * p# +/- 1
-bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit, unsigned int& nChainsHit)
+bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit)
 {
     nProbableChainLength = 0;
     nTests = 0;
     nPrimesHit = 0;
-    nChainsHit = 0;
-
-    if (psievectrl.get() == NULL)
-        psievectrl.reset(new CSieveControl()); // init sieve control object
 
     if (fNewBlock && psieve.get() != NULL)
     {
@@ -396,7 +392,7 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         int64 nSieveRoundLimit = (int)GetArg("-gensieveroundlimitms", 1000);
         nStart = GetTimeMicros();
         unsigned int nWeaveTimes = 0;
-        while (psieve->Weave() && pindexPrev == pindexBest && (GetTimeMicros() - nStart < 1000 * nSieveRoundLimit) && (++nWeaveTimes < psievectrl->nSieveWeaveOptimal));
+        while (psieve->Weave() && pindexPrev == pindexBest && (GetTimeMicros() - nStart < 1000 * nSieveRoundLimit) && (++nWeaveTimes < pminer->nSieveWeaveOptimal));
         unsigned int nCandidateCount = psieve->GetCandidateCount();
         nCurrent = GetTimeMicros();
         psieve->Weave(); // weave once more to find out about cost
@@ -406,10 +402,10 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         unsigned int nSieveWeaveComposites = nCandidateCount;
         nCandidateCount = psieve->GetCandidateCount();
         nSieveWeaveComposites = nCandidateCount - nSieveWeaveComposites; // number of composite chains found in last weave
-        psievectrl->SetSieveWeaveCost(nSieveWeaveCost, nSieveWeaveComposites);
-        psievectrl->AdjustSieveWeaveOptimal();
+        pminer->SetSieveWeaveCost(nSieveWeaveCost, nSieveWeaveComposites);
+        pminer->AdjustSieveWeaveOptimal();
         if (fDebug && GetBoolArg("-printmining"))
-            printf("MineProbablePrimeChain() : new sieve (%u/%u@%u) ready in %uus test cost=%uus\n", psieve->GetCandidateCount(), nMaxSieveSize, (nWeaveTimes < vPrimes.size())? vPrimes[nWeaveTimes] : 1000000u, (unsigned int) (GetTimeMicros() - nStart), (unsigned int)psievectrl->nPrimalityTestCost);
+            printf("MineProbablePrimeChain() : new sieve (%u/%u@%u) ready in %uus test cost=%uus\n", psieve->GetCandidateCount(), nMaxSieveSize, (nWeaveTimes < vPrimes.size())? vPrimes[nWeaveTimes] : 1000000u, (unsigned int) (GetTimeMicros() - nStart), (unsigned int)pminer->nPrimalityTestCost);
     }
 
     CBigNum bnChainOrigin;
@@ -441,11 +437,9 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         nProbableChainLength = nChainLength;
         if(TargetGetLength(nProbableChainLength) >= 1)
             nPrimesHit++;
-        if(TargetGetLength(nProbableChainLength) >= nStatsChainLength)
-            nChainsHit++;
 
-        psievectrl->nPrimalityTestCost = GetTimeMicros() - nCurrent;
-        nCurrent += psievectrl->nPrimalityTestCost;
+        pminer->nPrimalityTestCost = GetTimeMicros() - nCurrent;
+        nCurrent += pminer->nPrimalityTestCost;
     }
     return false; // stop as timed out
 }
@@ -558,12 +552,6 @@ std::string GetPrimeChainName(unsigned int nChainType, unsigned int nChainLength
 }
 
 
-// Get progress percentage of the sieve
-unsigned int CSieveOfEratosthenes::GetProgressPercentage()
-{
-    return std::min(100u, (((nPrimeSeq >= vPrimes.size())? nPrimeTableLimit : vPrimes[nPrimeSeq]) * 100 / nSieveSize));
-}
-
 // Weave sieve for the next prime in table
 // Return values:
 //   True  - weaved another prime
@@ -612,4 +600,22 @@ bool CSieveOfEratosthenes::Weave()
     }
     nPrimeSeq++;
     return true;
+}
+
+// Estimate the probability of primality for a number in a candidate chain
+double EstimateCandidatePrimeProbability()
+{
+    // h * q# is prime with probability 1/log(h * q#)   (prime number theorem)
+    // log(p#) ~ p
+    // Euler product to p ~ 1.781072 * log(p)   (Mertens theorem)
+    // If sieve is weaved up to p, a number in a candidate chain is a prime
+    // with probability
+    //     (1/log(h * q#)) / (1/(1.781072 * log(p)))
+    //   = 1.781072 * log(p) / (256 * log(2) + q)
+    //
+    // This model assumes that the numbers on a chain being primes are
+    // statistically independent after running the sieve, which might not be
+    // true, but nontheless it's a reasonable model of the chances of finding
+    // prime chains.
+    return (1.781072 * log((double)std::max(1u, pminer->nSieveWeaveOptimal)) / (256.0 * log(2.0) + (double) pminer->nPrimorialMultiplier));
 }
