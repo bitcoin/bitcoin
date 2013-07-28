@@ -1,42 +1,26 @@
 
-PPCoin official development tree
+PPCoin Official Development Repo
+================================
 
-Bitcoin development process
-===========================
+### What is PPCoin?
+[PPCoin](http://ppcoin.org/) (abbreviated PPC), also known as Peercoin and Peer-to-Peer Coin is the first known [cryptocurrency](https://en.wikipedia.org/wiki/Cryptocurrency)  designed as a combined [proof-of-stake](http://ppcoin.org/static/ppcoin-paper.pdf)/[proof-of-work](https://en.wikipedia.org/wiki/Proof-of-work_system) system. PPCoin is build upon [Bitcoin](http://bitcoin.org/en/), but unique in the fact that it is more energy efficiency, as proof-of-stake blocks require minimal energy consumption. Thus, with PPCoin energy consumption would decrease over time as proof-of-work blocks become less rewarding and coin generation becomes increasingly based on proof-of-stake block generation.
 
-Developers work in their own trees, then submit pull requests when
-they think their feature or bug fix is ready.
+### PPCoin Resources
+* Client and Source:
+[Client Binaries](http://sourceforge.net/projects/ppcoin/files/),
+[Source Code](https://github.com/ppcoin/ppcoin)
+* Documentation: [PPCoin Whitepaper](http://ppcoin.org/static/ppcoin-paper.pdf),
+[PPCoin Wiki](https://github.com/ppcoin/ppcoin/wiki)
+* Help: 
+[Forum](http://www.ppcointalk.org/),
+[Other Sites and Links...](http://www.ppcointalk.org/index.php?topic=4.0;topicseen)
 
-If it is a simple/trivial/non-controversial change, then one of the
-bitcoin development team members simply pulls it.
+Repo Guidelines
+================================
 
-If it is a more complicated or potentially controversial
-change, then the patch submitter will be asked to start a
-discussion (if they haven't already) on the mailing list:
-http://sourceforge.net/mailarchive/forum.php?forum_name=bitcoin-development
-
-The patch will be accepted if there is broad consensus that it is a
-good thing.  Developers should expect to rework and resubmit patches
-if they don't match the project's coding conventions (see coding.txt)
-or are controversial.
-
-The master branch is regularly built and tested, but is not guaranteed
-to be completely stable. Tags are regularly created to indicate new
-official, stable release versions of Bitcoin. If you would like to
-help test the Bitcoin core, please contact QA@BitcoinTesting.org.
-
-Feature branches are created when there are major new features being
-worked on by several people.
-
-From time to time a pull request will become outdated. If this occurs, and
-the pull is no longer automatically mergeable; a comment on the pull will
-be used to issue a warning of closure. The pull will be closed 15 days
-after the warning if action is not taken by the author. Pull requests closed
-in this manner will have their corresponding issue labeled 'stagnant'.
-
-Issues with no commits will be given a similar warning, and closed after
-15 days from their last activity. Issues closed in this manner will be 
-labeled 'stale'. 
-
-Requests to reopen closed pull requests and/or issues can be submitted to 
-QA@BitcoinTesting.org. 
+* Developers work in their own forks, then submit pull requests when they think their feature or bug fix is ready.
+* If it is a simple/trivial/non-controversial change, then one of the development team members simply pulls it.
+* If it is a more complicated or potentially controversial change, then the change may be discussed in the pull request, or the requester may be asked to start a discussion [PPCoin Talk](http://www.ppcointalk.org/) for a broader community discussion. 
+* The patch will be accepted if there is broad consensus that it is a good thing. Developers should expect to rework and resubmit patches if they don't match the project's coding conventions (see coding.txt) or are controversial.
+* From time to time a pull request will become outdated. If this occurs, and the pull is no longer automatically mergeable; a comment on the pull will be used to issue a warning of closure.  Pull requests closed in this manner will have their corresponding issue labeled 'stagnant'.
+* For development ideas and help see [here](http://www.ppcointalk.org/index.php?board=10.0).
