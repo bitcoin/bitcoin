@@ -82,24 +82,22 @@ public:
         return Erase(std::make_pair(std::string("tx"), hash));
     }
 
-    bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, int64 nCreateTime)
+    bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta)
     {
         nWalletDBUpdated++;
 
-        CKeyMetadata keyMeta(nCreateTime);
-        if(!Write(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta, false))
+        if(!Write(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta))
             return false;
 
         return Write(std::make_pair(std::string("key"), vchPubKey.Raw()), vchPrivKey, false);
     }
 
-    bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, int64 nCreateTime)
+    bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta)
     {
         nWalletDBUpdated++;
         bool fEraseUnencryptedKey = true;
 
-        CKeyMetadata keyMeta(nCreateTime);
-        if(!Write(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta, false))
+        if(!Write(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta))
             return false;
 
         if (!Write(std::make_pair(std::string("ckey"), vchPubKey.Raw()), vchCryptedSecret, false))
