@@ -4,6 +4,10 @@
 
 #include "prime.h"
 
+/**********************/
+/* PRIMECOIN PROTOCOL */
+/**********************/
+
 // Prime Table
 std::vector<unsigned int> vPrimes;
 static const unsigned int nPrimeTableLimit = nMaxSieveSize;
@@ -271,6 +275,12 @@ bool TargetGetNext(unsigned int nBits, int64 nInterval, int64 nTargetSpacing, in
     return true;
 }
 
+// prime chain type and length value
+std::string GetPrimeChainName(unsigned int nChainType, unsigned int nChainLength)
+{
+    return strprintf("%s%s", (nChainType==PRIME_CHAIN_CUNNINGHAM1)? "1CC" : ((nChainType==PRIME_CHAIN_CUNNINGHAM2)? "2CC" : "TWN"), TargetToString(nChainLength).c_str());
+}
+
 // Test Probable Cunningham Chain for: n
 // fSophieGermain:
 //   true - Test for Cunningham Chain of first kind (n, 2n+1, 4n+3, ...)
@@ -331,6 +341,111 @@ bool ProbablePrimeChainTest(const CBigNum& bnPrimeChainOrigin, unsigned int nBit
     return (nChainLengthCunningham1 >= nBits || nChainLengthCunningham2 >= nBits || nChainLengthBiTwin >= nBits);
 }
 
+// Check prime proof-of-work
+bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier, unsigned int& nChainType, unsigned int& nChainLength)
+{
+    // Check target
+    if (TargetGetLength(nBits) < nTargetMinLength || TargetGetLength(nBits) > 99)
+        return error("CheckPrimeProofOfWork() : invalid chain length target %s", TargetToString(nBits).c_str());
+
+    // Check header hash limit
+    if (hashBlockHeader < hashBlockHeaderLimit)
+        return error("CheckPrimeProofOfWork() : block header hash under limit");
+    // Check target for prime proof-of-work
+    CBigNum bnPrimeChainOrigin = CBigNum(hashBlockHeader) * bnPrimeChainMultiplier;
+    if (bnPrimeChainOrigin < bnPrimeMin)
+        return error("CheckPrimeProofOfWork() : prime too small");
+    // First prime in chain must not exceed cap
+    if (bnPrimeChainOrigin > bnPrimeMax)
+        return error("CheckPrimeProofOfWork() : prime too big");
+
+    // Check prime chain
+    unsigned int nChainLengthCunningham1 = 0;
+    unsigned int nChainLengthCunningham2 = 0;
+    unsigned int nChainLengthBiTwin = 0;
+    if (!ProbablePrimeChainTest(bnPrimeChainOrigin, nBits, false, nChainLengthCunningham1, nChainLengthCunningham2, nChainLengthBiTwin))
+        return error("CheckPrimeProofOfWork() : failed prime chain test target=%s length=(%s %s %s)", TargetToString(nBits).c_str(),
+            TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str());
+    if (nChainLengthCunningham1 < nBits && nChainLengthCunningham2 < nBits && nChainLengthBiTwin < nBits)
+        return error("CheckPrimeProofOfWork() : prime chain length assert target=%s length=(%s %s %s)", TargetToString(nBits).c_str(),
+            TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str());
+
+    // Double check prime chain with Fermat tests only
+    unsigned int nChainLengthCunningham1FermatTest = 0;
+    unsigned int nChainLengthCunningham2FermatTest = 0;
+    unsigned int nChainLengthBiTwinFermatTest = 0;
+    if (!ProbablePrimeChainTest(bnPrimeChainOrigin, nBits, true, nChainLengthCunningham1FermatTest, nChainLengthCunningham2FermatTest, nChainLengthBiTwinFermatTest))
+        return error("CheckPrimeProofOfWork() : failed Fermat test target=%s length=(%s %s %s) lengthFermat=(%s %s %s)", TargetToString(nBits).c_str(),
+            TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str(),
+            TargetToString(nChainLengthCunningham1FermatTest).c_str(), TargetToString(nChainLengthCunningham2FermatTest).c_str(), TargetToString(nChainLengthBiTwinFermatTest).c_str());
+    if (nChainLengthCunningham1 != nChainLengthCunningham1FermatTest ||
+        nChainLengthCunningham2 != nChainLengthCunningham2FermatTest ||
+        nChainLengthBiTwin != nChainLengthBiTwinFermatTest)
+        return error("CheckPrimeProofOfWork() : failed Fermat-only double check target=%s length=(%s %s %s) lengthFermat=(%s %s %s)", TargetToString(nBits).c_str(), 
+            TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str(),
+            TargetToString(nChainLengthCunningham1FermatTest).c_str(), TargetToString(nChainLengthCunningham2FermatTest).c_str(), TargetToString(nChainLengthBiTwinFermatTest).c_str());
+
+    // Select the longest primechain from the three chain types
+    nChainLength = nChainLengthCunningham1;
+    nChainType = PRIME_CHAIN_CUNNINGHAM1;
+    if (nChainLengthCunningham2 > nChainLength)
+    {
+        nChainLength = nChainLengthCunningham2;
+        nChainType = PRIME_CHAIN_CUNNINGHAM2;
+    }
+    if (nChainLengthBiTwin > nChainLength)
+    {
+        nChainLength = nChainLengthBiTwin;
+        nChainType = PRIME_CHAIN_BI_TWIN;
+    }
+
+    // Check that the certificate (bnPrimeChainMultiplier) is normalized
+    if (bnPrimeChainMultiplier % 2 == 0 && bnPrimeChainOrigin % 4 == 0)
+    {
+        unsigned int nChainLengthCunningham1Extended = 0;
+        unsigned int nChainLengthCunningham2Extended = 0;
+        unsigned int nChainLengthBiTwinExtended = 0;
+        if (ProbablePrimeChainTest(bnPrimeChainOrigin / 2, nBits, false, nChainLengthCunningham1Extended, nChainLengthCunningham2Extended, nChainLengthBiTwinExtended))
+        { // try extending down the primechain with a halved multiplier
+            if (nChainLengthCunningham1Extended > nChainLength || nChainLengthCunningham2Extended > nChainLength || nChainLengthBiTwinExtended > nChainLength)
+                return error("CheckPrimeProofOfWork() : prime certificate not normalzied target=%s length=(%s %s %s) extend=(%s %s %s)",
+                    TargetToString(nBits).c_str(),
+                    TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str(),
+                    TargetToString(nChainLengthCunningham1Extended).c_str(), TargetToString(nChainLengthCunningham2Extended).c_str(), TargetToString(nChainLengthBiTwinExtended).c_str());
+        }
+    }
+
+    return true;
+}
+
+// prime target difficulty value for visualization
+double GetPrimeDifficulty(unsigned int nBits)
+{
+    return ((double) nBits / (double) (1 << nFractionalBits));
+}
+
+// Estimate work transition target to longer prime chain
+unsigned int EstimateWorkTransition(unsigned int nPrevWorkTransition, unsigned int nBits, unsigned int nChainLength)
+{
+    int64 nInterval = 500;
+    int64 nWorkTransition = nPrevWorkTransition;
+    unsigned int nBitsCeiling = 0;
+    TargetSetLength(TargetGetLength(nBits)+1, nBitsCeiling);
+    unsigned int nBitsFloor = 0;
+    TargetSetLength(TargetGetLength(nBits), nBitsFloor);
+    uint64 nFractionalDifficulty = TargetGetFractionalDifficulty(nBits);
+    bool fLonger = (TargetGetLength(nChainLength) > TargetGetLength(nBits));
+    if (fLonger)
+        nWorkTransition = (nWorkTransition * (((nInterval - 1) * nFractionalDifficulty) >> 32) + 2 * ((uint64) nBitsFloor)) / ((((nInterval - 1) * nFractionalDifficulty) >> 32) + 2);
+    else
+        nWorkTransition = ((nInterval - 1) * nWorkTransition + 2 * ((uint64) nBitsCeiling)) / (nInterval + 1);
+    return nWorkTransition;
+}
+
+
+/********************/
+/* PRIMECOIN MINING */
+/********************/
 
 // Test probable prime chain for: nOrigin (miner version - for miner use only)
 // Return value:
@@ -443,114 +558,6 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
     }
     return false; // stop as timed out
 }
-
-// Check prime proof-of-work
-bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier, unsigned int& nChainType, unsigned int& nChainLength)
-{
-    // Check target
-    if (TargetGetLength(nBits) < nTargetMinLength || TargetGetLength(nBits) > 99)
-        return error("CheckPrimeProofOfWork() : invalid chain length target %s", TargetToString(nBits).c_str());
-
-    // Check header hash limit
-    if (hashBlockHeader < hashBlockHeaderLimit)
-        return error("CheckPrimeProofOfWork() : block header hash under limit");
-    // Check target for prime proof-of-work
-    CBigNum bnPrimeChainOrigin = CBigNum(hashBlockHeader) * bnPrimeChainMultiplier;
-    if (bnPrimeChainOrigin < bnPrimeMin)
-        return error("CheckPrimeProofOfWork() : prime too small");
-    // First prime in chain must not exceed cap
-    if (bnPrimeChainOrigin > bnPrimeMax)
-        return error("CheckPrimeProofOfWork() : prime too big");
-
-    // Check prime chain
-    unsigned int nChainLengthCunningham1 = 0;
-    unsigned int nChainLengthCunningham2 = 0;
-    unsigned int nChainLengthBiTwin = 0;
-    if (!ProbablePrimeChainTest(bnPrimeChainOrigin, nBits, false, nChainLengthCunningham1, nChainLengthCunningham2, nChainLengthBiTwin))
-        return error("CheckPrimeProofOfWork() : failed prime chain test target=%s length=(%s %s %s)", TargetToString(nBits).c_str(),
-            TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str());
-    if (nChainLengthCunningham1 < nBits && nChainLengthCunningham2 < nBits && nChainLengthBiTwin < nBits)
-        return error("CheckPrimeProofOfWork() : prime chain length assert target=%s length=(%s %s %s)", TargetToString(nBits).c_str(),
-            TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str());
-
-    // Double check prime chain with Fermat tests only
-    unsigned int nChainLengthCunningham1FermatTest = 0;
-    unsigned int nChainLengthCunningham2FermatTest = 0;
-    unsigned int nChainLengthBiTwinFermatTest = 0;
-    if (!ProbablePrimeChainTest(bnPrimeChainOrigin, nBits, true, nChainLengthCunningham1FermatTest, nChainLengthCunningham2FermatTest, nChainLengthBiTwinFermatTest))
-        return error("CheckPrimeProofOfWork() : failed Fermat test target=%s length=(%s %s %s) lengthFermat=(%s %s %s)", TargetToString(nBits).c_str(),
-            TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str(),
-            TargetToString(nChainLengthCunningham1FermatTest).c_str(), TargetToString(nChainLengthCunningham2FermatTest).c_str(), TargetToString(nChainLengthBiTwinFermatTest).c_str());
-    if (nChainLengthCunningham1 != nChainLengthCunningham1FermatTest ||
-        nChainLengthCunningham2 != nChainLengthCunningham2FermatTest ||
-        nChainLengthBiTwin != nChainLengthBiTwinFermatTest)
-        return error("CheckPrimeProofOfWork() : failed Fermat-only double check target=%s length=(%s %s %s) lengthFermat=(%s %s %s)", TargetToString(nBits).c_str(), 
-            TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str(),
-            TargetToString(nChainLengthCunningham1FermatTest).c_str(), TargetToString(nChainLengthCunningham2FermatTest).c_str(), TargetToString(nChainLengthBiTwinFermatTest).c_str());
-
-    // Select the longest primechain from the three chain types
-    nChainLength = nChainLengthCunningham1;
-    nChainType = PRIME_CHAIN_CUNNINGHAM1;
-    if (nChainLengthCunningham2 > nChainLength)
-    {
-        nChainLength = nChainLengthCunningham2;
-        nChainType = PRIME_CHAIN_CUNNINGHAM2;
-    }
-    if (nChainLengthBiTwin > nChainLength)
-    {
-        nChainLength = nChainLengthBiTwin;
-        nChainType = PRIME_CHAIN_BI_TWIN;
-    }
-
-    // Check that the certificate (bnPrimeChainMultiplier) is normalized
-    if (bnPrimeChainMultiplier % 2 == 0 && bnPrimeChainOrigin % 4 == 0)
-    {
-        unsigned int nChainLengthCunningham1Extended = 0;
-        unsigned int nChainLengthCunningham2Extended = 0;
-        unsigned int nChainLengthBiTwinExtended = 0;
-        if (ProbablePrimeChainTest(bnPrimeChainOrigin / 2, nBits, false, nChainLengthCunningham1Extended, nChainLengthCunningham2Extended, nChainLengthBiTwinExtended))
-        { // try extending down the primechain with a halved multiplier
-            if (nChainLengthCunningham1Extended > nChainLength || nChainLengthCunningham2Extended > nChainLength || nChainLengthBiTwinExtended > nChainLength)
-                return error("CheckPrimeProofOfWork() : prime certificate not normalzied target=%s length=(%s %s %s) extend=(%s %s %s)",
-                    TargetToString(nBits).c_str(),
-                    TargetToString(nChainLengthCunningham1).c_str(), TargetToString(nChainLengthCunningham2).c_str(), TargetToString(nChainLengthBiTwin).c_str(),
-                    TargetToString(nChainLengthCunningham1Extended).c_str(), TargetToString(nChainLengthCunningham2Extended).c_str(), TargetToString(nChainLengthBiTwinExtended).c_str());
-        }
-    }
-
-    return true;
-}
-
-// prime target difficulty value for visualization
-double GetPrimeDifficulty(unsigned int nBits)
-{
-    return ((double) nBits / (double) (1 << nFractionalBits));
-}
-
-// Estimate work transition target to longer prime chain
-unsigned int EstimateWorkTransition(unsigned int nPrevWorkTransition, unsigned int nBits, unsigned int nChainLength)
-{
-    int64 nInterval = 500;
-    int64 nWorkTransition = nPrevWorkTransition;
-    unsigned int nBitsCeiling = 0;
-    TargetSetLength(TargetGetLength(nBits)+1, nBitsCeiling);
-    unsigned int nBitsFloor = 0;
-    TargetSetLength(TargetGetLength(nBits), nBitsFloor);
-    uint64 nFractionalDifficulty = TargetGetFractionalDifficulty(nBits);
-    bool fLonger = (TargetGetLength(nChainLength) > TargetGetLength(nBits));
-    if (fLonger)
-        nWorkTransition = (nWorkTransition * (((nInterval - 1) * nFractionalDifficulty) >> 32) + 2 * ((uint64) nBitsFloor)) / ((((nInterval - 1) * nFractionalDifficulty) >> 32) + 2);
-    else
-        nWorkTransition = ((nInterval - 1) * nWorkTransition + 2 * ((uint64) nBitsCeiling)) / (nInterval + 1);
-    return nWorkTransition;
-}
-
-// prime chain type and length value
-std::string GetPrimeChainName(unsigned int nChainType, unsigned int nChainLength)
-{
-    return strprintf("%s%s", (nChainType==PRIME_CHAIN_CUNNINGHAM1)? "1CC" : ((nChainType==PRIME_CHAIN_CUNNINGHAM2)? "2CC" : "TWN"), TargetToString(nChainLength).c_str());
-}
-
 
 // Weave sieve for the next prime in table
 // Return values:
