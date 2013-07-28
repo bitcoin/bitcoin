@@ -2164,6 +2164,11 @@ Address: %4
         <translation>Don&apos;t generate coins</translation>
     </message>
     <message>
+        <location line="-17"/>
+        <source>Specify wallet file (within data directory)</source>
+        <translation>Specify wallet file (within data directory)</translation>
+    </message>
+    <message>
         <location line="+60"/>
         <source>Specify data directory</source>
         <translation>Specify data directory</translation>
@@ -2537,6 +2542,11 @@ Address: %4
         <location line="+139"/>
         <source>This help message</source>
         <translation>This help message</translation>
+    </message>
+    <message>
+        <location line="-122"/>
+        <source>Wallet %s resides outside data directory %s.</source>
+        <translation>Wallet %s resides outside data directory %s.</translation>
     </message>
     <message>
         <location line="-131"/>

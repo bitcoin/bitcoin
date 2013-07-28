@@ -2166,6 +2166,11 @@ Address: %4
         <translation>Указать pid-файл (по умолчанию: novacoin.pid)</translation>
     </message>
     <message>
+        <location line="-17"/>
+        <source>Specify wallet file (within data directory)</source>
+        <translation>Указать файл кошелька (в пределах DATA директории)</translation>
+    </message>
+    <message>
         <location line="-47"/>
         <source>Generate coins</source>
         <translation>Генерировать монеты</translation>
@@ -2243,7 +2248,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Error initializing database environment %s! To recover, BACKUP THAT DIRECTORY, then remove everything from it except for wallet.dat.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка инициализации окружения БД %s! Для восстановления СДЕЛАЙТЕ РЕЗЕРВНУЮ КОПИЮ этой директории, затем удалите из нее все, кроме wallet.dat.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -2459,7 +2464,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Verifying database integrity...</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверка целостности базы данных...</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2474,7 +2479,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation type="unfinished"></translation>
+        <translation>wallet.dat поврежден, восстановление не удалось</translation>
     </message>
     <message>
         <location line="-43"/>
@@ -2550,6 +2555,11 @@ Address: %4
         <location line="+139"/>
         <source>This help message</source>
         <translation>Эта справка</translation>
+    </message>
+    <message>
+        <location line="-122"/>
+        <source>Wallet %s resides outside data directory %s.</source>
+        <translation>Кошелек %s находится вне рабочей директории %s.</translation>
     </message>
     <message>
         <location line="-131"/>
