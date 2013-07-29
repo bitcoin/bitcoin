@@ -527,6 +527,58 @@ void ErrorReply(std::ostream& stream, const Object& objError, const Value& id)
     stream << HTTPReply(nStatus, strReply, false) << std::flush;
 }
 
+bool ClientAllowedForMethod(const boost::asio::ip::address& address, string strMethod) {
+
+    // Make sure that IPv4-compatible and IPv4-mapped IPv6 addresses are treated as IPv4 addresses
+    if (address.is_v6()
+     && (address.to_v6().is_v4_compatible()
+      || address.to_v6().is_v4_mapped()))
+        return ClientAllowedForMethod(address.to_v6().to_v4(), strMethod);
+
+    const string strAddress = address.to_string();
+    const vector<string>& vAllow = mapMultiArgs["-rpcipcmds"];
+    
+    printf( "ClientAllowedForMethod(%s, %s)", strAddress.c_str(), strMethod.c_str() );
+    
+    if( vAllow.empty() ) {
+        return true;
+    }
+
+    bool found_ip = false;
+    
+    // config lines look like:
+    //   rpcipcmds=127.0.0.1,sendtoaddress,listtransactions,gettransaction,getinfo,getbalance,stop
+    //   rpipcmds=YYY.YYY.YYY.*,getnewaddress,validateaddress
+    BOOST_FOREACH(string strAllow, vAllow) {
+        vector<string> strs;
+        boost::split(strs,strAllow,boost::is_any_of(","));
+
+        int count = 0;
+        string strIP;
+        BOOST_FOREACH(string strNext, strs) {
+            if( count++ == 0 ) {
+                strIP = strNext;
+                if ( !WildcardMatch(strAddress, strIP) ) {
+                    break;  // not our IP, move on to next config setting.
+                }
+            }
+            else {
+                found_ip = true;
+                if( strNext == strMethod )
+                    return true;  // method is allowed for this IP.
+            }
+        }
+    }
+    
+    // If there is no rpcallowmethodsforip entry matching our IP, then we allow
+    // the rpc call to proceed.  Otherwise, it would require listing all allowed
+    // methods for all IPs in the config, even if we only want to restrict
+    // method calls for one IP.
+    
+    return found_ip ? false : true;
+}
+
+
 bool ClientAllowed(const boost::asio::ip::address& address)
 {
     // Make sure that IPv4-compatible and IPv4-mapped IPv6 addresses are treated as IPv4 addresses
@@ -997,19 +1049,42 @@ void ServiceConnection(AcceptedConnection *conn)
                 throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
 
             string strReply;
+            AcceptedConnectionImpl<ip::tcp>* tcp_conn = dynamic_cast< AcceptedConnectionImpl<ip::tcp>* >(conn);
 
             // singleton request
             if (valRequest.type() == obj_type) {
                 jreq.parse(valRequest);
 
+                if( !ClientAllowedForMethod(tcp_conn->peer.address(), jreq.strMethod) ) {
+                    throw JSONRPCError(RPC_FORBIDDEN_BY_IP, "Method not allowed for client IP.");
+                }
+                
                 Value result = tableRPC.execute(jreq.strMethod, jreq.params);
 
                 // Send reply
                 strReply = JSONRPCReply(result, Value::null, jreq.id);
 
             // array of requests
-            } else if (valRequest.type() == array_type)
+            } else if (valRequest.type() == array_type) {
+
+                // Verify that all methods are allowed for this IP before we execute any method.
+                // We only do these checks if -rpcallowmethodsforip is specified.
+                const vector<string>& vAllow = mapMultiArgs["-rpcipcmds"];
+                
+                if( !vAllow.empty() ) {
+                
+                    const Array& vReq = valRequest.get_array();
+                    for (unsigned int reqIdx = 0; reqIdx < vReq.size(); reqIdx++) {
+                        jreq.parse( vReq[reqIdx] );
+    
+                        if( !ClientAllowedForMethod(tcp_conn->peer.address(), jreq.strMethod) ) {
+                            throw JSONRPCError(RPC_FORBIDDEN_BY_IP, "Method not allowed for client IP.");
+                        }
+                    }
+                }
+                
                 strReply = JSONRPCExecBatch(valRequest.get_array());
+            }
             else
                 throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
 
