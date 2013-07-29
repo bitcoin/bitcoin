@@ -3692,6 +3692,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
+    else if (!fBloomFilters &&
+             (strCommand == "filterload" ||
+              strCommand == "filteradd" ||
+              strCommand == "filterclear"))
+    {
+        pfrom->Misbehaving(100);
+        return error("peer %s attempted to set a bloom filter even though we do not advertise that service",
+                     pfrom->addr.ToString().c_str());
+    }
+
     else if (strCommand == "filterload")
     {
         CBloomFilter filter;

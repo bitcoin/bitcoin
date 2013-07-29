@@ -315,6 +315,7 @@ std::string HelpMessage()
         "  -bantime=<n>           " + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n" +
         "  -maxreceivebuffer=<n>  " + _("Maximum per-connection receive buffer, <n>*1000 bytes (default: 5000)") + "\n" +
         "  -maxsendbuffer=<n>     " + _("Maximum per-connection send buffer, <n>*1000 bytes (default: 1000)") + "\n" +
+        "  -bloomfilters          " + _("Allow peers to set bloom filters (default: 0)") + "\n" +
 #ifdef USE_UPNP
 #if USE_UPNP
         "  -upnp                  " + _("Use UPnP to map the listening port (default: 1 when listening)") + "\n" +
@@ -494,6 +495,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     // ********************************************************* Step 2: parameter interactions
 
     fTestNet = GetBoolArg("-testnet");
+    fBloomFilters = GetBoolArg("-bloomfilters");
+    if (fBloomFilters)
+        nLocalServices |= NODE_BLOOM;
 
     if (mapArgs.count("-bind")) {
         // when specifying an explicit binding address, you want to listen on it
