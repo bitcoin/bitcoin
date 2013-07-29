@@ -2494,6 +2494,11 @@ Address: %4
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
+        <location line="-97"/>
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</translation>
+    </message>
+    <message>
         <location line="+122"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Upgrade wallet to latest format</translation>

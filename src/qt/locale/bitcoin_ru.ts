@@ -2507,6 +2507,11 @@ Address: %4
         <translation>Выполнить команду, когда появляется новый блок (%s в команде заменяется на хэш блока)</translation>
     </message>
     <message>
+        <location line="-97"/>
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation>Выполнить команду, когда получена новая транзакция (%s в команде заменяется на ID транзакции)</translation>
+    </message>
+    <message>
         <location line="+122"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Обновить бумажник до последнего формата</translation>
