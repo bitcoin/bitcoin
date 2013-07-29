@@ -80,6 +80,9 @@ private:
     // the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
     int nWalletMaxVersion;
 
+    int64 nNextResend;
+    int64 nLastResend;
+
 public:
     mutable CCriticalSection cs_wallet;
 
