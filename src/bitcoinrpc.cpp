@@ -570,7 +570,7 @@ bool ClientAllowedForMethod(const boost::asio::ip::address& address, string strM
         }
     }
     
-    // If there is no rpcallowmethodsforip entry matching our IP, then we allow
+    // If there is no rpcipcmds entry matching our IP, then we allow
     // the rpc call to proceed.  Otherwise, it would require listing all allowed
     // methods for all IPs in the config, even if we only want to restrict
     // method calls for one IP.
@@ -1068,7 +1068,7 @@ void ServiceConnection(AcceptedConnection *conn)
             } else if (valRequest.type() == array_type) {
 
                 // Verify that all methods are allowed for this IP before we execute any method.
-                // We only do these checks if -rpcallowmethodsforip is specified.
+                // We only do these checks if -rpcipcmds is specified.
                 const vector<string>& vAllow = mapMultiArgs["-rpcipcmds"];
                 
                 if( !vAllow.empty() ) {
