@@ -281,6 +281,19 @@ std::string GetPrimeChainName(unsigned int nChainType, unsigned int nChainLength
     return strprintf("%s%s", (nChainType==PRIME_CHAIN_CUNNINGHAM1)? "1CC" : ((nChainType==PRIME_CHAIN_CUNNINGHAM2)? "2CC" : "TWN"), TargetToString(nChainLength).c_str());
 }
 
+// primorial form of prime chain origin
+std::string GetPrimeOriginPrimorialForm(CBigNum& bnPrimeChainOrigin)
+{
+    CBigNum bnNonPrimorialFactor = bnPrimeChainOrigin;
+    unsigned int nPrimeSeq = 0;
+    while (nPrimeSeq < vPrimes.size() && bnNonPrimorialFactor % vPrimes[nPrimeSeq] == 0)
+    {
+        bnNonPrimorialFactor /= vPrimes[nPrimeSeq];
+        nPrimeSeq++;
+    }
+    return strprintf("%s*%u#", bnNonPrimorialFactor.ToString().c_str(), (nPrimeSeq > 0)? vPrimes[nPrimeSeq-1] : 0);
+}
+
 // Test Probable Cunningham Chain for: n
 // fSophieGermain:
 //   true - Test for Cunningham Chain of first kind (n, 2n+1, 4n+3, ...)
