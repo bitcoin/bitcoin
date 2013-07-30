@@ -4,6 +4,7 @@
 
 USE_UPNP:=0
 USE_IPV6:=1
+STATIC:=1
 
 LINK:=$(CXX)
 
