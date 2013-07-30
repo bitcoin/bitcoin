@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = novacoin-qt
-VERSION = 0.7.4
+VERSION = 0.7.5
 INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
