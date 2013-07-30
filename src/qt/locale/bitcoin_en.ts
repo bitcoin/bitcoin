@@ -2159,16 +2159,6 @@ Address: %4
         <translation>Specify pid file (default: novacoind.pid)</translation>
     </message>
     <message>
-        <location line="-47"/>
-        <source>Generate coins</source>
-        <translation>Generate coins</translation>
-    </message>
-    <message>
-        <location line="-14"/>
-        <source>Don&apos;t generate coins</source>
-        <translation>Don&apos;t generate coins</translation>
-    </message>
-    <message>
         <location line="-17"/>
         <source>Specify wallet file (within data directory)</source>
         <translation>Specify wallet file (within data directory)</translation>

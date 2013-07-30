@@ -2176,16 +2176,6 @@ Address: %4
         <translation>Указать файл кошелька (в пределах DATA директории)</translation>
     </message>
     <message>
-        <location line="-47"/>
-        <source>Generate coins</source>
-        <translation>Генерировать монеты</translation>
-    </message>
-    <message>
-        <location line="-14"/>
-        <source>Don&apos;t generate coins</source>
-        <translation>Не генерировать монеты</translation>
-    </message>
-    <message>
         <location line="+60"/>
         <source>Specify data directory</source>
         <translation>Укажите каталог данных</translation>
