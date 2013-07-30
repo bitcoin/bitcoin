@@ -4,12 +4,12 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About Bitcoin</source>
+        <source>About Primecoin</source>
         <translation>关于比特币</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
+        <source>&lt;b&gt;Primecoin&lt;/b&gt; version</source>
         <translation>&lt;b&gt;比特币&lt;/b&gt;版本</translation>
     </message>
     <message>
@@ -34,7 +34,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+0"/>
-        <source>The Bitcoin developers</source>
+        <source>The Primecoin developers</source>
         <translation>Primecoin-qt 客户端开发团队</translation>
     </message>
 </context>
@@ -248,7 +248,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PRIMECOINS&lt;/b&gt;!</source>
         <translation>警告：如果您加密了您的钱包，但是忘记了密码，你将会&lt;b&gt;丢失所有的比特币&lt;/b&gt;！</translation>
     </message>
     <message>
@@ -275,7 +275,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="-56"/>
-        <source>Primecoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>Primecoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your primecoins from being stolen by malware infecting your computer.</source>
         <translation>将关闭软件以完成加密过程。 请您谨记：钱包加密并不是万能的，电脑中毒，您的比特币还是有可能丢失。</translation>
     </message>
     <message>
@@ -480,7 +480,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+22"/>
-        <source>&amp;About Bitcoin</source>
+        <source>&amp;About Primecoin</source>
         <translation>&amp;关于比特币</translation>
     </message>
     <message>
@@ -1070,7 +1070,7 @@ Address: %4
     <name>PaymentServer</name>
     <message>
         <location filename="../paymentserver.cpp" line="+107"/>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <source>Cannot start primecoin: click-to-pay handler</source>
         <translation>暂时无法启动比特币：点击支付功能</translation>
     </message>
 </context>
@@ -1220,7 +1220,7 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Primecoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
+        <source>Show the Primecoin-Qt help message to get a list with possible Primecoin command-line options.</source>
         <translation>显示Primecoin命令行选项帮助信息</translation>
     </message>
     <message>
@@ -1650,7 +1650,7 @@ Address: %4
     <name>SplashScreen</name>
     <message>
         <location filename="../splashscreen.cpp" line="+22"/>
-        <source>The Bitcoin developers</source>
+        <source>The Primecoin developers</source>
         <translation>Primecoin-qt 客户端开发团队</translation>
     </message>
     <message>
@@ -2185,10 +2185,10 @@ Address: %4
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>primecoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+94"/>
-        <source>Bitcoin version</source>
+        <source>Primecoin version</source>
         <translation>比特币版本</translation>
     </message>
     <message>
@@ -2312,7 +2312,7 @@ Address: %4
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
-rpcuser=bitcoinrpc
+rpcuser=primecoinrpc
 rpcpassword=%s
 (you do not need to remember this password)
 The username and password MUST NOT be the same.
@@ -2323,7 +2323,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Primecoin Alert&quot; admin@fo
         <translation>%s, 您必须在配置文件设置rpcpassword:
  %s
 建议您使用下面的随机密码:
-rpcuser=bitcoinrpc
+rpcuser=primecoinrpc
 rpcpassword=%s
 (您无需记住此密码)
 用户名和密码 必! 须! 不一样。

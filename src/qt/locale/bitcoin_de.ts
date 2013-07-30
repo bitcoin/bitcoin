@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About Bitcoin</source>
+        <source>About Primecoin</source>
         <translation>Über Primecoin</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Bitcoin&lt;/b&gt;-Version</translation>
+        <source>&lt;b&gt;Primecoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Primecoin&lt;/b&gt;-Version</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -34,7 +34,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     </message>
     <message>
         <location line="+0"/>
-        <source>The Bitcoin developers</source>
+        <source>The Primecoin developers</source>
         <translation>Die Primecoinentwickler</translation>
     </message>
 </context>
@@ -123,7 +123,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location filename="../addressbookpage.cpp" line="-5"/>
         <source>These are your Primecoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Dies sind Ihre Primecoin-Adressen zum Tätigen von Überweisungen. Bitte prüfen Sie den Betrag und die Empfangsadresse, bevor Sie Bitcoins überweisen.</translation>
+        <translation>Dies sind Ihre Primecoin-Adressen zum Tätigen von Überweisungen. Bitte prüfen Sie den Betrag und die Empfangsadresse, bevor Sie Primecoins überweisen.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -248,7 +248,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PRIMECOINS&lt;/b&gt;!</source>
         <translation>Warnung: Wenn Sie Ihre Brieftasche verschlüsseln und Ihre Passphrase verlieren, werden Sie &lt;b&gt;alle Ihre Primecoins verlieren&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -275,8 +275,8 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     </message>
     <message>
         <location line="-56"/>
-        <source>Primecoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Primecoin wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Verschlüsselung Ihrer Brieftasche nicht vollständig vor Diebstahl Ihrer Bitcoins durch Schadsoftware schützt, die Ihren Computer befällt.</translation>
+        <source>Primecoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your Primecoins from being stolen by malware infecting your computer.</source>
+        <translation>Primecoin wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Verschlüsselung Ihrer Brieftasche nicht vollständig vor Diebstahl Ihrer Primecoins durch Schadsoftware schützt, die Ihren Computer befällt.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -420,7 +420,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location line="-347"/>
         <source>Send coins to a Primecoin address</source>
-        <translation>Primecoins an eine Bitcoin-Adresse überweisen</translation>
+        <translation>Primecoins an eine Primecoin-Adresse überweisen</translation>
     </message>
     <message>
         <location line="+49"/>
@@ -480,7 +480,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     </message>
     <message>
         <location line="+22"/>
-        <source>&amp;About Bitcoin</source>
+        <source>&amp;About Primecoin</source>
         <translation>&amp;Über Primecoin</translation>
     </message>
     <message>
@@ -542,7 +542,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message numerus="yes">
         <location line="+141"/>
         <source>%n active connection(s) to Primecoin network</source>
-        <translation><numerusform>%n aktive Verbindung zum Primecoin-Netzwerk</numerusform><numerusform>%n aktive Verbindungen zum Bitcoin-Netzwerk</numerusform></translation>
+        <translation><numerusform>%n aktive Verbindung zum Primecoin-Netzwerk</numerusform><numerusform>%n aktive Verbindungen zum Primecoin-Netzwerk</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -1068,8 +1068,8 @@ Adresse: %4</translation>
     <name>PaymentServer</name>
     <message>
         <location filename="../paymentserver.cpp" line="+107"/>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>&quot;bitcoin: Klicken-zum-Bezahlen&quot;-Handler konnte nicht gestartet werden</translation>
+        <source>Cannot start primecoin: click-to-pay handler</source>
+        <translation>&quot;primecoin: Klicken-zum-Bezahlen&quot;-Handler konnte nicht gestartet werden</translation>
     </message>
 </context>
 <context>
@@ -1218,7 +1218,7 @@ Adresse: %4</translation>
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Primecoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
+        <source>Show the Primecoin-Qt help message to get a list with possible Primecoin command-line options.</source>
         <translation>Zeige die Primecoin-Qt-Hilfsnachricht, um eine Liste mit möglichen Kommandozeilenoptionen zu erhalten.</translation>
     </message>
     <message>
@@ -1384,7 +1384,7 @@ Adresse: %4</translation>
     <message>
         <location line="+5"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Fehler: Die Transaktion wurde abgelehnt. Dies kann passieren, wenn einige Primecoins aus Ihrer Brieftasche bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie Ihrer wallet.dat genutzt, die Bitcoins dort ausgegeben haben und dies daher in der derzeit aktiven Brieftasche nicht vermerkt ist.</translation>
+        <translation>Fehler: Die Transaktion wurde abgelehnt. Dies kann passieren, wenn einige Primecoins aus Ihrer Brieftasche bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie Ihrer wallet.dat genutzt, die Primecoins dort ausgegeben haben und dies daher in der derzeit aktiven Brieftasche nicht vermerkt ist.</translation>
     </message>
 </context>
 <context>
@@ -1648,7 +1648,7 @@ Adresse: %4</translation>
     <name>SplashScreen</name>
     <message>
         <location filename="../splashscreen.cpp" line="+22"/>
-        <source>The Bitcoin developers</source>
+        <source>The Primecoin developers</source>
         <translation>Die Primecoinentwickler</translation>
     </message>
     <message>
@@ -2183,10 +2183,10 @@ Adresse: %4</translation>
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>primecoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+94"/>
-        <source>Bitcoin version</source>
+        <source>Primecoin version</source>
         <translation>Primecoin-Version</translation>
     </message>
     <message>
@@ -2299,7 +2299,7 @@ Adresse: %4</translation>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
-rpcuser=bitcoinrpc
+rpcuser=primecoinrpc
 rpcpassword=%s
 (you do not need to remember this password)
 The username and password MUST NOT be the same.
@@ -2310,7 +2310,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Primecoin Alert&quot; admin@fo
         <translation>%s, Sie müssen den Wert rpcpasswort in dieser Konfigurationsdatei angeben:
 %s
 Es wird empfohlen das folgende Zufallspasswort zu verwenden:
-rpcuser=bitcoinrpc
+rpcuser=primecoinrpc
 rpcpassword=%s
 (Sie müssen sich dieses Passwort nicht merken!)
 Der Benutzername und das Passwort dürfen NICHT identisch sein.
@@ -2337,7 +2337,7 @@ zum Beispiel: alertnotify=echo %%s | mail -s \&quot;Primecoin Alert\&quot; admin
     <message>
         <location line="+3"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Fehler: Die Transaktion wurde abgelehnt! Dies kann passieren, wenn einige Primecoins aus Ihrer Brieftasche bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie Ihrer wallet.dat genutzt, die Bitcoins dort ausgegeben haben und dies daher in der derzeit aktiven Brieftasche nicht vermerkt ist.</translation>
+        <translation>Fehler: Die Transaktion wurde abgelehnt! Dies kann passieren, wenn einige Primecoins aus Ihrer Brieftasche bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie Ihrer wallet.dat genutzt, die Primecoins dort ausgegeben haben und dies daher in der derzeit aktiven Brieftasche nicht vermerkt ist.</translation>
     </message>
     <message>
         <location line="+4"/>
