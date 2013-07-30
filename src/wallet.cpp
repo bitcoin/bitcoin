@@ -1380,7 +1380,7 @@ uint64 CWallet::GetStakeMintPower(const CKeyStore& keystore, enum StakeWeightMod
 
     if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
     {
-        error("CreateCoinStake : invalid reserve balance amount");
+        error("GetStakeMintPower : invalid reserve balance amount");
         return 0;
     }
 
