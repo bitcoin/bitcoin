@@ -265,7 +265,7 @@ Value listprimerecords(const Array& params, bool fHelp)
             entry.push_back(Pair("epoch", (boost::int64_t) pindex->GetBlockTime()));
             entry.push_back(Pair("height", pindex->nHeight));
             entry.push_back(Pair("ismine", pwalletMain->IsMine(block.vtx[0])));
-            entry.push_back(Pair("primedigit", bnPrimeChainOrigin.ToString().length()));
+            entry.push_back(Pair("primedigit", (int) bnPrimeChainOrigin.ToString().length()));
             entry.push_back(Pair("primechain", GetPrimeChainName(pindex->nPrimeChainType, pindex->nPrimeChainLength).c_str()));
             entry.push_back(Pair("primeorigin", bnPrimeChainOrigin.ToString().c_str()));
             entry.push_back(Pair("primorialform", GetPrimeOriginPrimorialForm(bnPrimeChainOrigin).c_str()));
