@@ -4615,7 +4615,7 @@ void static BitcoinMiner(CWallet *pwallet)
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
-    try { loop {
+    try { while (true) {
         if (Params().NetworkID() != CChainParams::REGTEST) {
             // Busy-wait for the network to come online so we don't waste time mining
             // on an obsolete chain. In regtest mode we expect to fly solo.
@@ -4659,7 +4659,7 @@ void static BitcoinMiner(CWallet *pwallet)
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
         uint256 hashbuf[2];
         uint256& hash = *alignup<16>(hashbuf);
-        loop
+        while (true)
         {
             unsigned int nHashesDone = 0;
             unsigned int nNonceFound;
