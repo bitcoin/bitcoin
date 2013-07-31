@@ -874,4 +874,16 @@ private:
 
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
+void RegisterWallet(CWallet* pwalletIn);
+void UnregisterWallet(CWallet* pwalletIn);
+void UnregisterAllWallets();
+bool GetTransaction(const uint256& hashTx, CWalletTx& wtx);
+void EraseFromWallets(uint256 hash);
+void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate);
+void SetBestChain(const CBlockLocator& loc);
+void UpdatedTransaction(const uint256& hashTx);
+void PrintWallets(const CBlock& block);
+void Inventory(const uint256& hash);
+void ResendWalletTransactions();
+
 #endif

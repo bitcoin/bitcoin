@@ -13,11 +13,9 @@
 
 #include <list>
 
-class CWallet;
 class CBlock;
 class CBlockIndex;
 class CKeyItem;
-class CReserveKey;
 
 class CAddress;
 class CInv;
@@ -85,8 +83,6 @@ extern const std::string strMessageMagic;
 extern double dHashesPerSec;
 extern int64 nHPSTimerStart;
 extern int64 nTimeBestReceived;
-extern CCriticalSection cs_setpwalletRegistered;
-extern std::set<CWallet*> setpwalletRegistered;
 extern bool fImporting;
 extern bool fReindex;
 extern bool fBenchmark;
@@ -102,7 +98,6 @@ extern int64 nTransactionFee;
 static const uint64 nMinDiskSpace = 52428800;
 
 
-class CReserveKey;
 class CCoinsDB;
 class CBlockTreeDB;
 struct CDiskBlockPos;
@@ -114,15 +109,6 @@ class CScriptCheck;
 class CValidationState;
 
 struct CBlockTemplate;
-
-/** Register a wallet to receive updates from core */
-void RegisterWallet(CWallet* pwalletIn);
-/** Unregister a wallet from core */
-void UnregisterWallet(CWallet* pwalletIn);
-/** Unregister all wallets from core */
-void UnregisterAllWallets();
-/** Push an updated transaction to all registered wallets */
-void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false);
 
 /** Register with a network node to receive its signals */
 void RegisterNodeSignals(CNodeSignals& nodeSignals);
@@ -196,8 +182,6 @@ bool AbortNode(const std::string &msg);
 
 
 
-
-bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
 struct CDiskBlockPos
 {
