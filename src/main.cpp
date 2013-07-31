@@ -4579,8 +4579,8 @@ void static BitcoinMiner(CWallet *pwallet)
     unsigned int nExtraNonce = 0;
 
     static const unsigned int nPrimorialHashFactor = 7;
-    int64 nTimeExpected = 0;   // time expected to prime chain (micro-second)
-    int64 nTimeExpectedPrev = 0; // time expected to prime chain last time
+    double nTimeExpected = 0;   // time expected to prime chain (micro-second)
+    double nTimeExpectedPrev = 0; // time expected to prime chain last time
     bool fIncrementPrimorial = true; // increase or decrease primorial factor
 
     try { loop {
@@ -4712,17 +4712,17 @@ void static BitcoinMiner(CWallet *pwallet)
                 // Primecoin: a sieve+primality round completes
                 // Primecoin: estimate time to block
                 int64 nRoundTime = (GetTimeMicros() - nPrimeTimerStart); 
-                nTimeExpected = nRoundTime / max(1u, nRoundTests);
+                nTimeExpected = (double) nRoundTime / max(1u, nRoundTests);
                 double dRoundChainExpected = (double) nRoundTests;
                 double dPrimeProbability = EstimateCandidatePrimeProbability();
                 for (unsigned int n = 0; n < TargetGetLength(pblock->nBits); n++)
                 {
-                    nTimeExpected = nTimeExpected * max(1u, nRoundTests) / max(1u, nRoundPrimesHit);
+                    nTimeExpected = nTimeExpected / max(0.01, dPrimeProbability);
                     dRoundChainExpected *= dPrimeProbability;
                 }
                 dChainExpected += dRoundChainExpected;
                 if (fDebug && GetBoolArg("-printmining"))
-                    printf("PrimecoinMiner() : Round primorial=%u tests=%u primes=%u time=%uus tochain=%6.3fd expect=%3.9f\n", pminer->nPrimorialMultiplier, nRoundTests, nRoundPrimesHit, (unsigned int) nRoundTime, ((double)(nTimeExpected/1000000))/86400.0, dRoundChainExpected);
+                    printf("PrimecoinMiner() : Round primorial=%u tests=%u primes=%u time=%uus pprob=%1.6f tochain=%6.3fd expect=%3.9f\n", pminer->nPrimorialMultiplier, nRoundTests, nRoundPrimesHit, (unsigned int) nRoundTime, dPrimeProbability, ((nTimeExpected/1000000.0))/86400.0, dRoundChainExpected);
 
                 // Primecoin: update time and nonce
                 pblock->nTime = max(pblock->nTime, (unsigned int) GetAdjustedTime());

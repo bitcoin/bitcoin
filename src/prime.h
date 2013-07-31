@@ -206,9 +206,9 @@ class CPrimeMiner
     void AdjustSieveWeaveOptimal()
     {
         if (fSieveRoundShrink)
-            nSieveWeaveOptimal--;
+            nSieveWeaveOptimal = nSieveWeaveOptimal * 95 / 100 + 1;
         else
-            nSieveWeaveOptimal++;
+            nSieveWeaveOptimal = nSieveWeaveOptimal * 100 / 95;
     }
 };
 
