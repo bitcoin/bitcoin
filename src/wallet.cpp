@@ -1194,7 +1194,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
         LOCK2(cs_main, cs_wallet);
         {
             nFeeRet = nTransactionFee;
-            loop
+            while (true)
             {
                 wtxNew.vin.clear();
                 wtxNew.vout.clear();
