@@ -2158,9 +2158,9 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
 
         // Check coinbase reward
         if (vtx[0].GetValueOut() > (GetProofOfWorkReward(nBits) - nFee))
-            return DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s", 
-                   FormatMoney(vtx[0].GetValueOut()).c_str(),
-                   FormatMoney(GetProofOfWorkReward(nBits) - nFee).c_str()));
+            return DoS(50, error("CheckBlock() : coinbase reward exceeded (actual=%"PRI64d" vs calculated=%"PRI64d")",
+                   vtx[0].GetValueOut(),
+                   GetProofOfWorkReward(nBits) - nFee));
     }
 
     // Check transactions
