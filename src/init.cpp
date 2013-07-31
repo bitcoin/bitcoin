@@ -12,6 +12,7 @@
 #include "bitcoinrpc.h"
 #include "net.h"
 #include "util.h"
+#include "miner.h"
 #include "ui_interface.h"
 #include "checkpoints.h"
 

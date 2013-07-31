@@ -125,6 +125,7 @@ OBJS= \
     obj/keystore.o \
     obj/core.o \
     obj/main.o \
+    obj/miner.o \
     obj/net.o \
     obj/protocol.o \
     obj/bitcoinrpc.o \
