@@ -2133,9 +2133,9 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
 
     if (IsProofOfStake())
     {
-        // ppcoin: coinbase output should be empty if proof-of-stake block
+        // Coinbase output should be empty if proof-of-stake block
         if (vtx[0].vout.size() != 1 || !vtx[0].vout[0].IsEmpty())
-            return error("CheckBlock() : coinbase output not empty for proof-of-stake block");
+            return DoS(100, error("CheckBlock() : coinbase output not empty for proof-of-stake block"));
 
         // Second transaction must be coinstake, the rest must not be
         if (vtx.empty() || !vtx[1].IsCoinStake())
