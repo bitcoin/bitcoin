@@ -872,8 +872,6 @@ private:
     std::vector<char> _ssExtra;
 };
 
-bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
-
 void RegisterWallet(CWallet* pwalletIn);
 void UnregisterWallet(CWallet* pwalletIn);
 void UnregisterAllWallets();
