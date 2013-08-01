@@ -639,5 +639,5 @@ double EstimateCandidatePrimeProbability()
     // true, but nontheless it's a reasonable model of the chances of finding
     // prime chains.
     unsigned int nSieveWeaveOptimalPrime = (pminer->nSieveWeaveOptimal < vPrimes.size())? vPrimes[pminer->nSieveWeaveOptimal] : 1000000u;
-    return (1.781072 * log((double)std::max(1u, nSieveWeaveOptimalPrime)) / (256.0 * log(2.0) + (double) pminer->nPrimorialMultiplier + log(nMaxSieveSize / 2.0)));
+    return (1.781072 * log((double)std::max(1u, nSieveWeaveOptimalPrime)) / (256.0 * log(2.0) + (double) (pminer->nPrimorialMultiplier - nPrimorialHashFactor) + log(nMaxSieveSize / 2.0)));
 }

@@ -175,6 +175,8 @@ public:
     bool Weave();
 };
 
+static const unsigned int nPrimorialHashFactor = 7;
+
 class CPrimeMiner
 {
     bool fSieveRoundShrink;
@@ -192,7 +194,7 @@ class CPrimeMiner
 
     CPrimeMiner()
     {
-        nPrimorialMultiplier = 7;
+        nPrimorialMultiplier = nPrimorialHashFactor;
         nPrimalityTestCost = 0;
         nSieveWeaveOptimal = 1000;
         fSieveRoundShrink = true;
