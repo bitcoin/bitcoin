@@ -176,6 +176,7 @@ public:
 };
 
 static const unsigned int nPrimorialHashFactor = 7;
+static const unsigned int nSieveWeaveInitial = 1000;
 
 class CPrimeMiner
 {
@@ -196,22 +197,21 @@ class CPrimeMiner
     {
         nPrimorialMultiplier = nPrimorialHashFactor;
         nPrimalityTestCost = 0;
-        nSieveWeaveOptimal = 1000;
+        nSieveWeaveOptimal = nSieveWeaveInitial;
         fSieveRoundShrink = true;
     }
+
+    unsigned int GetSieveWeaveOptimalPrime();
 
     void SetSieveWeaveCost(int64 nSieveWeaveCost, unsigned int nSieveWeaveComposites)
     {
         fSieveRoundShrink = (nSieveWeaveCost > nSieveWeaveComposites * nPrimalityTestCost);
     }
 
-    void AdjustSieveWeaveOptimal()
-    {
-        if (fSieveRoundShrink)
-            nSieveWeaveOptimal = nSieveWeaveOptimal * 95 / 100 + 1;
-        else
-            nSieveWeaveOptimal = nSieveWeaveOptimal * 100 / 95;
-    }
+    void SetSieveWeaveCount(unsigned int nSieveWeaveCount);
+
+    void AdjustSieveWeaveOptimal();
+
 };
 
 extern boost::thread_specific_ptr<CPrimeMiner> pminer;

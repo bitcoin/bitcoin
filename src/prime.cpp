@@ -530,10 +530,14 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         unsigned int nSieveWeaveComposites = nCandidateCount;
         nCandidateCount = psieve->GetCandidateCount();
         nSieveWeaveComposites = nCandidateCount - nSieveWeaveComposites; // number of composite chains found in last weave
+        if (fDebug && GetBoolArg("-printmining"))
+            printf("MineProbablePrimeChain() : new sieve (%u/%u@%u/%u) ready in %uus test cost=%uus\n",
+                psieve->GetCandidateCount(), nMaxSieveSize,
+                (nWeaveTimes < vPrimes.size())? vPrimes[nWeaveTimes] : nPrimeTableLimit, pminer->GetSieveWeaveOptimalPrime(),
+                (unsigned int) (GetTimeMicros() - nStart), (unsigned int)pminer->nPrimalityTestCost);
+        pminer->SetSieveWeaveCount(nWeaveTimes);
         pminer->SetSieveWeaveCost(nSieveWeaveCost, nSieveWeaveComposites);
         pminer->AdjustSieveWeaveOptimal();
-        if (fDebug && GetBoolArg("-printmining"))
-            printf("MineProbablePrimeChain() : new sieve (%u/%u@%u) ready in %uus test cost=%uus\n", psieve->GetCandidateCount(), nMaxSieveSize, (nWeaveTimes < vPrimes.size())? vPrimes[nWeaveTimes] : 1000000u, (unsigned int) (GetTimeMicros() - nStart), (unsigned int)pminer->nPrimalityTestCost);
     }
 
     CBigNum bnChainOrigin;
@@ -638,6 +642,26 @@ double EstimateCandidatePrimeProbability()
     // statistically independent after running the sieve, which might not be
     // true, but nontheless it's a reasonable model of the chances of finding
     // prime chains.
-    unsigned int nSieveWeaveOptimalPrime = (pminer->nSieveWeaveOptimal < vPrimes.size())? vPrimes[pminer->nSieveWeaveOptimal] : 1000000u;
+    unsigned int nSieveWeaveOptimalPrime = pminer->GetSieveWeaveOptimalPrime();
     return (1.781072 * log((double)std::max(1u, nSieveWeaveOptimalPrime)) / (256.0 * log(2.0) + (double) (pminer->nPrimorialMultiplier - nPrimorialHashFactor) + log(nMaxSieveSize / 2.0)));
 }
+
+unsigned int CPrimeMiner::GetSieveWeaveOptimalPrime()
+{
+    return (nSieveWeaveOptimal < vPrimes.size())? vPrimes[nSieveWeaveOptimal] : nPrimeTableLimit;
+}
+
+void CPrimeMiner::SetSieveWeaveCount(unsigned int nSieveWeaveCount)
+{
+    if (nSieveWeaveCount < nSieveWeaveOptimal)
+        nSieveWeaveOptimal = std::max(nSieveWeaveCount, nSieveWeaveInitial);
+}
+
+void CPrimeMiner::AdjustSieveWeaveOptimal()
+{
+    if (fSieveRoundShrink)
+        nSieveWeaveOptimal = std::max(nSieveWeaveOptimal * 95 / 100 + 1, nSieveWeaveInitial);
+    else
+        nSieveWeaveOptimal = std::min(nSieveWeaveOptimal * 100 / 95, (unsigned int) vPrimes.size());
+}
+
