@@ -521,20 +521,19 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         nStart = GetTimeMicros();
         unsigned int nWeaveTimes = 0;
         while (psieve->Weave() && pindexPrev == pindexBest && (GetTimeMicros() - nStart < 1000 * nSieveRoundLimit) && (++nWeaveTimes < pminer->nSieveWeaveOptimal));
+        nCurrent = GetTimeMicros();
+        int64 nSieveWeaveCost = (nCurrent - nStart) / std::max(nWeaveTimes, 1u); // average weave cost in us
         unsigned int nCandidateCount = psieve->GetCandidateCount();
-        nCurrent = GetTimeMicros();
-        psieve->Weave(); // weave once more to find out about cost
-        int64 nSieveWeaveCost = nCurrent;
-        nCurrent = GetTimeMicros();
-        nSieveWeaveCost = nCurrent - nSieveWeaveCost; // last weave cost in us
+        psieve->Weave(); // weave once more to find out about weave efficiency
         unsigned int nSieveWeaveComposites = nCandidateCount;
         nCandidateCount = psieve->GetCandidateCount();
         nSieveWeaveComposites = nCandidateCount - nSieveWeaveComposites; // number of composite chains found in last weave
         if (fDebug && GetBoolArg("-printmining"))
             printf("MineProbablePrimeChain() : new sieve (%u/%u@%u/%u) ready in %uus test cost=%uus\n",
-                psieve->GetCandidateCount(), nMaxSieveSize,
+                nCandidateCount, nMaxSieveSize,
                 (nWeaveTimes < vPrimes.size())? vPrimes[nWeaveTimes] : nPrimeTableLimit, pminer->GetSieveWeaveOptimalPrime(),
-                (unsigned int) (GetTimeMicros() - nStart), (unsigned int)pminer->nPrimalityTestCost);
+                (unsigned int) (nCurrent - nStart), (unsigned int)pminer->GetPrimalityTestCost());
+        pminer->TimerSetSieveReady(nCandidateCount, nCurrent);
         pminer->SetSieveWeaveCount(nWeaveTimes);
         pminer->SetSieveWeaveCost(nSieveWeaveCost, nSieveWeaveComposites);
         pminer->AdjustSieveWeaveOptimal();
@@ -552,6 +551,7 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         if (!psieve->GetNextCandidateMultiplier(nTriedMultiplier, nCandidateType))
         {
             // power tests completed for the sieve
+            pminer->TimerSetPrimalityDone(nCurrent);
             psieve.reset();
             fNewBlock = true; // notify caller to change nonce
             return false;
@@ -570,8 +570,7 @@ bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNe
         if(TargetGetLength(nProbableChainLength) >= 1)
             nPrimesHit++;
 
-        pminer->nPrimalityTestCost = GetTimeMicros() - nCurrent;
-        nCurrent += pminer->nPrimalityTestCost;
+        nCurrent = GetTimeMicros();
     }
     return false; // stop as timed out
 }

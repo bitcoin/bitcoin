@@ -181,24 +181,26 @@ static const unsigned int nSieveWeaveInitial = 1000;
 class CPrimeMiner
 {
     bool fSieveRoundShrink;
+    unsigned int nSieveCandidateCount;
+    int64 nTimeSieveReady; // sieve ready timestamp in microsecond
+    int64 nPrimalityTestCost; // power test time cost in microsecond
 
  public:
 
     // Primorial multiplier
     unsigned int nPrimorialMultiplier;
 
-    // Power test time cost in microsecond
-    int64 nPrimalityTestCost;
-
     // Optimal sieve weave times (index to prime table)
     unsigned int nSieveWeaveOptimal;
 
     CPrimeMiner()
     {
-        nPrimorialMultiplier = nPrimorialHashFactor;
-        nPrimalityTestCost = 0;
-        nSieveWeaveOptimal = nSieveWeaveInitial;
         fSieveRoundShrink = true;
+        nSieveCandidateCount = 0;
+        nTimeSieveReady = 0;
+        nPrimalityTestCost = 0;
+        nPrimorialMultiplier = nPrimorialHashFactor;
+        nSieveWeaveOptimal = nSieveWeaveInitial;
     }
 
     unsigned int GetSieveWeaveOptimalPrime();
@@ -212,6 +214,22 @@ class CPrimeMiner
 
     void AdjustSieveWeaveOptimal();
 
+    int64 GetPrimalityTestCost()
+    {
+        return nPrimalityTestCost;
+    }
+
+    void TimerSetSieveReady(unsigned int nCandidateCount, int64 nTimestampMicro)
+    {
+        nSieveCandidateCount = nCandidateCount;
+        nTimeSieveReady = nTimestampMicro;
+    }
+
+    void TimerSetPrimalityDone(int64 nTimestampMicro)
+    {
+        if (nTimestampMicro > nTimeSieveReady && nSieveCandidateCount > 0)
+            nPrimalityTestCost = (nTimestampMicro - nTimeSieveReady) / nSieveCandidateCount;
+    }
 };
 
 extern boost::thread_specific_ptr<CPrimeMiner> pminer;
