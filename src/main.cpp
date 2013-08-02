@@ -845,15 +845,15 @@ bool CTxMemPool::remove(const CTransaction &tx, bool fRecursive)
     {
         LOCK(cs);
         uint256 hash = tx.GetHash();
+        if (fRecursive) {
+            for (unsigned int i = 0; i < tx.vout.size(); i++) {
+                std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
+                if (it != mapNextTx.end())
+                    remove(*it->second.ptx, true);
+            }
+        }
         if (mapTx.count(hash))
         {
-            if (fRecursive) {
-                for (unsigned int i = 0; i < tx.vout.size(); i++) {
-                    std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
-                    if (it != mapNextTx.end())
-                        remove(*it->second.ptx, true);
-                }
-            }
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
                 mapNextTx.erase(txin.prevout);
             mapTx.erase(hash);
@@ -1865,7 +1865,8 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     BOOST_FOREACH(CTransaction& tx, vResurrect) {
         // ignore validation errors in resurrected transactions
         CValidationState stateDummy;
-        tx.AcceptToMemoryPool(stateDummy, true, false);
+        if (!tx.AcceptToMemoryPool(stateDummy, true, false))
+            mempool.remove(tx, true);
     }
 
     // Delete redundant memory transactions that are in the connected branch
