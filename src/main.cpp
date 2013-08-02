@@ -1073,6 +1073,12 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
     else
         nSubsidy = nCoinAge * nRewardCoinYear * 33 / (365 * 33 + 8);
 
+    // Set reasonable reward limit for large inputs since 20 Oct 2013
+    //
+    // This will stimulate large holders to use smaller inputs, that's good for the network protection
+    if(fTestNet || STAKECURVE_SWITCH_TIME < nTime)
+        nSubsidy = min(nSubsidy, 10 * COIN);
+
     if (fDebug && GetBoolArg("-printcreation"))
         printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRI64d" nBits=%d\n", FormatMoney(nSubsidy).c_str(), nCoinAge, nBits);
     return nSubsidy;
