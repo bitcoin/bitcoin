@@ -2087,7 +2087,7 @@ public:
     std::map<COutPoint, CInPoint> mapNextTx;
 
     bool accept(CValidationState &state, CTransaction &tx, bool fCheckInputs, bool fLimitFree, bool* pfMissingInputs);
-    bool addUnchecked(const uint256& hash, CTransaction &tx);
+    bool addUnchecked(const uint256& hash, const CTransaction &tx);
     bool remove(const CTransaction &tx, bool fRecursive = false);
     bool removeConflicts(const CTransaction &tx);
     void clear();
