@@ -35,8 +35,6 @@ public:
     void showOutOfSyncWarning(bool fShow);
 
 private:
-    BitcoinGUI *gui;
-    ClientModel *clientModel;
     WalletStack *walletStack;
 
 public slots:
