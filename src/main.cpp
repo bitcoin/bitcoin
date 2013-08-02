@@ -59,8 +59,8 @@ CMedianFilter<int> cPeerBlockCounts(8, 0); // Amount of blocks that other nodes 
 map<uint256, CBlock*> mapOrphanBlocks;
 multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
 
-map<uint256, CDataStream*> mapOrphanTransactions;
-map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
+map<uint256, CTransaction> mapOrphanTransactions;
+map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
@@ -399,15 +399,11 @@ CBlockTreeDB *pblocktree = NULL;
 // mapOrphanTransactions
 //
 
-bool AddOrphanTx(const CDataStream& vMsg)
+bool AddOrphanTx(const CTransaction& tx)
 {
-    CTransaction tx;
-    CDataStream(vMsg) >> tx;
     uint256 hash = tx.GetHash();
     if (mapOrphanTransactions.count(hash))
         return false;
-
-    CDataStream* pvMsg = new CDataStream(vMsg);
 
     // Ignore big transactions, to avoid a
     // send-big-orphans memory exhaustion attack. If a peer has a legitimate
@@ -416,16 +412,16 @@ bool AddOrphanTx(const CDataStream& vMsg)
     // have been mined or received.
     // 10,000 orphans, each of which is at most 5,000 bytes big is
     // at most 500 megabytes of orphans:
-    if (pvMsg->size() > 5000)
+    unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    if (sz > 5000)
     {
-        printf("ignoring large orphan tx (size: %"PRIszu", hash: %s)\n", pvMsg->size(), hash.ToString().c_str());
-        delete pvMsg;
+        printf("ignoring large orphan tx (size: %u, hash: %s)\n", sz, hash.ToString().c_str());
         return false;
     }
 
-    mapOrphanTransactions[hash] = pvMsg;
+    mapOrphanTransactions[hash] = tx;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        mapOrphanTransactionsByPrev[txin.prevout.hash].insert(make_pair(hash, pvMsg));
+        mapOrphanTransactionsByPrev[txin.prevout.hash].insert(hash);
 
     printf("stored orphan tx %s (mapsz %"PRIszu")\n", hash.ToString().c_str(),
         mapOrphanTransactions.size());
@@ -436,16 +432,13 @@ void static EraseOrphanTx(uint256 hash)
 {
     if (!mapOrphanTransactions.count(hash))
         return;
-    const CDataStream* pvMsg = mapOrphanTransactions[hash];
-    CTransaction tx;
-    CDataStream(*pvMsg) >> tx;
+    const CTransaction& tx = mapOrphanTransactions[hash];
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
         mapOrphanTransactionsByPrev[txin.prevout.hash].erase(hash);
         if (mapOrphanTransactionsByPrev[txin.prevout.hash].empty())
             mapOrphanTransactionsByPrev.erase(txin.prevout.hash);
     }
-    delete pvMsg;
     mapOrphanTransactions.erase(hash);
 }
 
@@ -456,7 +449,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     {
         // Evict a random orphan:
         uint256 randomhash = GetRandHash();
-        map<uint256, CDataStream*>::iterator it = mapOrphanTransactions.lower_bound(randomhash);
+        map<uint256, CTransaction>::iterator it = mapOrphanTransactions.lower_bound(randomhash);
         if (it == mapOrphanTransactions.end())
             it = mapOrphanTransactions.begin();
         EraseOrphanTx(it->first);
@@ -793,7 +786,7 @@ void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
     }
 }
 
-bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fLimitFree,
+bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs)
 {
     if (pfMissingInputs)
@@ -960,7 +953,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fLimitFr
 }
 
 
-bool CTxMemPool::addUnchecked(const uint256& hash, CTransaction &tx)
+bool CTxMemPool::addUnchecked(const uint256& hash, const CTransaction &tx)
 {
     // Add to memory pool without checking anything.  Don't call this directly,
     // call CTxMemPool::accept to properly check the transaction first.
@@ -3602,7 +3595,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CValidationState state;
         if (mempool.accept(state, tx, true, &fMissingInputs))
         {
-            RelayTransaction(tx, inv.hash, vMsg);
+            RelayTransaction(tx, inv.hash);
             mapAlreadyAskedFor.erase(inv);
             vWorkQueue.push_back(inv.hash);
             vEraseQueue.push_back(inv.hash);
@@ -3611,31 +3604,31 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             for (unsigned int i = 0; i < vWorkQueue.size(); i++)
             {
                 uint256 hashPrev = vWorkQueue[i];
-                for (map<uint256, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin();
+                for (set<uint256>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin();
                      mi != mapOrphanTransactionsByPrev[hashPrev].end();
                      ++mi)
                 {
-                    const CDataStream& vMsg = *((*mi).second);
-                    CTransaction tx;
-                    CDataStream(vMsg) >> tx;
-                    CInv inv(MSG_TX, tx.GetHash());
+                    const uint256& orphanHash = *mi;
+                    const CTransaction& orphanTx = mapOrphanTransactions[orphanHash];
                     bool fMissingInputs2 = false;
-                    // Use a dummy CValidationState so someone can't setup nodes to counter-DoS based on orphan resolution (that is, feeding people an invalid transaction based on LegitTxX in order to get anyone relaying LegitTxX banned)
+                    // Use a dummy CValidationState so someone can't setup nodes to counter-DoS based on orphan
+                    // resolution (that is, feeding people an invalid transaction based on LegitTxX in order to get
+                    // anyone relaying LegitTxX banned)
                     CValidationState stateDummy;
 
-                    if (mempool.accept(stateDummy, tx, true, &fMissingInputs2))
+                    if (mempool.accept(stateDummy, orphanTx, true, &fMissingInputs2))
                     {
-                        printf("   accepted orphan tx %s\n", inv.hash.ToString().c_str());
-                        RelayTransaction(tx, inv.hash, vMsg);
-                        mapAlreadyAskedFor.erase(inv);
-                        vWorkQueue.push_back(inv.hash);
-                        vEraseQueue.push_back(inv.hash);
+                        printf("   accepted orphan tx %s\n", orphanHash.ToString().c_str());
+                        RelayTransaction(orphanTx, orphanHash);
+                        mapAlreadyAskedFor.erase(CInv(MSG_TX, orphanHash));
+                        vWorkQueue.push_back(orphanHash);
+                        vEraseQueue.push_back(orphanHash);
                     }
                     else if (!fMissingInputs2)
                     {
                         // invalid or too-little-fee orphan
-                        vEraseQueue.push_back(inv.hash);
-                        printf("   removed orphan tx %s\n", inv.hash.ToString().c_str());
+                        vEraseQueue.push_back(orphanHash);
+                        printf("   removed orphan tx %s\n", orphanHash.ToString().c_str());
                     }
                 }
             }
@@ -3645,7 +3638,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
         else if (fMissingInputs)
         {
-            AddOrphanTx(vMsg);
+            AddOrphanTx(tx);
 
             // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
             unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
@@ -4132,9 +4125,6 @@ public:
         mapOrphanBlocks.clear();
 
         // orphan transactions
-        std::map<uint256, CDataStream*>::iterator it3 = mapOrphanTransactions.begin();
-        for (; it3 != mapOrphanTransactions.end(); it3++)
-            delete (*it3).second;
         mapOrphanTransactions.clear();
     }
 } instance_of_cmaincleanup;
