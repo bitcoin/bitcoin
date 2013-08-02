@@ -628,21 +628,30 @@ bool CSieveOfEratosthenes::Weave()
 // Estimate the probability of primality for a number in a candidate chain
 double EstimateCandidatePrimeProbability()
 {
-    // h * q# * s is prime with probability 1/log(h * q# * s),
+    // h * q# / r# * s is prime with probability 1/log(h * q# / r# * s),
     //   (prime number theorem)
-    //   here s ~ max sieve size / 2, log(q#) ~ q
+    //   here s ~ max sieve size / 2,
+    //   h ~ 2^255 * 1.5,
+    //   r = 7 (primorial multiplier embedded in the hash)
     // Euler product to p ~ 1.781072 * log(p)   (Mertens theorem)
     // If sieve is weaved up to p, a number in a candidate chain is a prime
     // with probability
-    //     (1/log(h * q#)) / (1/(1.781072 * log(p)))
-    //   = 1.781072 * log(p) / (256 * log(2) + q)
+    //     (1/log(h * q# / r# * s)) / (1/(1.781072 * log(p)))
+    //   = 1.781072 * log(p) / (255 * log(2) + log(1.5) + log(q# / r#) + log(s))
     //
     // This model assumes that the numbers on a chain being primes are
     // statistically independent after running the sieve, which might not be
     // true, but nontheless it's a reasonable model of the chances of finding
     // prime chains.
     unsigned int nSieveWeaveOptimalPrime = pminer->GetSieveWeaveOptimalPrime();
-    return (1.781072 * log((double)std::max(1u, nSieveWeaveOptimalPrime)) / (256.0 * log(2.0) + (double) (pminer->nPrimorialMultiplier - nPrimorialHashFactor) + log(nMaxSieveSize / 2.0)));
+    unsigned int nAverageCandidateMultiplier = nMaxSieveSize / 2;
+    unsigned int nPrimorialMultiplier = pminer->nPrimorialMultiplier;
+    double dFixedMultiplier = 1.0;
+    for (unsigned int i = 0; vPrimes[i] <= nPrimorialMultiplier; i++)
+        dFixedMultiplier *= vPrimes[i];
+    for (unsigned int i = 0; vPrimes[i] <= nPrimorialHashFactor; i++)
+        dFixedMultiplier /= vPrimes[i];
+    return (1.781072 * log((double)std::max(1u, nSieveWeaveOptimalPrime)) / (255.0 * log(2.0) + log(1.5) + log(dFixedMultiplier) + log(nAverageCandidateMultiplier)));
 }
 
 unsigned int CPrimeMiner::GetSieveWeaveOptimalPrime()
