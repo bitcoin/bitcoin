@@ -77,6 +77,41 @@ Value importprivkey(const Array& params, bool fHelp)
     return Value::null;
 }
 
+Value eraseprivkey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "eraseprivkey <bitcoinprivkey> [label] [rescan=true]\n"
+            "Erases a private key (as returned by dumpprivkey) from your wallet.");
+
+    string strSecret = params[0].get_str();
+
+    CBitcoinSecret vchSecret;
+    bool fGood = vchSecret.SetString(strSecret);
+
+    if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+
+    CKey key;
+    bool fCompressed;
+    CSecret secret = vchSecret.GetSecret(fCompressed);
+    key.SetSecret(secret, fCompressed);
+    CKeyID vchAddress = key.GetPubKey().GetID();
+
+    if (!pwalletMain->HaveKey(vchAddress))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key is not known");
+    {
+        LOCK2(cs_main, pwalletMain->cs_wallet);
+
+        if (!pwalletMain->EraseKey(key))
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error erasing key from wallet");
+
+        pwalletMain->MarkDirty();
+        pwalletMain->DelAddressBookName(vchAddress);
+        }
+
+    return Value::null;
+}
+
 Value dumpprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)

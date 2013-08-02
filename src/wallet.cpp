@@ -55,6 +55,17 @@ bool CWallet::AddKey(const CKey& key)
     return true;
 }
 
+bool CWallet::EraseKey(const CKey& key)
+{
+    if (!CCryptoKeyStore::EraseKey(key.GetPubKey().GetID()))
+        return false;
+    if (!fFileBacked)
+        return true;
+    if (!IsCrypted())
+        return CWalletDB(strWalletFile).EraseKey(key.GetPubKey(), key.GetPrivKey());
+    return true;
+}
+
 bool CWallet::AddCryptedKey(const CPubKey &vchPubKey, const vector<unsigned char> &vchCryptedSecret)
 {
     if (!CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret))
