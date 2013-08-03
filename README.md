@@ -9,6 +9,7 @@ NovaCoin - a hybrid scrypt PoW + PoS based cryptocurrency.
 * The PoW subsidy halves every x64 multiply of PoW difficulty
 * The PoS interest halves every x64 multiply of PoS difficulty
 * Maximum PoW reward is 100 coins
+* Maximum PoS reward is 10 coins
 * ~ 2 billion total coins
 
 Development process
