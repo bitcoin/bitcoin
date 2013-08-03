@@ -56,6 +56,7 @@ protected:
 
 public:
     bool AddKey(const CKey& key);
+    bool EraseKey(const CKeyID &address);
     bool HaveKey(const CKeyID &address) const
     {
         bool result;
@@ -146,7 +147,9 @@ public:
     bool Lock();
 
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    virtual bool EraseCryptedKey(const CKeyID &address);
     bool AddKey(const CKey& key);
+    bool EraseKey(const CKeyID &address);
     bool HaveKey(const CKeyID &address) const
     {
         {

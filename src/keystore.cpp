@@ -26,6 +26,15 @@ bool CBasicKeyStore::AddKey(const CKey& key)
     return true;
 }
 
+bool CBasicKeyStore::EraseKey(const CKeyID &address)
+{
+    {
+        LOCK(cs_KeyStore);
+        mapKeys.erase(address);
+    }
+    return true;
+}
+
 bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
 {
     {
@@ -138,7 +147,21 @@ bool CCryptoKeyStore::AddKey(const CKey& key)
     }
     return true;
 }
+bool CCryptoKeyStore::EraseKey(const CKeyID &address)
+{
+    {
+        LOCK(cs_KeyStore);
+        if (!IsCrypted())
+            return CBasicKeyStore::EraseKey(address);
 
+        if (IsLocked())
+            return false;
+
+        if (!EraseCryptedKey(address))
+            return false;
+    }
+    return true;
+}
 
 bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
 {
@@ -148,6 +171,18 @@ bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<
             return false;
 
         mapCryptedKeys[vchPubKey.GetID()] = make_pair(vchPubKey, vchCryptedSecret);
+    }
+    return true;
+}
+
+bool CCryptoKeyStore::EraseCryptedKey(const CKeyID &address)
+{
+    {
+        LOCK(cs_KeyStore);
+        if (!SetCrypted())
+            return false;
+
+        mapCryptedKeys.erase(address);
     }
     return true;
 }
