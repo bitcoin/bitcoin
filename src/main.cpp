@@ -772,7 +772,7 @@ int64 GetMinFee(const CTransaction& tx, bool fAllowFree, enum GetMinFee_mode mod
     {
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
             if (txout.nValue < CENT)
-                nMinFee = nBaseFee;
+                nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
     }
 
     if (!MoneyRange(nMinFee))
