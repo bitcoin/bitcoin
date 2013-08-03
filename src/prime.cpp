@@ -27,7 +27,7 @@ void GeneratePrimeTable()
     for (unsigned int n = 2; n < nPrimeTableLimit; n++)
         if (!vfComposite[n])
             vPrimes.push_back(n);
-    printf("GeneratePrimeTable() : prime table [1, %d] generated with %lu primes\n", nPrimeTableLimit, vPrimes.size());
+    printf("GeneratePrimeTable() : prime table [1, %u] generated with %u primes\n", nPrimeTableLimit, (unsigned int) vPrimes.size());
 }
 
 // Get next prime number of p
