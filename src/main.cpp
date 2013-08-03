@@ -998,7 +998,7 @@ int64 GetProofOfWorkReward(unsigned int nBits)
 // miner's coin stake reward based on nBits and coin age spent (coin-days)
 int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTime, bool bCoinYearOnly)
 {
-    int64 nRewardCoinYear, nSubsidy;
+    int64 nRewardCoinYear, nSubsidy, nSubsidyLimit = 10 * COIN;
 
     if(fTestNet || nTime > STAKE_SWITCH_TIME)
     {
@@ -1032,8 +1032,8 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
                 // Human readable form: nRewardCoinYear = 1 / (posdiff ^ 1/6)
                 //
 
-                bnMidPart = bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnTargetLimit;
-                bnRewardPart = bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnTarget;
+                bnMidPart = bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue;
+                bnRewardPart = bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit;
             }
             else
             {
@@ -1045,11 +1045,11 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
                 // Human readable form: nRewardCoinYear = 1 / (posdiff ^ 1/3)
                 //
 
-                bnMidPart = bnMidValue * bnMidValue * bnMidValue * bnTargetLimit;
-                bnRewardPart = bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnTarget;
+                bnMidPart = bnMidValue * bnMidValue * bnMidValue;
+                bnRewardPart = bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit;
             }
 
-            if (bnMidPart > bnRewardPart)
+            if (bnMidPart * bnTargetLimit > bnRewardPart * bnTarget)
                 bnUpperBound = bnMidValue;
             else
                 bnLowerBound = bnMidValue;
@@ -1077,7 +1077,12 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
     //
     // This will stimulate large holders to use smaller inputs, that's good for the network protection
     if(fTestNet || STAKECURVE_SWITCH_TIME < nTime)
-        nSubsidy = min(nSubsidy, 10 * COIN);
+    {
+        if (fDebug && GetBoolArg("-printcreation") && nSubsidyLimit < nSubsidy)
+            printf("GetProofOfStakeReward(): %s is greater than %s, coinstake reward will be truncated\n", FormatMoney(nSubsidy).c_str(), FormatMoney(nSubsidyLimit).c_str());
+
+        nSubsidy = min(nSubsidy, nSubsidyLimit);
+    }
 
     if (fDebug && GetBoolArg("-printcreation"))
         printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRI64d" nBits=%d\n", FormatMoney(nSubsidy).c_str(), nCoinAge, nBits);
