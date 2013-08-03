@@ -95,18 +95,19 @@ Value eraseprivkey(const Array& params, bool fHelp)
     bool fCompressed;
     CSecret secret = vchSecret.GetSecret(fCompressed);
     key.SetSecret(secret, fCompressed);
-    CKeyID vchAddress = key.GetPubKey().GetID();
+    CPubKey vchPubKey = key.GetPubKey();
+    //const CKeyID address = key.GetPubKey().GetID();
 
-    if (!pwalletMain->HaveKey(vchAddress))
+    if (!pwalletMain->HaveKey(vchPubKey.GetID()))
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key is not known");
     {
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
-        if (!pwalletMain->EraseKey(key))
+        if (!pwalletMain->EraseKey(vchPubKey))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error erasing key from wallet");
 
         pwalletMain->MarkDirty();
-        pwalletMain->DelAddressBookName(vchAddress);
+        pwalletMain->DelAddressBookName(vchPubKey.GetID());
         }
 
     return Value::null;

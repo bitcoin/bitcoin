@@ -138,7 +138,7 @@ public:
     // Adds a key to the store, and saves it to disk.
     bool AddKey(const CKey& key);
     // Erases a key from the store, and erases it from disk.
-    bool EraseKey(const CKey& key);
+    bool EraseKey(const CPubKey &vchPubKey);
     // Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key) { return CCryptoKeyStore::AddKey(key); }
 
