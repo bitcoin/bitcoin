@@ -48,8 +48,6 @@
 #endif
 #include <QMimeData>
 #include <QStyle>
-#include <QSettings>
-#include <QDesktopWidget>
 #include <QListWidget>
 
 #include <iostream>
@@ -67,7 +65,7 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     rpcConsole(0),
     prevBlocks(0)
 {
-    restoreWindowGeometry();
+    GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
 #ifndef Q_OS_MAC
     if (!fIsTestnet)
@@ -165,7 +163,7 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
 
 BitcoinGUI::~BitcoinGUI()
 {
-    saveWindowGeometry();
+    GUIUtil::saveWindowGeometry("nWindow", this);
     if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)
         trayIcon->hide();
 #ifdef Q_OS_MAC
@@ -423,28 +421,6 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 #endif
-
-void BitcoinGUI::saveWindowGeometry()
-{
-    QSettings settings;
-    settings.setValue("nWindowPos", pos());
-    settings.setValue("nWindowSize", size());
-}
-
-void BitcoinGUI::restoreWindowGeometry()
-{
-    QSettings settings;
-    QPoint pos = settings.value("nWindowPos").toPoint();
-    QSize size = settings.value("nWindowSize", QSize(850, 550)).toSize();
-    if (!pos.x() && !pos.y())
-    {
-        QRect screen = QApplication::desktop()->screenGeometry();
-        pos.setX((screen.width()-size.width())/2);
-        pos.setY((screen.height()-size.height())/2);
-    }
-    resize(size);
-    move(pos);
-}
 
 void BitcoinGUI::optionsClicked()
 {
