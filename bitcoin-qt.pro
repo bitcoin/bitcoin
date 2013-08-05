@@ -23,6 +23,21 @@ OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
 
+contains(BITCOIN_QT_TEST, 1) {
+OBJECTS_DIR = build_test
+MOC_DIR = build_test
+UI_DIR = build_test
+
+SOURCES += src/qt/test/test_main.cpp \
+    src/qt/test/uritests.cpp
+HEADERS += src/qt/test/uritests.h
+DEPENDPATH += src/qt/test
+QT += testlib
+TARGET = bitcoin-qt_test
+DEFINES += BITCOIN_QT_TEST
+macx: CONFIG -= app_bundle
+}
+
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
     # Mac: compile for maximum compatibility (10.5, 32-bit)
@@ -119,12 +134,12 @@ QMAKE_EXTRA_TARGETS += genleveldb
 # Gross ugly hack that depends on qmake internals, unfortunately there is no other way to do it.
 QMAKE_CLEAN += $$PWD/src/leveldb/libleveldb.a; cd $$PWD/src/leveldb ; $(MAKE) clean
 
-# regenerate src/build.h
+# regenerate build.h
 !win32|contains(USE_BUILD_INFO, 1) {
     genbuild.depends = FORCE
-    genbuild.commands = cd $$PWD; /bin/sh share/genbuild.sh $$OUT_PWD/build/build.h
-    genbuild.target = $$OUT_PWD/build/build.h
-    PRE_TARGETDEPS += $$OUT_PWD/build/build.h
+    genbuild.commands = cd $$PWD; /bin/sh share/genbuild.sh $$OBJECTS_DIR/build.h
+    genbuild.target = $$OBJECTS_DIR/build.h
+    PRE_TARGETDEPS += $$OBJECTS_DIR/build.h
     QMAKE_EXTRA_TARGETS += genbuild
     DEFINES += HAVE_BUILD_INFO
 }
@@ -311,16 +326,6 @@ SOURCES += src/qt/qrcodedialog.cpp
 FORMS += src/qt/forms/qrcodedialog.ui
 }
 
-contains(BITCOIN_QT_TEST, 1) {
-SOURCES += src/qt/test/test_main.cpp \
-    src/qt/test/uritests.cpp
-HEADERS += src/qt/test/uritests.h
-DEPENDPATH += src/qt/test
-QT += testlib
-TARGET = bitcoin-qt_test
-DEFINES += BITCOIN_QT_TEST
-  macx: CONFIG -= app_bundle
-}
 
 # Todo: Remove this line when switching to Qt5, as that option was removed
 CODECFORTR = UTF-8
