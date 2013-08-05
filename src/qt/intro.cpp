@@ -80,9 +80,9 @@ void FreespaceChecker::check()
         {
             if(fs::is_directory(dataDir))
             {
-                QString separator = QDir::toNativeSeparators("/");
+                QString separator = "<code>" + QDir::toNativeSeparators("/") + tr("name") + "</code>";
                 replyStatus = ST_OK;
-                replyMessage = tr("Directory already exists. Add <code>%1name</code> if you intend to create a new directory here.").arg(separator);
+                replyMessage = tr("Directory already exists. Add %1 if you intend to create a new directory here.").arg(separator);
             } else {
                 replyStatus = ST_ERROR;
                 replyMessage = tr("Path already exists, and is not a directory.");
