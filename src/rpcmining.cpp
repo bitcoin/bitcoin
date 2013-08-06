@@ -11,7 +11,9 @@
 using namespace json_spirit;
 using namespace std;
 
-// Litecoin: Return average network hashes per second based on last number of blocks.
+// Return average network hashes per second based on the last 'lookup' blocks,
+// or from the last difficulty change if 'lookup' is nonpositive.
+// If 'height' is nonnegative, compute the estimate at the time when a given block was found.
 Value GetNetworkHashPS(int lookup, int height) {
     CBlockIndex *pb = pindexBest;
 
