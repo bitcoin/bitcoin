@@ -2716,10 +2716,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+1"/>
-        <source>Wallet %s resides outside data directory %s
-</source>
-        <translation>Wallet %s resides outside data directory %s
-</translation>
+        <source>Wallet %s resides outside data directory %s</source>
+        <translation>Wallet %s resides outside data directory %s</translation>
     </message>
     <message>
         <location line="+4"/>
