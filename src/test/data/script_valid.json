@@ -316,6 +316,15 @@
 ["2147483647", "1ADD 1"],
 ["-2147483647", "1ADD 1"],
 
+["1", "0x02 0x0100 EQUAL NOT", "Not the same byte array..."],
+["1", "0x02 0x0100 NUMEQUAL", "... but they are numerically equal"],
+["11", "0x4c 0x03 0x0b0000 NUMEQUAL"],
+["0", "0x01 0x80 EQUAL NOT"],
+["0", "0x01 0x80 NUMEQUAL", "Zero numerically equals negative zero"],
+["0", "0x02 0x0080 NUMEQUAL"],
+["0x03 0x000080", "0x04 0x00000080 NUMEQUAL"],
+["0x03 0x100080", "0x04 0x10000080 NUMEQUAL"],
+["0x03 0x100000", "0x04 0x10000000 NUMEQUAL"],
 
 ["NOP", "NOP 1", "The following tests check the if(stack.size() < N) tests in each opcode"],
 ["1", "IF 1 ENDIF", "They are here to catch copy-and-paste errors"],
