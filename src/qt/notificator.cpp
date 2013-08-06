@@ -113,7 +113,7 @@ FreedesktopImage::FreedesktopImage(const QImage &img):
 {
     // Convert 00xAARRGGBB to RGBA bytewise (endian-independent) format
     QImage tmp = img.convertToFormat(QImage::Format_ARGB32);
-    const uint32_t *data = reinterpret_cast<const uint32_t*>(tmp.constBits());
+    const uint32_t *data = reinterpret_cast<const uint32_t*>(tmp.bits());
 
     unsigned int num_pixels = width * height;
     image.resize(num_pixels * BYTES_PER_PIXEL);
