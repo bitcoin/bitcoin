@@ -1492,18 +1492,18 @@ Value lockunspent(const Array& params, bool fHelp)
     BOOST_FOREACH(Value& output, outputs)
     {
         if (output.type() != obj_type)
-            throw JSONRPCError(-8, "Invalid parameter, expected object");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected object");
         const Object& o = output.get_obj();
 
         RPCTypeCheck(o, map_list_of("txid", str_type)("vout", int_type));
 
         string txid = find_value(o, "txid").get_str();
         if (!IsHex(txid))
-            throw JSONRPCError(-8, "Invalid parameter, expected hex txid");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected hex txid");
 
         int nOutput = find_value(o, "vout").get_int();
         if (nOutput < 0)
-            throw JSONRPCError(-8, "Invalid parameter, vout must be positive");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
 
         COutPoint outpt(uint256(txid), nOutput);
 
