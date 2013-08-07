@@ -65,6 +65,22 @@ std::string DecodeDumpString(const std::string &str) {
     return ret.str();
 }
 
+Value forcerescan(const Array& params, bool fHelp)
+{
+	if (fHelp) {
+        	throw runtime_error(
+          		"forcerescan\n"
+            		"Forces a rescan of all blocks and adds the transactions to your wallet.");
+	} else {
+        	printf("Forcing rescan...\n");
+        	LOCK2(cs_main, pwalletMain->cs_wallet);
+        	pwalletMain->MarkDirty();
+        	pwalletMain->ScanForWalletTransactions(pindexGenesisBlock, true);
+        	pwalletMain->ReacceptWalletTransactions();
+	}
+        return Value::null;
+}
+
 Value importprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
