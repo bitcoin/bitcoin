@@ -101,24 +101,21 @@ bool SendCoinsEntry::validate()
     // Check input validity
     bool retval = true;
 
-    if(!ui->payAmount->validate())
-    {
-        retval = false;
-    }
-    else
-    {
-        if(ui->payAmount->value() <= 0)
-        {
-            // Cannot send 0 coins or less
-            ui->payAmount->setValid(false);
-            retval = false;
-        }
-    }
-
     if(!ui->payTo->hasAcceptableInput() ||
        (model && !model->validateAddress(ui->payTo->text())))
     {
         ui->payTo->setValid(false);
+        retval = false;
+    }
+
+    if(!ui->payAmount->validate())
+    {
+        retval = false;
+    }
+
+    // Reject dust outputs:
+    if (retval && GUIUtil::isDust(ui->payTo->text(), ui->payAmount->value())) {
+        ui->payAmount->setValid(false);
         retval = false;
     }
 
