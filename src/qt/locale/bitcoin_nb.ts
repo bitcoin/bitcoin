@@ -1071,7 +1071,7 @@ Adresse: %4
     <message>
         <location filename="../paymentserver.cpp" line="+107"/>
         <source>Cannot start litecoin: click-to-pay handler</source>
-        <translation>Kan ikke starte Bit-coin: klikk-og-betal håndterer</translation>
+        <translation>Kan ikke starte litecoin: klikk-og-betal håndterer</translation>
     </message>
 </context>
 <context>
@@ -1331,7 +1331,7 @@ Adresse: %4
     <message>
         <location line="+3"/>
         <source>S&amp;end</source>
-        <translation>S&amp;avslutt</translation>
+        <translation>S&amp;end</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-59"/>
