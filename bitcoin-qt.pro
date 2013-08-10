@@ -216,7 +216,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/threadsafety.h \
     src/limitedmap.h \
     src/qt/splashscreen.h \
-    src/qt/intro.h
+    src/qt/intro.h \
+    src/qt/walletmodeltransaction.h
 
 SOURCES += src/qt/bitcoin.cpp \
     src/qt/bitcoingui.cpp \
@@ -288,7 +289,8 @@ SOURCES += src/qt/bitcoin.cpp \
     src/leveldb.cpp \
     src/txdb.cpp \
     src/qt/splashscreen.cpp \
-    src/qt/intro.cpp
+    src/qt/intro.cpp \
+    src/qt/walletmodeltransaction.cpp
 
 RESOURCES += src/qt/bitcoin.qrc
 

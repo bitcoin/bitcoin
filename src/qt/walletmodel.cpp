@@ -5,7 +5,6 @@
 #include "transactiontablemodel.h"
 
 #include "ui_interface.h"
-#include "wallet.h"
 #include "walletdb.h" // for BackupWallet
 #include "base58.h"
 
@@ -124,11 +123,14 @@ bool WalletModel::validateAddress(const QString &address)
     return addressParsed.IsValid();
 }
 
-WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipient> &recipients)
+WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction)
 {
     qint64 total = 0;
     QSet<QString> setAddress;
     QString hex;
+    qint64 nFeeRequired = 0;
+
+    QList<SendCoinsRecipient> recipients = transaction.getRecipients();
 
     if(recipients.empty())
     {
@@ -163,11 +165,14 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
 
     if((total + nTransactionFee) > getBalance())
     {
-        return SendCoinsReturn(AmountWithFeeExceedsBalance, nTransactionFee);
+        transaction.setTransactionFee(nTransactionFee);
+        return SendCoinsReturn(AmountWithFeeExceedsBalance);
     }
 
     {
         LOCK2(cs_main, wallet->cs_wallet);
+
+        transaction.newPossibleKeyChange(wallet);
 
         // Sendmany
         std::vector<std::pair<CScript, int64> > vecSend;
@@ -178,35 +183,49 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
             vecSend.push_back(make_pair(scriptPubKey, rcp.amount));
         }
 
-        CWalletTx wtx;
-        CReserveKey keyChange(wallet);
-        int64 nFeeRequired = 0;
         std::string strFailReason;
-        bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strFailReason);
+
+        CWalletTx *newTx = transaction.getTransaction();
+        CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason);
+        transaction.setTransactionFee(nFeeRequired);
 
         if(!fCreated)
         {
             if((total + nFeeRequired) > wallet->GetBalance())
             {
-                return SendCoinsReturn(AmountWithFeeExceedsBalance, nFeeRequired);
+                return SendCoinsReturn(AmountWithFeeExceedsBalance);
             }
             emit message(tr("Send Coins"), QString::fromStdString(strFailReason),
                          CClientUIInterface::MSG_ERROR);
             return TransactionCreationFailed;
         }
-        if(!uiInterface.ThreadSafeAskFee(nFeeRequired))
+        hex = QString::fromStdString(newTx->GetHash().GetHex());
+    }
+
+    return SendCoinsReturn(OK, hex);
+}
+
+WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &transaction)
+{
+    QString hex;
+    {
         {
-            return Aborted;
+            LOCK2(cs_main, wallet->cs_wallet);
+
+            CWalletTx *newTx = transaction.getTransaction();
+            CReserveKey *keyChange = transaction.getPossibleKeyChange();
+
+            if(!wallet->CommitTransaction(*newTx, *keyChange))
+            {
+                return TransactionCommitFailed;
+            }
+            hex = QString::fromStdString(newTx->GetHash().GetHex());
         }
-        if(!wallet->CommitTransaction(wtx, keyChange))
-        {
-            return TransactionCommitFailed;
-        }
-        hex = QString::fromStdString(wtx.GetHash().GetHex());
     }
 
     // Add addresses / update labels that we've sent to to the address book
-    foreach(const SendCoinsRecipient &rcp, recipients)
+    foreach(const SendCoinsRecipient &rcp, transaction.getRecipients())
     {
         std::string strAddress = rcp.address.toStdString();
         CTxDestination dest = CBitcoinAddress(strAddress).Get();
@@ -224,7 +243,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         }
     }
 
-    return SendCoinsReturn(OK, 0, hex);
+    return SendCoinsReturn(OK, hex);
 }
 
 OptionsModel *WalletModel::getOptionsModel()
