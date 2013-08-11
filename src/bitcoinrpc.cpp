@@ -268,6 +268,7 @@ static const CRPCCommand vRPCCommands[] =
     { "lockunspent",            &lockunspent,            false,     false },
     { "listlockunspent",        &listlockunspent,        false,     false },
     { "listprimerecords",       &listprimerecords,       false,     false },
+    { "listtopprimes",          &listtopprimes,          false,     false },
 };
 
 CRPCTable::CRPCTable()
@@ -1198,6 +1199,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "lockunspent"            && n > 1) ConvertTo<Array>(params[1]);
     if (strMethod == "importprivkey"          && n > 2) ConvertTo<bool>(params[2]);
     if (strMethod == "listprimerecords"       && n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "listtopprimes"          && n > 0) ConvertTo<boost::int64_t>(params[0]);
 
     return params;
 }

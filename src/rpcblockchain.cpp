@@ -275,3 +275,74 @@ Value listprimerecords(const Array& params, bool fHelp)
 
     return ret;
 }
+
+// Primecoin: list top prime chain within primecoin network
+Value listtopprimes(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "listtopprimes <primechain length> [primechain type]\n"
+            "Returns the list of top prime chains in primecoin network.\n"
+            "<primechain length> is integer like 10, 11, 12 etc.\n"
+            "[primechain type] is optional type, among 1CC, 2CC and TWN");
+
+    int nPrimeChainLength = params[0].get_int();
+    unsigned int nPrimeChainType = 0;
+    if (params.size() > 1)
+    {
+        std::string strPrimeChainType = params[1].get_str();
+        if (strPrimeChainType.compare("1CC") == 0)
+            nPrimeChainType = PRIME_CHAIN_CUNNINGHAM1;
+        else if (strPrimeChainType.compare("2CC") == 0)
+            nPrimeChainType = PRIME_CHAIN_CUNNINGHAM2;
+        else if (strPrimeChainType.compare("TWN") == 0)
+            nPrimeChainType = PRIME_CHAIN_BI_TWIN;
+        else
+            throw runtime_error("Prime chain type must be 1CC, 2CC or TWN.");
+    }
+
+    // Prepare block candidates for sorting
+    vector<pair<unsigned int, uint256> > vSortedByOrigin;
+    for (CBlockIndex* pindex = pindexGenesisBlock; pindex; pindex = pindex->pnext)
+    {
+        if (nPrimeChainLength != (int) TargetGetLength(pindex->nPrimeChainLength))
+            continue; // length not matching, next block
+        if (nPrimeChainType && nPrimeChainType != pindex->nPrimeChainType)
+            continue; // type not matching, next block
+
+        CBlock block;
+        block.ReadFromDisk(pindex); // read block
+        CBigNum bnPrimeChainOrigin = CBigNum(block.GetHeaderHash()) * block.bnPrimeChainMultiplier; // compute prime chain origin
+
+        vSortedByOrigin.push_back(make_pair(bnPrimeChainOrigin.GetCompact(), block.GetHash()));
+    }
+
+    // Sort block list
+    sort(vSortedByOrigin.begin(), vSortedByOrigin.end());
+    reverse(vSortedByOrigin.begin(), vSortedByOrigin.end());
+
+    // Output top prime chains
+    Array ret;
+    unsigned int nCount = 0;
+    BOOST_FOREACH(const PAIRTYPE(unsigned int, uint256)& item, vSortedByOrigin)
+    {
+        CBlockIndex* pindex = mapBlockIndex[item.second];
+        CBlock block;
+        block.ReadFromDisk(pindex); // read block
+        CBigNum bnPrimeChainOrigin = CBigNum(block.GetHeaderHash()) * block.bnPrimeChainMultiplier; // compute prime chain origin
+        Object entry;
+        entry.push_back(Pair("time", DateTimeStrFormat("%Y-%m-%d %H:%M:%S UTC", pindex->GetBlockTime()).c_str()));
+        entry.push_back(Pair("epoch", (boost::int64_t) pindex->GetBlockTime()));
+        entry.push_back(Pair("height", pindex->nHeight));
+        entry.push_back(Pair("ismine", pwalletMain->IsMine(block.vtx[0])));
+        entry.push_back(Pair("primedigit", (int) bnPrimeChainOrigin.ToString().length()));
+        entry.push_back(Pair("primechain", GetPrimeChainName(pindex->nPrimeChainType, pindex->nPrimeChainLength).c_str()));
+        entry.push_back(Pair("primeorigin", bnPrimeChainOrigin.ToString().c_str()));
+        entry.push_back(Pair("primorialform", GetPrimeOriginPrimorialForm(bnPrimeChainOrigin).c_str()));
+        ret.push_back(entry);
+        if (++nCount > 10)
+            break;
+    }
+
+    return ret;
+}
