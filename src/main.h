@@ -36,11 +36,13 @@ static const int64 MAX_MONEY = 2000000000 * COIN;
 static const int64 MAX_MINT_PROOF_OF_WORK = 100 * COIN;
 static const int64 MAX_MINT_PROOF_OF_STAKE = 1 * COIN;
 static const int64 MIN_TXOUT_AMOUNT = MIN_TX_FEE;
-static const unsigned int STAKE_SWITCH_TIME = 1371686400; // 20 Jun 2013 00:00:00
-static const unsigned int TARGETS_SWITCH_TIME = 1374278400; // 20 Jul 2013 00:00:00
-static const unsigned int LOCKS_SWITCH_TIME = 1376956800; // 20 Aug 2013 00:00:00
-static const unsigned int CHAINCHECKS_SWITCH_TIME = 1379635200; // 20 Sep 2013 00:00:00
-static const unsigned int STAKECURVE_SWITCH_TIME = 1382227200; // 20 Oct 2013 00:00:00
+static const unsigned int STAKE_SWITCH_TIME = 1371686400; // Thu, 20 Jun 2013 00:00:00 GMT
+static const unsigned int TARGETS_SWITCH_TIME = 1374278400; // Sat, 20 Jul 2013 00:00:00 GMT
+static const unsigned int LOCKS_SWITCH_TIME = 1376956800; // Tue, 20 Aug 2013 00:00:00 GMT
+static const unsigned int CHAINCHECKS_SWITCH_TIME = 1379635200; // Fri, 20 Sep 2013 00:00:00 GMT
+static const unsigned int STAKECURVE_SWITCH_TIME = 1382227200; // Sun, 20 Oct 2013 00:00:00 GMT
+static const unsigned int STAKEWEIGHT_SWITCH_TIME = 1388534400; // Wed, 01 Jan 2014 00:00:00 GMT
+
 
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
