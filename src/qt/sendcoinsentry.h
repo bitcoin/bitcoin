@@ -40,6 +40,7 @@ public slots:
 
 signals:
     void removeEntry(SendCoinsEntry *entry);
+    void payAmountChanged();
 
 private slots:
     void on_deleteButton_clicked();
