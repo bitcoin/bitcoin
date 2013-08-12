@@ -721,12 +721,11 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     return true;
 }
 
-int64 GetMinFee(const CTransaction& tx, bool fAllowFree, enum GetMinFee_mode mode)
+int64 GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, enum GetMinFee_mode mode)
 {
     // Base fee is either nMinTxFee or nMinRelayTxFee
     int64 nBaseFee = (mode == GMF_RELAY) ? tx.nMinRelayTxFee : tx.nMinTxFee;
 
-    unsigned int nBytes = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
     int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
 
     if (fAllowFree)
@@ -875,7 +874,7 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
         // Don't accept it if it can't get into a block
-        int64 txMinFee = GetMinFee(tx, true, GMF_RELAY);
+        int64 txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
         if (fLimitFree && nFees < txMinFee)
             return error("CTxMemPool::accept() : not enough fees %s, %"PRI64d" < %"PRI64d,
                          hash.ToString().c_str(),
