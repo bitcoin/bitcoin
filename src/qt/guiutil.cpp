@@ -633,4 +633,10 @@ void HelpMessageBox::showOrPrint()
 #endif
 }
 
+void setClipboard(const QString& str)
+{
+    QApplication::clipboard()->setText(str, QClipboard::Clipboard);
+    QApplication::clipboard()->setText(str, QClipboard::Selection);
+}
+
 } // namespace GUIUtil
