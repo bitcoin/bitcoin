@@ -301,8 +301,11 @@ Value listtopprimes(const Array& params, bool fHelp)
             throw runtime_error("Prime chain type must be 1CC, 2CC or TWN.");
     }
 
-    // Prepare block candidates for sorting
-    vector<pair<unsigned int, uint256> > vSortedByOrigin;
+    // Search for top prime chains
+    unsigned int nRankingSize = 10; // ranking list size
+    unsigned int nSortVectorSize = 64; // vector size for sort operation
+    CBigNum bnPrimeQualify = 0; // minimum qualify value for ranking list
+    vector<pair<CBigNum, uint256> > vSortedByOrigin;
     for (CBlockIndex* pindex = pindexGenesisBlock; pindex; pindex = pindex->pnext)
     {
         if (nPrimeChainLength != (int) TargetGetLength(pindex->nPrimeChainLength))
@@ -314,22 +317,37 @@ Value listtopprimes(const Array& params, bool fHelp)
         block.ReadFromDisk(pindex); // read block
         CBigNum bnPrimeChainOrigin = CBigNum(block.GetHeaderHash()) * block.bnPrimeChainMultiplier; // compute prime chain origin
 
-        vSortedByOrigin.push_back(make_pair(bnPrimeChainOrigin.GetCompact(), block.GetHash()));
+        if (bnPrimeChainOrigin > bnPrimeQualify)
+            vSortedByOrigin.push_back(make_pair(bnPrimeChainOrigin, block.GetHash()));
+
+        if (vSortedByOrigin.size() >= nSortVectorSize)
+        {
+            // Sort prime chain candidates
+            sort(vSortedByOrigin.begin(), vSortedByOrigin.end());
+            reverse(vSortedByOrigin.begin(), vSortedByOrigin.end());
+            // Truncate candidate list
+            while (vSortedByOrigin.size() > nRankingSize)
+                vSortedByOrigin.pop_back();
+            // Update minimum qualify value for top prime chains
+            bnPrimeQualify = vSortedByOrigin.back().first;
+        }
     }
 
-    // Sort block list
+    // Final sort of prime chain candidates
     sort(vSortedByOrigin.begin(), vSortedByOrigin.end());
     reverse(vSortedByOrigin.begin(), vSortedByOrigin.end());
+    // Truncate candidate list
+    while (vSortedByOrigin.size() > nRankingSize)
+        vSortedByOrigin.pop_back();
 
     // Output top prime chains
     Array ret;
-    unsigned int nCount = 0;
-    BOOST_FOREACH(const PAIRTYPE(unsigned int, uint256)& item, vSortedByOrigin)
+    BOOST_FOREACH(const PAIRTYPE(CBigNum, uint256)& item, vSortedByOrigin)
     {
+        CBigNum bnPrimeChainOrigin = item.first;
         CBlockIndex* pindex = mapBlockIndex[item.second];
         CBlock block;
         block.ReadFromDisk(pindex); // read block
-        CBigNum bnPrimeChainOrigin = CBigNum(block.GetHeaderHash()) * block.bnPrimeChainMultiplier; // compute prime chain origin
         Object entry;
         entry.push_back(Pair("time", DateTimeStrFormat("%Y-%m-%d %H:%M:%S UTC", pindex->GetBlockTime()).c_str()));
         entry.push_back(Pair("epoch", (boost::int64_t) pindex->GetBlockTime()));
@@ -340,8 +358,6 @@ Value listtopprimes(const Array& params, bool fHelp)
         entry.push_back(Pair("primeorigin", bnPrimeChainOrigin.ToString().c_str()));
         entry.push_back(Pair("primorialform", GetPrimeOriginPrimorialForm(bnPrimeChainOrigin).c_str()));
         ret.push_back(entry);
-        if (++nCount > 10)
-            break;
     }
 
     return ret;
