@@ -14,7 +14,7 @@ DIST_SUBDIRS = . qt test
 # bitcoin core #
 BITCOIN_CORE_H = addrman.h alert.h allocators.h base58.h bignum.h \
   bitcoinrpc.h bloom.h chainparams.h checkpoints.h checkqueue.h \
-  clientversion.h compat.h core.h crypter.h db.h hash.h init.h \
+  clientversion.h coincontrol.h compat.h core.h crypter.h db.h hash.h init.h \
   key.h keystore.h leveldb.h limitedmap.h main.h miner.h mruset.h \
   netbase.h net.h protocol.h script.h serialize.h sync.h threadsafety.h \
   txdb.h ui_interface.h uint256.h util.h version.h walletdb.h wallet.h

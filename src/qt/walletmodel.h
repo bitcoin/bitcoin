@@ -2,6 +2,8 @@
 #define WALLETMODEL_H
 
 #include <QObject>
+#include <vector>
+#include <map>
 
 #include "allocators.h" /* for SecureString */
 #include "wallet.h"
@@ -13,6 +15,12 @@ class AddressTableModel;
 class TransactionTableModel;
 class CWallet;
 class WalletModelTransaction;
+class CKeyID;
+class CPubKey;
+class COutput;
+class COutPoint;
+class uint256;
+class CCoinControl;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -68,7 +76,7 @@ public:
     AddressTableModel *getAddressTableModel();
     TransactionTableModel *getTransactionTableModel();
 
-    qint64 getBalance() const;
+    qint64 getBalance(const CCoinControl *coinControl=NULL) const;
     qint64 getUnconfirmedBalance() const;
     qint64 getImmatureBalance() const;
     int getNumTransactions() const;
@@ -80,13 +88,13 @@ public:
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
     {
-        SendCoinsReturn(StatusCode status):
+        SendCoinsReturn(StatusCode status=Aborted):
             status(status) {}
         StatusCode status;
     };
 
     // prepare transaction for getting txfee before sending coins
-    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction);
+    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl=NULL);
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);
@@ -120,6 +128,15 @@ public:
     };
 
     UnlockContext requestUnlock();
+
+    bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
+    void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;
+
+    bool isLockedCoin(uint256 hash, unsigned int n) const;
+    void lockCoin(COutPoint& output);
+    void unlockCoin(COutPoint& output);
+    void listLockedCoins(std::vector<COutPoint>& vOutpts);
 
 private:
     CWallet *wallet;
