@@ -280,12 +280,16 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned 
     // this change increases active coins participating the hash and helps
     // to secure the network when proof-of-stake difficulty is low
     //
-    // Disabled for the moment, needs some discussion. That's planned to make this active since 01 Jan 2014
-
-    if(fTestNet || (false && STAKEWEIGHT_SWITCH_TIME < nTimeTx))
+    if(fTestNet || (STAKEWEIGHT_SWITCH_TIME < nTimeTx))
+    {
+        // New rule since 01 Jan 2014: Maximum TimeWeight is 90 days.
         nTimeWeight = min((int64)nTimeTx - txPrev.nTime - nStakeMinAge, (int64)nStakeMaxAge);
+    }
     else
+    {
+        // Current rule: Maximum TimeWeight is 60 days.
         nTimeWeight = min((int64)nTimeTx - txPrev.nTime, (int64)nStakeMaxAge) - nStakeMinAge;
+    }
 
     CBigNum bnCoinDayWeight = CBigNum(nValueIn) * nTimeWeight / COIN / (24 * 60 * 60);
 
