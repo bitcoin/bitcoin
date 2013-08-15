@@ -471,12 +471,24 @@ int ReadHTTPMessage(std::basic_istream<char>& stream, map<string,
 
 bool HTTPAuthorized(map<string, string>& mapHeaders)
 {
+    int nResult = 0;
     string strAuth = mapHeaders["authorization"];
     if (strAuth.substr(0,6) != "Basic ")
         return false;
     string strUserPass64 = strAuth.substr(6); boost::trim(strUserPass64);
     string strUserPass = DecodeBase64(strUserPass64);
-    return strUserPass == strRPCUserColonPass;
+
+    //Begin constant-time comparison
+    //XOR chars in each password together, and then adds either 0 or 1 (0 if they match) to nResult
+    for(size_t i = 0; i < min(strUserPass.length(), strRPCUserColonPass.length()); i++)
+    { 
+        nResult |= strUserPass.at(i) ^ strRPCUserColonPass.at(i); 
+    }
+
+    if(strUserPass.length() != strRPCUserColonPass.length())
+        nResult++;
+
+    return nResult == 0;
 }
 
 //
