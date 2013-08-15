@@ -2361,6 +2361,11 @@ Address: %4
         <translation>Искать узлы с помощью DNS (по умолчанию: 1)</translation>
     </message>
     <message>
+        <location line="+4"/>
+        <source>Disable sync checkpoints (default: 0)</source>
+        <translation>Отключить синхронизированные метки (по умолчанию: 0)</translation>
+    </message>
+    <message>
         <location line="+11"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Неверный адрес -tor: &apos;%s&apos;</translation>

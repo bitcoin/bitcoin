@@ -2349,6 +2349,11 @@ Address: %4
         <translation>Find peers using DNS lookup (default: 1)</translation>
     </message>
     <message>
+        <location line="+4"/>
+        <source>Disable sync checkpoints (default: 0)</source>
+        <translation>Disable sync checkpoints (default: 0)</translation>
+    </message>
+    <message>
         <location line="+11"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Invalid -tor address: &apos;%s&apos;</translation>
