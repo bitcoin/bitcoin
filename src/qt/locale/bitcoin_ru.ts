@@ -2357,8 +2357,8 @@ Address: %4
     </message>
     <message>
         <location line="+2"/>
-        <source>Find peers using DNS lookup (default: 0 unless -connect)</source>
-        <translation>Искать узлы с помощью DNS (по умолчанию: 0)</translation>
+        <source>Find peers using DNS lookup (default: 1)</source>
+        <translation>Искать узлы с помощью DNS (по умолчанию: 1)</translation>
     </message>
     <message>
         <location line="+11"/>

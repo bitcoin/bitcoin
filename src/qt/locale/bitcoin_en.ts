@@ -2345,8 +2345,8 @@ Address: %4
     </message>
     <message>
         <location line="+2"/>
-        <source>Find peers using DNS lookup (default: 0)</source>
-        <translation>Find peers using DNS lookup (default: 0)</translation>
+        <source>Find peers using DNS lookup (default: 1)</source>
+        <translation>Find peers using DNS lookup (default: 1)</translation>
     </message>
     <message>
         <location line="+11"/>
