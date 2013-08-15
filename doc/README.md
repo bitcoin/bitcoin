@@ -1,4 +1,4 @@
-Bitcoin 0.8.2 BETA 
+Bitcoin 0.8.3 BETA 
 ====================
 Copyright (c) 2009-2013 Bitcoin Developers
 
@@ -25,11 +25,6 @@ Unpack the files into a directory and run:
 - bin/64/bitcoin-qt (GUI, 64-bit)
 - bin/64/bitcoind (headless, 64-bit)
 
-### Mac
-Starting with a command-line flag:
-    
-	open /Applications/Bitcoin-Qt.app --args -reindex
-
 ### Windows
 
 Unpack the files into a directory and run bitcoin-qt.exe.
@@ -52,7 +47,7 @@ The following are developer notes on how to build Bitcoin on your native platfor
 
 Bitcoind
 ---------------------
-Bitcoind is a program that implements the Bitcoin protocol for command line and remote procedure call (RPC) use.
+Bitcoind is a headless daemon, and also bundles a testing tool for the same daemon. It provides a JSON-RPC interface, allowing it to be controlled locally or remotely which makes it useful for integration with other software or in larger payment systems. 
 
 - [Running Bitcoind](running-bitcoind.md)
 
