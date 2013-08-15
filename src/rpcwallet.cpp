@@ -1144,7 +1144,7 @@ Value listsinceblock(const Array& params, bool fHelp)
     if (fHelp)
         throw runtime_error(
             "listsinceblock [blockhash] [target-confirmations]\n"
-            "Get all transactions in blocks since block [blockhash], or all transactions if omitted");
+            "Get all wallet transactions in blocks since block [blockhash], or all wallet transactions if omitted");
 
     CBlockIndex *pindex = NULL;
     int target_confirms = 1;
