@@ -1077,6 +1077,7 @@ public:
 class CTxMemPool
 {
 public:
+    static bool fChecks;
     mutable CCriticalSection cs;
     std::map<uint256, CTransaction> mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
@@ -1088,6 +1089,7 @@ public:
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
+    void check(CCoinsViewCache *pcoins) const;
 
     unsigned long size()
     {
