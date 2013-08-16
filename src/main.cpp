@@ -1585,8 +1585,8 @@ bool CBlock::DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 
 bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 {
-    // Check it again in case a previous version let a bad block in
-    if (!CheckBlock(!fJustCheck, !fJustCheck))
+    // Check it again in case a previous version let a bad block in, but skip BlockSig checking
+    if (!CheckBlock(!fJustCheck, !fJustCheck, false))
         return false;
 
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
@@ -2042,7 +2042,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     pindexNew->nChainTrust = (pindexNew->pprev ? pindexNew->pprev->nChainTrust : 0) + pindexNew->GetBlockTrust();
 
     // ppcoin: compute stake entropy bit for stake modifier
-    if (!pindexNew->SetStakeEntropyBit(GetStakeEntropyBit(pindexNew->nHeight)))
+    if (!pindexNew->SetStakeEntropyBit(GetStakeEntropyBit(pindexNew->nTime)))
         return error("AddToBlockIndex() : SetStakeEntropyBit() failed");
 
     // ppcoin: record proof-of-stake hash value
@@ -2099,7 +2099,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
 
 
-bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
+bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) const
 {
     // These are checks that are independent of context
     // that can be verified before saving an orphan block.
@@ -2161,6 +2161,10 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
         // Check coinstake timestamp
         if (!CheckCoinStakeTimestamp(GetBlockTime(), (int64)vtx[1].nTime))
             return DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%"PRI64d" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
+
+        // NovaCoin: check proof-of-stake block signature
+        if (fCheckSig && !CheckBlockSignature(true))
+            return DoS(100, error("CheckBlock() : bad proof-of-stake block signature"));
     }
     else
     {
@@ -2172,6 +2176,23 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
             return DoS(50, error("CheckBlock() : coinbase reward exceeded (actual=%"PRI64d" vs calculated=%"PRI64d")",
                    vtx[0].GetValueOut(),
                    GetProofOfWorkReward(nBits) - nFee));
+
+        // Should we check proof-of-work block signature or not?
+        //
+        // * Always skip on TestNet
+        // * Perform checking for the first 9689 blocks
+        // * Perform checking since last checkpoint until 20 Sep 2013 (will be removed after)
+
+        if(!fTestNet && fCheckSig)
+        {
+            bool isAfterCheckpoint = (GetBlockTime() > Checkpoints::GetLastCheckpointTime());
+            bool checkEntropySig = (GetBlockTime() < ENTROPY_SWITCH_TIME);
+            bool checkPoWSig = (isAfterCheckpoint && GetBlockTime() < CHAINCHECKS_SWITCH_TIME);
+
+            // NovaCoin: check proof-of-work block signature
+            if ((checkEntropySig || checkPoWSig) && !CheckBlockSignature(false))
+                return DoS(100, error("CheckBlock() : bad proof-of-work block signature"));
+        }
     }
 
     // Check transactions
@@ -2207,12 +2228,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
     if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
         return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
 
-    // NovaCoin: check proof-of-stake block signature
-    if (IsProofOfStake() || (!fTestNet && GetBlockTime() < CHAINCHECKS_SWITCH_TIME))
-    {
-        if (!CheckBlockSignature())
-            return DoS(100, error("CheckBlock() : bad block signature"));
-    }
 
     return true;
 }
@@ -2563,7 +2578,7 @@ bool CBlock::SignBlock(const CKeyStore& keystore)
 }
 
 // ppcoin: check block signature
-bool CBlock::CheckBlockSignature() const
+bool CBlock::CheckBlockSignature(bool fProofOfStake) const
 {
     if (GetHash() == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet))
         return vchBlockSig.empty();
@@ -2571,7 +2586,7 @@ bool CBlock::CheckBlockSignature() const
     vector<valtype> vSolutions;
     txnouttype whichType;
 
-    if(IsProofOfStake())
+    if(fProofOfStake)
     {
         const CTxOut& txout = vtx[1].vout[1];
 

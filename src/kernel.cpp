@@ -12,6 +12,8 @@ using namespace std;
 extern int nStakeMaxAge;
 extern int nStakeTargetSpacing;
 
+typedef std::map<int, unsigned int> MapModifierCheckpoints;
+
 // Hard checkpoints of stake modifiers to ensure they are deterministic
 static std::map<int, unsigned int> mapStakeModifierCheckpoints =
     boost::assign::map_list_of
@@ -22,6 +24,12 @@ static std::map<int, unsigned int> mapStakeModifierCheckpoints =
         ( 19600, 0xdded1b8du )
         ( 21800, 0x0daa1aaau )
         ( 26174, 0xaf9983dcu )
+    ;
+
+// Hard checkpoints of stake modifiers to ensure they are deterministic (testNet)
+static std::map<int, unsigned int> mapStakeModifierCheckpointsTestNet =
+    boost::assign::map_list_of
+        ( 0, 0x0e00670bu )
     ;
 
 // Get the last stake modifier and its generation time from a given block
@@ -394,8 +402,9 @@ unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex)
 // Check stake modifier hard checkpoints
 bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierChecksum)
 {
-    if (fTestNet) return true; // Testnet has no checkpoints
-    if (mapStakeModifierCheckpoints.count(nHeight))
-        return nStakeModifierChecksum == mapStakeModifierCheckpoints[nHeight];
+    MapModifierCheckpoints& checkpoints = (fTestNet ? mapStakeModifierCheckpointsTestNet : mapStakeModifierCheckpoints);
+
+    if (checkpoints.count(nHeight))
+        return nStakeModifierChecksum == checkpoints[nHeight];
     return true;
 }
