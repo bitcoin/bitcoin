@@ -15,6 +15,7 @@
 void HandleError(const leveldb::Status &status) throw(leveldb_error) {
     if (status.ok())
         return;
+    printf("%s\n", status.ToString().c_str());
     if (status.IsCorruption())
         throw leveldb_error("Database corrupted");
     if (status.IsIOError())
@@ -54,8 +55,7 @@ CLevelDB::CLevelDB(const boost::filesystem::path &path, size_t nCacheSize, bool 
         printf("Opening LevelDB in %s\n", path.string().c_str());
     }
     leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
-    if (!status.ok())
-        throw std::runtime_error(strprintf("CLevelDB(): error opening database environment %s", status.ToString().c_str()));
+    HandleError(status);
     printf("Opened LevelDB successfully\n");
 }
 
@@ -72,10 +72,6 @@ CLevelDB::~CLevelDB() {
 
 bool CLevelDB::WriteBatch(CLevelDBBatch &batch, bool fSync) throw(leveldb_error) {
     leveldb::Status status = pdb->Write(fSync ? syncoptions : writeoptions, &batch.batch);
-    if (!status.ok()) {
-        printf("LevelDB write failure: %s\n", status.ToString().c_str());
-        HandleError(status);
-        return false;
-    }
+    HandleError(status);
     return true;
 }
