@@ -493,6 +493,24 @@ static bool ProbablePrimeChainTestForMiner(const CBigNum& bnPrimeChainOrigin, un
     return (nChainLength >= nBits);
 }
 
+// Perform Fermat test with trial division
+// Return values:
+//   true  - passes trial division test and Fermat test; probable prime
+//   false - failed either trial division or Fermat test; composite
+bool ProbablePrimalityTestWithTrialDivision(const CBigNum& bnCandidate, unsigned int nTrialDivisionLimit)
+{
+    // Trial division
+    BOOST_FOREACH(unsigned int nPrime, vPrimes)
+    {
+        if (nPrime >= nTrialDivisionLimit)
+            break;
+        if (bnCandidate % nPrime == 0)
+            return false; // failed trial division test
+    }
+    unsigned int nLength = 0;
+    return (FermatProbablePrimalityTest(bnCandidate, nLength));
+}
+
 // Sieve for mining
 boost::thread_specific_ptr<CSieveOfEratosthenes> psieve;
 boost::thread_specific_ptr<CPrimeMiner> pminer;
@@ -649,8 +667,6 @@ double EstimateCandidatePrimeProbability()
     double dFixedMultiplier = 1.0;
     for (unsigned int i = 0; vPrimes[i] <= nPrimorialMultiplier; i++)
         dFixedMultiplier *= vPrimes[i];
-    for (unsigned int i = 0; vPrimes[i] <= nPrimorialHashFactor; i++)
-        dFixedMultiplier /= vPrimes[i];
     return (1.781072 * log((double)std::max(1u, nSieveWeaveOptimalPrime)) / (255.0 * log(2.0) + log(1.5) + log(dFixedMultiplier) + log(nAverageCandidateMultiplier)));
 }
 

@@ -86,6 +86,12 @@ std::string GetPrimeOriginPrimorialForm(CBigNum& bnPrimeChainOrigin);
 // Mine probable prime chain of form: n = h * p# +/- 1
 bool MineProbablePrimeChain(CBlock& block, CBigNum& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, unsigned int& nTests, unsigned int& nPrimesHit);
 
+// Perform Fermat test with trial division
+// Return values:
+//   true  - passes trial division test and Fermat test; probable prime
+//   false - failed either trial division or Fermat test; composite
+bool ProbablePrimalityTestWithTrialDivision(const CBigNum& bnCandidate, unsigned int nTrialDivisionLimit);
+
 // Estimate the probability of primality for a number in a candidate chain
 double EstimateCandidatePrimeProbability();
 
@@ -175,7 +181,7 @@ public:
     bool Weave();
 };
 
-static const unsigned int nPrimorialHashFactor = 7;
+static const unsigned int nPrimorialMultiplierMin = 7;
 static const unsigned int nSieveWeaveInitial = 1000;
 
 class CPrimeMiner
@@ -199,7 +205,7 @@ class CPrimeMiner
         nSieveCandidateCount = 0;
         nTimeSieveReady = 0;
         nPrimalityTestCost = 0;
-        nPrimorialMultiplier = nPrimorialHashFactor;
+        nPrimorialMultiplier = nPrimorialMultiplierMin;
         nSieveWeaveOptimal = nSieveWeaveInitial;
     }
 

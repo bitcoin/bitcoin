@@ -4609,11 +4609,15 @@ void static BitcoinMiner(CWallet *pwallet)
         bool fNewBlock = true;
         unsigned int nTriedMultiplier = 0;
 
-        // Primecoin: try to find hash divisible by primorial
-        CBigNum bnHashFactor;
-        Primorial(nPrimorialHashFactor, bnHashFactor);
-        while ((pblock->GetHeaderHash() < hashBlockHeaderLimit || CBigNum(pblock->GetHeaderHash()) % bnHashFactor != 0) && pblock->nNonce < 0xffff0000)
-            pblock->nNonce++;
+        // Primecoin: try to find hash that is probable prime
+        do
+        {
+            uint256 hashBlockHeader = pblock->GetHeaderHash();
+            if (hashBlockHeader < hashBlockHeaderLimit)
+                continue; // must meet minimum requirement
+            if (ProbablePrimalityTestWithTrialDivision(CBigNum(hashBlockHeader), 1000))
+                break;
+        } while (++(pblock->nNonce) < 0xffff0000);
         if (pblock->nNonce >= 0xffff0000)
             continue;
         // Primecoin: primorial fixed multiplier
@@ -4628,18 +4632,9 @@ void static BitcoinMiner(CWallet *pwallet)
             unsigned int nTests = 0;
             unsigned int nPrimesHit = 0;
 
-            CBigNum bnMultiplierMin = bnPrimeMin * bnHashFactor / CBigNum(pblock->GetHeaderHash()) + 1;
-            while (bnPrimorial < bnMultiplierMin)
-            {
-                if (!PrimeTableGetNextPrime(pminer->nPrimorialMultiplier))
-                    error("PrimecoinMiner() : primorial minimum overflow");
-                Primorial(pminer->nPrimorialMultiplier, bnPrimorial);
-            }
-            CBigNum bnFixedMultiplier = (bnPrimorial > bnHashFactor)? (bnPrimorial / bnHashFactor) : 1;
-
             // Primecoin: mine for prime chain
             unsigned int nProbableChainLength;
-            if (MineProbablePrimeChain(*pblock, bnFixedMultiplier, fNewBlock, nTriedMultiplier, nProbableChainLength, nTests, nPrimesHit))
+            if (MineProbablePrimeChain(*pblock, bnPrimorial, fNewBlock, nTriedMultiplier, nProbableChainLength, nTests, nPrimesHit))
             {
                 SetThreadPriority(THREAD_PRIORITY_NORMAL);
                 CheckWork(pblock, *pwalletMain, reservekey);
@@ -4725,9 +4720,14 @@ void static BitcoinMiner(CWallet *pwallet)
 
                 // Primecoin: update time and nonce
                 pblock->nTime = max(pblock->nTime, (unsigned int) GetAdjustedTime());
-                do
-                    pblock->nNonce++;
-                while ((pblock->GetHeaderHash() < hashBlockHeaderLimit || CBigNum(pblock->GetHeaderHash()) % bnHashFactor != 0) && pblock->nNonce < 0xffff0000);
+                while (++(pblock->nNonce) < 0xffff0000)
+                {
+                    uint256 hashBlockHeader = pblock->GetHeaderHash();
+                    if (hashBlockHeader < hashBlockHeaderLimit)
+                        continue; // must meet minimum requirement
+                    if (ProbablePrimalityTestWithTrialDivision(CBigNum(hashBlockHeader), 1000))
+                        break;
+                }
                 if (pblock->nNonce >= 0xffff0000)
                     break;
 
@@ -4745,7 +4745,7 @@ void static BitcoinMiner(CWallet *pwallet)
                     if (!PrimeTableGetNextPrime(pminer->nPrimorialMultiplier))
                         error("PrimecoinMiner() : primorial increment overflow");
                 }
-                else if (pminer->nPrimorialMultiplier > nPrimorialHashFactor)
+                else if (pminer->nPrimorialMultiplier > nPrimorialMultiplierMin)
                 {
                     if (!PrimeTableGetPreviousPrime(pminer->nPrimorialMultiplier))
                         error("PrimecoinMiner() : primorial decrement overflow");
