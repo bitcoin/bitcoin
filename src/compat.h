@@ -26,7 +26,6 @@
 #endif
 
 #ifdef WIN32
-#define MSG_NOSIGNAL        0
 #define MSG_DONTWAIT        0
 #else
 typedef u_int SOCKET;
