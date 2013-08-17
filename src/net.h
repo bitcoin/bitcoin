@@ -162,6 +162,7 @@ public:
 
 
 
+typedef std::map<CNetAddr, int64> banned_map_t;
 
 /** Information about a peer */
 class CNode
@@ -211,7 +212,7 @@ protected:
 
     // Denial-of-service detection/prevention
     // Key is IP address, value is banned-until-time
-    static std::map<CNetAddr, int64> setBanned;
+    static banned_map_t setBanned;
     static CCriticalSection cs_setBanned;
     int nMisbehavior;
 
@@ -637,6 +638,8 @@ public:
     // new code.
     static void ClearBanned(); // needed for unit testing
     static bool IsBanned(CNetAddr ip);
+    static void Ban(CNetAddr ip, int64_t expiration); // negative expiration unbans the node.
+    static banned_map_t GetBannedMap();
     bool Misbehaving(int howmuch); // 1 == a little, 100 == a lot
     void copyStats(CNodeStats &stats);
 };
