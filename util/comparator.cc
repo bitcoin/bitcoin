@@ -66,7 +66,7 @@ class BytewiseComparatorImpl : public Comparator {
 };
 }  // namespace
 
-static port::OnceType once_comparator = LEVELDB_ONCE_INIT;
+static port::OnceType once = LEVELDB_ONCE_INIT;
 static const Comparator* bytewise;
 
 static void InitModule() {
@@ -74,7 +74,7 @@ static void InitModule() {
 }
 
 const Comparator* BytewiseComparator() {
-  port::InitOnce(&once_comparator, InitModule);
+  port::InitOnce(&once, InitModule);
   return bytewise;
 }
 
