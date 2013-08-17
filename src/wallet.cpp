@@ -1368,8 +1368,8 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& w
     return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet);
 }
 
-// NovaCoin: get current stake generation power
-uint64 CWallet::GetStakeMintPower(const CKeyStore& keystore, enum StakeWeightMode mode)
+// NovaCoin: get current stake weight
+uint64 CWallet::GetStakeWeight(const CKeyStore& keystore, enum StakeWeightMode mode)
 {
     LOCK2(cs_main, cs_wallet);
 
@@ -1380,7 +1380,7 @@ uint64 CWallet::GetStakeMintPower(const CKeyStore& keystore, enum StakeWeightMod
 
     if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
     {
-        error("GetStakeMintPower : invalid reserve balance amount");
+        error("GetStakeWeight : invalid reserve balance amount");
         return 0;
     }
 
@@ -1402,41 +1402,53 @@ uint64 CWallet::GetStakeMintPower(const CKeyStore& keystore, enum StakeWeightMod
         if (!txdb.ReadTxIndex(pcoin.first->GetHash(), txindex))
             continue;
 
+        unsigned int nTime = pcoin.first->nTime;
+
         switch(mode)
         {
             case STAKE_NORMAL:
                 // Do not count input that is still less than 30 days old
-                if (pcoin.first->nTime + nStakeMinAge > GetTime())
+                if (nTime + nStakeMinAge > GetTime())
                     continue;
             break;
             case STAKE_MAXWEIGHT:
                 // Do not count input that is still less than 90 days old
-                if (pcoin.first->nTime + nStakeMaxAge > GetTime())
+                if (nTime + nStakeMaxAge > GetTime())
                     continue;
             break;
             case STAKE_MINWEIGHT:
                 // Count only inputs with suitable age (from 30 to 90 days old)
-                if (pcoin.first->nTime + nStakeMaxAge < GetTime())
+                if (nTime + nStakeMaxAge < GetTime())
                     continue;
-                if (pcoin.first->nTime + nStakeMinAge > GetTime())
-                    continue;
-            break;
-            case STAKE_BELOWMIN:
-                // Count only inputs with suitable age (less than 30 days old)
-                if (pcoin.first->nTime + nStakeMinAge < GetTime())
+                if (nTime + nStakeMinAge > GetTime())
                     continue;
             break;
         }
 
-        CBigNum bnCentSecond = CBigNum(pcoin.first->vout[pcoin.second].nValue) * (GetTime()-pcoin.first->nTime) / CENT;
-        CBigNum bnCoinDay = bnCentSecond * CENT / COIN / (24 * 60 * 60);
+        int64 nTimeWeight;
 
+        // Kernel hash weight starts from 0 at the 30-day min age
+        // this change increases active coins participating the hash and helps
+        // to secure the network when proof-of-stake difficulty is low
+        //
+        if(fTestNet || (STAKEWEIGHT_SWITCH_TIME < nTime))
+        {
+            // New rule since 01 Jan 2014: Maximum TimeWeight is 90 days.
+            nTimeWeight = min((int64)GetTime() - nTime - nStakeMinAge, (int64)nStakeMaxAge);
+        }
+        else
+        {
+            // Current rule: Maximum TimeWeight is 60 days.
+            nTimeWeight = min((int64)GetTime() - nTime, (int64)nStakeMaxAge) - nStakeMinAge;
+        }
 
-        nCoinAge += bnCoinDay.getuint64();
+        CBigNum bnCoinDayWeight = CBigNum(pcoin.first->vout[pcoin.second].nValue) * nTimeWeight / COIN / (24 * 60 * 60);
+
+        nCoinAge += bnCoinDayWeight.getuint64();
     }
 
     if (fDebug && GetBoolArg("-printcoinage"))
-        printf("StakePower bnCoinDay=%"PRI64d"\n", nCoinAge);
+        printf("StakeWeight bnCoinDay=%"PRI64d"\n", nCoinAge);
 
     return nCoinAge;
 }

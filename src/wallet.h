@@ -40,8 +40,7 @@ enum StakeWeightMode
 {
     STAKE_NORMAL = 0, // all 30+ days old inputs
     STAKE_MAXWEIGHT = 1, // only 90+ days old inputs
-    STAKE_MINWEIGHT = 3, // only [30-90] days old inputs
-    STAKE_BELOWMIN = 4 // only less than 30 days old inputs
+    STAKE_MINWEIGHT = 3 // only [30-90] days old inputs
 };
 
 /** A key pool entry */
@@ -193,7 +192,7 @@ public:
     bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
-    uint64 GetStakeMintPower(const CKeyStore& keystore, enum StakeWeightMode mode=STAKE_NORMAL);
+    uint64 GetStakeWeight(const CKeyStore& keystore, enum StakeWeightMode mode=STAKE_NORMAL);
     bool CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64 nSearchInterval, CTransaction& txNew);
 
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
