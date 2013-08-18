@@ -27,6 +27,7 @@ using namespace boost;
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
 std::string strWalletFileName;
+unsigned int nNodeLifespan;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -349,6 +350,8 @@ bool AppInit2()
 #endif
 
     // ********************************************************* Step 2: parameter interactions
+
+    nNodeLifespan = GetArg("-addrlifespan", 7);
 
     fTestNet = GetBoolArg("-testnet");
     if (fTestNet) {
