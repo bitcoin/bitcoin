@@ -10,7 +10,6 @@
 #include "main.h"
 #include "kernel.h"
 #include "ui_interface.h"
-#include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
