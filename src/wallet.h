@@ -199,7 +199,7 @@ public:
     std::string SendMoneyToDestination(const CTxDestination &address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
 
     bool NewKeyPool();
-    bool TopUpKeyPool();
+    bool TopUpKeyPool(unsigned int nSize = 0);
     int64 AddReserveKey(const CKeyPool& keypool);
     void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
     void KeepKey(int64 nIndex);
@@ -296,7 +296,7 @@ public:
         }
     }
 
-    int GetKeyPoolSize()
+    unsigned int GetKeyPoolSize()
     {
         return setKeyPool.size();
     }
