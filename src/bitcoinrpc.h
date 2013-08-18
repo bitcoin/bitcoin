@@ -131,6 +131,15 @@ extern std::string HexBits(unsigned int nBits);
 extern std::string HelpRequiringPassphrase();
 extern void EnsureWalletIsUnlocked();
 
+//
+// Utilities: convert hex-encoded Values
+// (throws error if not hex).
+//
+extern uint256 ParseHashV(const json_spirit::Value& v, std::string strName);
+extern uint256 ParseHashO(const json_spirit::Object& o, std::string strKey);
+extern std::vector<unsigned char> ParseHexV(const json_spirit::Value& v, std::string strName);
+extern std::vector<unsigned char> ParseHexO(const json_spirit::Object& o, std::string strKey); 
+
 extern json_spirit::Value getconnectioncount(const json_spirit::Array& params, bool fHelp); // in rpcnet.cpp
 extern json_spirit::Value getpeerinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value dumpwallet(const json_spirit::Array& params, bool fHelp);
@@ -161,6 +170,7 @@ extern json_spirit::Value movecmd(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendfrom(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendmany(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value addmultisigaddress(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value addredeemscript(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listreceivedbyaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listreceivedbyaccount(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listtransactions(const json_spirit::Array& params, bool fHelp);
@@ -188,6 +198,7 @@ extern json_spirit::Value getrawtransaction(const json_spirit::Array& params, bo
 extern json_spirit::Value listunspent(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value createrawtransaction(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value decoderawtransaction(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value decodescript(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value signrawtransaction(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendrawtransaction(const json_spirit::Array& params, bool fHelp);
 
