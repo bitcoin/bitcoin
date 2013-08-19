@@ -158,6 +158,11 @@ bool WriteSyncCheckpoint(const uint256& hashCheckpoint)
     return true;
 }
 
+bool IsSyncCheckpointEnforced()
+{
+    return (GetBoolArg("-checkpointenforce", false) || mapArgs.count("-checkpointkey")); // checkpoint master node is always enforced
+}
+
 bool AcceptPendingSyncCheckpoint()
 {
     LOCK(cs_hashSyncCheckpoint);
@@ -171,7 +176,7 @@ bool AcceptPendingSyncCheckpoint()
         }
 
         CBlockIndex* pindexCheckpoint = mapBlockIndex[hashPendingCheckpoint];
-        if (!pindexCheckpoint->IsInMainChain())
+        if (IsSyncCheckpointEnforced() && !pindexCheckpoint->IsInMainChain())
         {
             CValidationState state;
             if (!SetBestChain(state, pindexCheckpoint))
@@ -434,7 +439,7 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
         return false;
 
     CBlockIndex* pindexCheckpoint = mapBlockIndex[hashCheckpoint];
-    if (!pindexCheckpoint->IsInMainChain())
+    if (IsSyncCheckpointEnforced() && !pindexCheckpoint->IsInMainChain())
     {
         // checkpoint chain received but not yet main chain
         CValidationState state;
@@ -474,7 +479,7 @@ Value getcheckpoint(const Array& params, bool fHelp)
         result.push_back(Pair("height", pindexCheckpoint->nHeight));
         result.push_back(Pair("timestamp", (boost::int64_t) pindexCheckpoint->GetBlockTime()));
     }
-    result.push_back(Pair("subscribemode", (GetBoolArg("-checkpointenforce", false) || mapArgs.count("-checkpointkey")? "enforce" : "advisory")));
+    result.push_back(Pair("subscribemode", IsSyncCheckpointEnforced()? "enforce" : "advisory"));
     if (mapArgs.count("-checkpointkey"))
         result.push_back(Pair("checkpointmaster", true));
 
@@ -507,7 +512,7 @@ Value sendcheckpoint(const Array& params, bool fHelp)
         result.push_back(Pair("height", pindexCheckpoint->nHeight));
         result.push_back(Pair("timestamp", (boost::int64_t) pindexCheckpoint->GetBlockTime()));
     }
-    result.push_back(Pair("subscribemode", (GetBoolArg("-checkpointenforce", false) || mapArgs.count("-checkpointkey")? "enforce" : "advisory")));
+    result.push_back(Pair("subscribemode", IsSyncCheckpointEnforced()? "enforce" : "advisory"));
     if (mapArgs.count("-checkpointkey"))
         result.push_back(Pair("checkpointmaster", true));
 

@@ -1867,7 +1867,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
             strMiscWarning = _("Warning: This version is obsolete, upgrade required!");
     }
 
-    if (!(GetBoolArg("-checkpointenforce", false) || mapArgs.count("-checkpointkey"))) // checkpoint advisory mode
+    if (!IsSyncCheckpointEnforced()) // checkpoint advisory mode
     {
         if (pindexBest->pprev && !CheckSyncCheckpoint(pindexBest->GetBlockHash(), pindexBest->pprev))
             strCheckpointWarning = _("Warning: checkpoint on different blockchain fork, contact developers to resolve the issue");
@@ -2145,7 +2145,7 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
             return state.DoS(100, error("AcceptBlock() : rejected by checkpoint lock-in at %d", nHeight));
 
         // ppcoin: check that the block satisfies synchronized checkpoint
-        if ((GetBoolArg("-checkpointenforce", false) || mapArgs.count("-checkpointkey")) // checkpoint enforce mode
+        if (IsSyncCheckpointEnforced() // checkpoint enforce mode
             && !CheckSyncCheckpoint(hash, pindexPrev))
             return error("AcceptBlock() : rejected by synchronized checkpoint");
 
