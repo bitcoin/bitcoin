@@ -8,11 +8,7 @@
 #include "core.h"
 #include "wallet.h"
 
-/** Run the miner threads */
-void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
 /** Generate a new block, without valid proof-of-work */
 CBlockTemplate* CreateNewBlock(CReserveKey& reservekey);
-/** Base sha256 mining transform */
-void SHA256Transform(void* pstate, void* pinput, const void* pinit);
 
 #endif // BITCOIN_MINER_H

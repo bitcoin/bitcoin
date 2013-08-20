@@ -67,9 +67,6 @@ CScript COINBASE_FLAGS;
 
 const string strMessageMagic = "Bitcoin Signed Message:\n";
 
-double dHashesPerSec = 0.0;
-int64 nHPSTimerStart = 0;
-
 // Settings
 int64 nTransactionFee = 0;
 
