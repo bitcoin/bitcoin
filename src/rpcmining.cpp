@@ -12,21 +12,6 @@
 using namespace json_spirit;
 using namespace std;
 
-// Key used by getblocktemplate miners.
-// Allocated in InitRPCMining, free'd in ShutdownRPCMining
-static CReserveKey* pMiningKey = NULL;
-
-void InitRPCMining()
-{
-    // getblocktemplate mining rewards paid here:
-    pMiningKey = new CReserveKey(pwalletMain);
-}
-
-void ShutdownRPCMining()
-{
-    delete pMiningKey; pMiningKey = NULL;
-}
-
 
 Value getmininginfo(const Array& params, bool fHelp)
 {
@@ -115,7 +100,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             delete pblocktemplate;
             pblocktemplate = NULL;
         }
-        pblocktemplate = CreateNewBlock(*pMiningKey);
+        pblocktemplate = CreateNewBlock();
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 

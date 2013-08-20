@@ -9,6 +9,6 @@
 #include "wallet.h"
 
 /** Generate a new block, without valid proof-of-work */
-CBlockTemplate* CreateNewBlock(CReserveKey& reservekey);
+CBlockTemplate* CreateNewBlock();
 
 #endif // BITCOIN_MINER_H

@@ -61,7 +61,7 @@ public:
     }
 };
 
-CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
+CBlockTemplate* CreateNewBlock()
 {
     // Create new block
     auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
@@ -74,15 +74,11 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
     txNew.vin.resize(1);
     txNew.vin[0].prevout.SetNull();
     txNew.vout.resize(1);
-    CPubKey pubkey;
-    if (!reservekey.GetReservedKey(pubkey))
-        return NULL;
-    txNew.vout[0].scriptPubKey << pubkey << OP_CHECKSIG;
 
     // Add our coinbase tx as first transaction
     pblock->vtx.push_back(txNew);
     pblocktemplate->vTxFees.push_back(-1); // updated at end
-    pblocktemplate->vTxSigOps.push_back(-1); // updated at end
+    pblocktemplate->vTxSigOps.push_back(0);
 
     // Largest block you're willing to create:
     unsigned int nBlockMaxSize = GetArg("-blockmaxsize", MAX_BLOCK_SIZE_GEN/2);
@@ -289,7 +285,6 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
-        pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
         CBlockIndex indexDummy(*pblock);
         indexDummy.pprev = pindexPrev;
