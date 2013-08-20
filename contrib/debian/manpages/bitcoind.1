@@ -15,12 +15,6 @@ Bitcoins can be sent easily through the Internet, without having to trust middle
 \fB\-conf=\fR<file>
 Specify configuration file (default: bitcoin.conf)
 .TP
-\fB\-gen\fR
-Generate coins
-.TP
-\fB\-gen\fR=\fI0\fR
-Don't generate coins
-.TP
 \fB\-min\fR
 Start minimized
 .TP
@@ -107,18 +101,6 @@ Returns the block number of the latest block in the longest block chain.
 .TP
 \fBgetconnectioncount\fR
 Returns the number of connections to other nodes.
-.TP
-\fBgetdifficulty\fR
-Returns the proof-of-work difficulty as a multiple of the minimum difficulty.
-.TP
-\fBgetgenerate\fR
-Returns boolean true if server is trying to generate bitcoins, false otherwise.
-.TP
-\fBsetgenerate 'generate' ['genproclimit']\fR
-Generation is limited to ['genproclimit'] processors, \-1 is unlimited.
-.TP
-\fBgethashespersec\fR
-Returns a recent hashes per second performance measurement while generating.
 .TP
 \fBgetinfo\fR
 Returns an object containing server information.
