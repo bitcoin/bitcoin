@@ -497,7 +497,7 @@ public:
 
     T median() const
     {
-        int size = sorted_access().size();
+        int size = sorted().size();
         assert(size>0);
         if(size & 1) // Odd number of elements
         {
@@ -514,7 +514,7 @@ public:
         return vValues.size();
     }
 
-    std::vector<T> sorted () const
+    const std::vector<T> &sorted () const
     {
         return sorted_access();
     }
