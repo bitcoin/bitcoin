@@ -464,15 +464,25 @@ template <typename T> class CMedianFilter
 {
 private:
     std::vector<T> vValues;
-    std::vector<T> vSorted;
+    mutable std::vector<T> vSorted;
     unsigned int nSize;
+
+    std::vector<T> &sorted_access() const
+    {
+      if (vSorted.size() != vValues.size())
+      {
+        vSorted.resize(vValues.size());
+        std::copy(vValues.begin(), vValues.end(), vSorted.begin());
+        std::sort(vSorted.begin(), vSorted.end());
+      }
+      return vSorted;
+    }
 public:
     CMedianFilter(unsigned int size, T initial_value):
         nSize(size)
     {
         vValues.reserve(size);
         vValues.push_back(initial_value);
-        vSorted = vValues;
     }
 
     void input(T value)
@@ -480,17 +490,14 @@ public:
         if(vValues.size() == nSize)
         {
             vValues.erase(vValues.begin());
+            sorted_access();
         }
         vValues.push_back(value);
-
-        vSorted.resize(vValues.size());
-        std::copy(vValues.begin(), vValues.end(), vSorted.begin());
-        std::sort(vSorted.begin(), vSorted.end());
     }
 
     T median() const
     {
-        int size = vSorted.size();
+        int size = sorted_access().size();
         assert(size>0);
         if(size & 1) // Odd number of elements
         {
@@ -509,7 +516,7 @@ public:
 
     std::vector<T> sorted () const
     {
-        return vSorted;
+        return sorted_access();
     }
 };
 
