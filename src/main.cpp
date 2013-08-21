@@ -3068,6 +3068,12 @@ void static ProcessGetData(CNode* pfrom)
         if (pfrom->nSendSize >= SendBufferSize())
             break;
 
+        // Don't waste work on slow peers until they catch up on the blocks we
+        // give them. 80 bytes is just the size of a block header - obviously
+        // the minimum we might return.
+        if (pfrom->nBlocksRequested * 80 > pfrom->nSendBytes)
+            break;
+
         const CInv &inv = *it;
         {
             boost::this_thread::interruption_point();
