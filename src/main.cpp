@@ -77,7 +77,7 @@ int64 nHPSTimerStart;
 
 // Settings
 int64 nTransactionFee = MIN_TX_FEE;
-
+bool fStakeUsePooledKeys = false;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -2414,8 +2414,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // ppcoin: verify hash target and signature of coinstake tx
     if (pblock->IsProofOfStake())
     {
-        uint256 hashProofOfStake = 0;
-        if (!CheckProofOfStake(pblock->vtx[1], pblock->nBits, hashProofOfStake))
+        uint256 hashProofOfStake = 0, targetProofOfStake = 0;
+        if (!CheckProofOfStake(pblock->vtx[1], pblock->nBits, hashProofOfStake, targetProofOfStake))
         {
             printf("WARNING: ProcessBlock(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
             return false; // do not error here as we expect this during initial block download
@@ -4119,8 +4119,6 @@ public:
 //   fProofOfStake: try (best effort) to make a proof-of-stake block
 CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
 {
-    CReserveKey reservekey(pwallet);
-
     // Create new block
     auto_ptr<CBlock> pblock(new CBlock());
     if (!pblock.get())
@@ -4131,7 +4129,14 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
     txNew.vin.resize(1);
     txNew.vin[0].prevout.SetNull();
     txNew.vout.resize(1);
-    txNew.vout[0].scriptPubKey << reservekey.GetReservedKey() << OP_CHECKSIG;
+
+    if (!fProofOfStake)
+    {
+        CReserveKey reservekey(pwallet);
+        txNew.vout[0].scriptPubKey << reservekey.GetReservedKey() << OP_CHECKSIG;
+    }
+    else
+        txNew.vout[0].SetEmpty();
 
     // Add our coinbase tx as first transaction
     pblock->vtx.push_back(txNew);
@@ -4176,7 +4181,6 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
                 if (txCoinStake.nTime >= max(pindexPrev->GetMedianTimePast()+1, pindexPrev->GetBlockTime() - nMaxClockDrift))
                 {   // make sure coinstake would meet timestamp protocol
                     // as it would be the same as the block timestamp
-                    pblock->vtx[0].vout[0].SetEmpty();
                     pblock->vtx[0].nTime = txCoinStake.nTime;
                     pblock->vtx.push_back(txCoinStake);
                 }
@@ -4467,12 +4471,14 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     uint256 hash = pblock->GetHash();
     uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
 
-    if (hash > hashTarget && pblock->IsProofOfWork())
-        return error("BitcoinMiner : proof-of-work not meeting target");
+    if(!pblock->IsProofOfWork())
+        return error("CheckWork() : %s is not a proof-of-work block", hash.GetHex().c_str());
+
+    if (hash > hashTarget)
+        return error("CheckWork() : proof-of-work not meeting target");
 
     //// debug print
-    printf("BitcoinMiner:\n");
-    printf("new block found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
+    printf("CheckWork() : new proof-of-stake block found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
     pblock->print();
     printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
 
@@ -4480,7 +4486,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     {
         LOCK(cs_main);
         if (pblock->hashPrevBlock != hashBestChain)
-            return error("BitcoinMiner : generated block is stale");
+            return error("CheckWork() : generated block is stale");
 
         // Remove key from key pool
         reservekey.KeepKey();
@@ -4493,7 +4499,44 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 
         // Process this block the same as if we had received it from another node
         if (!ProcessBlock(NULL, pblock))
-            return error("BitcoinMiner : ProcessBlock, block not accepted");
+            return error("CheckWork() : ProcessBlock, block not accepted");
+    }
+
+    return true;
+}
+
+bool CheckStake(CBlock* pblock, CWallet& wallet)
+{
+    uint256 proofHash = 0, hashTarget = 0;
+    uint256 hash = pblock->GetHash();
+
+    if(!pblock->IsProofOfStake())
+        return error("CheckStake() : %s is not a proof-of-stake block", hash.GetHex().c_str());
+
+    // verify hash target and signature of coinstake tx
+    if (!CheckProofOfStake(pblock->vtx[1], pblock->nBits, proofHash, hashTarget))
+        return error("CheckStake() : proof-of-stake checking failed");
+
+    //// debug print
+    printf("CheckStake() : new proof-of-stake block found  \n  hash: %s \nproofhash: %s  \ntarget: %s\n", hash.GetHex().c_str(), proofHash.GetHex().c_str(), hashTarget.GetHex().c_str());
+    pblock->print();
+    printf("out %s\n", FormatMoney(pblock->vtx[1].GetValueOut()).c_str());
+
+    // Found a solution
+    {
+        LOCK(cs_main);
+        if (pblock->hashPrevBlock != hashBestChain)
+            return error("CheckStake() : generated block is stale");
+
+        // Track how many getdata requests this block gets
+        {
+            LOCK(wallet.cs_wallet);
+            wallet.mapRequestCount[pblock->GetHash()] = 0;
+        }
+
+        // Process this block the same as if we had received it from another node
+        if (!ProcessBlock(NULL, pblock))
+            return error("CheckStake() : ProcessBlock, block not accepted");
     }
 
     return true;
@@ -4506,8 +4549,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     // Make this thread recognisable as the mining thread
     RenameThread("bitcoin-miner");
 
-    // Each thread has its own key and counter
-    CReserveKey reservekey(pwallet);
+    // Each thread has its own counter
     unsigned int nExtraNonce = 0;
 
     while (fProofOfStake)
@@ -4540,25 +4582,23 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
             return;
         IncrementExtraNonce(pblock.get(), pindexPrev, nExtraNonce);
 
-        if (fProofOfStake)
+        if(pblock->IsProofOfStake())
         {
-            // ppcoin: if proof-of-stake block found then process block
-            if (pblock->IsProofOfStake())
+            // Trying to sign a block
+            if (!pblock->SignBlock(*pwalletMain))
             {
-                if (!pblock->SignBlock(*pwalletMain))
-                {
-                    strMintWarning = strMintMessage;
-                    continue;
-                }
-                strMintWarning = "";
-                printf("StakeMiner : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str()); 
-                SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                CheckWork(pblock.get(), *pwalletMain, reservekey);
-                SetThreadPriority(THREAD_PRIORITY_LOWEST);
+                strMintWarning = strMintMessage;
+                continue;
             }
-            Sleep(500);
-            continue;
+
+            strMintWarning = "";
+            SetThreadPriority(THREAD_PRIORITY_NORMAL);
+            CheckStake(pblock.get(), *pwalletMain);
+            SetThreadPriority(THREAD_PRIORITY_LOWEST);
         }
+
+        Sleep(500);
+        continue;
     }
 }
 
