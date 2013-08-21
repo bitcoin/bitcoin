@@ -44,8 +44,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: This transaction requires a transaction fee of at least %s because of "
 "its amount, complexity, or use of recently received funds!"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Execute command when a relevant alert is received (%s in cmd is replaced by "
-"message)"),
+"Execute command when a relevant alert is received or we see a really long "
+"fork (%s in cmd is replaced by message)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Execute command when a wallet transaction changes (%s in cmd is replaced by "
 "TxID)"),
@@ -72,11 +72,14 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: -paytxfee is set very high! This is the transaction fee you will "
 "pay if you send a transaction."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Warning: Displayed transactions may not be correct! You may need to upgrade, "
-"or other nodes may need to upgrade."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: Please check that your computer's date and time are correct! If "
 "your clock is wrong Bitcoin will not work properly."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Warning: The network does not appear to fully agree! Some miners appear to "
+"be experiencing issues."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Warning: We do not appear to fully agree with our peers! You may need to "
+"upgrade, or other nodes may need to upgrade."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: error reading wallet.dat! All keys read correctly, but transaction "
 "data or address book entries might be missing or incorrect."),
