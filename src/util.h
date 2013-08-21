@@ -439,17 +439,22 @@ void seed_insecure_rand(bool fDeterministic=false);
 
 /**
  * Timing-attack-resistant comparison.
- * Takes time proportional to length
- * of first argument.
+ * Takes time proportional to minimum length
+ * of arguments.
  */
 template <typename T>
 bool TimingResistantEqual(const T& a, const T& b)
 {
-    if (b.size() == 0) return a.size() == 0;
-    size_t accumulator = a.size() ^ b.size();
-    for (size_t i = 0; i < a.size(); i++)
-        accumulator |= a[i] ^ b[i%b.size()];
-    return accumulator == 0;
+	if (b.size() == 0) return a.size() == 0;
+	bool second_shorter = b.size() < a.size();
+	const T
+		& A = second_shorter ? b : a,
+		& B = second_shorter ? a : b;
+	
+	size_t accumulator = A.size() ^ B.size();
+	for (size_t i = 0; i < A.size(); i++)
+		accumulator |= A[i] ^ B[i];
+	return accumulator == 0;
 }
 
 /** Median filter over a stream of values.
@@ -459,15 +464,25 @@ template <typename T> class CMedianFilter
 {
 private:
     std::vector<T> vValues;
-    std::vector<T> vSorted;
+    mutable std::vector<T> vSorted;
     unsigned int nSize;
+
+    std::vector<T> &sorted_access() const
+    {
+      if (vSorted.size() != vValues.size())
+      {
+        vSorted.resize(vValues.size());
+        std::copy(vValues.begin(), vValues.end(), vSorted.begin());
+        std::sort(vSorted.begin(), vSorted.end());
+      }
+      return vSorted;
+    }
 public:
     CMedianFilter(unsigned int size, T initial_value):
         nSize(size)
     {
         vValues.reserve(size);
         vValues.push_back(initial_value);
-        vSorted = vValues;
     }
 
     void input(T value)
@@ -475,17 +490,14 @@ public:
         if(vValues.size() == nSize)
         {
             vValues.erase(vValues.begin());
+            sorted_access();
         }
         vValues.push_back(value);
-
-        vSorted.resize(vValues.size());
-        std::copy(vValues.begin(), vValues.end(), vSorted.begin());
-        std::sort(vSorted.begin(), vSorted.end());
     }
 
     T median() const
     {
-        int size = vSorted.size();
+        int size = sorted_access().size();
         assert(size>0);
         if(size & 1) // Odd number of elements
         {
@@ -504,7 +516,7 @@ public:
 
     std::vector<T> sorted () const
     {
-        return vSorted;
+        return sorted_access();
     }
 };
 
