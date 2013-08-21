@@ -439,17 +439,22 @@ void seed_insecure_rand(bool fDeterministic=false);
 
 /**
  * Timing-attack-resistant comparison.
- * Takes time proportional to length
- * of first argument.
+ * Takes time proportional to minimum length
+ * of arguments.
  */
 template <typename T>
 bool TimingResistantEqual(const T& a, const T& b)
 {
-    if (b.size() == 0) return a.size() == 0;
-    size_t accumulator = a.size() ^ b.size();
-    for (size_t i = 0; i < a.size(); i++)
-        accumulator |= a[i] ^ b[i%b.size()];
-    return accumulator == 0;
+	if (b.size() == 0) return a.size() == 0;
+	bool second_shorter = b.size() < a.size();
+	const T
+		& A = second_shorter ? b : a,
+		& B = second_shorter ? a : b;
+	
+	size_t accumulator = A.size() ^ B.size();
+	for (size_t i = 0; i < A.size(); i++)
+		accumulator |= A[i] ^ B[i];
+	return accumulator == 0;
 }
 
 /** Median filter over a stream of values.
