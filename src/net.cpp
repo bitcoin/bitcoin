@@ -610,6 +610,7 @@ void CNode::copyStats(CNodeStats &stats)
     X(nSendBytes);
     X(nRecvBytes);
     stats.fSyncNode = (this == pnodeSync);
+    stats.addrLocal = CAddress(addrLocal).ToString().c_str();
 }
 #undef X
 

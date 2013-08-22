@@ -61,6 +61,9 @@ Value getpeerinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("banscore", stats.nMisbehavior));
         if (stats.fSyncNode)
             obj.push_back(Pair("syncnode", true));
+        
+        // Name "peerlocal" instead of "addrlocal" to avoid breaking scripts that grep for "addr"
+        obj.push_back(Pair("peerlocal", stats.addrLocal));
 
         ret.push_back(obj);
     }

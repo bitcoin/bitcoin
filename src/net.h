@@ -119,6 +119,7 @@ public:
     uint64 nSendBytes;
     uint64 nRecvBytes;
     bool fSyncNode;
+    std::string addrLocal;
 };
 
 
