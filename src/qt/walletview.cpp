@@ -201,10 +201,10 @@ void WalletView::gotoVerifyMessageTab(QString addr)
         signVerifyMessageDialog->setAddress_VM(addr);
 }
 
-bool WalletView::handleURI(const QString& strURI)
+bool WalletView::handlePaymentRequest(const SendCoinsRecipient& recipient)
 {
     // URI has to be valid
-    if (sendCoinsPage->handleURI(strURI))
+    if (sendCoinsPage->handlePaymentRequest(recipient))
     {
         gotoSendCoinsPage();
         return true;

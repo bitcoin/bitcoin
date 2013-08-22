@@ -52,9 +52,9 @@ void WalletFrame::removeAllWallets()
     walletStack->removeAllWallets();
 }
 
-bool WalletFrame::handleURI(const QString &uri)
+bool WalletFrame::handlePaymentRequest(const SendCoinsRecipient &recipient)
 {
-    return walletStack->handleURI(uri);
+    return walletStack->handlePaymentRequest(recipient);
 }
 
 void WalletFrame::showOutOfSyncWarning(bool fShow)

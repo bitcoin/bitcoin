@@ -20,6 +20,7 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class SendCoinsDialog;
+class SendCoinsRecipient;
 class SignVerifyMessageDialog;
 class Notificator;
 class RPCConsole;
@@ -54,7 +55,7 @@ public:
 
     void removeAllWallets();
 
-    bool handleURI(const QString &uri);
+    bool handlePaymentRequest(const SendCoinsRecipient &recipient);
 
     void showOutOfSyncWarning(bool fShow);
 
