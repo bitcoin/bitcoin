@@ -19,6 +19,24 @@ Value getconnectioncount(const Array& params, bool fHelp)
     return (int)vNodes.size();
 }
 
+Value ping(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "ping\n"
+            "Requests that a ping be sent to all other nodes, to measure ping time.\n"
+            "Results provided in getpeerinfo, pingtime and pingwait fields are decimal seconds.\n"
+            "Ping command is handled in queue with all other commands, so it measures processing backlog, not just network ping.");
+    
+    // Request that each node send a ping during next message processing pass
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pNode, vNodes) {
+        pNode->fPingQueued = true;
+    }
+
+    return Value::null;
+}
+
 static void CopyNodeStats(std::vector<CNodeStats>& vstats)
 {
     vstats.clear();
@@ -54,6 +72,9 @@ Value getpeerinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("bytessent", (boost::int64_t)stats.nSendBytes));
         obj.push_back(Pair("bytesrecv", (boost::int64_t)stats.nRecvBytes));
         obj.push_back(Pair("conntime", (boost::int64_t)stats.nTimeConnected));
+        obj.push_back(Pair("pingtime", stats.dPingTime));
+        if (stats.dPingWait > 0.0)
+            obj.push_back(Pair("pingwait", stats.dPingWait));
         obj.push_back(Pair("version", stats.nVersion));
         obj.push_back(Pair("subver", stats.strSubVer));
         obj.push_back(Pair("inbound", stats.fInbound));
