@@ -32,6 +32,7 @@ Once you've got the right hardware and software:
     wget 'https://downloads.sourceforge.net/project/libpng/zlib/1.2.6/zlib-1.2.6.tar.gz'
     wget 'https://downloads.sourceforge.net/project/libpng/libpng15/older-releases/1.5.9/libpng-1.5.9.tar.gz'
     wget 'http://releases.qt-project.org/qt4/source/qt-everywhere-opensource-src-4.8.3.tar.gz'
+    wget 'http://protobuf.googlecode.com/files/protobuf-2.5.0.tar.bz2'
     cd ../..
 
     cd gitian-builder
@@ -50,6 +51,7 @@ Once you've got the right hardware and software:
     ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/boost-win32.yml
     ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/deps-win32.yml
     ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/qt-win32.yml
+    ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/protobuf-win32.yml
 
     # Build Win32 release:
     ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/gitian-win32.yml

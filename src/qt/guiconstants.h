@@ -28,6 +28,9 @@ static const int TOOLTIP_WRAP_THRESHOLD = 80;
 /* Maximum allowed URI length */
 static const int MAX_URI_LENGTH = 255;
 
+/* Maximum somewhat-sane size of a payment request file */
+static const int MAX_PAYMENT_REQUEST_SIZE = 50000; // bytes
+
 /* QRCodeDialog -- size of exported QR Code image */
 #define EXPORT_IMAGE_SIZE 256
 

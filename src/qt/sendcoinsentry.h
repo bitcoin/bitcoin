@@ -1,16 +1,21 @@
 #ifndef SENDCOINSENTRY_H
 #define SENDCOINSENTRY_H
 
-#include <QFrame>
+#include <QStackedWidget>
+
+#include "walletmodel.h"
 
 namespace Ui {
     class SendCoinsEntry;
 }
 class WalletModel;
-class SendCoinsRecipient;
 
-/** A single entry in the dialog for sending bitcoins. */
-class SendCoinsEntry : public QFrame
+/**
+ * A single entry in the dialog for sending bitcoins.
+ * Stacked widget, with different UIs for payment requests
+ * with a strong payee identity.
+ */
+class SendCoinsEntry : public QStackedWidget
 {
     Q_OBJECT
 
@@ -49,6 +54,7 @@ private slots:
     void updateDisplayUnit();
 
 private:
+    SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
 };
