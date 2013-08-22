@@ -1,15 +1,15 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="af_ZA" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="be_BY" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Аб Біткойн</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; weergawe</translation>
+        <translation>Версія &lt;b&gt;Bitcoin&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -37,22 +37,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="+14"/>
         <source>Address Book</source>
-        <translation>Adres Boek</translation>
+        <translation>Адрасная кніга</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Double-click to edit address or label</source>
-        <translation>Dubbel-klik om die adres of etiket te wysig</translation>
+        <translation>Двайны пстрык для рэдагавання адрасу ці пазнакі</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Create a new address</source>
-        <translation>Skep &apos;n nuwe adres</translation>
+        <translation>Стварыць новы адрас</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Maak &apos;n kopie van die huidige adres na die stelsel klipbord</translation>
+        <translation>Капіяваць пазначаны адрас у буфер абмену</translation>
     </message>
     <message>
         <location line="-11"/>
@@ -82,7 +82,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>Sign &amp;Message</source>
-        <translation>Teken &amp;Boodskap</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+25"/>
@@ -112,7 +112,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+14"/>
         <source>&amp;Delete</source>
-        <translation>&amp;Verwyder</translation>
+        <translation>&amp;Выдаліць</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="-5"/>
@@ -132,27 +132,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+1"/>
         <source>Send &amp;Coins</source>
-        <translation>Stuur &amp;Muntstukke</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+265"/>
         <source>Export Address Book Data</source>
-        <translation>Voer die Adresboek Data Uit</translation>
+        <translation>Экспартаваць Звесткі Адраснай Кнігі</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Коскамі падзелены файл (*.csv)</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Error exporting</source>
-        <translation>Fout uitvoering</translation>
+        <translation>Памылка экспартавання</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>Kon nie na die %1 lêer skryf nie</translation>
+        <translation>Немагчыма запісаць у файл %1</translation>
     </message>
 </context>
 <context>
@@ -160,17 +160,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="+144"/>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation>Пазнака</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation>Adres</translation>
+        <translation>Адрас</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>(no label)</source>
-        <translation>(geen etiket)</translation>
+        <translation>непазначаны</translation>
     </message>
 </context>
 <context>
@@ -183,62 +183,62 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+21"/>
         <source>Enter passphrase</source>
-        <translation>Tik Wagwoord in</translation>
+        <translation>Увядзіце кодавую фразу</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>New passphrase</source>
-        <translation>Nuwe wagwoord</translation>
+        <translation>Новая кодавая фраза</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation>Herhaal nuwe wagwoord</translation>
+        <translation>Паўтарыце нувую кодавую фразу</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="+33"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Tik die nuwe wagwoord vir die beursie in.&lt;br/&gt;Gebruik asseblief &apos;n wagwoord van &lt;b&gt;ten minste 10 ewekansige karakters&lt;/b&gt;, of &lt;b&gt;agt (8) of meer woorde.&lt;/b&gt;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Encrypt wallet</source>
-        <translation>Enkripteer beursie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Hierdie operasie benodig &apos;n wagwoord om die beursie oop te sluit.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+5"/>
         <source>Unlock wallet</source>
-        <translation>Sluit beursie oop</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Hierdie operasie benodig &apos;n wagwoord om die beursie oop te sluit.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+5"/>
         <source>Decrypt wallet</source>
-        <translation>Sluit beursie oop</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Change passphrase</source>
-        <translation>Verander wagwoord</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Tik asseblief die ou en nuwe wagwoord vir die beursie in.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation>Bevestig beursie enkripsie.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -265,7 +265,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="-130"/>
         <location line="+58"/>
         <source>Wallet encrypted</source>
-        <translation>Die beursie is nou bewaak</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-56"/>
@@ -278,35 +278,35 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+42"/>
         <location line="+6"/>
         <source>Wallet encryption failed</source>
-        <translation>Die beursie kon nie bewaak word nie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-54"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Beursie bewaaking het misluk as gevolg van &apos;n interne fout. Die beursie is nie bewaak nie!</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+7"/>
         <location line="+48"/>
         <source>The supplied passphrases do not match.</source>
-        <translation>Die wagwoord stem nie ooreen nie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-37"/>
         <source>Wallet unlock failed</source>
-        <translation>Beursie oopsluiting het misluk</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <location line="+11"/>
         <location line="+19"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Die wagwoord wat ingetik was om die beursie oop te sluit, was verkeerd.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-20"/>
         <source>Wallet decryption failed</source>
-        <translation>Beursie dekripsie het misluk</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+14"/>
@@ -324,52 +324,52 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+246"/>
         <source>Synchronizing with network...</source>
-        <translation>Sinchroniseer met die netwerk ...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-321"/>
         <source>&amp;Overview</source>
-        <translation>&amp;Oorsig</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Show general overview of wallet</source>
-        <translation>Wys algemene oorsig van die beursie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+20"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transaksies</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation>Besoek transaksie geskiedenis</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+7"/>
         <source>Edit the list of stored addresses and labels</source>
-        <translation>Wysig die lys van gestoorde adresse en etikette</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-14"/>
         <source>Show the list of addresses for receiving payments</source>
-        <translation>Wys die lys van adresse vir die ontvangs van betalings</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>
         <source>E&amp;xit</source>
-        <translation>S&amp;luit af</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Quit application</source>
-        <translation>Sluit af</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+7"/>
         <source>Show information about Bitcoin</source>
-        <translation>Wys inligting oor Bitcoin</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -384,7 +384,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation>&amp;Opsies</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+9"/>
@@ -451,13 +451,13 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+6"/>
         <location line="+508"/>
         <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-514"/>
         <location line="+6"/>
         <source>Wallet</source>
-        <translation>Beursie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+107"/>
@@ -509,22 +509,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+28"/>
         <source>&amp;File</source>
-        <translation>&amp;Lêer</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Settings</source>
-        <translation>&amp;Instellings</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+6"/>
         <source>&amp;Help</source>
-        <translation>&amp;Hulp</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+9"/>
         <source>Tabs toolbar</source>
-        <translation>Blad nutsbalk</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-228"/>
@@ -576,12 +576,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+4"/>
         <source>%1 behind</source>
-        <translation>%1 agter</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+14"/>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Ontvangs van laaste blok is %1 terug.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -591,7 +591,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+22"/>
         <source>Error</source>
-        <translation>Fout</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
@@ -601,7 +601,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>Information</source>
-        <translation>Informasie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+70"/>
@@ -790,7 +790,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Usage:</source>
-        <translation>Gebruik:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -1102,7 +1102,7 @@ Address: %4
     <message>
         <location line="-78"/>
         <source>Wallet</source>
-        <translation>Beursie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+49"/>
@@ -1435,7 +1435,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>S&amp;end</source>
-        <translation>S&amp;tuur</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-62"/>
@@ -1514,7 +1514,7 @@ Address: %4
     <message>
         <location line="+34"/>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Die adres waarheen die betaling gestuur moet word (b.v. 1H7wyVL5HCNoVFyyBJSDojwyxcCChU7TPA)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+60"/>
@@ -1555,7 +1555,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Die adres waarheen die betaling gestuur moet word (b.v. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -1568,7 +1568,7 @@ Address: %4
     <message>
         <location line="+13"/>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Teken boodskap</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+6"/>
@@ -1610,7 +1610,7 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Signature</source>
-        <translation>Handtekening</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+27"/>
@@ -1625,7 +1625,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Sign &amp;Message</source>
-        <translation>Teken &amp;Boodskap</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+14"/>
@@ -1672,7 +1672,7 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Die adres waarheen die betaling gestuur moet word (b.v. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-2"/>
@@ -1799,7 +1799,7 @@ Address: %4
     <message>
         <location line="+4"/>
         <source>Date</source>
-        <translation>Datum</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+7"/>
@@ -1815,25 +1815,25 @@ Address: %4
         <location line="+5"/>
         <location line="+17"/>
         <source>From</source>
-        <translation>Van</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <location line="+22"/>
         <location line="+58"/>
         <source>To</source>
-        <translation>Na</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-77"/>
         <location line="+2"/>
         <source>own address</source>
-        <translation>eie adres</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-2"/>
         <source>label</source>
-        <translation>etiket</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+37"/>
@@ -1842,7 +1842,7 @@ Address: %4
         <location line="+17"/>
         <location line="+30"/>
         <source>Credit</source>
-        <translation>Krediet</translation>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
         <location line="-102"/>
@@ -1852,7 +1852,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>not accepted</source>
-        <translation>nie aanvaar nie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+44"/>
@@ -1860,22 +1860,22 @@ Address: %4
         <location line="+15"/>
         <location line="+30"/>
         <source>Debit</source>
-        <translation>Debiet</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-39"/>
         <source>Transaction fee</source>
-        <translation>Transaksie fooi</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+16"/>
         <source>Net amount</source>
-        <translation>Netto bedrag</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+6"/>
         <source>Message</source>
-        <translation>Boodskap</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -1885,7 +1885,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Transaction ID</source>
-        <translation>Transaksie ID</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
@@ -1910,17 +1910,17 @@ Address: %4
     <message>
         <location line="+23"/>
         <source>Amount</source>
-        <translation>Bedrag</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>true</source>
-        <translation>waar</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+0"/>
         <source>false</source>
-        <translation>onwaar</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-209"/>
@@ -1956,22 +1956,22 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="+225"/>
         <source>Date</source>
-        <translation>Datum</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+0"/>
         <source>Type</source>
-        <translation>Tipe</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation>Adres</translation>
+        <translation>Адрас</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Amount</source>
-        <translation>Bedrag</translation>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
         <location line="+57"/>
@@ -2016,7 +2016,7 @@ Address: %4
     <message>
         <location line="+43"/>
         <source>Received with</source>
-        <translation>Ontvang met</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -2026,7 +2026,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Sent to</source>
-        <translation>Gestuur na</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -2036,12 +2036,12 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Mined</source>
-        <translation>Gemyn</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+38"/>
         <source>(n/a)</source>
-        <translation>(n.v.t)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+199"/>
@@ -2051,12 +2051,12 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>Datum en tyd wat die transaksie ontvang was.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation>Tipe transaksie.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -2075,32 +2075,32 @@ Address: %4
         <location filename="../transactionview.cpp" line="+52"/>
         <location line="+16"/>
         <source>All</source>
-        <translation>Alles</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-15"/>
         <source>Today</source>
-        <translation>Vandag</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>This week</source>
-        <translation>Hierdie week</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>This month</source>
-        <translation>Hierdie maand</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Last month</source>
-        <translation>Verlede maand</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>This year</source>
-        <translation>Hierdie jaar</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -2110,27 +2110,27 @@ Address: %4
     <message>
         <location line="+11"/>
         <source>Received with</source>
-        <translation>Ontvang met</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
         <source>Sent to</source>
-        <translation>Gestuur na</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
         <source>To yourself</source>
-        <translation>Aan/na jouself</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Mined</source>
-        <translation>Gemyn</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Other</source>
-        <translation>Ander</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+7"/>
@@ -2140,12 +2140,12 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Min amount</source>
-        <translation>Min bedrag</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+34"/>
         <source>Copy address</source>
-        <translation>Maak kopie van adres</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -2180,7 +2180,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Коскамі падзелены файл (*.csv)</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2190,42 +2190,42 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Date</source>
-        <translation>Datum</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Type</source>
-        <translation>Tipe</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation>Пазнака</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Address</source>
-        <translation>Adres</translation>
+        <translation>Адрас</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Amount</source>
-        <translation>Bedrag</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>ID</source>
-        <translation>ID</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+4"/>
         <source>Error exporting</source>
-        <translation>Fout uitvoering</translation>
+        <translation>Памылка экспартавання</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>Kon nie na die %1 lêer skryf nie</translation>
+        <translation>Немагчыма запісаць у файл %1</translation>
     </message>
     <message>
         <location line="+100"/>
@@ -2294,12 +2294,12 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="+98"/>
         <source>Bitcoin version</source>
-        <translation>Bitcoin weergawe</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+104"/>
         <source>Usage:</source>
-        <translation>Gebruik:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-30"/>
@@ -2544,7 +2544,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+2"/>
         <source>Error: Disk space is low!</source>
-        <translation>Fout: Hardeskyf spasie is baie laag!</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -2689,7 +2689,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+78"/>
         <source>Information</source>
-        <translation>Informasie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
@@ -2794,7 +2794,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+5"/>
         <source>System error: </source>
-        <translation>Sisteem fout:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+4"/>
@@ -2924,7 +2924,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+56"/>
         <source>Loading addresses...</source>
-        <translation>Laai adresse...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-36"/>
@@ -2989,7 +2989,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+10"/>
         <source>Loading block index...</source>
-        <translation>Laai blok indeks...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-58"/>
@@ -3009,7 +3009,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+20"/>
         <source>Loading wallet...</source>
-        <translation>Laai beursie...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-53"/>
@@ -3029,7 +3029,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="-58"/>
         <source>Done loading</source>
-        <translation>Klaar gelaai</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+84"/>
@@ -3039,7 +3039,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="-76"/>
         <source>Error</source>
-        <translation>Fout</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-31"/>

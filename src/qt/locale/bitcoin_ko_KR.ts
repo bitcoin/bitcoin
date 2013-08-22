@@ -1,15 +1,15 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="af_ZA" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="ko_KR" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>비트코인 소개</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; weergawe</translation>
+        <translation>&lt;b&gt;비트코인&lt;/b&gt;버전</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -37,22 +37,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="+14"/>
         <source>Address Book</source>
-        <translation>Adres Boek</translation>
+        <translation>주소록</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Double-click to edit address or label</source>
-        <translation>Dubbel-klik om die adres of etiket te wysig</translation>
+        <translation>표 또는 주소를 편집하기 위해 더블클릭 하세요</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Create a new address</source>
-        <translation>Skep &apos;n nuwe adres</translation>
+        <translation>새 주소 만들기</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Maak &apos;n kopie van die huidige adres na die stelsel klipbord</translation>
+        <translation>현재 선택한 주로를 시스템 클립보드로 복사하기</translation>
     </message>
     <message>
         <location line="-11"/>
@@ -82,7 +82,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>Sign &amp;Message</source>
-        <translation>Teken &amp;Boodskap</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+25"/>
@@ -112,7 +112,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+14"/>
         <source>&amp;Delete</source>
-        <translation>&amp;Verwyder</translation>
+        <translation>&amp;삭제</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="-5"/>
@@ -132,27 +132,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+1"/>
         <source>Send &amp;Coins</source>
-        <translation>Stuur &amp;Muntstukke</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+265"/>
         <source>Export Address Book Data</source>
-        <translation>Voer die Adresboek Data Uit</translation>
+        <translation>주소록 데이터를 내보내기</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>각각의 파일에 쉼표하기(*.csv)</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Error exporting</source>
-        <translation>Fout uitvoering</translation>
+        <translation>에러 내보내기</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>Kon nie na die %1 lêer skryf nie</translation>
+        <translation>파일을 저장 할 수 없슴 %1.</translation>
     </message>
 </context>
 <context>
@@ -160,17 +160,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="+144"/>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation>표</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation>Adres</translation>
+        <translation>주소</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>(no label)</source>
-        <translation>(geen etiket)</translation>
+        <translation>(표 없슴)</translation>
     </message>
 </context>
 <context>
@@ -183,62 +183,62 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+21"/>
         <source>Enter passphrase</source>
-        <translation>Tik Wagwoord in</translation>
+        <translation>패스프레이즈 입력하기</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>New passphrase</source>
-        <translation>Nuwe wagwoord</translation>
+        <translation>새로운 패스프레이즈</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation>Herhaal nuwe wagwoord</translation>
+        <translation>새로운 패스프레이즈 반복</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="+33"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Tik die nuwe wagwoord vir die beursie in.&lt;br/&gt;Gebruik asseblief &apos;n wagwoord van &lt;b&gt;ten minste 10 ewekansige karakters&lt;/b&gt;, of &lt;b&gt;agt (8) of meer woorde.&lt;/b&gt;</translation>
+        <translation>새로운 패스프레이즈를 지갑에 입력. 8자보다 많은 단어를 입력하거나 10 자보다 많은 무작위 캐랙터를 패스프레이즈에 사용하세요.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Encrypt wallet</source>
-        <translation>Enkripteer beursie</translation>
+        <translation>지갑 암호화</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Hierdie operasie benodig &apos;n wagwoord om die beursie oop te sluit.</translation>
+        <translation>본 작업은 지갑을 열기위하여 사용자의 지갑의  패스프레이즈가 필요합니다.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Unlock wallet</source>
-        <translation>Sluit beursie oop</translation>
+        <translation>지갑 열기</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Hierdie operasie benodig &apos;n wagwoord om die beursie oop te sluit.</translation>
+        <translation>본 작업은 지갑을 해독하기위하여 사용자의 지갑 패스프레이즈가 필요합니다.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Decrypt wallet</source>
-        <translation>Sluit beursie oop</translation>
+        <translation>지갑 해독</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Change passphrase</source>
-        <translation>Verander wagwoord</translation>
+        <translation>패스프레이즈 변경</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Tik asseblief die ou en nuwe wagwoord vir die beursie in.</translation>
+        <translation>지갑에 전과 새로운 패스프레이즈를 입력</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation>Bevestig beursie enkripsie.</translation>
+        <translation>지갑의 암호화를 확정</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -265,7 +265,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="-130"/>
         <location line="+58"/>
         <source>Wallet encrypted</source>
-        <translation>Die beursie is nou bewaak</translation>
+        <translation>지갑 암호화 완료</translation>
     </message>
     <message>
         <location line="-56"/>
@@ -278,35 +278,35 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+42"/>
         <location line="+6"/>
         <source>Wallet encryption failed</source>
-        <translation>Die beursie kon nie bewaak word nie</translation>
+        <translation>지갑 암호화 실패</translation>
     </message>
     <message>
         <location line="-54"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Beursie bewaaking het misluk as gevolg van &apos;n interne fout. Die beursie is nie bewaak nie!</translation>
+        <translation>지갑 암호화는 내부 에러로 인해 실패했습니다.  당신의 지갑은 암호화 되지 않았습니다.</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+48"/>
         <source>The supplied passphrases do not match.</source>
-        <translation>Die wagwoord stem nie ooreen nie</translation>
+        <translation>제공된 패스프레이즈가 일치하지 않습니다.</translation>
     </message>
     <message>
         <location line="-37"/>
         <source>Wallet unlock failed</source>
-        <translation>Beursie oopsluiting het misluk</translation>
+        <translation>지갑 열기가 실패하였습니다.</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+11"/>
         <location line="+19"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Die wagwoord wat ingetik was om die beursie oop te sluit, was verkeerd.</translation>
+        <translation>지갑 해독을 위한 패스프레이즈가 틀렸습니다.</translation>
     </message>
     <message>
         <location line="-20"/>
         <source>Wallet decryption failed</source>
-        <translation>Beursie dekripsie het misluk</translation>
+        <translation>지갑 해독에 실패하였습니다.</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -324,52 +324,52 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+246"/>
         <source>Synchronizing with network...</source>
-        <translation>Sinchroniseer met die netwerk ...</translation>
+        <translation>네트워크와 동기화중...</translation>
     </message>
     <message>
         <location line="-321"/>
         <source>&amp;Overview</source>
-        <translation>&amp;Oorsig</translation>
+        <translation>&amp;개요</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show general overview of wallet</source>
-        <translation>Wys algemene oorsig van die beursie</translation>
+        <translation>지갑의 일반적 개요를 보여 줍니다.</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transaksies</translation>
+        <translation>&amp;거래</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation>Besoek transaksie geskiedenis</translation>
+        <translation>거래내역을 검색합니다.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Edit the list of stored addresses and labels</source>
-        <translation>Wysig die lys van gestoorde adresse en etikette</translation>
+        <translation>저장된 주소들과 표 목록을 편집합니다.</translation>
     </message>
     <message>
         <location line="-14"/>
         <source>Show the list of addresses for receiving payments</source>
-        <translation>Wys die lys van adresse vir die ontvangs van betalings</translation>
+        <translation>받는 지불금액 주소들의 목록을 보여줍니다</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>E&amp;xit</source>
-        <translation>S&amp;luit af</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Quit application</source>
-        <translation>Sluit af</translation>
+        <translation>적용 중단</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Show information about Bitcoin</source>
-        <translation>Wys inligting oor Bitcoin</translation>
+        <translation>비트코인에 대한 정보를 보여줍니다.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -384,7 +384,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation>&amp;Opsies</translation>
+        <translation>&amp;옵션</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -424,12 +424,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+12"/>
         <source>Backup wallet to another location</source>
-        <translation type="unfinished"/>
+        <translation>지갑을 다른장소에 저장하기</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>지갑 암호화에 사용되는 패스프레이즈를 변경합니다</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -451,13 +451,13 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+6"/>
         <location line="+508"/>
         <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-514"/>
         <location line="+6"/>
         <source>Wallet</source>
-        <translation>Beursie</translation>
+        <translation>지갑</translation>
     </message>
     <message>
         <location line="+107"/>
@@ -509,39 +509,39 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+28"/>
         <source>&amp;File</source>
-        <translation>&amp;Lêer</translation>
+        <translation>&amp;파일</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Settings</source>
-        <translation>&amp;Instellings</translation>
+        <translation>&amp;설정</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&amp;Help</source>
-        <translation>&amp;Hulp</translation>
+        <translation>&amp;도움말</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Tabs toolbar</source>
-        <translation>Blad nutsbalk</translation>
+        <translation>툴바 색인표</translation>
     </message>
     <message>
         <location line="-228"/>
         <location line="+288"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[테스트넷]</translation>
     </message>
     <message>
         <location line="-5"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
-        <translation type="unfinished"/>
+        <translation>비트코인 고객</translation>
     </message>
     <message numerus="yes">
         <location line="+121"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>비트코인 네트워크와 %n 개의 활성연결</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -561,27 +561,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location line="+20"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>%1 behind</source>
-        <translation>%1 agter</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+14"/>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Ontvangs van laaste blok is %1 terug.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -591,7 +591,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+22"/>
         <source>Error</source>
-        <translation>Fout</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
@@ -601,7 +601,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>Information</source>
-        <translation>Informasie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+70"/>
@@ -611,12 +611,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-140"/>
         <source>Up to date</source>
-        <translation type="unfinished"/>
+        <translation>현재까지</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Catching up...</source>
-        <translation type="unfinished"/>
+        <translation>따라잡기...</translation>
     </message>
     <message>
         <location line="+113"/>
@@ -626,12 +626,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+8"/>
         <source>Sent transaction</source>
-        <translation type="unfinished"/>
+        <translation>거래 보내기</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Incoming transaction</source>
-        <translation type="unfinished"/>
+        <translation>도착하는 거래</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -657,12 +657,12 @@ Address: %4
     <message>
         <location line="+17"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>지갑이 암호화 되었고 현재 차단해제 되었습니다</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>지갑이 암호화 되었고 현재 잠겨져 있습니다</translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="+110"/>
@@ -683,52 +683,52 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>주소 편집</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;표</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The label associated with this address book entry</source>
-        <translation type="unfinished"/>
+        <translation>본 주소록 입력은 표와 연결</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;주소</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The address associated with this address book entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"/>
+        <translation>본 주소록 입력은 주소와 연계되었습니다.  이것은 보내는 주소들에서만 변경될수 있습니다.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="+21"/>
         <source>New receiving address</source>
-        <translation type="unfinished"/>
+        <translation>새로 받는 주소</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>New sending address</source>
-        <translation type="unfinished"/>
+        <translation>새로 보내는 주소</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Edit receiving address</source>
-        <translation type="unfinished"/>
+        <translation>받는 주소 편집</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Edit sending address</source>
-        <translation type="unfinished"/>
+        <translation>보내는 주소 편집</translation>
     </message>
     <message>
         <location line="+76"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation type="unfinished"/>
+        <translation>입력된 주소는&quot;%1&quot; 이미 주소록에 있습니다.</translation>
     </message>
     <message>
         <location line="-5"/>
@@ -738,12 +738,12 @@ Address: %4
     <message>
         <location line="+10"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"/>
+        <translation>지갑을 열 수 없습니다.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>New key generation failed.</source>
-        <translation type="unfinished"/>
+        <translation>새로운 키 생성이 실패하였습니다</translation>
     </message>
 </context>
 <context>
@@ -790,7 +790,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Usage:</source>
-        <translation>Gebruik:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -876,7 +876,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="+14"/>
         <source>Options</source>
-        <translation type="unfinished"/>
+        <translation>선택들</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1086,7 +1086,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"/>
+        <translation>유형</translation>
     </message>
     <message>
         <location line="+50"/>
@@ -1097,12 +1097,12 @@ Address: %4
     <message>
         <location line="-131"/>
         <source>Unconfirmed:</source>
-        <translation type="unfinished"/>
+        <translation>미확인:</translation>
     </message>
     <message>
         <location line="-78"/>
         <source>Wallet</source>
-        <translation>Beursie</translation>
+        <translation>지갑</translation>
     </message>
     <message>
         <location line="+49"/>
@@ -1142,7 +1142,7 @@ Address: %4
     <message>
         <location line="+53"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;최근 거래내역&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="+116"/>
@@ -1183,7 +1183,7 @@ Address: %4
     <message>
         <location filename="../forms/qrcodedialog.ui" line="+14"/>
         <source>QR Code Dialog</source>
-        <translation type="unfinished"/>
+        <translation>QR코드 대화상자</translation>
     </message>
     <message>
         <location line="+59"/>
@@ -1213,7 +1213,7 @@ Address: %4
     <message>
         <location filename="../qrcodedialog.cpp" line="+64"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished"/>
+        <translation>QR코드 인코딩 오류</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -1223,17 +1223,17 @@ Address: %4
     <message>
         <location line="+23"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation type="unfinished"/>
+        <translation>URI 결과가 너무 길음, 표/메세지의 글을 줄이도록 하세요.</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Save QR Code</source>
-        <translation type="unfinished"/>
+        <translation>QR코드 저장</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>PNG Images (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>PNG 영상들(*.png)</translation>
     </message>
 </context>
 <context>
@@ -1241,7 +1241,7 @@ Address: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="+46"/>
         <source>Client name</source>
-        <translation type="unfinished"/>
+        <translation>클라이언트 이름</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1255,12 +1255,12 @@ Address: %4
         <location line="+23"/>
         <location filename="../rpcconsole.cpp" line="+345"/>
         <source>N/A</source>
-        <translation type="unfinished"/>
+        <translation>없음</translation>
     </message>
     <message>
         <location line="-217"/>
         <source>Client version</source>
-        <translation type="unfinished"/>
+        <translation>클라이언트 버전</translation>
     </message>
     <message>
         <location line="-45"/>
@@ -1280,12 +1280,12 @@ Address: %4
     <message>
         <location line="+29"/>
         <source>Network</source>
-        <translation type="unfinished"/>
+        <translation>네트워크</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Number of connections</source>
-        <translation type="unfinished"/>
+        <translation>연결 수</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -1295,22 +1295,22 @@ Address: %4
     <message>
         <location line="+23"/>
         <source>Block chain</source>
-        <translation type="unfinished"/>
+        <translation>블럭 체인</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Current number of blocks</source>
-        <translation type="unfinished"/>
+        <translation>현재 블럭 수</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Estimated total blocks</source>
-        <translation type="unfinished"/>
+        <translation>예상 전체 블럭</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Last block time</source>
-        <translation type="unfinished"/>
+        <translation>최종 블럭 시각</translation>
     </message>
     <message>
         <location line="+52"/>
@@ -1340,7 +1340,7 @@ Address: %4
     <message>
         <location line="-260"/>
         <source>Build date</source>
-        <translation type="unfinished"/>
+        <translation>빌드 날짜</translation>
     </message>
     <message>
         <location line="-104"/>
@@ -1365,7 +1365,7 @@ Address: %4
     <message>
         <location line="+102"/>
         <source>Clear console</source>
-        <translation type="unfinished"/>
+        <translation>콘솔 초기화</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="-30"/>
@@ -1395,12 +1395,12 @@ Address: %4
         <location line="+5"/>
         <location line="+5"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>코인들 보내기</translation>
     </message>
     <message>
         <location line="+50"/>
         <source>Send to multiple recipients at once</source>
-        <translation type="unfinished"/>
+        <translation>다수의 수령인들에게 한번에 보내기</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1420,43 +1420,43 @@ Address: %4
     <message>
         <location line="+22"/>
         <source>Balance:</source>
-        <translation type="unfinished"/>
+        <translation>잔액:</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>123.456 BTC</source>
-        <translation type="unfinished"/>
+        <translation>123.456 BTC</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Confirm the send action</source>
-        <translation type="unfinished"/>
+        <translation>보내는 행위 확인</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>S&amp;end</source>
-        <translation>S&amp;tuur</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-62"/>
         <location line="+2"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;%1&lt;/b&gt;to%(%3)</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Confirm send coins</source>
-        <translation type="unfinished"/>
+        <translation>코인 전송을 확인</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Are you sure you want to send %1?</source>
-        <translation type="unfinished"/>
+        <translation>%1 전송을 확실히 하시겠습니까?</translation>
     </message>
     <message>
         <location line="+0"/>
         <source> and </source>
-        <translation type="unfinished"/>
+        <translation>그리고</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -1466,22 +1466,22 @@ Address: %4
     <message>
         <location line="+5"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation type="unfinished"/>
+        <translation>지불하는 금액은 0 보다 커야 합니다.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished"/>
+        <translation>잔고를 초과하였습니다.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>%1 의 거래수수료를 포함하면 잔고를 초과합니다.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation type="unfinished"/>
+        <translation>두개 이상의 주소입니다. 한번에 하나의 주소에만 작업할 수 있습니다.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1491,7 +1491,7 @@ Address: %4
     <message>
         <location line="+5"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>오류 : 거래가 거부되었습니다. 해당 코인이 이미 사용되었을 수 있습니다. wallet.dat 파일의 사본을 사용하였거나, 코인을 사용하였는데 여기서 사용하였다고 확인되지 않았을 수 있습니다.</translation>
     </message>
 </context>
 <context>
@@ -1499,33 +1499,33 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"/>
+        <translation>서식</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>A&amp;mount:</source>
-        <translation type="unfinished"/>
+        <translation>금액:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Pay &amp;To:</source>
-        <translation type="unfinished"/>
+        <translation>지급&amp;수신:</translation>
     </message>
     <message>
         <location line="+34"/>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Die adres waarheen die betaling gestuur moet word (b.v. 1H7wyVL5HCNoVFyyBJSDojwyxcCChU7TPA)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+60"/>
         <location filename="../sendcoinsentry.cpp" line="+26"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation type="unfinished"/>
+        <translation>당신의 주소록에 이 주소를 추가하기 위하여 표를 입역하세요 </translation>
     </message>
     <message>
         <location line="-78"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>표:</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -1535,27 +1535,27 @@ Address: %4
     <message>
         <location line="+10"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>클립보드로 부터 주소를 붙이세요</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Remove this recipient</source>
-        <translation type="unfinished"/>
+        <translation>이 수신자 제거 하기</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Die adres waarheen die betaling gestuur moet word (b.v. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>비트코인 주소를 입력하기 (예 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1568,7 +1568,7 @@ Address: %4
     <message>
         <location line="+13"/>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Teken boodskap</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+6"/>
@@ -1590,17 +1590,17 @@ Address: %4
         <location line="-203"/>
         <location line="+213"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location line="-203"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>클립보드로 부터 주소를 붙이세요</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -1610,7 +1610,7 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Signature</source>
-        <translation>Handtekening</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+27"/>
@@ -1625,7 +1625,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Sign &amp;Message</source>
-        <translation>Teken &amp;Boodskap</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+14"/>
@@ -1672,7 +1672,7 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Die adres waarheen die betaling gestuur moet word (b.v. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>비트코인 주소를 입력하기 (예 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="-2"/>
@@ -1761,7 +1761,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[테스트넷]</translation>
     </message>
 </context>
 <context>
@@ -1769,7 +1769,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="+20"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>%1 까지 열림</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1779,12 +1779,12 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>%1/미확인</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 confirmations</source>
-        <translation type="unfinished"/>
+        <translation>%1 확인됨</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -1794,12 +1794,12 @@ Address: %4
     <message numerus="yes">
         <location line="+7"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Date</source>
-        <translation>Datum</translation>
+        <translation>날짜</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1815,25 +1815,25 @@ Address: %4
         <location line="+5"/>
         <location line="+17"/>
         <source>From</source>
-        <translation>Van</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <location line="+22"/>
         <location line="+58"/>
         <source>To</source>
-        <translation>Na</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-77"/>
         <location line="+2"/>
         <source>own address</source>
-        <translation>eie adres</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-2"/>
         <source>label</source>
-        <translation>etiket</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+37"/>
@@ -1842,17 +1842,17 @@ Address: %4
         <location line="+17"/>
         <location line="+30"/>
         <source>Credit</source>
-        <translation>Krediet</translation>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
         <location line="-102"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+2"/>
         <source>not accepted</source>
-        <translation>nie aanvaar nie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+44"/>
@@ -1860,22 +1860,22 @@ Address: %4
         <location line="+15"/>
         <location line="+30"/>
         <source>Debit</source>
-        <translation>Debiet</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-39"/>
         <source>Transaction fee</source>
-        <translation>Transaksie fooi</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+16"/>
         <source>Net amount</source>
-        <translation>Netto bedrag</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+6"/>
         <source>Message</source>
-        <translation>Boodskap</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -1885,7 +1885,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Transaction ID</source>
-        <translation>Transaksie ID</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
@@ -1910,32 +1910,32 @@ Address: %4
     <message>
         <location line="+23"/>
         <source>Amount</source>
-        <translation>Bedrag</translation>
+        <translation>거래량</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>true</source>
-        <translation>waar</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+0"/>
         <source>false</source>
-        <translation>onwaar</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-209"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"/>
+        <translation>. 아직 성공적으로 통보하지 않음</translation>
     </message>
     <message numerus="yes">
         <location line="-35"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+70"/>
         <source>unknown</source>
-        <translation type="unfinished"/>
+        <translation>알수없음</translation>
     </message>
 </context>
 <context>
@@ -1943,12 +1943,12 @@ Address: %4
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="+14"/>
         <source>Transaction details</source>
-        <translation type="unfinished"/>
+        <translation>거래 세부 내역</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation type="unfinished"/>
+        <translation>이 창은 거래의 세부내역을 보여줍니다</translation>
     </message>
 </context>
 <context>
@@ -1956,67 +1956,67 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="+225"/>
         <source>Date</source>
-        <translation>Datum</translation>
+        <translation>날짜</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Type</source>
-        <translation>Tipe</translation>
+        <translation>형식</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation>Adres</translation>
+        <translation>주소</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Amount</source>
-        <translation>Bedrag</translation>
+        <translation>수량</translation>
     </message>
     <message numerus="yes">
         <location line="+57"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>%1 까지 열림</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Offline (%1 confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>오프라인(%1 확인됨)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>미확인(%2 중 %1 확인됨)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>확인됨(%1 확인됨)</translation>
     </message>
     <message numerus="yes">
         <location line="+8"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+5"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="unfinished"/>
+        <translation>이 블럭은 다른 노드로부터 받지 않았음. 허용되지 않을 것임.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Generated but not accepted</source>
-        <translation type="unfinished"/>
+        <translation>생성되었으나 거절됨</translation>
     </message>
     <message>
         <location line="+43"/>
         <source>Received with</source>
-        <translation>Ontvang met</translation>
+        <translation>다음과 함께 받음 : </translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2026,47 +2026,47 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Sent to</source>
-        <translation>Gestuur na</translation>
+        <translation>다음에게 보냄 :</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Payment to yourself</source>
-        <translation type="unfinished"/>
+        <translation>자신에게 지불</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Mined</source>
-        <translation>Gemyn</translation>
+        <translation>채굴됨</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>(n/a)</source>
-        <translation>(n.v.t)</translation>
+        <translation>(없음)</translation>
     </message>
     <message>
         <location line="+199"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished"/>
+        <translation>거래상황. 마우스를 올리면 승인횟수가 표시됩니다.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>Datum en tyd wat die transaksie ontvang was.</translation>
+        <translation>거래가 이루어진 날짜와 시각.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation>Tipe transaksie.</translation>
+        <translation>거래의 종류.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Destination address of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>거래 상대방의 주소.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished"/>
+        <translation>변경된 잔고.</translation>
     </message>
 </context>
 <context>
@@ -2075,82 +2075,82 @@ Address: %4
         <location filename="../transactionview.cpp" line="+52"/>
         <location line="+16"/>
         <source>All</source>
-        <translation>Alles</translation>
+        <translation>전체</translation>
     </message>
     <message>
         <location line="-15"/>
         <source>Today</source>
-        <translation>Vandag</translation>
+        <translation>오늘</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This week</source>
-        <translation>Hierdie week</translation>
+        <translation>이번주</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This month</source>
-        <translation>Hierdie maand</translation>
+        <translation>이번 달</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Last month</source>
-        <translation>Verlede maand</translation>
+        <translation>지난 달</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This year</source>
-        <translation>Hierdie jaar</translation>
+        <translation>올 해</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Range...</source>
-        <translation type="unfinished"/>
+        <translation>범위...</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Received with</source>
-        <translation>Ontvang met</translation>
+        <translation>보낸 주소</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Sent to</source>
-        <translation>Gestuur na</translation>
+        <translation>받는 주소</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>To yourself</source>
-        <translation>Aan/na jouself</translation>
+        <translation>자기거래</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Mined</source>
-        <translation>Gemyn</translation>
+        <translation>채굴</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Other</source>
-        <translation>Ander</translation>
+        <translation>기타</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Enter address or label to search</source>
-        <translation type="unfinished"/>
+        <translation>검색하기 위한 주소 또는 라벨을 입력</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Min amount</source>
-        <translation>Min bedrag</translation>
+        <translation>최소 거래량</translation>
     </message>
     <message>
         <location line="+34"/>
         <source>Copy address</source>
-        <translation>Maak kopie van adres</translation>
+        <translation>주소 복사하기</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>라벨 복사하기</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2165,77 +2165,77 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Edit label</source>
-        <translation type="unfinished"/>
+        <translation>라벨 수정하기</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show transaction details</source>
-        <translation type="unfinished"/>
+        <translation>거래 내역 확인</translation>
     </message>
     <message>
         <location line="+143"/>
         <source>Export Transaction Data</source>
-        <translation type="unfinished"/>
+        <translation>거래내역 내보내기</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>각각의 파일에 쉼표하기(*.csv)</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>확인됨</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Date</source>
-        <translation>Datum</translation>
+        <translation>날짜</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type</source>
-        <translation>Tipe</translation>
+        <translation>종류</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation>표</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Address</source>
-        <translation>Adres</translation>
+        <translation>주소</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Amount</source>
-        <translation>Bedrag</translation>
+        <translation>거래량</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>ID</source>
-        <translation>ID</translation>
+        <translation>아이디</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Error exporting</source>
-        <translation>Fout uitvoering</translation>
+        <translation>에러 내보내기</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>Kon nie na die %1 lêer skryf nie</translation>
+        <translation>파일을 저장 할 수 없슴 %1.</translation>
     </message>
     <message>
         <location line="+100"/>
         <source>Range:</source>
-        <translation type="unfinished"/>
+        <translation>범위:</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>to</source>
-        <translation type="unfinished"/>
+        <translation>상대방</translation>
     </message>
 </context>
 <context>
@@ -2243,7 +2243,7 @@ Address: %4
     <message>
         <location filename="../walletmodel.cpp" line="+193"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>코인들 보내기</translation>
     </message>
 </context>
 <context>
@@ -2294,52 +2294,52 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="+98"/>
         <source>Bitcoin version</source>
-        <translation>Bitcoin weergawe</translation>
+        <translation>비트코인 버전</translation>
     </message>
     <message>
         <location line="+104"/>
         <source>Usage:</source>
-        <translation>Gebruik:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-30"/>
         <source>Send command to -server or bitcoind</source>
-        <translation type="unfinished"/>
+        <translation>서버 또는 bitcoind에 커맨드 전송</translation>
     </message>
     <message>
         <location line="-23"/>
         <source>List commands</source>
-        <translation type="unfinished"/>
+        <translation>커맨드 목록</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>Get help for a command</source>
-        <translation type="unfinished"/>
+        <translation>커맨드 도움말</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Options:</source>
-        <translation type="unfinished"/>
+        <translation>옵션:</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation type="unfinished"/>
+        <translation>설정파일 지정 (기본: bitcoin.conf)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation type="unfinished"/>
+        <translation>pid 파일 지정 (기본: bitcoind.pid)</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>Specify data directory</source>
-        <translation type="unfinished"/>
+        <translation>데이터 폴더 지정</translation>
     </message>
     <message>
         <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
-        <translation type="unfinished"/>
+        <translation>데이터베이스 캐시 크기를 메가바이트로 지정(내정값:25)</translation>
     </message>
     <message>
         <location line="-28"/>
@@ -2544,7 +2544,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+2"/>
         <source>Error: Disk space is low!</source>
-        <translation>Fout: Hardeskyf spasie is baie laag!</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -2689,7 +2689,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+78"/>
         <source>Information</source>
-        <translation>Informasie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
@@ -2759,12 +2759,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+3"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation type="unfinished"/>
+        <translation>추적오류 정보를 degug.log 자료로 보내는 대신 콘솔로 보내기</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send trace/debug info to debugger</source>
-        <translation type="unfinished"/>
+        <translation>추적/오류를 debugger로 보내기</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2794,7 +2794,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+5"/>
         <source>System error: </source>
-        <translation>Sisteem fout:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+4"/>
@@ -2809,7 +2809,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>너무 큰 거래</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2864,12 +2864,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="-121"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation type="unfinished"/>
+        <translation>최고의 블럭이 변하면 명령을 실행(cmd 에 있는 %s 는 블럭 해시에 의해 대체되어 짐)</translation>
     </message>
     <message>
         <location line="+149"/>
         <source>Upgrade wallet to latest format</source>
-        <translation type="unfinished"/>
+        <translation>지갑을 최근 형식으로 개선하시오</translation>
     </message>
     <message>
         <location line="-22"/>
@@ -2924,27 +2924,27 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+56"/>
         <source>Loading addresses...</source>
-        <translation>Laai adresse...</translation>
+        <translation>주소를 불러오는 중...</translation>
     </message>
     <message>
         <location line="-36"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat에러: 지갑 오류</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat 로딩 에러:  지갑은 새버전의 비트코인이 필요합니다.</translation>
     </message>
     <message>
         <location line="+96"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation type="unfinished"/>
+        <translation>지갑을 새로 써야 합니다.:  완성하기위하여 비트코인을 다시 시작하십시오.</translation>
     </message>
     <message>
         <location line="-98"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat 로딩 에러</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -2979,17 +2979,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Invalid amount</source>
-        <translation type="unfinished"/>
+        <translation>효력없는 금액</translation>
     </message>
     <message>
         <location line="-6"/>
         <source>Insufficient funds</source>
-        <translation type="unfinished"/>
+        <translation>자금 부족</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Loading block index...</source>
-        <translation>Laai blok indeks...</translation>
+        <translation>블럭 인덱스를 불러오는 중...</translation>
     </message>
     <message>
         <location line="-58"/>
@@ -3009,7 +3009,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+20"/>
         <source>Loading wallet...</source>
-        <translation>Laai beursie...</translation>
+        <translation>지갑을 불러오는 중...</translation>
     </message>
     <message>
         <location line="-53"/>
@@ -3024,12 +3024,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+65"/>
         <source>Rescanning...</source>
-        <translation type="unfinished"/>
+        <translation>재검색 중...</translation>
     </message>
     <message>
         <location line="-58"/>
         <source>Done loading</source>
-        <translation>Klaar gelaai</translation>
+        <translation>로딩 완료</translation>
     </message>
     <message>
         <location line="+84"/>
@@ -3039,7 +3039,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="-76"/>
         <source>Error</source>
-        <translation>Fout</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-31"/>

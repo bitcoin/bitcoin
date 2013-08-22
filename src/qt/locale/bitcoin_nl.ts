@@ -1,5 +1,4 @@
 <?xml version="1.0" ?><!DOCTYPE TS><TS language="nl" version="2.0">
-<defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
     <message>
@@ -141,7 +140,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <translation>Verstuur &amp;Coins</translation>
     </message>
     <message>
-        <location line="+260"/>
+        <location line="+265"/>
         <source>Export Address Book Data</source>
         <translation>Exporteer Gegevens van het Adresboek</translation>
     </message>
@@ -323,17 +322,17 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+233"/>
+        <location filename="../bitcoingui.cpp" line="+254"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Onderteken bericht...</translation>
     </message>
     <message>
-        <location line="+280"/>
+        <location line="+246"/>
         <source>Synchronizing with network...</source>
         <translation>Synchroniseren met netwerk...</translation>
     </message>
     <message>
-        <location line="-349"/>
+        <location line="-321"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overzicht</translation>
     </message>
@@ -373,7 +372,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <translation>Programma afsluiten</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+7"/>
         <source>Show information about Bitcoin</source>
         <translation>Laat informatie zien over Bitcoin</translation>
     </message>
@@ -393,7 +392,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <translation>O&amp;pties...</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+9"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Versleutel Portemonnee...</translation>
     </message>
@@ -408,7 +407,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <translation>&amp;Wijzig Wachtwoord</translation>
     </message>
     <message>
-        <location line="+285"/>
+        <location line="+251"/>
         <source>Importing blocks from disk...</source>
         <translation>Blokken aan het importeren vanaf harde schijf...</translation>
     </message>
@@ -418,17 +417,17 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <translation>Bezig met herindexeren van blokken op harde schijf...</translation>
     </message>
     <message>
-        <location line="-347"/>
+        <location line="-319"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Verstuur munten naar een Bitcoinadres</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+52"/>
         <source>Modify configuration options for Bitcoin</source>
         <translation>Wijzig instellingen van Bitcoin</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>Backup wallet to another location</source>
         <translation>&amp;Backup portemonnee naar een andere locatie</translation>
     </message>
@@ -453,18 +452,20 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <translation>&amp;Verifiëer bericht...</translation>
     </message>
     <message>
-        <location line="-165"/>
-        <location line="+530"/>
+        <location line="-183"/>
+        <location line="+6"/>
+        <location line="+508"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-530"/>
+        <location line="-514"/>
+        <location line="+6"/>
         <source>Wallet</source>
         <translation>Portemonnee</translation>
     </message>
     <message>
-        <location line="+101"/>
+        <location line="+107"/>
         <source>&amp;Send</source>
         <translation>&amp;Versturen</translation>
     </message>
@@ -479,12 +480,14 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <translation>&amp;Adressen</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+23"/>
+        <location line="+2"/>
         <source>&amp;About Bitcoin</source>
         <translation>&amp;Over Bitcoin</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
+        <location line="+2"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Toon / Verberg</translation>
     </message>
@@ -529,18 +532,19 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <translation>Tab-werkbalk</translation>
     </message>
     <message>
-        <location line="+17"/>
-        <location line="+10"/>
+        <location line="-228"/>
+        <location line="+288"/>
         <source>[testnet]</source>
         <translation>[testnetwerk]</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="-5"/>
+        <location line="+5"/>
         <source>Bitcoin client</source>
         <translation>Bitcoin client</translation>
     </message>
     <message numerus="yes">
-        <location line="+141"/>
+        <location line="+121"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n actieve connectie naar Bitcoinnetwerk</numerusform><numerusform>%n actieve connecties naar Bitcoinnetwerk</numerusform></translation>
     </message>
@@ -670,7 +674,7 @@ Adres: %4
         <translation>Portemonnee is &lt;b&gt;versleuteld&lt;/b&gt; en momenteel &lt;b&gt;gesloten&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+111"/>
+        <location filename="../bitcoin.cpp" line="+110"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Er is een fatale fout opgetreden. Bitcoin kan niet meer veilig doorgaan en zal nu afgesloten worden.</translation>
     </message>
@@ -678,7 +682,7 @@ Adres: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+104"/>
+        <location filename="../clientmodel.cpp" line="+105"/>
         <source>Network Alert</source>
         <translation>Netwerkwaarschuwing</translation>
     </message>
@@ -752,15 +756,43 @@ Adres: %4
     </message>
 </context>
 <context>
+    <name>FreespaceChecker</name>
+    <message>
+        <location filename="../intro.cpp" line="+61"/>
+        <source>A new data directory will be created.</source>
+        <translation>Een nieuwe gegevensmap wordt aangemaakt.</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>name</source>
+        <translation>naam</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation>Map bestaat al. Voeg %1 toe als u van plan bent hier een nieuwe map aan te maken.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Path already exists, and is not a directory.</source>
+        <translation>Communicatiepad bestaat al, en is geen folder.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Cannot create data directory here.</source>
+        <translation>Kan hier geen gegevensmap aanmaken.</translation>
+    </message>
+</context>
+<context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+424"/>
-        <location line="+12"/>
+        <location filename="../guiutil.cpp" line="+517"/>
+        <location line="+13"/>
         <source>Bitcoin-Qt</source>
         <translation>Bitcoin-Qt</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="-13"/>
         <source>version</source>
         <translation>versie</translation>
     </message>
@@ -793,6 +825,59 @@ Adres: %4
         <location line="+1"/>
         <source>Show splash screen on startup (default: 1)</source>
         <translation>Laat laadscherm zien bij het opstarten. (standaard: 1)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Choose data directory on startup (default: 0)</source>
+        <translation>Kies de gegevensmap tijdens het opstarten (default: 0)</translation>
+    </message>
+</context>
+<context>
+    <name>Intro</name>
+    <message>
+        <location filename="../forms/intro.ui" line="+14"/>
+        <source>Welcome</source>
+        <translation>Welkom</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Welcome to Bitcoin-Qt.</source>
+        <translation>Welkom bij Bitcoin-Qt.</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
+        <translation>Gezien dit de eerste keer is dat dit programma is gestart, kun je kiezen waar Bitcoin-Qt zijn gegevens zal opslaan.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin-Qt zal een kopie van de Bitcoin blok keten downloaden en opslaan. Tenminste %1GB aan gegevens zal worden opgeslagen in deze folder, en dit zal toenemen over tijd. De portemonnee zal ook opgeslagen worden in deze folder.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Use the default data directory</source>
+        <translation>Gebruik de standaard gegevensmap</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Use a custom data directory:</source>
+        <translation>Gebruik een persoonlijke gegevensmap:</translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="+100"/>
+        <source>Error</source>
+        <translation>Fout</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>GB of free space available</source>
+        <translation>GB aan vrije opslagruimte beschikbaar</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>(of %1GB needed)</source>
+        <translation>(van %1GB benodigd)</translation>
     </message>
 </context>
 <context>
@@ -968,7 +1053,7 @@ Adres: %4
         <translation>&amp;Toepassen</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+53"/>
+        <location filename="../optionsdialog.cpp" line="+54"/>
         <source>default</source>
         <translation>standaard</translation>
     </message>
@@ -1014,17 +1099,12 @@ Adres: %4
     </message>
     <message>
         <location line="+50"/>
-        <location line="+166"/>
+        <location line="+202"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>De weergegeven informatie kan verouderd zijn. Uw portemonnee synchroniseert automaticsh met het Bitcoinnetwerk nadat een verbinding is gelegd, maar dit proces is nog niet voltooid.</translation>
     </message>
     <message>
-        <location line="-124"/>
-        <source>Balance:</source>
-        <translation>Saldo:</translation>
-    </message>
-    <message>
-        <location line="+29"/>
+        <location line="-131"/>
         <source>Unconfirmed:</source>
         <translation>Onbevestigd:</translation>
     </message>
@@ -1034,7 +1114,22 @@ Adres: %4
         <translation>Portemonnee</translation>
     </message>
     <message>
-        <location line="+107"/>
+        <location line="+49"/>
+        <source>Confirmed:</source>
+        <translation>Bevestigd:</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Your current spendable balance</source>
+        <translation>Uw beschikbare saldo</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
+        <translation>De som van de transacties die nog bevestigd moeten worden, en nog niet meetellen in uw beschikbare saldo</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Immature:</source>
         <translation>Immatuur:</translation>
     </message>
@@ -1044,19 +1139,19 @@ Adres: %4
         <translation>Gedolven saldo dat nog niet tot wasdom is gekomen</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+13"/>
+        <source>Total:</source>
+        <translation>Totaal:</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Your current total balance</source>
+        <translation>Uw totale saldo</translation>
+    </message>
+    <message>
+        <location line="+53"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Recente transacties&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location line="-101"/>
-        <source>Your current balance</source>
-        <translation>Uw huidige saldo</translation>
-    </message>
-    <message>
-        <location line="+29"/>
-        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
-        <translation>Totaal van de transacties die nog moeten worden bevestigd en nog niet zijn meegeteld in uw huidige saldo </translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="+116"/>
@@ -1068,9 +1163,28 @@ Adres: %4
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+107"/>
+        <location filename="../paymentserver.cpp" line="+108"/>
         <source>Cannot start bitcoin: click-to-pay handler</source>
         <translation>Kan bitcoin niet starten: click-to-pay handler</translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <location filename="../bitcoin.cpp" line="+92"/>
+        <location filename="../intro.cpp" line="-32"/>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
+        <translation>Fout: Opgegeven gegevensmap &quot;%1&quot; bestaat niet.</translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="+1"/>
+        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
+        <translation>Fout: Opgegeven gegevensmap &quot;%1&quot; kan niet aangemaakt worden.</translation>
     </message>
 </context>
 <context>
@@ -1106,7 +1220,7 @@ Adres: %4
         <translation>&amp;Opslaan Als...</translation>
     </message>
     <message>
-        <location filename="../qrcodedialog.cpp" line="+62"/>
+        <location filename="../qrcodedialog.cpp" line="+64"/>
         <source>Error encoding URI into QR Code.</source>
         <translation>Fout tijdens encoderen URI in QR-code</translation>
     </message>
@@ -1148,7 +1262,7 @@ Adres: %4
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+339"/>
+        <location filename="../rpcconsole.cpp" line="+345"/>
         <source>N/A</source>
         <translation>N.v.t.</translation>
     </message>
@@ -1282,7 +1396,7 @@ Adres: %4
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+124"/>
+        <location filename="../sendcoinsdialog.cpp" line="+128"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+5"/>
@@ -1333,12 +1447,13 @@ Adres: %4
         <translation>&amp;Verstuur</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-59"/>
+        <location filename="../sendcoinsdialog.cpp" line="-62"/>
+        <location line="+2"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
         <translation>&lt;b&gt;%1&lt;/b&gt; aan %2 (%3)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Confirm send coins</source>
         <translation>Bevestig versturen munten</translation>
     </message>
@@ -2067,7 +2182,7 @@ Adres: %4
         <translation>Toon transactiedetails</translation>
     </message>
     <message>
-        <location line="+139"/>
+        <location line="+143"/>
         <source>Export Transaction Data</source>
         <translation>Exporteer transactiegegevens</translation>
     </message>
@@ -2143,7 +2258,7 @@ Adres: %4
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+42"/>
+        <location filename="../walletview.cpp" line="+46"/>
         <source>&amp;Export</source>
         <translation>&amp;Exporteer</translation>
     </message>
@@ -2153,7 +2268,7 @@ Adres: %4
         <translation>Exporteer de data in de huidige tab naar een bestand</translation>
     </message>
     <message>
-        <location line="+193"/>
+        <location line="+197"/>
         <source>Backup Wallet</source>
         <translation>Portomonnee backuppen</translation>
     </message>
@@ -2186,17 +2301,17 @@ Adres: %4
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+94"/>
+        <location filename="../bitcoinstrings.cpp" line="+98"/>
         <source>Bitcoin version</source>
         <translation>Bitcoinversie</translation>
     </message>
     <message>
-        <location line="+102"/>
+        <location line="+104"/>
         <source>Usage:</source>
         <translation>Gebruik:</translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-30"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Stuur commando naar -server of bitcoind</translation>
     </message>
@@ -2206,12 +2321,12 @@ Adres: %4
         <translation>Lijst van commando&apos;s</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="-13"/>
         <source>Get help for a command</source>
         <translation>Toon hulp voor een commando</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+25"/>
         <source>Options:</source>
         <translation>Opties:</translation>
     </message>
@@ -2248,12 +2363,12 @@ Adres: %4
         <translation>Onderhoud maximaal &lt;n&gt; verbindingen naar peers (standaard: 125)</translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-49"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Verbind naar een node om adressen van anderen op te halen, en verbreek vervolgens de verbinding</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+84"/>
         <source>Specify your own public address</source>
         <translation>Specificeer uw eigen publieke adres</translation>
     </message>
@@ -2263,17 +2378,17 @@ Adres: %4
         <translation>Drempel om verbinding te verbreken naar zich misdragende peers (standaard: 100)</translation>
     </message>
     <message>
-        <location line="-134"/>
+        <location line="-136"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Aantal seconden dat zich misdragende peers niet opnieuw mogen verbinden (standaard: 86400)</translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-33"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation>Er is een fout opgetreden tijdens het instellen van de inkomende RPC-poort %u op IPv4: %s</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+31"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Wacht op JSON-RPC-connecties op poort &lt;port&gt; (standaard: 8332 of testnet: 18332)</translation>
     </message>
@@ -2283,22 +2398,22 @@ Adres: %4
         <translation>Aanvaard commandoregel- en JSON-RPC-commando&apos;s</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+77"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Draai in de achtergrond als daemon en aanvaard commando&apos;s</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+38"/>
         <source>Use the test network</source>
         <translation>Gebruik het testnetwerk</translation>
     </message>
     <message>
-        <location line="-112"/>
+        <location line="-114"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Accepteer verbindingen van buitenaf (standaard: 1 als geen -proxy of -connect is opgegeven)</translation>
     </message>
     <message>
-        <location line="-80"/>
+        <location line="-84"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -2337,6 +2452,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+3"/>
+        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
+        <translation>Schakel regressietest-modus in, die een speciale blokketen gebruikt waarin blokken instantaan opgelost kunnen worden. Dit is bedoeld voor regressietestsoftware en app-ontwikkeling.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Fout: De transactie was afgewezen! Dit kan gebeuren als sommige munten in uw portemonnee al eerder uitgegeven zijn, zoals wanneer u een kopie van uw wallet.dat heeft gebruikt en in de kopie deze munten zijn uitgegeven, maar in deze portemonnee die munten nog niet als zodanig zijn gemarkeerd.</translation>
     </message>
@@ -2531,14 +2651,19 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Hoe grondig de blokverificatie is (0-4, standaard: 3)</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+2"/>
+        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
+        <translation>Incorrect of geen genesis-blok gevonden. Verkeerde datamap voor het netwerk?</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>Not enough file descriptors available.</source>
         <translation>Niet genoeg file descriptors beschikbaar.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>Blokketen opnieuw opbouwen van huidige blk000??.dat-bestanden</translation>
+        <translation>Blok keten opnieuw opbouwen met behulp van huidige blk000??.dat-bestanden</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -2546,7 +2671,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Stel het aantal threads in om RPC-aanvragen mee te bedienen (standaard: 4)</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+7"/>
+        <source>Specify wallet file (within data directory)</source>
+        <translation>Specificeer het portemonnee bestand (vanuit de gegevensmap)</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>Verifying blocks...</source>
         <translation>Blokken aan het controleren...</translation>
     </message>
@@ -2556,7 +2686,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Portomonnee aan het controleren...</translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="+1"/>
+        <source>Wallet %s resides outside data directory %s</source>
+        <translation>Portemonnee %s bevindt zich buiten de gegevensmap %s</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>You need to rebuild the database using -reindex to change -txindex</source>
+        <translation>Om -txindex te kunnen veranderen dient u de database opnieuw te bouwen met gebruik van -reindex.</translation>
+    </message>
+    <message>
+        <location line="-76"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importeert blokken van extern blk000??.dat bestand</translation>
     </message>
@@ -2566,7 +2706,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Stel het aantal threads voor scriptverificatie in (max 16, 0 = auto, &lt;0 = laat zoveel cores vrij, standaard: 0)</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+78"/>
         <source>Information</source>
         <translation>Informatie</translation>
     </message>
@@ -2671,7 +2811,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Specificeer de time-outtijd in milliseconden (standaard: 5000)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>System error: </source>
         <translation>Systeemfout:</translation>
     </message>
@@ -2711,7 +2851,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Gebruikersnaam voor JSON-RPC-verbindingen</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Warning</source>
         <translation>Waarschuwing</translation>
     </message>
@@ -2721,42 +2861,37 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Waarschuwing: Deze versie is verouderd, een upgrade is vereist!</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>You need to rebuild the databases using -reindex to change -txindex</source>
-        <translation>U moet de databases herbouwen met behulp van -reindex om -txindex te kunnen veranderen</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat corrupt, veiligstellen mislukt</translation>
     </message>
     <message>
-        <location line="-50"/>
+        <location line="-52"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Wachtwoord voor JSON-RPC-verbindingen</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Sta JSON-RPC verbindingen van opgegeven IP-adres toe</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+77"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Verstuur commando&apos;s naar proces dat op &lt;ip&gt; draait (standaard: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-120"/>
+        <location line="-121"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Voer commando uit zodra het beste blok verandert (%s in cmd wordt vervangen door blockhash)</translation>
     </message>
     <message>
-        <location line="+147"/>
+        <location line="+149"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Vernieuw portemonnee naar nieuwste versie</translation>
     </message>
     <message>
-        <location line="-21"/>
+        <location line="-22"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Stel sleutelpoelgrootte in op &lt;n&gt; (standaard: 100)</translation>
     </message>
@@ -2766,12 +2901,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Doorzoek de blokketen op ontbrekende portemonnee-transacties</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Gebruik OpenSSL (https) voor JSON-RPC-verbindingen</translation>
     </message>
     <message>
-        <location line="-26"/>
+        <location line="-27"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Certificaat-bestand voor server (standaard: server.cert)</translation>
     </message>
@@ -2781,12 +2916,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Geheime sleutel voor server (standaard: server.pem)</translation>
     </message>
     <message>
-        <location line="-151"/>
+        <location line="-156"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Aanvaardbare ciphers (standaard: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+165"/>
+        <location line="+171"/>
         <source>This help message</source>
         <translation>Dit helpbericht</translation>
     </message>
@@ -2796,7 +2931,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Niet in staat om aan %s te binden op deze computer (bind gaf error %d, %s)</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-93"/>
         <source>Connect through socks proxy</source>
         <translation>Verbind via een socks-proxy</translation>
     </message>
@@ -2806,12 +2941,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Sta DNS-naslag toe voor -addnode, -seednode en -connect</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+56"/>
         <source>Loading addresses...</source>
         <translation>Adressen aan het laden...</translation>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-36"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Fout bij laden wallet.dat: Portemonnee corrupt</translation>
     </message>
@@ -2821,22 +2956,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Fout bij laden wallet.dat: Portemonnee vereist een nieuwere versie van Bitcoin</translation>
     </message>
     <message>
-        <location line="+93"/>
+        <location line="+96"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Portemonnee moest herschreven worden: Herstart Bitcoin om te voltooien</translation>
     </message>
     <message>
-        <location line="-95"/>
+        <location line="-98"/>
         <source>Error loading wallet.dat</source>
         <translation>Fout bij laden wallet.dat</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Ongeldig -proxy adres: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+57"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Onbekend netwerk gespecificeerd in -onlynet: &apos;%s&apos;</translation>
     </message>
@@ -2846,7 +2981,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Onbekende -socks proxyversie aangegeven: %i</translation>
     </message>
     <message>
-        <location line="-96"/>
+        <location line="-98"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kan -bind adres niet herleiden: &apos;%s&apos;</translation>
     </message>
@@ -2856,7 +2991,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Kan -externlip adres niet herleiden: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+45"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Ongeldig bedrag voor -paytxfee=&lt;bedrag&gt;: &apos;%s&apos;</translation>
     </message>
@@ -2876,7 +3011,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Blokindex aan het laden...</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-58"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Voeg een node om naar te verbinden toe en probeer de verbinding open te houden</translation>
     </message>
@@ -2891,12 +3026,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Kosten per KB om aan transacties toe te voegen die u verstuurt</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+20"/>
         <source>Loading wallet...</source>
         <translation>Portemonnee aan het laden...</translation>
     </message>
     <message>
-        <location line="-52"/>
+        <location line="-53"/>
         <source>Cannot downgrade wallet</source>
         <translation>Kan portemonnee niet downgraden</translation>
     </message>
@@ -2906,22 +3041,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Kan standaardadres niet schrijven</translation>
     </message>
     <message>
-        <location line="+64"/>
+        <location line="+65"/>
         <source>Rescanning...</source>
         <translation>Blokketen aan het doorzoeken...</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-58"/>
         <source>Done loading</source>
         <translation>Klaar met laden</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+84"/>
         <source>To use the %s option</source>
         <translation>Om de %s optie te gebruiken</translation>
     </message>
     <message>
-        <location line="-74"/>
+        <location line="-76"/>
         <source>Error</source>
         <translation>Fout</translation>
     </message>
