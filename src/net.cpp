@@ -597,6 +597,18 @@ bool CNode::Misbehaving(int howmuch)
 #define X(name) stats.name = name
 void CNode::copyStats(CNodeStats &stats)
 {
+    // Raw is microsecs, but show it to user as whole seconds (Bitcoin users should be well used to small numbers with many decimal places by now :)
+    stats.dPingTime = ((double)((nPingTime > 0) ? nPingTime : 0)) / 1000000.0;
+    stats.nPingStat = 0;
+    
+    // Since ping does not update instantly, give user feedback, avoid ambiguity
+    if (fPingRequested) {
+        stats.nPingStat |= 0x1;  // Ping request by user
+    }
+    if (nPingStart > 0) {
+        stats.nPingStat |= 0x2;  // Ping in flight
+    }
+    
     X(nServices);
     X(nLastSend);
     X(nLastRecv);
