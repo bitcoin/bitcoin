@@ -68,8 +68,10 @@ private:
     void operator=(const CWalletDB&);
 public:
     bool WriteName(const std::string& strAddress, const std::string& strName);
-
     bool EraseName(const std::string& strAddress);
+
+    bool WritePurpose(const std::string& strAddress, const std::string& purpose);
+    bool ErasePurpose(const std::string& strAddress);
 
     bool WriteTx(uint256 hash, const CWalletTx& wtx)
     {

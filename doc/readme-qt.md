@@ -18,13 +18,13 @@ for Debian and Ubuntu  <= 11.10 :
 
     apt-get install qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev \
         libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev \
-        libssl-dev libdb4.8++-dev
+        libssl-dev libdb4.8++-dev libprotobuf-dev protobuf-compiler
 
 for Ubuntu >= 12.04 (please read the 'Berkely DB version warning' below):
 
     apt-get install qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev \
         libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev \
-        libssl-dev libdb++-dev libminiupnpc-dev
+        libssl-dev libdb++-dev libminiupnpc-dev libprotobuf-dev protobuf-compiler
 
 For Qt 5 you need the following, otherwise you get an error with lrelease when running qmake:
 
@@ -48,12 +48,12 @@ An executable named `bitcoin-qt` will be built.
 * Execute the following commands in a terminal to get the dependencies using MacPorts
 
 		sudo port selfupdate
-		sudo port install boost db48 miniupnpc
+		sudo port install boost db48 miniupnpc protobuf-cpp
 
 * Execute the following commands in a terminal to get the dependencies using HomeBrew:
 
 		brew update
-		brew install boost miniupnpc openssl berkeley-db4
+		brew install boost miniupnpc openssl berkeley-db4 protobuf
 
 - If using HomeBrew,  edit `bitcoin-qt.pro` to account for library location differences. There's a diff in `contrib/homebrew/bitcoin-qt-pro.patch` that shows what you need to change, or you can just patch by doing
 
