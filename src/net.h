@@ -121,6 +121,7 @@ public:
     bool fSyncNode;
     double dPingTime;
     double dPingWait;
+    std::string addrLocal;
 };
 
 
