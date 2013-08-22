@@ -32,6 +32,18 @@ bool CWalletDB::EraseName(const string& strAddress)
     return Erase(make_pair(string("name"), strAddress));
 }
 
+bool CWalletDB::WritePurpose(const string& strAddress, const string& strPurpose)
+{
+    nWalletDBUpdated++;
+    return Write(make_pair(string("purpose"), strAddress), strPurpose);
+}
+
+bool CWalletDB::ErasePurpose(const string& strPurpose)
+{
+    nWalletDBUpdated++;
+    return Erase(make_pair(string("purpose"), strPurpose));
+}
+
 bool CWalletDB::ReadAccount(const string& strAccount, CAccount& account)
 {
     account.SetNull();
@@ -212,7 +224,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             string strAddress;
             ssKey >> strAddress;
-            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()];
+            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].name;
+        }
+        else if (strType == "purpose")
+        {
+            string strAddress;
+            ssKey >> strAddress;
+            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].purpose;
         }
         else if (strType == "tx")
         {

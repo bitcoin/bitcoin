@@ -94,7 +94,7 @@ Value importprivkey(const Array& params, bool fHelp)
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
         pwalletMain->MarkDirty();
-        pwalletMain->SetAddressBookName(vchAddress, strLabel);
+        pwalletMain->SetAddressBook(vchAddress, strLabel, "receive");
 
         // Don't throw error in case a key is already there
         if (pwalletMain->HaveKey(vchAddress))
@@ -172,7 +172,7 @@ Value importwallet(const Array& params, bool fHelp)
         }
         pwalletMain->mapKeyMetadata[keyid].nCreateTime = nTime;
         if (fLabel)
-            pwalletMain->SetAddressBookName(keyid, strLabel);
+            pwalletMain->SetAddressBook(keyid, strLabel, "receive");
         nTimeBegin = std::min(nTimeBegin, nTime);
     }
     file.close();
@@ -255,7 +255,7 @@ Value dumpwallet(const Array& params, bool fHelp)
         CKey key;
         if (pwalletMain->GetKey(keyid, key)) {
             if (pwalletMain->mapAddressBook.count(keyid)) {
-                file << strprintf("%s %s label=%s # addr=%s\n", CBitcoinSecret(key).ToString().c_str(), strTime.c_str(), EncodeDumpString(pwalletMain->mapAddressBook[keyid]).c_str(), strAddr.c_str());
+                file << strprintf("%s %s label=%s # addr=%s\n", CBitcoinSecret(key).ToString().c_str(), strTime.c_str(), EncodeDumpString(pwalletMain->mapAddressBook[keyid].name).c_str(), strAddr.c_str());
             } else if (setKeyPool.count(keyid)) {
                 file << strprintf("%s %s reserve=1 # addr=%s\n", CBitcoinSecret(key).ToString().c_str(), strTime.c_str(), strAddr.c_str());
             } else {

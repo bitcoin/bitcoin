@@ -22,6 +22,9 @@ public:
     qint64 value(bool *valid=0) const;
     void setValue(qint64 value);
 
+    /** Make read-only **/
+    void setReadOnly(bool fReadOnly);
+
     /** Mark current value as invalid in UI. */
     void setValid(bool valid);
     /** Perform input validation, mark field as invalid if entered value is not valid. */
