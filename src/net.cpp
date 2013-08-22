@@ -1195,11 +1195,13 @@ static const char *strMainNetDNSSeed[][2] = {
     {"primecoin.net", "seed.ppcoin.net"},
     {"xpm.altcointech.net", "dnsseed.xpm.altcointech.net"},
     {"xpm2.altcointech.net", "dnsseed.xpm2.altcointech.net"},
+    {"primeseed.muuttuja.org", "primeseed.muuttuja.org"},
     {NULL, NULL}
 };
 
 static const char *strTestNetDNSSeed[][2] = {
     {"primecoin.net", "tnseed.ppcoin.net"},
+    {"primeseed.muuttuja.org", "primeseed.muuttuja.org"},
     {NULL, NULL}
 };
 
@@ -1245,16 +1247,17 @@ void ThreadDNSAddressSeed()
 
 
 
-
+// Physical IP seeds: 32-bit IPv4 addresses: e.g. 178.33.22.32 = 0x201621b2
 unsigned int pnSeedMainNet[] =
 {
-    0x201621b2, 0x3a38be58, 0xde3cc718, 0x732dfb54, 0xf3c645d3, 0x48926257,
-    0x746f1f4e, 0xaed7175e,
+    0xde3cc718, 0x43b9191f, 0x79753932, 0x70d6dd36, 0x746f1f4e, 0x732dfb54,
+    0x48926257, 0x3a38be58, 0xaed7175e, 0x7714166b, 0x201621b2, 0x96706ab8,
+    0x2fafedc0, 0x77daf1c0, 0x4677c7c6, 0xf3c645d3,
 };
 
 unsigned int pnSeedTestNet[] =
 {
-    0x0a1621b2,
+    0x97c71955, 0x0a1621b2,
 };
 
 void DumpAddresses()
