@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "scrypt_mine.h"
+#include "scrypt.h"
 #include "pbkdf2.h"
 
 #include "util.h"
