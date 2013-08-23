@@ -102,6 +102,9 @@ void SignVerifyMessageDialog::on_pasteButton_SM_clicked()
 
 void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
 {
+    if (!model)
+        return;
+
     /* Clear old signature to ensure users don't get confused on error with an old signature displayed */
     ui->signatureOut_SM->clear();
 
