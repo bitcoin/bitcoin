@@ -49,11 +49,11 @@ extern "C" void scrypt_core(uint32_t *X, uint32_t *V);
    r = 1, p = 1, N = 1024
  */
 
-static uint256 scrypt(const void* input, size_t inputlen, void *scratchpad)
+uint256 scrypt(const void* input, size_t inputlen, void *scratchpad)
 {
     uint32_t *V;
     uint32_t X[32];
-    uint256 result;
+    uint256 result = 0;
     V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
 
     PBKDF2_SHA256((const uint8_t*)input, inputlen, (const uint8_t*)input, inputlen, 1, (uint8_t *)X, 128);
