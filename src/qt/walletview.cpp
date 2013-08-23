@@ -137,7 +137,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
 void WalletView::incomingTransaction(const QModelIndex& parent, int start, int /*end*/)
 {
     // Prevent balloon-spam when initial block download is in progress
-    if(!walletModel || !clientModel || clientModel->inInitialBlockDownload())
+    if (!walletModel || !clientModel || clientModel->inInitialBlockDownload())
         return;
 
     TransactionTableModel *ttm = walletModel->getTransactionTableModel();
@@ -207,6 +207,7 @@ bool WalletView::handlePaymentRequest(const SendCoinsRecipient& recipient)
     if (sendCoinsPage->handlePaymentRequest(recipient))
     {
         gotoSendCoinsPage();
+        emit showNormalIfMinimized();
         return true;
     }
     else
