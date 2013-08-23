@@ -29,7 +29,6 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include <xmmintrin.h>
 
 #include "scrypt_mine.h"
 #include "pbkdf2.h"
@@ -37,39 +36,41 @@
 #include "util.h"
 #include "net.h"
 
-#if defined (__x86_64__) || defined (__i386__)
 #define SCRYPT_BUFFER_SIZE (131072 + 63)
+
+#if defined (__x86_64__) || defined (__i386__)
 extern "C" void scrypt_core(uint32_t *X, uint32_t *V);
+#else
+// TODO: Add cross-platform scrypt_core implementation
 #endif
-
-void *scrypt_buffer_alloc() {
-    return malloc(SCRYPT_BUFFER_SIZE);
-}
-
-void scrypt_buffer_free(void *scratchpad)
-{
-    free(scratchpad);
-}
 
 /* cpu and memory intensive function to transform a 80 byte buffer into a 32 byte output
    scratchpad size needs to be at least 63 + (128 * r * p) + (256 * r + 64) + (128 * r * N) bytes
    r = 1, p = 1, N = 1024
  */
 
-static void scrypt(const void* input, size_t inputlen, uint32_t *res, void *scratchpad)
+static uint256 scrypt(const void* input, size_t inputlen, void *scratchpad)
 {
     uint32_t *V;
     uint32_t X[32];
+    uint256 result;
     V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
 
-    PBKDF2_SHA256((const uint8_t*)input, inputlen, (const uint8_t*)input, sizeof(block_header), 1, (uint8_t *)X, 128);
-
+    PBKDF2_SHA256((const uint8_t*)input, inputlen, (const uint8_t*)input, inputlen, 1, (uint8_t *)X, 128);
     scrypt_core(X, V);
+    PBKDF2_SHA256((const uint8_t*)input, inputlen, (uint8_t *)X, 128, 1, (uint8_t*)&result, 32);
 
-    PBKDF2_SHA256((const uint8_t*)input, inputlen, (uint8_t *)X, 128, 1, (uint8_t*)res, 32);
+    return result;
 }
 
-void scrypt_hash(const void* input, size_t inputlen, uint32_t *res, void *scratchpad)
+uint256 scrypt_hash(const void* input, size_t inputlen)
 {
-    return scrypt(input, inputlen, res, scratchpad);
+    unsigned char scratchpad[SCRYPT_BUFFER_SIZE];
+    return scrypt(input, inputlen, scratchpad);
+}
+
+uint256 scrypt_blockhash(const void* input)
+{
+    unsigned char scratchpad[SCRYPT_BUFFER_SIZE];
+    return scrypt(input, 80, scratchpad);
 }

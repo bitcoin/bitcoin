@@ -80,8 +80,6 @@ extern uint64 nLastBlockTx;
 extern uint64 nLastBlockSize;
 extern int64 nLastCoinStakeSearchInterval;
 extern const std::string strMessageMagic;
-extern double dHashesPerSec;
-extern int64 nHPSTimerStart;
 extern int64 nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
@@ -912,14 +910,7 @@ public:
 
     uint256 GetHash() const
     {
-        uint256 thash;
-        void * scratchbuff = scrypt_buffer_alloc();
-
-        scrypt_hash(CVOIDBEGIN(nVersion), sizeof(block_header), UINTBEGIN(thash), scratchbuff);
-
-        scrypt_buffer_free(scratchbuff);
-
-        return thash;
+        return scrypt_blockhash(CVOIDBEGIN(nVersion));
     }
 
     int64 GetBlockTime() const

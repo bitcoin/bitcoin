@@ -72,9 +72,6 @@ CScript COINBASE_FLAGS;
 
 const string strMessageMagic = "NovaCoin Signed Message:\n";
 
-double dHashesPerSec;
-int64 nHPSTimerStart;
-
 // Settings
 int64 nTransactionFee = MIN_TX_FEE;
 bool fStakeUsePooledKeys = false;
