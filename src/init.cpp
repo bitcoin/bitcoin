@@ -28,6 +28,7 @@ CWallet* pwalletMain;
 CClientUIInterface uiInterface;
 std::string strWalletFileName;
 unsigned int nNodeLifespan;
+unsigned int nDerivationMethodIndex;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -246,6 +247,7 @@ std::string HelpMessage()
         "  -dnsseed               " + _("Find peers using DNS lookup (default: 1)") + "\n" +
         "  -nosynccheckpoints     " + _("Disable sync checkpoints (default: 0)") + "\n" +
         "  -stakepooledkeys       " + _("Use pooled pubkeys for the last coinstake output (default: 0)") + "\n" +
+        "  -derivationmethod      " + _("Which key derivation method to use by default (default: sha512)") + "\n" +
         "  -banscore=<n>          " + _("Threshold for disconnecting misbehaving peers (default: 100)") + "\n" +
         "  -bantime=<n>           " + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n" +
         "  -maxreceivebuffer=<n>  " + _("Maximum per-connection receive buffer, <n>*1000 bytes (default: 5000)") + "\n" +
@@ -354,6 +356,10 @@ bool AppInit2()
 
     nNodeLifespan = GetArg("-addrlifespan", 7);
     fStakeUsePooledKeys = GetBoolArg("-stakepooledkeys", false);
+
+    if(GetArg("-derivationmethod", "sha512") == "scrypt+sha512")
+        nDerivationMethodIndex = 1;
+
     fTestNet = GetBoolArg("-testnet");
     if (fTestNet) {
         SoftSetBoolArg("-irc", true);

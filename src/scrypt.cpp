@@ -49,7 +49,7 @@ extern "C" void scrypt_core(uint32_t *X, uint32_t *V);
    r = 1, p = 1, N = 1024
  */
 
-uint256 scrypt(const void* input, size_t inputlen, void *scratchpad)
+uint256 scrypt_nosalt(const void* input, size_t inputlen, void *scratchpad)
 {
     uint32_t *V;
     uint32_t X[32];
@@ -63,14 +63,49 @@ uint256 scrypt(const void* input, size_t inputlen, void *scratchpad)
     return result;
 }
 
+uint256 scrypt(const void* data, size_t datalen, const void* salt, size_t saltlen, void *scratchpad)
+{
+    uint32_t *V;
+    uint32_t X[32];
+    uint256 result = 0;
+    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+
+    PBKDF2_SHA256((const uint8_t*)data, datalen, (const uint8_t*)salt, saltlen, 1, (uint8_t *)X, 128);
+    scrypt_core(X, V);
+    PBKDF2_SHA256((const uint8_t*)data, datalen, (uint8_t *)X, 128, 1, (uint8_t*)&result, 32);
+
+    return result;
+}
+
 uint256 scrypt_hash(const void* input, size_t inputlen)
 {
     unsigned char scratchpad[SCRYPT_BUFFER_SIZE];
-    return scrypt(input, inputlen, scratchpad);
+    return scrypt_nosalt(input, inputlen, scratchpad);
+}
+
+uint256 scrypt_salted_hash(const void* input, size_t inputlen, const void* salt, size_t saltlen)
+{
+    unsigned char scratchpad[SCRYPT_BUFFER_SIZE];
+    return scrypt(input, inputlen, salt, saltlen, scratchpad);
+}
+
+uint256 scrypt_salted_multiround_hash(const void* input, size_t inputlen, const void* salt, size_t saltlen, const unsigned int nRounds)
+{
+    uint256 resultHash = scrypt_salted_hash(input, inputlen, salt, saltlen);
+    uint256 transitionalHash = resultHash;
+
+    for(unsigned int i = 1; i < nRounds; i++)
+    {
+        resultHash = scrypt_salted_hash(input, inputlen, (const void*)&transitionalHash, 32);
+        transitionalHash = resultHash;
+    }
+
+    return resultHash;
 }
 
 uint256 scrypt_blockhash(const void* input)
 {
     unsigned char scratchpad[SCRYPT_BUFFER_SIZE];
-    return scrypt(input, 80, scratchpad);
+    return scrypt_nosalt(input, 80, scratchpad);
 }
+
