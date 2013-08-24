@@ -469,7 +469,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
             delete pblocktemplate;
             pblocktemplate = NULL;
         }
-        pblocktemplate = CreateNewBlockWithKey(*pMiningKey);
+        CScript scriptDummy = CScript() << OP_TRUE;
+        pblocktemplate = CreateNewBlock(scriptDummy);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
