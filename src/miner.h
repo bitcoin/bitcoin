@@ -9,7 +9,7 @@
 #include "main.h"
 #include "wallet.h"
 
-/** Generate a new block, without valid proof-of-work */
+/* Generate a new block, without valid proof-of-work */
 CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake=false);
 
 /** Modify the extranonce in a block */

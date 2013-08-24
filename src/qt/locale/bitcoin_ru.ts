@@ -2366,6 +2366,16 @@ Address: %4
         <translation>Отключить синхронизированные метки (по умолчанию: 0)</translation>
     </message>
     <message>
+        <location line="+5"/>
+        <source>Use pooled pubkeys for the last coinstake output (default: 0)</source>
+        <translation>Использовать для coinstake транзакций ключи из пула (по умолчанию: 0)</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Which key derivation method to use by default (default: sha512)</source>
+        <translation>Выбор функции для создания ключа шифрования (по умолчанию: sha512)</translation>
+    </message>
+    <message>
         <location line="+11"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Неверный адрес -tor: &apos;%s&apos;</translation>
