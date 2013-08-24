@@ -23,7 +23,11 @@ namespace Checkpoints
 
     Checkpoint initCheckpoint(uint256 hashCheckPoint, unsigned int nTime)
     {
-        return {hashCheckPoint, nTime};
+        Checkpoint item;
+        item.hashCheckPoint = hashCheckPoint;
+        item.nTime = nTime;
+
+        return item;
     }
 
     //
