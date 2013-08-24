@@ -17,7 +17,7 @@
 // received at or during startup in a list.
 //
 // When startup is finished and the main window is
-// show, a signal is sent to slot uiReady(), which
+// shown, a signal is sent to slot uiReady(), which
 // emits a receivedURL() signal for any payment
 // requests that happened during startup.
 //
@@ -70,12 +70,15 @@ public:
     // Return certificate store
     static X509_STORE* getCertStore() { return certStore; }
 
-    // Setup networking (options is used to get proxy settings)
-    void initNetManager(const OptionsModel& options);
+    // Setup networking
+    void initNetManager();
 
     // Constructor registers this on the parent QApplication to
     // receive QEvent::FileOpen events
     bool eventFilter(QObject *object, QEvent *event);
+
+    // OptionsModel is used for getting proxy settings and display unit
+    void setOptionsModel(OptionsModel *optionsModel);
 
 signals:
     // Fired when a valid payment request is received
@@ -106,12 +109,15 @@ private:
     void handleURIOrFile(const QString& s);
     void fetchRequest(const QUrl& url);
 
-    bool saveURIs;                 // true during startup
+    bool saveURIs;                      // true during startup
     QLocalServer* uriServer;
-    static X509_STORE* certStore; // Trusted root certificates
+
+    static X509_STORE* certStore;       // Trusted root certificates
     static void freeCertStore();
 
-    QNetworkAccessManager* netManager; // Used to fetch payment requests
+    QNetworkAccessManager* netManager;  // Used to fetch payment requests
+
+    OptionsModel *optionsModel;
 };
 
 #endif // PAYMENTSERVER_H
