@@ -92,7 +92,7 @@ static void ReportInvalidCertificate(const QSslCertificate& cert)
 }
 
 //
-// Load openSSL's list of root certificate authorities
+// Load OpenSSL's list of root certificate authorities
 //
 void PaymentServer::LoadRootCAs(X509_STORE* _store)
 {
@@ -147,7 +147,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
         const unsigned char *data = (const unsigned char *)certData.data();
 
         X509* x509 = d2i_X509(0, &data, certData.size());
-        if (x509 && X509_STORE_add_cert( PaymentServer::certStore, x509))
+        if (x509 && X509_STORE_add_cert(PaymentServer::certStore, x509))
         {
             // Note: X509_STORE_free will free the X509* objects when
             // the PaymentServer is destroyed
@@ -303,18 +303,20 @@ bool PaymentServer::eventFilter(QObject *, QEvent *event)
     return false;
 }
 
-void PaymentServer::initNetManager(const OptionsModel& options)
+void PaymentServer::initNetManager()
 {
+    if (!optionsModel)
+        return;
     if (netManager != NULL)
         delete netManager;
 
     // netManager is used to fetch paymentrequests given in bitcoin: URI's
     netManager = new QNetworkAccessManager(this);
 
-    // Use proxy settings from options:
+    // Use proxy settings from optionsModel:
     QString proxyIP;
     quint16 proxyPort;
-    if (options.getProxySettings(proxyIP, proxyPort))
+    if (optionsModel->getProxySettings(proxyIP, proxyPort))
     {
         QNetworkProxy proxy;
         proxy.setType(QNetworkProxy::Socks5Proxy);
@@ -435,13 +437,16 @@ bool
 PaymentServer::processPaymentRequest(PaymentRequestPlus& request,
                                      QList<SendCoinsRecipient>& recipients)
 {
+    if (!optionsModel)
+        return false;
+
     QList<std::pair<CScript,qint64> > sendingTos = request.getPayTo();
     qint64 totalAmount = 0;
     foreach(const PAIRTYPE(CScript, qint64)& sendingTo, sendingTos) {
         CTxOut txOut(sendingTo.second, sendingTo.first);
         if (txOut.IsDust(CTransaction::nMinRelayTxFee)) {
             QString message = QObject::tr("Requested payment amount (%1) too small")
-                .arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, sendingTo.second));
+                .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second));
             qDebug() << message;
             emit reportError(tr("Payment request error"), message, CClientUIInterface::MODAL);
             return false;
@@ -613,4 +618,9 @@ PaymentServer::reportSslErrors(QNetworkReply* reply, const QList<QSslError> &err
         errString += err.errorString() + "\n";
     }
     emit reportError(tr("Network request error"), errString, CClientUIInterface::MODAL);
+}
+
+void PaymentServer::setOptionsModel(OptionsModel *optionsModel)
+{
+    this->optionsModel = optionsModel;
 }
