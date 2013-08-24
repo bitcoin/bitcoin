@@ -77,7 +77,7 @@ static bool Send(SOCKET hSocket, const char* pszSend)
 
 bool RecvLineIRC(SOCKET hSocket, string& strLine)
 {
-    loop
+    while (true)
     {
         bool fRet = RecvLine(hSocket, strLine);
         if (fRet)
@@ -100,7 +100,7 @@ bool RecvLineIRC(SOCKET hSocket, string& strLine)
 
 int RecvUntil(SOCKET hSocket, const char* psz1, const char* psz2=NULL, const char* psz3=NULL, const char* psz4=NULL)
 {
-    loop
+    while (true)
     {
         string strLine;
         strLine.reserve(10000);
@@ -135,7 +135,7 @@ bool Wait(int nSeconds)
 bool RecvCodeLine(SOCKET hSocket, const char* psz1, string& strRet)
 {
     strRet.clear();
-    loop
+    while (true)
     {
         string strLine;
         if (!RecvLineIRC(hSocket, strLine))
