@@ -300,7 +300,8 @@ int main(int argc, char *argv[])
                 optionsModel.Upgrade(); // Must be done after AppInit2
 
                 PaymentServer::LoadRootCAs();
-                paymentServer->initNetManager(optionsModel);
+                paymentServer->setOptionsModel(&optionsModel);
+                paymentServer->initNetManager();
 
                 if (splashref)
                     splash.finish(&window);
