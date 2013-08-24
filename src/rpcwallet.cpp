@@ -1346,7 +1346,7 @@ Value keypoolrefill(const Array& params, bool fHelp)
     unsigned int nSize = max(GetArg("-keypool", 100), 0LL);
     if (params.size() > 0) {
         if (params[0].get_int() < 0)
-            throw JSONRPCError(-8, "Invalid parameter, expected valid size");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size");
         nSize = (unsigned int) params[0].get_int();
     }
 
