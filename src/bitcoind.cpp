@@ -5,7 +5,8 @@
 
 #include "init.h"
 #include "bitcoinrpc.h"
-#include <boost/algorithm/string/predicate.hpp>
+
+#include <vector>
 
 void DetectShutdownThread(boost::thread_group* threadGroup)
 {
@@ -36,7 +37,7 @@ bool AppInit(int argc, char* argv[])
         // Parameters
         //
         // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
-        ParseParameters(argc, argv);
+        const std::vector<std::string> vUris = ParseParameters(argc, argv);
         if (!boost::filesystem::is_directory(GetDataDir(false)))
         {
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
@@ -66,14 +67,18 @@ bool AppInit(int argc, char* argv[])
         }
 
         // Command-line RPC
-        for (int i = 1; i < argc; i++)
-            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:"))
-                fCommandLine = true;
-
-        if (fCommandLine)
+        if (vUris.empty())
         {
-            int ret = CommandLineRPC(argc, argv);
-            exit(ret);
+            bool fCommandLine = false;
+            for (int i = 1; i < argc; i++)
+                if (!IsSwitchChar(argv[i][0]))
+                    fCommandLine = true;
+
+            if (fCommandLine)
+            {
+                int ret = CommandLineRPC(argc, argv);
+                exit(ret);
+            }
         }
 #ifndef WIN32
         fDaemon = GetBoolArg("-daemon", false);

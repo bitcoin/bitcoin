@@ -29,6 +29,7 @@
 #endif
 
 #include <cstdlib>
+#include <vector>
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
@@ -178,22 +179,20 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
 // and the items in savedPaymentRequest will be handled
 // when uiReady() is called.
 //
-bool PaymentServer::ipcSendCommandLine(int argc, char* argv[])
+bool PaymentServer::ipcSendUris(const std::vector<std::string> &vUris)
 {
     bool fResult = false;
 
-    for (int i = 1; i < argc; i++)
-    {
-        QString arg(argv[i]);
-        if (arg.startsWith("-"))
-            continue;
+    for (std::vector<std::string>::const_iterator it = vUris.begin(); it != vUris.end(); it++) {
+        QString strUri = QString::fromStdString(*it);
 
-        if (arg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcoin:
+        // strUri should always contain a bitcoin: URI, but re-check to be sure
+        if (strUri.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive))
         {
-            savedPaymentRequests.append(arg);
+            savedPaymentRequests.append(strUri);
 
             SendCoinsRecipient r;
-            if (GUIUtil::parseBitcoinURI(arg, &r))
+            if (GUIUtil::parseBitcoinURI(strUri, &r))
             {
                 CBitcoinAddress address(r.address.toStdString());
 
@@ -204,12 +203,12 @@ bool PaymentServer::ipcSendCommandLine(int argc, char* argv[])
                 }
             }
         }
-        else if (QFile::exists(arg)) // Filename
+        else if (QFile::exists(strUri)) // Filename
         {
-            savedPaymentRequests.append(arg);
+            savedPaymentRequests.append(strUri);
 
             PaymentRequestPlus request;
-            if (readPaymentRequest(arg, request))
+            if (readPaymentRequest(strUri, request))
             {
                 if (request.getDetails().network() == "main")
                     SelectParams(CChainParams::MAIN);
@@ -219,9 +218,9 @@ bool PaymentServer::ipcSendCommandLine(int argc, char* argv[])
         }
         else
         {
-            qDebug() << "PaymentServer::ipcSendCommandLine : Payment request file does not exist: " << argv[i];
             // Printing to debug.log is about the best we can do here, the
             // GUI hasn't started yet so we can't pop up a message box.
+            qDebug() << "PaymentServer::ipcSendCommandLine : Payment request file does not exist: " << strUri;
         }
     }
 
@@ -245,6 +244,7 @@ bool PaymentServer::ipcSendCommandLine(int argc, char* argv[])
         delete socket;
         fResult = true;
     }
+
     return fResult;
 }
 
@@ -254,9 +254,11 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) : QObject(p
     // compatible with the version of the headers we compiled against.
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    // Install global event filter to catch QFileOpenEvents on the mac (sent when you click bitcoin: links)
+#ifdef Q_OS_MAC
+    // Install global event filter to catch QFileOpenEvents on the Mac (sent when you click bitcoin: links)
     if (parent)
         parent->installEventFilter(this);
+#endif
 
     QString name = ipcServerName();
 

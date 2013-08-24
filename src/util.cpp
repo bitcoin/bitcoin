@@ -78,7 +78,6 @@ bool fPrintToConsole = false;
 bool fPrintToDebugger = false;
 bool fDaemon = false;
 bool fServer = false;
-bool fCommandLine = false;
 string strMiscWarning;
 bool fNoListen = false;
 bool fLogTimestamps = false;
@@ -524,12 +523,18 @@ static void InterpretNegativeSetting(string name, map<string, string>& mapSettin
     }
 }
 
-void ParseParameters(int argc, const char* const argv[])
+std::vector<std::string> ParseParameters(int argc, const char* const argv[])
 {
+    std::vector<std::string> vUris;
+
     mapArgs.clear();
     mapMultiArgs.clear();
     for (int i = 1; i < argc; i++)
     {
+        // check for bitcoin: URIs and save them in a vector
+        if (boost::algorithm::istarts_with(argv[i], "bitcoin:"))
+            vUris.push_back(argv[i]);
+
         std::string str(argv[i]);
         std::string strValue;
         size_t is_index = str.find('=');
@@ -567,6 +572,8 @@ void ParseParameters(int argc, const char* const argv[])
         // interpret -nofoo as -foo=0 (and -nofoo=0 as -foo=1) as long as -foo not set
         InterpretNegativeSetting(name, mapArgs);
     }
+
+    return vUris;
 }
 
 std::string GetArg(const std::string& strArg, const std::string& strDefault)
