@@ -81,7 +81,7 @@ CTxDB::CTxDB(const char* pszMode)
         WriteVersion(CLIENT_VERSION);
         fReadOnly = fTmp;
     }
-    printf("Opened LevelDB sucessfully\n");
+    printf("Opened LevelDB successfully\n");
 }
 
 void CTxDB::Close()
