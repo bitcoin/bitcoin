@@ -360,7 +360,10 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     CTxIndex txindex;
     if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
         return tx.DoS(1, error("CheckProofOfStake() : INFO: read txPrev failed"));  // previous transaction not in main chain, may occur during initial download
+
+#ifndef USE_LEVELDB
     txdb.Close();
+#endif
 
     // Verify signature
     if (!VerifySignature(txPrev, tx, 0, true, 0))
