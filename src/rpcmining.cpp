@@ -48,7 +48,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     {
         if (pindex->IsProofOfStake())
         {
-            dStakeKernelsTriedAvg += GetDifficulty(pindex) * 4294967296;
+            dStakeKernelsTriedAvg += GetDifficulty(pindex) * 4294967296.0;
             nStakesTime += pindexPrevStake ? (pindexPrevStake->nTime - pindex->nTime) : 0;
             pindexPrevStake = pindex;
             nStakesHandled++;
