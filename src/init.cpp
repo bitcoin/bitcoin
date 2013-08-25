@@ -103,9 +103,7 @@ void Shutdown()
     RenameThread("bitcoin-shutoff");
     nTransactionsUpdated++;
     StopRPCThreads();
-    ShutdownRPCMining();
     bitdb.Flush(false);
-    GenerateBitcoins(false, NULL);
     StopNode();
     {
         LOCK(cs_main);
@@ -169,7 +167,6 @@ std::string HelpMessage()
     strUsage += "  -?                     " + _("This help message") + "\n";
     strUsage += "  -conf=<file>           " + _("Specify configuration file (default: bitcoin.conf)") + "\n";
     strUsage += "  -pid=<file>            " + _("Specify pid file (default: bitcoind.pid)") + "\n";
-    strUsage += "  -gen                   " + _("Generate coins (default: 0)") + "\n";
     strUsage += "  -datadir=<dir>         " + _("Specify data directory") + "\n";
     strUsage += "  -wallet=<file>         " + _("Specify wallet file (within data directory)") + "\n";
     strUsage += "  -dbcache=<n>           " + _("Set database cache size in megabytes (default: 25)") + "\n";
@@ -979,13 +976,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     StartNode(threadGroup);
 
-    // InitRPCMining is needed here so getwork/getblocktemplate in the GUI debug console works properly.
-    InitRPCMining();
     if (fServer)
         StartRPCThreads();
-
-    // Generate coins in the background
-    GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain);
 
     // ********************************************************* Step 12: finished
 
