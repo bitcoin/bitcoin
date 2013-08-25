@@ -251,6 +251,7 @@
 ["1","VER", "OP_VER is reserved"],
 ["1","VERIF", "OP_VERIF is reserved"],
 ["1","VERNOTIF", "OP_VERNOTIF is reserved"],
+["1","RESERVED", "OP_RESERVED is reserved"],
 ["1","RESERVED1", "OP_RESERVED1 is reserved"],
 ["1","RESERVED2", "OP_RESERVED2 is reserved"],
 ["1","0xba", "0xba == OP_NOP10 + 1"],
