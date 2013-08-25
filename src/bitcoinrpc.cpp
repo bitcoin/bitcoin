@@ -135,6 +135,9 @@ string CRPCTable::help(string strCommand) const
             continue;
         if (strCommand != "" && strMethod != strCommand)
             continue;
+        if (pcmd->reqWallet && !pwalletMain)
+            continue;
+
         try
         {
             Array params;
@@ -193,75 +196,75 @@ Value stop(const Array& params, bool fHelp)
 
 
 static const CRPCCommand vRPCCommands[] =
-{ //  name                      actor (function)         okSafeMode threadSafe
-  //  ------------------------  -----------------------  ---------- ----------
-    { "help",                   &help,                   true,      true },
-    { "stop",                   &stop,                   true,      true },
-    { "getblockcount",          &getblockcount,          true,      false },
-    { "getbestblockhash",       &getbestblockhash,       true,      false },
-    { "getconnectioncount",     &getconnectioncount,     true,      false },
-    { "getpeerinfo",            &getpeerinfo,            true,      false },
-    { "addnode",                &addnode,                true,      true },
-    { "getaddednodeinfo",       &getaddednodeinfo,       true,      true },
-    { "getdifficulty",          &getdifficulty,          true,      false },
-    { "getnetworkhashps",       &getnetworkhashps,       true,      false },
-    { "getgenerate",            &getgenerate,            true,      false },
-    { "setgenerate",            &setgenerate,            true,      false },
-    { "gethashespersec",        &gethashespersec,        true,      false },
-    { "getinfo",                &getinfo,                true,      false },
-    { "getmininginfo",          &getmininginfo,          true,      false },
-    { "getnewaddress",          &getnewaddress,          true,      false },
-    { "getaccountaddress",      &getaccountaddress,      true,      false },
-    { "setaccount",             &setaccount,             true,      false },
-    { "getaccount",             &getaccount,             false,     false },
-    { "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false },
-    { "sendtoaddress",          &sendtoaddress,          false,     false },
-    { "getreceivedbyaddress",   &getreceivedbyaddress,   false,     false },
-    { "getreceivedbyaccount",   &getreceivedbyaccount,   false,     false },
-    { "listreceivedbyaddress",  &listreceivedbyaddress,  false,     false },
-    { "listreceivedbyaccount",  &listreceivedbyaccount,  false,     false },
-    { "backupwallet",           &backupwallet,           true,      false },
-    { "keypoolrefill",          &keypoolrefill,          true,      false },
-    { "walletpassphrase",       &walletpassphrase,       true,      false },
-    { "walletpassphrasechange", &walletpassphrasechange, false,     false },
-    { "walletlock",             &walletlock,             true,      false },
-    { "encryptwallet",          &encryptwallet,          false,     false },
-    { "validateaddress",        &validateaddress,        true,      false },
-    { "getbalance",             &getbalance,             false,     false },
-    { "move",                   &movecmd,                false,     false },
-    { "sendfrom",               &sendfrom,               false,     false },
-    { "sendmany",               &sendmany,               false,     false },
-    { "addmultisigaddress",     &addmultisigaddress,     false,     false },
-    { "createmultisig",         &createmultisig,         true,      true  },
-    { "getrawmempool",          &getrawmempool,          true,      false },
-    { "getblock",               &getblock,               false,     false },
-    { "getblockhash",           &getblockhash,           false,     false },
-    { "gettransaction",         &gettransaction,         false,     false },
-    { "listtransactions",       &listtransactions,       false,     false },
-    { "listaddressgroupings",   &listaddressgroupings,   false,     false },
-    { "signmessage",            &signmessage,            false,     false },
-    { "verifymessage",          &verifymessage,          false,     false },
-    { "getwork",                &getwork,                true,      false },
-    { "getworkex",              &getworkex,              true,      false },
-    { "listaccounts",           &listaccounts,           false,     false },
-    { "settxfee",               &settxfee,               false,     false },
-    { "getblocktemplate",       &getblocktemplate,       true,      false },
-    { "submitblock",            &submitblock,            false,     false },
-    { "setmininput",            &setmininput,            false,     false },
-    { "listsinceblock",         &listsinceblock,         false,     false },
-    { "dumpprivkey",            &dumpprivkey,            true,      false },
-    { "importprivkey",          &importprivkey,          false,     false },
-    { "listunspent",            &listunspent,            false,     false },
-    { "getrawtransaction",      &getrawtransaction,      false,     false },
-    { "createrawtransaction",   &createrawtransaction,   false,     false },
-    { "decoderawtransaction",   &decoderawtransaction,   false,     false },
-    { "signrawtransaction",     &signrawtransaction,     false,     false },
-    { "sendrawtransaction",     &sendrawtransaction,     false,     false },
-    { "gettxoutsetinfo",        &gettxoutsetinfo,        true,      false },
-    { "gettxout",               &gettxout,               true,      false },
-    { "lockunspent",            &lockunspent,            false,     false },
-    { "listlockunspent",        &listlockunspent,        false,     false },
-    { "verifychain",            &verifychain,            true,      false },
+{ //  name                      actor (function)         okSafeMode threadSafe reqWallet
+  //  ------------------------  -----------------------  ---------- ---------- ---------
+    { "help",                   &help,                   true,      true,       false },
+    { "stop",                   &stop,                   true,      true,       false },
+    { "getblockcount",          &getblockcount,          true,      false,      false },
+    { "getbestblockhash",       &getbestblockhash,       true,      false,      false },
+    { "getconnectioncount",     &getconnectioncount,     true,      false,      false },
+    { "getpeerinfo",            &getpeerinfo,            true,      false,      false },
+    { "addnode",                &addnode,                true,      true,       false },
+    { "getaddednodeinfo",       &getaddednodeinfo,       true,      true,       false },
+    { "getdifficulty",          &getdifficulty,          true,      false,      false },
+    { "getnetworkhashps",       &getnetworkhashps,       true,      false,      false },
+    { "getgenerate",            &getgenerate,            true,      false,      false },
+    { "setgenerate",            &setgenerate,            true,      false,      true },
+    { "gethashespersec",        &gethashespersec,        true,      false,      false },
+    { "getinfo",                &getinfo,                true,      false,      false },
+    { "getmininginfo",          &getmininginfo,          true,      false,      false },
+    { "getnewaddress",          &getnewaddress,          true,      false,      true },
+    { "getaccountaddress",      &getaccountaddress,      true,      false,      true },
+    { "setaccount",             &setaccount,             true,      false,      true },
+    { "getaccount",             &getaccount,             false,     false,      true },
+    { "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false,      true },
+    { "sendtoaddress",          &sendtoaddress,          false,     false,      true },
+    { "getreceivedbyaddress",   &getreceivedbyaddress,   false,     false,      true },
+    { "getreceivedbyaccount",   &getreceivedbyaccount,   false,     false,      true },
+    { "listreceivedbyaddress",  &listreceivedbyaddress,  false,     false,      true },
+    { "listreceivedbyaccount",  &listreceivedbyaccount,  false,     false,      true },
+    { "backupwallet",           &backupwallet,           true,      false,      true },
+    { "keypoolrefill",          &keypoolrefill,          true,      false,      true },
+    { "walletpassphrase",       &walletpassphrase,       true,      false,      true },
+    { "walletpassphrasechange", &walletpassphrasechange, false,     false,      true },
+    { "walletlock",             &walletlock,             true,      false,      true },
+    { "encryptwallet",          &encryptwallet,          false,     false,      true },
+    { "validateaddress",        &validateaddress,        true,      false,      false },
+    { "getbalance",             &getbalance,             false,     false,      true },
+    { "move",                   &movecmd,                false,     false,      true },
+    { "sendfrom",               &sendfrom,               false,     false,      true },
+    { "sendmany",               &sendmany,               false,     false,      true },
+    { "addmultisigaddress",     &addmultisigaddress,     false,     false,      true },
+    { "createmultisig",         &createmultisig,         true,      true ,      false },
+    { "getrawmempool",          &getrawmempool,          true,      false,      false },
+    { "getblock",               &getblock,               false,     false,      false },
+    { "getblockhash",           &getblockhash,           false,     false,      false },
+    { "gettransaction",         &gettransaction,         false,     false,      true },
+    { "listtransactions",       &listtransactions,       false,     false,      true },
+    { "listaddressgroupings",   &listaddressgroupings,   false,     false,      true },
+    { "signmessage",            &signmessage,            false,     false,      true },
+    { "verifymessage",          &verifymessage,          false,     false,      false },
+    { "getwork",                &getwork,                true,      false,      true },
+    { "getworkex",              &getworkex,              true,      false,      true },
+    { "listaccounts",           &listaccounts,           false,     false,      true },
+    { "settxfee",               &settxfee,               false,     false,      true },
+    { "getblocktemplate",       &getblocktemplate,       true,      false,      false },
+    { "submitblock",            &submitblock,            false,     false,      false },
+    { "setmininput",            &setmininput,            false,     false,      false },
+    { "listsinceblock",         &listsinceblock,         false,     false,      true },
+    { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
+    { "importprivkey",          &importprivkey,          false,     false,      true },
+    { "listunspent",            &listunspent,            false,     false,      true },
+    { "getrawtransaction",      &getrawtransaction,      false,     false,      false },
+    { "createrawtransaction",   &createrawtransaction,   false,     false,      false },
+    { "decoderawtransaction",   &decoderawtransaction,   false,     false,      false },
+    { "signrawtransaction",     &signrawtransaction,     false,     false,      false },
+    { "sendrawtransaction",     &sendrawtransaction,     false,     false,      false },
+    { "gettxoutsetinfo",        &gettxoutsetinfo,        true,      false,      false },
+    { "gettxout",               &gettxout,               true,      false,      false },
+    { "lockunspent",            &lockunspent,            false,     false,      true },
+    { "listlockunspent",        &listlockunspent,        false,     false,      true },
+    { "verifychain",            &verifychain,            true,      false,      false },
 };
 
 CRPCTable::CRPCTable()
@@ -1017,6 +1020,8 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
     const CRPCCommand *pcmd = tableRPC[strMethod];
     if (!pcmd)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
+    if (pcmd->reqWallet && !pwalletMain)
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
 
     // Observe safe mode
     string strWarning = GetWarnings("rpc");
@@ -1031,7 +1036,10 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
         {
             if (pcmd->threadSafe)
                 result = pcmd->actor(params, false);
-            else {
+            else if (!pwalletMain) {
+                LOCK(cs_main);
+                result = pcmd->actor(params, false);
+            } else {
                 LOCK2(cs_main, pwalletMain->cs_wallet);
                 result = pcmd->actor(params, false);
             }

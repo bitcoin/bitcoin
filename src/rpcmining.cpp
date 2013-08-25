@@ -70,12 +70,18 @@ static CReserveKey* pMiningKey = NULL;
 
 void InitRPCMining()
 {
+    if (!pwalletMain)
+        return;
+
     // getwork/getblocktemplate mining rewards paid here:
     pMiningKey = new CReserveKey(pwalletMain);
 }
 
 void ShutdownRPCMining()
 {
+    if (!pMiningKey)
+        return;
+
     delete pMiningKey; pMiningKey = NULL;
 }
 
@@ -85,6 +91,9 @@ Value getgenerate(const Array& params, bool fHelp)
         throw runtime_error(
             "getgenerate\n"
             "Returns true or false.");
+
+    if (!pMiningKey)
+        return false;
 
     return GetBoolArg("-gen");
 }
@@ -111,6 +120,7 @@ Value setgenerate(const Array& params, bool fHelp)
     }
     mapArgs["-gen"] = (fGenerate ? "1" : "0");
 
+    assert(pwalletMain != NULL);
     GenerateBitcoins(fGenerate, pwalletMain);
     return Value::null;
 }
@@ -396,6 +406,7 @@ Value getwork(const Array& params, bool fHelp)
         pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
+        assert(pwalletMain != NULL);
         return CheckWork(pblock, *pwalletMain, *pMiningKey);
     }
 }
