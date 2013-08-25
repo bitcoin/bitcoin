@@ -15,6 +15,10 @@
 #include <string.h>
 #endif
 
+#ifndef WIN32
+#include <fcntl.h>
+#endif
+
 #ifdef USE_UPNP
 #include <miniupnpc/miniwget.h>
 #include <miniupnpc/miniupnpc.h>
