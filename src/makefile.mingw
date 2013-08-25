@@ -4,7 +4,7 @@
 
 USE_UPNP:=0
 USE_IPV6:=1
-USE_LEVELDB:=1
+USE_LEVELDB:=-
 
 INCLUDEPATHS= \
  -I"C:\boost-1.50.0-mgw" \
