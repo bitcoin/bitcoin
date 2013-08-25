@@ -327,6 +327,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 return false;
             if (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE)
                 return false;
+
+            // Note how OP_RESERVED does not count towards the opcode limit.
             if (opcode > OP_16 && ++nOpCount > 201)
                 return false;
 

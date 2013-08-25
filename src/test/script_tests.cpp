@@ -32,8 +32,12 @@ ParseScript(string s)
 
     if (mapOpNames.size() == 0)
     {
-        for (int op = OP_NOP; op <= OP_NOP10; op++)
+        for (int op = 0; op <= OP_NOP10; op++)
         {
+            // Allow OP_RESERVED to get into mapOpNames
+            if (op < OP_NOP && op != OP_RESERVED)
+                continue;
+
             const char* name = GetOpName((opcodetype)op);
             if (strcmp(name, "OP_UNKNOWN") == 0)
                 continue;
@@ -72,7 +76,7 @@ ParseScript(string s)
         }
         else if (mapOpNames.count(w))
         {
-            // opcode, e.g. OP_ADD or OP_1:
+            // opcode, e.g. OP_ADD or ADD:
             result << mapOpNames[w];
         }
         else
