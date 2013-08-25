@@ -22,11 +22,11 @@ LIBPATHS= \
  -L"$(DEPSDIR)/openssl-1.0.1c"
 
 LIBS= \
- -l boost_system-mt-s \
- -l boost_filesystem-mt-s \
- -l boost_program_options-mt-s \
- -l boost_thread_win32-mt-s \
- -l boost_chrono-mt-s \
+ -l boost_system-mt \
+ -l boost_filesystem-mt \
+ -l boost_program_options-mt \
+ -l boost_thread_win32-mt \
+ -l boost_chrono-mt \
  -l db_cxx \
  -l ssl \
  -l crypto
@@ -97,13 +97,13 @@ all: novacoind.exe
 # LevelDB support
 #
 ifdef USE_LEVELDB
-LIBS += $(CURDIR)/leveldb/libleveldb.lib $(CURDIR)/leveldb/libmemenv.lib
+LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
 DEFS += -I"$(CURDIR)/leveldb/include" -DUSE_LEVELDB
 DEFS += -I"$(CURDIR)/leveldb/helpers"
 OBJS += obj/txdb-leveldb.o
-leveldb/libleveldb.lib:
-	@echo "Building LevelDB ..."; cd leveldb; TARGET_OS=OS_WINDOWS_CROSSCOMPILE make; cd ..
-obj/txdb-leveldb.o: leveldb/libleveldb.lib
+leveldb/libleveldb.a:
+	@echo "Building LevelDB ..." && cd leveldb && CC=i586-mingw32msvc-gcc CXX=i586-mingw32msvc-g++ TARGET_OS=OS_WINDOWS_CROSSCOMPILE CXXFLAGS="-I$(INCLUDEPATHS)" LDFLAGS="-L$(LIBPATHS)" $(MAKE) libleveldb.a libmemenv.a && i586-mingw32msvc-ranlib libleveldb.a && i586-mingw32msvc-ranlib libmemenv.a && cd ..
+obj/txdb-leveldb.o: leveldb/libleveldb.a
 else
 OBJS += obj/txdb-bdb.o
 endif
@@ -117,7 +117,7 @@ obj/%.o: %.cpp $(HEADERS)
 	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
 
 novacoind.exe: $(OBJS:obj/%=obj/%)
-	i586-mingw32msvc-g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+	i586-mingw32msvc-g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lshlwapi
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
@@ -139,5 +139,6 @@ clean:
 	-rm -f obj-test/*.o
 	-rm -f test_novacoin.exe
 	-rm -f obj/build.h
+	cd leveldb && TARGET_OS=OS_WINDOWS_CROSSCOMPILE $(MAKE) clean && cd ..
 
 FORCE:
