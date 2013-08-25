@@ -110,8 +110,7 @@ xCXXFLAGS=-O2 -pthread -Wall -Wextra -Wformat -Wformat-security -Wno-unused-para
 # adds some defaults in front. Unfortunately, LDFLAGS=... $(LDFLAGS) does not work.
 xLDFLAGS=$(LDHARDENING) $(LDFLAGS)
 
-OBJS= \
-    leveldb/libleveldb.a \
+BASEOBJS := \
     obj/alert.o \
     obj/version.o \
     obj/checkpoints.o \
@@ -120,8 +119,6 @@ OBJS= \
     obj/crypter.o \
     obj/key.o \
     obj/db.o \
-    obj/init.o \
-    obj/bitcoind.o \
     obj/keystore.o \
     obj/core.o \
     obj/main.o \
@@ -143,9 +140,19 @@ OBJS= \
     obj/hash.o \
     obj/bloom.o \
     obj/noui.o \
-    obj/leveldb.o \
     obj/txdb.o \
     obj/chainparams.o
+
+OBJS := \
+    obj/leveldb.o \
+    obj/init.o \
+    obj/bitcoind.o \
+    $(BASEOBJS)
+
+TESTOBJS := \
+    obj-test/leveldb.o \
+    $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp)) \
+    $(BASEOBJS)
 
 
 all: bitcoind
@@ -153,15 +160,25 @@ all: bitcoind
 test check: test_bitcoin FORCE
 	./test_bitcoin
 
+ifdef USE_SYSTEM_LEVELDB
+    LIBS += -lleveldb
+    TESTLIBS += -lmemenv
+else
 #
 # LevelDB support
 #
 MAKEOVERRIDES =
-LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
+LIBS += $(CURDIR)/leveldb/libleveldb.a
+TESTLIBS += $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
-DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
+DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers/memenv)
 leveldb/libleveldb.a:
-	@echo "Building LevelDB ..." && cd leveldb && $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(xCXXFLAGS)" libleveldb.a libmemenv.a && cd ..
+	@echo "Building LevelDB ..." && cd leveldb && $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(xCXXFLAGS)" libleveldb.a && cd ..
+leveldb/libmemenv.a:
+	@echo "Building LevelDB memenv ..." && cd leveldb && $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(xCXXFLAGS)" libmemenv.a && cd ..
+OBJS += leveldb/libleveldb.a
+TESTOBJS += leveldb/libmemenv.a
+endif
 
 # auto-generated dependencies:
 -include obj/*.P
@@ -172,26 +189,28 @@ obj/build.h: FORCE
 version.cpp: obj/build.h
 DEFS += -DHAVE_BUILD_INFO
 
-obj/%.o: %.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+P_TO_D = \
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
-	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	  sed -e 's/\#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-bitcoind: $(OBJS:obj/%=obj/%)
-	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
+obj/%.o: %.cpp
+	$(CXX) -c $(xCXXFLAGS) -DLEVELDB_WITHOUT_MEMENV -MMD -MF $(@:%.o=%.d) -o $@ $<
+	$(P_TO_D)
 
-TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
+bitcoind: $(OBJS)
+	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
 
 obj-test/%.o: test/%.cpp
 	$(CXX) -c $(TESTDEFS) $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
-	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
-	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
-	  rm -f $(@:%.o=%.d)
+	$(P_TO_D)
 
-test_bitcoin: $(TESTOBJS) $(filter-out obj/init.o obj/bitcoind.o,$(OBJS:obj/%=obj/%))
+obj-test/leveldb.o: leveldb.cpp
+	$(CXX) -c $(TESTDEFS) $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+	$(P_TO_D)
+
+test_bitcoin: $(TESTOBJS)
 	$(LINK) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ $(TESTLIBS) $(xLDFLAGS) $(LIBS)
 
 clean:

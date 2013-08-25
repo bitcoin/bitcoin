@@ -8,7 +8,9 @@
 #include <leveldb/env.h>
 #include <leveldb/cache.h>
 #include <leveldb/filter_policy.h>
-#include <memenv/memenv.h>
+#ifndef LEVELDB_WITHOUT_MEMENV
+#include <memenv.h>
+#endif
 
 #include <boost/filesystem.hpp>
 
@@ -44,8 +46,12 @@ CLevelDB::CLevelDB(const boost::filesystem::path &path, size_t nCacheSize, bool 
     options = GetOptions(nCacheSize);
     options.create_if_missing = true;
     if (fMemory) {
+#ifndef LEVELDB_WITHOUT_MEMENV
         penv = leveldb::NewMemEnv(leveldb::Env::Default());
         options.env = penv;
+#else
+        throw std::runtime_error("CLevelDB(): compiled without memenv support");
+#endif
     } else {
         if (fWipe) {
             printf("Wiping LevelDB in %s\n", path.string().c_str());
