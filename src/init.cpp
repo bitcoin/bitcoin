@@ -395,6 +395,10 @@ bool AppInit2(boost::thread_group& threadGroup)
         // to protect privacy, do not listen by default if a proxy server is specified
         SoftSetBoolArg("-listen", false);
     }
+    if (mapArgs.count("-tor")) {
+        // to protect privacy, do not listen by default if a Tor proxy server is specified
+        SoftSetBoolArg("-listen", false);
+    }
 
     if (!GetBoolArg("-listen", true)) {
         // do not map ports or try to retrieve public IP when not listening (pointless)
