@@ -1,7 +1,7 @@
 Bitcoin integration/staging tree
 ================================
 
-[http://www.bitcoin.org](http://www.bitcoin.org)
+http://www.bitcoin.org
 
 Copyright (c) 2009-2013 Bitcoin Developers
 
@@ -12,15 +12,15 @@ Bitcoin is an experimental new digital currency that enables instant payments to
 anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
 out collectively by the network. Bitcoin is also the name of the open source
-software which enables the use of this currency. 
+software which enables the use of this currency.
 
-For more information, as well as an immediately useable, binary version of the Bitcoin client software, see [http://www.bitcoin.org](http://www.bitcoin.org).
+For more information, as well as an immediately useable, binary version of the Bitcoin client software, see http://www.bitcoin.org.
 
 License
 -------
 
 Bitcoin is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT).
+information or see http://opensource.org/licenses/MIT.
 
 Development process
 -------------------
@@ -71,9 +71,9 @@ Every pull request is built for both Windows and Linux on a dedicated server,
 and unit and sanity tests are automatically run. The binaries produced may be
 used for manual QA testing — a link to them will appear in a comment on the
 pull request posted by [BitcoinPullTester](https://github.com/BitcoinPullTester). 
-See the [BitcoinPullTester repo](https://github.com/BitcoinPullTester) for the build/test scripts.
+See the https://github.com/BitcoinPullTester for the build/test scripts.
 
 ### Manual Quality Assurance (QA) Testing
 
 Large changes should have a test plan, and should be tested by somebody other
-than the developer who wrote the code. See [https://github.com/bitcoin/QA/](https://github.com/bitcoin/QA/) for how to create a test plan.
+than the developer who wrote the code. See https://github.com/bitcoin/QA/ for how to create a test plan.

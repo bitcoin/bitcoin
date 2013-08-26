@@ -45,11 +45,7 @@ The following are developer notes on how to build Bitcoin on your native platfor
 - [Unix Build Notes](build-unix.md)
 - [Windows Build Notes](build-msw.md)
 
-Bitcoind
----------------------
-Bitcoind is a headless daemon, and also bundles a testing tool for the same daemon. It provides a JSON-RPC interface, allowing it to be controlled locally or remotely which makes it useful for integration with other software or in larger payment systems. 
 
-- [Running Bitcoind](running-bitcoind.md)
 
 Development
 ---------------------
