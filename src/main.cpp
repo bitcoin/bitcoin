@@ -4186,7 +4186,7 @@ public:
     }
 };
 
-CBlockTemplate* CreateNewBlock(CScript& scriptPubKeyIn)
+CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 {
     // Create new block
     auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
