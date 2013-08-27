@@ -1118,7 +1118,7 @@ void CreatePidFile(const boost::filesystem::path &path, pid_t pid)
         fclose(file);
     }
 }
-#end
+#endif
 
 bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest)
 {
