@@ -4,6 +4,7 @@
 #ifndef CHECKQUEUE_H
 #define CHECKQUEUE_H
 
+#include <boost/foreach.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/condition_variable.hpp>
