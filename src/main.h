@@ -12,20 +12,20 @@
 #include "core.h"
 #include "bignum.h"
 #include "sync.h"
+#include "txmempool.h"
 #include "net.h"
 #include "script.h"
 
 #include <list>
 
-class CWallet;
+class CAddress;
 class CBlock;
 class CBlockIndex;
-class CKeyItem;
-class CReserveKey;
-
-class CAddress;
 class CInv;
+class CKeyItem;
 class CNode;
+class CReserveKey;
+class CWallet;
 
 struct CBlockIndexWorkComparator;
 
@@ -1073,44 +1073,6 @@ public:
 
 
 
-
-
-
-class CTxMemPool
-{
-public:
-    static bool fChecks;
-    mutable CCriticalSection cs;
-    std::map<uint256, CTransaction> mapTx;
-    std::map<COutPoint, CInPoint> mapNextTx;
-
-    bool accept(CValidationState &state, const CTransaction &tx, bool fLimitFree, bool* pfMissingInputs, bool fRejectInsaneFee = false);
-    bool addUnchecked(const uint256& hash, const CTransaction &tx);
-    bool remove(const CTransaction &tx, bool fRecursive = false);
-    bool removeConflicts(const CTransaction &tx);
-    void clear();
-    void queryHashes(std::vector<uint256>& vtxid);
-    void pruneSpent(const uint256& hash, CCoins &coins);
-    void check(CCoinsViewCache *pcoins) const;
-
-    unsigned long size()
-    {
-        LOCK(cs);
-        return mapTx.size();
-    }
-
-    bool exists(uint256 hash)
-    {
-        return (mapTx.count(hash) != 0);
-    }
-
-    CTransaction& lookup(uint256 hash)
-    {
-        return mapTx[hash];
-    }
-};
-
-extern CTxMemPool mempool;
 
 struct CCoinsStats
 {
