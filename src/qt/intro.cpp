@@ -142,7 +142,7 @@ QString Intro::getDefaultDataDirectory()
     return QString::fromStdString(GetDefaultDataDir().string());
 }
 
-void Intro::pickDataDirectory()
+void Intro::pickDataDirectory(bool fIsTestnet)
 {
     namespace fs = boost::filesystem;;
     QSettings settings;
@@ -160,6 +160,11 @@ void Intro::pickDataDirectory()
         /* If current default data directory does not exist, let the user choose one */
         Intro intro;
         intro.setDataDirectory(dataDir);
+        if (!fIsTestnet)
+            intro.setWindowIcon(QIcon(":icons/bitcoin"));
+        else
+            intro.setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+
         while(true)
         {
             if(!intro.exec())
