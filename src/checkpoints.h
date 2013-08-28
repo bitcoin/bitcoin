@@ -19,6 +19,17 @@ class CSyncCheckpoint;
  */
 namespace Checkpoints
 {
+    /** Checkpointing mode */
+    enum CPMode
+    {
+        // Scrict checkpoints policy, perform conflicts verification and resolve conflicts
+        STRICT = 0,
+        // Advisory checkpoints policy, perform conflicts verification but don't try to resolve them
+        ADVISORY = 1,
+        // Permissive checkpoints policy, don't perform any checking
+        PERMISSIVE = 2,
+    };
+
     // Returns true if block passes checkpoint checks
     bool CheckHardened(int nHeight, const uint256& hash);
 

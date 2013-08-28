@@ -29,6 +29,7 @@ CClientUIInterface uiInterface;
 std::string strWalletFileName;
 unsigned int nNodeLifespan;
 unsigned int nDerivationMethodIndex;
+enum Checkpoints::CPMode CheckpointsMode;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -246,7 +247,7 @@ std::string HelpMessage()
         "  -listen                " + _("Accept connections from outside (default: 1 if no -proxy or -connect)") + "\n" +
         "  -bind=<addr>           " + _("Bind to given address. Use [host]:port notation for IPv6") + "\n" +
         "  -dnsseed               " + _("Find peers using DNS lookup (default: 1)") + "\n" +
-        "  -nosynccheckpoints     " + _("Disable sync checkpoints (default: 0)") + "\n" +
+        "  -cppolicy              " + _("Sync checkpoints policy (default: strict)") + "\n" +
         "  -stakepooledkeys       " + _("Use pooled pubkeys for the last coinstake output (default: 0)") + "\n" +
         "  -derivationmethod      " + _("Which key derivation method to use by default (default: sha512)") + "\n" +
         "  -banscore=<n>          " + _("Threshold for disconnecting misbehaving peers (default: 100)") + "\n" +
@@ -357,6 +358,18 @@ bool AppInit2()
 
     nNodeLifespan = GetArg("-addrlifespan", 7);
     fStakeUsePooledKeys = GetBoolArg("-stakepooledkeys", false);
+
+    CheckpointsMode = Checkpoints::STRICT;
+    std::string strCpMode = GetArg("-cppolicy", "strict");
+
+    if(strCpMode == "strict")
+        CheckpointsMode = Checkpoints::STRICT;
+
+    if(strCpMode == "advisory")
+        CheckpointsMode = Checkpoints::ADVISORY;
+
+    if(strCpMode == "permissive")
+        CheckpointsMode = Checkpoints::PERMISSIVE;
 
     if(GetArg("-derivationmethod", "sha512") == "scrypt+sha512")
         nDerivationMethodIndex = 1;

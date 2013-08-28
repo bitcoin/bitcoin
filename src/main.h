@@ -94,7 +94,6 @@ extern unsigned int nDerivationMethodIndex;
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;
 
-
 class CReserveKey;
 class CTxDB;
 class CTxIndex;

@@ -2350,8 +2350,8 @@ Address: %4
     </message>
     <message>
         <location line="+4"/>
-        <source>Disable sync checkpoints (default: 0)</source>
-        <translation>Disable sync checkpoints (default: 0)</translation>
+        <source>Sync checkpoints policy (default: strict)</source>
+        <translation>Sync checkpoints policy (default: strict)</translation>
     </message>
     <message>
         <location line="+5"/>
