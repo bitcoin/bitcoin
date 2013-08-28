@@ -176,6 +176,29 @@ Value getaccountaddress(const Array& params, bool fHelp)
 }
 
 
+Value getrawchangeaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "getrawchangeaddress\n"
+            "Returns a new Bitcoin address, for receiving change.  "
+            "This is for use with raw transactions, NOT normal use.");
+
+    if (!pwalletMain->IsLocked())
+        pwalletMain->TopUpKeyPool();
+
+    CReserveKey reservekey(pwalletMain);
+    CPubKey vchPubKey;
+    if (!reservekey.GetReservedKey(vchPubKey))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Unable to obtain key for change");
+
+    reservekey.KeepKey();
+
+    CKeyID keyID = vchPubKey.GetID();
+
+    return CBitcoinAddress(keyID).ToString();
+}
+
 
 Value setaccount(const Array& params, bool fHelp)
 {
