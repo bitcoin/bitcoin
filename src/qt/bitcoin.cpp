@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
     PaymentServer* paymentServer = new PaymentServer(&app);
 
     // User language is set up: pick a data directory
-    Intro::pickDataDirectory();
+    Intro::pickDataDirectory(TestNet());
 
     // Install global event filter that makes sure that long tooltips can be word-wrapped
     app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
