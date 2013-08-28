@@ -787,7 +787,7 @@ void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
 }
 
 bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs)
+                        bool* pfMissingInputs, bool fRejectInsaneFee)
 {
     if (pfMissingInputs)
         *pfMissingInputs = false;
@@ -920,6 +920,11 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
                 printf("Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
             dFreeCount += nSize;
         }
+
+        if (fRejectInsaneFee && nFees > CTransaction::nMinRelayTxFee * 10000)
+            return error("CTxMemPool::accept() : insane fees %s, %"PRI64d" > %"PRI64d,
+                         hash.ToString().c_str(),
+                         nFees, CTransaction::nMinRelayTxFee * 10000);
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
