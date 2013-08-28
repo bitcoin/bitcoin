@@ -242,9 +242,21 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             }
             if (fMissingInputs) continue;
 
-            // Priority is sum(valuein * age) / txsize
+            // Priority is sum(valuein * age) / modified_txsize
             unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
-            dPriority /= nTxSize;
+            unsigned int nTxSizeMod = nTxSize;
+            // In order to avoid disincentivizing cleaning up the UTXO set we don't count
+            // the constant overhead for each txin and up to 110 bytes of scriptSig (which
+            // is enough to cover a compressed pubkey p2sh redemption) for priority.
+            // Providing any more cleanup incentive than making additional inputs free would
+            // risk encouraging people to create junk outputs to redeem later.
+            BOOST_FOREACH(const CTxIn& txin, tx.vin)
+            {
+                unsigned int offset = 41U + min(110U, (unsigned int)txin.scriptSig.size());
+                if (nTxSizeMod > offset)
+                    nTxSizeMod -= offset;
+            }
+            dPriority /= nTxSizeMod;
 
             // This is a more accurate fee-per-kilobyte than is used by the client code, because the
             // client code rounds up the size to the nearest 1K. That's good, because it gives an
