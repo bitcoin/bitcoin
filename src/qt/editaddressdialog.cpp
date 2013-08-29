@@ -13,6 +13,10 @@ EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // allow buttonBox to close the dialog
+    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(ui->buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+
     GUIUtil::setupAddressWidget(ui->addressEdit, this);
 
     switch(mode)

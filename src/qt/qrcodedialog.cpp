@@ -21,6 +21,9 @@ QRCodeDialog::QRCodeDialog(const QString &addr, const QString &label, bool enabl
 {
     ui->setupUi(this);
 
+    // enable/disable request amount field, when changing request payment checkbox
+    connect(ui->chkReqPayment, SIGNAL(clicked(bool)), ui->lnReqAmount, SLOT(setEnabled(bool)));
+
     setWindowTitle(QString("%1").arg(address));
 
     ui->chkReqPayment->setVisible(enableReq);

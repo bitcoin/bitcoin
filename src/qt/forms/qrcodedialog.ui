@@ -191,22 +191,5 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>chkReqPayment</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>lnReqAmount</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>92</x>
-     <y>285</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>98</x>
-     <y>311</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
