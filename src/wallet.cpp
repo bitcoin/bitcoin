@@ -741,32 +741,40 @@ bool CWalletTx::IsConfirmed() const
 
     // If no confirmations but it's from us, we can still
     // consider it confirmed if all dependencies are confirmed
-    std::map<uint256, const CMerkleTx*> mapPrev;
-    std::vector<const CMerkleTx*> vWorkQueue;
-    vWorkQueue.reserve(vtxPrev.size()+1);
-    vWorkQueue.push_back(this);
+    std::vector<uint256> vWorkQueue;
+    
+    BOOST_FOREACH(const CTxIn& txin, this->vin)
+        vWorkQueue.push_back(txin.prevout.hash);
+    
+    set<uint256> setAlreadyDone;
+    
     for (unsigned int i = 0; i < vWorkQueue.size(); i++)
     {
-        const CMerkleTx* ptx = vWorkQueue[i];
-
-        if (!IsFinalTx(*ptx))
-            return false;
-        if (ptx->GetDepthInMainChain() >= 1)
+        uint256 hash = vWorkQueue[i];
+        
+        if (setAlreadyDone.count(hash))
             continue;
-        if (!pwallet->IsFromMe(*ptx))
+        setAlreadyDone.insert(hash);
+        
+        CMerkleTx tx;
+        map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
+        
+        // dependent transactions cannot be found
+        if (mi == pwallet->mapWallet.end())
             return false;
-
-        if (mapPrev.empty())
+        
+        tx = (*mi).second;
+        
+        if (!IsFinalTx(tx))
+            return false;
+        if (tx.GetDepthInMainChain() >= 1)
+            continue;
+        if (!pwallet->IsFromMe(tx))
+            return false;
+        
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
         {
-            BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
-                mapPrev[tx.GetHash()] = &tx;
-        }
-
-        BOOST_FOREACH(const CTxIn& txin, ptx->vin)
-        {
-            if (!mapPrev.count(txin.prevout.hash))
-                return false;
-            vWorkQueue.push_back(mapPrev[txin.prevout.hash]);
+            vWorkQueue.push_back(txin.prevout.hash);
         }
     }
     return true;
