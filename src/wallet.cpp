@@ -743,6 +743,8 @@ bool CWalletTx::IsConfirmed() const
     // consider it confirmed if all dependencies are confirmed
     std::vector<uint256> vWorkQueue;
     
+    set<uint256> setAlreadyQueued;
+    
     // pwallet->mapWallet doesn't contain !IsMine transactions
     std::map<uint256, CMerkleTx> mapPrev;
     
@@ -750,17 +752,17 @@ bool CWalletTx::IsConfirmed() const
         mapPrev[tx.GetHash()] = tx;
     
     BOOST_FOREACH(const CTxIn& txin, vin)
+    {
+        if (setAlreadyQueued.count(txin.prevout.hash))
+            continue;
+        setAlreadyQueued.insert(txin.prevout.hash);
+        
         vWorkQueue.push_back(txin.prevout.hash);
-    
-    set<uint256> setAlreadyDone;
+    }
     
     for (unsigned int i = 0; i < vWorkQueue.size(); i++)
     {
         uint256 hash = vWorkQueue[i];
-        
-        if (setAlreadyDone.count(hash))
-            continue;
-        setAlreadyDone.insert(hash);
         
         map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
         map<uint256, CMerkleTx>::const_iterator pi = mapPrev.find(hash);
@@ -785,6 +787,10 @@ bool CWalletTx::IsConfirmed() const
         
         BOOST_FOREACH(const CTxIn& txin, tx.vin)
         {
+            if (setAlreadyQueued.count(txin.prevout.hash))
+                continue;
+            setAlreadyQueued.insert(txin.prevout.hash);
+            
             vWorkQueue.push_back(txin.prevout.hash);
         }
     }
