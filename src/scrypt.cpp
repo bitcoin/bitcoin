@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Colin Percival, 2011 ArtForz
+ * Copyright 2009 Colin Percival, 2011 ArtForz, 2012-2013 pooler
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,23 +48,6 @@ static inline void be32enc(void *pp, uint32_t x)
 	p[1] = (x >> 16) & 0xff;
 	p[0] = (x >> 24) & 0xff;
 }
-
-static inline uint32_t le32dec(const void *pp)
-{
-	const uint8_t *p = (uint8_t const *)pp;
-	return ((uint32_t)(p[0]) + ((uint32_t)(p[1]) << 8) +
-	    ((uint32_t)(p[2]) << 16) + ((uint32_t)(p[3]) << 24));
-}
-
-static inline void le32enc(void *pp, uint32_t x)
-{
-	uint8_t *p = (uint8_t *)pp;
-	p[0] = x & 0xff;
-	p[1] = (x >> 8) & 0xff;
-	p[2] = (x >> 16) & 0xff;
-	p[3] = (x >> 24) & 0xff;
-}
-
 
 typedef struct HMAC_SHA256Context {
 	SHA256_CTX ictx;
@@ -139,7 +122,7 @@ HMAC_SHA256_Final(unsigned char digest[32], HMAC_SHA256_CTX *ctx)
  * Compute PBKDF2(passwd, salt, c, dkLen) using HMAC-SHA256 as the PRF, and
  * write the output to buf.  The value dkLen must be at most 32 * (2^32 - 1).
  */
-static void
+void
 PBKDF2_SHA256(const uint8_t *passwd, size_t passwdlen, const uint8_t *salt,
     size_t saltlen, uint64_t c, uint8_t *buf, size_t dkLen)
 {
@@ -190,7 +173,6 @@ PBKDF2_SHA256(const uint8_t *passwd, size_t passwdlen, const uint8_t *salt,
 	/* Clean PShctx, since we never called _Final on it. */
 	memset(&PShctx, 0, sizeof(HMAC_SHA256_CTX));
 }
-
 
 #define ROTL(a, b) (((a) << (b)) | ((a) >> (32 - (b))))
 
@@ -296,5 +278,11 @@ void scrypt_1024_1_1_256_sp(const char *input, char *output, char *scratchpad)
 void scrypt_1024_1_1_256(const char *input, char *output)
 {
 	char scratchpad[SCRYPT_SCRATCHPAD_SIZE];
-	scrypt_1024_1_1_256_sp(input, output, scratchpad);
+#ifdef USE_SSE2
+        // todo: runtime detection at startup and use function pointer
+        if(1)
+          scrypt_1024_1_1_256_sp_sse2(input, output, scratchpad);
+        else
+#endif
+          scrypt_1024_1_1_256_sp(input, output, scratchpad);
 }
