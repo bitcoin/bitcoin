@@ -85,7 +85,7 @@ signals:
 public slots:
     /* Update address list from core.
      */
-    void updateEntry(const QString &address, const QString &label, bool isMine, int status);
+    void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
 
     friend class AddressTablePriv;
 };
