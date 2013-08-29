@@ -58,7 +58,8 @@ void PaymentServerTests::paymentServerTests()
     X509_STORE* caStore = X509_STORE_new();
     X509_STORE_add_cert(caStore, parse_b64der_cert(caCert_BASE64));
     PaymentServer::LoadRootCAs(caStore);
-    server->initNetManager(optionsModel);
+    server->setOptionsModel(&optionsModel);
+    server->initNetManager();
     server->uiReady();
 
     // Now feed PaymentRequests to server, and observe signals it produces:
