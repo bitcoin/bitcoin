@@ -261,6 +261,9 @@ public:
 
     // Derive BIP32 child key.
     bool Derive(CKey& keyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const;
+    
+    // Load private key and check that public key matches.
+    bool Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck);  
 };
 
 struct CExtPubKey {

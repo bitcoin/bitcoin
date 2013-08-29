@@ -306,6 +306,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             }
             CKey key;
             CPrivKey pkey;
+            uint256 hash = 0;
+            
             if (strType == "key")
             {
                 wss.nKeys++;
@@ -315,14 +317,34 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 ssValue >> wkey;
                 pkey = wkey.vchPrivKey;
             }
-            if (!key.SetPrivKey(pkey, vchPubKey.IsCompressed()))
+            try
+            {
+                ssValue >> hash;
+            }
+            catch(...){}
+            
+            bool fSkipCheck = false;
+            
+            if (hash != 0)
+            {
+                // hash pubkey/privkey to accelerate wallet load
+                std::vector<unsigned char> vchKey;
+                vchKey.reserve(vchPubKey.size() + pkey.size());
+                vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
+                vchKey.insert(vchKey.end(), pkey.begin(), pkey.end());
+                
+                if (Hash(vchKey.begin(), vchKey.end()) != hash)
+                {
+                    strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
+                    return false;
+                }
+                
+                fSkipCheck = true;
+            }
+            
+            if (!key.Load(pkey, vchPubKey, fSkipCheck))
             {
                 strErr = "Error reading wallet database: CPrivKey corrupt";
-                return false;
-            }
-            if (key.GetPubKey() != vchPubKey)
-            {
-                strErr = "Error reading wallet database: CPrivKey pubkey inconsistency";
                 return false;
             }
             if (!pwallet->LoadKey(key, vchPubKey))
