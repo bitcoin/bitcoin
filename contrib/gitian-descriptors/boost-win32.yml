@@ -4,7 +4,7 @@ suites:
 - "lucid"
 architectures:
 - "i386"
-packages: 
+packages:
 - "mingw32"
 - "faketime"
 - "zip"
