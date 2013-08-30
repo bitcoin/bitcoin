@@ -98,20 +98,12 @@ void SendCoinsDialog::on_sendButton_clicked()
         if (rcp.authenticatedMerchant.isEmpty())
         {
             QString address = rcp.address;
-#if QT_VERSION < 0x050000
-            QString to = Qt::escape(rcp.label);
-#else
-            QString to = rcp.label.toHtmlEscaped();
-#endif
+            QString to = GUIUtil::HtmlEscape(rcp.label);
             formatted.append(tr("<b>%1</b> to %2 (%3)").arg(amount, to, address));
         }
         else
         {
-#if QT_VERSION < 0x050000
-            QString merchant = Qt::escape(rcp.authenticatedMerchant);
-#else
-            QString merchant = rcp.authenticatedMerchant.toHtmlEscaped();
-#endif
+            QString merchant = GUIUtil::HtmlEscape(rcp.authenticatedMerchant);
             formatted.append(tr("<b>%1</b> to %2").arg(amount, merchant));
         }
     }
