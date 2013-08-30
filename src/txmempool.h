@@ -12,6 +12,31 @@ class CTransaction;
 class CValidationState;
 
 /*
+ * CTxMemPool stores these:
+ */
+class CTxMemPoolEntry
+{
+private:
+    CTransaction tx;
+    int64 nFee; // Cached to avoid expensive parent-transaction lookups
+    size_t nTxSize; // ... and avoid recomputing tx size
+    double dPriority; // Priority when entering the mempool
+    unsigned int nHeight; // Chain height when entering the mempool
+
+public:
+    CTxMemPoolEntry(const CTransaction& _tx, int64 _nFee, double _dPriority,
+                    unsigned int nHeight);
+    CTxMemPoolEntry();
+    CTxMemPoolEntry(const CTxMemPoolEntry& other);
+
+    const CTransaction& getTx() const { return this->tx; }
+    double getPriority(unsigned int currentHeight) const;
+    int64 getFee() const { return nFee; }
+    size_t getTxSize() const { return nTxSize; }
+    unsigned int getHeight() const { return nHeight; }
+};
+
+/*
  * CTxMemPool stores valid-according-to-the-current-best-chain
  * transactions that may be included in the next block.
  * 
@@ -28,7 +53,7 @@ private:
 
 public:
     mutable CCriticalSection cs;
-    std::map<uint256, CTransaction> mapTx;
+    std::map<uint256, CTxMemPoolEntry> mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
 
     CTxMemPool();
@@ -44,7 +69,7 @@ public:
 
     bool accept(CValidationState &state, const CTransaction &tx, bool fLimitFree,
                 bool* pfMissingInputs, bool fRejectInsaneFee=false);
-    bool addUnchecked(const uint256& hash, const CTransaction &tx);
+    bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
     bool remove(const CTransaction &tx, bool fRecursive = false);
     bool removeConflicts(const CTransaction &tx);
     void clear();

@@ -11,6 +11,10 @@
 
 #include <stdio.h>
 
+/** No amount larger than this (in satoshi) is valid */
+static const int64 MAX_MONEY = 21000000 * COIN;
+inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+
 class CTransaction;
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
@@ -49,11 +53,11 @@ public:
 class CInPoint
 {
 public:
-    CTransaction* ptx;
+    const CTransaction* ptx;
     unsigned int n;
 
     CInPoint() { SetNull(); }
-    CInPoint(CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
+    CInPoint(const CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
     void SetNull() { ptx = NULL; n = (unsigned int) -1; }
     bool IsNull() const { return (ptx == NULL && n == (unsigned int) -1); }
 };
@@ -220,6 +224,11 @@ public:
     {
         return (vin.size() == 1 && vin[0].prevout.IsNull());
     }
+
+    /** Returns sum of all outputs (note: does not include fees) */
+    int64 GetValueOut() const;
+    // Note: GetValueIn is a method on CCoinsViewCache, because
+    // it requires looking up the values of previous inputs
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {

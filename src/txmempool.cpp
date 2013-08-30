@@ -16,6 +16,32 @@ void static EraseFromWallets(uint256 hash)
         pwallet->EraseFromWallet(hash);
 }
 
+CTxMemPoolEntry::CTxMemPoolEntry()
+{
+    nHeight = MEMPOOL_HEIGHT;
+}
+
+CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, int64 _nFee, double _dPriority,
+                                 unsigned int _nHeight):
+    tx(_tx), nFee(_nFee), dPriority(_dPriority), nHeight(_nHeight)
+{
+    nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+}
+
+CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
+{
+    *this = other;
+}
+
+double
+CTxMemPoolEntry::getPriority(unsigned int currentHeight) const
+{
+    int64 nValueIn = tx.GetValueOut()+nFee;
+    double deltaPriority = ((double)(currentHeight-nHeight)*nValueIn)/nTxSize;
+    double dResult = dPriority + deltaPriority;
+    return dResult;
+}
+
 CTxMemPool::CTxMemPool()
 {
     // Sanity checks off by default for performance, because otherwise
@@ -65,7 +91,7 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
     }
 
     // Check for conflicts with in-memory transactions
-    CTransaction* ptxOld = NULL;
+    const CTransaction* ptxOld = NULL;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         COutPoint outpoint = tx.vin[i].prevout;
@@ -92,11 +118,10 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
         }
     }
 
+    unsigned int nBestBlockHeight = 0;
+    CCoinsView dummy;
+    CCoinsViewCache view(dummy);
     {
-        CCoinsView dummy;
-        CCoinsViewCache view(dummy);
-
-        {
         LOCK(cs);
         CCoinsViewMemPool viewMemPool(*pcoinsTip, *this);
         view.SetBackend(viewMemPool);
@@ -121,12 +146,12 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
             return state.Invalid(error("CTxMemPool::accept() : inputs already spent"));
 
         // Bring the best block into scope
-        view.GetBestBlock();
+        nBestBlockHeight = view.GetBestBlock()->nHeight;
 
         // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
         view.SetBackend(dummy);
-        }
-
+    }
+    {
         // Check for non-standard pay-to-script-hash in inputs
         if (Params().NetworkID() == CChainParams::MAIN && !AreInputsStandard(tx, view))
             return error("CTxMemPool::accept() : nonstandard transaction input");
@@ -135,8 +160,13 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
         // you should add code here to check that the transaction does a
         // reasonable number of ECDSA signature verifications.
 
-        int64 nFees = view.GetValueIn(tx)-GetValueOut(tx);
-        unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        int64 nValueIn = view.GetValueIn(tx);
+        int64 nValueOut = tx.GetValueOut();
+        int64 nFees = nValueIn-nValueOut;
+        double dPriority = view.GetPriority(tx, nBestBlockHeight);
+
+        CTxMemPoolEntry entry(tx, nFees, dPriority, nBestBlockHeight);
+        unsigned int nSize = entry.getTxSize();
 
         // Don't accept it if it can't get into a block
         int64 txMinFee = GetMinFee(tx, true, GMF_RELAY);
@@ -178,17 +208,13 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
         {
             return error("CTxMemPool::accept() : ConnectInputs failed %s", hash.ToString().c_str());
         }
-    }
-
-    // Store transaction in memory
-    {
-        LOCK(cs);
+        // Store transaction in memory
         if (ptxOld)
         {
             LogPrint("mempool", "CTxMemPool::accept() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
             remove(*ptxOld);
         }
-        addUnchecked(hash, tx);
+        addUnchecked(hash, entry);
     }
 
     ///// are we sure this is ok when loading transactions or restoring block txes
@@ -204,14 +230,16 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
 }
 
 
-bool CTxMemPool::addUnchecked(const uint256& hash, const CTransaction &tx)
+bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
 {
     // Add to memory pool without checking anything.  Don't call this directly,
     // call CTxMemPool::accept to properly check the transaction first.
     {
-        mapTx[hash] = tx;
+        LOCK(cs);
+        mapTx[hash] = entry;
+        const CTransaction& tx = mapTx[hash].getTx();
         for (unsigned int i = 0; i < tx.vin.size(); i++)
-            mapNextTx[tx.vin[i].prevout] = CInPoint(&mapTx[hash], i);
+            mapNextTx[tx.vin[i].prevout] = CInPoint(&tx, i);
         nTransactionsUpdated++;
     }
     return true;
@@ -273,13 +301,15 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
     LogPrint("mempool", "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
 
     LOCK(cs);
-    for (std::map<uint256, CTransaction>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
+    for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
-        BOOST_FOREACH(const CTxIn &txin, it->second.vin) {
+        const CTransaction& tx = it->second.getTx();
+        BOOST_FOREACH(const CTxIn &txin, tx.vin) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
-            std::map<uint256, CTransaction>::const_iterator it2 = mapTx.find(txin.prevout.hash);
+            std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end()) {
-                assert(it2->second.vout.size() > txin.prevout.n && !it2->second.vout[txin.prevout.n].IsNull());
+                const CTransaction& tx2 = it2->second.getTx();
+                assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
             } else {
                 CCoins &coins = pcoins->GetCoins(txin.prevout.hash);
                 assert(coins.IsAvailable(txin.prevout.n));
@@ -287,17 +317,18 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
             // Check whether its inputs are marked in mapNextTx.
             std::map<COutPoint, CInPoint>::const_iterator it3 = mapNextTx.find(txin.prevout);
             assert(it3 != mapNextTx.end());
-            assert(it3->second.ptx == &it->second);
+            assert(it3->second.ptx == &tx);
             assert(it3->second.n == i);
             i++;
         }
     }
     for (std::map<COutPoint, CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); it++) {
         uint256 hash = it->second.ptx->GetHash();
-        std::map<uint256, CTransaction>::const_iterator it2 = mapTx.find(hash);
+        std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(hash);
+        const CTransaction& tx = it2->second.getTx();
         assert(it2 != mapTx.end());
-        assert(&it2->second == it->second.ptx);
-        assert(it2->second.vin.size() > it->second.n);
+        assert(&tx == it->second.ptx);
+        assert(tx.vin.size() > it->second.n);
         assert(it->first == it->second.ptx->vin[it->second.n].prevout);
     }
 }
@@ -308,15 +339,15 @@ void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
 
     LOCK(cs);
     vtxid.reserve(mapTx.size());
-    for (map<uint256, CTransaction>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
+    for (map<uint256, CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
         vtxid.push_back((*mi).first);
 }
 
 bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
 {
     LOCK(cs);
-    std::map<uint256, CTransaction>::const_iterator i = mapTx.find(hash);
+    std::map<uint256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
     if (i == mapTx.end()) return false;
-    result = i->second;
+    result = i->second.getTx();
     return true;
 }

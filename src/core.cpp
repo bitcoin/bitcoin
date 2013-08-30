@@ -3,6 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <boost/foreach.hpp>
+
 #include "core.h"
 #include "util.h"
 
@@ -106,6 +108,23 @@ bool CTransaction::IsNewerThan(const CTransaction& old) const
     }
     return fNewer;
 }
+
+/** Amount of bitcoins spent by the transaction.
+    @return sum of all outputs (note: does not include fees)
+ */
+int64 CTransaction::GetValueOut() const
+{
+    int64 nValueOut = 0;
+    BOOST_FOREACH(const CTxOut& txout, this->vout)
+    {
+        nValueOut += txout.nValue;
+        if (!MoneyRange(txout.nValue) || !MoneyRange(nValueOut))
+            throw std::runtime_error("GetValueOut() : value out of range");
+    }
+    return nValueOut;
+}
+
+
 
 std::string CTransaction::ToString() const
 {
