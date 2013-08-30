@@ -16,6 +16,14 @@ void static EraseFromWallets(uint256 hash)
         pwallet->EraseFromWallet(hash);
 }
 
+CTxMemPool::CTxMemPool()
+{
+    // Sanity checks off by default for performance, because otherwise
+    // accepting transactions becomes O(N^2) where N is the number
+    // of transactions in the pool
+    fSanityCheck = false;
+}
+
 void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
 {
     LOCK(cs);
@@ -41,10 +49,6 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.DoS(100, error("CTxMemPool::accept() : coinbase as individual tx"));
-
-    // To help v0.1.5 clients who would see it as a negative number
-    if ((int64)tx.nLockTime > std::numeric_limits<int>::max())
-        return error("CTxMemPool::accept() : not accepting nLockTime beyond 2038 yet");
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     string reason;
@@ -261,11 +265,9 @@ void CTxMemPool::clear()
     ++nTransactionsUpdated;
 }
 
-bool CTxMemPool::fChecks = false;
-
 void CTxMemPool::check(CCoinsViewCache *pcoins) const
 {
-    if (!fChecks)
+    if (!fSanityCheck)
         return;
 
     LogPrint("mempool", "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
@@ -308,4 +310,13 @@ void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
     vtxid.reserve(mapTx.size());
     for (map<uint256, CTransaction>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
         vtxid.push_back((*mi).first);
+}
+
+bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
+{
+    LOCK(cs);
+    std::map<uint256, CTransaction>::const_iterator i = mapTx.find(hash);
+    if (i == mapTx.end()) return false;
+    result = i->second;
+    return true;
 }

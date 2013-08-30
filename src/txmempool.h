@@ -23,11 +23,24 @@ class CValidationState;
  */
 class CTxMemPool
 {
+private:
+    bool fSanityCheck; // Normally false, true if -checkmempool or -regtest
+
 public:
-    static bool fChecks;
     mutable CCriticalSection cs;
     std::map<uint256, CTransaction> mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
+
+    CTxMemPool();
+    
+    /*
+     * If sanity-checking is turned on, check makes sure the pool is
+     * consistent (does not contain two transactions that spend the same inputs,
+     * all inputs are in the mapNextTx array). If sanity-checking is turned off,
+     * check does nothing.
+     */
+    void check(CCoinsViewCache *pcoins) const;
+    void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool accept(CValidationState &state, const CTransaction &tx, bool fLimitFree,
                 bool* pfMissingInputs, bool fRejectInsaneFee=false);
@@ -37,7 +50,6 @@ public:
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
-    void check(CCoinsViewCache *pcoins) const;
 
     unsigned long size()
     {
@@ -50,10 +62,7 @@ public:
         return (mapTx.count(hash) != 0);
     }
 
-    CTransaction& lookup(uint256 hash)
-    {
-        return mapTx[hash];
-    }
+    bool lookup(uint256 hash, CTransaction& result) const;
 };
 
 extern CTxMemPool mempool;
