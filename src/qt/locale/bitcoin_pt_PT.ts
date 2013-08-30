@@ -476,7 +476,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     </message>
     <message>
         <location line="+14"/>
-        <source>&amp;Addresses</source>
+        <source>&amp;Address book</source>
         <translation>E&amp;ndereços</translation>
     </message>
     <message>

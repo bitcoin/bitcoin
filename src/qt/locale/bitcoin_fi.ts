@@ -477,7 +477,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     </message>
     <message>
         <location line="+14"/>
-        <source>&amp;Addresses</source>
+        <source>&amp;Address book</source>
         <translation>&amp;Osoitteet</translation>
     </message>
     <message>

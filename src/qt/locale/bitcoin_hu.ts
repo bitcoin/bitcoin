@@ -475,7 +475,7 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <location line="+14"/>
-        <source>&amp;Addresses</source>
+        <source>&amp;Address book</source>
         <translation>&amp;Cím</translation>
     </message>
     <message>
