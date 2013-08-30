@@ -11,7 +11,7 @@ else
     exit 1
 fi
 
-if [ -e "$(which git)" ]; then
+if test -e .git -a "x$(which git)" != "x"; then
     # clean 'dirty' status of touched files that haven't been modified
     git diff >/dev/null 2>/dev/null 
 

@@ -168,7 +168,7 @@ leveldb/libleveldb.a:
 -include obj-test/*.P
 
 obj/build.h: FORCE
-	/bin/sh ../share/genbuild.sh obj/build.h
+	cd .. && /bin/sh share/genbuild.sh src/obj/build.h
 version.cpp: obj/build.h
 DEFS += -DHAVE_BUILD_INFO
 
