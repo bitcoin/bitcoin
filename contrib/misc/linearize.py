@@ -89,7 +89,7 @@ def get_blocks(settings):
 
 if __name__ == '__main__':
 	if len(sys.argv) != 2:
-		print "Usage: lineraize.py CONFIG-FILE"
+		print "Usage: linearize.py CONFIG-FILE"
 		sys.exit(1)
 
 	f = open(sys.argv[1])
