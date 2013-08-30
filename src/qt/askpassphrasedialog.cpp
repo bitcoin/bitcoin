@@ -16,6 +16,7 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
     fCapsLock(false)
 {
     ui->setupUi(this);
+
     ui->passEdit1->setMaxLength(MAX_PASSPHRASE_SIZE);
     ui->passEdit2->setMaxLength(MAX_PASSPHRASE_SIZE);
     ui->passEdit3->setMaxLength(MAX_PASSPHRASE_SIZE);
