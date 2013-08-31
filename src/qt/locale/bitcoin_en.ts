@@ -478,8 +478,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+14"/>
-        <source>&amp;Addresses</source>
-        <translation>&amp;Addresses</translation>
+        <source>&amp;Address book</source>
+        <translation>&amp;Address book</translation>
     </message>
     <message>
         <location line="+23"/>
