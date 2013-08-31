@@ -6,7 +6,7 @@ DEPSDIR:=/usr/i586-mingw32msvc
 
 USE_UPNP:=0
 USE_IPV6:=1
-USE_LEVELDB:=-
+USE_LEVELDB:=1
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \

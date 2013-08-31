@@ -21,7 +21,7 @@ LIBPATHS= \
 
 USE_UPNP:=1
 USE_IPV6:=1
-USE_LEVELDB:=-
+USE_LEVELDB:=1
 
 LIBS= -dead_strip
 

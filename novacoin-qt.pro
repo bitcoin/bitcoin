@@ -90,7 +90,10 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
     QTPLUGIN += qcncodecs qjpcodecs qtwcodecs qkrcodecs qtaccessiblewidgets
 }
 
-contains(USE_LEVELDB, 1) {
+contains(USE_LEVELDB, -) {
+    message(Building without LevelDB)
+    SOURCES += src/txdb-bdb.cpp
+} else {
     message(Building with LevelDB)
     DEFINES += USE_LEVELDB
 
@@ -114,9 +117,6 @@ contains(USE_LEVELDB, 1) {
     QMAKE_EXTRA_TARGETS += genleveldb
     # Gross ugly hack that depends on qmake internals, unfortunately there is no other way to do it.
     QMAKE_CLEAN += $$PWD/src/leveldb/libleveldb.a; cd $$PWD/src/leveldb ; $(MAKE) clean
-} else {
-    message(Building without LevelDB)
-    SOURCES += src/txdb-bdb.cpp
 }
 
 # regenerate src/build.h
