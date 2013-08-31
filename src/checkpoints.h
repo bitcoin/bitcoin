@@ -10,6 +10,12 @@
 
 #define CHECKPOINT_MAX_SPAN (60 * 60 * 4) // max 4 hours before latest block
 
+#ifdef WIN32
+#undef STRICT
+#undef PERMISSIVE
+#undef ADVISORY
+#endif
+
 class uint256;
 class CBlockIndex;
 class CSyncCheckpoint;
