@@ -1113,43 +1113,7 @@ bool CWalletTx::AcceptWalletTransaction()
     {
         LOCK(mempool.cs);
         // Add previous supporting transactions first
-        std::vector<uint256> vWorkQueue;
-        set<uint256> setAlreadyQueued;
-        
-        BOOST_FOREACH(const CTxIn& txin, vin)
-        {
-            if (setAlreadyQueued.count(txin.prevout.hash))
-                continue;
-            setAlreadyQueued.insert(txin.prevout.hash);
-            
-            vWorkQueue.push_back(txin.prevout.hash);
-        }
-        
-        // build unconfirmed supporting transactions list
-        for (unsigned int i = 0; i < vWorkQueue.size(); i++)
-        {
-            uint256 hash = vWorkQueue[i];
-            
-            map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
-            
-            // dependent transaction cannot be found
-            if (mi == pwallet->mapWallet.end())
-                continue;
-            
-            CWalletTx tx = (*mi).second;
-            
-            if (tx.IsInMainChain())
-                continue;
-            
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-            {
-                if (setAlreadyQueued.count(txin.prevout.hash))
-                    continue;
-                setAlreadyQueued.insert(txin.prevout.hash);
-                
-                vWorkQueue.push_back(txin.prevout.hash);
-            }
-        }
+        std::vector<uint256> vWorkQueue = ListUnconfirmedSupportingTransactions();
         
         // reverse for depth first iteration
         reverse(vWorkQueue.begin(), vWorkQueue.end());
