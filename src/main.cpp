@@ -1124,7 +1124,8 @@ bool CWalletTx::AcceptWalletTransaction()
             uint256 hash = vWorkQueue[i];
             map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
             CWalletTx tx = (*mi).second;
-            tx.AcceptToMemoryPool(false);
+            if (!tx.IsCoinBase())
+                tx.AcceptToMemoryPool(false);
         }
         
         return AcceptToMemoryPool(false);
