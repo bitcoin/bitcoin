@@ -1113,15 +1113,54 @@ bool CWalletTx::AcceptWalletTransaction()
     {
         LOCK(mempool.cs);
         // Add previous supporting transactions first
-        BOOST_FOREACH(CMerkleTx& tx, vtxPrev)
+        std::vector<uint256> vWorkQueue;
+        set<uint256> setAlreadyQueued;
+        
+        BOOST_FOREACH(const CTxIn& txin, vin)
         {
-            if (!tx.IsCoinBase())
+            if (setAlreadyQueued.count(txin.prevout.hash))
+                continue;
+            setAlreadyQueued.insert(txin.prevout.hash);
+            
+            vWorkQueue.push_back(txin.prevout.hash);
+        }
+        
+        // build unconfirmed supporting transactions list top to bottom
+        for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+        {
+            uint256 hash = vWorkQueue[i];
+            
+            map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
+            
+            // dependent transaction cannot be found
+            if (mi == pwallet->mapWallet.end())
+                continue;
+            
+            CWalletTx tx = (*mi).second;
+            
+            if (tx.IsInMainChain())
+                continue;
+            
+            BOOST_FOREACH(const CTxIn& txin, tx.vin)
             {
-                uint256 hash = tx.GetHash();
-                if (!mempool.exists(hash) && pcoinsTip->HaveCoins(hash))
-                    tx.AcceptToMemoryPool(false);
+                if (setAlreadyQueued.count(txin.prevout.hash))
+                    continue;
+                setAlreadyQueued.insert(txin.prevout.hash);
+                
+                vWorkQueue.push_back(txin.prevout.hash);
             }
         }
+        
+        reverse(vWorkQueue.begin(), vWorkQueue.end());
+        
+        for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+        {
+            uint256 hash = vWorkQueue[i];
+            map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
+            CWalletTx tx = (*mi).second;
+            tx.AcceptToMemoryPool(false);
+        }
+        
         return AcceptToMemoryPool(false);
     }
     return false;

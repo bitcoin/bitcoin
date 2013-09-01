@@ -729,56 +729,6 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nReceived,
     }
 }
 
-void CWalletTx::AddSupportingTransactions()
-{
-    vtxPrev.clear();
-
-    const int COPY_DEPTH = 3;
-    if (SetMerkleBranch() < COPY_DEPTH)
-    {
-        vector<uint256> vWorkQueue;
-        BOOST_FOREACH(const CTxIn& txin, vin)
-            vWorkQueue.push_back(txin.prevout.hash);
-
-        {
-            LOCK(pwallet->cs_wallet);
-            map<uint256, const CMerkleTx*> mapWalletPrev;
-            set<uint256> setAlreadyDone;
-            for (unsigned int i = 0; i < vWorkQueue.size(); i++)
-            {
-                uint256 hash = vWorkQueue[i];
-                if (setAlreadyDone.count(hash))
-                    continue;
-                setAlreadyDone.insert(hash);
-
-                CMerkleTx tx;
-                map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
-                if (mi != pwallet->mapWallet.end())
-                {
-                    tx = (*mi).second;
-                    BOOST_FOREACH(const CMerkleTx& txWalletPrev, (*mi).second.vtxPrev)
-                        mapWalletPrev[txWalletPrev.GetHash()] = &txWalletPrev;
-                }
-                else if (mapWalletPrev.count(hash))
-                {
-                    tx = *mapWalletPrev[hash];
-                }
-
-                int nDepth = tx.SetMerkleBranch();
-                vtxPrev.push_back(tx);
-
-                if (nDepth < COPY_DEPTH)
-                {
-                    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-                        vWorkQueue.push_back(txin.prevout.hash);
-                }
-            }
-        }
-    }
-
-    reverse(vtxPrev.begin(), vtxPrev.end());
-}
-
 bool CWalletTx::WriteToDisk()
 {
     return CWalletDB(pwallet->strWalletFile).WriteTx(GetHash(), *this);
@@ -872,12 +822,58 @@ void CWallet::ReacceptWalletTransactions()
 
 void CWalletTx::RelayWalletTransaction()
 {
-    BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
+
+    // broadcast supporting transactions first
+    std::vector<uint256> vWorkQueue;
+    set<uint256> setAlreadyQueued;
+    
+    BOOST_FOREACH(const CTxIn& txin, vin)
     {
-        if (!tx.IsCoinBase())
-            if (tx.GetDepthInMainChain() == 0)
-                RelayTransaction((CTransaction)tx, tx.GetHash());
+        if (setAlreadyQueued.count(txin.prevout.hash))
+            continue;
+        setAlreadyQueued.insert(txin.prevout.hash);
+        
+        vWorkQueue.push_back(txin.prevout.hash);
     }
+    
+    // build unconfirmed supporting transactions list
+    for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+    {
+        uint256 hash = vWorkQueue[i];
+        
+        map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
+        
+        // dependent transaction cannot be found
+        if (mi == pwallet->mapWallet.end())
+            continue;
+        
+        CWalletTx tx = (*mi).second;
+        
+        if (tx.IsInMainChain())
+            continue;
+        
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            if (setAlreadyQueued.count(txin.prevout.hash))
+                continue;
+            setAlreadyQueued.insert(txin.prevout.hash);
+            
+            vWorkQueue.push_back(txin.prevout.hash);
+        }
+    }
+    
+    // reverse for depth first iteration
+    reverse(vWorkQueue.begin(), vWorkQueue.end());
+    
+    // broadcast supporting transactions
+    for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+    {
+        uint256 hash = vWorkQueue[i];
+        map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
+        CWalletTx tx = (*mi).second;
+        RelayTransaction((CTransaction)tx, tx.GetHash());
+    }
+    
     if (!IsCoinBase())
     {
         if (GetDepthInMainChain() == 0) {
@@ -1311,9 +1307,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
                     nFeeRet = max(nPayFee, nMinFee);
                     continue;
                 }
-
-                // Fill vtxPrev by copying from previous transactions vtxPrev
-                wtxNew.AddSupportingTransactions();
+                
                 wtxNew.fTimeReceivedIsTxTime = true;
 
                 break;
