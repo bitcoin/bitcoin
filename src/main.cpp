@@ -1125,7 +1125,7 @@ bool CWalletTx::AcceptWalletTransaction()
             vWorkQueue.push_back(txin.prevout.hash);
         }
         
-        // build unconfirmed supporting transactions list top to bottom
+        // build unconfirmed supporting transactions list
         for (unsigned int i = 0; i < vWorkQueue.size(); i++)
         {
             uint256 hash = vWorkQueue[i];
@@ -1151,8 +1151,10 @@ bool CWalletTx::AcceptWalletTransaction()
             }
         }
         
+        // reverse for depth first iteration
         reverse(vWorkQueue.begin(), vWorkQueue.end());
         
+        // attempt to add supporting transaction to the mempool
         for (unsigned int i = 0; i < vWorkQueue.size(); i++)
         {
             uint256 hash = vWorkQueue[i];

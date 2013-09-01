@@ -679,45 +679,24 @@ public:
 
         // If no confirmations but it's from us, we can still
         // consider it confirmed if all dependencies are confirmed
-        std::vector<uint256> vWorkQueue;
-        set<uint256> setAlreadyQueued;
         
-        BOOST_FOREACH(const CTxIn& txin, vin)
-        {
-            if (setAlreadyQueued.count(txin.prevout.hash))
-                continue;
-            setAlreadyQueued.insert(txin.prevout.hash);
-            
-            vWorkQueue.push_back(txin.prevout.hash);
-        }
+        bool fCompleteSet = false;
+        
+        std::vector<uint256> vWorkQueue = ListUnconfirmedSupportingTransactions(&fCompleteSet);
+        
+        if (!fCompleteSet)
+            return false;
         
         for (unsigned int i = 0; i < vWorkQueue.size(); i++)
         {
             uint256 hash = vWorkQueue[i];
-            
             map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
-            
-            // dependent transactions cannot be found
-            if (mi == pwallet->mapWallet.end())
-                return false;
-            
             CMerkleTx tx = (*mi).second;
             
             if (!IsFinalTx(tx))
                 return false;
-            if (tx.IsInMainChain())
-                continue;
             if (!pwallet->IsFromMe(tx))
                 return false;
-            
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-            {
-                if (setAlreadyQueued.count(txin.prevout.hash))
-                    continue;
-                setAlreadyQueued.insert(txin.prevout.hash);
-                
-                vWorkQueue.push_back(txin.prevout.hash);
-            }
         }
         return true;
     }
@@ -729,6 +708,12 @@ public:
 
     bool AcceptWalletTransaction();
     void RelayWalletTransaction();
+    
+    // this function is lazy and only returns transactions in mapWallet
+    // that means it potentially misses unconfirmed supporting transactions
+    // which are not IsMine() or IsFromMe()
+    // you've been warned
+    std::vector<uint256> ListUnconfirmedSupportingTransactions(bool *pfCompleteSet=NULL) const;
 };
 
 
