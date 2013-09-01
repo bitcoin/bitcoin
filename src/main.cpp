@@ -1107,33 +1107,6 @@ bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree)
 }
 
 
-
-bool CWalletTx::AcceptWalletTransaction()
-{
-    {
-        LOCK(mempool.cs);
-        // Add previous supporting transactions first
-        std::vector<uint256> vWorkQueue = ListUnconfirmedSupportingTransactions();
-        
-        // reverse for depth first iteration
-        reverse(vWorkQueue.begin(), vWorkQueue.end());
-        
-        // attempt to add supporting transaction to the mempool
-        for (unsigned int i = 0; i < vWorkQueue.size(); i++)
-        {
-            uint256 hash = vWorkQueue[i];
-            map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
-            CWalletTx tx = (*mi).second;
-            if (!tx.IsCoinBase())
-                tx.AcceptToMemoryPool(false);
-        }
-        
-        return AcceptToMemoryPool(false);
-    }
-    return false;
-}
-
-
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
 bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock, bool fAllowSlow)
 {

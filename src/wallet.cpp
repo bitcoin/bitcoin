@@ -734,6 +734,31 @@ bool CWalletTx::WriteToDisk()
     return CWalletDB(pwallet->strWalletFile).WriteTx(GetHash(), *this);
 }
 
+bool CWalletTx::AcceptWalletTransaction()
+{
+    {
+        LOCK(mempool.cs);
+        // Add previous supporting transactions first
+        std::vector<uint256> vWorkQueue = ListUnconfirmedSupportingTransactions();
+        
+        // reverse for depth first iteration
+        reverse(vWorkQueue.begin(), vWorkQueue.end());
+        
+        // attempt to add supporting transaction to the mempool
+        for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+        {
+            uint256 hash = vWorkQueue[i];
+            map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
+            CWalletTx tx = (*mi).second;
+            if (!tx.IsCoinBase())
+                tx.AcceptToMemoryPool(false);
+        }
+        
+        return AcceptToMemoryPool(false);
+    }
+    return false;
+}
+
 // Scan the block chain (starting in pindexStart) for transactions
 // from or to us. If fUpdate is true, found transactions that already
 // exist in the wallet will be updated.
