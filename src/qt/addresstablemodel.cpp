@@ -15,7 +15,8 @@ struct AddressTableEntry
 {
     enum Type {
         Sending,
-        Receiving
+        Receiving,
+        Hidden /* QSortFilterProxyModel will filter these out */
     };
 
     Type type;
@@ -43,6 +44,20 @@ struct AddressTableEntryLessThan
     }
 };
 
+/* Determine address type from address purpose */
+static AddressTableEntry::Type translateTransactionType(const QString &strPurpose, bool isMine)
+{
+    AddressTableEntry::Type addressType = AddressTableEntry::Hidden;
+    // "refund" addresses aren't shown, and change addresses aren't in mapAddressBook at all.
+    if (strPurpose == "send")
+        addressType = AddressTableEntry::Sending;
+    else if (strPurpose == "receive")
+        addressType = AddressTableEntry::Receiving;
+    else if (strPurpose == "unknown" || strPurpose == "") // if purpose not set, guess
+        addressType = (isMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending);
+    return addressType;
+}
+
 // Private implementation
 class AddressTablePriv
 {
@@ -62,17 +77,9 @@ public:
             BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& item, wallet->mapAddressBook)
             {
                 const CBitcoinAddress& address = item.first;
-
-                AddressTableEntry::Type addressType;
-                const std::string& strPurpose = item.second.purpose;
-                if (strPurpose == "send") addressType = AddressTableEntry::Sending;
-                else if (strPurpose == "receive") addressType = AddressTableEntry::Receiving;
-                else if (strPurpose == "unknown") {
-                    bool fMine = IsMine(*wallet, address.Get());
-                    addressType = (fMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending);
-                }
-                else continue; // "refund" addresses aren't shown, and change addresses aren't in mapAddressBook at all.
-
+                bool fMine = IsMine(*wallet, address.Get());
+                AddressTableEntry::Type addressType = translateTransactionType(
+                        QString::fromStdString(item.second.purpose), fMine);
                 const std::string& strName = item.second.name;
                 cachedAddressTable.append(AddressTableEntry(addressType,
                                   QString::fromStdString(strName),
@@ -85,7 +92,7 @@ public:
         qSort(cachedAddressTable.begin(), cachedAddressTable.end(), AddressTableEntryLessThan());
     }
 
-    void updateEntry(const QString &address, const QString &label, bool isMine, int status)
+    void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status)
     {
         // Find address / label in model
         QList<AddressTableEntry>::iterator lower = qLowerBound(
@@ -95,7 +102,7 @@ public:
         int lowerIndex = (lower - cachedAddressTable.begin());
         int upperIndex = (upper - cachedAddressTable.begin());
         bool inModel = (lower != upper);
-        AddressTableEntry::Type newEntryType = isMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending;
+        AddressTableEntry::Type newEntryType = translateTransactionType(purpose, isMine);
 
         switch(status)
         {
@@ -324,10 +331,11 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex &par
     }
 }
 
-void AddressTableModel::updateEntry(const QString &address, const QString &label, bool isMine, int status)
+void AddressTableModel::updateEntry(const QString &address,
+        const QString &label, bool isMine, const QString &purpose, int status)
 {
     // Update address book model from Bitcoin core
-    priv->updateEntry(address, label, isMine, status);
+    priv->updateEntry(address, label, isMine, purpose, status);
 }
 
 QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
