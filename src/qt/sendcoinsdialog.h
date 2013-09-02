@@ -10,6 +10,7 @@ namespace Ui {
 class WalletModel;
 class SendCoinsEntry;
 class SendCoinsRecipient;
+class OptionsModel;
 
 QT_BEGIN_NAMESPACE
 class QUrl;
