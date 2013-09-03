@@ -3,18 +3,121 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <assert.h>
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/member.hpp>
+
 #include "main.h"
 #include "wallet.h"
 
+using namespace ::boost;
+using namespace ::boost::multi_index;
+
 CTxMemPool mempool;
 
-// erases transaction with the given hash from all wallets
-void static EraseFromWallets(uint256 hash)
+// CMinerPolicyEstimator is told when transactions exit the
+// memory pool because they are included in blocks, and uses
+// that information to estimate the priority needed for
+// free transactions to be included in blocks and the
+// fee needed for fee-paying transactions.
+
+struct TimeValue
 {
-    LOCK(cs_setpwalletRegistered);
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->EraseFromWallet(hash);
-}
+    int64 t;
+    double v;
+    TimeValue(int64 _t, double _v) : t(_t), v(_v) { }
+};
+typedef multi_index_container<
+    TimeValue,
+    indexed_by<
+        // Sort by time inserted
+        ordered_non_unique<member<TimeValue,int64,&TimeValue::t > >,
+
+        // Sort by value
+        ordered_non_unique<member<TimeValue,double,&TimeValue::v > >
+        >
+> SortedValues ;
+
+class CMinerPolicyEstimator
+{
+private:
+    size_t nMin, nMax;
+    SortedValues byPriority;
+    SortedValues byFee;
+
+    // Results of estimate() are cached between new blocks, because
+    // the estimate doesn't change until a new block pulls transactions
+    // from the memory pool and because the transaction relaying code
+    // calls estimate on every transaction to decide whether or not it
+    // should be relayed.
+    map<double, double> byPriorityCache;
+    map<double, double> byFeeCache;
+
+    // Estimate what value is required to be chosen above
+    // fraction of other transactions (fraction is 0.0 to 1.0)
+    // Returns -1.0 if not enough data has been collected to
+    // give a good estimate.
+    double estimate(const SortedValues& values, double fraction, map<double,double>& cache)
+    {
+        assert(fraction >= 0.0 && fraction <= 1.0);
+        if (values.size() < nMin) return -1.0;
+
+        map<double,double>::iterator cached = cache.find(fraction);
+        if (cached != cache.end())
+            return cached->second;
+
+        size_t n = size_t(values.size()*fraction);
+        if (n > 0) --n;
+        SortedValues::nth_index<1>::type::iterator it=values.get<1>().begin();
+        std::advance(it, n);
+        cache[fraction] = it->v;
+        return it->v;
+    }
+
+public:
+    CMinerPolicyEstimator(size_t _nMin, size_t _nMax) : nMin(_nMin), nMax(_nMax)
+    {
+    }
+
+    void resize(SortedValues& what, size_t n)
+    {
+        while (what.size() > n)
+            what.erase(what.begin());
+    }
+
+    void add(const CTxMemPoolEntry& entry, int nBlockHeight)
+    {
+        if (nBlockHeight < 0 || entry.getTxSize() == 0) return;
+        double dFeePerByte = entry.getFee() / (double)entry.getTxSize();
+        double dPriority = entry.getPriority(nBlockHeight);
+        if (dPriority == 0 && dFeePerByte > 0)
+        {
+            byFee.insert(TimeValue(GetTimeMillis(), dFeePerByte));
+            resize(byFee, nMax);
+            byFeeCache.clear();
+        }
+        else if (dFeePerByte == 0 && dPriority > 0)
+        {
+            byPriority.insert(TimeValue(GetTimeMillis(), dPriority));
+            resize(byPriority, nMax);
+            byPriorityCache.clear();
+        }
+        // Ignore transactions with both fee and priority > 0,
+        // because we can't tell why miners included them (might
+        // have been priority, might have been fee)
+    }
+
+    double estimatePriority(double fraction)
+    {
+        return estimate(byPriority, fraction, byPriorityCache);
+    }
+    double estimateFee(double fraction)
+    {
+        return estimate(byFee, fraction, byFeeCache);
+    }
+
+};
 
 CTxMemPoolEntry::CTxMemPoolEntry()
 {
@@ -48,6 +151,14 @@ CTxMemPool::CTxMemPool()
     // accepting transactions becomes O(N^2) where N is the number
     // of transactions in the pool
     fSanityCheck = false;
+    // 100 and 10,000 values here are arbitrary, but work
+    // well in practice.
+    minerPolicyEstimator = new CMinerPolicyEstimator(100, 10000);
+}
+
+CTxMemPool::~CTxMemPool()
+{
+    delete minerPolicyEstimator;
 }
 
 void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
@@ -91,7 +202,6 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
     }
 
     // Check for conflicts with in-memory transactions
-    const CTransaction* ptxOld = NULL;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         COutPoint outpoint = tx.vin[i].prevout;
@@ -99,22 +209,6 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
         {
             // Disable replacement feature for now
             return false;
-
-            // Allow replacing with a newer version of the same transaction
-            if (i != 0)
-                return false;
-            ptxOld = mapNextTx[outpoint].ptx;
-            if (IsFinalTx(*ptxOld))
-                return false;
-            if (!tx.IsNewerThan(*ptxOld))
-                return false;
-            for (unsigned int i = 0; i < tx.vin.size(); i++)
-            {
-                COutPoint outpoint = tx.vin[i].prevout;
-                if (!mapNextTx.count(outpoint) || mapNextTx[outpoint].ptx != ptxOld)
-                    return false;
-            }
-            break;
         }
     }
 
@@ -209,18 +303,9 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
             return error("CTxMemPool::accept() : ConnectInputs failed %s", hash.ToString().c_str());
         }
         // Store transaction in memory
-        if (ptxOld)
-        {
-            LogPrint("mempool", "CTxMemPool::accept() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
-            remove(*ptxOld);
-        }
         addUnchecked(hash, entry);
     }
 
-    ///// are we sure this is ok when loading transactions or restoring block txes
-    // If updated, erase old tx from wallet
-    if (ptxOld)
-        EraseFromWallets(ptxOld->GetHash());
     SyncWithWallets(hash, tx, NULL, true);
 
     LogPrint("mempool", "CTxMemPool::accept() : accepted %s (poolsz %"PRIszu")\n",
@@ -246,26 +331,27 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
 }
 
 
-bool CTxMemPool::remove(const CTransaction &tx, bool fRecursive)
+bool CTxMemPool::remove(const uint256& hash, bool fRecursive, int nBlockHeight)
 {
     // Remove transaction from memory pool
     {
         LOCK(cs);
-        uint256 hash = tx.GetHash();
+        if (mapTx.count(hash) == 0)
+            return false;
+        const CTxMemPoolEntry& entry = mapTx[hash];
+        const CTransaction& tx = entry.getTx();
         if (fRecursive) {
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
                 if (it != mapNextTx.end())
-                    remove(*it->second.ptx, true);
+                    remove(it->second.ptx->GetHash(), true, nBlockHeight);
             }
         }
-        if (mapTx.count(hash))
-        {
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-                mapNextTx.erase(txin.prevout);
-            mapTx.erase(hash);
-            nTransactionsUpdated++;
-        }
+        minerPolicyEstimator->add(entry, nBlockHeight);
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+            mapNextTx.erase(txin.prevout);
+        mapTx.erase(hash);
+        nTransactionsUpdated++;
     }
     return true;
 }
@@ -279,7 +365,7 @@ bool CTxMemPool::removeConflicts(const CTransaction &tx)
         if (it != mapNextTx.end()) {
             const CTransaction &txConflict = *it->second.ptx;
             if (txConflict != tx)
-                remove(txConflict, true);
+                remove(txConflict.GetHash(), true);
         }
     }
     return true;
@@ -350,4 +436,11 @@ bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
     if (i == mapTx.end()) return false;
     result = i->second.getTx();
     return true;
+}
+
+void CTxMemPool::estimateFees(double dPriorityMedian, double& dPriority, double dFeeMedian, double& dFee)
+{
+    LOCK(cs);
+    dPriority = minerPolicyEstimator->estimatePriority(dPriorityMedian);
+    dFee = minerPolicyEstimator->estimateFee(dFeeMedian);
 }

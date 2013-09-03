@@ -3,6 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <boost/assign/list_of.hpp>
+
 #include "chainparams.h"
 #include "db.h"
 #include "init.h"
@@ -450,4 +452,59 @@ Value submitblock(const Array& params, bool fHelp)
         return "rejected"; // TODO: report validation state
 
     return Value::null;
+}
+
+Value estimatefees(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 2)
+        throw runtime_error(
+            "estimatefees [prioritymedian=0.1] [feemedian=0.5]\n"
+            "Estimates the priority or fee a transaction needs\n"
+            "to be relayed across the network and included in\n"
+            "the block chain.\n"
+            "\n"
+            "prioritymedian and feemedian are values from 0.0\n"
+            "to 1.0, where 0.0 will return the smallest\n"
+            "recently-included-in-a-block priority (or fee) seen,\n"
+            "1.0 the largest, and 0.5 the median priority (or fee)\n"
+            "for transactions that were broadcast on the network and\n"
+            "included in a block.\n"
+            "\n"
+            "The default value for prioritymedian (0.1) is\n"
+            "chosen to return a priority for free transactions that\n"
+            "will eventually be confirmed, but might take several hours.\n"
+            "The default value for feemedian (0.5) returns how much\n"
+            "fee you should include to have your transactions confirmed\n"
+            "in an average amount of time.\n"
+            "\n"
+            "Values returned are:\n"
+            " freepriority : priority needed to out-compete a prioritymedian\n"
+            "  fraction of free transactions to be relayed and included in blocks.\n"
+            " feeperbyte : fee, in satoshis/byte, needed to out-compete a\n"
+            "  feemedian fraction of fee-paying transactions.\n"
+            "\n"
+            "Values of -1.0 are returned if not enough transactions\n"
+            "have been seen to make a good estimate.");
+
+    RPCTypeCheck(params, boost::assign::list_of(real_type)(real_type));
+
+    double dPriorityMedian = 0.1;
+    if (params.size() > 0)
+        dPriorityMedian = params[0].get_real();
+    if (dPriorityMedian < 0.0 || dPriorityMedian > 1.0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid priority median (must be 0.0 to 1.0)");
+    double dFeeMedian = 0.5;
+    if (params.size() > 1)
+        dFeeMedian = params[1].get_real();
+    if (dFeeMedian < 0.0 || dFeeMedian > 1.0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid fee median (must be 0.0 to 1.0)");
+
+    double dPriority, dFee;
+    mempool.estimateFees(dPriorityMedian, dPriority, dFeeMedian, dFee);
+
+    Object result;
+    result.push_back(Pair("freepriority", dPriority));
+    result.push_back(Pair("feeperbyte", dFee));
+
+    return result;
 }

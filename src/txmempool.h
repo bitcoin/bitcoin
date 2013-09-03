@@ -10,6 +10,7 @@
 class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
+class CMinerPolicyEstimator;
 
 /*
  * CTxMemPool stores these:
@@ -50,6 +51,7 @@ class CTxMemPool
 {
 private:
     bool fSanityCheck; // Normally false, true if -checkmempool or -regtest
+    CMinerPolicyEstimator* minerPolicyEstimator; // For estimating transaction fees
 
 public:
     mutable CCriticalSection cs;
@@ -57,6 +59,7 @@ public:
     std::map<COutPoint, CInPoint> mapNextTx;
 
     CTxMemPool();
+    ~CTxMemPool();
     
     /*
      * If sanity-checking is turned on, check makes sure the pool is
@@ -70,11 +73,12 @@ public:
     bool accept(CValidationState &state, const CTransaction &tx, bool fLimitFree,
                 bool* pfMissingInputs, bool fRejectInsaneFee=false);
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
-    bool remove(const CTransaction &tx, bool fRecursive = false);
+    bool remove(const uint256 &hash, bool fRecursive = false, int nBlockHeight = -1);
     bool removeConflicts(const CTransaction &tx);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
+    void estimateFees(double dPriorityMedian, double& dPriority, double dFeeMedian, double& dFee);
 
     unsigned long size()
     {
