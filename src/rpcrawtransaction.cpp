@@ -311,6 +311,41 @@ Value listunspent(const Array& params, bool fHelp)
 }
 #endif
 
+static int64 txInputTotal(const CTransaction& tx)
+{
+    int64 total = 0;
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        CCoins coin;
+        if (!pcoinsTip->GetCoins(tx.vin[i].prevout.hash, coin))
+            return -1;
+        if (!coin.IsAvailable(tx.vin[i].prevout.n))
+            return -1;
+        total += coin.vout[tx.vin[i].prevout.n].nValue;
+    }
+
+    return total;
+}
+
+static int64 txOutputTotal(const CTransaction& tx)
+{
+    int64 total = 0;
+    for (unsigned int i = 0; i < tx.vout.size(); i++)
+        total += tx.vout[i].nValue;
+
+    return total;
+}
+
+static bool txFeeSafetyCheck(const CTransaction& tx, const int64 fee)
+{
+    int64 inTotal = txInputTotal(tx);
+    if (inTotal < 0)
+        return false;
+
+    int64 outTotal = txOutputTotal(tx);
+
+    return ((inTotal + fee) == outTotal);
+}
+
 Value createrawtransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
@@ -368,9 +403,16 @@ Value createrawtransaction(const Array& params, bool fHelp)
         rawTx.vin.push_back(in);
     }
 
+    int64 feeCheck = -1;
+
     set<CBitcoinAddress> setAddress;
     BOOST_FOREACH(const Pair& s, sendTo)
     {
+        if (s.name_ == "fee") {
+            feeCheck = AmountFromValue(s.value_);
+            continue;
+        }
+
         CBitcoinAddress address(s.name_);
         if (!address.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+s.name_);
@@ -386,6 +428,9 @@ Value createrawtransaction(const Array& params, bool fHelp)
         CTxOut out(nAmount, scriptPubKey);
         rawTx.vout.push_back(out);
     }
+    
+    if ((feeCheck >= 0) && (!txFeeSafetyCheck(rawTx, feeCheck)))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, string("Inputs + fee != outputs"));
 
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << rawTx;
