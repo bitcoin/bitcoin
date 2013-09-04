@@ -48,6 +48,8 @@ using namespace boost;
 
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
 const QString BITCOIN_IPC_PREFIX("bitcoin:");
+const char* BITCOIN_REQUEST_MIMETYPE = "application/bitcoin-paymentrequest";
+const char* BITCOIN_PAYMENTACK_MIMETYPE = "application/bitcoin-paymentack";
 
 X509_STORE* PaymentServer::certStore = NULL;
 void PaymentServer::freeCertStore()
@@ -505,6 +507,7 @@ PaymentServer::fetchRequest(const QUrl& url)
     netRequest.setAttribute(QNetworkRequest::User, "PaymentRequest");
     netRequest.setUrl(url);
     netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
+    netRequest.setRawHeader("Accept", BITCOIN_REQUEST_MIMETYPE);
     netManager->get(netRequest);
 }
 
@@ -520,6 +523,7 @@ PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipient, QB
     netRequest.setUrl(QString::fromStdString(details.payment_url()));
     netRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/bitcoin-payment");
     netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
+    netRequest.setRawHeader("Accept", BITCOIN_PAYMENTACK_MIMETYPE);
 
     payments::Payment payment;
     payment.set_merchant_data(details.merchant_data());
