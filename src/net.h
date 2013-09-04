@@ -641,15 +641,6 @@ public:
     void copyStats(CNodeStats &stats);
 };
 
-
-
-
-
-
-
-
-
-
 inline void RelayInventory(const CInv& inv)
 {
     // Put on lists to offer to the other nodes
@@ -660,34 +651,9 @@ inline void RelayInventory(const CInv& inv)
     }
 }
 
-template<typename T>
-void RelayMessage(const CInv& inv, const T& a)
-{
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss.reserve(10000);
-    ss << a;
-    RelayMessage(inv, ss);
-}
-
-template<>
-inline void RelayMessage<>(const CInv& inv, const CDataStream& ss)
-{
-    {
-        LOCK(cs_mapRelay);
-        // Expire old relay messages
-        while (!vRelayExpiration.empty() && vRelayExpiration.front().first < GetTime())
-        {
-            mapRelay.erase(vRelayExpiration.front().second);
-            vRelayExpiration.pop_front();
-        }
-
-        // Save original serialized message so newer versions are preserved
-        mapRelay.insert(std::make_pair(inv, ss));
-        vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, inv));
-    }
-
-    RelayInventory(inv);
-}
+class CTransaction;
+void RelayTransaction(const CTransaction& tx, const uint256& hash);
+void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataStream& ss);
 
 
 #endif
