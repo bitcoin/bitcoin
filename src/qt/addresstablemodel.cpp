@@ -7,6 +7,7 @@
 #include "base58.h"
 
 #include <QFont>
+#include <QDebug>
 
 const QString AddressTableModel::Send = "S";
 const QString AddressTableModel::Receive = "R";
@@ -109,7 +110,7 @@ public:
         case CT_NEW:
             if(inModel)
             {
-                OutputDebugStringF("Warning: AddressTablePriv::updateEntry: Got CT_NOW, but entry is already in model\n");
+                qDebug() << "AddressTablePriv::updateEntry : Warning: Got CT_NOW, but entry is already in model";
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
@@ -119,7 +120,7 @@ public:
         case CT_UPDATED:
             if(!inModel)
             {
-                OutputDebugStringF("Warning: AddressTablePriv::updateEntry: Got CT_UPDATED, but entry is not in model\n");
+                qDebug() << "AddressTablePriv::updateEntry : Warning: Got CT_UPDATED, but entry is not in model";
                 break;
             }
             lower->type = newEntryType;
@@ -129,7 +130,7 @@ public:
         case CT_DELETED:
             if(!inModel)
             {
-                OutputDebugStringF("Warning: AddressTablePriv::updateEntry: Got CT_DELETED, but entry is not in model\n");
+                qDebug() << "AddressTablePriv::updateEntry : Warning: Got CT_DELETED, but entry is not in model";
                 break;
             }
             parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
