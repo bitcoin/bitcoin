@@ -49,7 +49,7 @@ Release Process
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-win32.yml
 	mv build/out/boost-win32-1.50.0-gitian2.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/qt-win32.yml
-	mv build/out/qt-win32-4.8.3-gitian-r1.zip inputs/
+	mv build/out/qt-win32-4.8.3-gitian-r2.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-win32.yml
 	mv build/out/bitcoin-deps-0.0.5.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/protobuf-win32.yml
