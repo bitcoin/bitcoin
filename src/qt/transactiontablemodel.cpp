@@ -208,7 +208,7 @@ public:
             std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
             if(mi != wallet->mapWallet.end())
             {
-                return TransactionDesc::toHTML(wallet, mi->second, unit);
+                return TransactionDesc::toHTML(wallet, mi->second, rec->idx, unit);
             }
         }
         return QString("");
@@ -569,7 +569,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case AmountRole:
         return rec->credit + rec->debit;
     case TxIDRole:
-        return QString::fromStdString(rec->getTxID());
+        return rec->getTxID();
     case ConfirmedRole:
         // Return True if transaction counts for balance
         return rec->status.confirmed && !(rec->type == TransactionRecord::Generated &&
