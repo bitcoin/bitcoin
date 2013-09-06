@@ -2,7 +2,14 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-DEPSDIR:=/usr/i586-mingw32msvc
+TARGET_PLATFORM:=i686
+#TARGET_PLATFORM:=x86_64
+
+DEPSDIR:=/usr/$(TARGET_PLATFORM)-w64-mingw32
+CC:=$(TARGET_PLATFORM)-w64-mingw32-gcc
+CXX:=$(TARGET_PLATFORM)-w64-mingw32-g++
+RANLIB=$(TARGET_PLATFORM)-w64-mingw32-ranlib
+STRIP=$(TARGET_PLATFORM)-w64-mingw32-strip
 
 USE_UPNP:=0
 USE_IPV6:=1
@@ -34,7 +41,7 @@ LIBS= \
 DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
 DEBUGFLAGS=-g
 CFLAGS=-O2 -msse2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat
+LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -static-libgcc -static-libstdc++
 
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
@@ -102,7 +109,7 @@ DEFS += -I"$(CURDIR)/leveldb/include" -DUSE_LEVELDB
 DEFS += -I"$(CURDIR)/leveldb/helpers"
 OBJS += obj/txdb-leveldb.o
 leveldb/libleveldb.a:
-	@echo "Building LevelDB ..." && cd leveldb && CC=i586-mingw32msvc-gcc CXX=i586-mingw32msvc-g++ TARGET_OS=OS_WINDOWS_CROSSCOMPILE CXXFLAGS="-I$(INCLUDEPATHS)" LDFLAGS="-L$(LIBPATHS)" $(MAKE) libleveldb.a libmemenv.a && i586-mingw32msvc-ranlib libleveldb.a && i586-mingw32msvc-ranlib libmemenv.a && cd ..
+	@echo "Building LevelDB ..." && cd leveldb && CC=$(CC) CXX=$(CXX) TARGET_OS=OS_WINDOWS_CROSSCOMPILE CXXFLAGS="-I$(INCLUDEPATHS)" LDFLAGS="-L$(LIBPATHS)" $(MAKE) libleveldb.a libmemenv.a && $(RANLIB) libleveldb.a && $(RANLIB) libmemenv.a && cd ..
 obj/txdb-leveldb.o: leveldb/libleveldb.a
 else
 OBJS += obj/txdb-bdb.o
@@ -114,24 +121,26 @@ version.cpp: obj/build.h
 DEFS += -DHAVE_BUILD_INFO
 
 obj/%.o: %.cpp $(HEADERS)
-	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
+	$(CXX) -c $(CFLAGS) -o $@ $<
 
 novacoind.exe: $(OBJS:obj/%=obj/%)
-	i586-mingw32msvc-g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lshlwapi
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lshlwapi
+	$(STRIP) novacoind.exe
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
 obj-test/%.o: test/%.cpp $(HEADERS)
-	i586-mingw32msvc-g++ -c $(TESTDEFS) $(CFLAGS) -o $@ $<
+	$(CXX) -c $(TESTDEFS) $(CFLAGS) -o $@ $<
 
 test_novacoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
-	i586-mingw32msvc-g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework-mt-s $(LIBS)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework-mt-s $(LIBS)
+	$(STRIP) test_novacoin.exe
 
 obj/scrypt-x86.o: scrypt-x86.S
-	i586-mingw32msvc-g++ -c $(CFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 obj/scrypt-x86_64.o: scrypt-x86_64.S
-	i586-mingw32msvc-g++ -c $(CFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 clean:
 	-rm -f obj/*.o
