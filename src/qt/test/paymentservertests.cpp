@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QTemporaryFile>
 #include <QVariant>
+#include <QFileOpenEvent>
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
