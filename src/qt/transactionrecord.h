@@ -4,6 +4,7 @@
 #include "uint256.h"
 
 #include <QList>
+#include <QString>
 
 class CWallet;
 class CWalletTx;
@@ -117,7 +118,10 @@ public:
     TransactionStatus status;
 
     /** Return the unique identifier for this transaction (part) */
-    std::string getTxID();
+    QString getTxID() const;
+
+    /** Format subtransaction id */
+    static QString formatSubTxId(const uint256 &hash, int vout);
 
     /** Update status from core wallet tx.
      */
