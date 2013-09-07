@@ -31,14 +31,8 @@ For Qt 5 you need the following, otherwise you get an error with lrelease when r
 
     apt-get install qt5-qmake libqt5gui5 libqt5core5 libqt5dbus5 qttools5-dev-tools
 
-then execute the following:
-
-    qmake
-    make
-
-Alternatively, install [Qt Creator](http://qt-project.org/downloads/) and open the `bitcoin-qt.pro` file. 
-An executable named `bitcoin-qt` will be built.
-
+Once these are installed, they will be found by configure and bitcoin-qt will be
+built by default.
 
 
 ### Mac OS X
@@ -55,52 +49,31 @@ An executable named `bitcoin-qt` will be built.
 		brew update
 		brew install boost miniupnpc openssl berkeley-db4 protobuf
 
-- If using HomeBrew,  edit `bitcoin-qt.pro` to account for library location differences. There's a diff in `contrib/homebrew/bitcoin-qt-pro.patch` that shows what you need to change, or you can just patch by doing
-
-        patch -p1 < contrib/homebrew/bitcoin.qt.pro.patch
-
-- Open the bitcoin-qt.pro file in Qt Creator and build as normal (cmd+B)
-
-
 Build Configuration Options
 ---------------------
 
 ### UPnP port forwarding
 
-To use UPnP for port forwarding behind a NAT router (recommended, as more connections overall allow for a faster and more stable bitcoin experience), pass the following argument to qmake:
+UPnP support is compiled in when possible and turned off by default.  See the
+configure options for upnp behavior desired:
 
-
-
-    qmake "USE_UPNP=1"
-
-(in **Qt Creator**, you can find the setting for additional qmake arguments under "Projects" -> "Build Settings" -> "Build Steps", then click "Details" next to **qmake**)
-
-This requires miniupnpc for UPnP port mapping.  It can be downloaded from [here](
-http://miniupnp.tuxfamily.org/files/).  UPnP support is not compiled in by default.
-
-Set USE_UPNP to a different value to control this:
-
-
-	USE_UPNP=-	no UPnP support, miniupnpc not required;                                 
-	USE_UPNP=0  (the default) built with UPnP, support turned off by default at runtime; 
-	USE_UPNP=1  build with UPnP support turned on by default at runtime.                 
+        --with-miniupnpc         No UPnP support miniupnp not required
+        --disable-upnp-default   (the default) UPnP support turned off by default at runtime
+        --enable-upnp-default    UPnP support turned on by default at runtime
 
 ### Notification support for recent (k)ubuntu versions
 
-To see desktop notifications on (k)ubuntu versions starting from 10.04, enable usage of the
-FreeDesktop notification interface through DBUS using the following qmake option:
+DBUS support is enabled by default if dependencies are met.
 
-
-
-    qmake "USE_DBUS=1"
+See the --with-qtdbus configure option.
 
 ### Generation of QR codes
 
-[libqrencode](http://fukuchi.org/works/qrencode/) may be used to generate QRCode images for payment requests. Pass the USE_QRCODE flag to qmake to control this:
+[libqrencode](http://fukuchi.org/works/qrencode/) may be used to generate QRCode images for payment requests.
 
+QR code support is enabled by default if dependencies are met.
 
-	USE_QRCODE=0 	(the default) No QRCode support - libarcode not required                 
-	USE_QRCODE=1 	QRCode support enabled                                                   
+See the --with-qrencode configure option.
 
 Warnings
 ---------------------

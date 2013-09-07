@@ -7,11 +7,11 @@
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleGetInfoString</key>
-  <string>$VERSION, Copyright © 2009-$YEAR The Bitcoin developers</string>
+  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@, Copyright © 2009-@COPYRIGHT_YEAR@ The Bitcoin developers</string>
   <key>CFBundleShortVersionString</key>
-  <string>$VERSION</string>
+  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@</string>
   <key>CFBundleVersion</key>
-  <string>$VERSION</string>
+  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@</string>
   <key>CFBundleSignature</key>
   <string>????</string>
   <key>CFBundleExecutable</key>
