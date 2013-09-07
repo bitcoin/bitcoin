@@ -408,7 +408,7 @@ fi
 if test x$use_pkgconfig = xyes; then
 
   if test x$PKG_CONFIG == x; then
-    AC_MSG_ERROR(pkg-config not found.)]
+    AC_MSG_ERROR(pkg-config not found.)
   fi
 
   : #NOP
