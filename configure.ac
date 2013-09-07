@@ -128,6 +128,7 @@ dnl Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
+AC_PROG_CXXCPP
 AC_PROG_INSTALL
 AC_PROG_OBJC
 m4_ifdef([AC_PROG_OBJCXX],[AC_PROG_OBJCXX])
@@ -334,8 +335,7 @@ AC_TRY_COMPILE([#include <sys/socket.h>],
 )
 
 dnl Check for libdb_cxx
-AC_CHECK_HEADER([db_cxx.h],,AC_MSG_ERROR(libdb_cxx headers missing))
-AC_CHECK_LIB([db_cxx], [main],, AC_MSG_ERROR(libdb_cxx missing))
+BITCOIN_FIND_BDB48
 
 dnl Check for libminiupnpc (optional)
 if test x$use_upnp != xno; then
