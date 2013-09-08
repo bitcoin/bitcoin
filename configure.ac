@@ -98,7 +98,7 @@ AC_ARG_ENABLE([hardening],
 
 AC_ARG_ENABLE([ccache],
   [AS_HELP_STRING([--enable-ccache],
-  [enable building with ccache (default is yes if ccache is found)])],
+  [use ccache for building (default is yes if ccache is found)])],
   [use_ccache=$enableval],
   [use_ccache=auto])
 
@@ -494,11 +494,11 @@ fi
 
 BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 
-AC_MSG_CHECKING([if bitcoind should be enabled])
+AC_MSG_CHECKING([whether to build bitcoind])
 AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
 AC_MSG_RESULT($build_bitcoind)
 
-AC_MSG_CHECKING([if bitcoin-cli should be enabled])
+AC_MSG_CHECKING([whether to build bitcoin-cli])
 AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_bitcoin_cli = xyes])
 AC_MSG_RESULT($build_bitcoin_cli)
 
@@ -508,7 +508,7 @@ BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
 
 if test x$use_ipv6 = xyes; then
   dnl Check for ipv6 build requirements
-  AC_MSG_CHECKING(for IPV6 build support)
+  AC_MSG_CHECKING(for operating system IPv6 support)
   AC_TRY_LINK([
   #if defined(_WINDOWS)
   #include <winsock2.h>
@@ -523,18 +523,17 @@ if test x$use_ipv6 = xyes; then
   struct sockaddr_in6 addr;
   #endif
   int temp = socket(AF_INET6, SOCK_STREAM, 0);],
-  [AC_MSG_RESULT(yes); have_ipv6=yes; AC_DEFINE(HAVE_IPV6, 1, [Define this symbol if you have ipv6 build support])],
+  [AC_MSG_RESULT(yes); have_ipv6=yes; AC_DEFINE(HAVE_IPV6, 1, [Define this symbol if you have operating system IPv6 support])],
   [AC_MSG_RESULT(no)]; have_ipv6=no)
 fi
 AC_LANG_POP
 
 if test "x$use_ccache" != "xno"; then
-  AC_MSG_CHECKING(if ccache should be enabled)
+  AC_MSG_CHECKING(if ccache should be used)
   if test x$CCACHE = x; then
     if test "x$use_ccache" = "xyes"; then
       AC_MSG_ERROR([ccache not found.]);
     else
-      AC_MSG_NOTICE([ccache not found. Falling back to default CC])
       use_ccache=no
     fi
   else
@@ -556,32 +555,32 @@ else
 fi
 
 dnl enable ipv6 support
-AC_MSG_CHECKING([if ipv6 should be enabled])
+AC_MSG_CHECKING([whether to build with support for IPv6])
 if test x$have_ipv6 = xno; then
   if test x$use_ipv6 = xyes; then
-     AC_MSG_ERROR("ipv6 requested but cannot be built. use --disable-ipv6")
+     AC_MSG_ERROR([IPv6 requested, but cannot be built. use --disable-ipv6])
   fi
   AC_MSG_RESULT(no)
 else
   if test x$use_ipv6 = xyes; then
       AC_MSG_RESULT(yes)
-      AC_DEFINE([USE_IPV6],[1],[Define if ipv6 support should be compiled in])
+      AC_DEFINE([USE_IPV6],[1],[Define if IPv6 support should be compiled in])
   else
       AC_MSG_RESULT(no)
   fi
 fi
 
 dnl enable upnp support
-AC_MSG_CHECKING([if upnp should be enabled])
+AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
-     AC_MSG_ERROR("upnp requested but cannot be built. use --without-miniupnpc")
+     AC_MSG_ERROR("UPnP requested but cannot be built. use --without-miniupnpc")
   fi
   AC_MSG_RESULT(no)
 else
   if test x$use_upnp != xno; then
     AC_MSG_RESULT(yes)
-    AC_MSG_CHECKING([if upnp should be on by default])
+    AC_MSG_CHECKING([whether to build with UPnP enabled by default])
     use_upnp=yes
     upnp_setting=0
     if test x$use_upnp_default != xno; then
@@ -589,7 +588,7 @@ else
       upnp_setting=1
     fi
     AC_MSG_RESULT($use_upnp_default)
-    AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[Define to 1 for upnp runtime support])
+    AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
     if test x$TARGET_OS = xwindows; then
       CPPFLAGS="$CPPFLAGS -DSTATICLIB"
     fi
@@ -602,14 +601,14 @@ dnl these are only used when qt is enabled
 if test x$bitcoin_enable_qt != xno; then
   BUILD_QT=qt
   dnl enable dbus support
-  AC_MSG_CHECKING([if dbus should be enabled])
+  AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
   if test x$bitcoin_enable_qt_dbus != xno; then
     AC_DEFINE([USE_DBUS],[1],[Define if dbus support should be compiled in])
   fi
   AC_MSG_RESULT($bitcoin_enable_qt_dbus)
 
   dnl enable qr support
-  AC_MSG_CHECKING([if qr should be enabled])
+  AC_MSG_CHECKING([whether to build GUI with support for QR codes])
   if test x$have_qrencode = xno; then
     if test x$use_qr == xyes; then
      AC_MSG_ERROR("QR support requested but cannot be built. use --without-qrencode")
@@ -629,16 +628,21 @@ if test x$bitcoin_enable_qt != xno; then
     AC_MSG_WARN("xgettext is required to update qt translations")
   fi
 
-  if test x$use_tests = xyes; then
+  AC_MSG_CHECKING([whether to build test_bitcoin-qt])
+  if test x$use_tests$bitcoin_enable_qt_test = xyesyes; then
+    AC_MSG_RESULT([yes])
     BUILD_TEST_QT="test"
-    if test x$bitcoin_enable_qt_test != xyes; then
-      AC_MSG_ERROR("Qt Test lib not found. Use --disable-tests or --without-gui.")
-    fi
+  else
+    AC_MSG_RESULT([no])
   fi
 fi
 
+AC_MSG_CHECKING([whether to build test_bitcoin])
 if test x$use_tests = xyes; then
+  AC_MSG_RESULT([yes])
   BUILD_TEST="test"
+else
+  AC_MSG_RESULT([no])
 fi
 
 if test "x$use_tests$build_bitcoind$use_qt" = "xnonono"; then
