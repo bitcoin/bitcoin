@@ -177,6 +177,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/zerocoin/Params.h \
     src/zerocoin/SerialNumberSignatureOfKnowledge.h \
     src/zerocoin/SpendMetaData.h \
+    src/zerocoin/ZeroTest.h \
     src/zerocoin/Zerocoin.h \
     src/serialize.h \
     src/strlcpy.h \
@@ -306,7 +307,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/zerocoin/ParamGeneration.cpp \
     src/zerocoin/Params.cpp \
     src/zerocoin/SerialNumberSignatureOfKnowledge.cpp \
-    src/zerocoin/SpendMetaData.cpp
+    src/zerocoin/SpendMetaData.cpp \
+    src/zerocoin/ZeroTest.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

@@ -10,6 +10,7 @@
 #include "util.h"
 #include "ui_interface.h"
 #include "checkpoints.h"
+#include "zerocoin/ZeroTest.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -20,6 +21,7 @@
 #ifndef WIN32
 #include <signal.h>
 #endif
+
 
 using namespace std;
 using namespace boost;
@@ -358,6 +360,11 @@ bool AppInit2()
 
     nNodeLifespan = GetArg("-addrlifespan", 7);
     fStakeUsePooledKeys = GetBoolArg("-stakepooledkeys", false);
+
+    if (GetBoolArg("-zerotest", false))
+    {
+        Test_RunAllTests();
+    }
 
     CheckpointsMode = Checkpoints::STRICT;
     std::string strCpMode = GetArg("-cppolicy", "strict");

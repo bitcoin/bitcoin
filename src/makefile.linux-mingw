@@ -105,7 +105,8 @@ OBJS= \
     obj/zerocoin/ParamGeneration.o \
     obj/zerocoin/Params.o \
     obj/zerocoin/SerialNumberSignatureOfKnowledge.o \
-    obj/zerocoin/SpendMetaData.o
+    obj/zerocoin/SpendMetaData.o \
+    obj/zerocoin/ZeroTest.o
 
 all: novacoind.exe
 
