@@ -13,7 +13,15 @@ if ENABLE_WALLET
 noinst_LIBRARIES += libppcoin_wallet.a
 endif
 
-bin_PROGRAMS = ppcoind peercoin-cli
+bin_PROGRAMS =
+
+if BUILD_BITCOIND
+  bin_PROGRAMS += ppcoind
+endif
+
+if BUILD_BITCOIN_CLI
+  bin_PROGRAMS += peercoin-cli
+endif
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
 DIST_SUBDIRS = . qt test
