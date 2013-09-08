@@ -24,6 +24,12 @@ m4_include([pkg.m4])
 dnl faketime breaks configure and is only needed for make. Disable it here.
 unset FAKETIME
 
+if test "x${CXXFLAGS+set}" = "xset"; then
+  CXXFLAGS_overridden=yes
+else
+  CXXFLAGS_overridden=no
+fi
+
 dnl ==============================================================
 dnl Setup for automake
 dnl ==============================================================
@@ -134,7 +140,9 @@ PKG_PROG_PKG_CONFIG
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
 ##
-CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
+if test "x$CXXFLAGS_overridden" = "xno"; then
+  CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
+fi
 CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_LANG_PUSH([C++])
@@ -182,7 +190,9 @@ case $host in
 
      CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -D__USE_MINGW_ANSI_STDIO"
      LEVELDB_TARGET_FLAGS="TARGET_OS=OS_WINDOWS_CROSSCOMPILE"
-     CXXFLAGS="$CXXFLAGS -w"
+     if test "x$CXXFLAGS_overridden" = "xno"; then
+       CXXFLAGS="$CXXFLAGS -w"
+     fi
      ;;
   *darwin*)
      TARGET_OS=darwin
