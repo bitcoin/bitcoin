@@ -17,7 +17,7 @@ namespace libzerocoin {
 
 //PublicCoin class
 PublicCoin::PublicCoin(const Params* p):
-	params(p), denomination(ZQ_LOVELACE) {
+	params(p), denomination(ZQ_PEDERSEN) {
 	if(this->params->initialized == false) {
 		throw std::invalid_argument("Params are not initialized");
 	}

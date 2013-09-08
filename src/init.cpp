@@ -361,11 +361,6 @@ bool AppInit2()
     nNodeLifespan = GetArg("-addrlifespan", 7);
     fStakeUsePooledKeys = GetBoolArg("-stakepooledkeys", false);
 
-    if (GetBoolArg("-zerotest", false))
-    {
-        Test_RunAllTests();
-    }
-
     CheckpointsMode = Checkpoints::STRICT;
     std::string strCpMode = GetArg("-cppolicy", "strict");
 
@@ -707,6 +702,7 @@ bool AppInit2()
     if (!LoadBlockIndex())
         return InitError(_("Error loading blkindex.dat"));
 
+
     // as LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill bitcoin-qt during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
@@ -744,6 +740,16 @@ bool AppInit2()
         if (nFound == 0)
             printf("No blocks matching %s were found\n", strMatch.c_str());
         return false;
+    }
+
+    // ********************************************************* Testing Zerocoin
+
+
+    if (GetBoolArg("-zerotest", false))
+    {
+        printf("\n=== ZeroCoin tests start ===\n");
+        Test_RunAllTests();
+        printf("=== ZeroCoin tests end ===\n\n");
     }
 
     // ********************************************************* Step 8: load wallet
