@@ -31,6 +31,8 @@ contains(RELEASE, 1) {
     }
 }
 
+QMAKE_LFLAGS *= -fopenmp
+
 !win32 {
 # for extra security against potential buffer overflows: enable GCCs Stack Smashing Protection
 QMAKE_CXXFLAGS *= -fstack-protector-all --param ssp-buffer-size=1
@@ -138,9 +140,9 @@ contains(USE_O3, 1) {
     QMAKE_CFLAGS += -O3
 }
 
-QMAKE_CXXFLAGS += -msse2
+QMAKE_CXXFLAGS += -msse2 -fopenmp
 QMAKE_CFLAGS += -msse2
-QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector
+QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector
 
 # Input
 DEPENDPATH += src src/json src/qt
