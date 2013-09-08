@@ -7,7 +7,6 @@
 #include "allocators.h" /* for SecureString */
 #include "key.h"
 #include "serialize.h"
-//#include <openssl/crypto.h> // for OPENSSL_cleanse()
 
 const unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
 const unsigned int WALLET_CRYPTO_SALT_SIZE = 8;

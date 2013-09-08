@@ -4,7 +4,6 @@
 
 #include <openssl/aes.h>
 #include <openssl/evp.h>
-//#include <openssl/crypto.h> // for OPENSSL_cleanse()
 #include <vector>
 #include <string>
 #ifdef WIN32
