@@ -10,7 +10,15 @@ if ENABLE_WALLET
 noinst_LIBRARIES += libbitcoin_wallet.a
 endif
 
-bin_PROGRAMS = bitcoind bitcoin-cli
+bin_PROGRAMS =
+
+if BUILD_BITCOIND
+  bin_PROGRAMS += bitcoind
+endif
+
+if BUILD_BITCOIN_CLI
+  bin_PROGRAMS += bitcoin-cli
+endif
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
 DIST_SUBDIRS = . qt test
