@@ -21,8 +21,8 @@ outgoing connections be anonimized, but more is possible.
 	-proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
 	                server will be used to try to reach .onion addresses as well.
 	
-	-tor=ip:port    Set the proxy server to use for tor hidden services. You do not
-	                need to set this if it's the same as -proxy. You can use -notor
+	-onion=ip:port  Set the proxy server to use for tor hidden services. You do not
+	                need to set this if it's the same as -proxy. You can use -noonion
 	                to explicitly disable access to hidden service.
 	
 	-listen         When using -proxy, listening is disabled by default. If you want
@@ -85,5 +85,5 @@ and open port 8333 on your firewall (or use -upnp).
 If you only want to use Tor to reach onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
-	./bitcoin -tor=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
+	./bitcoin -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
 
