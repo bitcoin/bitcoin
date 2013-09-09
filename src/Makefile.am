@@ -1110,8 +1110,10 @@ endif
 
 include Makefile.minisketch.include
 
+if EMBEDDED_LEVELDB
 include Makefile.crc32c.include
 include Makefile.leveldb.include
+endif
 
 include Makefile.test_util.include
 include Makefile.test_fuzz.include
