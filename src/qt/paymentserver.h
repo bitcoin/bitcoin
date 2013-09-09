@@ -36,6 +36,8 @@
 
 class CWallet;
 class OptionsModel;
+
+QT_BEGIN_NAMESPACE
 class QApplication;
 class QByteArray;
 class QLocalServer;
@@ -43,6 +45,7 @@ class QNetworkAccessManager;
 class QNetworkReply;
 class QSslError;
 class QUrl;
+QT_END_NAMESPACE
 
 class PaymentServer : public QObject
 {
@@ -56,8 +59,8 @@ public:
     // will be called so we startup in the right mode.
     static bool ipcSendCommandLine(int argc, char *argv[]);
 
-    PaymentServer(QObject* parent, // parent should be QApplication object
-                  bool startLocalServer=true);
+    // parent should be QApplication object
+    PaymentServer(QObject* parent, bool startLocalServer = true);
     ~PaymentServer();
 
     // Load root certificate authorities. Pass NULL (default)
@@ -65,7 +68,7 @@ public:
     // or, if that's not set, to use the system default root certificates.
     // If you pass in a store, you should not X509_STORE_free it: it will be
     // freed either at exit or when another set of CAs are loaded.
-    static void LoadRootCAs(X509_STORE* store=NULL);
+    static void LoadRootCAs(X509_STORE* store = NULL);
 
     // Return certificate store
     static X509_STORE* getCertStore() { return certStore; }
