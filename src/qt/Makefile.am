@@ -1,8 +1,8 @@
 include $(top_srcdir)/src/Makefile.include
 
 AM_CPPFLAGS +=  $(INCLUDES) -I$(top_builddir)/src/obj \
-  -I$(top_srcdir)/src/leveldb/include -I$(top_srcdir)/src \
-  -I$(top_srcdir)/src/leveldb/helpers -I$(top_builddir)/src/qt \
+  -I$(top_srcdir)/src \
+  -I$(top_builddir)/src/qt \
   -I$(top_builddir)/src/qt/forms $(BOOST_INCLUDES) $(PROTOBUF_CFLAGS) \
   $(QR_CFLAGS) $(BDB_CPPFLAGS)
 bin_PROGRAMS = peercoin-qt

@@ -1,5 +1,8 @@
 include Makefile.include
 
+AM_CPPFLAGS += -I$(top_srcdir)/src/leveldb/helpers/memenv \
+  -I$(builddir)
+
 AM_CPPFLAGS += -I$(builddir)
 
 noinst_LIBRARIES = \
