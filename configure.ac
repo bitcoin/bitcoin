@@ -348,6 +348,27 @@ AC_TRY_COMPILE([#include <sys/socket.h>],
  [ AC_MSG_RESULT(no)]
 )
 
+dnl Check for leveldb, only if explicitly requested
+AC_ARG_WITH([system-leveldb],
+  [AS_HELP_STRING([--with-system-leveldb],
+  [Build with system LevelDB (default is no; DANGEROUS; NOT SUPPORTED)])],
+  [system_leveldb=$withval],
+  [system_leveldb=no]
+)
+if test x$system_leveldb = xno; then
+  LEVELDB_CPPFLAGS='-I$(top_srcdir)/src/leveldb/include'
+  LIBLEVELDB='$(top_builddir)/src/leveldb/libleveldb.a'
+  LIBMEMENV='$(top_builddir)/src/leveldb/libmemenv.a'
+else
+  LEVELDB_CPPFLAGS=
+  LIBLEVELDB=-lleveldb
+  LIBMEMENV=-lmemenv
+fi
+AC_SUBST(LEVELDB_CPPFLAGS)
+AC_SUBST(LIBLEVELDB)
+AC_SUBST(LIBMEMENV)
+AM_CONDITIONAL([INTERNAL_LEVELDB], [test x$system_leveldb = xno])
+
 dnl Check for libdb_cxx
 BITCOIN_FIND_BDB48
 

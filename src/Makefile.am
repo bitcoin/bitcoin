@@ -1,7 +1,9 @@
 include Makefile.include
 
-AM_CPPFLAGS += -I$(top_srcdir)/src/leveldb/helpers/memenv \
-  -I$(builddir)
+AM_CPPFLAGS += -I$(builddir)
+if INTERNAL_LEVELDB
+AM_CPPFLAGS += -I$(top_srcdir)/src/leveldb/helpers/memenv
+endif
 
 noinst_LIBRARIES = libbitcoin.a
 
@@ -42,7 +44,7 @@ nodist_libbitcoin_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
 # bitcoind binary #
-bitcoind_LDADD = libbitcoin.a leveldb/libleveldb.a leveldb/libmemenv.a \
+bitcoind_LDADD = libbitcoin.a $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS)
 bitcoind_SOURCES = bitcoind.cpp
 #
@@ -55,7 +57,7 @@ AM_CPPFLAGS += $(BDB_CPPFLAGS)
 bitcoind_LDADD += $(BDB_LIBS)
 
 # bitcoin-cli binary #
-bitcoin_cli_LDADD = libbitcoin.a leveldb/libleveldb.a leveldb/libmemenv.a \
+bitcoin_cli_LDADD = libbitcoin.a $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS)
 bitcoin_cli_SOURCES = bitcoin-cli.cpp
 #
@@ -76,7 +78,11 @@ qt/bitcoinstrings.cpp: $(libbitcoin_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
 
-CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
+CLEANFILES = *.gcda *.gcno
+
+if INTERNAL_LEVELDB
+CLEANFILES += leveldb/libleveldb.a leveldb/libmemenv.a
+endif
 
 DISTCLEANFILES = obj/build.h
 
