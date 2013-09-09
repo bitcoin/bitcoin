@@ -1,3 +1,5 @@
+include $(top_srcdir)/src/Makefile.common
+
 .PHONY: FORCE
 
 LIBBITCOIN=$(top_builddir)/src/libbitcoin.a

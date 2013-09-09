@@ -1,7 +1,6 @@
-AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
-  -I$(top_srcdir)/src/leveldb/include -I$(top_srcdir)/src/leveldb/helpers \
-  $(BOOST_INCLUDES)
-AM_LDFLAGS = $(PTHREAD_CFLAGS)
+include Makefile.common
+
+AM_CPPFLAGS += -I$(top_srcdir)/src/leveldb/helpers/memenv
 
 noinst_LIBRARIES = libbitcoin.a
 
