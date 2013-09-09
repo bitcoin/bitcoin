@@ -778,7 +778,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
                 if (!VerifyDB(GetArg("-checklevel", 3),
-                              GetArg( "-checkblocks", 288))) {
+                              GetArg("-checkblocks", 288))) {
                     strLoadError = _("Corrupted block database detected");
                     break;
                 }
