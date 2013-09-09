@@ -445,10 +445,33 @@ if test x$use_reduce_exports != xno; then
   ])
 fi
 
+dnl Check for leveldb, only if explicitly requested
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
 LIBMEMENV=
-AM_CONDITIONAL([EMBEDDED_LEVELDB],[true])
+AC_ARG_WITH([system-leveldb],
+  [AS_HELP_STRING([--with-system-leveldb],
+  [Build with system LevelDB (default is no; DANGEROUS; NOT SUPPORTED)])],
+  [system_leveldb=$withval],
+  [system_leveldb=no]
+)
+if test x$system_leveldb != xno; then
+  LEVELDB_CPPFLAGS=
+  AC_CHECK_LIB([leveldb],[main],[
+    LIBLEVELDB=-lleveldb
+  ],[
+    AC_MSG_ERROR([leveldb library not found; using --with-system-leveldb is not supported anyway])
+  ])
+  TEMP_LIBS="$LIBS"
+  LIBS="$LIBS $LIBLEVELDB"
+  AC_CHECK_LIB([memenv],[main],[
+    LIBLEVELDB=-lmemenv
+  ],[
+    AC_MSG_ERROR([LevelDB's memenv library not found; using --with-system-leveldb is not supported anyway])
+  ])
+  LIBS="$TEMP_LIBS"
+fi
+AM_CONDITIONAL([EMBEDDED_LEVELDB],[test x$system_leveldb = xno])
 AC_SUBST(LEVELDB_CPPFLAGS)
 AC_SUBST(LIBLEVELDB)
 AC_SUBST(LIBMEMENV)
