@@ -7,6 +7,7 @@ architectures:
 packages: 
 - "mingw32"
 - "zip"
+- "unzip"
 - "faketime"
 - "unzip"
 reference_datetime: "2011-01-30 00:00:00"
