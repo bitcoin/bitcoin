@@ -73,7 +73,7 @@ struct ReadAlerts
     {
         std::string filename("alertTests");
         namespace fs = boost::filesystem;
-        fs::path testFile = fs::current_path() / "test" / "data" / filename;
+        fs::path testFile = fs::current_path() / "data" / filename;
 #ifdef TEST_DATA_DIR
         if (!fs::exists(testFile))
         {
@@ -125,6 +125,9 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
     {
         BOOST_CHECK(alert.CheckSignature());
     }
+
+    BOOST_CHECK(alerts.size() >= 3);
+
     // Matches:
     BOOST_CHECK(alerts[0].AppliesTo(1, ""));
     BOOST_CHECK(alerts[0].AppliesTo(70001, ""));

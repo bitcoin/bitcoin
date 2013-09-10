@@ -5,6 +5,9 @@ LIBLEVELDB=$(top_builddir)/src/leveldb/libleveldb.a
 LIBMEMENV=$(top_builddir)/src/leveldb/libmemenv.a
 LIBBITCOINQT=$(top_builddir)/src/qt/libbitcoinqt.a
 
+INCLUDES += $(BDB_CPPFLAGS)
+LIBBITCOIN += $(BDB_LIBS)
+
 $(LIBBITCOIN):
 	$(MAKE) -C $(top_builddir)/src $(@F)
 
