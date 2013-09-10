@@ -14,6 +14,8 @@
 
 #include "main.h"
 #include "wallet.h"
+#include "data/script_invalid.json.h"
+#include "data/script_valid.json.h"
 
 using namespace std;
 using namespace json_spirit;
@@ -90,34 +92,15 @@ ParseScript(string s)
 }
 
 Array
-read_json(const std::string& filename)
+read_json(const std::string& jsondata)
 {
-    namespace fs = boost::filesystem;
-    fs::path testFile = fs::current_path() / "data" / filename;
-
-#ifdef TEST_DATA_DIR
-    if (!fs::exists(testFile))
-    {
-        testFile = fs::path(BOOST_PP_STRINGIZE(TEST_DATA_DIR)) / filename;
-    }
-#endif
-
-    ifstream ifs(testFile.string().c_str(), ifstream::in);
     Value v;
-    if (!read_stream(ifs, v))
-    {
-        if (ifs.fail())
-            BOOST_ERROR("Cound not find/open " << filename);
-        else
-            BOOST_ERROR("JSON syntax error in " << filename);
-        return Array();
-    }
-    if (v.type() != array_type)
-    {
-        BOOST_ERROR(filename << " does not contain a json array");
-        return Array();
-    }
 
+    if (!read_string(jsondata, v) || v.type() != array_type)
+    {
+        BOOST_ERROR("Parse error.");
+        return Array();
+    }
     return v.get_array();
 }
 
@@ -130,7 +113,7 @@ BOOST_AUTO_TEST_CASE(script_valid)
     // Inner arrays are [ "scriptSig", "scriptPubKey" ]
     // ... where scriptSig and scriptPubKey are stringified
     // scripts.
-    Array tests = read_json("script_valid.json");
+    Array tests = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
 
     BOOST_FOREACH(Value& tv, tests)
     {
@@ -154,7 +137,7 @@ BOOST_AUTO_TEST_CASE(script_valid)
 BOOST_AUTO_TEST_CASE(script_invalid)
 {
     // Scripts that should evaluate as invalid
-    Array tests = read_json("script_invalid.json");
+    Array tests = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
 
     BOOST_FOREACH(Value& tv, tests)
     {
