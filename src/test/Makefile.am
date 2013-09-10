@@ -10,7 +10,7 @@ bin_PROGRAMS = test_bitcoin
 
 TESTS = test_bitcoin
 
-TEST_DATA_DIR=$(top_srcdir)/src/test/data
+TEST_DATA_DIR=$(srcdir)/data
 
 TEST_DATA_FILES= $(TEST_DATA_DIR)/script_valid.json \
   $(TEST_DATA_DIR)/base58_keys_valid.json $(TEST_DATA_DIR)/sig_canonical.json \
@@ -22,7 +22,7 @@ TEST_DATA_FILES= $(TEST_DATA_DIR)/script_valid.json \
 
 # test_bitcoin binary #
 test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(TESTDEFS) \
-  -DTEST_DATA_DIR=$(TEST_DATA_DIR)
+  -DTEST_DATA_DIR=$(abs_srcdir)/data
 test_bitcoin_LDADD = $(LIBBITCOIN) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
 test_bitcoin_SOURCES = accounting_tests.cpp alert_tests.cpp \
