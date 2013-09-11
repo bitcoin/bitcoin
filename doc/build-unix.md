@@ -75,22 +75,6 @@ Optional:
 	sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
 
 
-Dependency Build Instructions: Gentoo
--------------------------------------
-
-Note: If you just want to install bitcoind on Gentoo, you can add the Bitcoin overlay and use your package manager:
-
-	layman -a bitcoin && emerge bitcoind
-	emerge -av1 --noreplace boost glib openssl sys-libs/db:4.8
-
-Take the following steps to build (no UPnP support):
-
-	cd ${BITCOIN_DIR}
-	./autogen.sh
-	./configure --without-miniupnpc CXXFLAGS="-i/usr/include/db4.8"
-	strip bitcoind
-
-
 Notes
 -----
 The release is built with GCC and then "strip bitcoind" to strip the debug
