@@ -184,9 +184,18 @@ void SendCoinsDialog::on_sendButton_clicked()
     {
         // append fee string if a fee is required
         questionString.append("<hr /><span style='color:#aa0000;'>");
-        questionString.append(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
-        questionString.append("</span> ");
-        questionString.append(tr("added as transaction fee"));
+        questionString.append(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee).replace(" ", "&nbsp;"));
+        questionString.append("</span>&nbsp;");
+        
+        if(currentTransaction.isTransactionFeeVoluntary())
+        {
+            questionString.append(tr("added as voluntary transaction fee").replace(" ", "&nbsp;"));
+        }
+        else
+        {
+            questionString.append(tr("added as required transaction fee").replace(" ", "&nbsp;"));
+        }
+        
     }
     if(txFee > 0 || recipients.count() > 1)
     {

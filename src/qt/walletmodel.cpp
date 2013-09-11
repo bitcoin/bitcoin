@@ -193,7 +193,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
     if((total + nTransactionFee) > getBalance())
     {
-        transaction.setTransactionFee(nTransactionFee);
+        transaction.setTransactionFee(nTransactionFee, false);
         return SendCoinsReturn(AmountWithFeeExceedsBalance);
     }
 
@@ -206,8 +206,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason);
-        transaction.setTransactionFee(nFeeRequired);
+        bool isVoluntaryFee = false;
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, isVoluntaryFee, strFailReason);
+        transaction.setTransactionFee(nFeeRequired, isVoluntaryFee);
 
         if(!fCreated)
         {
