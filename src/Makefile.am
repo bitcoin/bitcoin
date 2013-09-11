@@ -47,6 +47,9 @@ bitcoind_LDADD = libbitcoin.a leveldb/libleveldb.a leveldb/libmemenv.a \
 bitcoind_SOURCES = bitcoind.cpp
 #
 
+AM_CPPFLAGS += $(BDB_CPPFLAGS)
+bitcoind_LDADD += $(BDB_LIBS)
+
 leveldb/libleveldb.a:
 	@echo "Building LevelDB ..." && cd leveldb && CXX="$(CXX)" CC="$(CC)" \
 	  PLATFORM=$(TARGET_OS) AR="$(AR)" $(MAKE) $(LEVELDB_TARGET_FLAGS) OPT="$(CXXFLAGS) $(CPPFLAGS)" libleveldb.a

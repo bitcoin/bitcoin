@@ -128,6 +128,7 @@ dnl Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
+AC_PROG_CXXCPP
 AC_PROG_INSTALL
 AC_PROG_OBJC
 m4_ifdef([AC_PROG_OBJCXX],[AC_PROG_OBJCXX])
@@ -142,10 +143,10 @@ AC_PATH_PROG(LCOV, lcov)
 AC_PATH_PROG(JAVA, java)
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
-AC_PATH_PROGS([MOC], [moc moc-qt4],, $qt_bin_path:$PATH)
-AC_PATH_PROGS([UIC], [uic uic-qt4],, $qt_bin_path:$PATH)
-AC_PATH_PROG([RCC], [rcc],, $qt_bin_path:$PATH)
-AC_PATH_PROG([LRELEASE], [lrelease],, $qt_bin_path:$PATH)
+AC_PATH_PROGS([MOC], [moc-qt4 moc4 moc],, $qt_bin_path:$PATH)
+AC_PATH_PROGS([UIC], [uic-qt4 uic4 uic],, $qt_bin_path:$PATH)
+AC_PATH_PROGS([RCC], [rcc-qt4 rcc4 rcc],, $qt_bin_path:$PATH)
+AC_PATH_PROGS([LRELEASE], [lrelease-qt4 lrelease4 lrelease],, $qt_bin_path:$PATH)
 AC_PATH_PROG([PROTOC], [protoc],, $protoc_bin_path:$PATH)
 AC_PATH_PROG(CCACHE,ccache)
 PKG_PROG_PKG_CONFIG
@@ -334,8 +335,7 @@ AC_TRY_COMPILE([#include <sys/socket.h>],
 )
 
 dnl Check for libdb_cxx
-AC_CHECK_HEADER([db_cxx.h],,AC_MSG_ERROR(libdb_cxx headers missing))
-AC_CHECK_LIB([db_cxx], [main],, AC_MSG_ERROR(libdb_cxx missing))
+BITCOIN_FIND_BDB48
 
 dnl Check for libminiupnpc (optional)
 if test x$use_upnp != xno; then
