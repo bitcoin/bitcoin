@@ -1,8 +1,10 @@
 IDI_ICON1 ICON DISCARDABLE "icons/bitcoin.ico"
 IDI_ICON2 ICON DISCARDABLE "icons/bitcoin_testnet.ico"
 
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"  // holds the needed client version information
+#endif
 #include <windows.h>             // needed for VERSIONINFO
-#include "../../clientversion.h" // holds the needed client version information
 
 #define VER_PRODUCTVERSION     CLIENT_VERSION_MAJOR,CLIENT_VERSION_MINOR,CLIENT_VERSION_REVISION,CLIENT_VERSION_BUILD
 #define VER_PRODUCTVERSION_STR STRINGIZE(CLIENT_VERSION_MAJOR) "." STRINGIZE(CLIENT_VERSION_MINOR) "." STRINGIZE(CLIENT_VERSION_REVISION) "." STRINGIZE(CLIENT_VERSION_BUILD)
