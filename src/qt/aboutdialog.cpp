@@ -1,8 +1,11 @@
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 #include "aboutdialog.h"
 #include "ui_aboutdialog.h"
 
 #include "clientmodel.h"
-#include "clientversion.h"
 
 AboutDialog::AboutDialog(QWidget *parent) :
     QDialog(parent),

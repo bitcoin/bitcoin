@@ -1,5 +1,8 @@
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
 #include "splashscreen.h"
-#include "clientversion.h"
 #include "util.h"
 #include "chainparams.h"
 
