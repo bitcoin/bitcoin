@@ -113,6 +113,7 @@ void Shutdown()
         bitdb.Flush(false);
     GenerateBitcoins(false, NULL);
     StopNode();
+    mempool.Write();
     {
         LOCK(cs_main);
         if (pwalletMain)
@@ -942,6 +943,11 @@ bool AppInit2(boost::thread_group& threadGroup)
         pwalletMain->SetBestChain(CBlockLocator(pindexBest));
         nWalletDBUpdated++;
     }
+
+    // It is OK if mempool.Read() fails; starting out with an empty memory pool is not
+    // a problem, it gets filled quickly.
+    mempool.Read();
+    LogPrintf("Read %lu mempool transactions\n", mempool.size());
 
     // ********************************************************* Step 9: import blocks
 

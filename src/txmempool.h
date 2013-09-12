@@ -7,6 +7,7 @@
 
 #include "uint256.h"
 
+class CAutoFile;
 class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
@@ -53,6 +54,8 @@ private:
     bool fSanityCheck; // Normally false, true if -checkmempool or -regtest
     CMinerPolicyEstimator* minerPolicyEstimator; // For estimating transaction fees
 
+    void writeEntry(CAutoFile& file, const uint256& txid, std::set<uint256>& alreadyWritten);
+
 public:
     mutable CCriticalSection cs;
     std::map<uint256, CTxMemPoolEntry> mapTx;
@@ -92,6 +95,9 @@ public:
     }
 
     bool lookup(uint256 hash, CTransaction& result) const;
+
+    bool Write();
+    bool Read();
 };
 
 extern CTxMemPool mempool;

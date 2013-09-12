@@ -11,10 +11,13 @@
 #include "main.h"
 #include "wallet.h"
 
+using namespace std;
 using namespace ::boost;
 using namespace ::boost::multi_index;
 
 CTxMemPool mempool;
+
+static const char* MEMPOOL_FILENAME="mempool.dat";
 
 // CMinerPolicyEstimator is told when transactions exit the
 // memory pool because they are included in blocks, and uses
@@ -75,6 +78,31 @@ private:
         return it->v;
     }
 
+    bool Write(CAutoFile& fileout, const SortedValues& values)
+    {
+        fileout << values.size();
+        SortedValues::nth_index<1>::type::iterator it=values.get<1>().begin();
+        while (it != values.get<1>().end())
+        {
+            fileout << it->t << it->v;
+            it++;
+        }
+        return true;
+    }
+    bool Read(CAutoFile& filein, SortedValues& values)
+    {
+        size_t n;
+        filein >> n;
+        for (size_t i = 0; i < n; i++)
+        {
+            int64 t;
+            double v;
+            filein >> t >> v;
+            values.insert(TimeValue(t, v));
+        }
+        return true;
+    }
+
 public:
     CMinerPolicyEstimator(size_t _nMin, size_t _nMax) : nMin(_nMin), nMax(_nMax)
     {
@@ -117,6 +145,14 @@ public:
         return estimate(byFee, fraction, byFeeCache);
     }
 
+    bool Write(CAutoFile& fileout)
+    {
+        return Write(fileout, byPriority) && Write(fileout, byFee);
+    }
+    bool Read(CAutoFile& filein)
+    {
+        return Read(filein, byPriority) && Read(filein, byFee);
+    }
 };
 
 CTxMemPoolEntry::CTxMemPoolEntry()
@@ -165,7 +201,7 @@ void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
 {
     LOCK(cs);
 
-    std::map<COutPoint, CInPoint>::iterator it = mapNextTx.lower_bound(COutPoint(hashTx, 0));
+    map<COutPoint, CInPoint>::iterator it = mapNextTx.lower_bound(COutPoint(hashTx, 0));
 
     // iterate over all COutPoints in mapNextTx whose hash equals the provided hashTx
     while (it != mapNextTx.end() && it->first.hash == hashTx) {
@@ -342,7 +378,7 @@ bool CTxMemPool::remove(const uint256& hash, bool fRecursive, int nBlockHeight)
         const CTransaction& tx = entry.getTx();
         if (fRecursive) {
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
-                std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
+                map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
                 if (it != mapNextTx.end())
                     remove(it->second.ptx->GetHash(), true, nBlockHeight);
             }
@@ -361,7 +397,7 @@ bool CTxMemPool::removeConflicts(const CTransaction &tx)
     // Remove transactions which depend on inputs of tx, recursively
     LOCK(cs);
     BOOST_FOREACH(const CTxIn &txin, tx.vin) {
-        std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(txin.prevout);
+        map<COutPoint, CInPoint>::iterator it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
             const CTransaction &txConflict = *it->second.ptx;
             if (txConflict != tx)
@@ -387,12 +423,12 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
     LogPrint("mempool", "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
 
     LOCK(cs);
-    for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
+    for (map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
         const CTransaction& tx = it->second.getTx();
         BOOST_FOREACH(const CTxIn &txin, tx.vin) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
-            std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
+            map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end()) {
                 const CTransaction& tx2 = it2->second.getTx();
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
@@ -401,16 +437,16 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
                 assert(coins.IsAvailable(txin.prevout.n));
             }
             // Check whether its inputs are marked in mapNextTx.
-            std::map<COutPoint, CInPoint>::const_iterator it3 = mapNextTx.find(txin.prevout);
+            map<COutPoint, CInPoint>::const_iterator it3 = mapNextTx.find(txin.prevout);
             assert(it3 != mapNextTx.end());
             assert(it3->second.ptx == &tx);
             assert(it3->second.n == i);
             i++;
         }
     }
-    for (std::map<COutPoint, CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); it++) {
+    for (map<COutPoint, CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); it++) {
         uint256 hash = it->second.ptx->GetHash();
-        std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(hash);
+        map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(hash);
         const CTransaction& tx = it2->second.getTx();
         assert(it2 != mapTx.end());
         assert(&tx == it->second.ptx);
@@ -419,7 +455,7 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
     }
 }
 
-void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
+void CTxMemPool::queryHashes(vector<uint256>& vtxid)
 {
     vtxid.clear();
 
@@ -432,7 +468,7 @@ void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
 bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
 {
     LOCK(cs);
-    std::map<uint256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
+    map<uint256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
     if (i == mapTx.end()) return false;
     result = i->second.getTx();
     return true;
@@ -443,4 +479,97 @@ void CTxMemPool::estimateFees(double dPriorityMedian, double& dPriority, double 
     LOCK(cs);
     dPriority = minerPolicyEstimator->estimatePriority(dPriorityMedian);
     dFee = minerPolicyEstimator->estimateFee(dFeeMedian);
+}
+
+void CTxMemPool::writeEntry(CAutoFile& file, const uint256& txid, std::set<uint256>& alreadyWritten)
+{
+    if (alreadyWritten.count(txid)) return;
+    alreadyWritten.insert(txid);
+    CTxMemPoolEntry& entry = mapTx[txid];
+    // Write txns we depend on first:
+    BOOST_FOREACH(const CTxIn txin, entry.getTx().vin)
+    {
+        const uint256& prevout = txin.prevout.hash;
+        if (mapTx.count(prevout))
+            writeEntry(file, prevout, alreadyWritten);
+    }
+    file << entry.getTx();
+}
+
+//
+// Format of the mempool.dat file:
+//  32-bit versionRequiredToRead
+//  32-bit versionThatWrote
+//  32-bit-number of priority data points
+//  [ (time,priority) ]
+//  32-bit-number of fee data points
+//  [ (time,fee) ]
+//  32-bit-number of transactions
+//  [ serialized transactions ]
+//
+bool CTxMemPool::Write()
+{
+    boost::filesystem::path path = GetDataDir() / MEMPOOL_FILENAME;
+    FILE *file = fopen(path.string().c_str(), "wb"); // Overwrites any older mempool (which is fine)
+    CAutoFile fileout = CAutoFile(file, SER_DISK, CLIENT_VERSION);
+    if (!fileout)
+        return error("CTxMemPool::Write() : open failed");
+
+    fileout << CLIENT_VERSION; // version required to read
+    fileout << CLIENT_VERSION; // version that wrote the file
+
+    std::set<uint256> alreadyWritten; // Used to write parents before dependents
+    try {
+        LOCK(cs);
+        minerPolicyEstimator->Write(fileout);
+        fileout << mapTx.size();
+        for (map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin();
+             it != mapTx.end(); it++)
+        {
+            writeEntry(fileout, it->first, alreadyWritten);
+        }
+    }
+    catch (std::exception &e) {
+        return error("CTxMemPool::Write() : I/O error");
+    }
+
+    return true;
+}
+
+bool CTxMemPool::Read()
+{
+    boost::filesystem::path path = GetDataDir() / MEMPOOL_FILENAME;
+    FILE *file = fopen(path.string().c_str(), "rb");
+    if (!file) return true; // No mempool.dat: OK
+    CAutoFile filein = CAutoFile(file, SER_DISK, CLIENT_VERSION);
+    if (!filein)
+        return error("CTxMemPool::Read() : open failed");
+
+    try {
+        int nVersionRequired, nVersionThatWrote;
+        filein >> nVersionRequired >> nVersionThatWrote;
+
+        if (nVersionRequired > CLIENT_VERSION)
+            return error("CTxMemPool::Read() : up-version (%d) mempool.dat", nVersionRequired);
+
+        minerPolicyEstimator->Read(filein);
+        size_t nTx;
+        filein >> nTx;
+
+        for (size_t i = 0; i < nTx; i++)
+        {
+            CTransaction tx;
+            filein >> tx;
+        
+            CValidationState state;
+            bool fMissingInputs;
+            accept(state, tx, false, &fMissingInputs);
+            assert(state.IsValid() && !fMissingInputs);
+        }
+    }
+    catch (std::exception &e) {
+        return error("CTxMemPool::Read() : I/O error or stream data corrupted");
+    }
+
+    return true;
 }
