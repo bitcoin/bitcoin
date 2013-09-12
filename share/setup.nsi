@@ -5,7 +5,7 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.8.4.1
+!define VERSION 0.8.5.1
 !define COMPANY "Litecoin project"
 !define URL http://www.litecoin.org/
 
@@ -45,13 +45,13 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile litecoin-0.8.4.1-win32-setup.exe
+OutFile litecoin-0.8.5.1-win32-setup.exe
 InstallDir $PROGRAMFILES\Litecoin
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 0.8.4.1
+VIProductVersion 0.8.5.1
 VIAddVersionKey ProductName Litecoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
