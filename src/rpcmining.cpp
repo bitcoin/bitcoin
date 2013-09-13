@@ -32,11 +32,20 @@ Value GetNetworkHashPS(int lookup, int height) {
         lookup = pb->nHeight;
 
     CBlockIndex *pb0 = pb;
-    for (int i = 0; i < lookup; i++)
+    int64 minTime, maxTime = pb0->GetBlockTime();
+    for (int i = 0; i < lookup; i++) {
         pb0 = pb0->pprev;
+        int64 time = pb0->GetBlockTime();
+        minTime = std::min(time, minTime);
+        maxTime = std::max(time, maxTime);
+    }
+
+    // In case there's a situation where minTime == maxTime, we don't want a divide by zero exception.
+    if (minTime == maxTime)
+        return 0;
 
     uint256 workDiff = pb->nChainWork - pb0->nChainWork;
-    int64 timeDiff = pb->GetBlockTime() - pb0->GetBlockTime();
+    int64 timeDiff = maxTime - minTime;
 
     return (boost::int64_t)(workDiff.getdouble() / timeDiff);
 }
