@@ -1,8 +1,8 @@
+include $(top_srcdir)/src/Makefile.common
+
 .PHONY: FORCE
 
 LIBBITCOIN=$(top_builddir)/src/libbitcoin.a
-LIBLEVELDB=$(top_builddir)/src/leveldb/libleveldb.a
-LIBMEMENV=$(top_builddir)/src/leveldb/libmemenv.a
 LIBBITCOINQT=$(top_builddir)/src/qt/libbitcoinqt.a
 
 INCLUDES += $(BDB_CPPFLAGS)
@@ -12,7 +12,7 @@ $(LIBBITCOIN):
 	$(MAKE) -C $(top_builddir)/src $(@F)
 
 $(LIBLEVELDB) $(LIBMEMENV):
-	$(MAKE) -C $(top_builddir)/src leveldb/$(@F)
+	$(MAKE) -C $(top_builddir)/src $@
 
 $(LIBBITCOINQT):
 	$(MAKE) -C $(top_builddir)/src/qt $(@F)

@@ -1,7 +1,8 @@
-AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
-  -I$(top_srcdir)/src/leveldb/include -I$(top_srcdir)/src/leveldb/helpers \
-  $(BOOST_INCLUDES)
-AM_LDFLAGS = $(PTHREAD_CFLAGS)
+include Makefile.common
+
+if INTERNAL_LEVELDB
+AM_CPPFLAGS += -I$(top_srcdir)/src/leveldb/helpers/memenv
+endif
 
 noinst_LIBRARIES = libbitcoin.a
 
@@ -42,7 +43,7 @@ nodist_libbitcoin_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
 # bitcoind binary #
-bitcoind_LDADD = libbitcoin.a leveldb/libleveldb.a leveldb/libmemenv.a \
+bitcoind_LDADD = libbitcoin.a $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS)
 bitcoind_SOURCES = bitcoind.cpp
 #
@@ -50,11 +51,11 @@ bitcoind_SOURCES = bitcoind.cpp
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
 bitcoind_LDADD += $(BDB_LIBS)
 
-leveldb/libleveldb.a:
+$(LIBLEVELDB):
 	@echo "Building LevelDB ..." && cd leveldb && CXX="$(CXX)" CC="$(CC)" \
 	  PLATFORM=$(TARGET_OS) AR="$(AR)" $(MAKE) $(LEVELDB_TARGET_FLAGS) OPT="$(CXXFLAGS) $(CPPFLAGS)" libleveldb.a
 
-leveldb/libmemenv.a:
+$(LIBMEMENV):
 	@echo "Building LevelDB ..." && cd leveldb && CXX="$(CXX)" CC="$(CC)" \
 	  PLATFORM=$(TARGET_OS) AR="$(AR)" $(MAKE) $(LEVELDB_TARGET_FLAGS) OPT="$(CXXFLAGS) $(CPPFLAGS)" libmemenv.a
 
