@@ -31,14 +31,14 @@ Value GetNetworkHashPS(int lookup, int height) {
     if (lookup > pb->nHeight)
         lookup = pb->nHeight;
 
-    double sum = 0.0;
+    CBlockIndex *pb0 = pb;
     for (int i = 0; i < lookup; i++)
-    {
-        sum += (pb->GetBlockTime() - pb->pprev->GetBlockTime()) / GetDifficulty(pb);
-        pb = pb->pprev;
-    }
+        pb0 = pb0->pprev;
 
-    return (boost::int64_t)(pow(2.0, 32) / (sum / lookup));
+    uint256 workDiff = pb->nChainWork - pb0->nChainWork;
+    int64 timeDiff = pb->GetBlockTime() - pb0->GetBlockTime();
+
+    return (boost::int64_t)(workDiff.getdouble() / timeDiff);
 }
 
 Value getnetworkhashps(const Array& params, bool fHelp)
