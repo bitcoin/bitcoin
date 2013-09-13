@@ -7,6 +7,7 @@ USE_IPV6:=1
 USE_LEVELDB:=1
 
 LINK:=$(CXX)
+ARCH:=$(system lscpu | head -n 1 | awk '{print $2}')
 
 DEFS=-DBOOST_SPIRIT_THREADSAFE
 
@@ -92,9 +93,15 @@ LIBS+= \
 
 DEBUGFLAGS=-g
 
+
+ifeq (${ARCH}, i686)
+    EXT_OPTIONS=-msse2
+endif
+
+
 # CXXFLAGS can be specified on the make command line, so we use xCXXFLAGS that only
 # adds some defaults in front. Unfortunately, CXXFLAGS=... $(CXXFLAGS) does not work.
-xCXXFLAGS=-O2 -msse2 -fopenmp -pthread -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter \
+xCXXFLAGS=-O2 $(EXT_OPTIONS) -fopenmp -pthread -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter \
     $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
 
 # LDFLAGS can be specified on the make command line, so we use xLDFLAGS that only
