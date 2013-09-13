@@ -38,7 +38,7 @@
 
 #define SCRYPT_BUFFER_SIZE (131072 + 63)
 
-#if defined (__x86_64__) || defined (__i386__)
+#if defined (__x86_64__) || defined (__i386__) || defined(__arm__)
 extern "C" void scrypt_core(uint32_t *X, uint32_t *V);
 #else
 // TODO: Add cross-platform scrypt_core implementation
