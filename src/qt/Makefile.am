@@ -53,6 +53,9 @@ QT_MOC_CPP = moc_aboutdialog.cpp moc_addressbookpage.cpp \
   moc_transactiontablemodel.cpp moc_transactionview.cpp moc_walletframe.cpp \
   moc_walletmodel.cpp moc_walletstack.cpp moc_walletview.cpp
 
+BITCOIN_MM = macdockiconhandler.mm macnotificationhandler.mm
+QR_CPP = qrcodedialog.cpp
+
 QT_MOC = intro.moc overviewpage.moc rpcconsole.moc
 
 QT_QRC_CPP = qrc_bitcoin.cpp
@@ -91,6 +94,19 @@ RES_ICONS = res/icons/bitcoin.png res/icons/address-book.png \
   res/icons/qrcode.png res/icons/debugwindow.png res/icons/bitcoin.ico \
   res/icons/bitcoin_testnet.ico
 
+BITCOIN_QT_CPP = aboutdialog.cpp addressbookpage.cpp \
+  addresstablemodel.cpp askpassphrasedialog.cpp bitcoinaddressvalidator.cpp \
+  bitcoinamountfield.cpp bitcoin.cpp bitcoingui.cpp \
+  bitcoinunits.cpp clientmodel.cpp csvmodelwriter.cpp editaddressdialog.cpp \
+  guiutil.cpp intro.cpp monitoreddatamapper.cpp notificator.cpp \
+  optionsdialog.cpp optionsmodel.cpp overviewpage.cpp paymentrequestplus.cpp \
+  paymentserver.cpp qvalidatedlineedit.cpp qvaluecombobox.cpp \
+  rpcconsole.cpp sendcoinsdialog.cpp sendcoinsentry.cpp \
+  signverifymessagedialog.cpp splashscreen.cpp transactiondesc.cpp \
+  transactiondescdialog.cpp transactionfilterproxy.cpp transactionrecord.cpp \
+  transactiontablemodel.cpp transactionview.cpp walletframe.cpp \
+  walletmodel.cpp walletmodeltransaction.cpp walletstack.cpp walletview.cpp
+
 RES_IMAGES = res/images/about.png res/images/splash.png \
   res/images/splash_testnet.png
 
@@ -100,20 +116,8 @@ BITCOIN_RC = res/bitcoin-qt-res.rc
 
 libbitcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
-libbitcoinqt_a_SOURCES = aboutdialog.cpp addressbookpage.cpp \
-  addresstablemodel.cpp askpassphrasedialog.cpp bitcoinaddressvalidator.cpp \
-  bitcoinamountfield.cpp bitcoin.cpp bitcoingui.cpp bitcoinstrings.cpp \
-  bitcoinunits.cpp clientmodel.cpp csvmodelwriter.cpp editaddressdialog.cpp \
-  guiutil.cpp intro.cpp monitoreddatamapper.cpp notificator.cpp \
-  optionsdialog.cpp optionsmodel.cpp overviewpage.cpp paymentrequestplus.cpp \
-  paymentserver.cpp qvalidatedlineedit.cpp qvaluecombobox.cpp \
-  rpcconsole.cpp sendcoinsdialog.cpp sendcoinsentry.cpp \
-  signverifymessagedialog.cpp splashscreen.cpp transactiondesc.cpp \
-  transactiondescdialog.cpp transactionfilterproxy.cpp transactionrecord.cpp \
-  transactiontablemodel.cpp transactionview.cpp walletframe.cpp \
-  walletmodel.cpp walletmodeltransaction.cpp walletstack.cpp walletview.cpp \
-  $(BITCOIN_QT_H) $(QT_FORMS_UI) $(QT_QRC) $(QT_TS) $(PROTOBUF_PROTO) \
-  $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
+libbitcoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
+  $(QT_QRC) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
 nodist_libbitcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP)
@@ -126,13 +130,13 @@ $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
 if TARGET_DARWIN
-  libbitcoinqt_a_SOURCES += macdockiconhandler.mm macnotificationhandler.mm
+  libbitcoinqt_a_SOURCES += $(BITCOIN_MM)
 endif
 if TARGET_WINDOWS
   libbitcoinqt_a_SOURCES += $(BITCOIN_RC)
 endif
 if USE_QRCODE
-  libbitcoinqt_a_SOURCES += qrcodedialog.cpp
+  libbitcoinqt_a_SOURCES += $(QR_CPP)
 endif
 #
 
