@@ -147,8 +147,10 @@ AC_PATH_PROGS([MOC], [moc-qt4 moc4 moc],, $qt_bin_path:$PATH)
 AC_PATH_PROGS([UIC], [uic-qt4 uic4 uic],, $qt_bin_path:$PATH)
 AC_PATH_PROGS([RCC], [rcc-qt4 rcc4 rcc],, $qt_bin_path:$PATH)
 AC_PATH_PROGS([LRELEASE], [lrelease-qt4 lrelease4 lrelease],, $qt_bin_path:$PATH)
+AC_PATH_PROGS([LUPDATE], [lupdate-qt4 lupdate4 lupdate],, $qt_bin_path:$PATH)
 AC_PATH_PROG([PROTOC], [protoc],, $protoc_bin_path:$PATH)
 AC_PATH_PROG(CCACHE,ccache)
+AC_PATH_PROG(XGETTEXT,xgettext)
 PKG_PROG_PKG_CONFIG
 
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
@@ -625,6 +627,13 @@ if test x$use_qt = xyes; then
       AC_MSG_ERROR("libQtDBus not found. Use --without-qtdbus.")
     fi
   fi
+  if test x$XGETTEXT == x; then
+    AC_MSG_WARN("xgettext is required to update qt translations")
+  fi
+  if test x$LUPDATE == x; then
+    AC_MSG_WARN("lupdate is required to update qt translations")
+  fi
+
   BUILD_QT=qt
 else
   use_qt=no
