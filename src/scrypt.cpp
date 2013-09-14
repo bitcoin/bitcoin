@@ -28,6 +28,7 @@
  */
 
 #include "scrypt.h"
+#include "util.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -242,7 +243,7 @@ static inline void xor_salsa8(uint32_t B[16], const uint32_t Bx[16])
 	B[15] += x15;
 }
 
-void scrypt_1024_1_1_256_sp(const char *input, char *output, char *scratchpad)
+void scrypt_1024_1_1_256_sp_generic(const char *input, char *output, char *scratchpad)
 {
 	uint8_t B[128];
 	uint32_t X[32];
@@ -275,14 +276,48 @@ void scrypt_1024_1_1_256_sp(const char *input, char *output, char *scratchpad)
 	PBKDF2_SHA256((const uint8_t *)input, 80, B, 128, 1, (uint8_t *)output, 32);
 }
 
+#if defined(USE_SSE2)
+#if defined(_M_X64) || defined(__x86_64__) || defined(_M_AMD64) || (defined(MAC_OSX) && defined(__i386__))
+/* Always SSE2 */
+void scrypt_detect_sse2(unsigned int cpuid_edx)
+{
+    printf("scrypt: using scrypt-sse2 as built.\n");
+}
+#else
+/* Detect SSE2 */
+void (*scrypt_1024_1_1_256_sp)(const char *input, char *output, char *scratchpad);
+
+void scrypt_detect_sse2(unsigned int cpuid_edx)
+{
+    if (cpuid_edx & 1<<26)
+    {
+        scrypt_1024_1_1_256_sp = &scrypt_1024_1_1_256_sp_sse2;
+        printf("scrypt: using scrypt-sse2 as detected.\n");
+    }
+    else
+    {
+        scrypt_1024_1_1_256_sp = &scrypt_1024_1_1_256_sp_generic;
+        printf("scrypt: using scrypt-generic, SSE2 unavailable.\n");
+    }
+}
+#endif
+#endif
+
 void scrypt_1024_1_1_256(const char *input, char *output)
 {
 	char scratchpad[SCRYPT_SCRATCHPAD_SIZE];
-#ifdef USE_SSE2
-        // todo: runtime detection at startup and use function pointer
-        if(1)
-          scrypt_1024_1_1_256_sp_sse2(input, output, scratchpad);
-        else
+#if defined(USE_SSE2)
+        // Detection would work, but in cases where we KNOW it always has SSE2,
+        // it is faster to use directly than to use a function pointer or conditional.
+#if defined(_M_X64) || defined(__x86_64__) || defined(_M_AMD64) || (defined(MAC_OSX) && defined(__i386__))
+        // Always SSE2: x86_64 or Intel MacOS X
+        scrypt_1024_1_1_256_sp_sse2(input, output, scratchpad);
+#else
+        // Detect SSE2: 32bit x86 Linux or Windows
+        scrypt_1024_1_1_256_sp(input, output, scratchpad);
 #endif
-          scrypt_1024_1_1_256_sp(input, output, scratchpad);
+#else
+        // Generic scrypt
+        scrypt_1024_1_1_256_sp_generic(input, output, scratchpad);
+#endif
 }

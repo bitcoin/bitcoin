@@ -144,10 +144,10 @@ OBJS= \
     obj/leveldb.o \
     obj/txdb.o
 
-OBJS_SSE2= obj/scrypt-sse2.o
 
-ifdef SSE2
+ifdef USE_SSE2
 DEFS += -DUSE_SSE2
+OBJS_SSE2= obj/scrypt-sse2.o
 OBJS += $(OBJS_SSE2)
 endif
 

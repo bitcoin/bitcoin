@@ -316,6 +316,11 @@ DEFINES += BITCOIN_QT_TEST
   macx: CONFIG -= app_bundle
 }
 
+contains(USE_SSE2, 1) {
+SOURCES += src/scrypt-sse2.cpp
+DEFINES += USE_SSE2
+}
+
 # Todo: Remove this line when switching to Qt5, as that option was removed
 CODECFORTR = UTF-8
 
