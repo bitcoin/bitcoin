@@ -1562,7 +1562,7 @@ bool SwitchToBestHeader(CValidationState &state) {
         }
 
         // Check whether it's actually an improvement.
-        if (pindexBestHeader && pindexNewBest->nChainWork <= pindexBestHeader->nChainWork) {
+        if (pindexBestHeader && !CBlockIndexWorkComparator()(pindexBestHeader, pindexNewBest)) {
             break;
         }
 
@@ -2801,6 +2801,7 @@ FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
 bool static LinkOrphans(const uint256 *phashParent) {
     bool fWorkDone = false;
     const uint256 &hashGenesisBlock = Params().HashGenesisBlock();
+    static unsigned int nLastBlockOrder = 0;
 
     deque<multimap<uint256, CBlockIndex*>::iterator> vTodo;
     if (phashParent) {
@@ -2860,8 +2861,10 @@ bool static LinkOrphans(const uint256 *phashParent) {
             }
         }
         fWorkDone = true;
-        if (!(pindex->nStatus & BLOCK_FAILED_MASK) && (pindex->nStatus & BLOCK_VALID_TREE))
+        if (!(pindex->nStatus & BLOCK_FAILED_MASK) && (pindex->nStatus & BLOCK_VALID_TREE)) {
+            pindex->nOrder = ++nLastBlockOrder;
             setBlockIndexValid.insert(pindex);
+        }
         const uint256 &hashBlock = pindex->GetBlockHash();
         multimap<uint256, CBlockIndex*>::iterator itadd = mapOrphanBlocksByPrev.lower_bound(hashBlock);
         while (itadd != mapOrphanBlocksByPrev.end() && itadd->first == hashBlock)

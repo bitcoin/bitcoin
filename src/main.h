@@ -718,6 +718,9 @@ public:
     // Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
 
+    // (memory only) Order of adding to setBlockIndexValid.
+    unsigned int nOrder;
+
     // block header
     int nVersion;
     uint256 hashMerkleRoot;
@@ -738,6 +741,7 @@ public:
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
+        nOrder = 0;
 
         nVersion       = 0;
         hashMerkleRoot = 0;
@@ -758,6 +762,7 @@ public:
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
+        nOrder = 0;
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
@@ -877,8 +882,13 @@ public:
 struct CBlockIndexWorkComparator
 {
     bool operator()(CBlockIndex *pa, CBlockIndex *pb) {
+        if (pa == pb) return false;
+
         if (pa->nChainWork > pb->nChainWork) return false;
         if (pa->nChainWork < pb->nChainWork) return true;
+
+        if (pa->nOrder < pb->nOrder) return false;
+        if (pa->nOrder > pb->nOrder) return true;
 
         if (pa->GetBlockHash() < pb->GetBlockHash()) return false;
         if (pa->GetBlockHash() > pb->GetBlockHash()) return true;
