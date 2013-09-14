@@ -60,12 +60,7 @@ void SendCoinsEntry::on_addressBookButton_clicked()
 
 void SendCoinsEntry::on_payTo_textChanged(const QString &address)
 {
-    if(!model)
-        return;
-    // Fill in label from address book, if address has an associated label
-    QString associatedLabel = model->getAddressTableModel()->labelForAddress(address);
-    if(!associatedLabel.isEmpty())
-        ui->addAsLabel->setText(associatedLabel);
+    updateLabel(address);
 }
 
 void SendCoinsEntry::setModel(WalletModel *model)
@@ -164,7 +159,11 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
     if (recipient.authenticatedMerchant.isEmpty())
     {
         ui->payTo->setText(recipient.address);
-        ui->addAsLabel->setText(recipient.label);
+        // if no label is set, query users address book for current user-defined label
+        if (recipient.label.isEmpty())
+            updateLabel(recipient.address);
+        else
+            ui->addAsLabel->setText(recipient.label);
         ui->payAmount->setValue(recipient.amount);
     }
     else
@@ -202,4 +201,20 @@ void SendCoinsEntry::updateDisplayUnit()
         ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_s->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     }
+}
+
+bool SendCoinsEntry::updateLabel(const QString &address)
+{
+    if(!model)
+        return false;
+
+    // Fill in label from address book, if address has an associated label
+    QString associatedLabel = model->getAddressTableModel()->labelForAddress(address);
+    if(!associatedLabel.isEmpty())
+    {
+        ui->addAsLabel->setText(associatedLabel);
+        return true;
+    }
+
+    return false;
 }
