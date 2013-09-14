@@ -81,7 +81,7 @@ public:
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
-    void estimateFees(double dPriorityMedian, double& dPriority, double dFeeMedian, double& dFee);
+    void estimateFees(double dPriorityMedian, double& dPriority, double dFeeMedian, double& dFee, bool fUseHardCoded=false);
 
     unsigned long size()
     {

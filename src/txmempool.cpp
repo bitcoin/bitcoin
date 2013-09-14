@@ -298,33 +298,72 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
         CTxMemPoolEntry entry(tx, nFees, dPriority, nBestBlockHeight);
         unsigned int nSize = entry.getTxSize();
 
-        // Don't accept it if it can't get into a block
-        int64 txMinFee = GetMinFee(tx, true, GMF_RELAY);
-        if (fLimitFree && nFees < txMinFee)
-            return error("CTxMemPool::accept() : not enough fees %s, %"PRI64d" < %"PRI64d,
-                         hash.ToString().c_str(),
-                         nFees, txMinFee);
-
-        // Continuously rate-limit free transactions
-        // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-        // be annoying or make others' transactions take longer to confirm.
-        if (fLimitFree && nFees < CTransaction::nMinRelayTxFee)
+        // If -mintxfee is set, then use it instead of
+        // trying to estimate other miner's policies.
+        static double dHardFeeCutoff = 0.0;
+        if (dHardFeeCutoff == 0.0)
         {
-            static double dFreeCount;
-            static int64 nLastTime;
-            int64 nNow = GetTime();
+            int64 n = 0;
+            if (mapArgs.count("-mintxfee") && ParseMoney(mapArgs["-mintxfee"], n) && n > 0)
+            {
+                // n is satoshis-per-1000-bytes, dHardFeeCutoff is
+                // satoshis-per-byte, so:
+                dHardFeeCutoff = n/1000.0;
+            }
+            else dHardFeeCutoff = -1.0;
+        }
 
-            LOCK(cs);
+        //
+        // The less likely a transaction is to get into a block, the
+        // less likely we are to relay it.
+        // So: find the lowest 1% fee/priority transaction that recently made it into
+        // a block, and start rejecting transactions below that cutoff. 1% is arbitrary;
+        // we want fuzziness around the "relay/don't relay" cutoff, because we want to
+        // give miners some below-the-cutoff transactions that they might choose to include,
+        // which will drive the cutoff down. But we don't want to use zero because
+        // that would make it easy and cheap for a rogue miner to game by including one
+        // very-low-fee or very-low-priority transaction in their blocks. We do want to err
+        // on the side of relaying MORE, so 1% was chosen as the cutoff.
+        //
+        // Or, another way of thinking about it: we want to give miners a good selection
+        // of transactions to include (or not) in their blocks, but we also want to make
+        // it hard for a "penny-flooder" to waste network bandwidth. So we relay all
+        // transactions above the 1% cutoff, most of the transactions near our estimate of
+        // what a reasonable miner will (eventually) accept, and almost none that we estimate
+        // have little chance of making it into a block.
+        // 
+        // Economically rational miners might want to try to drive the feeCutoff up, so
+        // users pay higher average fees. However, the only way for them to do that is to flood
+        // the memory pool with high-fee transactions to try to drive up the 1%-median value;
+        // but doing that will cost them directly in lost fees (other miners will include those
+        // transactions in their blocks and take the fees). Miners have no incentive to drive
+        // down the fee cutoff.
+        // The priority cutoff for free transactions can't easily be manipulated because transaction
+        // priority is a naturally limited resource that depends on how many large, old inputs
+        // you have available to spend.
+        //
+        double priorityCutoff;
+        double feeCutoff;
+        estimateFees(0.01, priorityCutoff, 0.01, feeCutoff, true);
+        if (dHardFeeCutoff > 0.0)
+            feeCutoff = dHardFeeCutoff;
 
-            // Use an exponentially decaying ~10-minute window:
-            dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-            nLastTime = nNow;
-            // -limitfreerelay unit is thousand-bytes-per-minute
-            // At default rate it would take over a month to fill 1GB
-            if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
-                return error("CTxMemPool::accept() : free transaction rejected by rate limiter");
-            LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-            dFreeCount += nSize;
+        double dFee = (double)nFees/(double)nSize;
+        if (dFee < feeCutoff && dPriority < priorityCutoff)
+        {
+            bool fAccept = false;
+
+            if (dHardFeeCutoff < 0.0)
+            {   // Marginal transaction given a chance:
+                // insecure_rand returns unsigned 32-bit int, divide by
+                // 32-bit maximum value to get [0,1] inclusive range:
+                double dRand = insecure_rand() / (double)0xFFFFFFFF;
+                double r = max(dFee/feeCutoff, dPriority/priorityCutoff);
+                fAccept = (r*r > dRand); // exponentially less likely to include as r goes to zero
+            }
+            LogPrint("mempool", "CTxMemPool::accept() : %s %s, satoshi/byte=%.3g, pri=%.3g\n",
+                     hash.ToString().c_str(), (fAccept?"marginal accept":"rejected"), dFee, dPriority);
+            if (!fAccept) return false;
         }
 
         if (fRejectInsaneFee && nFees > CTransaction::nMinRelayTxFee * 10000)
@@ -474,11 +513,15 @@ bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
     return true;
 }
 
-void CTxMemPool::estimateFees(double dPriorityMedian, double& dPriority, double dFeeMedian, double& dFee)
+void CTxMemPool::estimateFees(double dPriorityMedian, double& dPriority, double dFeeMedian, double& dFee, bool fUseHardCoded)
 {
     LOCK(cs);
     dPriority = minerPolicyEstimator->estimatePriority(dPriorityMedian);
+    // Hard-coded priority is 1-BTC, 144-confirmation old, 250-byte txn:
+    if (dPriority < 0 && fUseHardCoded) dPriority = COIN*144 / 250;
     dFee = minerPolicyEstimator->estimateFee(dFeeMedian);
+    // Hard-coded fee is 10,000 satoshis per kilobyte (10 satoshis per byte):
+    if (dFee < 0 && fUseHardCoded) dFee = 10.0;
 }
 
 void CTxMemPool::writeEntry(CAutoFile& file, const uint256& txid, std::set<uint256>& alreadyWritten)
@@ -564,7 +607,6 @@ bool CTxMemPool::Read()
             CValidationState state;
             bool fMissingInputs;
             accept(state, tx, false, &fMissingInputs);
-            assert(state.IsValid() && !fMissingInputs);
         }
     }
     catch (std::exception &e) {
