@@ -292,7 +292,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             // Prioritize by fee once past the priority size or we run out of high-priority
             // transactions:
             if (!fSortedByFee &&
-                ((nBlockSize + nTxSize >= nBlockPrioritySize) || !AllowFree(dPriority)))
+                ((nBlockSize + nTxSize >= nBlockPrioritySize) || dPriority < CTransaction::dMinFreePriority))
             {
                 fSortedByFee = true;
                 comparer = TxPriorityCompare(fSortedByFee);

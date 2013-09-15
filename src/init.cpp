@@ -499,6 +499,13 @@ bool AppInit2(boost::thread_group& threadGroup)
         else
             return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"].c_str()));
     }
+    if (mapArgs.count("-minfreepriority"))
+    {
+        double dPriority = atof(mapArgs["-minfreepriority"].c_str());
+        if (dPriority < 0)
+            return InitError(strprintf(_("Invalid amount for -minfreepriority=<priority>: '%s'"), mapArgs["-minfreepriority"].c_str()));
+        CTransaction::dMinFreePriority = dPriority;
+    }
 
     if (mapArgs.count("-paytxfee"))
     {
