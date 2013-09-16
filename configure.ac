@@ -151,6 +151,7 @@ AC_PATH_PROGS([LUPDATE], [lupdate-qt4 lupdate4 lupdate],, $qt_bin_path:$PATH)
 AC_PATH_PROG([PROTOC], [protoc],, $protoc_bin_path:$PATH)
 AC_PATH_PROG(CCACHE,ccache)
 AC_PATH_PROG(XGETTEXT,xgettext)
+AC_PATH_PROG(HEXDUMP,hexdump)
 PKG_PROG_PKG_CONFIG
 
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
@@ -353,6 +354,12 @@ AX_BOOST_THREAD
 AX_BOOST_CHRONO
 
 if test x$use_tests = xyes; then
+
+  if test x$HEXDUMP = x; then
+    AC_MSG_ERROR(hexdump is required for tests)
+  fi
+
+
   AX_BOOST_UNIT_TEST_FRAMEWORK
 fi
 

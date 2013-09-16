@@ -49,3 +49,19 @@ moc_%.cpp: %.h
 %.pb.cc %.pb.h: %.proto
 	test -f $(PROTOC) && $(PROTOC) --cpp_out=$(@D) --proto_path=$(abspath $(<D) $<)  || \
 	  echo error: could not build $@
+
+%.json.h: %.json
+	@$(MKDIR_P) $(@D)
+	@echo "namespace json_tests{" > $@
+	@echo "static unsigned const char $(*F)[] = {" >> $@
+	@$(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' >> $@
+	@echo "};};" >> $@
+	@echo "Generated $@"
+
+%.raw.h: %.raw
+	@$(MKDIR_P) $(@D)
+	@echo "namespace alert_tests{" > $@
+	@echo "static unsigned const char $(*F)[] = {" >> $@
+	@$(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' >> $@
+	@echo "};};" >> $@
+	@echo "Generated $@"
