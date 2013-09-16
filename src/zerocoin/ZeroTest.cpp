@@ -15,7 +15,6 @@ using namespace std;
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <curses.h>
 #include <exception>
 #include "Zerocoin.h"
 #include "../util.h"
@@ -23,9 +22,6 @@ using namespace std;
 using namespace libzerocoin;
 extern Params* ZCParams;
 
-#define COLOR_STR_GREEN   "\033[32m"
-#define COLOR_STR_NORMAL  "\033[0m"
-#define COLOR_STR_RED     "\033[31m"
 
 #define TESTS_COINS_TO_ACCUMULATE   10
 
