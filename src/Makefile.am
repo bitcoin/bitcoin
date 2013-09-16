@@ -50,13 +50,12 @@ bitcoind_SOURCES = bitcoind.cpp
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
 bitcoind_LDADD += $(BDB_LIBS)
 
-leveldb/libleveldb.a:
-	@echo "Building LevelDB ..." && cd leveldb && CXX="$(CXX)" CC="$(CC)" \
-	  PLATFORM=$(TARGET_OS) AR="$(AR)" $(MAKE) $(LEVELDB_TARGET_FLAGS) OPT="$(CXXFLAGS) $(CPPFLAGS)" libleveldb.a
+leveldb/libleveldb.a: leveldb/libmemenv.a
 
-leveldb/libmemenv.a:
-	@echo "Building LevelDB ..." && cd leveldb && CXX="$(CXX)" CC="$(CC)" \
-	  PLATFORM=$(TARGET_OS) AR="$(AR)" $(MAKE) $(LEVELDB_TARGET_FLAGS) OPT="$(CXXFLAGS) $(CPPFLAGS)" libmemenv.a
+leveldb/%.a:
+	@echo "Building LevelDB ..." && $(MAKE) -C $(@D) $(@F) CXX="$(CXX)" \
+	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
+	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
 
 qt/bitcoinstrings.cpp: $(libbitcoin_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
