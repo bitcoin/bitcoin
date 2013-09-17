@@ -32,7 +32,8 @@ Value GetNetworkHashPS(int lookup, int height) {
         lookup = pb->nHeight;
 
     CBlockIndex *pb0 = pb;
-    int64 minTime, maxTime = pb0->GetBlockTime();
+    int64 minTime = pb0->GetBlockTime();
+    int64 maxTime = minTime;
     for (int i = 0; i < lookup; i++) {
         pb0 = pb0->pprev;
         int64 time = pb0->GetBlockTime();
