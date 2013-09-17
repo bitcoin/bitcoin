@@ -5,12 +5,14 @@
 
 #include "main.h"
 #include "wallet.h"
+#include "data/tx_invalid.json.h"
+#include "data/tx_valid.json.h"
 
 using namespace std;
 using namespace json_spirit;
 
 // In script_tests.cpp
-extern Array read_json(const std::string& filename);
+extern Array read_json(const std::string& jsondata);
 extern CScript ParseScript(string s);
 
 BOOST_AUTO_TEST_SUITE(transaction_tests)
@@ -22,7 +24,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
     // Inner arrays are either [ "comment" ]
     // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, enforceP2SH
     // ... where all scripts are stringified scripts.
-    Array tests = read_json("tx_valid.json");
+    Array tests = read_json(std::string(json_tests::tx_valid, json_tests::tx_valid + sizeof(json_tests::tx_valid)));
 
     BOOST_FOREACH(Value& tv, tests)
     {
@@ -91,7 +93,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
     // Inner arrays are either [ "comment" ]
     // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, enforceP2SH
     // ... where all scripts are stringified scripts.
-    Array tests = read_json("tx_invalid.json");
+    Array tests = read_json(std::string(json_tests::tx_invalid, json_tests::tx_invalid + sizeof(json_tests::tx_invalid)));
 
     BOOST_FOREACH(Value& tv, tests)
     {
