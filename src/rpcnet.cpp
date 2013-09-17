@@ -202,3 +202,39 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
     return ret;
 }
 
+
+Value bannode(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "bannode <node> <expiration>\n"
+            "Bans <node> until unix timestamp <expiration>. Set <expiration> to -1 to unban a node. Ban list is cleared on restart.");
+
+    std::vector<CNetAddr> addrs;
+    if (!LookupHost(params[0].get_str().c_str(), addrs, 50, true)) 
+        throw JSONRPCError(-25, "Error: Node lookup failed.");
+
+    BOOST_FOREACH(const CNetAddr& addr, addrs) {
+        CNode::Ban(addr, params[1].get_int64());
+    }
+
+    return Value::null;
+}
+
+Value listbannednodes(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "listbannednodes\n"
+            "Returns a list of currently banned nodes along with the ban expiration timestamps.");
+
+    Array ret;
+    BOOST_FOREACH(const banned_map_t::value_type& pair, CNode::GetBannedMap()) {
+        Object node;
+        node.push_back(Pair("addr", pair.first.ToStringIP()));
+        node.push_back(Pair("until", (boost::int64_t)pair.second));
+        ret.push_back(node);
+    }
+
+    return ret;
+}
