@@ -8,13 +8,15 @@
 #include "key.h"
 #include "script.h"
 #include "util.h"
+#include "data/sig_noncanonical.json.h"
+#include "data/sig_canonical.json.h"
 
 using namespace std;
 using namespace json_spirit;
 
 
 // In script_tests.cpp
-extern Array read_json(const std::string& filename);
+extern Array read_json(const std::string& jsondata);
 
 BOOST_AUTO_TEST_SUITE(canonical_tests)
 
@@ -58,7 +60,7 @@ bool static IsCanonicalSignature_OpenSSL(const std::vector<unsigned char> &vchSi
 
 BOOST_AUTO_TEST_CASE(script_canon)
 {
-    Array tests = read_json("sig_canonical.json");
+    Array tests = read_json(std::string(json_tests::sig_canonical, json_tests::sig_canonical + sizeof(json_tests::sig_canonical)));
 
     BOOST_FOREACH(Value &tv, tests) {
         string test = tv.get_str();
@@ -72,7 +74,7 @@ BOOST_AUTO_TEST_CASE(script_canon)
 
 BOOST_AUTO_TEST_CASE(script_noncanon)
 {
-    Array tests = read_json("sig_noncanonical.json");
+    Array tests = read_json(std::string(json_tests::sig_noncanonical, json_tests::sig_noncanonical + sizeof(json_tests::sig_noncanonical)));
 
     BOOST_FOREACH(Value &tv, tests) {
         string test = tv.get_str();

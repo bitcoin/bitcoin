@@ -9,6 +9,7 @@
 #include "alert.h"
 #include "serialize.h"
 #include "util.h"
+#include "data/alertTests.raw.h"
 
 #if 0
 //
@@ -71,27 +72,13 @@ struct ReadAlerts
 {
     ReadAlerts()
     {
-        std::string filename("alertTests");
-        namespace fs = boost::filesystem;
-        fs::path testFile = fs::current_path() / "data" / filename;
-#ifdef TEST_DATA_DIR
-        if (!fs::exists(testFile))
-        {
-            testFile = fs::path(BOOST_PP_STRINGIZE(TEST_DATA_DIR)) / filename;
-        }
-#endif
-        FILE* fp = fopen(testFile.string().c_str(), "rb");
-        if (!fp) return;
-
-
-        CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
-        if (!filein) return;
-
+        std::vector<unsigned char> vch(alert_tests::alertTests, alert_tests::alertTests + sizeof(alert_tests::alertTests));
+        CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
         try {
-            while (!feof(filein))
+            while (stream.good())
             {
                 CAlert alert;
-                filein >> alert;
+                stream >> alert;
                 alerts.push_back(alert);
             }
         }

@@ -57,6 +57,9 @@ src/qt/res/.dirstamp
 *.trs
 *.dmg
 
+*.json.h
+*.raw.h
+
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
