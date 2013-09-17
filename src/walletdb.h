@@ -147,12 +147,6 @@ public:
         return Write(std::string("orderposnext"), nOrderPosNext);
     }
 
-    bool WriteDefaultKey(const CPubKey& vchPubKey)
-    {
-        nWalletDBUpdated++;
-        return Write(std::string("defaultkey"), vchPubKey);
-    }
-
     bool ReadPool(int64 nPool, CKeyPool& keypool)
     {
         return Read(std::make_pair(std::string("pool"), nPool), keypool);

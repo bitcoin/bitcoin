@@ -105,7 +105,7 @@ Value getnewaddress(const Array& params, bool fHelp)
     if (params.size() > 0)
         strAccount = AccountFromValue(params[0]);
 
-    if (!pwalletMain->IsLocked())
+    if (pwalletMain->AutoFillKeyPool() && !pwalletMain->IsLocked())
         pwalletMain->TopUpKeyPool();
 
     // Generate a new key that is added to wallet
@@ -1323,7 +1323,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
             "walletpassphrase <passphrase> <timeout>\n"
             "Stores the wallet decryption key in memory for <timeout> seconds.");
 
-    pwalletMain->TopUpKeyPool();
+    if (pwalletMain->AutoFillKeyPool()) pwalletMain->TopUpKeyPool();
 
     int64 nSleepTime = params[1].get_int64();
     LOCK(cs_nWalletUnlockTime);

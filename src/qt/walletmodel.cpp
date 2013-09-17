@@ -357,6 +357,16 @@ bool WalletModel::backupWallet(const QString &filename)
     return BackupWallet(*wallet, filename.toLocal8Bit().data());
 }
 
+bool WalletModel::refillKeyPool()
+{
+    LOCK(wallet->cs_wallet);
+
+    UnlockContext ctx(requestUnlock());
+    if(!ctx.isValid()) return false;
+
+    return wallet->TopUpKeyPool();
+}
+
 // Handlers for core signals
 static void NotifyKeyStoreStatusChanged(WalletModel *walletmodel, CCryptoKeyStore *wallet)
 {

@@ -96,6 +96,8 @@ private:
     int64 nNextResend;
     int64 nLastResend;
 
+    bool fAutoFillKeyPool;
+
 public:
     mutable CCriticalSection cs_wallet;
 
@@ -109,7 +111,7 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
-    CWallet()
+    CWallet(bool _fAutoFillKeyPool = true)
     {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
@@ -119,8 +121,9 @@ public:
         nOrderPosNext = 0;
         nNextResend = 0;
         nLastResend = 0;
+        fAutoFillKeyPool = _fAutoFillKeyPool;
     }
-    CWallet(std::string strWalletFileIn)
+    CWallet(std::string strWalletFileIn, bool _fAutoFillKeyPool = true)
     {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
@@ -131,6 +134,7 @@ public:
         nOrderPosNext = 0;
         nNextResend = 0;
         nLastResend = 0;
+        fAutoFillKeyPool = _fAutoFillKeyPool;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -138,8 +142,6 @@ public:
     std::map<uint256, int> mapRequestCount;
 
     std::map<CTxDestination, CAddressBookData> mapAddressBook;
-
-    CPubKey vchDefaultKey;
 
     std::set<COutPoint> setLockedCoins;
 
@@ -223,6 +225,7 @@ public:
     bool GetKeyFromPool(CPubKey &key);
     int64 GetOldestKeyPoolTime();
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
+    bool AutoFillKeyPool() const { return fAutoFillKeyPool; }
 
     std::set< std::set<CTxDestination> > GetAddressGroupings();
     std::map<CTxDestination, int64> GetAddressBalances();
@@ -294,7 +297,7 @@ public:
     }
     void SetBestChain(const CBlockLocator& loc);
 
-    DBErrors LoadWallet(bool& fFirstRunRet);
+    DBErrors LoadWallet();
 
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
@@ -320,8 +323,6 @@ public:
     }
 
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
-
-    bool SetDefaultKey(const CPubKey &vchPubKey);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
     bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);

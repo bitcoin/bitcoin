@@ -110,6 +110,11 @@ void WalletFrame::backupWallet()
     walletStack->backupWallet();
 }
 
+void WalletFrame::refillKeyPool()
+{
+    walletStack->refillKeyPool();
+}
+
 void WalletFrame::changePassphrase()
 {
     walletStack->changePassphrase();

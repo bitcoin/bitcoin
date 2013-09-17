@@ -30,9 +30,8 @@ struct TestingSetup {
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
         InitBlockIndex();
-        bool fFirstRun;
         pwalletMain = new CWallet("wallet.dat");
-        pwalletMain->LoadWallet(fFirstRun);
+        pwalletMain->LoadWallet();
         RegisterWallet(pwalletMain);
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)

@@ -90,7 +90,7 @@ RES_ICONS = res/icons/bitcoin.png res/icons/address-book.png \
   res/icons/overview.png res/icons/export.png res/icons/synced.png \
   res/icons/remove.png res/icons/tx_mined.png res/icons/tx_input.png \
   res/icons/tx_output.png res/icons/tx_inout.png res/icons/lock_closed.png \
-  res/icons/lock_open.png res/icons/key.png res/icons/filesave.png \
+  res/icons/lock_open.png res/icons/key.png res/icons/keypair.png res/icons/filesave.png \
   res/icons/qrcode.png res/icons/debugwindow.png res/icons/bitcoin.ico \
   res/icons/bitcoin_testnet.ico
 

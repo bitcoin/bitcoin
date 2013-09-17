@@ -95,6 +95,8 @@ public:
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
     // Wallet backup
     bool backupWallet(const QString &filename);
+    // Refill keypool
+    bool refillKeyPool();
 
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
