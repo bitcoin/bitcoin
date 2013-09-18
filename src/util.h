@@ -153,7 +153,9 @@ extern volatile bool fReopenDebugLog;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
-int ATTR_WARN_PRINTF(1,2) OutputDebugStringF(const char* pszFormat, ...);
+
+// Print to debug.log if -debug=category switch is given OR category is NULL.
+int ATTR_WARN_PRINTF(2,3) LogPrint(const char* category, const char* pszFormat, ...);
 
 /*
   Rationale for the real_strprintf / strprintf construction:
@@ -179,7 +181,7 @@ bool ATTR_WARN_PRINTF(1,2) error(const char *format, ...);
  * __attribute__((format(printf,X,Y))) gets expanded to __attribute__((format(OutputDebugStringF,X,Y)))
  * which confuses gcc.
  */
-#define printf OutputDebugStringF
+#define printf(...) LogPrint(NULL, __VA_ARGS__)
 
 void LogException(std::exception* pex, const char* pszThread);
 void PrintException(std::exception* pex, const char* pszThread);
