@@ -1,3 +1,4 @@
+include Makefile.include
 AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
   -I$(top_srcdir)/src/leveldb/include -I$(top_srcdir)/src/leveldb/helpers \
   -I$(builddir) $(BOOST_INCLUDES) $(BDB_CPPFLAGS)
