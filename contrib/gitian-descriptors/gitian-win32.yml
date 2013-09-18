@@ -23,7 +23,7 @@ remotes:
 files:
 - "qt-win32-4.8.3-gitian-r3.zip"
 - "boost-win32-1.50.0-gitian3.zip"
-- "bitcoin-deps-0.0.6.zip"
+- "bitcoin-deps-0.0.7.zip"
 - "protobuf-win32-2.5.0-gitian-r2.zip"
 script: |
   #
@@ -32,7 +32,7 @@ script: |
   cd $STAGING
   unzip ../build/qt-win32-4.8.3-gitian-r3.zip
   unzip ../build/boost-win32-1.50.0-gitian3.zip
-  unzip ../build/bitcoin-deps-0.0.6.zip
+  unzip ../build/bitcoin-deps-0.0.7.zip
   unzip ../build/protobuf-win32-2.5.0-gitian-r2.zip
   cd $HOME/build/
   #
