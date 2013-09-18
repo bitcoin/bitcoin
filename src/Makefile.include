@@ -1,12 +1,10 @@
-.PHONY: FORCE
+# Helper for rules and subdir Makefiles to find parent targets.
+# Flags and other non-target variables should not be set here.
 
 LIBBITCOIN=$(top_builddir)/src/libbitcoin.a
 LIBLEVELDB=$(top_builddir)/src/leveldb/libleveldb.a
 LIBMEMENV=$(top_builddir)/src/leveldb/libmemenv.a
 LIBBITCOINQT=$(top_builddir)/src/qt/libbitcoinqt.a
-
-INCLUDES += $(BDB_CPPFLAGS)
-LIBBITCOIN += $(BDB_LIBS)
 
 $(LIBBITCOIN):
 	$(MAKE) -C $(top_builddir)/src $(@F)

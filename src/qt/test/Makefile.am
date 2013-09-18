@@ -4,7 +4,7 @@ AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
   -I$(top_srcdir)/src/leveldb/include -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/leveldb/helpers -I$(top_srcdir)/src/qt \
   -I$(top_builddir)/src/qt $(BOOST_INCLUDES) $(PROTOBUF_CFLAGS) \
-    $(QR_CFLAGS)
+    $(QR_CFLAGS) $(BDB_CPPFLAGS)
 AM_LDFLAGS = $(PTHREAD_CFLAGS)
 bin_PROGRAMS = test_bitcoin-qt
 TESTS = test_bitcoin-qt
@@ -20,7 +20,7 @@ test_bitcoin_qt_SOURCES = test_main.cpp uritests.cpp paymentservertests.cpp $(TE
 nodist_test_bitcoin_qt_SOURCES = $(TEST_QT_MOC_CPP)
 test_bitcoin_qt_LDADD = $(LIBBITCOINQT) $(LIBBITCOIN) $(LIBLEVELDB) \
   $(LIBMEMENV) $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QT_TEST_LIBS) \
-  $(QR_LIBS) $(PROTOBUF_LIBS)
+  $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS)
 
 CLEANFILES = $(BUILT_SOURCES) *.gcda *.gcno
 
