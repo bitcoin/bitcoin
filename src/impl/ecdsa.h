@@ -187,7 +187,7 @@ int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_
     secp256k1_num_free(&n);
     if (secp256k1_num_is_zero(&sig->s))
         return 0;
-    if (secp256k1_num_is_odd(&sig->s)) {
+    if (secp256k1_num_cmp(&sig->s, &c->half_order) > 0) {
         secp256k1_num_sub(&sig->s, &c->order, &sig->s);
         if (recid)
             *recid ^= 1;

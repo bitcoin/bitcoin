@@ -359,6 +359,7 @@ void static secp256k1_ge_start(void) {
     if (secp256k1_ge_consts == NULL) {
         secp256k1_ge_consts_t *ret = (secp256k1_ge_consts_t*)malloc(sizeof(secp256k1_ge_consts_t));
         secp256k1_num_init(&ret->order);
+        secp256k1_num_init(&ret->half_order);
         secp256k1_num_init(&ret->lambda);
         secp256k1_num_init(&ret->a1b2);
         secp256k1_num_init(&ret->a2);
@@ -368,6 +369,8 @@ void static secp256k1_ge_start(void) {
         secp256k1_num_set_bin(&ret->a1b2,   secp256k1_ge_consts_a1b2,   sizeof(secp256k1_ge_consts_a1b2));
         secp256k1_num_set_bin(&ret->a2,     secp256k1_ge_consts_a2,     sizeof(secp256k1_ge_consts_a2));
         secp256k1_num_set_bin(&ret->b1,     secp256k1_ge_consts_b1,     sizeof(secp256k1_ge_consts_b1));
+        secp256k1_num_copy(&ret->half_order, &ret->order);
+        secp256k1_num_shift(&ret->half_order, 1);
         secp256k1_fe_set_b32(&ret->beta, secp256k1_ge_consts_beta);
         secp256k1_fe_t g_x, g_y;
         secp256k1_fe_set_b32(&g_x, secp256k1_ge_consts_g_x);
@@ -381,6 +384,7 @@ void static secp256k1_ge_stop(void) {
     if (secp256k1_ge_consts != NULL) {
         secp256k1_ge_consts_t *c = (secp256k1_ge_consts_t*)secp256k1_ge_consts;
         secp256k1_num_free(&c->order);
+        secp256k1_num_free(&c->half_order);
         secp256k1_num_free(&c->lambda);
         secp256k1_num_free(&c->a1b2);
         secp256k1_num_free(&c->a2);
