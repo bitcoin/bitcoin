@@ -21,10 +21,6 @@ AH_BOTTOM([#endif //BITCOIN_CONFIG_H])
 # probably be removed when building on <= 10.6 is no longer supported.
 m4_include([pkg.m4])
 
-dnl reset CXXFLAGS if empty (autoconf adds its own defaults otherwise)
-: ${CFLAGS=""}
-: ${CXXFLAGS=""}
-
 dnl faketime breaks configure and is only needed for make. Disable it here.
 unset FAKETIME
 
@@ -66,13 +62,6 @@ AC_ARG_WITH([qt],
   [enable qt (default is yes)])],
   [use_qt=$withval],
   [use_qt=yes])
-
-dnl compile with full warnings and debugging symbols
-AC_ARG_ENABLE(debug,
-    AS_HELP_STRING([--enable-debug],[compile with debug symbols (default is yes)]),
-    [use_debug=$enableval],
-    [use_debug=yes])
-    AC_MSG_CHECKING([if compiling with debugging symbols])
 
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
@@ -159,8 +148,6 @@ PKG_PROG_PKG_CONFIG
 ##
 CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
 CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO"
-DEBUG_CXXFLAGS="-g -ggdb"
-RELEASE_CXXFLAGS="-O2"
 
 AC_LANG_PUSH([C++])
 
@@ -228,9 +215,9 @@ case $host in
        AX_CHECK_LINK_FLAG([[$base_frameworks]],[LIBS="$LIBS $base_frameworks"],[AC_MSG_ERROR(could not find base frameworks)])
      fi
 
-     AX_CHECK_COMPILE_FLAG([-mmacosx-version-min=10.5],[RELEASE_CXXFLAGS="$RELEASE_CXXFLAGS -mmacosx-version-min=10.5"])
-     AX_CHECK_COMPILE_FLAG([-arch i386],[RELEASE_CXXFLAGS="$RELEASE_CXXFLAGS -arch i386"])
-     RELEASE_CXXFLAGS="$RELEASE_CXXFLAGS -O3"
+     AX_CHECK_COMPILE_FLAG([-mmacosx-version-min=10.5],[CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.5"])
+     AX_CHECK_COMPILE_FLAG([-arch i386],[CXXFLAGS="$CXXFLAGS -arch i386"])
+     CXXFLAGS="$CXXFLAGS -O3"
      CPPFLAGS="$CPPFLAGS -DMAC_OSX"
      TESTDEFS="-DBOOST_TEST_DYN_LINK"
      ;;
@@ -238,12 +225,6 @@ case $host in
      TESTDEFS="-DBOOST_TEST_DYN_LINK"
      ;;
 esac
-
-if test x$use_debug == xyes; then
-  CXXFLAGS="$DEBUG_CXXFLAGS $CXXFLAGS"
-else
-  CXXFLAGS="$RELEASE_CXXFLAGS $CXXFLAGS"
-fi
 
 if test x$use_comparison_tool != xno; then
   AC_SUBST(JAVA_COMPARISON_TOOL, $use_comparison_tool)
