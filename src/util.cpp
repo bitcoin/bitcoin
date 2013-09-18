@@ -233,8 +233,16 @@ static void DebugPrintInit()
     mutexDebugLog = new boost::mutex();
 }
 
-int OutputDebugStringF(const char* pszFormat, ...)
+int LogPrint(const char* category, const char* pszFormat, ...)
 {
+    if (category != NULL)
+    {
+        if (!fDebug) return 0;
+        const vector<string>& categories = mapMultiArgs["-debug"];
+        if (find(categories.begin(), categories.end(), string(category)) == categories.end())
+            return 0;
+    }
+
     int ret = 0; // Returns total number of characters written
     if (fPrintToConsole)
     {
