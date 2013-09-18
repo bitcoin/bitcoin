@@ -153,7 +153,10 @@ extern volatile bool fReopenDebugLog;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
-int ATTR_WARN_PRINTF(1,2) OutputDebugStringF(const char* pszFormat, ...);
+
+// Print to debug.log if -debug=category switch is given OR category is NULL.
+int ATTR_WARN_PRINTF(2,3) LogPrint(const char* category, const char* pszFormat, ...);
+#define LogPrintf(...) LogPrint(NULL, __VA_ARGS__)
 
 /*
   Rationale for the real_strprintf / strprintf construction:
@@ -172,14 +175,6 @@ std::string real_strprintf(const std::string &format, int dummy, ...);
 std::string vstrprintf(const char *format, va_list ap);
 
 bool ATTR_WARN_PRINTF(1,2) error(const char *format, ...);
-
-/* Redefine printf so that it directs output to debug.log
- *
- * Do this *after* defining the other printf-like functions, because otherwise the
- * __attribute__((format(printf,X,Y))) gets expanded to __attribute__((format(OutputDebugStringF,X,Y)))
- * which confuses gcc.
- */
-#define printf OutputDebugStringF
 
 void LogException(std::exception* pex, const char* pszThread);
 void PrintException(std::exception* pex, const char* pszThread);
@@ -317,12 +312,12 @@ inline std::string HexStr(const T& vch, bool fSpaces=false)
 template<typename T>
 void PrintHex(const T pbegin, const T pend, const char* pszFormat="%s", bool fSpaces=true)
 {
-    printf(pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
+    LogPrintf(pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
 }
 
 inline void PrintHex(const std::vector<unsigned char>& vch, const char* pszFormat="%s", bool fSpaces=true)
 {
-    printf(pszFormat, HexStr(vch, fSpaces).c_str());
+    LogPrintf(pszFormat, HexStr(vch, fSpaces).c_str());
 }
 
 inline int64 GetPerformanceCounter()
@@ -560,7 +555,7 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
 {
     std::string s = strprintf("bitcoin-%s", name);
     RenameThread(s.c_str());
-    printf("%s thread start\n", name);
+    LogPrintf("%s thread start\n", name);
     try
     {
         while (1)
@@ -571,7 +566,7 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
     }
     catch (boost::thread_interrupted)
     {
-        printf("%s thread stop\n", name);
+        LogPrintf("%s thread stop\n", name);
         throw;
     }
     catch (std::exception& e) {
@@ -588,13 +583,13 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     RenameThread(s.c_str());
     try
     {
-        printf("%s thread start\n", name);
+        LogPrintf("%s thread start\n", name);
         func();
-        printf("%s thread exit\n", name);
+        LogPrintf("%s thread exit\n", name);
     }
     catch (boost::thread_interrupted)
     {
-        printf("%s thread interrupt\n", name);
+        LogPrintf("%s thread interrupt\n", name);
         throw;
     }
     catch (std::exception& e) {
