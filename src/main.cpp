@@ -711,38 +711,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     return true;
 }
 
-int64 GetMinFee(const CTransaction& tx, bool fAllowFree, enum GetMinFee_mode mode)
-{
-    // Base fee is either nMinTxFee or nMinRelayTxFee
-    int64 nBaseFee = (mode == GMF_RELAY) ? tx.nMinRelayTxFee : tx.nMinTxFee;
-
-    unsigned int nBytes = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
-    int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
-
-    if (fAllowFree)
-    {
-        // There is a free transaction area in blocks created by most miners,
-        // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
-        //   to be considered to fall into this category
-        // * If we are creating a transaction we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 17000
-        //   (= 10000) to be considered safe and assume they can likely make it into this section
-        if (nBytes < (mode == GMF_SEND ? (DEFAULT_BLOCK_PRIORITY_SIZE - 17000) : (DEFAULT_BLOCK_PRIORITY_SIZE - 1000)))
-            nMinFee = 0;
-    }
-
-    // To limit dust spam, require base fee if any output is less than 0.01
-    if (nMinFee < nBaseFee)
-    {
-        BOOST_FOREACH(const CTxOut& txout, tx.vout)
-            if (txout.nValue < CENT)
-                nMinFee = nBaseFee;
-    }
-
-    if (!MoneyRange(nMinFee))
-        nMinFee = MAX_MONEY;
-    return nMinFee;
-}
-
 
 
 int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const

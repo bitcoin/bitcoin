@@ -253,14 +253,6 @@ struct CDiskTxPos : public CDiskBlockPos
 
 
 
-enum GetMinFee_mode
-{
-    GMF_RELAY,
-    GMF_SEND,
-};
-
-int64 GetMinFee(const CTransaction& tx, bool fAllowFree, enum GetMinFee_mode mode);
-
 //
 // Check transaction inputs, and make sure any
 // pay-to-script-hash transactions are evaluating IsStandard scripts

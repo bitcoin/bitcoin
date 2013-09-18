@@ -59,6 +59,25 @@ string AccountFromValue(const Value& value)
     return strAccount;
 }
 
+void
+GetFeePolicy(double& dMinFreePriority, double& dFeePerByte)
+{
+    // If -paytxfee is set:
+    if (nTransactionFee > 0)
+    {
+        // Never send for free:
+        dMinFreePriority = std::numeric_limits<double>::max();
+        // Convert satoshis-per-1000-bytes to satoshis-per-byte:
+        dFeePerByte = (double)nTransactionFee / 1000.0;
+    }
+    else
+    {
+        // Default is to send for free if it is fairly likely to get into next few,
+        // otherwise use median transaction fee:
+        mempool.estimateFees(0.1, dMinFreePriority, 0.5, dFeePerByte, true);
+    }
+}
+
 Value getinfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -299,7 +318,9 @@ Value sendtoaddress(const Array& params, bool fHelp)
     if (pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
+    double dMinFreePriority, dFeePerByte;
+    GetFeePolicy(dMinFreePriority, dFeePerByte);
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, dMinFreePriority, dFeePerByte, wtx);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
@@ -650,7 +671,9 @@ Value sendfrom(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
     // Send
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
+    double dMinFreePriority, dFeePerByte;
+    GetFeePolicy(dMinFreePriority, dFeePerByte);
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, dMinFreePriority, dFeePerByte, wtx);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
@@ -707,10 +730,16 @@ Value sendmany(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
     // Send
+
+    double dMinFreePriority, dFeePerByte;
+    GetFeePolicy(dMinFreePriority, dFeePerByte);
+
     CReserveKey keyChange(pwalletMain);
     int64 nFeeRequired = 0;
     string strFailReason;
-    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strFailReason);
+    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, 
+                                                   dMinFreePriority, dFeePerByte,
+                                                   nFeeRequired, strFailReason);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     if (!pwalletMain->CommitTransaction(wtx, keyChange))
