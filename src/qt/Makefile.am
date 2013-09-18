@@ -4,7 +4,7 @@ AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
   -I$(top_srcdir)/src/leveldb/include -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/leveldb/helpers -I$(top_builddir)/src/qt \
   -I$(top_builddir)/src/qt/forms $(BOOST_INCLUDES) $(PROTOBUF_CFLAGS) \
-  $(QR_CFLAGS)
+  $(QR_CFLAGS) $(BDB_CPPFLAGS)
 AM_LDFLAGS = $(PTHREAD_CFLAGS)
 bin_PROGRAMS = peercoin-qt
 noinst_LIBRARIES = libppcoinqt.a

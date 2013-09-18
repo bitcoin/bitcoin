@@ -1,4 +1,5 @@
-.PHONY: FORCE
+# Helper for rules and subdir Makefiles to find parent targets.
+# Flags and other non-target variables should not be set here.
 
 LIBPPCOIN_SERVER=$(top_builddir)/src/libppcoin_server.a
 LIBPPCOIN_WALLET=$(top_builddir)/src/libppcoin_wallet.a
