@@ -145,7 +145,7 @@ Value importwallet(const Array& params, bool fHelp)
         CPubKey pubkey = key.GetPubKey();
         CKeyID keyid = pubkey.GetID();
         if (pwalletMain->HaveKey(keyid)) {
-            printf("Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString().c_str());
+            LogPrintf("Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString().c_str());
             continue;
         }
         int64 nTime = DecodeDumpTime(vstr[1]);
@@ -163,7 +163,7 @@ Value importwallet(const Array& params, bool fHelp)
                 fLabel = true;
             }
         }
-        printf("Importing %s...\n", CBitcoinAddress(keyid).ToString().c_str());
+        LogPrintf("Importing %s...\n", CBitcoinAddress(keyid).ToString().c_str());
         if (!pwalletMain->AddKeyPubKey(key, pubkey)) {
             fGood = false;
             continue;
@@ -179,7 +179,7 @@ Value importwallet(const Array& params, bool fHelp)
     while (pindex && pindex->pprev && pindex->nTime > nTimeBegin - 7200)
         pindex = pindex->pprev;
 
-    printf("Rescanning last %i blocks\n", pindexBest->nHeight - pindex->nHeight + 1);
+    LogPrintf("Rescanning last %i blocks\n", pindexBest->nHeight - pindex->nHeight + 1);
     pwalletMain->ScanForWalletTransactions(pindex);
     pwalletMain->ReacceptWalletTransactions();
     pwalletMain->MarkDirty();
