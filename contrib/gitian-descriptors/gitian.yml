@@ -58,12 +58,12 @@ script: |
   cd bitcoin
   export TAR_OPTIONS=--mtime=`echo $REFERENCE_DATETIME | awk '{ print $1 }'`
   ./autogen.sh
-  ./configure --disable-debug --prefix=$STAGING --bindir=$OUTDIR --with-protoc-bindir=$STAGING/host/bin --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" CXXFLAGS="-frandom-seed=bitcoin"
+  ./configure --prefix=$STAGING --bindir=$OUTDIR --with-protoc-bindir=$STAGING/host/bin --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" CXXFLAGS="-frandom-seed=bitcoin"
   make dist
   mkdir -p distsrc
   cd distsrc
   tar --strip-components=1 -xf ../bitcoin-*.tar.*
-  ./configure --disable-debug --prefix=$STAGING --bindir=$OUTDIR --with-protoc-bindir=$STAGING/host/bin --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" CXXFLAGS="-frandom-seed=bitcoin"
+  ./configure --prefix=$STAGING --bindir=$OUTDIR --with-protoc-bindir=$STAGING/host/bin --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" CXXFLAGS="-frandom-seed=bitcoin"
   make $MAKEOPTS
   make $MAKEOPTS install-strip
   mkdir -p $OUTDIR/src
