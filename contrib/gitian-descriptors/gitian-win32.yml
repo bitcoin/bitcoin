@@ -23,7 +23,7 @@ remotes:
 files:
 - "qt-win32-4.8.3-gitian-r3.zip"
 - "boost-win32-1.50.0-gitian3.zip"
-- "bitcoin-deps-0.0.6.zip"
+- "bitcoin-deps-0.0.7.zip"
 - "protobuf-win32-2.5.0-gitian-r2.zip"
 script: |
   #
@@ -32,7 +32,7 @@ script: |
   cd $STAGING
   unzip ../build/qt-win32-4.8.3-gitian-r3.zip
   unzip ../build/boost-win32-1.50.0-gitian3.zip
-  unzip ../build/bitcoin-deps-0.0.6.zip
+  unzip ../build/bitcoin-deps-0.0.7.zip
   unzip ../build/protobuf-win32-2.5.0-gitian-r2.zip
   cd $HOME/build/
   #
@@ -40,12 +40,12 @@ script: |
   export PATH=$STAGING/host/bin:$PATH
   export TAR_OPTIONS=--mtime=`echo $REFERENCE_DATETIME | awk '{ print $1 }'`
   ./autogen.sh
-  ./configure --disable-debug --bindir=$OUTDIR --prefix=$STAGING --host=i586-mingw32msvc --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" CXXFLAGS="-frandom-seed=bitcoin"
+  ./configure --bindir=$OUTDIR --prefix=$STAGING --host=i586-mingw32msvc --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" CXXFLAGS="-frandom-seed=bitcoin"
   make dist
   mkdir -p distsrc
   cd distsrc
   tar --strip-components=1 -xf ../bitcoin-*.tar.*
-  ./configure --disable-debug --bindir=$OUTDIR --prefix=$STAGING --host=i586-mingw32msvc --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" CXXFLAGS="-frandom-seed=bitcoin"
+  ./configure --bindir=$OUTDIR --prefix=$STAGING --host=i586-mingw32msvc --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" CXXFLAGS="-frandom-seed=bitcoin"
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
