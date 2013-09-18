@@ -289,6 +289,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
             BOOST_CHECK_NE(fails, RANDOM_REPEATS);
         }
     }
+    empty_wallet();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
