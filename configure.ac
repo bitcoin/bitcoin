@@ -215,9 +215,6 @@ case $host in
        AX_CHECK_LINK_FLAG([[$base_frameworks]],[LIBS="$LIBS $base_frameworks"],[AC_MSG_ERROR(could not find base frameworks)])
      fi
 
-     AX_CHECK_COMPILE_FLAG([-mmacosx-version-min=10.5],[CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.5"])
-     AX_CHECK_COMPILE_FLAG([-arch i386],[CXXFLAGS="$CXXFLAGS -arch i386"])
-     CXXFLAGS="$CXXFLAGS -O3"
      CPPFLAGS="$CPPFLAGS -DMAC_OSX"
      TESTDEFS="-DBOOST_TEST_DYN_LINK"
      ;;
