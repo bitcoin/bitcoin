@@ -2,7 +2,7 @@ include $(top_srcdir)/src/Makefile.include
 
 AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
   -I$(top_srcdir)/src/leveldb/include -I$(top_srcdir)/src/leveldb/helpers \
-  -I$(top_srcdir)/src $(BOOST_INCLUDES)
+  -I$(top_srcdir)/src $(BOOST_INCLUDES) $(BDB_CPPFLAGS)
 
 AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
@@ -25,7 +25,7 @@ BUILT_SOURCES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 # test_bitcoin binary #
 test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(TESTDEFS)
 test_bitcoin_LDADD = $(LIBBITCOIN) $(LIBLEVELDB) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BDB_LIBS)
 test_bitcoin_SOURCES = accounting_tests.cpp alert_tests.cpp \
   allocator_tests.cpp base32_tests.cpp base58_tests.cpp base64_tests.cpp \
   bignum_tests.cpp bloom_tests.cpp canonical_tests.cpp checkblock_tests.cpp \
