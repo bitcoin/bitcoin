@@ -39,7 +39,7 @@ script: |
   #
   tar xzf db-4.8.30.NC.tar.gz
   cd db-4.8.30.NC/build_unix
-  ../dist/configure --prefix=$INSTALLPREFIX --enable-mingw --enable-cxx --host=$HOST
+  ../dist/configure --prefix=$INSTALLPREFIX --enable-mingw --enable-cxx --host=$HOST --disable-shared
   make $MAKEOPTS library_build
   make install_lib install_include
   cd ../..
@@ -77,6 +77,6 @@ script: |
   cd ..
   #
   cd $INSTALLPREFIX
-  zip -r $OUTDIR/bitcoin-deps-0.0.6.zip include lib
+  zip -r $OUTDIR/bitcoin-deps-0.0.7.zip include lib
   # Kill wine processes as gitian won't figure out we are done otherwise
   killall wineserver services.exe explorer.exe winedevice.exe
