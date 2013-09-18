@@ -426,7 +426,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 
-    fDebug = GetBoolArg("-debug", false);
+    if (mapMultiArgs.count("-debug")) fDebug = true;
     fBenchmark = GetBoolArg("-benchmark", false);
     mempool.fChecks = GetBoolArg("-checkmempool", RegTest());
     Checkpoints::fEnabled = GetBoolArg("-checkpoints", true);
