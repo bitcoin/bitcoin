@@ -14,8 +14,6 @@ files:
 - "protobuf-2.5.0.tar.bz2"
 script: |
   #
-  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-  export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
   export INSTALLPREFIX=$OUTDIR/staging/deps
   export HOST=i586-mingw32msvc
@@ -36,4 +34,8 @@ script: |
   make
   make install
   cd $INSTALLPREFIX
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
   zip -r $OUTDIR/protobuf-win32-2.5.0-gitian-r2.zip include lib host
+  unset LD_PRELOAD
+  unset FAKETIME
