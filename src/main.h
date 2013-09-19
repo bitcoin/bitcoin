@@ -655,7 +655,7 @@ public:
          if (nBlocks==0 || nTimeFirst > nTimeIn)
              nTimeFirst = nTimeIn;
          nBlocks++;
-         if (nHeightIn > nHeightFirst)
+         if (nHeightIn > nHeightLast)
              nHeightLast = nHeightIn;
          if (nTimeIn > nTimeLast)
              nTimeLast = nTimeIn;
