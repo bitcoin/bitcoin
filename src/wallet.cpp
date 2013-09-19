@@ -1145,11 +1145,11 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
                 nValueRet += vValue[i].first;
             }
 
-        LogPrintf("selectcoins", "SelectCoins() best subset: ");
+        LogPrint("selectcoins", "SelectCoins() best subset: ");
         for (unsigned int i = 0; i < vValue.size(); i++)
             if (vfBest[i])
-                LogPrintf("selectcoins", "%s ", FormatMoney(vValue[i].first).c_str());
-        LogPrintf("selectcoins", "total %s\n", FormatMoney(nBest).c_str());
+                LogPrint("selectcoins", "%s ", FormatMoney(vValue[i].first).c_str());
+        LogPrint("selectcoins", "total %s\n", FormatMoney(nBest).c_str());
     }
 
     return true;
