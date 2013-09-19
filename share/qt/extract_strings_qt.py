@@ -50,7 +50,7 @@ def parse_po(text):
 files = glob.glob('src/*.cpp') + glob.glob('src/*.h') 
 
 # xgettext -n --keyword=_ $FILES
-XGETTEXT=os.getenv('XGETTEXT', 'gettext')
+XGETTEXT=os.getenv('XGETTEXT', 'xgettext')
 child = Popen([XGETTEXT,'--output=-','-n','--keyword=_'] + files, stdout=PIPE)
 (out, err) = child.communicate()
 
