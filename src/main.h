@@ -1214,7 +1214,7 @@ public:
         @see CTransaction::FetchInputs
      */
     int64 GetValueIn(const CTransaction& tx);
-    
+
     // Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx);
 
