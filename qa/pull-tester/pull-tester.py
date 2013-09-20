@@ -33,6 +33,7 @@ def checkout_pull(clone_url, commit, out):
     build_dir=os.environ["BUILD_DIR"]
     run("umount ${CHROOT_COPY}/proc", fail_hard=False)
     run("rsync --delete -apv ${CHROOT_MASTER} ${CHROOT_COPY}")
+    run("rm -rf ${CHROOT_COPY}${SCRIPTS_DIR}")
     run("cp -a ${SCRIPTS_DIR} ${CHROOT_COPY}${SCRIPTS_DIR}")
     # Merge onto upstream/master
     run("rm -rf ${BUILD_DIR}")
@@ -102,7 +103,7 @@ def testpull(number, comment_url, clone_url, commit):
 
     # New: pull-tester.sh script(s) are in the tree:
     script = os.environ["BUILD_PATH"]+"/qa/pull-tester/pull-tester.sh"
-    script += " ${BUILD_PATH} ${MINGW_DEPS_DIR} ${SCRIPTS_DIR}/BitcoinjBitcoindComparisonTool.jar 6"
+    script += " ${BUILD_PATH} ${MINGW_DEPS_DIR} ${SCRIPTS_DIR}/BitcoindComparisonTool.jar 6"
     returncode = run("chroot ${CHROOT_COPY} sudo -u ${BUILD_USER} -H timeout ${TEST_TIMEOUT} "+script,
                      fail_hard=False, stdout=out, stderr=out)
 
