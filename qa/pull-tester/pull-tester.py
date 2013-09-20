@@ -21,9 +21,15 @@ def run(command, **kwargs):
     kwargs.setdefault("stderr", open('/dev/null', 'w'))
     command = Template(command).substitute(os.environ)
     if "TRACE" in os.environ:
-        print(command)
-    process = subprocess.Popen(command.split(' '), **kwargs)
-    process.wait()
+        if 'cwd' in kwargs:
+            print("[cwd=%s] %s"%(kwargs['cwd'], command))
+        else: print(command)
+    try:
+        process = subprocess.Popen(command.split(' '), **kwargs)
+        process.wait()
+    except KeyboardInterrupt:
+        process.terminate()
+        raise
     if process.returncode != 0 and fail_hard:
         raise RunError("Failed: "+command)
     return process.returncode
@@ -85,6 +91,7 @@ def testpull(number, comment_url, clone_url, commit):
     print("Testing pull %d: %s : %s"%(number, clone_url,commit))
 
     dir = os.environ["RESULTS_DIR"] + "/" + commit + "/"
+    print(" ouput to %s"%dir)
     if os.path.exists(dir):
         os.system("rm -r " + dir)
     os.makedirs(dir)
@@ -103,7 +110,7 @@ def testpull(number, comment_url, clone_url, commit):
 
     # New: pull-tester.sh script(s) are in the tree:
     script = os.environ["BUILD_PATH"]+"/qa/pull-tester/pull-tester.sh"
-    script += " ${BUILD_PATH} ${MINGW_DEPS_DIR} ${SCRIPTS_DIR}/BitcoindComparisonTool.jar 6"
+    script += " ${BUILD_PATH} ${MINGW_DEPS_DIR} ${SCRIPTS_DIR}/BitcoindComparisonTool.jar 1"
     returncode = run("chroot ${CHROOT_COPY} sudo -u ${BUILD_USER} -H timeout ${TEST_TIMEOUT} "+script,
                      fail_hard=False, stdout=out, stderr=out)
 
