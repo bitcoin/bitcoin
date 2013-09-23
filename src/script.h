@@ -541,8 +541,11 @@ public:
 
     bool IsPayToScriptHash() const;
 
-    // Called by IsStandardTx
+    // Called by IsStandardTx and P2SH VerifyScript (which makes it consensus-critical).
     bool IsPushOnly() const;
+
+    // Called by IsStandardTx.
+    bool HasCanonicalPushes() const;
 
     // Returns whether the script is guaranteed to fail at execution,
     // regardless of the initial stack. This allows outputs to be pruned
