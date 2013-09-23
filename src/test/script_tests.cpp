@@ -444,4 +444,22 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     BOOST_CHECK(combined == partial3c);
 }
 
+BOOST_AUTO_TEST_CASE(script_standard_push)
+{
+    for (int i=0; i<1000; i++) {
+        CScript script;
+        script << i;
+        BOOST_CHECK_MESSAGE(script.IsPushOnly(), "Number " << i << " is not pure push.");
+        BOOST_CHECK_MESSAGE(script.HasCanonicalPushes(), "Number " << i << " push is not canonical.");
+    }
+
+    for (int i=0; i<1000; i++) {
+        std::vector<unsigned char> data(i, '\111');
+        CScript script;
+        script << data;
+        BOOST_CHECK_MESSAGE(script.IsPushOnly(), "Length " << i << " is not pure push.");
+        BOOST_CHECK_MESSAGE(script.HasCanonicalPushes(), "Length " << i << " push is not canonical.");
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
