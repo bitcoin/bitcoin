@@ -16,8 +16,10 @@ public:
 
     CWalletTx *getTransaction();
 
-    void setTransactionFee(qint64 newFee);
+    void setTransactionFee(qint64 newFee, bool isVoluntary);
     qint64 getTransactionFee();
+    
+    bool isTransactionFeeVoluntary();
 
     qint64 getTotalTransactionAmount();
 
@@ -29,6 +31,7 @@ private:
     CWalletTx *walletTransaction;
     CReserveKey *keyChange;
     qint64 fee;
+    bool isVoluntary;
 
 public slots:
 

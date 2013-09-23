@@ -4,7 +4,8 @@ WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &
     recipients(recipients),
     walletTransaction(0),
     keyChange(0),
-    fee(0)
+    fee(0),
+    isVoluntary(false)
 {
     walletTransaction = new CWalletTx();
 }
@@ -30,9 +31,15 @@ qint64 WalletModelTransaction::getTransactionFee()
     return fee;
 }
 
-void WalletModelTransaction::setTransactionFee(qint64 newFee)
+void WalletModelTransaction::setTransactionFee(qint64 newFee, bool isVoluntary)
 {
     fee=newFee;
+    this->isVoluntary = isVoluntary;
+}
+
+bool WalletModelTransaction::isTransactionFeeVoluntary()
+{
+    return isVoluntary;
 }
 
 qint64 WalletModelTransaction::getTotalTransactionAmount()

@@ -1169,7 +1169,7 @@ bool CWallet::SelectCoins(int64 nTargetValue, set<pair<const CWalletTx*,unsigned
 
 
 bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason)
+                                CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, bool& isVoluntaryFee, std::string& strFailReason)
 {
     int64 nValue = 0;
     BOOST_FOREACH (const PAIRTYPE(CScript, int64)& s, vecSend)
@@ -1305,6 +1305,15 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
                 int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
                 bool fAllowFree = AllowFree(dPriority);
                 int64 nMinFee = GetMinFee(wtxNew, fAllowFree, GMF_SEND);
+  
+                // Check if the fee is voluntary or required
+                isVoluntaryFee = true;
+                if((nMinFee > 0 && (nTransactionFee <= nMinFee)) || (nMinFee == 0 && nTransactionFee == 0))
+                {
+                    isVoluntaryFee = false;
+                }
+                
+                
                 if (nFeeRet < max(nPayFee, nMinFee))
                 {
                     nFeeRet = max(nPayFee, nMinFee);
@@ -1323,11 +1332,11 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
 }
 
 bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason)
+                                CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, bool& isVoluntaryFee, std::string& strFailReason)
 {
     vector< pair<CScript, int64> > vecSend;
     vecSend.push_back(make_pair(scriptPubKey, nValue));
-    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason);
+    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, isVoluntaryFee, strFailReason);
 }
 
 // Call after CreateTransaction unless you want to abort
@@ -1386,6 +1395,7 @@ string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew,
 {
     CReserveKey reservekey(this);
     int64 nFeeRequired;
+	bool isVoluntaryFee = false;
 
     if (IsLocked())
     {
@@ -1394,7 +1404,7 @@ string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew,
         return strError;
     }
     string strError;
-    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, strError))
+    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, isVoluntaryFee, strError))
     {
         if (nValue + nFeeRequired > GetBalance())
             strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!"), FormatMoney(nFeeRequired).c_str());
