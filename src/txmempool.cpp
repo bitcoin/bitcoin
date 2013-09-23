@@ -365,10 +365,10 @@ bool CTxMemPool::accept(CValidationState &state, const CTransaction &tx, bool fL
             if (!fAccept) return false;
         }
 
-        if (fRejectInsaneFee && nFees > CTransaction::nMinRelayTxFee * 10000)
+        if (fRejectInsaneFee && nFees > feeCutoff * 10000)
             return error("CTxMemPool::accept() : insane fees %s, %"PRI64d" > %"PRI64d,
                          hash.ToString().c_str(),
-                         nFees, CTransaction::nMinRelayTxFee * 10000);
+                         nFees, (int64)(feeCutoff * 10000));
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.

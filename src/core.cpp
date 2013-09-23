@@ -10,8 +10,7 @@
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
 int64 CTransaction::nMinTxFee = 10000;  // Override with -mintxfee
-/** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
-int64 CTransaction::nMinRelayTxFee = 10000; // Override with -minrelaytxfee
+
 /** Mining: priorities smaller than this are not eligible for free-transaction area */
 double CTransaction::dMinFreePriority = COIN * 144 / 250;
 

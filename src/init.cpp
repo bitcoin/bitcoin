@@ -493,11 +493,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
     if (mapArgs.count("-minrelaytxfee"))
     {
-        int64 n = 0;
-        if (ParseMoney(mapArgs["-minrelaytxfee"], n) && n > 0)
-            CTransaction::nMinRelayTxFee = n;
-        else
-            return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"].c_str()));
+        LogPrintf("Warning: -minrelaytxfee obsolete, use -mintxfee\n");
     }
     if (mapArgs.count("-minfreepriority"))
     {

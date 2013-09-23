@@ -170,7 +170,6 @@ class CTransaction
 {
 public:
     static int64 nMinTxFee;
-    static int64 nMinRelayTxFee;
     static double dMinFreePriority;
     static const int CURRENT_VERSION=1;
     int nVersion;
