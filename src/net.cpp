@@ -1257,7 +1257,7 @@ unsigned int pnSeedMainNet[] =
 
 unsigned int pnSeedTestNet[] =
 {
-    0x97c71955, 0x0a1621b2,
+    0x184bbb25, 0x0a1621b2,
 };
 
 void DumpAddresses()
