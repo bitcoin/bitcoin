@@ -490,7 +490,7 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
             reason = "scriptpubkey";
             return false;
         }
-        if (txout.IsDust(CTransaction::nMinRelayTxFee)) {
+        if (mempool.isDust(txout)) {
             reason = "dust";
             return false;
         }

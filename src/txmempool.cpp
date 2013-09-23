@@ -144,7 +144,6 @@ public:
     {
         return estimate(byFee, fraction, byFeeCache);
     }
-
     bool Write(CAutoFile& fileout)
     {
         return Write(fileout, byPriority) && Write(fileout, byFee);
@@ -523,6 +522,28 @@ void CTxMemPool::estimateFees(double dPriorityMedian, double& dPriority, double 
     // Hard-coded fee is 10,000 satoshis per kilobyte (10 satoshis per byte):
     if (dFee < 0 && fUseHardCoded) dFee = 10.0;
 }
+
+bool CTxMemPool::isDust(const CTxOut& txout)
+{
+    // "Dust" is defined as outputs so small
+    // (in value) that they would require that
+    // more than 1/3 of their value in fees to
+    // have a reasonable chance of being accepted into
+    // a block right now.
+    // Fees are per-byte, so:
+    int nSize = (int)::GetSerializeSize(txout, SER_DISK,0);
+    // ... and assume it will need a 148-byte CTxIn to spend:
+    nSize += 148;
+
+    // Use 0.01 (lowest 1%) as threshold to estimate fee-per-byte:
+    double dMinFee, dUnused;
+    estimateFees(0.01, dUnused, 0.01, dMinFee, true);
+
+    // Need to pay more than 1/3 of value?
+    bool fIsDust = dMinFee*nSize > txout.nValue/3;
+    return fIsDust;
+}
+
 
 void CTxMemPool::writeEntry(CAutoFile& file, const uint256& txid, std::set<uint256>& alreadyWritten)
 {
