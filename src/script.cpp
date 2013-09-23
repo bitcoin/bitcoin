@@ -1863,6 +1863,24 @@ bool CScript::IsPayToScriptHash() const
             this->at(22) == OP_EQUAL);
 }
 
+bool CScript::IsPushOnly() const
+{
+    const_iterator pc = begin();
+    while (pc < end())
+    {
+        opcodetype opcode;
+        if (!GetOp(pc, opcode))
+            return false;
+        // Note that IsPushOnly() *does* consider OP_RESERVED to be a
+        // push-type opcode, however execution of OP_RESERVED fails, so
+        // it's not relevant to P2SH as the scriptSig would fail prior to
+        // the P2SH special validation code being executed.
+        if (opcode > OP_16)
+            return false;
+    }
+    return true;
+}
+
 class CScriptVisitor : public boost::static_visitor<bool>
 {
 private:
