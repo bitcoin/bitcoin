@@ -1,11 +1,12 @@
 ---
 name: "bitcoin-deps"
 suites:
-- "lucid"
+- "precise"
 architectures:
-- "i386"
+- "amd64"
 packages:
-- "mingw32"
+- "mingw-w64"
+- "g++-mingw-w64"
 - "git-core"
 - "zip"
 - "faketime"
@@ -26,7 +27,7 @@ script: |
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
   export INSTALLPREFIX=$OUTDIR/staging/deps
-  export HOST=i586-mingw32msvc
+  export HOST=i686-w64-mingw32
   #
   mkdir -p $INSTALLPREFIX
 
@@ -71,12 +72,12 @@ script: |
   #
   tar xjf qrencode-3.2.0.tar.bz2
   cd qrencode-3.2.0
-  png_CFLAGS="-I$INSTALLPREFIX/include" png_LIBS="-L$INSTALLPREFIX/lib -lpng" ./configure --prefix=$INSTALLPREFIX --host=i586-mingw32msvc
+  png_CFLAGS="-I$INSTALLPREFIX/include" png_LIBS="-L$INSTALLPREFIX/lib -lpng" ./configure --prefix=$INSTALLPREFIX --host=$HOST
   make
   make install
   cd ..
   #
   cd $INSTALLPREFIX
-  zip -r $OUTDIR/bitcoin-deps-0.0.7.zip include lib
+  zip -r $OUTDIR/bitcoin-deps-win32-gitian-r8.zip include lib
   # Kill wine processes as gitian won't figure out we are done otherwise
   killall wineserver services.exe explorer.exe winedevice.exe

@@ -1,11 +1,12 @@
 ---
 name: "boost"
 suites:
-- "lucid"
+- "precise"
 architectures:
-- "i386"
+- "amd64"
 packages:
-- "mingw32"
+- "mingw-w64"
+- "g++-mingw-w64"
 - "faketime"
 - "zip"
 reference_datetime: "2011-01-30 00:00:00"
@@ -13,21 +14,69 @@ remotes: []
 files:
 - "boost_1_50_0.tar.bz2"
 script: |
+  #
   INSTALLPREFIX="$OUTDIR/staging/boost"
+  HOST=i686-w64-mingw32
+  #
+
   mkdir -p "$INSTALLPREFIX"
   tar xjf boost_1_50_0.tar.bz2
   cd boost_1_50_0
-  echo "using gcc : 4.4 : i586-mingw32msvc-g++
+
+  # Boost #4258: multiple definition of `_tls_used' https://svn.boost.org/trac/boost/ticket/4258
+  cd libs/thread/
+  patch -p1 << 'EOF'
+  From 8b83ad1f0ac4c56f019072de4a7a93f8fcccb96b Mon Sep 17 00:00:00 2001
+  From: "Vicente J. Botet Escriba" <vicente.botet@wanadoo.fr>
+  Date: Sat, 7 Jul 2012 14:37:07 +0000
+  Subject: [PATCH] Thread: Added __MINGW64_VERSION_MAJOR when __MINGW64__ is not
+   defined
+  
+  ---
+   src/win32/tss_pe.cpp | 4 ++--
+   1 file changed, 2 insertions(+), 2 deletions(-)
+  
+  diff --git a/src/win32/tss_pe.cpp b/src/win32/tss_pe.cpp
+  index 4d75680..0cdb7a6 100644
+  --- a/src/win32/tss_pe.cpp
+  +++ b/src/win32/tss_pe.cpp
+  @@ -11,7 +11,7 @@
+   
+   #if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) 
+   
+  -#if (defined(__MINGW32__) && !defined(_WIN64)) || defined(__MINGW64__)
+  +#if (defined(__MINGW32__) && !defined(_WIN64)) || defined(__MINGW64__) || (__MINGW64_VERSION_MAJOR)
+   
+   #include <boost/thread/detail/tss_hooks.hpp>
+   
+  @@ -38,7 +38,7 @@
+       }
+   }
+   
+  -#if defined(__MINGW64__) || (__MINGW32_MAJOR_VERSION >3) ||             \
+  +#if defined(__MINGW64__) || (__MINGW64_VERSION_MAJOR) || (__MINGW32_MAJOR_VERSION >3) ||             \
+       ((__MINGW32_MAJOR_VERSION==3) && (__MINGW32_MINOR_VERSION>=18))
+   extern "C"
+   {
+  -- 
+  1.8.4
+  EOF
+  cd -
+
+  GCCVERSION=$($HOST-g++ -E -dM $(mktemp --suffix=.h) | grep __VERSION__ | cut -d ' ' -f 3 | cut -d '"' -f 2)
+  echo "using gcc : $GCCVERSION : $HOST-g++
         :
-        <rc>i586-mingw32msvc-windres
-        <archiver>i586-mingw32msvc-ar
+        <rc>$HOST-windres
+        <archiver>$HOST-ar
         <cxxflags>-frandom-seed=boost1
+        <ranlib>$HOST-ranlib
   ;" > user-config.jam
   ./bootstrap.sh --without-icu
+
   ./bjam toolset=gcc target-os=windows threadapi=win32 threading=multi variant=release link=static --user-config=user-config.jam --without-mpi --without-python -sNO_BZIP2=1 -sNO_ZLIB=1 --layout=tagged --build-type=complete --prefix="$INSTALLPREFIX" $MAKEOPTS install
 
   cd "$INSTALLPREFIX"
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
-  zip -r boost-win32-1.50.0-gitian3.zip *
-  cp boost-win32-1.50.0-gitian3.zip $OUTDIR
+  zip -r boost-win32-1.50.0-gitian-r5.zip *
+  cp boost-win32-1.50.0-gitian-r5.zip $OUTDIR
