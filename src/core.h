@@ -390,11 +390,7 @@ public:
 
     // construct a CCoins from a CTransaction, at a given height
     CCoins(const CTransaction &tx, int nHeightIn) : fCoinBase(tx.IsCoinBase()), vout(tx.vout), nHeight(nHeightIn), nVersion(tx.nVersion) {
-        BOOST_FOREACH(CTxOut &txout, vout) {
-            if (txout.scriptPubKey.IsUnspendable())
-                txout.SetNull();
-        }
-        Cleanup();
+        ClearUnspendable();
     }
 
     // empty constructor
@@ -406,6 +402,14 @@ public:
             vout.pop_back();
         if (vout.empty())
             std::vector<CTxOut>().swap(vout);
+    }
+
+    void ClearUnspendable() {
+        BOOST_FOREACH(CTxOut &txout, vout) {
+            if (txout.scriptPubKey.IsUnspendable())
+                txout.SetNull();
+        }
+        Cleanup();
     }
 
     void swap(CCoins &to) {
