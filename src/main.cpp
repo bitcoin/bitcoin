@@ -1781,6 +1781,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
             view.SetCoins(hash, CCoins());
         }
         CCoins &outs = view.GetCoins(hash);
+        outs.ClearUnspendable();
 
         CCoins outsBlock = CCoins(tx, pindex->nHeight);
         // The CCoins serialization does not serialize negative numbers.
