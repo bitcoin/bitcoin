@@ -3559,7 +3559,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         pfrom->fSuccessfullyConnected = true;
 
-        LogPrintf("receive version message: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", pfrom->nVersion, pfrom->nStartingHeight, addrMe.ToString().c_str(), addrFrom.ToString().c_str(), pfrom->addr.ToString().c_str());
+        LogPrintf("receive version message: version %d, service=%x, blocks=%d, us=%s, them=%s, peer=%s\n", pfrom->nVersion, pfrom->nServices, pfrom->nStartingHeight, addrMe.ToString().c_str(), addrFrom.ToString().c_str(), pfrom->addr.ToString().c_str());
     }
 
 
