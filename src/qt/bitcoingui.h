@@ -154,7 +154,7 @@ public slots:
     void askFee(qint64 nFeeRequired, bool *payFee);
 
     void handlePaymentRequest(const SendCoinsRecipient& recipient);
-    void showPaymentACK(QString msg);
+    void showPaymentACK(const QString& msg);
 
     /** Show incoming transaction notification for new transactions. */
     void incomingTransaction(const QString& date, int unit, qint64 amount, const QString& type, const QString& address);
