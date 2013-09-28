@@ -111,6 +111,7 @@ bool CDBEnv::Open(boost::filesystem::path pathEnv_)
     fDbEnvInit = true;
     fMockDb = false;
 
+#ifndef USE_LEVELDB
     // Check that the number of locks is sufficient (to prevent chain fork possibility, read http://bitcoin.org/may15 for more info)
     u_int32_t nMaxLocks;
     if (!dbenv.get_lk_max_locks(&nMaxLocks))
@@ -133,6 +134,7 @@ bool CDBEnv::Open(boost::filesystem::path pathEnv_)
             printf("*** %s\n", strMessage.c_str());
         }
     }
+#endif
 
     return true;
 }

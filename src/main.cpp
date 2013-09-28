@@ -476,9 +476,7 @@ bool CTransaction::CheckTransaction() const
             return DoS(100, error("CTransaction::CheckTransaction() : txout empty for user transaction"));
 
         // NovaCoin: enforce minimum output amount for user transactions
-        // (and for all transactions until 20 Sep 2013)
-        if ((!IsCoinBase() || nTime < CHAINCHECKS_SWITCH_TIME)
-                && (!txout.IsEmpty()) && txout.nValue < MIN_TXOUT_AMOUNT)
+        if (!IsCoinBase() && !txout.IsEmpty() && txout.nValue < MIN_TXOUT_AMOUNT)
             return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));
 
         if (txout.nValue > MAX_MONEY)
@@ -1063,11 +1061,7 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
     if(bCoinYearOnly)
         return nRewardCoinYear;
 
-    // Fix problem with proof-of-stake rewards calculation since 20 Sep 2013
-    if(nTime < CHAINCHECKS_SWITCH_TIME)
-        nSubsidy = nCoinAge * 33 / (365 * 33 + 8) * nRewardCoinYear;
-    else
-        nSubsidy = nCoinAge * nRewardCoinYear * 33 / (365 * 33 + 8);
+    nSubsidy = nCoinAge * nRewardCoinYear * 33 / (365 * 33 + 8);
 
     // Set reasonable reward limit for large inputs since 20 Oct 2013
     //
@@ -2160,14 +2154,12 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     }
     else
     {
-        // Coinbase fee paid until 20 Sep 2013
-        int64 nFee = GetBlockTime() < CHAINCHECKS_SWITCH_TIME ? vtx[0].GetMinFee() - MIN_TX_FEE : 0;
-
+        int64 nReward = GetProofOfWorkReward(nBits);
         // Check coinbase reward
-        if (vtx[0].GetValueOut() > (GetProofOfWorkReward(nBits) - nFee))
+        if (vtx[0].GetValueOut() > nReward)
             return DoS(50, error("CheckBlock() : coinbase reward exceeded (actual=%"PRI64d" vs calculated=%"PRI64d")",
                    vtx[0].GetValueOut(),
-                   GetProofOfWorkReward(nBits) - nFee));
+                   nReward));
 
         // Should we check proof-of-work block signature or not?
         //
@@ -2177,12 +2169,10 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
         if(!fTestNet && fCheckSig)
         {
-            bool isAfterCheckpoint = (GetBlockTime() > Checkpoints::GetLastCheckpointTime());
             bool checkEntropySig = (GetBlockTime() < ENTROPY_SWITCH_TIME);
-            bool checkPoWSig = (isAfterCheckpoint && GetBlockTime() < CHAINCHECKS_SWITCH_TIME);
 
             // NovaCoin: check proof-of-work block signature
-            if ((checkEntropySig || checkPoWSig) && !CheckBlockSignature(false))
+            if (checkEntropySig && !CheckBlockSignature(false))
                 return DoS(100, error("CheckBlock() : bad proof-of-work block signature"));
         }
     }
@@ -2303,12 +2293,6 @@ uint256 CBlockIndex::GetBlockTrust() const
 
     if (bnTarget <= 0)
         return 0;
-
-    /* Old protocol, will be removed later */
-    if (!fTestNet && GetBlockTime() < CHAINCHECKS_SWITCH_TIME)
-        return (IsProofOfStake()? ((CBigNum(1)<<256) / (bnTarget+1)).getuint256() : 1);
-
-    /* New protocol */
 
     // Calculate work amount for block
     uint256 nPoWTrust = (CBigNum(nPoWBase) / (bnTarget+1)).getuint256();

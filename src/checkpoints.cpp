@@ -43,6 +43,7 @@ namespace Checkpoints
         ( 9690, initCheckpoint(uint256("0x00000000026561450859c46868099e0df6068a538f038cb18988fd8d47dcdaf5"), 1362791423) )
         ( 13560, initCheckpoint(uint256("0xa1591a0fcbf11f282d671581edb9f0aadcd06fee69761081e0a3245914c13729"), 1364674052) )
         ( 37092, initCheckpoint(uint256("0x0000000000a38c2f98556f46793b453e92d8fab2d31c0b93fd08bcf78e56099d"), 1376677203) )
+        ( 44200, initCheckpoint(uint256("0xc9bda7232a18b9c1f5ff974a9e5566b2d1879ceb8fc0e9e61fba9038a25b8447"), 1380145962) )
     ;
 
     // TestNet has no checkpoints
