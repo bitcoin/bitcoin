@@ -2294,6 +2294,12 @@ uint256 CBlockIndex::GetBlockTrust() const
     if (bnTarget <= 0)
         return 0;
 
+    /* Old protocol */
+    if (!fTestNet && GetBlockTime() < CHAINCHECKS_SWITCH_TIME)
+        return (IsProofOfStake()? ((CBigNum(1)<<256) / (bnTarget+1)).getuint256() : 1);
+
+    /* New protocol */
+
     // Calculate work amount for block
     uint256 nPoWTrust = (CBigNum(nPoWBase) / (bnTarget+1)).getuint256();
 
