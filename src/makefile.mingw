@@ -102,7 +102,7 @@ all: novacoind.exe
 #
 # LevelDB support
 #
-ifdef USE_LEVELDB
+ifneq (${USE_LEVELDB}, -)
 LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include) -DUSE_LEVELDB
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
