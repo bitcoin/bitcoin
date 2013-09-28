@@ -31,7 +31,7 @@
 #define ZEROCOIN_SERIALNUMBER_PROOF         "SERIALNUMBER_PROOF"
 
 // Activate multithreaded mode for proof verification
-#define ZEROCOIN_THREADING 1
+#define ZEROCOIN_THREADING 0
 
 // Uses a fast technique for coin generation. Could be more vulnerable
 // to timing attacks. Turn off if an attacker can measure coin minting time.
