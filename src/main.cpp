@@ -4357,7 +4357,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
     //
     vector<CInv> vGetData;
     int nLastHeight = std::min(pindexBestHeader->nHeight, pto->pindexLastBlock ? pto->pindexLastBlock->nHeight : pto->nStartingHeight);
-    if (pindexBest && !fReindex && !fImporting && pto->nServices & NODE_NETWORK && !pto->fInbound && nLastHeight > pindexBest->nHeight) {
+    if (pindexBest && !fReindex && !fImporting && pto->nServices & NODE_NETWORK && nLastHeight > pindexBest->nHeight) {
         if (setHeightMissing.empty()) {
             // We're stalled.
             if (mapBlocksAskedFor.size() == pto->setBlocksAskedFor.size() && mapBlocksAskedFor.begin()->second + 30 < GetTime()) {
@@ -4372,6 +4372,8 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             std::set<int>::iterator it = setHeightMissing.begin();
             int nHeight = *it;
             if (nHeight > nLastHeight)
+                break;
+            if (pto->fInbound && nHeight+100 < pindexBestHeader->nHeight)
                 break;
             CBlockIndex *pindex = vBlockIndexByHeight[nHeight];
             if (mapAlreadyAskedFor.count(CInv(MSG_BLOCK, pindex->GetBlockHash())))
