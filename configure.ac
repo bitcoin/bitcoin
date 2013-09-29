@@ -125,7 +125,6 @@ AC_PROG_MKDIR_P
 AC_PROG_SED
 AC_PATH_TOOL(AR, ar)
 AC_PATH_TOOL(RANLIB, ranlib)
-AC_PATH_TOOL(WINDRES, windres)
 AC_PATH_TOOL(STRIP, strip)
 AC_PATH_TOOL(GCOV, gcov)
 AC_PATH_PROG(LCOV, lcov)
@@ -185,6 +184,11 @@ case $host in
      AC_PATH_PROG([MAKENSIS], [makensis], none)
      if test x$MAKENSIS = xnone; then
        AC_MSG_WARN("makensis not found. Cannot create installer.")
+     fi
+
+     AC_PATH_TOOL(WINDRES, windres, none)
+     if test x$WINDRES = xnone; then
+       AC_MSG_ERROR("windres not found")
      fi
 
      CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB"
