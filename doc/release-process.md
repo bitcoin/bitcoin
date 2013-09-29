@@ -53,10 +53,10 @@ Release Process
 	cd ..
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-win32.yml
 	mv build/out/boost-win32-*.zip inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/qt-win32.yml
-	mv build/out/qt-win32-*.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-win32.yml
 	mv build/out/bitcoin-deps-*.zip inputs/
+	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/qt-win32.yml
+	mv build/out/qt-win32-*.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/protobuf-win32.yml
 	mv build/out/protobuf-win32-*.zip inputs/
 
