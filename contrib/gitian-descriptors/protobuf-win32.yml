@@ -1,11 +1,12 @@
 ---
 name: "protobuf-win32"
 suites:
-- "lucid"
+- "precise"
 architectures:
-- "i386"
+- "amd64"
 packages:
-- "mingw32"
+- "mingw-w64"
+- "g++-mingw-w64"
 - "zip"
 - "faketime"
 reference_datetime: "2013-04-15 00:00:00"
@@ -16,7 +17,7 @@ script: |
   #
   export TZ=UTC
   export INSTALLPREFIX=$OUTDIR/staging/deps
-  export HOST=i586-mingw32msvc
+  export HOST=i686-w64-mingw32
   #
   #
   mkdir -p $INSTALLPREFIX
@@ -36,6 +37,6 @@ script: |
   cd $INSTALLPREFIX
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
-  zip -r $OUTDIR/protobuf-win32-2.5.0-gitian-r2.zip include lib host
+  zip -r $OUTDIR/protobuf-win32-2.5.0-gitian-r3.zip include lib host
   unset LD_PRELOAD
   unset FAKETIME
