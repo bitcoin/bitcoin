@@ -942,7 +942,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     CValidationState state;
-    if (!ConnectBestBlock(state))
+    if (!SwitchToBestBlock(state))
         strErrors << "Failed to connect best block";
 
     std::vector<boost::filesystem::path> vImportFiles;
@@ -980,7 +980,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     //// debug print
     LogPrintf("mapBlockIndex.size() = %"PRIszu"\n",   mapBlockIndex.size());
-    LogPrintf("nBestHeight = %d\n",                   nBestHeight);
+    LogPrintf("nBestHeight = %d\n",                   pindexBest ? pindexBest->nHeight : -1);
+    LogPrintf("nBestHeaderHeight = %d\n",             pindexBestHeader ? pindexBestHeader->nHeight : -1);
     LogPrintf("setKeyPool.size() = %"PRIszu"\n",      pwalletMain->setKeyPool.size());
     LogPrintf("mapWallet.size() = %"PRIszu"\n",       pwalletMain->mapWallet.size());
     LogPrintf("mapAddressBook.size() = %"PRIszu"\n",  pwalletMain->mapAddressBook.size());

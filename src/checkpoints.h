@@ -20,10 +20,10 @@ namespace Checkpoints
     // Return conservative estimate of total number of blocks, 0 if unknown
     int GetTotalBlocksEstimate();
 
-    // Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
-    CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
-
     double GuessVerificationProgress(CBlockIndex *pindex);
+
+    // Get the height of the last checkpoint not further than nHeight.
+    int GetLastCheckpointHeight(int nHeight);
 
     extern bool fEnabled;
 }

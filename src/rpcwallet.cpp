@@ -74,7 +74,8 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
     obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
     obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
-    obj.push_back(Pair("blocks",        (int)nBestHeight));
+    obj.push_back(Pair("blocks",        (int)pindexBest->nHeight));
+    obj.push_back(Pair("headers",       (int)pindexBestHeader->nHeight));
     obj.push_back(Pair("timeoffset",    (boost::int64_t)GetTimeOffset()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
@@ -1176,7 +1177,7 @@ Value listsinceblock(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
     }
 
-    int depth = pindex ? (1 + nBestHeight - pindex->nHeight) : -1;
+    int depth = pindex ? (1 + pindexBest->nHeight - pindex->nHeight) : -1;
 
     Array transactions;
 
@@ -1192,7 +1193,7 @@ Value listsinceblock(const Array& params, bool fHelp)
 
     if (target_confirms == 1)
     {
-        lastblock = hashBestChain;
+        lastblock = pindexBest->GetBlockHash();
     }
     else
     {

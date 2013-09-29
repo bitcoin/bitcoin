@@ -19,7 +19,7 @@ static const int64 nClientStartupTime = GetTime();
 
 ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), optionsModel(optionsModel),
-    cachedNumBlocks(0), cachedNumBlocksOfPeers(0),
+    cachedNumBlocks(0), cachedNumBlocksTotal(0),
     cachedReindexing(0), cachedImporting(0),
     numBlocksAtStartup(-1), pollTimer(0)
 {
@@ -43,7 +43,7 @@ int ClientModel::getNumConnections() const
 
 int ClientModel::getNumBlocks() const
 {
-    return nBestHeight;
+    return pindexBest->nHeight;
 }
 
 int ClientModel::getNumBlocksAtStartup()
@@ -72,19 +72,19 @@ void ClientModel::updateTimer()
     // Some quantities (such as number of blocks) change so fast that we don't want to be notified for each change.
     // Periodically check and update with a timer.
     int newNumBlocks = getNumBlocks();
-    int newNumBlocksOfPeers = getNumBlocksOfPeers();
+    int newNumBlocksTotal = getNumBlocksTotal();
 
     // check for changed number of blocks we have, number of blocks peers claim to have, reindexing state and importing state
-    if (cachedNumBlocks != newNumBlocks || cachedNumBlocksOfPeers != newNumBlocksOfPeers ||
+    if (cachedNumBlocks != newNumBlocks || cachedNumBlocksTotal != newNumBlocksTotal ||
         cachedReindexing != fReindex || cachedImporting != fImporting)
     {
         cachedNumBlocks = newNumBlocks;
-        cachedNumBlocksOfPeers = newNumBlocksOfPeers;
+        cachedNumBlocksTotal = newNumBlocksTotal;
         cachedReindexing = fReindex;
         cachedImporting = fImporting;
 
         // ensure we return the maximum of newNumBlocksOfPeers and newNumBlocks to not create weird displays in the GUI
-        emit numBlocksChanged(newNumBlocks, std::max(newNumBlocksOfPeers, newNumBlocks));
+        emit numBlocksChanged(newNumBlocks, std::max(newNumBlocksTotal, newNumBlocks));
     }
 }
 
@@ -132,9 +132,9 @@ enum BlockSource ClientModel::getBlockSource() const
     return BLOCK_SOURCE_NONE;
 }
 
-int ClientModel::getNumBlocksOfPeers() const
+int ClientModel::getNumBlocksTotal() const
 {
-    return GetNumBlocksOfPeers();
+    return pindexBestHeader->nHeight;
 }
 
 QString ClientModel::getStatusBarWarnings() const

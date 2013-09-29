@@ -538,16 +538,16 @@ void CNode::Cleanup()
 }
 
 
-void CNode::PushVersion()
+void CNode::PushVersion(int nHeight)
 {
     /// when NTP implemented, change to just nTime = GetAdjustedTime()
     int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService("0.0.0.0",0)));
     CAddress addrMe = GetLocalAddress(&addr);
     RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-    LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString().c_str(), addrYou.ToString().c_str(), addr.ToString().c_str());
+    LogPrintf("send version message: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", PROTOCOL_VERSION, nHeight, addrMe.ToString().c_str(), addrYou.ToString().c_str(), addr.ToString().c_str());
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-                nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight, true);
+                nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nHeight, true);
 }
 
 
@@ -781,7 +781,8 @@ void ThreadSocketHandler()
                     vNodesDisconnected.push_back(pnode);
                 }
             }
-
+        }
+        {
             // Delete disconnected nodes
             list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
             BOOST_FOREACH(CNode* pnode, vNodesDisconnectedCopy)
@@ -805,6 +806,7 @@ void ThreadSocketHandler()
                     }
                     if (fDelete)
                     {
+                        g_signals.FinalizeNode(pnode);
                         vNodesDisconnected.remove(pnode);
                         delete pnode;
                     }
@@ -1464,6 +1466,8 @@ double static NodeSyncScore(const CNode *pnode) {
 }
 
 void static StartSync(const vector<CNode*> &vNodes) {
+    // TODO: turn into a hook and move to main, so it has access to chain data.
+
     CNode *pnodeNewSync = NULL;
     double dBestScore = 0;
 
@@ -1472,7 +1476,6 @@ void static StartSync(const vector<CNode*> &vNodes) {
         // check preconditions for allowing a sync
         if (!pnode->fClient && !pnode->fOneShot &&
             !pnode->fDisconnect && pnode->fSuccessfullyConnected &&
-            (pnode->nStartingHeight > (nBestHeight - 144)) &&
             (pnode->nVersion < NOBLKS_VERSION_START || pnode->nVersion >= NOBLKS_VERSION_END)) {
             // if ok, compare node's score with the best so far
             double dScore = NodeSyncScore(pnode);
