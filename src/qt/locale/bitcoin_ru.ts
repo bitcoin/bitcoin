@@ -1219,8 +1219,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+3"/>
-        <source>Управление &amp;входами (только для продвинутых пользователей!)</source>
-        <translation type="unfinished"></translation>
+        <source>Display coin &amp;control features (experts only!)</source>
+        <translation>Управление &amp;входами (только для продвинутых пользователей!)</translation>
     </message>
     <message>
         <location line="+71"/>
