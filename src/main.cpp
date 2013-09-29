@@ -4358,7 +4358,9 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
     vector<CInv> vGetData;
     int nLastHeight = std::min(pindexBestHeader->nHeight, pto->pindexLastBlock ? pto->pindexLastBlock->nHeight : pto->nStartingHeight);
     if (pindexBest && !fReindex && !fImporting && pto->nServices & NODE_NETWORK && nLastHeight > pindexBest->nHeight) {
+        printf("Sync from %s: peerHeight=%i pindexBest->nHeight=%i pindexBestHeader->nHeight=%i\n", pto->addr.ToString().c_str(), nLastHeight, pindexBest->nHeight, pindexBestHeader->nHeight);
         if (setHeightMissing.empty()) {
+            printf("* We're stalled\n");
             // We're stalled.
             if (mapBlocksAskedFor.size() == pto->setBlocksAskedFor.size() && mapBlocksAskedFor.begin()->second + 30 < GetTime()) {
                 // This peer is the one stalling everyone!
@@ -4367,20 +4369,29 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             }
         }
         while ((int)pto->setBlocksAskedFor.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER && !setHeightMissing.empty()) {
-            if (4*pto->setBlocksAskedFor.size() > setHeightMissing.size() + mapBlocksAskedFor.size())
+            if (pto->setBlocksAskedFor.size() > 6 && 4*pto->setBlocksAskedFor.size() > setHeightMissing.size() + mapBlocksAskedFor.size()) {
+                printf("* Too large %% already requested (%i req, %i missing, %i total req).\n", pto->setBlocksAskedFor.size(), setHeightMissing.size(), mapBlocksAskedFor.size());
                 break;
+            }
             std::set<int>::iterator it = setHeightMissing.begin();
             int nHeight = *it;
-            if (nHeight > nLastHeight)
+            if (nHeight > nLastHeight) {
+                printf("* Height %i beyond what peer has\n", nHeight);
                 break;
-            if (pto->fInbound && nHeight+100 < pindexBestHeader->nHeight)
+            }
+            if (pto->fInbound && nHeight+100 < pindexBestHeader->nHeight) {
+                printf("* Height %i is historic, don't request from inbound peer.\n", nHeight);
                 break;
+            }
             CBlockIndex *pindex = vBlockIndexByHeight[nHeight];
-            if (mapAlreadyAskedFor.count(CInv(MSG_BLOCK, pindex->GetBlockHash())))
+            if (mapAlreadyAskedFor.count(CInv(MSG_BLOCK, pindex->GetBlockHash()))) {
+                printf("* Height %i already asked for\n", nHeight);
                 break;
+            }
             setHeightMissing.erase(it);
             pto->setBlocksAskedFor.insert(pindex);
             mapBlocksAskedFor[pindex] = GetTime();
+            printf("- Fetching height %i\n", nHeight);
             vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
         }
         if (vGetData.size())
