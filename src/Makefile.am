@@ -1,6 +1,7 @@
+include Makefile.include
 AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
   -I$(top_srcdir)/src/leveldb/include -I$(top_srcdir)/src/leveldb/helpers \
-  -I$(builddir) $(BOOST_INCLUDES)
+  -I$(builddir) $(BOOST_INCLUDES) $(BDB_CPPFLAGS)
 AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
 noinst_LIBRARIES = libbitcoin.a
@@ -46,6 +47,10 @@ bitcoind_LDADD = libbitcoin.a leveldb/libleveldb.a leveldb/libmemenv.a \
   $(BOOST_LIBS)
 bitcoind_SOURCES = bitcoind.cpp
 #
+
+if TARGET_WINDOWS
+bitcoind_SOURCES += bitcoin-res.rc
+endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
 bitcoind_LDADD += $(BDB_LIBS)
