@@ -1215,11 +1215,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+7"/>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"></translation>
+        <translation>Выключает и включает отображение панели выбора входов.</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Display coin &amp;control features (experts only!)</source>
+        <source>Управление &amp;входами (только для продвинутых пользователей!)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
