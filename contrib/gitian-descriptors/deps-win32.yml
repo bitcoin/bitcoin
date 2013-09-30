@@ -10,7 +10,6 @@ packages:
 - "git-core"
 - "zip"
 - "faketime"
-- "wine"
 - "psmisc"
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
@@ -47,10 +46,23 @@ script: |
   #
   tar xzf miniupnpc-1.6.tar.gz
   cd miniupnpc-1.6
-  sed 's/dllwrap -k --driver-name gcc/$(DLLWRAP) -k --driver-name $(CC)/' -i Makefile.mingw
-  sed 's|wingenminiupnpcstrings $< $@|./wingenminiupnpcstrings $< $@|' -i Makefile.mingw
+  echo "
+  --- miniupnpc-1.6/Makefile.mingw.orig   2013-09-29 18:52:51.014087958 -1000
+  +++ miniupnpc-1.6/Makefile.mingw        2013-09-29 19:09:29.663318691 -1000
+  @@ -67,8 +67,8 @@
+   
+   wingenminiupnpcstrings.o:	wingenminiupnpcstrings.c
+   
+  -miniupnpcstrings.h: miniupnpcstrings.h.in wingenminiupnpcstrings
+  -	wingenminiupnpcstrings \$< \$@
+  +miniupnpcstrings.h: miniupnpcstrings.h.in 
+  +	sed -e 's|OS/version|MSWindows/5.1.2600|' -e 's|MINIUPNPC_VERSION_STRING \"version\"|MINIUPNPC_VERSION_STRING \"VERSIONHERE\"|' \$< > \$@
+   
+   minixml.o:	minixml.c minixml.h miniupnpcstrings.h
+   
+  " | sed "s/VERSIONHERE/$(cat VERSION)/" | patch -p1
   mkdir -p dll
-  make -f Makefile.mingw DLLWRAP=$HOST-dllwrap CC=$HOST-gcc AR=$HOST-ar libminiupnpc.a
+  make -f Makefile.mingw CC=$HOST-gcc AR=$HOST-ar libminiupnpc.a
   install -d $INSTALLPREFIX/include/miniupnpc
   install *.h $INSTALLPREFIX/include/miniupnpc
   install libminiupnpc.a  $INSTALLPREFIX/lib
@@ -78,6 +90,4 @@ script: |
   cd ..
   #
   cd $INSTALLPREFIX
-  zip -r $OUTDIR/bitcoin-deps-win32-gitian-r8.zip include lib
-  # Kill wine processes as gitian won't figure out we are done otherwise
-  killall wineserver services.exe explorer.exe winedevice.exe
+  zip -r $OUTDIR/bitcoin-deps-win32-gitian-r9.zip include lib
