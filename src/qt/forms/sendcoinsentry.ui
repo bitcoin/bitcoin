@@ -10,19 +10,13 @@
     <height>150</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>StackedWidget</string>
-  </property>
   <property name="autoFillBackground">
    <bool>false</bool>
   </property>
   <property name="currentIndex">
-   <number>1</number>
+   <number>0</number>
   </property>
   <widget class="QFrame" name="SendCoinsInsecure">
-   <property name="windowTitle">
-    <string>Form</string>
-   </property>
    <property name="frameShape">
     <enum>QFrame::StyledPanel</enum>
    </property>
@@ -34,7 +28,7 @@
      <number>12</number>
     </property>
     <item row="5" column="0">
-     <widget class="QLabel" name="label">
+     <widget class="QLabel" name="amountLabel">
       <property name="text">
        <string>A&amp;mount:</string>
       </property>
@@ -47,7 +41,7 @@
      </widget>
     </item>
     <item row="3" column="0">
-     <widget class="QLabel" name="label_2">
+     <widget class="QLabel" name="payToLabel">
       <property name="text">
        <string>Pay &amp;To:</string>
       </property>
@@ -63,7 +57,7 @@
      <widget class="BitcoinAmountField" name="payAmount"/>
     </item>
     <item row="4" column="0">
-     <widget class="QLabel" name="label_4">
+     <widget class="QLabel" name="labellLabel">
       <property name="text">
        <string>&amp;Label:</string>
       </property>
@@ -592,9 +586,6 @@
      </disabled>
     </palette>
    </property>
-   <property name="windowTitle">
-    <string>SecureSend</string>
-   </property>
    <property name="autoFillBackground">
     <bool>true</bool>
    </property>
@@ -609,7 +600,7 @@
      <number>12</number>
     </property>
     <item row="4" column="0">
-     <widget class="QLabel" name="label_s4">
+     <widget class="QLabel" name="memoLabel_s">
       <property name="text">
        <string>Memo:</string>
       </property>
@@ -622,7 +613,7 @@
      </widget>
     </item>
     <item row="5" column="0">
-     <widget class="QLabel" name="label_s1">
+     <widget class="QLabel" name="amountLabel_s">
       <property name="text">
        <string>A&amp;mount:</string>
       </property>
@@ -635,7 +626,7 @@
      </widget>
     </item>
     <item row="3" column="0">
-     <widget class="QLabel" name="label_s2">
+     <widget class="QLabel" name="payToLabel_s">
       <property name="text">
        <string>Pay &amp;To:</string>
       </property>
@@ -667,14 +658,17 @@
       </property>
       <item>
        <widget class="QLabel" name="payTo_s">
+        <property name="textFormat">
+         <enum>Qt::PlainText</enum>
+        </property>
        </widget>
       </item>
      </layout>
     </item>
     <item row="4" column="2">
-     <widget class="QLabel" name="memo_s">
-      <property name="text">
-       <string>message from merchant</string>
+     <widget class="QLabel" name="memoTextLabel_s">
+      <property name="textFormat">
+       <enum>Qt::PlainText</enum>
       </property>
      </widget>
     </item>
