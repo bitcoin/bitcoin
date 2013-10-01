@@ -3581,9 +3581,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (nEvicted > 0)
                 printf("mapOrphan overflow, removed %u tx\n", nEvicted);
         }
-        int nDoS;
+        int nDoS = 0;
         if (state.IsInvalid(nDoS))
-            pfrom->Misbehaving(nDoS);
+            if (nDoS > 0)
+                pfrom->Misbehaving(nDoS);
     }
 
 
@@ -3601,9 +3602,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CValidationState state;
         if (ProcessBlock(state, pfrom, &block) || state.CorruptionPossible())
             mapAlreadyAskedFor.erase(inv);
-        int nDoS;
+        int nDoS = 0;
         if (state.IsInvalid(nDoS))
-            pfrom->Misbehaving(nDoS);
+            if (nDoS > 0)
+                pfrom->Misbehaving(nDoS);
     }
 
 
