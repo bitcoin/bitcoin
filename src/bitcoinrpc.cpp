@@ -963,8 +963,8 @@ void ServiceConnection(AcceptedConnection *conn)
         {
             printf("ThreadRPCServer incorrect password attempt from %s\n", conn->peer_address_to_string().c_str());
             /* Deter brute-forcing short passwords.
-               If this results in a DOS the user really
-               shouldn't have their RPC port exposed.*/
+               If this results in a DoS the user really
+               shouldn't have their RPC port exposed. */
             if (mapArgs["-rpcpassword"].size() < 20)
                 MilliSleep(250);
 
