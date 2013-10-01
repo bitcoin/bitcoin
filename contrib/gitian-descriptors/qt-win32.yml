@@ -31,13 +31,13 @@ script: |
   tar xzf qt-everywhere-opensource-src-4.8.3.tar.gz
   cd qt-everywhere-opensource-src-4.8.3
   sed 's/$TODAY/2011-01-30/' -i configure
-  sed 's/i686-pc-mingw32-/$HOST-/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
-  sed --posix 's|QMAKE_CFLAGS\t\t= -pipe|QMAKE_CFLAGS\t\t= -pipe -isystem /usr/$HOST/include/ -frandom-seed=qtbuild|' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+  sed "s/i686-pc-mingw32-/$HOST-/" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+  sed --posix "s|QMAKE_CFLAGS\t\t= -pipe|QMAKE_CFLAGS\t\t= -pipe -isystem /usr/$HOST/include/ -frandom-seed=qtbuild|" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
   sed 's/QMAKE_CXXFLAGS_EXCEPTIONS_ON = -fexceptions -mthreads/QMAKE_CXXFLAGS_EXCEPTIONS_ON = -fexceptions/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
   sed 's/QMAKE_LFLAGS_EXCEPTIONS_ON = -mthreads/QMAKE_LFLAGS_EXCEPTIONS_ON = -lmingwthrd/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
-  sed --posix 's/QMAKE_MOC\t\t= $HOST-moc/QMAKE_MOC\t\t= moc/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
-  sed --posix 's/QMAKE_RCC\t\t= $HOST-rcc/QMAKE_RCC\t\t= rcc/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
-  sed --posix 's/QMAKE_UIC\t\t= $HOST-uic/QMAKE_UIC\t\t= uic/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+  sed --posix "s/QMAKE_MOC\t\t= $HOST-moc/QMAKE_MOC\t\t= moc/" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+  sed --posix "s/QMAKE_RCC\t\t= $HOST-rcc/QMAKE_RCC\t\t= rcc/" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+  sed --posix "s/QMAKE_UIC\t\t= $HOST-uic/QMAKE_UIC\t\t= uic/" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
   # ar adds timestamps to every object file included in the static library
   # providing -D as ar argument is supposed to solve it, but doesn't work as qmake strips off the arguments and adds -M to pass a script...
   # which somehow cannot be combined with other flags.
@@ -45,7 +45,7 @@ script: |
   sed --posix "s|QMAKE_LIB\t\t= $HOST-ar -ru|QMAKE_LIB\t\t= $HOME/ar -Dr|" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
   echo '#!/bin/bash' > $HOME/ar
   echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> $HOME/ar
-  echo '$HOST-ar "$@"' >> $HOME/ar
+  echo "$HOST-ar \"\$@\"" >> $HOME/ar
   chmod +x $HOME/ar
   #export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
