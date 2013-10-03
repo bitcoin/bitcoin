@@ -100,6 +100,7 @@ static CCoinsViewDB *pcoinsdbview;
 
 void Shutdown()
 {
+    LogPrintf("Shutdown : In progress...\n");
     static CCriticalSection cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown) return;
@@ -130,6 +131,7 @@ void Shutdown()
     UnregisterAllWallets();
     if (pwalletMain)
         delete pwalletMain;
+    LogPrintf("Shutdown : done\n");
 }
 
 //
