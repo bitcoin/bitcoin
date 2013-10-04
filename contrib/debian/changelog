@@ -1,3 +1,27 @@
+bitcoin (0.8.5-precise1) precise; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Sun, 15 Sep 2013 14:02:00 -0400
+
+bitcoin (0.8.4-precise1) precise; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Wed, 4 Sep 2013 10:25:00 -0400
+
+bitcoin (0.8.3-natty1) natty; urgency=low
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Wed, 26 Jun 2013 00:18:00 +0100
+
+bitcoin (0.8.2-natty1) natty; urgency=low
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Wed, 29 Mar 2013 23:23:00 +0100
+
 bitcoin (0.8.1-natty3) natty; urgency=low
 
   * New pixmaps
