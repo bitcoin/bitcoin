@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
     fHaveGUI = true;
 
     // Command-line options take precedence:
-    ParseParameters(argc, argv);
+    const std::vector<std::string> vUris = ParseParameters(argc, argv);
     // ... then bitcoin.conf:
     if (!boost::filesystem::is_directory(GetDataDir(false))) {
         fMissingDatadir = true;
@@ -216,8 +216,10 @@ int main(int argc, char *argv[])
     // Do this early as we don't want to bother initializing if we are just calling IPC
     // ... but do it after creating app and setting up translations, so errors are
     // translated properly.
-    if (PaymentServer::ipcSendCommandLine(argc, argv))
-        exit(0);
+    if (!vUris.empty()) {
+        if (PaymentServer::ipcSendUris(vUris))
+            exit(0);
+    }
 
     // Now that translations are initialized check for errors and allow a translatable error message
     if (fMissingDatadir) {
@@ -329,8 +331,8 @@ int main(int argc, char *argv[])
                 // bitcoin: URIs or payment requests:
                 QObject::connect(paymentServer, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
                                  &window, SLOT(handlePaymentRequest(SendCoinsRecipient)));
-                QObject::connect(&walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
-                                 paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
+                QObject::connect(&walletModel, SIGNAL(coinsSent(CWallet*, SendCoinsRecipient, QByteArray)),
+                                 paymentServer, SLOT(fetchPaymentACK(CWallet*, const SendCoinsRecipient&, QByteArray)));
                 QObject::connect(paymentServer, SIGNAL(receivedPaymentACK(QString)),
                                  &window, SLOT(showPaymentACK(QString)));
                 QObject::connect(paymentServer, SIGNAL(reportError(QString, QString, unsigned int)),
