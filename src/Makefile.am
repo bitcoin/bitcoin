@@ -49,7 +49,7 @@ bitcoind_SOURCES = bitcoind.cpp
 #
 
 if TARGET_WINDOWS
-bitcoind_SOURCES += bitcoin-res.rc
+bitcoind_SOURCES += bitcoind-res.rc
 endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
