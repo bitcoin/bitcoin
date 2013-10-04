@@ -9,4 +9,4 @@ Terminal=false
 Type=Application
 Icon=/usr/share/pixmaps/bitcoin128.png
 MimeType=x-scheme-handler/bitcoin;
-Categories=Office;
+Categories=Office;Finance;
