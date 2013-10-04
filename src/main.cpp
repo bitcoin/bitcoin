@@ -352,7 +352,7 @@ bool CCoinsViewCache::SetBestBlock(CBlockIndex *pindex) {
 }
 
 bool CCoinsViewCache::BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex) {
-    for (std::map<uint256, CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
+    for (std::map<uint256, CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); ++it)
         cacheCoins[it->first] = it->second;
     pindexTip = pindex;
     return true;
@@ -779,7 +779,7 @@ void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
     // iterate over all COutPoints in mapNextTx whose hash equals the provided hashTx
     while (it != mapNextTx.end() && it->first.hash == hashTx) {
         coins.Spend(it->first.n); // and remove those outputs from coins
-        it++;
+        ++it;
     }
 }
 
@@ -1026,7 +1026,8 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
     LogPrintf("Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
 
     LOCK(cs);
-    for (std::map<uint256, CTransaction>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
+    for (std::map<uint256, CTransaction>::const_iterator it = mapTx.begin(); it != mapTx.end(); ++it)
+    {
         unsigned int i = 0;
         BOOST_FOREACH(const CTxIn &txin, it->second.vin) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
@@ -1045,7 +1046,8 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
             i++;
         }
     }
-    for (std::map<COutPoint, CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); it++) {
+    for (std::map<COutPoint, CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); ++it)
+    {
         uint256 hash = it->second.ptx->GetHash();
         std::map<uint256, CTransaction>::const_iterator it2 = mapTx.find(hash);
         assert(it2 != mapTx.end());
@@ -3287,7 +3289,7 @@ void static ProcessGetData(CNode* pfrom)
         const CInv &inv = *it;
         {
             boost::this_thread::interruption_point();
-            it++;
+            ++it;
 
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
             {
@@ -3993,7 +3995,7 @@ bool ProcessMessages(CNode* pfrom)
             break;
 
         // at this point, any failure means we can delete the current message
-        it++;
+        ++it;
 
         // Scan for message start
         if (memcmp(msg.hdr.pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE) != 0) {
@@ -4255,13 +4257,13 @@ public:
     ~CMainCleanup() {
         // block headers
         std::map<uint256, CBlockIndex*>::iterator it1 = mapBlockIndex.begin();
-        for (; it1 != mapBlockIndex.end(); it1++)
+        for (; it1 != mapBlockIndex.end(); ++it1)
             delete (*it1).second;
         mapBlockIndex.clear();
 
         // orphan blocks
         std::map<uint256, CBlock*>::iterator it2 = mapOrphanBlocks.begin();
-        for (; it2 != mapOrphanBlocks.end(); it2++)
+        for (; it2 != mapOrphanBlocks.end(); ++it2)
             delete (*it2).second;
         mapOrphanBlocks.clear();
 

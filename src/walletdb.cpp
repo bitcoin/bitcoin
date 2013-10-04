@@ -567,7 +567,7 @@ void ThreadFlushWalletDB(const string& strFile)
                 while (mi != bitdb.mapFileUseCount.end())
                 {
                     nRefCount += (*mi).second;
-                    mi++;
+                    ++mi;
                 }
 
                 if (nRefCount == 0)
