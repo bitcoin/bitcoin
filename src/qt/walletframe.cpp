@@ -56,12 +56,9 @@ bool WalletFrame::handlePaymentRequest(const SendCoinsRecipient &recipient)
 
 void WalletFrame::showOutOfSyncWarning(bool fShow)
 {
-    if (!walletStack) {
-        QMessageBox box;
-        box.setText("walletStack is null");
-        box.exec();
+    if (!walletStack)
         return;
-    }
+
     walletStack->showOutOfSyncWarning(fShow);
 }
 
