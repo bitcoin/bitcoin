@@ -540,8 +540,8 @@ void RenameThread(const char* name);
 
 inline uint32_t ByteReverse(uint32_t value)
 {
-    value = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
-    return (value<<16) | (value>>16);
+    value = ((value & 0xFF00FF00U) >> 8U) | ((value & 0x00FF00FFU) << 8U);
+    return (value << 16U) | (value >> 16U);
 }
 
 // Standard wrapper for do-something-forever thread functions.
