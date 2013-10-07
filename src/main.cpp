@@ -3786,8 +3786,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 LogPrint("mempool", "mapOrphan overflow, removed %u tx\n", nEvicted);
         }
         int nDoS = 0;
-        if (state.IsInvalid(nDoS) && nDoS > 0)
-            pfrom->Misbehaving(nDoS);
+        if (state.IsInvalid(nDoS))
+            if (nDoS > 0)
+                pfrom->Misbehaving(nDoS);
     }
 
 
@@ -3806,8 +3807,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (ProcessBlock(state, pfrom, &block))
             mapAlreadyAskedFor.erase(inv);
         int nDoS = 0;
-        if (state.IsInvalid(nDoS) && nDoS > 0)
-            pfrom->Misbehaving(nDoS);
+        if (state.IsInvalid(nDoS))
+            if (nDoS > 0)
+                pfrom->Misbehaving(nDoS);
     }
 
 
