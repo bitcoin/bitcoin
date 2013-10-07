@@ -17,6 +17,14 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
+struct CompareCOutputByAmount
+{
+    bool operator()(const COutput& t1, const COutput& t2) const
+    {
+        return (t1.tx->vout[t1.i].nValue < t2.tx->vout[t2.i].nValue);
+    }
+};
+
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex)
 {
     txnouttype type;
@@ -173,6 +181,8 @@ Value listunspent(const Array& params, bool fHelp)
     vector<COutput> vecOutputs;
     assert(pwalletMain != NULL);
     pwalletMain->AvailableCoins(vecOutputs, false);
+    sort(vecOutputs.begin(), vecOutputs.end(), CompareCOutputByAmount());
+
     BOOST_FOREACH(const COutput& out, vecOutputs)
     {
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
