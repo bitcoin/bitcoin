@@ -19,7 +19,7 @@ bool
 read_block(const std::string& filename, CBlock& block)
 {
     namespace fs = boost::filesystem;
-    fs::path testFile = fs::current_path() / "test" / "data" / filename;
+    fs::path testFile = fs::current_path() / "data" / filename;
 #ifdef TEST_DATA_DIR
     if (!fs::exists(testFile))
     {
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(May15)
 
         // After May 15'th, big blocks are OK:
         forkingBlock.nTime = tMay15; // Invalidates PoW
-        BOOST_CHECK(forkingBlock.CheckBlock(state, false, false));
+        BOOST_CHECK(CheckBlock(forkingBlock, state, false, false));
     }
 
     SetMockTime(0);

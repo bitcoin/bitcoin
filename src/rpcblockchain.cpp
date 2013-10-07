@@ -9,7 +9,7 @@
 using namespace json_spirit;
 using namespace std;
 
-void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out);
+void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex);
 
 double GetDifficulty(const CBlockIndex* blockindex)
 {
@@ -62,6 +62,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("nonce", (boost::uint64_t)block.nNonce));
     result.push_back(Pair("bits", HexBits(block.nBits)));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
+    result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
@@ -82,6 +83,15 @@ Value getblockcount(const Array& params, bool fHelp)
     return nBestHeight;
 }
 
+Value getbestblockhash(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getbestblockhash\n"
+            "Returns the hash of the best (tip) block in the longest block chain.");
+
+    return hashBestChain.GetHex();
+}
 
 Value getdifficulty(const Array& params, bool fHelp)
 {
@@ -98,8 +108,8 @@ Value settxfee(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
-            "settxfee <amount>\n"
-            "<amount> is a real and is rounded to the nearest 0.00000001");
+            "settxfee <amount btc/kb>\n"
+            "<amount> is a real and is rounded to the nearest 0.00000001 btc per kb");
 
     // Amount
     int64 nAmount = 0;
@@ -163,7 +173,7 @@ Value getblock(const Array& params, bool fHelp)
 
     CBlock block;
     CBlockIndex* pblockindex = mapBlockIndex[hash];
-    block.ReadFromDisk(pblockindex);
+    ReadBlockFromDisk(block, pblockindex);
 
     if (!fVerbose)
     {
@@ -235,7 +245,7 @@ Value gettxout(const Array& params, bool fHelp)
         ret.push_back(Pair("confirmations", pcoinsTip->GetBestBlock()->nHeight - coins.nHeight + 1));
     ret.push_back(Pair("value", ValueFromAmount(coins.vout[n].nValue)));
     Object o;
-    ScriptPubKeyToJSON(coins.vout[n].scriptPubKey, o);
+    ScriptPubKeyToJSON(coins.vout[n].scriptPubKey, o, true);
     ret.push_back(Pair("scriptPubKey", o));
     ret.push_back(Pair("version", coins.nVersion));
     ret.push_back(Pair("coinbase", coins.fCoinBase));
@@ -243,4 +253,20 @@ Value gettxout(const Array& params, bool fHelp)
     return ret;
 }
 
+Value verifychain(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 2)
+        throw runtime_error(
+            "verifychain [check level] [num blocks]\n"
+            "Verifies blockchain database.");
+
+    int nCheckLevel = GetArg("-checklevel", 3);
+    int nCheckDepth = GetArg("-checkblocks", 288);
+    if (params.size() > 0)
+        nCheckLevel = params[0].get_int();
+    if (params.size() > 1)
+        nCheckDepth = params[1].get_int();
+
+    return VerifyDB(nCheckLevel, nCheckDepth);
+}
 

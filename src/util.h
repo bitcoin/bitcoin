@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 
+#include <boost/version.hpp>
 #include <boost/thread.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/path.hpp>
@@ -34,7 +35,6 @@ typedef unsigned long long  uint64;
 static const int64 COIN = 100000000;
 static const int64 CENT = 1000000;
 
-#define loop                for (;;)
 #define BEGIN(a)            ((char*)&(a))
 #define END(a)              ((char*)&((&(a))[1]))
 #define UBEGIN(a)           ((unsigned char*)&(a))
@@ -91,7 +91,6 @@ T* alignup(T* p)
 }
 
 #ifdef WIN32
-#define MSG_NOSIGNAL        0
 #define MSG_DONTWAIT        0
 
 #ifndef S_IRUSR
@@ -101,13 +100,23 @@ T* alignup(T* p)
 #else
 #define MAX_PATH            1024
 #endif
+// As Solaris does not have the MSG_NOSIGNAL flag for send(2) syscall, it is defined as 0
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
 
 inline void MilliSleep(int64 n)
 {
-#if BOOST_VERSION >= 105000
+// Boost's sleep_for was uninterruptable when backed by nanosleep from 1.50
+// until fixed in 1.52. Use the deprecated sleep method for the broken case.
+// See: https://svn.boost.org/trac/boost/ticket/7238
+#if defined(HAVE_WORKING_BOOST_SLEEP_FOR)
     boost::this_thread::sleep_for(boost::chrono::milliseconds(n));
-#else
+#elif defined(HAVE_WORKING_BOOST_SLEEP)
     boost::this_thread::sleep(boost::posix_time::milliseconds(n));
+#else
+  //should never get here
+#error missing boost sleep implementation
 #endif
 }
 
@@ -138,14 +147,16 @@ extern bool fDaemon;
 extern bool fServer;
 extern bool fCommandLine;
 extern std::string strMiscWarning;
-extern bool fTestNet;
 extern bool fNoListen;
 extern bool fLogTimestamps;
 extern volatile bool fReopenDebugLog;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
-int ATTR_WARN_PRINTF(1,2) OutputDebugStringF(const char* pszFormat, ...);
+
+// Print to debug.log if -debug=category switch is given OR category is NULL.
+int ATTR_WARN_PRINTF(2,3) LogPrint(const char* category, const char* pszFormat, ...);
+#define LogPrintf(...) LogPrint(NULL, __VA_ARGS__)
 
 /*
   Rationale for the real_strprintf / strprintf construction:
@@ -164,14 +175,6 @@ std::string real_strprintf(const std::string &format, int dummy, ...);
 std::string vstrprintf(const char *format, va_list ap);
 
 bool ATTR_WARN_PRINTF(1,2) error(const char *format, ...);
-
-/* Redefine printf so that it directs output to debug.log
- *
- * Do this *after* defining the other printf-like functions, because otherwise the
- * __attribute__((format(printf,X,Y))) gets expanded to __attribute__((format(OutputDebugStringF,X,Y)))
- * which confuses gcc.
- */
-#define printf OutputDebugStringF
 
 void LogException(std::exception* pex, const char* pszThread);
 void PrintException(std::exception* pex, const char* pszThread);
@@ -204,7 +207,9 @@ boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 boost::filesystem::path GetConfigFile();
 boost::filesystem::path GetPidFile();
+#ifndef WIN32
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
+#endif
 void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
@@ -307,12 +312,12 @@ inline std::string HexStr(const T& vch, bool fSpaces=false)
 template<typename T>
 void PrintHex(const T pbegin, const T pend, const char* pszFormat="%s", bool fSpaces=true)
 {
-    printf(pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
+    LogPrintf(pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
 }
 
 inline void PrintHex(const std::vector<unsigned char>& vch, const char* pszFormat="%s", bool fSpaces=true)
 {
-    printf(pszFormat, HexStr(vch, fSpaces).c_str());
+    LogPrintf(pszFormat, HexStr(vch, fSpaces).c_str());
 }
 
 inline int64 GetPerformanceCounter()
@@ -432,6 +437,21 @@ static inline uint32_t insecure_rand(void)
  */
 void seed_insecure_rand(bool fDeterministic=false);
 
+/**
+ * Timing-attack-resistant comparison.
+ * Takes time proportional to length
+ * of first argument.
+ */
+template <typename T>
+bool TimingResistantEqual(const T& a, const T& b)
+{
+    if (b.size() == 0) return a.size() == 0;
+    size_t accumulator = a.size() ^ b.size();
+    for (size_t i = 0; i < a.size(); i++)
+        accumulator |= a[i] ^ b[i%b.size()];
+    return accumulator == 0;
+}
+
 /** Median filter over a stream of values.
  * Returns the median of the last N numbers
  */
@@ -495,6 +515,10 @@ inline void SetThreadPriority(int nPriority)
 }
 #else
 
+// PRIO_MAX is not defined on Solaris
+#ifndef PRIO_MAX
+#define PRIO_MAX 20
+#endif
 #define THREAD_PRIORITY_LOWEST          PRIO_MAX
 #define THREAD_PRIORITY_BELOW_NORMAL    2
 #define THREAD_PRIORITY_NORMAL          0
@@ -523,7 +547,7 @@ inline uint32_t ByteReverse(uint32_t value)
 // Standard wrapper for do-something-forever thread functions.
 // "Forever" really means until the thread is interrupted.
 // Use it like:
-//   new boost::thread(boost::bind(&LoopForever<void (*)()>, "dumpaddr", &DumpAddresses, 10000));
+//   new boost::thread(boost::bind(&LoopForever<void (*)()>, "dumpaddr", &DumpAddresses, 900000));
 // or maybe:
 //    boost::function<void()> f = boost::bind(&FunctionWithArg, argument);
 //    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
@@ -531,18 +555,18 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
 {
     std::string s = strprintf("bitcoin-%s", name);
     RenameThread(s.c_str());
-    printf("%s thread start\n", name);
+    LogPrintf("%s thread start\n", name);
     try
     {
         while (1)
         {
-            func();
             MilliSleep(msecs);
+            func();
         }
     }
     catch (boost::thread_interrupted)
     {
-        printf("%s thread stop\n", name);
+        LogPrintf("%s thread stop\n", name);
         throw;
     }
     catch (std::exception& e) {
@@ -559,13 +583,13 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     RenameThread(s.c_str());
     try
     {
-        printf("%s thread start\n", name);
+        LogPrintf("%s thread start\n", name);
         func();
-        printf("%s thread exit\n", name);
+        LogPrintf("%s thread exit\n", name);
     }
     catch (boost::thread_interrupted)
     {
-        printf("%s thread interrupt\n", name);
+        LogPrintf("%s thread interrupt\n", name);
         throw;
     }
     catch (std::exception& e) {

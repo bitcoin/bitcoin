@@ -5,8 +5,6 @@
  * The Bitcoin Developers 2011-2012
  */
 
-#include <QApplication>
-
 #include "bitcoingui.h"
 
 #include "transactiontablemodel.h"
@@ -30,6 +28,7 @@
 #include "macdockiconhandler.h"
 #endif
 
+#include <QApplication>
 #include <QMenuBar>
 #include <QMenu>
 #include <QIcon>
@@ -46,11 +45,10 @@
 #include <QDragEnterEvent>
 #if QT_VERSION < 0x050000
 #include <QUrl>
+#include <QTextDocument>
 #endif
 #include <QMimeData>
 #include <QStyle>
-#include <QSettings>
-#include <QDesktopWidget>
 #include <QListWidget>
 
 #include <iostream>
@@ -68,7 +66,7 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     rpcConsole(0),
     prevBlocks(0)
 {
-    restoreWindowGeometry();
+    GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
 #ifndef Q_OS_MAC
     if (!fIsTestnet)
@@ -159,6 +157,8 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
 
     rpcConsole = new RPCConsole(this);
     connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(show()));
+    // prevents an oben debug window from becoming stuck/unusable on client shutdown
+    connect(quitAction, SIGNAL(triggered()), rpcConsole, SLOT(hide()));
 
     // Install event filter to be able to catch status tip events (QEvent::StatusTip)
     this->installEventFilter(this);
@@ -166,7 +166,7 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
 
 BitcoinGUI::~BitcoinGUI()
 {
-    saveWindowGeometry();
+    GUIUtil::saveWindowGeometry("nWindow", this);
     if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)
         trayIcon->hide();
 #ifdef Q_OS_MAC
@@ -425,28 +425,6 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 }
 #endif
 
-void BitcoinGUI::saveWindowGeometry()
-{
-    QSettings settings;
-    settings.setValue("nWindowPos", pos());
-    settings.setValue("nWindowSize", size());
-}
-
-void BitcoinGUI::restoreWindowGeometry()
-{
-    QSettings settings;
-    QPoint pos = settings.value("nWindowPos").toPoint();
-    QSize size = settings.value("nWindowSize", QSize(850, 550)).toSize();
-    if (!pos.x() && !pos.y())
-    {
-        QRect screen = QApplication::desktop()->screenGeometry();
-        pos.setX((screen.width()-size.width())/2);
-        pos.setY((screen.height()-size.height())/2);
-    }
-    resize(size);
-    move(pos);
-}
-
 void BitcoinGUI::optionsClicked()
 {
     if(!clientModel || !clientModel->getOptionsModel())
@@ -614,21 +592,28 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
 
-    // Override title based on style
     QString msgType;
-    switch (style) {
-    case CClientUIInterface::MSG_ERROR:
-        msgType = tr("Error");
-        break;
-    case CClientUIInterface::MSG_WARNING:
-        msgType = tr("Warning");
-        break;
-    case CClientUIInterface::MSG_INFORMATION:
-        msgType = tr("Information");
-        break;
-    default:
-        msgType = title; // Use supplied title
+
+    // Prefer supplied title over style based title
+    if (!title.isEmpty()) {
+        msgType = title;
     }
+    else {
+        switch (style) {
+        case CClientUIInterface::MSG_ERROR:
+            msgType = tr("Error");
+            break;
+        case CClientUIInterface::MSG_WARNING:
+            msgType = tr("Warning");
+            break;
+        case CClientUIInterface::MSG_INFORMATION:
+            msgType = tr("Information");
+            break;
+        default:
+            break;
+        }
+    }
+    // Append title to "Bitcoin - "
     if (!msgType.isEmpty())
         strTitle += " - " + msgType;
 
@@ -649,7 +634,7 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
         if (!(buttons = (QMessageBox::StandardButton)(style & CClientUIInterface::BTN_MASK)))
             buttons = QMessageBox::Ok;
 
-        QMessageBox mBox((QMessageBox::Icon)nMBoxIcon, strTitle, message, buttons);
+        QMessageBox mBox((QMessageBox::Icon)nMBoxIcon, strTitle, message, buttons, this);
         int r = mBox.exec();
         if (ret != NULL)
             *ret = r == QMessageBox::Ok;
@@ -694,9 +679,12 @@ void BitcoinGUI::closeEvent(QCloseEvent *event)
 
 void BitcoinGUI::askFee(qint64 nFeeRequired, bool *payFee)
 {
+    if (!clientModel || !clientModel->getOptionsModel())
+        return;
+
     QString strMessage = tr("This transaction is over the size limit. You can still send it for a fee of %1, "
         "which goes to the nodes that process your transaction and helps to support the network. "
-        "Do you want to pay the fee?").arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, nFeeRequired));
+        "Do you want to pay the fee?").arg(BitcoinUnits::formatWithUnit(clientModel->getOptionsModel()->getDisplayUnit(), nFeeRequired));
     QMessageBox::StandardButton retval = QMessageBox::question(
           this, tr("Confirm transaction fee"), strMessage,
           QMessageBox::Yes|QMessageBox::Cancel, QMessageBox::Yes);
@@ -732,7 +720,8 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
         QList<QUrl> uris = event->mimeData()->urls();
         foreach(const QUrl &uri, uris)
         {
-            if (walletFrame->handleURI(uri.toString()))
+            SendCoinsRecipient r;
+            if (GUIUtil::parseBitcoinURI(uri, &r) && walletFrame->handlePaymentRequest(r))
                 nValidUrisFound++;
         }
 
@@ -759,12 +748,14 @@ bool BitcoinGUI::eventFilter(QObject *object, QEvent *event)
     return QMainWindow::eventFilter(object, event);
 }
 
-void BitcoinGUI::handleURI(QString strURI)
+void BitcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
 {
-    // URI has to be valid
-    if (!walletFrame->handleURI(strURI))
-        message(tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters."),
-                  CClientUIInterface::ICON_WARNING);
+    walletFrame->handlePaymentRequest(recipient);
+}
+
+void BitcoinGUI::showPaymentACK(const QString& msg)
+{
+    message(tr("Payment acknowledged"), GUIUtil::HtmlEscape(msg), CClientUIInterface::MODAL);
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)

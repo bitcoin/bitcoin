@@ -11,6 +11,7 @@
 
 class BitcoinGUI;
 class ClientModel;
+class SendCoinsRecipient;
 class WalletModel;
 class WalletStack;
 
@@ -29,13 +30,11 @@ public:
 
     void removeAllWallets();
 
-    bool handleURI(const QString &uri);
+    bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
     void showOutOfSyncWarning(bool fShow);
 
 private:
-    BitcoinGUI *gui;
-    ClientModel *clientModel;
     WalletStack *walletStack;
 
 public slots:

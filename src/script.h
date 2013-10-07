@@ -32,9 +32,10 @@ enum
 enum
 {
     SCRIPT_VERIFY_NONE      = 0,
-    SCRIPT_VERIFY_P2SH      = (1U << 0),
-    SCRIPT_VERIFY_STRICTENC = (1U << 1),
-    SCRIPT_VERIFY_NOCACHE   = (1U << 2),
+    SCRIPT_VERIFY_P2SH      = (1U << 0), // evaluate P2SH (BIP16) subscripts
+    SCRIPT_VERIFY_STRICTENC = (1U << 1), // enforce strict conformance to DER and SEC2 for signatures and pubkeys
+    SCRIPT_VERIFY_EVEN_S    = (1U << 2), // enforce even S values in signatures (depends on STRICTENC)
+    SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
 };
 
 enum txnouttype
@@ -542,12 +543,23 @@ public:
             opcodetype opcode;
             if (!GetOp(pc, opcode))
                 return false;
+            // Note that IsPushOnly() *does* consider OP_RESERVED to be a
+            // push-type opcode, however execution of OP_RESERVED fails, so
+            // it's not relevant to P2SH as the scriptSig would fail prior to
+            // the P2SH special validation code being executed.
             if (opcode > OP_16)
                 return false;
         }
         return true;
     }
 
+    // Returns whether the script is guaranteed to fail at execution,
+    // regardless of the initial stack. This allows outputs to be pruned
+    // instantly when entering the UTXO set.
+    bool IsUnspendable() const
+    {
+        return (size() > 0 && *begin() == OP_RETURN);
+    }
 
     void SetDestination(const CTxDestination& address);
     void SetMultisig(int nRequired, const std::vector<CPubKey>& keys);
@@ -555,7 +567,7 @@ public:
 
     void PrintHex() const
     {
-        printf("CScript(%s)\n", HexStr(begin(), end(), true).c_str());
+        LogPrintf("CScript(%s)\n", HexStr(begin(), end(), true).c_str());
     }
 
     std::string ToString() const
@@ -583,7 +595,7 @@ public:
 
     void print() const
     {
-        printf("%s\n", ToString().c_str());
+        LogPrintf("%s\n", ToString().c_str());
     }
 
     CScriptID GetID() const
@@ -665,8 +677,8 @@ public:
     }
 };
 
-bool IsCanonicalPubKey(const std::vector<unsigned char> &vchPubKey);
-bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig);
+bool IsCanonicalPubKey(const std::vector<unsigned char> &vchPubKey, unsigned int flags);
+bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig, unsigned int flags);
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
@@ -674,6 +686,7 @@ int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned c
 bool IsStandard(const CScript& scriptPubKey);
 bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
 bool IsMine(const CKeyStore& keystore, const CTxDestination &dest);
+void ExtractAffectedKeys(const CKeyStore &keystore, const CScript& scriptPubKey, std::vector<CKeyID> &vKeys);
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
 bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
 bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);

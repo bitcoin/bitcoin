@@ -15,6 +15,7 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class SendCoinsDialog;
+class SendCoinsRecipient;
 class SignVerifyMessageDialog;
 class Notificator;
 class RPCConsole;
@@ -122,10 +123,6 @@ private:
     void createTrayIcon(bool fIsTestnet);
     /** Create system tray menu (or setup the dock menu) */
     void createTrayIconMenu();
-    /** Save window size and position */
-    void saveWindowGeometry();
-    /** Restore window size and position */
-    void restoreWindowGeometry();
 
 public slots:
     /** Set number of connections shown in the UI */
@@ -155,7 +152,9 @@ public slots:
       @param[out] payFee            true to pay the fee, false to not pay the fee
     */
     void askFee(qint64 nFeeRequired, bool *payFee);
-    void handleURI(QString strURI);
+
+    void handlePaymentRequest(const SendCoinsRecipient& recipient);
+    void showPaymentACK(const QString& msg);
 
     /** Show incoming transaction notification for new transactions. */
     void incomingTransaction(const QString& date, int unit, qint64 amount, const QString& type, const QString& address);

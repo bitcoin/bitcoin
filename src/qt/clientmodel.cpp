@@ -5,6 +5,7 @@
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 
+#include "chainparams.h"
 #include "alert.h"
 #include "main.h"
 #include "checkpoints.h"
@@ -12,6 +13,7 @@
 
 #include <QDateTime>
 #include <QTimer>
+#include <QDebug>
 
 static const int64 nClientStartupTime = GetTime();
 
@@ -22,9 +24,8 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     numBlocksAtStartup(-1), pollTimer(0)
 {
     pollTimer = new QTimer(this);
-    pollTimer->setInterval(MODEL_UPDATE_DELAY);
-    pollTimer->start();
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(updateTimer()));
+    pollTimer->start(MODEL_UPDATE_DELAY);
 
     subscribeToCoreSignals();
 }
@@ -110,7 +111,7 @@ void ClientModel::updateAlert(const QString &hash, int status)
 
 bool ClientModel::isTestNet() const
 {
-    return fTestNet;
+    return TestNet();
 }
 
 bool ClientModel::inInitialBlockDownload() const
@@ -179,14 +180,14 @@ static void NotifyBlocksChanged(ClientModel *clientmodel)
 
 static void NotifyNumConnectionsChanged(ClientModel *clientmodel, int newNumConnections)
 {
-    // Too noisy: OutputDebugStringF("NotifyNumConnectionsChanged %i\n", newNumConnections);
+    // Too noisy: qDebug() << "NotifyNumConnectionsChanged : " + QString::number(newNumConnections);
     QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
                               Q_ARG(int, newNumConnections));
 }
 
 static void NotifyAlertChanged(ClientModel *clientmodel, const uint256 &hash, ChangeType status)
 {
-    OutputDebugStringF("NotifyAlertChanged %s status=%i\n", hash.GetHex().c_str(), status);
+    qDebug() << "NotifyAlertChanged : " + QString::fromStdString(hash.GetHex()) + " status=" + QString::number(status);
     QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(hash.GetHex())),
                               Q_ARG(int, status));

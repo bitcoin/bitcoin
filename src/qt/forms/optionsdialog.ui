@@ -461,7 +461,7 @@
  <customwidgets>
   <customwidget>
    <class>BitcoinAmountField</class>
-   <extends>QSpinBox</extends>
+   <extends>QLineEdit</extends>
    <header>bitcoinamountfield.h</header>
   </customwidget>
   <customwidget>

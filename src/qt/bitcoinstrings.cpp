@@ -33,6 +33,10 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot obtain a lock on data directory %s. Bitcoin is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Enter regression test mode, which uses a special chain in which blocks can "
+"be solved instantly. This is intended for regression testing tools and app "
+"development."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: The transaction was rejected! This might happen if some of the coins "
 "in your wallet were already spent, such as if you used a copy of wallet.dat "
 "and coins were spent in the copy but not marked as spent here."),
@@ -40,8 +44,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: This transaction requires a transaction fee of at least %s because of "
 "its amount, complexity, or use of recently received funds!"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Execute command when a relevant alert is received (%s in cmd is replaced by "
-"message)"),
+"Execute command when a relevant alert is received or we see a really long "
+"fork (%s in cmd is replaced by message)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Execute command when a wallet transaction changes (%s in cmd is replaced by "
 "TxID)"),
@@ -68,11 +72,14 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: -paytxfee is set very high! This is the transaction fee you will "
 "pay if you send a transaction."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Warning: Displayed transactions may not be correct! You may need to upgrade, "
-"or other nodes may need to upgrade."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: Please check that your computer's date and time are correct! If "
 "your clock is wrong Bitcoin will not work properly."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Warning: The network does not appear to fully agree! Some miners appear to "
+"be experiencing issues."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Warning: We do not appear to fully agree with our peers! You may need to "
+"upgrade, or other nodes may need to upgrade."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: error reading wallet.dat! All keys read correctly, but transaction "
 "data or address book entries might be missing or incorrect."),
@@ -133,6 +140,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Get help for a command"),
 QT_TRANSLATE_NOOP("bitcoin-core", "How many blocks to check at startup (default: 288, 0 = all)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "How thorough the block verification is (0-4, default: 3)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Imports blocks from external blk000??.dat file"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Information"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Insufficient funds"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid -proxy address: '%s'"),
@@ -181,6 +189,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Specify configuration file (default: bitcoin.
 QT_TRANSLATE_NOOP("bitcoin-core", "Specify connection timeout in milliseconds (default: 5000)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Specify data directory"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Specify pid file (default: bitcoind.pid)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Specify wallet file (within data directory)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Specify your own public address"),
 QT_TRANSLATE_NOOP("bitcoin-core", "System error: "),
 QT_TRANSLATE_NOOP("bitcoin-core", "This help message"),
@@ -202,9 +211,10 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Use the test network"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Username for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Verifying wallet..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Wallet %s resides outside data directory %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Wallet needed to be rewritten: restart Bitcoin to complete"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Warning"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Warning: This version is obsolete, upgrade required!"),
-QT_TRANSLATE_NOOP("bitcoin-core", "You need to rebuild the databases using -reindex to change -txindex"),
+QT_TRANSLATE_NOOP("bitcoin-core", "You need to rebuild the database using -reindex to change -txindex"),
 QT_TRANSLATE_NOOP("bitcoin-core", "wallet.dat corrupt, salvage failed"),
 };

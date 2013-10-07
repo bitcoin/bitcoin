@@ -39,16 +39,17 @@ void SendCoinsDialog::setModel(WalletModel *model)
 {
     this->model = model;
 
-    for(int i = 0; i < ui->entries->count(); ++i)
-    {
-        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
-        if(entry)
-        {
-            entry->setModel(model);
-        }
-    }
     if(model && model->getOptionsModel())
     {
+        for(int i = 0; i < ui->entries->count(); ++i)
+        {
+            SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+            if(entry)
+            {
+                entry->setModel(model);
+            }
+        }
+
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
         connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
@@ -62,11 +63,11 @@ SendCoinsDialog::~SendCoinsDialog()
 
 void SendCoinsDialog::on_sendButton_clicked()
 {
+    if(!model || !model->getOptionsModel())
+        return;
+
     QList<SendCoinsRecipient> recipients;
     bool valid = true;
-
-    if(!model)
-        return;
 
     for(int i = 0; i < ui->entries->count(); ++i)
     {
@@ -93,25 +94,37 @@ void SendCoinsDialog::on_sendButton_clicked()
     QStringList formatted;
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
-#if QT_VERSION < 0x050000
-        formatted.append(tr("<b>%1</b> to %2 (%3)").arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, rcp.amount), Qt::escape(rcp.label), rcp.address));
-#else
-        formatted.append(tr("<b>%1</b> to %2 (%3)").arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, rcp.amount), rcp.label.toHtmlEscaped(), rcp.address));
-#endif
+        // generate bold amount string
+        QString amount = "<b>" + BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+        amount.append("</b>");
+        // generate monospace address string
+        QString address = "<span style='font-family: monospace;'>" + rcp.address;
+        address.append("</span>");
+
+        QString recipientElement;
+
+        if (rcp.authenticatedMerchant.isEmpty())
+        {
+            if(rcp.label.length() > 0) // label with address
+            {
+                recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.label));
+                recipientElement.append(QString(" (%1)").arg(address));
+            }
+            else // just address
+            {
+                recipientElement = tr("%1 to %2").arg(amount, address);
+            }
+        }
+        else // just merchant
+        {
+            recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.authenticatedMerchant));
+        }
+
+        formatted.append(recipientElement);
     }
 
     fNewRecipientAllowed = false;
 
-    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
-                          tr("Are you sure you want to send %1?").arg(formatted.join(tr(" and "))),
-          QMessageBox::Yes|QMessageBox::Cancel,
-          QMessageBox::Cancel);
-
-    if(retval != QMessageBox::Yes)
-    {
-        fNewRecipientAllowed = true;
-        return;
-    }
 
     WalletModel::UnlockContext ctx(model->requestUnlock());
     if(!ctx.isValid())
@@ -121,49 +134,93 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    WalletModel::SendCoinsReturn sendstatus = model->sendCoins(recipients);
-    switch(sendstatus.status)
+    // prepare transaction for getting txFee earlier
+    WalletModelTransaction currentTransaction(recipients);
+    WalletModel::SendCoinsReturn prepareStatus = model->prepareTransaction(currentTransaction);
+
+    QString strSendCoins = tr("Send Coins");
+    switch(prepareStatus.status)
     {
     case WalletModel::InvalidAddress:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("The recipient address is not valid, please recheck."),
-            QMessageBox::Ok, QMessageBox::Ok);
+        QMessageBox::warning(this, strSendCoins,
+            tr("The recipient address is not valid, please recheck."));
         break;
     case WalletModel::InvalidAmount:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("The amount to pay must be larger than 0."),
-            QMessageBox::Ok, QMessageBox::Ok);
+        QMessageBox::warning(this, strSendCoins,
+            tr("The amount to pay must be larger than 0."));
         break;
     case WalletModel::AmountExceedsBalance:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("The amount exceeds your balance."),
-            QMessageBox::Ok, QMessageBox::Ok);
+        QMessageBox::warning(this, strSendCoins,
+            tr("The amount exceeds your balance."));
         break;
     case WalletModel::AmountWithFeeExceedsBalance:
-        QMessageBox::warning(this, tr("Send Coins"),
+        QMessageBox::warning(this, strSendCoins,
             tr("The total exceeds your balance when the %1 transaction fee is included.").
-            arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, sendstatus.fee)),
-            QMessageBox::Ok, QMessageBox::Ok);
+            arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee())));
         break;
     case WalletModel::DuplicateAddress:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("Duplicate address found, can only send to each address once per send operation."),
-            QMessageBox::Ok, QMessageBox::Ok);
+        QMessageBox::warning(this, strSendCoins,
+            tr("Duplicate address found, can only send to each address once per send operation."));
         break;
     case WalletModel::TransactionCreationFailed:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("Error: Transaction creation failed!"),
-            QMessageBox::Ok, QMessageBox::Ok);
+        QMessageBox::warning(this, strSendCoins,
+            tr("Error: Transaction creation failed!"));
         break;
     case WalletModel::TransactionCommitFailed:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."),
-            QMessageBox::Ok, QMessageBox::Ok);
-        break;
+    case WalletModel::OK:
     case WalletModel::Aborted: // User aborted, nothing to do
+    default:
+        break;
+    }
+
+    if(prepareStatus.status != WalletModel::OK) {
+        fNewRecipientAllowed = true;
+        return;
+    }
+
+    qint64 txFee = currentTransaction.getTransactionFee();
+    QString questionString = tr("Are you sure you want to send?");
+    questionString.append("<br /><br />%1");
+
+    if(txFee > 0)
+    {
+        // append fee string if a fee is required
+        questionString.append("<hr /><span style='color:#aa0000;'>");
+        questionString.append(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+        questionString.append("</span> ");
+        questionString.append(tr("added as transaction fee"));
+    }
+    if(txFee > 0 || recipients.count() > 1)
+    {
+        // add total amount string if there are more then one recipients or a fee is required
+        questionString.append("<hr />");
+        questionString.append(tr("Total Amount %1").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTotalTransactionAmount()+txFee)));
+    }
+
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
+        questionString.arg(formatted.join("<br />")),
+        QMessageBox::Yes | QMessageBox::Cancel,
+        QMessageBox::Cancel);
+
+    if(retval != QMessageBox::Yes)
+    {
+        fNewRecipientAllowed = true;
+        return;
+    }
+
+    // now send the prepared transaction
+    WalletModel::SendCoinsReturn sendstatus = model->sendCoins(currentTransaction);
+    switch(sendstatus.status)
+    {
+    case WalletModel::TransactionCommitFailed:
+        QMessageBox::warning(this, strSendCoins,
+            tr("Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."));
         break;
     case WalletModel::OK:
         accept();
+        break;
+    case WalletModel::Aborted: // User aborted, nothing to do
+    default:
         break;
     }
     fNewRecipientAllowed = true;
@@ -292,38 +349,45 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
     entry->setValue(rv);
 }
 
-bool SendCoinsDialog::handleURI(const QString &uri)
+bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
 {
-    SendCoinsRecipient rv;
-    // URI has to be valid
-    if (GUIUtil::parseBitcoinURI(uri, &rv))
-    {
-        CBitcoinAddress address(rv.address.toStdString());
-        if (!address.IsValid())
+    QString strSendCoins = tr("Send Coins");
+    if (!rv.authenticatedMerchant.isEmpty()) {
+        // Expired payment request?
+        const payments::PaymentDetails& details = rv.paymentRequest.getDetails();
+        if (details.has_expires() && (int64)details.expires() < GetTime())
+        {
+            QMessageBox::warning(this, strSendCoins,
+                tr("Payment request expired"));
             return false;
-        pasteEntry(rv);
-        return true;
+        }
+    }
+    else {
+        CBitcoinAddress address(rv.address.toStdString());
+        if (!address.IsValid()) {
+            QString strAddress(address.ToString().c_str());
+            QMessageBox::warning(this, strSendCoins,
+                tr("Invalid payment address %1").arg(strAddress));
+            return false;
+        }
     }
 
-    return false;
+    pasteEntry(rv);
+    return true;
 }
 
 void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance)
 {
     Q_UNUSED(unconfirmedBalance);
     Q_UNUSED(immatureBalance);
-    if(!model || !model->getOptionsModel())
-        return;
 
-    int unit = model->getOptionsModel()->getDisplayUnit();
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
+    if(model && model->getOptionsModel())
+    {
+        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
+    }
 }
 
 void SendCoinsDialog::updateDisplayUnit()
 {
-    if(model && model->getOptionsModel())
-    {
-        // Update labelBalance with the current balance and the current unit
-        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->getBalance()));
-    }
+    setBalance(model->getBalance(), 0, 0);
 }

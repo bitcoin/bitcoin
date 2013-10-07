@@ -13,7 +13,9 @@
 ["0","NOP"],
 ["1", "IF VER ELSE 1 ENDIF", "VER non-functional"],
 ["0", "IF VERIF ELSE 1 ENDIF", "VERIF illegal everywhere"],
-["0", "IF VERNOTIF ELSE 1 ENDIF", "VERNOT illegal everywhere"],
+["0", "IF ELSE 1 ELSE VERIF ENDIF", "VERIF illegal everywhere"],
+["0", "IF VERNOTIF ELSE 1 ENDIF", "VERNOTIF illegal everywhere"],
+["0", "IF ELSE 1 ELSE VERNOTIF ENDIF", "VERNOTIF illegal everywhere"],
 
 ["1 IF", "1 ENDIF", "IF/ENDIF can't span scriptSig/scriptPubKey"],
 ["1 IF 0 ENDIF", "1 ENDIF"],
@@ -35,6 +37,18 @@
 ["0 1", "NOTIF IF 1 ELSE 0 ENDIF ENDIF"],
 ["1 1", "NOTIF IF 1 ELSE 0 ENDIF ELSE IF 0 ELSE 1 ENDIF ENDIF"],
 ["0 0", "NOTIF IF 1 ELSE 0 ENDIF ELSE IF 0 ELSE 1 ENDIF ENDIF"],
+
+["1", "IF RETURN ELSE ELSE 1 ENDIF", "Multiple ELSEs"],
+["1", "IF 1 ELSE ELSE RETURN ENDIF"],
+
+["1", "ENDIF", "Malformed IF/ELSE/ENDIF sequence"],
+["1", "ELSE ENDIF"],
+["1", "ENDIF ELSE"],
+["1", "ENDIF ELSE IF"],
+["1", "IF ELSE ENDIF ELSE"],
+["1", "IF ELSE ENDIF ELSE ENDIF"],
+["1", "IF ENDIF ENDIF"],
+["1", "IF ELSE ELSE ENDIF ENDIF"],
 
 ["1", "RETURN"],
 ["1", "DUP IF RETURN ENDIF"],
@@ -237,6 +251,7 @@
 ["1","VER", "OP_VER is reserved"],
 ["1","VERIF", "OP_VERIF is reserved"],
 ["1","VERNOTIF", "OP_VERNOTIF is reserved"],
+["1","RESERVED", "OP_RESERVED is reserved"],
 ["1","RESERVED1", "OP_RESERVED1 is reserved"],
 ["1","RESERVED2", "OP_RESERVED2 is reserved"],
 ["1","0xba", "0xba == OP_NOP10 + 1"],

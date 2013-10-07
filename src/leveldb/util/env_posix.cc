@@ -386,7 +386,7 @@ class PosixEnv : public Env {
   PosixEnv();
   virtual ~PosixEnv() {
     fprintf(stderr, "Destroying Env::Default()\n");
-    exit(1);
+    abort();
   }
 
   virtual Status NewSequentialFile(const std::string& fname,
@@ -467,7 +467,7 @@ class PosixEnv : public Env {
       result = IOError(fname, errno);
     }
     return result;
-  };
+  }
 
   virtual Status CreateDir(const std::string& name) {
     Status result;
@@ -475,7 +475,7 @@ class PosixEnv : public Env {
       result = IOError(name, errno);
     }
     return result;
-  };
+  }
 
   virtual Status DeleteDir(const std::string& name) {
     Status result;
@@ -483,7 +483,7 @@ class PosixEnv : public Env {
       result = IOError(name, errno);
     }
     return result;
-  };
+  }
 
   virtual Status GetFileSize(const std::string& fname, uint64_t* size) {
     Status s;
@@ -589,7 +589,7 @@ class PosixEnv : public Env {
   void PthreadCall(const char* label, int result) {
     if (result != 0) {
       fprintf(stderr, "pthread %s: %s\n", label, strerror(result));
-      exit(1);
+      abort();
     }
   }
 

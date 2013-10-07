@@ -2,6 +2,7 @@
 #define SENDCOINSDIALOG_H
 
 #include <QDialog>
+#include <QVariant>
 
 namespace Ui {
     class SendCoinsDialog;
@@ -9,6 +10,7 @@ namespace Ui {
 class WalletModel;
 class SendCoinsEntry;
 class SendCoinsRecipient;
+class OptionsModel;
 
 QT_BEGIN_NAMESPACE
 class QUrl;
@@ -31,7 +33,7 @@ public:
 
     void setAddress(const QString &address);
     void pasteEntry(const SendCoinsRecipient &rv);
-    bool handleURI(const QString &uri);
+    bool handlePaymentRequest(const SendCoinsRecipient &recipient);
 
 public slots:
     void clear();

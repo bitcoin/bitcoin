@@ -1,16 +1,21 @@
 #ifndef SENDCOINSENTRY_H
 #define SENDCOINSENTRY_H
 
-#include <QFrame>
+#include <QStackedWidget>
+
+#include "walletmodel.h"
 
 namespace Ui {
     class SendCoinsEntry;
 }
 class WalletModel;
-class SendCoinsRecipient;
 
-/** A single entry in the dialog for sending bitcoins. */
-class SendCoinsEntry : public QFrame
+/**
+ * A single entry in the dialog for sending bitcoins.
+ * Stacked widget, with different UIs for payment requests
+ * with a strong payee identity.
+ */
+class SendCoinsEntry : public QStackedWidget
 {
     Q_OBJECT
 
@@ -28,7 +33,8 @@ public:
     void setValue(const SendCoinsRecipient &value);
     void setAddress(const QString &address);
 
-    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
+    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases
+     *  (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
      */
     QWidget *setupTabChain(QWidget *prev);
 
@@ -49,6 +55,7 @@ private slots:
     void updateDisplayUnit();
 
 private:
+    SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
 };

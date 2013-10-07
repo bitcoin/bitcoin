@@ -137,7 +137,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
 void WalletView::incomingTransaction(const QModelIndex& parent, int start, int /*end*/)
 {
     // Prevent balloon-spam when initial block download is in progress
-    if(!walletModel || !clientModel || clientModel->inInitialBlockDownload())
+    if (!walletModel || !clientModel || clientModel->inInitialBlockDownload())
         return;
 
     TransactionTableModel *ttm = walletModel->getTransactionTableModel();
@@ -201,12 +201,13 @@ void WalletView::gotoVerifyMessageTab(QString addr)
         signVerifyMessageDialog->setAddress_VM(addr);
 }
 
-bool WalletView::handleURI(const QString& strURI)
+bool WalletView::handlePaymentRequest(const SendCoinsRecipient& recipient)
 {
     // URI has to be valid
-    if (sendCoinsPage->handleURI(strURI))
+    if (sendCoinsPage->handlePaymentRequest(recipient))
     {
         gotoSendCoinsPage();
+        emit showNormalIfMinimized();
         return true;
     }
     else

@@ -15,7 +15,7 @@ out collectively by the network. Bitcoin is also the name of the open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Bitcoin client sofware, see http://www.bitcoin.org.
+the Bitcoin client software, see http://www.bitcoin.org.
 
 License
 -------
@@ -38,7 +38,7 @@ submitter will be asked to start a discussion (if they haven't already) on the
 
 The patch will be accepted if there is broad consensus that it is a good thing.
 Developers should expect to rework and resubmit patches if the code doesn't
-match the project's coding conventions (see `doc/coding.txt`) or are
+match the project's coding conventions (see `doc/coding.md`) or are
 controversial.
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
@@ -58,15 +58,8 @@ lots of money.
 Developers are strongly encouraged to write unit tests for new code, and to
 submit new unit tests for old code.
 
-Unit tests for the core code are in `src/test/`. To compile and run them:
-
-    cd src; make -f makefile.unix test
-
-Unit tests for the GUI code are in `src/qt/test/`. To compile and run them:
-
-    qmake BITCOIN_QT_TEST=1 -o Makefile.test bitcoin-qt.pro
-    make -f Makefile.test
-    ./bitcoin-qt_test
+Unit tests can be compiled and run (assuming they weren't disabled in configure) with:
+  make check
 
 Every pull request is built for both Windows and Linux on a dedicated server,
 and unit and sanity tests are automatically run. The binaries produced may be

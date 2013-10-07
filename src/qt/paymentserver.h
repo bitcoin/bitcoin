@@ -17,7 +17,7 @@
 // received at or during startup in a list.
 //
 // When startup is finished and the main window is
-// show, a signal is sent to slot uiReady(), which
+// shown, a signal is sent to slot uiReady(), which
 // emits a receivedURL() signal for any payment
 // requests that happened during startup.
 //
@@ -31,37 +31,96 @@
 #include <QObject>
 #include <QString>
 
+#include "paymentrequestplus.h"
+#include "walletmodel.h"
+
+class CWallet;
+class OptionsModel;
+
+QT_BEGIN_NAMESPACE
 class QApplication;
+class QByteArray;
 class QLocalServer;
+class QNetworkAccessManager;
+class QNetworkReply;
+class QSslError;
+class QUrl;
+QT_END_NAMESPACE
 
 class PaymentServer : public QObject
 {
     Q_OBJECT
 
-private:
-    bool saveURIs;
-    QLocalServer* uriServer;
-
 public:
     // Returns true if there were URIs on the command line
     // which were successfully sent to an already-running
     // process.
-    static bool ipcSendCommandLine();
+    // Note: if a payment request is given, SelectParams(MAIN/TESTNET)
+    // will be called so we startup in the right mode.
+    static bool ipcSendCommandLine(int argc, char *argv[]);
 
-    PaymentServer(QApplication* parent);
+    // parent should be QApplication object
+    PaymentServer(QObject* parent, bool startLocalServer = true);
+    ~PaymentServer();
 
+    // Load root certificate authorities. Pass NULL (default)
+    // to read from the file specified in the -rootcertificates setting,
+    // or, if that's not set, to use the system default root certificates.
+    // If you pass in a store, you should not X509_STORE_free it: it will be
+    // freed either at exit or when another set of CAs are loaded.
+    static void LoadRootCAs(X509_STORE* store = NULL);
+
+    // Return certificate store
+    static X509_STORE* getCertStore() { return certStore; }
+
+    // Setup networking
+    void initNetManager();
+
+    // Constructor registers this on the parent QApplication to
+    // receive QEvent::FileOpen events
     bool eventFilter(QObject *object, QEvent *event);
 
+    // OptionsModel is used for getting proxy settings and display unit
+    void setOptionsModel(OptionsModel *optionsModel);
+
 signals:
-    void receivedURI(QString);
+    // Fired when a valid payment request is received
+    void receivedPaymentRequest(SendCoinsRecipient);
+
+    // Fired when a valid PaymentACK is received
+    void receivedPaymentACK(QString);
+
+    // Fired when an error should be reported to the user
+    void reportError(QString, QString, unsigned int);
 
 public slots:
     // Signal this when the main window's UI is ready
     // to display payment requests to the user
     void uiReady();
 
+    // Submit Payment message to a merchant, get back PaymentACK:
+    void fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
+
 private slots:
     void handleURIConnection();
+    void netRequestFinished(QNetworkReply*);
+    void reportSslErrors(QNetworkReply*, const QList<QSslError> &);
+
+private:
+    static bool readPaymentRequest(const QString& filename, PaymentRequestPlus& request);
+    bool processPaymentRequest(PaymentRequestPlus& request, QList<SendCoinsRecipient>& recipients);
+    void handleURIOrFile(const QString& s);
+    void fetchRequest(const QUrl& url);
+
+    bool saveURIs;                      // true during startup
+    QLocalServer* uriServer;
+
+    static X509_STORE* certStore;       // Trusted root certificates
+    static void freeCertStore();
+
+    QNetworkAccessManager* netManager;  // Used to fetch payment requests
+
+    OptionsModel *optionsModel;
 };
 
 #endif // PAYMENTSERVER_H
