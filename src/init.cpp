@@ -215,8 +215,18 @@ std::string HelpMessage(HelpMessageMode hmm)
 #endif
 #endif
         strUsage += "  -paytxfee=<amt>        " + _("Fee per KB to add to transactions you send") + "\n";
-        strUsage += "  -debug                 " + _("Output extra debugging information. Implies all other -debug* options") + "\n";
-        strUsage += "  -debugnet              " + _("Output extra network debugging information") + "\n";
+        strUsage += "  -debug=<category>      " + _("Output debugging information (default: 0, supplying <category> is optional)") + "\n";
+        strUsage +=                               _("If <category> is not supplied, output all debugging information.") + "\n";
+        strUsage +=                               _("<category> can be:");
+        strUsage +=                                 " addrman, alert, coindb, db, lock, rand, rpc, selectcoins, mempool, net"; // Don't translate these and qt below
+    if (hmm == HMM_BITCOIN_QT)
+    {
+        strUsage += ", qt.\n";
+    }
+    else
+    {
+        strUsage += ".\n";
+    }
         strUsage += "  -logtimestamps         " + _("Prepend debug output with timestamp") + "\n";
         strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
         strUsage += "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n";
@@ -457,7 +467,16 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 
-    if (mapMultiArgs.count("-debug")) fDebug = true;
+    fDebug = !mapMultiArgs["-debug"].empty();
+    // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
+    const vector<string>& categories = mapMultiArgs["-debug"];
+    if (GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), string("0")) != categories.end())
+        fDebug = false;
+
+    // Check for -debugnet (deprecated)
+    if (GetBoolArg("-debugnet", false))
+        InitWarning(_("Warning: Deprecated argument -debugnet ignored, use -debug=net"));
+
     fBenchmark = GetBoolArg("-benchmark", false);
     mempool.fChecks = GetBoolArg("-checkmempool", RegTest());
     Checkpoints::fEnabled = GetBoolArg("-checkpoints", true);
@@ -470,12 +489,6 @@ bool AppInit2(boost::thread_group& threadGroup)
         nScriptCheckThreads = 0;
     else if (nScriptCheckThreads > MAX_SCRIPTCHECK_THREADS)
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
-
-    // -debug implies fDebug*
-    if (fDebug)
-        fDebugNet = true;
-    else
-        fDebugNet = GetBoolArg("-debugnet", false);
 
     if (fDaemon)
         fServer = true;

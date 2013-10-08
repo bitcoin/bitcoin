@@ -419,7 +419,7 @@ public:
             Check();
         }
         if (fRet)
-            LogPrint("addr", "Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort().c_str(), source.ToString().c_str(), nTried, nNew);
+            LogPrint("addrman", "Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort().c_str(), source.ToString().c_str(), nTried, nNew);
         return fRet;
     }
 
@@ -435,7 +435,7 @@ public:
             Check();
         }
         if (nAdd)
-            LogPrint("addr", "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString().c_str(), nTried, nNew);
+            LogPrint("addrman", "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString().c_str(), nTried, nNew);
         return nAdd > 0;
     }
 
