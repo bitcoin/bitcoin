@@ -73,7 +73,6 @@ using namespace std;
 map<string, string> mapArgs;
 map<string, vector<string> > mapMultiArgs;
 bool fDebug = false;
-bool fDebugNet = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugger = false;
 bool fDaemon = false;
@@ -226,10 +225,20 @@ int LogPrint(const char* category, const char* pszFormat, ...)
 {
     if (category != NULL)
     {
-        if (!fDebug) return 0;
-        const vector<string>& categories = mapMultiArgs["-debug"];
-        if (find(categories.begin(), categories.end(), string(category)) == categories.end())
+        if (!fDebug)
             return 0;
+
+        const vector<string>& categories = mapMultiArgs["-debug"];
+        bool allCategories = count(categories.begin(), categories.end(), string(""));
+
+        // Only look for categories, if not -debug/-debug=1 was passed,
+        // as that implies every category should be logged.
+        if (!allCategories)
+        {
+            // Category was not found (not supplied via -debug=<category>)
+            if (find(categories.begin(), categories.end(), string(category)) == categories.end())
+                return 0;
+        }
     }
 
     int ret = 0; // Returns total number of characters written

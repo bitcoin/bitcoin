@@ -87,9 +87,7 @@ static QList<QString> savedPaymentRequests;
 
 static void ReportInvalidCertificate(const QSslCertificate& cert)
 {
-    if (fDebug) {
-        qDebug() << "ReportInvalidCertificate : Payment server found an invalid certificate: " << cert.subjectInfo(QSslCertificate::CommonName);
-    }
+    qDebug() << "ReportInvalidCertificate : Payment server found an invalid certificate: " << cert.subjectInfo(QSslCertificate::CommonName);
 }
 
 //
@@ -160,8 +158,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
             continue;
         }
     }
-    if (fDebug)
-        qDebug() << "PaymentServer::LoadRootCAs : Loaded " << nRootCerts << " root certificates";
+    qDebug() << "PaymentServer::LoadRootCAs : Loaded " << nRootCerts << " root certificates";
 
     // Project for another day:
     // Fetch certificate revocation lists, and add them to certStore.
@@ -375,8 +372,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
             QString decoded = QUrl::fromPercentEncoding(temp);
             QUrl fetchUrl(decoded, QUrl::StrictMode);
 
-            if (fDebug)
-                qDebug() << "PaymentServer::handleURIOrFile : fetchRequest(" << fetchUrl << ")";
+            qDebug() << "PaymentServer::handleURIOrFile : fetchRequest(" << fetchUrl << ")";
 
             if (fetchUrl.isValid())
                 fetchRequest(fetchUrl);
@@ -475,8 +471,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, QList<Sen
     if (request.getMerchant(PaymentServer::certStore, recipients[0].authenticatedMerchant)) {
         recipients[0].paymentRequest = request;
         recipients[0].amount = totalAmount;
-        if (fDebug)
-            qDebug() << "PaymentServer::processPaymentRequest : Payment request from " << recipients[0].authenticatedMerchant;
+        qDebug() << "PaymentServer::processPaymentRequest : Payment request from " << recipients[0].authenticatedMerchant;
     }
     else {
         recipients.clear();
@@ -493,8 +488,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, QList<Sen
                 if (i == 0) // Tie request to first pay-to, we don't want multiple ACKs
                     recipients[i].paymentRequest = request;
                 recipients[i].address = QString::fromStdString(CBitcoinAddress(dest).ToString());
-                if (fDebug)
-                    qDebug() << "PaymentServer::processPaymentRequest : Payment request, insecure " << recipients[i].address;
+                qDebug() << "PaymentServer::processPaymentRequest : Payment request, insecure " << recipients[i].address;
             }
             else {
                 // Insecure payments to custom bitcoin addresses are not supported

@@ -75,8 +75,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         digestAlgorithm = EVP_sha1();
     }
     else if (paymentRequest.pki_type() == "none") {
-        if (fDebug)
-            qDebug() << "PaymentRequestPlus::getMerchant : Payment request: pki_type == none";
+        qDebug() << "PaymentRequestPlus::getMerchant : Payment request: pki_type == none";
         return false;
     }
     else {

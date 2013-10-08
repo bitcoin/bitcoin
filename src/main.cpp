@@ -3544,10 +3544,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return error("message getdata size() = %"PRIszu"", vInv.size());
         }
 
-        if (fDebugNet || (vInv.size() != 1))
+        if (fDebug || (vInv.size() != 1))
             LogPrint("net", "received getdata (%"PRIszu" invsz)\n", vInv.size());
 
-        if ((fDebugNet && vInv.size() > 0) || (vInv.size() == 1))
+        if ((fDebug && vInv.size() > 0) || (vInv.size() == 1))
             LogPrint("net", "received getdata for: %s\n", vInv[0].ToString().c_str());
 
         pfrom->vRecvGetData.insert(pfrom->vRecvGetData.end(), vInv.begin(), vInv.end());
@@ -4213,7 +4213,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             const CInv& inv = (*pto->mapAskFor.begin()).second;
             if (!AlreadyHave(inv))
             {
-                if (fDebugNet)
+                if (fDebug)
                     LogPrint("net", "sending getdata: %s\n", inv.ToString().c_str());
                 vGetData.push_back(inv);
                 if (vGetData.size() >= 1000)
