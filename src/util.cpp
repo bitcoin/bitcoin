@@ -78,7 +78,6 @@ bool fPrintToConsole = false;
 bool fPrintToDebugger = false;
 bool fDaemon = false;
 bool fServer = false;
-bool fCommandLine = false;
 string strMiscWarning;
 bool fNoListen = false;
 bool fLogTimestamps = false;
