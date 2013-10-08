@@ -389,22 +389,36 @@ string FormatMoney(int64 n, bool fPlus)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
-    int64 n_abs = (n > 0 ? n : -n);
+    if (!n)
+        return "0.00";
+
+    std::string str;
+    str.reserve(1+8+1+8+1);
+
+    int64 n_abs;
+
+    if (n>0)
+    {
+        if(fPlus)
+            str.append(1,'+');
+        n_abs = n;
+    }
+    else
+    {
+        str.append(1,'-');
+        n_abs = -n;
+    }
+
     int64 quotient = n_abs/COIN;
     int64 remainder = n_abs%COIN;
-    string str = strprintf("%"PRI64d".%08"PRI64d, quotient, remainder);
+    str += strprintf("%"PRI64d".%08"PRI64d, quotient, remainder);
 
     // Right-trim excess zeros before the decimal point:
-    int nTrim = 0;
-    for (int i = str.size()-1; (str[i] == '0' && isdigit(str[i-2])); --i)
-        ++nTrim;
-    if (nTrim)
-        str.erase(str.size()-nTrim, nTrim);
+    int i;
+    for (i = str.size()-1; (str[i] == '0' && str[i-2] != '.'); --i)
+        ;
+    str.erase(i+1);
 
-    if (n < 0)
-        str.insert((unsigned int)0, 1, '-');
-    else if (fPlus && n > 0)
-        str.insert((unsigned int)0, 1, '+');
     return str;
 }
 
