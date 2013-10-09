@@ -599,4 +599,14 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 
+/* The help message mode determines what help message to show */
+enum HelpMessageMode
+{
+    HMM_BITCOIND,
+    HMM_BITCOIN_QT,
+    HMM_BITCOIN_RPC
+};
+
+std::string HelpMessage(HelpMessageMode mode);
+
 #endif

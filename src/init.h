@@ -14,6 +14,5 @@ void StartShutdown();
 bool ShutdownRequested();
 void Shutdown();
 bool AppInit2(boost::thread_group& threadGroup);
-std::string HelpMessage();
 
 #endif
