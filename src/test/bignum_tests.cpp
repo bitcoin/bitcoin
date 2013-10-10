@@ -175,4 +175,12 @@ BOOST_AUTO_TEST_CASE(bignum_SetCompact)
     BOOST_CHECK_EQUAL(num.GetCompact(), 0xff123456U);
 }
 
+BOOST_AUTO_TEST_CASE(bignum_SetHex)
+{
+    std::string hexStr = "deecf97fd890808b9cc0f1b6a3e7a60b400f52710e6ad075b1340755bfa58cc9";
+    CBigNum num;
+    num.SetHex(hexStr);
+    BOOST_CHECK_EQUAL(num.GetHex(), hexStr);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
