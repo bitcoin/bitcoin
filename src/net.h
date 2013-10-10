@@ -28,7 +28,6 @@ static const unsigned int MAX_INV_SZ = 50000;
 
 class CNode;
 class CBlockIndex;
-extern int nBestHeight;
 
 
 
@@ -52,6 +51,7 @@ void SocketSendData(CNode *pnode);
 // Signals for message handling
 struct CNodeSignals
 {
+    boost::signals2::signal<int ()> GetHeight;
     boost::signals2::signal<bool (CNode*)> ProcessMessages;
     boost::signals2::signal<bool (CNode*, bool)> SendMessages;
 };
