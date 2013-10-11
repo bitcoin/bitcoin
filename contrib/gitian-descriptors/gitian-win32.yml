@@ -1,11 +1,12 @@
 ---
 name: "litecoin"
 suites:
-- "lucid"
+- "precise"
 architectures:
-- "i386"
+- "amd64"
 packages:
-- "mingw32"
+- "mingw-w64"
+- "g++-mingw-w64"
 - "git-core"
 - "unzip"
 - "nsis"
@@ -15,35 +16,23 @@ remotes:
 - "url": "https://github.com/litecoin-project/litecoin.git"
   "dir": "litecoin"
 files:
-- "qt-win32-4.8.3-gitian-r1.zip"
-- "boost-win32-1.50.0-gitian2.zip"
-- "litecoin-deps-0.0.5.zip"
+- "qt-win32-4.8.3-gitian-r4.zip"
+- "boost-win32-1.54.0-gitian-r6.zip"
+- "bitcoin-deps-win32-gitian-r9.zip"
 script: |
   #
-  mkdir $HOME/qt
-  cd $HOME/qt
-  unzip ../build/qt-win32-4.8.3-gitian-r1.zip
+  STAGING=$HOME/staging
+  HOST=i686-w64-mingw32
+  #
+  mkdir -p $STAGING
+  cd $STAGING
+  unzip ../build/qt-win32-4.8.3-gitian-r4.zip
+  unzip ../build/boost-win32-1.54.0-gitian-r6.zip
+  unzip ../build/bitcoin-deps-win32-gitian-r9.zip
   cd $HOME/build/
-  export PATH=$HOME/qt/bin/:$PATH
-  #
-  mkdir boost_1_50_0
-  cd boost_1_50_0
-  mkdir -p stage/lib
-  unzip ../boost-win32-1.50.0-gitian2.zip
-  cd bin/$GBUILD_BITS
-  for lib in *; do
-    i586-mingw32msvc-ar rc ../../stage/lib/libboost_${lib}-mt-s.a $lib/*.o
-    i586-mingw32msvc-ranlib ../../stage/lib/libboost_${lib}-mt-s.a
-  done
-  cd ../..
-  mv include/boost .
-  cd ..
-  #
-  unzip litecoin-deps-0.0.5.zip
-  #
-  find -type f | xargs touch --date="$REFERENCE_DATETIME"
   #
   cd litecoin
+  export PATH=$STAGING/host/bin:$PATH
   mkdir -p $OUTDIR/src
   git archive HEAD | tar -x -C $OUTDIR/src
   cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
@@ -51,17 +40,18 @@ script: |
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_50_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_50_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1c OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1c/include QRENCODE_LIB_PATH=$HOME/build/qrencode-3.2.0/.libs QRENCODE_INCLUDE_PATH=$HOME/build/qrencode-3.2.0 USE_QRCODE=1 INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=litecoin USE_BUILD_INFO=1 USE_SSE2=1
+  ln -s $STAGING $HOME/qt
+  $HOME/staging/host/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$STAGING MINIUPNPC_INCLUDE_PATH=$STAGING BDB_LIB_PATH=$STAGING BDB_INCLUDE_PATH=$STAGING BOOST_LIB_PATH=$STAGING BOOST_INCLUDE_PATH=$STAGING BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$STAGING OPENSSL_INCLUDE_PATH=$STAGING QRENCODE_LIB_PATH=$STAGING QRENCODE_INCLUDE_PATH=$STAGING USE_QRCODE=1 INCLUDEPATH=$STAGING DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=litecoin USE_SSE2=1
   make $MAKEOPTS
-  i586-mingw32msvc-strip release/litecoin-qt.exe
+  $HOST-strip release/litecoin-qt.exe
   cp release/litecoin-qt.exe $OUTDIR/
   #
   cd src
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build litecoind.exe USE_UPNP=0 DEBUGFLAGS="-frandom-seed=litecoin" USE_SSE2=1
-  i586-mingw32msvc-strip litecoind.exe
+  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$STAGING litecoind.exe USE_UPNP=0 DEBUGFLAGS="-frandom-seed=litecoin" USE_SSE2=1
+  $HOST-strip litecoind.exe
   mkdir $OUTDIR/daemon
   cp litecoind.exe $OUTDIR/daemon
   cd ..

@@ -1,15 +1,15 @@
 ---
-name: "litecoin-deps"
+name: "bitcoin-deps"
 suites:
-- "lucid"
+- "precise"
 architectures:
-- "i386"
+- "amd64"
 packages:
-- "mingw32"
+- "mingw-w64"
+- "g++-mingw-w64"
 - "git-core"
 - "zip"
 - "faketime"
-- "wine"
 - "psmisc"
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
@@ -25,48 +25,69 @@ script: |
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
+  export INSTALLPREFIX=$OUTDIR/staging/deps
+  export HOST=i686-w64-mingw32
   #
+  mkdir -p $INSTALLPREFIX
+
   tar xzf openssl-1.0.1c.tar.gz
   cd openssl-1.0.1c
-  ./Configure --cross-compile-prefix=i586-mingw32msvc- mingw
+  ./Configure --cross-compile-prefix=$HOST- mingw --openssldir=$INSTALLPREFIX
   make
+  make install_sw
   cd ..
   #
   tar xzf db-4.8.30.NC.tar.gz
   cd db-4.8.30.NC/build_unix
-  ../dist/configure --enable-mingw --enable-cxx --host=i586-mingw32msvc CFLAGS="-I/usr/i586-mingw32msvc/include"
-  make $MAKEOPTS
+  ../dist/configure --prefix=$INSTALLPREFIX --enable-mingw --enable-cxx --host=$HOST --disable-shared
+  make $MAKEOPTS library_build
+  make install_lib install_include
   cd ../..
   #
   tar xzf miniupnpc-1.6.tar.gz
   cd miniupnpc-1.6
-  sed 's/dllwrap -k --driver-name gcc/$(DLLWRAP) -k --driver-name $(CC)/' -i Makefile.mingw
-  sed 's|wingenminiupnpcstrings $< $@|./wingenminiupnpcstrings $< $@|' -i Makefile.mingw
-  make -f Makefile.mingw DLLWRAP=i586-mingw32msvc-dllwrap CC=i586-mingw32msvc-gcc AR=i586-mingw32msvc-ar
+  echo "
+  --- miniupnpc-1.6/Makefile.mingw.orig   2013-09-29 18:52:51.014087958 -1000
+  +++ miniupnpc-1.6/Makefile.mingw        2013-09-29 19:09:29.663318691 -1000
+  @@ -67,8 +67,8 @@
+   
+   wingenminiupnpcstrings.o:	wingenminiupnpcstrings.c
+   
+  -miniupnpcstrings.h: miniupnpcstrings.h.in wingenminiupnpcstrings
+  -	wingenminiupnpcstrings \$< \$@
+  +miniupnpcstrings.h: miniupnpcstrings.h.in 
+  +	sed -e 's|OS/version|MSWindows/5.1.2600|' -e 's|MINIUPNPC_VERSION_STRING \"version\"|MINIUPNPC_VERSION_STRING \"VERSIONHERE\"|' \$< > \$@
+   
+   minixml.o:	minixml.c minixml.h miniupnpcstrings.h
+   
+  " | sed "s/VERSIONHERE/$(cat VERSION)/" | patch -p1
+  mkdir -p dll
+  make -f Makefile.mingw CC=$HOST-gcc AR=$HOST-ar libminiupnpc.a
+  install -d $INSTALLPREFIX/include/miniupnpc
+  install *.h $INSTALLPREFIX/include/miniupnpc
+  install libminiupnpc.a  $INSTALLPREFIX/lib
   cd ..
-  mv miniupnpc-1.6 miniupnpc
   #
   tar xzf zlib-1.2.6.tar.gz
   cd zlib-1.2.6
-  make -f win32/Makefile.gcc PREFIX=i586-mingw32msvc- $MAKEOPTS
+  CROSS_PREFIX=$HOST- ./configure --prefix=$INSTALLPREFIX --static
+  make
+  make install
   cd ..
   #
   tar xzf libpng-1.5.9.tar.gz
   cd libpng-1.5.9
-  ./configure -disable-shared CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld LDFLAGS="-L../zlib-1.2.6/" CFLAGS="-I../zlib-1.2.6/"
+  CFLAGS="-I$INSTALLPREFIX/include" LDFLAGS="-L$INSTALLPREFIX/lib" ./configure --disable-shared --prefix=$INSTALLPREFIX --host=$HOST
   make $MAKEOPTS
+  make install
   cd ..
   #
   tar xjf qrencode-3.2.0.tar.bz2
   cd qrencode-3.2.0
-  ./configure CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld png_LIBS="../libpng-1.5.9/.libs/libpng15.a ../zlib-1.2.6/libz.a" png_CFLAGS="-I../libpng-1.5.9"
-  make $MAKEOPTS
+  png_CFLAGS="-I$INSTALLPREFIX/include" png_LIBS="-L$INSTALLPREFIX/lib -lpng" ./configure --prefix=$INSTALLPREFIX --host=$HOST
+  make
+  make install
   cd ..
   #
-  zip -r $OUTDIR/litecoin-deps-0.0.5.zip \
-    $(ls qrencode-*/{qrencode.h,.libs/libqrencode.{,l}a} | sort) \
-    $(ls db-*/build_unix/{libdb_cxx.a,db.h,db_cxx.h,libdb.a,.libs/libdb_cxx-?.?.a} | sort) \
-    $(find openssl-* -name '*.a' -o -name '*.h' | sort) \
-    $(find miniupnpc -name '*.h' -o -name 'libminiupnpc.a' | sort)
-  # Kill wine processes as gitian won't figure out we are done otherwise
-  killall wineserver services.exe explorer.exe winedevice.exe
+  cd $INSTALLPREFIX
+  zip -r $OUTDIR/bitcoin-deps-win32-gitian-r9.zip include lib
