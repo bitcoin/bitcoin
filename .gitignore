@@ -5,6 +5,7 @@ src/*.exe
 src/*/*.exe
 src/bitcoin
 src/bitcoind
+src/bitcoin-cli
 src/test/test_bitcoin
 src/qt/test/test_bitcoin-qt
 
