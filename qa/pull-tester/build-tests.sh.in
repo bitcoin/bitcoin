@@ -63,14 +63,12 @@ make clean
 cd @abs_top_srcdir@/win32-build
 make clean
 
-# Test code coverage
-cd @abs_top_srcdir@
-make distdir
-mv $DISTDIR linux-coverage-build
-cd linux-coverage-build
-# TODO: re-enable blockchain tester tool
-#./configure --enable-lcov --with-comparison-tool="$JAVA_COMPARISON_TOOL"
-./configure --enable-lcov
-make -j$JOBS
-make cov
-
+# TODO: Fix code coverage builds on pull-tester machine
+# # Test code coverage
+# cd @abs_top_srcdir@
+# make distdir
+# mv $DISTDIR linux-coverage-build
+# cd linux-coverage-build
+# ./configure --enable-lcov --disable-silent-rules --disable-ccache --with-comparison-tool="$JAVA_COMPARISON_TOOL"
+# make -j$JOBS
+# make cov
