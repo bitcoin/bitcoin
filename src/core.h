@@ -11,6 +11,10 @@
 
 #include <stdio.h>
 
+/** No amount larger than this (in satoshi) is valid */
+static const int64 MAX_MONEY = 21000000 * COIN;
+inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+
 class CTransaction;
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
@@ -49,11 +53,11 @@ public:
 class CInPoint
 {
 public:
-    CTransaction* ptx;
+    const CTransaction* ptx;
     unsigned int n;
 
     CInPoint() { SetNull(); }
-    CInPoint(CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
+    CInPoint(const CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
     void SetNull() { ptx = NULL; n = (unsigned int) -1; }
     bool IsNull() const { return (ptx == NULL && n == (unsigned int) -1); }
 };
@@ -143,19 +147,6 @@ public:
 
     uint256 GetHash() const;
 
-    bool IsDust(int64 nMinRelayTxFee) const
-    {
-        // "Dust" is defined in terms of CTransaction::nMinRelayTxFee,
-        // which has units satoshis-per-kilobyte.
-        // If you'd pay more than 1/3 in fees
-        // to spend something, then we consider it dust.
-        // A typical txout is 34 bytes big, and will
-        // need a CTxIn of at least 148 bytes to spend,
-        // so dust is a txout less than 54 uBTC
-        // (5460 satoshis) with default nMinRelayTxFee
-        return ((nValue*1000)/(3*((int)GetSerializeSize(SER_DISK,0)+148)) < nMinRelayTxFee);
-    }
-
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
@@ -179,7 +170,7 @@ class CTransaction
 {
 public:
     static int64 nMinTxFee;
-    static int64 nMinRelayTxFee;
+    static double dMinFreePriority;
     static const int CURRENT_VERSION=1;
     int nVersion;
     std::vector<CTxIn> vin;
@@ -220,6 +211,11 @@ public:
     {
         return (vin.size() == 1 && vin[0].prevout.IsNull());
     }
+
+    /** Returns sum of all outputs (note: does not include fees) */
+    int64 GetValueOut() const;
+    // Note: GetValueIn is a method on CCoinsViewCache, because
+    // it requires looking up the values of previous inputs
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {

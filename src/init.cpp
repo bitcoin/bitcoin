@@ -113,6 +113,7 @@ void Shutdown()
         bitdb.Flush(false);
     GenerateBitcoins(false, NULL);
     StopNode();
+    mempool.Write();
     {
         LOCK(cs_main);
         if (pwalletMain)
@@ -433,7 +434,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     if (mapMultiArgs.count("-debug")) fDebug = true;
     fBenchmark = GetBoolArg("-benchmark", false);
-    mempool.fChecks = GetBoolArg("-checkmempool", RegTest());
+    mempool.setSanityCheck(GetBoolArg("-checkmempool", RegTest()));
     Checkpoints::fEnabled = GetBoolArg("-checkpoints", true);
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
@@ -492,11 +493,14 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
     if (mapArgs.count("-minrelaytxfee"))
     {
-        int64 n = 0;
-        if (ParseMoney(mapArgs["-minrelaytxfee"], n) && n > 0)
-            CTransaction::nMinRelayTxFee = n;
-        else
-            return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"].c_str()));
+        LogPrintf("Warning: -minrelaytxfee obsolete, use -mintxfee\n");
+    }
+    if (mapArgs.count("-minfreepriority"))
+    {
+        double dPriority = atof(mapArgs["-minfreepriority"].c_str());
+        if (dPriority < 0)
+            return InitError(strprintf(_("Invalid amount for -minfreepriority=<priority>: '%s'"), mapArgs["-minfreepriority"].c_str()));
+        CTransaction::dMinFreePriority = dPriority;
     }
 
     if (mapArgs.count("-paytxfee"))
@@ -942,6 +946,11 @@ bool AppInit2(boost::thread_group& threadGroup)
         pwalletMain->SetBestChain(CBlockLocator(pindexBest));
         nWalletDBUpdated++;
     }
+
+    // It is OK if mempool.Read() fails; starting out with an empty memory pool is not
+    // a problem, it gets filled quickly.
+    mempool.Read();
+    LogPrintf("Read %lu mempool transactions\n", mempool.size());
 
     // ********************************************************* Step 9: import blocks
 

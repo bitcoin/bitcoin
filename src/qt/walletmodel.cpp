@@ -197,6 +197,17 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return SendCoinsReturn(AmountWithFeeExceedsBalance);
     }
 
+
+    // TODO: let users choose between "low fee, don't care how long it takes"
+    // and "confirm quickly, please" ? E.g.
+    // low fee == estimateFees(0.1, ... 0.2 ...)
+    // confirm quickly == estimateFees(0.5, ... 0.75 ...)
+    double dMinFreePriority;
+    double dFeePerByte;
+    mempool.estimateFees(0.1, dMinFreePriority, 0.5, dFeePerByte, true);
+    if (nTransactionFee > 0)
+        dFeePerByte = nTransactionFee/1000.0; // Convert from satoshis-per-kilobyte
+
     {
         LOCK2(cs_main, wallet->cs_wallet);
 
@@ -206,7 +217,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason);
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange,
+                                                  dMinFreePriority, dFeePerByte,
+                                                  nFeeRequired, strFailReason);
         transaction.setTransactionFee(nFeeRequired);
 
         if(!fCreated)

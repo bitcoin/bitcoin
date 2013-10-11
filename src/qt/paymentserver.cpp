@@ -442,7 +442,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, QList<Sen
     qint64 totalAmount = 0;
     foreach(const PAIRTYPE(CScript, qint64)& sendingTo, sendingTos) {
         CTxOut txOut(sendingTo.second, sendingTo.first);
-        if (txOut.IsDust(CTransaction::nMinRelayTxFee)) {
+        if (mempool.isDust(txOut)) {
             QString message = QObject::tr("Requested payment amount (%1) too small")
                 .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second));
 

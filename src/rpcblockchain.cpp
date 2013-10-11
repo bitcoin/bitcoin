@@ -122,19 +122,53 @@ Value settxfee(const Array& params, bool fHelp)
 
 Value getrawmempool(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 0)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getrawmempool\n"
+            "getrawmempool [verbose=false]\n"
             "Returns all transaction ids in memory pool.");
 
-    vector<uint256> vtxid;
-    mempool.queryHashes(vtxid);
+    bool fVerbose = false;
+    if (params.size() > 0)
+        fVerbose = params[0].get_bool();
 
-    Array a;
-    BOOST_FOREACH(const uint256& hash, vtxid)
-        a.push_back(hash.ToString());
+    if (fVerbose)
+    {
+        LOCK(mempool.cs);
+        Object o;
+        BOOST_FOREACH(const PAIRTYPE(uint256, CTxMemPoolEntry)& entry, mempool.mapTx)
+        {
+            const uint256& hash = entry.first;
+            const CTxMemPoolEntry& e = entry.second;
+            Object info;
+            info.push_back(Pair("size", (int)e.getTxSize()));
+            info.push_back(Pair("fee", (int)e.getFee()));
+            info.push_back(Pair("height", (int)e.getHeight()));
+            info.push_back(Pair("startingpriority", e.getPriority(e.getHeight())));
+            info.push_back(Pair("currentpriority", e.getPriority(nBestHeight)));
+            const CTransaction& tx = e.getTx();
+            Array dependsOn;
+            BOOST_FOREACH(const CTxIn& txin, tx.vin)
+            {
+                if (mempool.exists(txin.prevout.hash))
+                    dependsOn.push_back(txin.prevout.hash.ToString());
+            }
+            if (!dependsOn.empty())
+                info.push_back(Pair("dependson", dependsOn));
+            o.push_back(Pair(hash.ToString(), info));
+        }
+        return o;
+    }
+    else
+    {
+        vector<uint256> vtxid;
+        mempool.queryHashes(vtxid);
 
-    return a;
+        Array a;
+        BOOST_FOREACH(const uint256& hash, vtxid)
+            a.push_back(hash.ToString());
+
+        return a;
+    }
 }
 
 Value getblockhash(const Array& params, bool fHelp)
