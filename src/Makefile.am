@@ -6,7 +6,7 @@ AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
 noinst_LIBRARIES = libbitcoin.a
 
-bin_PROGRAMS = bitcoind
+bin_PROGRAMS = bitcoind bitcoin-cli
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
 DIST_SUBDIRS = . qt test
@@ -54,6 +54,17 @@ endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
 bitcoind_LDADD += $(BDB_LIBS)
+
+# bitcoin-cli binary #
+bitcoin_cli_LDADD = libbitcoin.a leveldb/libleveldb.a leveldb/libmemenv.a \
+  $(BOOST_LIBS)
+bitcoin_cli_SOURCES = bitcoin-cli.cpp
+#
+
+if TARGET_WINDOWS
+bitcoin_cli_SOURCES += bitcoin-cli-res.rc
+endif
+bitcoin_cli_LDADD += $(BDB_LIBS)
 
 leveldb/libleveldb.a: leveldb/libmemenv.a
 
