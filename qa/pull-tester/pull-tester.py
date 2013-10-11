@@ -38,7 +38,7 @@ def checkout_pull(clone_url, commit, out):
     # Init
     build_dir=os.environ["BUILD_DIR"]
     run("umount ${CHROOT_COPY}/proc", fail_hard=False)
-    run("rsync --delete -apv ${CHROOT_MASTER} ${CHROOT_COPY}")
+    run("rsync --delete -apv ${CHROOT_MASTER}/ ${CHROOT_COPY}")
     run("rm -rf ${CHROOT_COPY}${SCRIPTS_DIR}")
     run("cp -a ${SCRIPTS_DIR} ${CHROOT_COPY}${SCRIPTS_DIR}")
     # Merge onto upstream/master
@@ -108,17 +108,18 @@ def testpull(number, comment_url, clone_url, commit):
         open(os.environ["TESTED_DB"], "a").write(commit + "\n")
         return
 
-    # New: pull-tester.sh script(s) are in the tree:
+    run("rm -rf ${CHROOT_COPY}/${OUT_DIR}", fail_hard=False);
+    run("mkdir -p ${CHROOT_COPY}/${OUT_DIR}", fail_hard=False);
+    run("chown -R ${BUILD_USER}:${BUILD_GROUP} ${CHROOT_COPY}/${OUT_DIR}", fail_hard=False)
+
     script = os.environ["BUILD_PATH"]+"/qa/pull-tester/pull-tester.sh"
-    script += " ${BUILD_PATH} ${MINGW_DEPS_DIR} ${SCRIPTS_DIR}/BitcoindComparisonTool.jar 1"
+    script += " ${BUILD_PATH} ${MINGW_DEPS_DIR} ${SCRIPTS_DIR}/BitcoindComparisonTool.jar 6 ${OUT_DIR}"
     returncode = run("chroot ${CHROOT_COPY} sudo -u ${BUILD_USER} -H timeout ${TEST_TIMEOUT} "+script,
                      fail_hard=False, stdout=out, stderr=out)
 
+    run("mv ${CHROOT_COPY}/${OUT_DIR} " + dir)
     run("mv ${BUILD_DIR} " + dir)
-    # TODO: FIXME 
-    # Idea: have run-script save interesting output...
-    #    run("cp /mnt/chroot-tmp/home/ubuntu/.bitcoin/regtest/debug.log " + dir)
-    #    os.system("chmod +r " + dir + "/debug.log")
+
     if returncode == 42:
         print("Successfully tested pull (needs tests) - sending comment to: " + comment_url)
         commentOn(comment_url, True, False, True, resultsurl)
@@ -147,6 +148,7 @@ environ_default("MINGW_DEPS_DIR", "/mnt/w32deps")
 environ_default("SCRIPTS_DIR", "/mnt/test-scripts")
 environ_default("CHROOT_COPY", "/mnt/chroot-tmp")
 environ_default("CHROOT_MASTER", "/mnt/chroot")
+environ_default("OUT_DIR", "/mnt/out")
 environ_default("BUILD_PATH", "/mnt/bitcoin")
 os.environ["BUILD_DIR"] = os.environ["CHROOT_COPY"] + os.environ["BUILD_PATH"]
 environ_default("RESULTS_DIR", "/mnt/www/pull-tester")
