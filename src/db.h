@@ -16,7 +16,7 @@
 #include <db_cxx.h>
 
 class CAddrMan;
-class CBlockLocator;
+struct CBlockLocator;
 class CDiskBlockIndex;
 class CMasterKey;
 class COutPoint;
