@@ -6,7 +6,7 @@ AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
 noinst_LIBRARIES = libbitcoin.a
 
-bin_PROGRAMS = bitcoind
+bin_PROGRAMS = bitcoind bitcoin-rpc
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
 DIST_SUBDIRS = . qt test
@@ -31,11 +31,11 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 version.o: obj/build.h
 
-libbitcoin_a_SOURCES = addrman.cpp alert.cpp allocators.cpp bitcoinrpc.cpp bloom.cpp \
+libbitcoin_a_SOURCES = addrman.cpp alert.cpp allocators.cpp bloom.cpp \
   chainparams.cpp checkpoints.cpp core.cpp crypter.cpp db.cpp hash.cpp \
   init.cpp key.cpp keystore.cpp leveldb.cpp main.cpp miner.cpp \
-  netbase.cpp net.cpp noui.cpp protocol.cpp rpcblockchain.cpp rpcdump.cpp \
-  rpcmining.cpp rpcnet.cpp rpcrawtransaction.cpp rpcwallet.cpp script.cpp \
+  netbase.cpp net.cpp noui.cpp protocol.cpp rpcblockchain.cpp rpcclient.cpp rpcdump.cpp \
+  rpcmining.cpp rpcnet.cpp rpcprotocol.cpp rpcrawtransaction.cpp rpcserver.cpp rpcwallet.cpp script.cpp \
   sync.cpp txdb.cpp util.cpp version.cpp wallet.cpp walletdb.cpp $(JSON_H) \
   $(BITCOIN_CORE_H)
 
@@ -54,6 +54,17 @@ endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
 bitcoind_LDADD += $(BDB_LIBS)
+
+# bitcoin-rpc binary #
+bitcoin_rpc_LDADD = libbitcoin.a leveldb/libleveldb.a leveldb/libmemenv.a \
+  $(BOOST_LIBS)
+bitcoin_rpc_SOURCES = bitcoin-rpc.cpp
+#
+
+if TARGET_WINDOWS
+bitcoin_rpc_SOURCES += bitcoin-rpc-res.rc
+endif
+bitcoin_rpc_LDADD += $(BDB_LIBS)
 
 leveldb/libleveldb.a: leveldb/libmemenv.a
 
