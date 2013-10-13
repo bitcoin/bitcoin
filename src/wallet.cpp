@@ -729,6 +729,74 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nReceived,
     }
 }
 
+bool CWalletTx::IsConfirmed() const
+{
+    // Quick answer in most cases
+    if (!IsFinalTx(*this))
+        return false;
+    if (GetDepthInMainChain() >= 1)
+        return true;
+    if (!IsFromMe()) // using wtx's cached debit
+        return false;
+
+    // If no confirmations but it's from us, we can still
+    // consider it confirmed if all dependencies are confirmed
+    std::vector<uint256> vWorkQueue;
+    
+    set<uint256> setAlreadyQueued;
+    
+    // pwallet->mapWallet doesn't contain !IsMine transactions
+    std::map<uint256, CMerkleTx> mapPrev;
+    
+    BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
+        mapPrev[tx.GetHash()] = tx;
+    
+    BOOST_FOREACH(const CTxIn& txin, vin)
+    {
+        if (setAlreadyQueued.count(txin.prevout.hash))
+            continue;
+        setAlreadyQueued.insert(txin.prevout.hash);
+        
+        vWorkQueue.push_back(txin.prevout.hash);
+    }
+    
+    for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+    {
+        uint256 hash = vWorkQueue[i];
+        
+        map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
+        map<uint256, CMerkleTx>::const_iterator pi = mapPrev.find(hash);
+        
+        // dependent transactions cannot be found
+        if (mi == pwallet->mapWallet.end() && pi == mapPrev.end())
+            return false;
+        
+        CMerkleTx tx;
+        if (mi != pwallet->mapWallet.end())
+            tx = (*mi).second;
+        
+        if (pi != mapPrev.end())
+            tx = (*pi).second;
+        
+        if (!IsFinalTx(tx))
+            return false;
+        if (tx.GetDepthInMainChain() >= 1)
+            continue;
+        if (!pwallet->IsFromMe(tx))
+            return false;
+        
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            if (setAlreadyQueued.count(txin.prevout.hash))
+                continue;
+            setAlreadyQueued.insert(txin.prevout.hash);
+            
+            vWorkQueue.push_back(txin.prevout.hash);
+        }
+    }
+    return true;
+}
+
 void CWalletTx::AddSupportingTransactions()
 {
     vtxPrev.clear();
