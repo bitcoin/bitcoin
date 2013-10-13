@@ -17,13 +17,13 @@ for Debian and Ubuntu  <= 11.10 :
 
 
     apt-get install qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev \
-        libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev \
+        libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev libboost-test-dev\
         libssl-dev libdb4.8++-dev libprotobuf-dev protobuf-compiler
 
 for Ubuntu >= 12.04 (please read the 'Berkely DB version warning' below):
 
     apt-get install qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev \
-        libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev \
+        libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev libboost-test-dev\
         libssl-dev libdb++-dev libminiupnpc-dev libprotobuf-dev protobuf-compiler
 
 For Qt 5 you need the following, otherwise you get an error with lrelease when running qmake:
