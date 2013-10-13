@@ -329,6 +329,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
  */
 bool AppInit2(boost::thread_group& threadGroup)
 {
+    nNodeStartTime = GetTime();
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
     // Turn off Microsoft heap dump noise
@@ -531,7 +532,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("Bitcoin version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
     LogPrintf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
     if (!fLogTimestamps)
-        LogPrintf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
+        LogPrintf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nNodeStartTime).c_str());
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
     LogPrintf("Using data directory %s\n", strDataDir.c_str());
     LogPrintf("Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
