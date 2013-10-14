@@ -26,8 +26,6 @@ class CAddress;
 class CInv;
 class CNode;
 
-struct CBlockIndexWorkComparator;
-
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 /** The maximum size for mined blocks */
@@ -73,7 +71,6 @@ extern CScript COINBASE_FLAGS;
 
 extern CCriticalSection cs_main;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
-extern std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid;
 extern unsigned int nTransactionsUpdated;
 extern uint64 nLastBlockTx;
 extern uint64 nLastBlockSize;
@@ -646,10 +643,6 @@ public:
      }
 };
 
-extern CCriticalSection cs_LastBlockFile;
-extern CBlockFileInfo infoLastBlockFile;
-extern int nLastBlockFile;
-
 enum BlockStatus {
     BLOCK_VALID_UNKNOWN      =    0,
     BLOCK_VALID_HEADER       =    1, // parsed, version ok, hash satisfies claimed PoW, 1 <= vtx count <= max, timestamp not in future
@@ -846,19 +839,6 @@ public:
     void print() const
     {
         LogPrintf("%s\n", ToString().c_str());
-    }
-};
-
-struct CBlockIndexWorkComparator
-{
-    bool operator()(CBlockIndex *pa, CBlockIndex *pb) {
-        if (pa->nChainWork > pb->nChainWork) return false;
-        if (pa->nChainWork < pb->nChainWork) return true;
-
-        if (pa->GetBlockHash() < pb->GetBlockHash()) return false;
-        if (pa->GetBlockHash() > pb->GetBlockHash()) return true;
-
-        return false; // identical blocks
     }
 };
 
