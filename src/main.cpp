@@ -4296,8 +4296,8 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             // RPC ping request by user
             pingSend = true;
         }
-        if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSendMsg.empty()) {
-            // Ping automatically sent as a keepalive
+        if (pto->nPingNonceSent == 0 && pto->nPingUsecStart + PING_INTERVAL * 1000000 < GetTimeMicros()) {
+            // Ping automatically sent as a latency probe & keepalive.
             pingSend = true;
         }
         if (pingSend) {
@@ -4305,15 +4305,14 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             while (nonce == 0) {
                 RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
             }
-            pto->nPingNonceSent = nonce;
             pto->fPingQueued = false;
+            pto->nPingUsecStart = GetTimeMicros();
             if (pto->nVersion > BIP0031_VERSION) {
-                // Take timestamp as close as possible before transmitting ping
-                pto->nPingUsecStart = GetTimeMicros();
+                pto->nPingNonceSent = nonce;
                 pto->PushMessage("ping", nonce);
             } else {
-                // Peer is too old to support ping command with nonce, pong will never arrive, disable timing
-                pto->nPingUsecStart = 0;
+                // Peer is too old to support ping command with nonce, pong will never arrive.
+                pto->nPingNonceSent = 0;
                 pto->PushMessage("ping");
             }
         }
