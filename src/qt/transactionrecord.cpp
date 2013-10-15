@@ -160,14 +160,14 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         idx);
     status.confirmed = wtx.IsConfirmed();
     status.depth = wtx.GetDepthInMainChain();
-    status.cur_num_blocks = nBestHeight;
+    status.cur_num_blocks = chainActive.Height();
 
     if (!IsFinalTx(wtx))
     {
         if (wtx.nLockTime < LOCKTIME_THRESHOLD)
         {
             status.status = TransactionStatus::OpenUntilBlock;
-            status.open_for = wtx.nLockTime - nBestHeight + 1;
+            status.open_for = wtx.nLockTime - chainActive.Height() + 1;
         }
         else
         {
@@ -221,7 +221,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
 
 bool TransactionRecord::statusUpdateNeeded()
 {
-    return status.cur_num_blocks != nBestHeight;
+    return status.cur_num_blocks != chainActive.Height();
 }
 
 QString TransactionRecord::getTxID() const
