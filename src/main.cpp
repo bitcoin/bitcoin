@@ -190,97 +190,12 @@ void UnregisterNodeSignals(CNodeSignals& nodeSignals)
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// CBlockLocator implementation
+// CChain implementation
 //
-
-CBlockLocator::CBlockLocator(uint256 hashBlock)
-{
-    std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
-    if (mi != mapBlockIndex.end())
-        Set((*mi).second);
-}
-
-void CBlockLocator::Set(const CBlockIndex* pindex)
-{
-    vHave.clear();
-    int nStep = 1;
-    while (pindex)
-    {
-        vHave.push_back(pindex->GetBlockHash());
-
-        // Exponentially larger steps back
-        for (int i = 0; pindex && i < nStep; i++)
-            pindex = pindex->pprev;
-        if (vHave.size() > 10)
-            nStep *= 2;
-    }
-    vHave.push_back(Params().HashGenesisBlock());
-}
-
-int CBlockLocator::GetDistanceBack()
-{
-    // Retrace how far back it was in the sender's branch
-    int nDistance = 0;
-    int nStep = 1;
-    BOOST_FOREACH(const uint256& hash, vHave)
-    {
-        std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
-        if (mi != mapBlockIndex.end())
-        {
-            CBlockIndex* pindex = (*mi).second;
-            if (chainActive.Contains(pindex))
-                return nDistance;
-        }
-        nDistance += nStep;
-        if (nDistance > 10)
-            nStep *= 2;
-    }
-    return nDistance;
-}
-
-CBlockIndex *CBlockLocator::GetBlockIndex()
-{
-    // Find the first block the caller has in the main chain
-    BOOST_FOREACH(const uint256& hash, vHave)
-    {
-        std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
-        if (mi != mapBlockIndex.end())
-        {
-            CBlockIndex* pindex = (*mi).second;
-            if (chainActive.Contains(pindex))
-                return pindex;
-        }
-    }
-    return chainActive.Genesis();
-}
-
-uint256 CBlockLocator::GetBlockHash()
-{
-    // Find the first block the caller has in the main chain
-    BOOST_FOREACH(const uint256& hash, vHave)
-    {
-        std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
-        if (mi != mapBlockIndex.end())
-        {
-            CBlockIndex* pindex = (*mi).second;
-            if (chainActive.Contains(pindex))
-                return hash;
-        }
-    }
-    return Params().HashGenesisBlock();
-}
-
-int CBlockLocator::GetHeight()
-{
-    CBlockIndex* pindex = GetBlockIndex();
-    if (!pindex)
-        return 0;
-    return pindex->nHeight;
-}
 
 CBlockIndex *CChain::SetTip(CBlockIndex *pindex) {
     if (pindex == NULL) {
-        std::vector<CBlockIndex*>().swap(vChain);
+        vChain.clear();
         return NULL;
     }
     vChain.resize(pindex->nHeight + 1);
@@ -289,6 +204,47 @@ CBlockIndex *CChain::SetTip(CBlockIndex *pindex) {
         pindex = pindex->pprev;
     }
     return pindex;
+}
+
+CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
+    int nStep = 1;
+    std::vector<uint256> vHave;
+    vHave.reserve(32);
+
+    if (!pindex)
+        pindex = Tip();
+    while (pindex) {
+        vHave.push_back(pindex->GetBlockHash());
+        // Stop when we have added the genesis block.
+        if (pindex->nHeight == 0)
+            break;
+        // Exponentially larger steps back, plus the genesis block.
+        int nHeight = std::max(pindex->nHeight - nStep, 0);
+        // In case pindex is not in this chain, iterate pindex->pprev to find blocks.
+        while (pindex->nHeight > nHeight && !Contains(pindex))
+            pindex = pindex->pprev;
+        // If pindex is in this chain, use direct height-based access.
+        if (pindex->nHeight > nHeight)
+            pindex = (*this)[nHeight];
+        if (vHave.size() > 10)
+            nStep *= 2;
+    }
+
+    return CBlockLocator(vHave);
+}
+
+CBlockIndex *CChain::FindFork(const CBlockLocator &locator) const {
+    // Find the first block the caller has in the main chain
+    BOOST_FOREACH(const uint256& hash, locator.vHave) {
+        std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+        if (mi != mapBlockIndex.end())
+        {
+            CBlockIndex* pindex = (*mi).second;
+            if (Contains(pindex))
+                return pindex;
+        }
+    }
+    return Genesis();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2156,10 +2112,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
 
     // Update best block in wallet (so we can detect restored wallets)
     if ((pindexNew->nHeight % 20160) == 0 || (!fIsInitialDownload && (pindexNew->nHeight % 144) == 0))
-    {
-        const CBlockLocator locator(pindexNew);
-        ::SetBestChain(locator);
-    }
+        ::SetBestChain(chainActive.GetLocator(pindexNew));
 
     // New best block
     nTimeBestReceived = GetTime();
@@ -2525,7 +2478,7 @@ void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
     pnode->pindexLastGetBlocksBegin = pindexBegin;
     pnode->hashLastGetBlocksEnd = hashEnd;
 
-    pnode->PushMessage("getblocks", CBlockLocator(pindexBegin), hashEnd);
+    pnode->PushMessage("getblocks", chainActive.GetLocator(pindexBegin), hashEnd);
 }
 
 bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
@@ -3653,7 +3606,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vRecv >> locator >> hashStop;
 
         // Find the last block the caller has in the main chain
-        CBlockIndex* pindex = locator.GetBlockIndex();
+        CBlockIndex* pindex = chainActive.FindFork(locator);
 
         // Send the rest of the chain
         if (pindex)
@@ -3698,7 +3651,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         else
         {
             // Find the last block the caller has in the main chain
-            pindex = locator.GetBlockIndex();
+            pindex = chainActive.FindFork(locator);
             if (pindex)
                 pindex = chainActive.Next(pindex);
         }
