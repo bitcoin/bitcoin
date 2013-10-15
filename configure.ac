@@ -154,7 +154,7 @@ use_pkgconfig=yes
 case $host in
   *mingw*)
 
-     #pkgconfig does more harm than good with mingw
+     #pkgconfig does more harm than good with MinGW
      use_pkgconfig=no
 
      TARGET_OS=windows
@@ -298,7 +298,7 @@ if test x$use_hardening != xno; then
     AX_CHECK_COMPILE_FLAG([-fno-stack-protector],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fno-stack-protector"])
     AX_CHECK_COMPILE_FLAG([-fstack-protector-all],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
 
-    # -pie will link successfully with mingw, but it's unsupported and leads to undeterministic binaries
+    # -pie will link successfully with MinGW, but it's unsupported and leads to undeterministic binaries
     AX_CHECK_LINK_FLAG([[-pie]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"])
   fi
 
