@@ -320,8 +320,39 @@ class PosixMmapFile : public WritableFile {
     return Status::OK();
   }
 
-  virtual Status Sync() {
+  Status SyncDirIfManifest() {
+    const char* f = filename_.c_str();
+    const char* sep = strrchr(f, '/');
+    Slice basename;
+    std::string dir;
+    if (sep == NULL) {
+      dir = ".";
+      basename = f;
+    } else {
+      dir = std::string(f, sep - f);
+      basename = sep + 1;
+    }
     Status s;
+    if (basename.starts_with("MANIFEST")) {
+      int fd = open(dir.c_str(), O_RDONLY);
+      if (fd < 0) {
+        s = IOError(dir, errno);
+      } else {
+        if (fsync(fd) < 0) {
+          s = IOError(dir, errno);
+        }
+        close(fd);
+      }
+    }
+    return s;
+  }
+
+  virtual Status Sync() {
+    // Ensure new files referred to by the manifest are in the filesystem.
+    Status s = SyncDirIfManifest();
+    if (!s.ok()) {
+      return s;
+    }
 
     if (pending_sync_) {
       // Some unmapped data was not synced
