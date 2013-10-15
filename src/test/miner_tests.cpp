@@ -65,10 +65,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     {
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         pblock->nVersion = 1;
-        pblock->nTime = pindexBest->GetMedianTimePast()+1;
+        pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
         pblock->vtx[0].vin[0].scriptSig = CScript();
         pblock->vtx[0].vin[0].scriptSig.push_back(blockinfo[i].extranonce);
-        pblock->vtx[0].vin[0].scriptSig.push_back(pindexBest->nHeight);
+        pblock->vtx[0].vin[0].scriptSig.push_back(chainActive.Height());
         pblock->vtx[0].vout[0].scriptPubKey = CScript();
         if (txFirst.size() < 2)
             txFirst.push_back(new CTransaction(pblock->vtx[0]));
@@ -193,14 +193,14 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     mempool.clear();
 
     // subsidy changing
-    int nHeight = pindexBest->nHeight;
-    pindexBest->nHeight = 209999;
+    int nHeight = chainActive.Height();
+    chainActive.Tip()->nHeight = 209999;
     BOOST_CHECK(pblocktemplate = CreateNewBlockWithKey(reservekey));
     delete pblocktemplate;
-    pindexBest->nHeight = 210000;
+    chainActive.Tip()->nHeight = 210000;
     BOOST_CHECK(pblocktemplate = CreateNewBlockWithKey(reservekey));
     delete pblocktemplate;
-    pindexBest->nHeight = nHeight;
+    chainActive.Tip()->nHeight = nHeight;
 
     BOOST_FOREACH(CTransaction *tx, txFirst)
         delete tx;
