@@ -85,15 +85,11 @@ Dependencies for the GUI: Ubuntu & Debian
 -----------------------------------------
 
 If you want to build Bitcoin-Qt, make sure that the required packages for Qt development
-are installed. Either Qt 4 or Qt 5 is necessary to build the GUI.
+are installed. Qt 4 is currently necessary to build the GUI.
 
 To build with Qt 4 you need the following:
 
     apt-get install libqt4-dev libprotobuf-dev
-
-For Qt 5 you need the following:
-
-    apt-get install libqt5gui5 libqt5core5 libqt5dbus5 qttools5-dev-tools libprotobuf-dev
 
 libqrencode (optional) can be installed with:
 
