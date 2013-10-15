@@ -1033,64 +1033,17 @@ public:
 
     /** Set/initialize a chain with a given tip. Returns the forking point. */
     CBlockIndex *SetTip(CBlockIndex *pindex);
+
+    /** Return a CBlockLocator that refers to a block in this chain (by default the tip). */
+    CBlockLocator GetLocator(const CBlockIndex *pindex = NULL) const;
+
+    /** Find the last common block between this chain and a locator. */
+    CBlockIndex *FindFork(const CBlockLocator &locator) const;
 };
 
 /** The currently-connected chain of blocks. */
 extern CChain chainActive;
 
-
-
-/** Describes a place in the block chain to another node such that if the
- * other node doesn't have the same branch, it can find a recent common trunk.
- * The further back it is, the further before the fork it may be.
- */
-class CBlockLocator
-{
-protected:
-    std::vector<uint256> vHave;
-public:
-    CBlockLocator() {}
-
-    explicit CBlockLocator(const CBlockIndex* pindex)
-    {
-        Set(pindex);
-    }
-
-    explicit CBlockLocator(uint256 hashBlock);
-
-    CBlockLocator(const std::vector<uint256>& vHaveIn)
-    {
-        vHave = vHaveIn;
-    }
-
-    IMPLEMENT_SERIALIZE
-    (
-        if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(vHave);
-    )
-
-    void SetNull()
-    {
-        vHave.clear();
-    }
-
-    bool IsNull()
-    {
-        return vHave.empty();
-    }
-
-    /** Given a block initialises the locator to that point in the chain. */
-    void Set(const CBlockIndex* pindex);
-    /** Returns the distance in blocks this locator is from our chain head. */
-    int GetDistanceBack();
-    /** Returns the first best-chain block the locator contains. */
-    CBlockIndex* GetBlockIndex();
-    /** Returns the hash of the first best chain block the locator contains. */
-    uint256 GetBlockHash();
-    /** Returns the height of the first best chain block the locator has. */
-    int GetHeight();
-};
 
 
 
