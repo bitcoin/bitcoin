@@ -3905,13 +3905,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
         
         if (!(sProblem.empty())) {
-            LogPrint("net", "pong %s %s: %s, %"PRI64x" expected, %"PRI64x" received, %zu bytes\n"
-                , pfrom->addr.ToString().c_str()
-                , pfrom->strSubVer.c_str()
-                , sProblem.c_str()
-                , pfrom->nPingNonceSent
-                , nonce
-                , nAvail);
+            LogPrint("net", "pong %s %s: %s, %"PRI64x" expected, %"PRI64x" received, %"PRIszu" bytes\n",
+                pfrom->addr.ToString().c_str(),
+                pfrom->strSubVer.c_str(),
+                sProblem.c_str(),
+                pfrom->nPingNonceSent,
+                nonce,
+                nAvail);
         }
         if (bPingFinished) {
             pfrom->nPingNonceSent = 0;
@@ -4017,7 +4017,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 bool ProcessMessages(CNode* pfrom)
 {
     //if (fDebug)
-    //    LogPrintf("ProcessMessages(%zu messages)\n", pfrom->vRecvMsg.size());
+    //    LogPrintf("ProcessMessages(%"PRIszu" messages)\n", pfrom->vRecvMsg.size());
 
     //
     // Message format
@@ -4042,7 +4042,7 @@ bool ProcessMessages(CNode* pfrom)
         CNetMessage& msg = *it;
 
         //if (fDebug)
-        //    LogPrintf("ProcessMessages(message %u msgsz, %zu bytes, complete:%s)\n",
+        //    LogPrintf("ProcessMessages(message %u msgsz, %"PRIszu" bytes, complete:%s)\n",
         //            msg.hdr.nMessageSize, msg.vRecv.size(),
         //            msg.complete() ? "Y" : "N");
 
