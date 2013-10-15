@@ -21,6 +21,9 @@ Dependencies
  libdb4.8    Berkeley DB       Blockchain & wallet storage
  libboost    Boost             C++ Library
  miniupnpc   UPnP Support      Optional firewall-jumping support
+ qt          GUI               GUI toolkit
+ protobuf    Payments in GUI   Data interchange format used for payment protocol
+ libqrencode QR codes in GUI   Optional for generating QR codes
 
 [miniupnpc](http://miniupnp.free.fr/) may be used for UPnP port mapping.  It can be downloaded from [here](
 http://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
@@ -46,21 +49,25 @@ Licenses of statically linked libraries:
 -  Berkeley DB   4.8.30.NC
 -  Boost         1.37
 -  miniupnpc     1.6
+-  qt            4.8.3
+-  protobuf      2.5.0
+-  libqrencode   3.2.0
 
 Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
 	sudo apt-get install build-essential
+	sudo apt-get install libtool autotools-dev
 	sudo apt-get install libssl-dev
 
-for Ubuntu 12.04:
+for Ubuntu 12.04 and later:
 
 	sudo apt-get install libboost-all-dev
 
  db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
 
- Ubuntu precise has packages for libdb5.1-dev and libdb5.1++-dev,
+ Ubuntu 12.04 and later have packages for libdb5.1-dev and libdb5.1++-dev,
  but using these will break binary wallet compatibility, and is not recommended.
 
 for other Ubuntu & Debian:
@@ -74,6 +81,22 @@ Optional:
 
 	sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
 
+Dependencies for the GUI: Ubuntu & Debian
+-----------------------------------------
+
+If you want to build Bitcoin-Qt, make sure that the required packages for Qt development
+are installed. Qt 4 is currently necessary to build the GUI.
+
+To build with Qt 4 you need the following:
+
+    apt-get install libqt4-dev libprotobuf-dev
+
+libqrencode (optional) can be installed with:
+
+    apt-get install libqrencode-dev
+
+Once these are installed, they will be found by configure and a bitcoin-qt executable will be
+built by default.
 
 Notes
 -----
