@@ -16,7 +16,12 @@ class Random {
  private:
   uint32_t seed_;
  public:
-  explicit Random(uint32_t s) : seed_(s & 0x7fffffffu) { }
+  explicit Random(uint32_t s) : seed_(s & 0x7fffffffu) {
+    // Avoid bad seeds.
+    if (seed_ == 0 || seed_ == 2147483647L) {
+      seed_ = 1;
+    }
+  }
   uint32_t Next() {
     static const uint32_t M = 2147483647L;   // 2^31-1
     static const uint64_t A = 16807;  // bits 14, 8, 7, 5, 2, 1, 0
