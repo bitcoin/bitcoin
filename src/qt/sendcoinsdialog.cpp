@@ -365,9 +365,8 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     else {
         CBitcoinAddress address(rv.address.toStdString());
         if (!address.IsValid()) {
-            QString strAddress(address.ToString().c_str());
             QMessageBox::warning(this, strSendCoins,
-                tr("Invalid payment address %1").arg(strAddress));
+                tr("Invalid payment address %1").arg(rv.address));
             return false;
         }
     }
