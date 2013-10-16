@@ -5,17 +5,17 @@
 #include <QImage>
 
 namespace Ui {
-    class QRCodeDialog;
+    class ReceiveRequestDialog;
 }
 class OptionsModel;
 
-class QRCodeDialog : public QDialog
+class ReceiveRequestDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit QRCodeDialog(const QString &addr, const QString &label, bool enableReq, QWidget *parent = 0);
-    ~QRCodeDialog();
+    explicit ReceiveRequestDialog(const QString &addr, const QString &label, quint64 amount, const QString &message, QWidget *parent = 0);
+    ~ReceiveRequestDialog();
 
     void setModel(OptionsModel *model);
 
@@ -24,12 +24,11 @@ private slots:
     void on_lnLabel_textChanged();
     void on_lnMessage_textChanged();
     void on_btnSaveAs_clicked();
-    void on_chkReqPayment_toggled(bool fChecked);
 
     void updateDisplayUnit();
 
 private:
-    Ui::QRCodeDialog *ui;
+    Ui::ReceiveRequestDialog *ui;
     OptionsModel *model;
     QString address;
     QImage myImage;

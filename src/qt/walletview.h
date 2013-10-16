@@ -14,8 +14,8 @@ class ClientModel;
 class WalletModel;
 class TransactionView;
 class OverviewPage;
-class AddressBookPage;
 class SendCoinsDialog;
+class ReceiveCoinsDialog;
 class SendCoinsRecipient;
 class SignVerifyMessageDialog;
 class RPCConsole;
@@ -61,8 +61,7 @@ private:
 
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
-    AddressBookPage *addressBookPage;
-    AddressBookPage *receiveCoinsPage;
+    ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
 
     TransactionView *transactionView;
@@ -72,8 +71,6 @@ public slots:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
-    /** Switch to address book page */
-    void gotoAddressBookPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
@@ -97,6 +94,11 @@ public slots:
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
+
+    /** Show used sending addresses */
+    void usedSendingAddresses();
+    /** Show used receiving addresses */
+    void usedReceivingAddresses();
 
     void setEncryptionStatus();
 
