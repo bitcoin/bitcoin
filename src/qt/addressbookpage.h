@@ -30,7 +30,7 @@ public:
     };
 
     enum Mode {
-        ForSending, /**< Open address book to pick address for sending */
+        ForSelection, /**< Open address book to pick address */
         ForEditing  /**< Open address book for editing */
     };
 
@@ -69,8 +69,6 @@ private slots:
     void on_verifyMessage_clicked();
     /** Open send coins dialog for currently selected address (no button) */
     void onSendCoinsAction();
-    /** Generate a QR Code from the currently selected address */
-    void on_showQRCode_clicked();
     /** Copy label of currently selected address entry to clipboard (no button) */
     void onCopyLabelAction();
     /** Edit currently selected address entry (no button) */
