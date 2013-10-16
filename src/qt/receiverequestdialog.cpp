@@ -1,5 +1,5 @@
-#include "qrcodedialog.h"
-#include "ui_qrcodedialog.h"
+#include "receiverequestdialog.h"
+#include "ui_receiverequestdialog.h"
 
 #include "bitcoinunits.h"
 #include "guiconstants.h"
@@ -11,35 +11,46 @@
 #include <QUrl>
 #endif
 
-#include <qrencode.h>
+#include "bitcoin-config.h" /* for USE_QRCODE */
 
-QRCodeDialog::QRCodeDialog(const QString &addr, const QString &label, bool enableReq, QWidget *parent) :
+#ifdef USE_QRCODE
+#include <qrencode.h>
+#endif
+
+ReceiveRequestDialog::ReceiveRequestDialog(const QString &addr, const QString &label, quint64 amount, const QString &message, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::QRCodeDialog),
+    ui(new Ui::ReceiveRequestDialog),
     model(0),
     address(addr)
 {
     ui->setupUi(this);
 
-    setWindowTitle(QString("%1").arg(address));
+    QString target = label;
+    if(target.isEmpty())
+        target = addr;
+    setWindowTitle(tr("Request payment to %1").arg(target));
 
-    ui->chkReqPayment->setVisible(enableReq);
-    ui->lblAmount->setVisible(enableReq);
-    ui->lnReqAmount->setVisible(enableReq);
-
+    ui->lnAddress->setText(addr);
+    if(amount)
+        ui->lnReqAmount->setValue(amount);
+    ui->lnReqAmount->setReadOnly(true);
     ui->lnLabel->setText(label);
+    ui->lnMessage->setText(message);
 
-    ui->btnSaveAs->setEnabled(false);
+#ifndef USE_QRCODE
+    ui->btnSaveAs->setVisible(false);
+    ui->lblQRCode->setVisible(false);
+#endif
 
     genCode();
 }
 
-QRCodeDialog::~QRCodeDialog()
+ReceiveRequestDialog::~ReceiveRequestDialog()
 {
     delete ui;
 }
 
-void QRCodeDialog::setModel(OptionsModel *model)
+void ReceiveRequestDialog::setModel(OptionsModel *model)
 {
     this->model = model;
 
@@ -50,10 +61,12 @@ void QRCodeDialog::setModel(OptionsModel *model)
     updateDisplayUnit();
 }
 
-void QRCodeDialog::genCode()
+void ReceiveRequestDialog::genCode()
 {
     QString uri = getURI();
-
+    ui->btnSaveAs->setEnabled(false);
+    ui->outUri->setPlainText(uri);
+#ifdef USE_QRCODE
     if (uri != "")
     {
         ui->lblQRCode->setText("");
@@ -78,32 +91,21 @@ void QRCodeDialog::genCode()
         QRcode_free(code);
 
         ui->lblQRCode->setPixmap(QPixmap::fromImage(myImage).scaled(300, 300));
-
-        ui->outUri->setPlainText(uri);
+        ui->btnSaveAs->setEnabled(true);
     }
+#endif
 }
 
-QString QRCodeDialog::getURI()
+QString ReceiveRequestDialog::getURI()
 {
     QString ret = QString("bitcoin:%1").arg(address);
     int paramCount = 0;
 
-    ui->outUri->clear();
-
-    if (ui->chkReqPayment->isChecked())
+    if (ui->lnReqAmount->validate())
     {
-        if (ui->lnReqAmount->validate())
-        {
-            // even if we allow a non BTC unit input in lnReqAmount, we generate the URI with BTC as unit (as defined in BIP21)
-            ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, ui->lnReqAmount->value()));
-            paramCount++;
-        }
-        else
-        {
-            ui->btnSaveAs->setEnabled(false);
-            ui->lblQRCode->setText(tr("The entered amount is invalid, please check."));
-            return QString("");
-        }
+        // even if we allow a non BTC unit input in lnReqAmount, we generate the URI with BTC as unit (as defined in BIP21)
+        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, ui->lnReqAmount->value()));
+        paramCount++;
     }
 
     if (!ui->lnLabel->text().isEmpty())
@@ -120,50 +122,41 @@ QString QRCodeDialog::getURI()
         paramCount++;
     }
 
-    // limit URI length to prevent a DoS against the QR-Code dialog
+    // limit URI length
     if (ret.length() > MAX_URI_LENGTH)
     {
-        ui->btnSaveAs->setEnabled(false);
         ui->lblQRCode->setText(tr("Resulting URI too long, try to reduce the text for label / message."));
         return QString("");
     }
 
-    ui->btnSaveAs->setEnabled(true);
     return ret;
 }
 
-void QRCodeDialog::on_lnReqAmount_textChanged()
+void ReceiveRequestDialog::on_lnReqAmount_textChanged()
 {
     genCode();
 }
 
-void QRCodeDialog::on_lnLabel_textChanged()
+void ReceiveRequestDialog::on_lnLabel_textChanged()
 {
     genCode();
 }
 
-void QRCodeDialog::on_lnMessage_textChanged()
+void ReceiveRequestDialog::on_lnMessage_textChanged()
 {
     genCode();
 }
 
-void QRCodeDialog::on_btnSaveAs_clicked()
+void ReceiveRequestDialog::on_btnSaveAs_clicked()
 {
+#ifdef USE_QRCODE
     QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Images (*.png)"));
     if (!fn.isEmpty())
         myImage.scaled(EXPORT_IMAGE_SIZE, EXPORT_IMAGE_SIZE).save(fn);
+#endif
 }
 
-void QRCodeDialog::on_chkReqPayment_toggled(bool fChecked)
-{
-    if (!fChecked)
-        // if chkReqPayment is not active, don't display lnReqAmount as invalid
-        ui->lnReqAmount->setValid(true);
-
-    genCode();
-}
-
-void QRCodeDialog::updateDisplayUnit()
+void ReceiveRequestDialog::updateDisplayUnit()
 {
     if (model)
     {
