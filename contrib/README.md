@@ -1,6 +1,9 @@
 Contrib Index
 ---------------------
 
+### [BitRPC](/contrib/bitrpc) ###
+Added bitrpc.py which allows for sending of all standard Bitcoin commands via RPC rather than as command line args.
+
 ### [Debian](/contrib/debian) ###
 Contains files used to package bitcoind/bitcoin-qt
 for Debian-based Linux systems. If you compile bitcoind/bitcoin-qt yourself, there are some useful files here.
@@ -11,7 +14,10 @@ Gavin's notes on getting gitian builds up and running using KVM.
 ### [Gitian-downloader](/contrib/gitian-downloader)
 Various PGP files of core developers. 
 
-### [Macdeploy](/contrib/macdeploy) ###
+### [Linearize](/contrib/linearize) ###
+Construct a linear, no-fork, best version of the blockchain.
+
+### [MacDeploy](/contrib/macdeploy) ###
 Scripts and notes for Mac builds. 
 
 ### [PyMiner](/contrib/pyminer) ###
@@ -32,3 +38,13 @@ address (or addresses).
 
 ### [TestGen](/contrib/testgen) ###
 Utilities to generate test vectors for the data-driven Bitcoin tests.
+
+### [Test Patches](/contrib/test-patches) ###
+These patches are applied when the automated pull-tester
+tests each pull and when master is tested using jenkins.
+
+### [Verify SF Binaries](/contrib/verifysfbinaries) ###
+This script attempts to download and verify the signature file SHA256SUMS.asc from SourceForge.
+
+### [Wallet Tools](/contrib/wallettools) ###
+Contains a wallet change password and unlock script.
