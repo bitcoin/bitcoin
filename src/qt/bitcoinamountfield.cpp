@@ -130,9 +130,10 @@ void BitcoinAmountField::setValue(qint64 value)
     setText(BitcoinUnits::format(currentUnit, value));
 }
 
-void BitcoinAmountField::setReadOnly(bool fReadeOnly)
+void BitcoinAmountField::setReadOnly(bool fReadOnly)
 {
-    // TODO ...
+    amount->setReadOnly(fReadOnly);
+    unit->setEnabled(!fReadOnly);
 }
 
 void BitcoinAmountField::unitChanged(int idx)

@@ -174,6 +174,7 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
         ui->payTo_s->setText(recipient.authenticatedMerchant);
         ui->memoTextLabel_s->setText(QString::fromStdString(details.memo()));
         ui->payAmount_s->setValue(recipient.amount);
+        ui->payAmount_s->setReadOnly(true);
         setCurrentWidget(ui->SendCoinsSecure);
     }
 }
