@@ -621,7 +621,7 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="buddy">
-       <cstring>payAmount</cstring>
+       <cstring>payAmount_s</cstring>
       </property>
      </widget>
     </item>
@@ -640,14 +640,8 @@
     </item>
     <item row="5" column="2">
      <widget class="BitcoinAmountField" name="payAmount_s">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
       <property name="acceptDrops">
        <bool>false</bool>
-      </property>
-      <property name="readOnly">
-       <bool>true</bool>
       </property>
      </widget>
     </item>
