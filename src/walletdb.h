@@ -93,8 +93,14 @@ public:
         if (!Write(std::make_pair(std::string("keymeta"), vchPubKey),
                    keyMeta))
             return false;
-
-        return Write(std::make_pair(std::string("key"), vchPubKey), vchPrivKey, false);
+        
+        // hash pubkey/privkey to accelerate wallet load
+        std::vector<unsigned char> vchKey;
+        vchKey.reserve(vchPubKey.size() + vchPrivKey.size());
+        vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
+        vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
+        
+        return Write(std::make_pair(std::string("key"), vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey.begin(), vchKey.end())), false);
     }
 
     bool WriteCryptedKey(const CPubKey& vchPubKey,
