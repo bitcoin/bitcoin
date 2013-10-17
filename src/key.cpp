@@ -166,9 +166,12 @@ public:
         assert(nSize == nSize2);
     }
 
-    bool SetPrivKey(const CPrivKey &privkey) {
+    bool SetPrivKey(const CPrivKey &privkey, bool fSkipCheck=false) {
         const unsigned char* pbegin = &privkey[0];
         if (d2i_ECPrivateKey(&pkey, &pbegin, privkey.size())) {
+            if(fSkipCheck)
+                return true;
+            
             // d2i_ECPrivateKey returns true if parsing succeeds.
             // This doesn't necessarily mean the key is valid.
             if (EC_KEY_check_key(pkey))
@@ -408,6 +411,24 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
         return false;
     assert(rec != -1);
     vchSig[0] = 27 + rec + (fCompressed ? 4 : 0);
+    return true;
+}
+
+bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
+    CECKey key;
+    if (!key.SetPrivKey(privkey, fSkipCheck))
+        return false;
+    
+    key.GetSecretBytes(vch);
+    fCompressed = vchPubKey.IsCompressed();
+    fValid = true;
+    
+    if (fSkipCheck)
+        return true;
+    
+    if (GetPubKey() != vchPubKey)
+        return false;
+    
     return true;
 }
 
