@@ -5,6 +5,7 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
+#include "walletmodel.h"
 
 #include <QPixmap>
 #include <QClipboard>
@@ -63,25 +64,25 @@ void QRImageWidget::copyImage()
     QApplication::clipboard()->setImage(exportImage());
 }
 
-ReceiveRequestDialog::ReceiveRequestDialog(const QString &addr, const QString &label, quint64 amount, const QString &message, QWidget *parent) :
+ReceiveRequestDialog::ReceiveRequestDialog(const SendCoinsRecipient &info, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ReceiveRequestDialog),
     model(0),
-    address(addr)
+    info(info)
 {
     ui->setupUi(this);
 
-    QString target = label;
+    QString target = info.label;
     if(target.isEmpty())
-        target = addr;
+        target = info.address;
     setWindowTitle(tr("Request payment to %1").arg(target));
 
-    ui->lnAddress->setText(addr);
-    if(amount)
-        ui->lnReqAmount->setValue(amount);
+    ui->lnAddress->setText(info.address);
+    if(info.amount)
+        ui->lnReqAmount->setValue(info.amount);
     ui->lnReqAmount->setReadOnly(true);
-    ui->lnLabel->setText(label);
-    ui->lnMessage->setText(message);
+    ui->lnLabel->setText(info.label);
+    ui->lnMessage->setText(info.message);
 
 #ifndef USE_QRCODE
     ui->btnSaveAs->setVisible(false);
@@ -146,7 +147,7 @@ void ReceiveRequestDialog::genCode()
 
 QString ReceiveRequestDialog::getURI()
 {
-    QString ret = QString("bitcoin:%1").arg(address);
+    QString ret = QString("bitcoin:%1").arg(info.address);
     int paramCount = 0;
 
     if (ui->lnReqAmount->validate())

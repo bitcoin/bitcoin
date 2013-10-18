@@ -1,6 +1,8 @@
 #ifndef QRCODEDIALOG_H
 #define QRCODEDIALOG_H
 
+#include "walletmodel.h"
+
 #include <QDialog>
 #include <QImage>
 #include <QLabel>
@@ -34,7 +36,7 @@ class ReceiveRequestDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ReceiveRequestDialog(const QString &addr, const QString &label, quint64 amount, const QString &message, QWidget *parent = 0);
+    explicit ReceiveRequestDialog(const SendCoinsRecipient &info, QWidget *parent = 0);
     ~ReceiveRequestDialog();
 
     void setModel(OptionsModel *model);
@@ -49,7 +51,7 @@ private slots:
 private:
     Ui::ReceiveRequestDialog *ui;
     OptionsModel *model;
-    QString address;
+    SendCoinsRecipient info;
 
     void genCode();
     QString getURI();
