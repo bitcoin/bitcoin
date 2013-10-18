@@ -28,6 +28,9 @@
        <height>300</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>QR Code</string>
+     </property>
      <property name="textFormat">
       <enum>Qt::PlainText</enum>
      </property>
@@ -53,6 +56,12 @@
        <height>50</height>
       </size>
      </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
      <property name="tabChangesFocus">
       <bool>true</bool>
      </property>
@@ -64,22 +73,16 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
       <widget class="QPushButton" name="btnCopyURI">
        <property name="text">
         <string>Copy &amp;URI</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnCopyAddress">
+       <property name="text">
+        <string>Copy &amp;Address</string>
        </property>
       </widget>
      </item>
@@ -97,6 +100,26 @@
        </property>
       </widget>
      </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Close</set>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>
@@ -109,5 +132,38 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>ReceiveRequestDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>452</x>
+     <y>573</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>243</x>
+     <y>298</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>ReceiveRequestDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>452</x>
+     <y>573</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>243</x>
+     <y>298</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
