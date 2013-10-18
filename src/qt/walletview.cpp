@@ -64,7 +64,6 @@ WalletView::WalletView(QWidget *parent):
     addWidget(sendCoinsPage);
 
     // Clicking on a transaction on the overview page simply sends you to transaction history page
-    connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
 
     // Double-clicking on a transaction on the transaction history page shows details
@@ -87,6 +86,10 @@ WalletView::~WalletView()
 void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 {
     this->gui = gui;
+    if(gui)
+    {
+        connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), gui, SLOT(gotoHistoryPage()));
+    }
 }
 
 void WalletView::setClientModel(ClientModel *clientModel)
@@ -103,7 +106,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
 void WalletView::setWalletModel(WalletModel *walletModel)
 {
     this->walletModel = walletModel;
-    if (walletModel)
+    if (walletModel && gui)
     {
         // Receive and report messages from wallet thread
         connect(walletModel, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
@@ -145,31 +148,26 @@ void WalletView::incomingTransaction(const QModelIndex& parent, int start, int /
 
 void WalletView::gotoOverviewPage()
 {
-    gui->getOverviewAction()->setChecked(true);
     setCurrentWidget(overviewPage);
 }
 
 void WalletView::gotoHistoryPage()
 {
-    gui->getHistoryAction()->setChecked(true);
     setCurrentWidget(transactionsPage);
 }
 
 void WalletView::gotoAddressBookPage()
 {
-    gui->getAddressBookAction()->setChecked(true);
     setCurrentWidget(addressBookPage);
 }
 
 void WalletView::gotoReceiveCoinsPage()
 {
-    gui->getReceiveCoinsAction()->setChecked(true);
     setCurrentWidget(receiveCoinsPage);
 }
 
 void WalletView::gotoSendCoinsPage(QString addr)
 {
-    gui->getSendCoinsAction()->setChecked(true);
     setCurrentWidget(sendCoinsPage);
 
     if (!addr.isEmpty())

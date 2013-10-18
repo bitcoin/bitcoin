@@ -61,14 +61,6 @@ public:
 
     void removeAllWallets();
 
-    /** Used by WalletView to allow access to needed QActions */
-    // Todo: Use Qt signals for these
-    QAction * getOverviewAction() { return overviewAction; }
-    QAction * getHistoryAction() { return historyAction; }
-    QAction * getAddressBookAction() { return addressBookAction; }
-    QAction * getReceiveCoinsAction() { return receiveCoinsAction; }
-    QAction * getSendCoinsAction() { return sendCoinsAction; }
-
 protected:
     void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *event);
