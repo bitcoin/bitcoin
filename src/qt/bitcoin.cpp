@@ -333,8 +333,8 @@ int main(int argc, char *argv[])
                                  paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
                 QObject::connect(paymentServer, SIGNAL(receivedPaymentACK(QString)),
                                  &window, SLOT(showPaymentACK(QString)));
-                QObject::connect(paymentServer, SIGNAL(reportError(QString, QString, unsigned int)),
-                                 guiref, SLOT(message(QString, QString, unsigned int)));
+                QObject::connect(paymentServer, SIGNAL(message(QString,QString,unsigned int)),
+                                 guiref, SLOT(message(QString,QString,unsigned int)));
                 QTimer::singleShot(100, paymentServer, SLOT(uiReady()));
 
                 app.exec();
