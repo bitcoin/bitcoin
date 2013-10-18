@@ -239,7 +239,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
 #else
     aboutQtAction = new QAction(QIcon(":/qt-project.org/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
-#endif	
+#endif
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
@@ -731,10 +731,13 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
 
         // if valid URIs were found
         if (nValidUrisFound)
+        {
+            showNormalIfMinimized();
             walletFrame->gotoSendCoinsPage();
+        }
         else
             message(tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters."),
-                      CClientUIInterface::ICON_WARNING);
+                CClientUIInterface::ICON_WARNING);
     }
 
     event->acceptProposedAction();
