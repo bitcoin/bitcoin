@@ -112,73 +112,43 @@ void ReceiveRequestDialog::setModel(OptionsModel *model)
 
 void ReceiveRequestDialog::genCode()
 {
-    QString uri = getURI();
+    QString uri = GUIUtil::formatBitcoinURI(info);
     ui->btnSaveAs->setEnabled(false);
     ui->outUri->setPlainText(uri);
+
 #ifdef USE_QRCODE
-    if (uri != "")
+    ui->lblQRCode->setText("");
+    if(!uri.isEmpty())
     {
-        ui->lblQRCode->setText("");
-
-        QRcode *code = QRcode_encodeString(uri.toUtf8().constData(), 0, QR_ECLEVEL_L, QR_MODE_8, 1);
-        if (!code)
+        // limit URI length
+        if (uri.length() > MAX_URI_LENGTH)
         {
-            ui->lblQRCode->setText(tr("Error encoding URI into QR Code."));
-            return;
-        }
-        QImage myImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
-        myImage.fill(0xffffff);
-        unsigned char *p = code->data;
-        for (int y = 0; y < code->width; y++)
-        {
-            for (int x = 0; x < code->width; x++)
+            ui->lblQRCode->setText(tr("Resulting URI too long, try to reduce the text for label / message."));
+        } else {
+            QRcode *code = QRcode_encodeString(uri.toUtf8().constData(), 0, QR_ECLEVEL_L, QR_MODE_8, 1);
+            if (!code)
             {
-                myImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
-                p++;
+                ui->lblQRCode->setText(tr("Error encoding URI into QR Code."));
+                return;
             }
-        }
-        QRcode_free(code);
+            QImage myImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
+            myImage.fill(0xffffff);
+            unsigned char *p = code->data;
+            for (int y = 0; y < code->width; y++)
+            {
+                for (int x = 0; x < code->width; x++)
+                {
+                    myImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
+                    p++;
+                }
+            }
+            QRcode_free(code);
 
-        ui->lblQRCode->setPixmap(QPixmap::fromImage(myImage).scaled(300, 300));
-        ui->btnSaveAs->setEnabled(true);
+            ui->lblQRCode->setPixmap(QPixmap::fromImage(myImage).scaled(300, 300));
+            ui->btnSaveAs->setEnabled(true);
+        }
     }
 #endif
-}
-
-QString ReceiveRequestDialog::getURI()
-{
-    QString ret = QString("bitcoin:%1").arg(info.address);
-    int paramCount = 0;
-
-    if (ui->lnReqAmount->validate())
-    {
-        // even if we allow a non BTC unit input in lnReqAmount, we generate the URI with BTC as unit (as defined in BIP21)
-        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, ui->lnReqAmount->value()));
-        paramCount++;
-    }
-
-    if (!ui->lnLabel->text().isEmpty())
-    {
-        QString lbl(QUrl::toPercentEncoding(ui->lnLabel->text()));
-        ret += QString("%1label=%2").arg(paramCount == 0 ? "?" : "&").arg(lbl);
-        paramCount++;
-    }
-
-    if (!ui->lnMessage->text().isEmpty())
-    {
-        QString msg(QUrl::toPercentEncoding(ui->lnMessage->text()));
-        ret += QString("%1message=%2").arg(paramCount == 0 ? "?" : "&").arg(msg);
-        paramCount++;
-    }
-
-    // limit URI length
-    if (ret.length() > MAX_URI_LENGTH)
-    {
-        ui->lblQRCode->setText(tr("Resulting URI too long, try to reduce the text for label / message."));
-        return QString("");
-    }
-
-    return ret;
 }
 
 void ReceiveRequestDialog::on_lnReqAmount_textChanged()
