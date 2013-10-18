@@ -63,12 +63,6 @@ private slots:
     void on_newAddress_clicked();
     /** Copy address of currently selected address entry to clipboard */
     void on_copyAddress_clicked();
-    /** Open the sign message tab in the Sign/Verify Message dialog with currently selected address */
-    void on_signMessage_clicked();
-    /** Open the verify message tab in the Sign/Verify Message dialog with currently selected address */
-    void on_verifyMessage_clicked();
-    /** Open send coins dialog for currently selected address (no button) */
-    void onSendCoinsAction();
     /** Copy label of currently selected address entry to clipboard (no button) */
     void onCopyLabelAction();
     /** Edit currently selected address entry (no button) */
@@ -84,8 +78,6 @@ private slots:
     void selectNewAddress(const QModelIndex &parent, int begin, int /*end*/);
 
 signals:
-    void signMessage(QString addr);
-    void verifyMessage(QString addr);
     void sendCoins(QString addr);
 };
 
