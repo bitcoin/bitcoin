@@ -7,6 +7,7 @@
 #include "optionsmodel.h"
 
 #include <QPixmap>
+#include <QClipboard>
 #if QT_VERSION < 0x050000
 #include <QUrl>
 #endif
@@ -16,6 +17,51 @@
 #ifdef USE_QRCODE
 #include <qrencode.h>
 #endif
+
+QRImageWidget::QRImageWidget(QWidget *parent):
+    QLabel(parent)
+{
+    setContextMenuPolicy(Qt::ActionsContextMenu);
+
+    QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
+    connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
+    addAction(saveImageAction);
+    QAction *copyImageAction = new QAction(tr("&Copy Image"), this);
+    connect(copyImageAction, SIGNAL(triggered()), this, SLOT(copyImage()));
+    addAction(copyImageAction);
+}
+
+QImage QRImageWidget::exportImage()
+{
+    return pixmap()->toImage().scaled(EXPORT_IMAGE_SIZE, EXPORT_IMAGE_SIZE);
+}
+
+void QRImageWidget::mousePressEvent(QMouseEvent *event)
+{
+    if(event->button() == Qt::LeftButton)
+    {
+        QMimeData *mimeData = new QMimeData;
+        mimeData->setImageData(exportImage());
+
+        QDrag *drag = new QDrag(this);
+        drag->setMimeData(mimeData);
+        drag->exec();
+    }
+}
+
+void QRImageWidget::saveImage()
+{
+    QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Images (*.png)"));
+    if (!fn.isEmpty())
+    {
+        exportImage().save(fn);
+    }
+}
+
+void QRImageWidget::copyImage()
+{
+    QApplication::clipboard()->setImage(exportImage());
+}
 
 ReceiveRequestDialog::ReceiveRequestDialog(const QString &addr, const QString &label, quint64 amount, const QString &message, QWidget *parent) :
     QDialog(parent),
@@ -41,6 +87,8 @@ ReceiveRequestDialog::ReceiveRequestDialog(const QString &addr, const QString &l
     ui->btnSaveAs->setVisible(false);
     ui->lblQRCode->setVisible(false);
 #endif
+
+    connect(ui->btnSaveAs, SIGNAL(clicked()), ui->lblQRCode, SLOT(saveImage()));
 
     genCode();
 }
@@ -77,7 +125,7 @@ void ReceiveRequestDialog::genCode()
             ui->lblQRCode->setText(tr("Error encoding URI into QR Code."));
             return;
         }
-        myImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
+        QImage myImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
         myImage.fill(0xffffff);
         unsigned char *p = code->data;
         for (int y = 0; y < code->width; y++)
@@ -145,15 +193,6 @@ void ReceiveRequestDialog::on_lnLabel_textChanged()
 void ReceiveRequestDialog::on_lnMessage_textChanged()
 {
     genCode();
-}
-
-void ReceiveRequestDialog::on_btnSaveAs_clicked()
-{
-#ifdef USE_QRCODE
-    QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Images (*.png)"));
-    if (!fn.isEmpty())
-        myImage.scaled(EXPORT_IMAGE_SIZE, EXPORT_IMAGE_SIZE).save(fn);
-#endif
 }
 
 void ReceiveRequestDialog::updateDisplayUnit()
