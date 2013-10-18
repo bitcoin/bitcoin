@@ -44,12 +44,15 @@ void QRImageWidget::mousePressEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::LeftButton)
     {
+        event->accept();
         QMimeData *mimeData = new QMimeData;
         mimeData->setImageData(exportImage());
 
         QDrag *drag = new QDrag(this);
         drag->setMimeData(mimeData);
         drag->exec();
+    } else {
+        QLabel::mousePressEvent(event);
     }
 }
 
@@ -119,9 +122,9 @@ void ReceiveRequestDialog::update()
     ui->btnSaveAs->setEnabled(false);
     QString html;
     html += "<html><font face='verdana, arial, helvetica, sans-serif'>";
-    html += "<a href=\""+uri+"\">" + GUIUtil::HtmlEscape(uri) + "</a><br>";
-    html += "<br>";
     html += "<b>"+tr("Payment information")+"</b><br>";
+    html += "<b>"+tr("URI")+"</b>: ";
+    html += "<a href=\""+uri+"\">" + GUIUtil::HtmlEscape(uri) + "</a><br>";
     html += "<b>"+tr("Address")+"</b>: " + GUIUtil::HtmlEscape(info.address) + "<br>";
     if(info.amount)
         html += "<b>"+tr("Amount")+"</b>: " + BitcoinUnits::formatWithUnit(model->getDisplayUnit(), info.amount) + "<br>";
@@ -173,3 +176,8 @@ void ReceiveRequestDialog::on_btnCopyURI_clicked()
     QApplication::clipboard()->setText(uri, QClipboard::Selection);
 }
 
+void ReceiveRequestDialog::on_btnCopyAddress_clicked()
+{
+    QApplication::clipboard()->setText(info.address, QClipboard::Clipboard);
+    QApplication::clipboard()->setText(info.address, QClipboard::Selection);
+}

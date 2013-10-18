@@ -30,12 +30,15 @@
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="BitcoinAmountField" name="reqAmount" native="true">
+      <widget class="BitcoinAmountField" name="reqAmount">
        <property name="minimumSize">
         <size>
          <width>80</width>
          <height>0</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>The amount to request</string>
        </property>
       </widget>
      </item>
@@ -50,7 +53,11 @@
       </widget>
      </item>
      <item row="4" column="1">
-      <widget class="QLineEdit" name="reqLabel"/>
+      <widget class="QLineEdit" name="reqLabel">
+       <property name="toolTip">
+        <string>The label to associate with the receiving address</string>
+       </property>
+      </widget>
      </item>
      <item row="5" column="0">
       <widget class="QLabel" name="label_3">
@@ -63,7 +70,11 @@
       </widget>
      </item>
      <item row="5" column="1">
-      <widget class="QLineEdit" name="reqMessage"/>
+      <widget class="QLineEdit" name="reqMessage">
+       <property name="toolTip">
+        <string>The message to attach to payment request</string>
+       </property>
+      </widget>
      </item>
      <item row="6" column="0">
       <widget class="QLabel" name="label_4">
@@ -74,8 +85,11 @@
      </item>
      <item row="6" column="1">
       <widget class="QCheckBox" name="reuseAddress">
+       <property name="toolTip">
+        <string>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</string>
+       </property>
        <property name="text">
-        <string>R&amp;euse an existing receiving address</string>
+        <string>R&amp;euse an existing receiving address (not recommended)</string>
        </property>
       </widget>
      </item>
