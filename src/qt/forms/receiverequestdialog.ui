@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
-    <widget class="QLabel" name="lblQRCode">
+    <widget class="QRImageWidget" name="lblQRCode">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -232,6 +232,11 @@
    <class>BitcoinAmountField</class>
    <extends>QWidget</extends>
    <header>bitcoinamountfield.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QRImageWidget</class>
+   <extends>QLabel</extends>
+   <header>receiverequestdialog.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
