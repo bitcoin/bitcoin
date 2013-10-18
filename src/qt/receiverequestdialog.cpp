@@ -9,6 +9,9 @@
 
 #include <QPixmap>
 #include <QClipboard>
+#include <QMouseEvent>
+#include <QDrag>
+#include <QMimeData>
 #if QT_VERSION < 0x050000
 #include <QUrl>
 #endif
@@ -64,34 +67,21 @@ void QRImageWidget::copyImage()
     QApplication::clipboard()->setImage(exportImage());
 }
 
-ReceiveRequestDialog::ReceiveRequestDialog(const SendCoinsRecipient &info, QWidget *parent) :
+ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ReceiveRequestDialog),
-    model(0),
-    info(info)
+    model(0)
 {
     ui->setupUi(this);
 
-    QString target = info.label;
-    if(target.isEmpty())
-        target = info.address;
-    setWindowTitle(tr("Request payment to %1").arg(target));
-
-    ui->lnAddress->setText(info.address);
-    if(info.amount)
-        ui->lnReqAmount->setValue(info.amount);
-    ui->lnReqAmount->setReadOnly(true);
-    ui->lnLabel->setText(info.label);
-    ui->lnMessage->setText(info.message);
-
 #ifndef USE_QRCODE
     ui->btnSaveAs->setVisible(false);
+    ui->btnCopyImage->setVisible(false);
     ui->lblQRCode->setVisible(false);
 #endif
 
     connect(ui->btnSaveAs, SIGNAL(clicked()), ui->lblQRCode, SLOT(saveImage()));
-
-    genCode();
+    connect(ui->btnCopyImage, SIGNAL(clicked()), ui->lblQRCode, SLOT(copyImage()));
 }
 
 ReceiveRequestDialog::~ReceiveRequestDialog()
@@ -104,17 +94,42 @@ void ReceiveRequestDialog::setModel(OptionsModel *model)
     this->model = model;
 
     if (model)
-        connect(model, SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        connect(model, SIGNAL(displayUnitChanged(int)), this, SLOT(update()));
 
-    // update the display unit, to not use the default ("BTC")
-    updateDisplayUnit();
+    // update the display unit if necessary
+    update();
 }
 
-void ReceiveRequestDialog::genCode()
+void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &info)
 {
+    this->info = info;
+    update();
+}
+
+void ReceiveRequestDialog::update()
+{
+    if(!model)
+        return;
+    QString target = info.label;
+    if(target.isEmpty())
+        target = info.address;
+    setWindowTitle(tr("Request payment to %1").arg(target));
+
     QString uri = GUIUtil::formatBitcoinURI(info);
     ui->btnSaveAs->setEnabled(false);
-    ui->outUri->setPlainText(uri);
+    QString html;
+    html += "<html><font face='verdana, arial, helvetica, sans-serif'>";
+    html += "<a href=\""+uri+"\">" + GUIUtil::HtmlEscape(uri) + "</a><br>";
+    html += "<br>";
+    html += "<b>"+tr("Payment information")+"</b><br>";
+    html += "<b>"+tr("Address")+"</b>: " + GUIUtil::HtmlEscape(info.address) + "<br>";
+    if(info.amount)
+        html += "<b>"+tr("Amount")+"</b>: " + BitcoinUnits::formatWithUnit(model->getDisplayUnit(), info.amount) + "<br>";
+    if(!info.label.isEmpty())
+        html += "<b>"+tr("Label")+"</b>: " + GUIUtil::HtmlEscape(info.label) + "<br>";
+    if(!info.message.isEmpty())
+        html += "<b>"+tr("Message")+"</b>: " + GUIUtil::HtmlEscape(info.message) + "<br>";
+    ui->outUri->setText(html);
 
 #ifdef USE_QRCODE
     ui->lblQRCode->setText("");
@@ -151,26 +166,10 @@ void ReceiveRequestDialog::genCode()
 #endif
 }
 
-void ReceiveRequestDialog::on_lnReqAmount_textChanged()
+void ReceiveRequestDialog::on_btnCopyURI_clicked()
 {
-    genCode();
+    QString uri = GUIUtil::formatBitcoinURI(info);
+    QApplication::clipboard()->setText(uri, QClipboard::Clipboard);
+    QApplication::clipboard()->setText(uri, QClipboard::Selection);
 }
 
-void ReceiveRequestDialog::on_lnLabel_textChanged()
-{
-    genCode();
-}
-
-void ReceiveRequestDialog::on_lnMessage_textChanged()
-{
-    genCode();
-}
-
-void ReceiveRequestDialog::updateDisplayUnit()
-{
-    if (model)
-    {
-        // Update lnReqAmount with the current unit
-        ui->lnReqAmount->setDisplayUnit(model->getDisplayUnit());
-    }
-}

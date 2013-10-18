@@ -98,8 +98,9 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     }
     SendCoinsRecipient info(address, label,
             ui->reqAmount->value(), ui->reqMessage->text());
-    ReceiveRequestDialog *dialog = new ReceiveRequestDialog(info, this);
+    ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
     dialog->setModel(model->getOptionsModel());
+    dialog->setInfo(info);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->show();
     clear();

@@ -36,25 +36,21 @@ class ReceiveRequestDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ReceiveRequestDialog(const SendCoinsRecipient &info, QWidget *parent = 0);
+    explicit ReceiveRequestDialog(QWidget *parent = 0);
     ~ReceiveRequestDialog();
 
     void setModel(OptionsModel *model);
+    void setInfo(const SendCoinsRecipient &info);
 
 private slots:
-    void on_lnReqAmount_textChanged();
-    void on_lnLabel_textChanged();
-    void on_lnMessage_textChanged();
+    void on_btnCopyURI_clicked();
 
-    void updateDisplayUnit();
+    void update();
 
 private:
     Ui::ReceiveRequestDialog *ui;
     OptionsModel *model;
     SendCoinsRecipient info;
-
-    void genCode();
-    QString getURI();
 };
 
 #endif // QRCODEDIALOG_H
