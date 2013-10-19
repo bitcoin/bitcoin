@@ -4,6 +4,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
+#include "main.h"
+#include "wallet.h"
 #include "init.h"
 #include "util.h"
 #include "sync.h"
