@@ -319,8 +319,6 @@ public:
         return setKeyPool.size();
     }
 
-    bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
-
     bool SetDefaultKey(const CPubKey &vchPubKey);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
