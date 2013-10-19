@@ -81,7 +81,6 @@ bool fServer = false;
 string strMiscWarning;
 bool fNoListen = false;
 bool fLogTimestamps = false;
-CMedianFilter<int64> vTimeOffsets(200,0);
 volatile bool fReopenDebugLog = false;
 
 // Init OpenSSL library multithreading support
@@ -1296,10 +1295,12 @@ void SetMockTime(int64 nMockTimeIn)
     nMockTime = nMockTimeIn;
 }
 
+static CCriticalSection cs_nTimeOffset;
 static int64 nTimeOffset = 0;
 
 int64 GetTimeOffset()
 {
+    LOCK(cs_nTimeOffset);
     return nTimeOffset;
 }
 
@@ -1312,12 +1313,14 @@ void AddTimeData(const CNetAddr& ip, int64 nTime)
 {
     int64 nOffsetSample = nTime - GetTime();
 
+    LOCK(cs_nTimeOffset);
     // Ignore duplicates
     static set<CNetAddr> setKnown;
     if (!setKnown.insert(ip).second)
         return;
 
     // Add data
+    static CMedianFilter<int64> vTimeOffsets(200,0);
     vTimeOffsets.input(nOffsetSample);
     LogPrintf("Added time data, samples %d, offset %+"PRI64d" (%+"PRI64d" minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample/60);
     if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1)
