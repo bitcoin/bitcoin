@@ -1032,9 +1032,7 @@ boost::filesystem::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    pathRet /= "Library/Application Support";
-    fs::create_directory(pathRet);
-    return pathRet / "Bitcoin";
+    return pathRet / "Library/Application Support/Bitcoin";
 #else
     // Unix
     return pathRet / ".bitcoin";
@@ -1042,24 +1040,10 @@ boost::filesystem::path GetDefaultDataDir()
 #endif
 }
 
-static boost::filesystem::path pathCached[CChainParams::MAX_NETWORK_TYPES+1];
-static CCriticalSection csPathCached;
-
-const boost::filesystem::path &GetDataDir(bool fNetSpecific)
+const boost::filesystem::path GetDataDir(bool fNetSpecific)
 {
     namespace fs = boost::filesystem;
-
-    LOCK(csPathCached);
-
-    int nNet = CChainParams::MAX_NETWORK_TYPES;
-    if (fNetSpecific) nNet = Params().NetworkID();
-
-    fs::path &path = pathCached[nNet];
-
-    // This can be called during exceptions by LogPrintf(), so we cache the
-    // value so we don't have to do memory allocations after that.
-    if (!path.empty())
-        return path;
+    fs::path path;
 
     if (mapArgs.count("-datadir")) {
         path = fs::system_complete(mapArgs["-datadir"]);
@@ -1076,12 +1060,6 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     fs::create_directories(path);
 
     return path;
-}
-
-void ClearDatadirCache()
-{
-    std::fill(&pathCached[0], &pathCached[CChainParams::MAX_NETWORK_TYPES+1],
-              boost::filesystem::path());
 }
 
 boost::filesystem::path GetConfigFile()
@@ -1113,8 +1091,6 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
         }
         mapMultiSettingsRet[strKey].push_back(it->value[0]);
     }
-    // If datadir is changed in .conf file:
-    ClearDatadirCache();
 }
 
 boost::filesystem::path GetPidFile()
