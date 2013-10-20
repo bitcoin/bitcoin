@@ -29,9 +29,9 @@
 #include <QFileDialog>
 #include <QPushButton>
 
-WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
+WalletView::WalletView(QWidget *parent):
     QStackedWidget(parent),
-    gui(_gui),
+    gui(0),
     clientModel(0),
     walletModel(0)
 {
@@ -54,12 +54,8 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     transactionsPage->setLayout(vbox);
 
     addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
-
     receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
-
-    sendCoinsPage = new SendCoinsDialog(gui);
-
-    signVerifyMessageDialog = new SignVerifyMessageDialog(gui);
+    sendCoinsPage = new SendCoinsDialog();
 
     addWidget(overviewPage);
     addWidget(transactionsPage);
@@ -68,7 +64,6 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     addWidget(sendCoinsPage);
 
     // Clicking on a transaction on the overview page simply sends you to transaction history page
-    connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
 
     // Double-clicking on a transaction on the transaction history page shows details
@@ -82,8 +77,6 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     connect(receiveCoinsPage, SIGNAL(signMessage(QString)), this, SLOT(gotoSignMessageTab(QString)));
     // Clicking on "Export" allows to export the transaction list
     connect(exportButton, SIGNAL(clicked()), transactionView, SLOT(exportClicked()));
-
-    gotoOverviewPage();
 }
 
 WalletView::~WalletView()
@@ -93,6 +86,10 @@ WalletView::~WalletView()
 void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 {
     this->gui = gui;
+    if(gui)
+    {
+        connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), gui, SLOT(gotoHistoryPage()));
+    }
 }
 
 void WalletView::setClientModel(ClientModel *clientModel)
@@ -109,7 +106,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
 void WalletView::setWalletModel(WalletModel *walletModel)
 {
     this->walletModel = walletModel;
-    if (walletModel)
+    if (walletModel && gui)
     {
         // Receive and report messages from wallet thread
         connect(walletModel, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
@@ -120,7 +117,6 @@ void WalletView::setWalletModel(WalletModel *walletModel)
         addressBookPage->setModel(walletModel->getAddressTableModel());
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
         sendCoinsPage->setModel(walletModel);
-        signVerifyMessageDialog->setModel(walletModel);
 
         setEncryptionStatus();
         connect(walletModel, SIGNAL(encryptionStatusChanged(int)), gui, SLOT(setEncryptionStatus(int)));
@@ -152,31 +148,26 @@ void WalletView::incomingTransaction(const QModelIndex& parent, int start, int /
 
 void WalletView::gotoOverviewPage()
 {
-    gui->getOverviewAction()->setChecked(true);
     setCurrentWidget(overviewPage);
 }
 
 void WalletView::gotoHistoryPage()
 {
-    gui->getHistoryAction()->setChecked(true);
     setCurrentWidget(transactionsPage);
 }
 
 void WalletView::gotoAddressBookPage()
 {
-    gui->getAddressBookAction()->setChecked(true);
     setCurrentWidget(addressBookPage);
 }
 
 void WalletView::gotoReceiveCoinsPage()
 {
-    gui->getReceiveCoinsAction()->setChecked(true);
     setCurrentWidget(receiveCoinsPage);
 }
 
 void WalletView::gotoSendCoinsPage(QString addr)
 {
-    gui->getSendCoinsAction()->setChecked(true);
     setCurrentWidget(sendCoinsPage);
 
     if (!addr.isEmpty())
@@ -185,7 +176,10 @@ void WalletView::gotoSendCoinsPage(QString addr)
 
 void WalletView::gotoSignMessageTab(QString addr)
 {
-    // call show() in showTab_SM()
+    // calls show() in showTab_SM()
+    SignVerifyMessageDialog *signVerifyMessageDialog = new SignVerifyMessageDialog(this);
+    signVerifyMessageDialog->setAttribute(Qt::WA_DeleteOnClose);
+    signVerifyMessageDialog->setModel(walletModel);
     signVerifyMessageDialog->showTab_SM(true);
 
     if (!addr.isEmpty())
@@ -194,7 +188,10 @@ void WalletView::gotoSignMessageTab(QString addr)
 
 void WalletView::gotoVerifyMessageTab(QString addr)
 {
-    // call show() in showTab_VM()
+    // calls show() in showTab_VM()
+    SignVerifyMessageDialog *signVerifyMessageDialog = new SignVerifyMessageDialog(this);
+    signVerifyMessageDialog->setAttribute(Qt::WA_DeleteOnClose);
+    signVerifyMessageDialog->setModel(walletModel);
     signVerifyMessageDialog->showTab_VM(true);
 
     if (!addr.isEmpty())
