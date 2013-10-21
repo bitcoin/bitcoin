@@ -403,7 +403,6 @@ private:
     const CWallet* pwallet;
 
 public:
-    std::vector<CMerkleTx> vtxPrev;
     mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int fTimeReceivedIsTxTime;
@@ -449,7 +448,6 @@ public:
     void Init(const CWallet* pwalletIn)
     {
         pwallet = pwalletIn;
-        vtxPrev.clear();
         mapValue.clear();
         vOrderForm.clear();
         fTimeReceivedIsTxTime = false;
@@ -498,6 +496,9 @@ public:
         }
 
         nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion,ser_action);
+        
+        // vtxPrev is obsolete
+        std::vector<CMerkleTx> vtxPrev;
         READWRITE(vtxPrev);
         READWRITE(mapValue);
         READWRITE(vOrderForm);
@@ -675,40 +676,31 @@ public:
         // Quick answer in most cases
         if (!IsFinalTx(*this))
             return false;
-        if (GetDepthInMainChain() >= 1)
+        if (IsInMainChain())
             return true;
         if (!IsFromMe()) // using wtx's cached debit
             return false;
 
         // If no confirmations but it's from us, we can still
         // consider it confirmed if all dependencies are confirmed
-        std::map<uint256, const CMerkleTx*> mapPrev;
-        std::vector<const CMerkleTx*> vWorkQueue;
-        vWorkQueue.reserve(vtxPrev.size()+1);
-        vWorkQueue.push_back(this);
+        
+        bool fCompleteSet = false;
+        
+        std::vector<uint256> vWorkQueue = ListUnconfirmedSupportingTransactions(&fCompleteSet);
+        
+        if (!fCompleteSet)
+            return false;
+        
         for (unsigned int i = 0; i < vWorkQueue.size(); i++)
         {
-            const CMerkleTx* ptx = vWorkQueue[i];
-
-            if (!IsFinalTx(*ptx))
+            uint256 hash = vWorkQueue[i];
+            map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(hash);
+            CMerkleTx tx = (*mi).second;
+            
+            if (!IsFinalTx(tx))
                 return false;
-            if (ptx->GetDepthInMainChain() >= 1)
-                continue;
-            if (!pwallet->IsFromMe(*ptx))
+            if (!pwallet->IsFromMe(tx))
                 return false;
-
-            if (mapPrev.empty())
-            {
-                BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
-                    mapPrev[tx.GetHash()] = &tx;
-            }
-
-            BOOST_FOREACH(const CTxIn& txin, ptx->vin)
-            {
-                if (!mapPrev.count(txin.prevout.hash))
-                    return false;
-                vWorkQueue.push_back(mapPrev[txin.prevout.hash]);
-            }
         }
         return true;
     }
@@ -718,9 +710,14 @@ public:
     int64 GetTxTime() const;
     int GetRequestCount() const;
 
-    void AddSupportingTransactions();
     bool AcceptWalletTransaction();
     void RelayWalletTransaction();
+    
+    // this function is lazy and only returns transactions in mapWallet
+    // that means it potentially misses unconfirmed supporting transactions
+    // which are not IsMine() or IsFromMe()
+    // you've been warned
+    std::vector<uint256> ListUnconfirmedSupportingTransactions(bool *pfCompleteSet=NULL) const;
 };
 
 
