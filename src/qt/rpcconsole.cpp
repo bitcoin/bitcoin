@@ -159,7 +159,7 @@ void RPCExecutor::request(const QString &command)
         else if (result.type() == json_spirit::str_type)
             strPrint = result.get_str();
         else
-            strPrint = write_string(result, true);
+            strPrint = write_string(result, json_spirit::pretty_print | json_spirit::raw_utf8);
 
         emit reply(RPCConsole::CMD_REPLY, QString::fromStdString(strPrint));
     }
@@ -173,7 +173,7 @@ void RPCExecutor::request(const QString &command)
         }
         catch(std::runtime_error &) // raised when converting to invalid type, i.e. missing code or message
         {   // Show raw JSON object
-            emit reply(RPCConsole::CMD_ERROR, QString::fromStdString(write_string(json_spirit::Value(objError), false)));
+            emit reply(RPCConsole::CMD_ERROR, QString::fromStdString(write_string(json_spirit::Value(objError), json_spirit::raw_utf8)));
         }
     }
     catch (std::exception& e)
