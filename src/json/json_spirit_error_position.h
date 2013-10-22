@@ -1,10 +1,10 @@
 #ifndef JSON_SPIRIT_ERROR_POSITION
 #define JSON_SPIRIT_ERROR_POSITION
 
-//          Copyright John W. Wilkinson 2007 - 2013
+//          Copyright John W. Wilkinson 2007 - 2009.
 // Distributed under the MIT License, see accompanying file LICENSE.txt
 
-// json spirit version 4.06
+// json spirit version 4.03
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 # pragma once
@@ -48,7 +48,7 @@ namespace json_spirit
         return ( reason_ == lhs.reason_ ) &&
                ( line_   == lhs.line_ ) &&
                ( column_ == lhs.column_ ); 
-    }
+}
 }
 
 #endif
