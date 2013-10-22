@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
-        std::string strTest = write_string(tv, raw_utf8);
+        std::string strTest = write_string(tv, false);
         if (test.size() < 2) // Allow for extra stuff (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
-        std::string strTest = write_string(tv, raw_utf8);
+        std::string strTest = write_string(tv, false);
         if (test.size() < 2) // Allow for extra stuff (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
-        std::string strTest = write_string(tv, raw_utf8);
+        std::string strTest = write_string(tv, false);
         if (test.size() < 3) // Allow for extra stuff (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
-        std::string strTest = write_string(tv, raw_utf8);
+        std::string strTest = write_string(tv, false);
         if (test.size() < 3) // Allow for extra stuff (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_invalid)
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
-        std::string strTest = write_string(tv, raw_utf8);
+        std::string strTest = write_string(tv, false);
         if (test.size() < 1) // Allow for extra stuff (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
