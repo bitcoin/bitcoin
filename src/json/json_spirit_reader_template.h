@@ -1,14 +1,10 @@
 #ifndef JSON_SPIRIT_READER_TEMPLATE
 #define JSON_SPIRIT_READER_TEMPLATE
 
-//          Copyright John W. Wilkinson 2007 - 2013
+//          Copyright John W. Wilkinson 2007 - 2009.
 // Distributed under the MIT License, see accompanying file LICENSE.txt
 
-// json spirit version 4.06
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
-# pragma once
-#endif
+// json spirit version 4.03
 
 #include "json_spirit_value.h"
 #include "json_spirit_error_position.h"
@@ -488,7 +484,7 @@ namespace json_spirit
                     ;
 
                 string_ 
-                    = lexeme_d // this causes white space and what would appear to be comments inside a string to be retained
+                    = lexeme_d // this causes white space inside a string to be retained
                       [
                           confix_p
                           ( 
@@ -519,6 +515,25 @@ namespace json_spirit
     };
 
     template< class Iter_type, class Value_type >
+    Iter_type read_range_or_throw( Iter_type begin, Iter_type end, Value_type& value )
+    {
+        Semantic_actions< Value_type, Iter_type > semantic_actions( value );
+     
+        const spirit_namespace::parse_info< Iter_type > info = 
+                            spirit_namespace::parse( begin, end, 
+                                                    Json_grammer< Value_type, Iter_type >( semantic_actions ), 
+                                                    spirit_namespace::space_p );
+
+        if( !info.hit )
+        {
+            assert( false ); // in theory exception should already have been thrown
+            throw_error( info.stop, "error" );
+        }
+
+        return info.stop;
+    }
+
+    template< class Iter_type, class Value_type >
     void add_posn_iter_and_read_range_or_throw( Iter_type begin, Iter_type end, Value_type& value )
     {
         typedef spirit_namespace::position_iterator< Iter_type > Posn_iter_t;
@@ -527,6 +542,35 @@ namespace json_spirit
         const Posn_iter_t posn_end( end, end );
      
         read_range_or_throw( posn_begin, posn_end, value );
+    }
+
+    template< class Iter_type, class Value_type >
+    bool read_range( Iter_type& begin, Iter_type end, Value_type& value )
+    {
+        try
+        {
+            begin = read_range_or_throw( begin, end, value );
+
+            return true;
+        }
+        catch( ... )
+        {
+            return false;
+        }
+    }
+
+    template< class String_type, class Value_type >
+    void read_string_or_throw( const String_type& s, Value_type& value )
+    {
+        add_posn_iter_and_read_range_or_throw( s.begin(), s.end(), value );
+    }
+
+    template< class String_type, class Value_type >
+    bool read_string( const String_type& s, Value_type& value )
+    {
+        typename String_type::const_iterator begin = s.begin();
+
+        return read_range( begin, s.end(), value );
     }
 
     template< class Istream_type >
@@ -548,84 +592,6 @@ namespace json_spirit
         Mp_iter end_;
     };
 
-    // reads a JSON Value from a pair of input iterators throwing an exception on invalid input, e.g.
-    //
-    // string::const_iterator start = str.begin();
-    // const string::const_iterator next = read_range_or_throw( str.begin(), str.end(), value );
-    //
-    // The iterator 'next' will point to the character past the 
-    // last one read.
-    //
-    template< class Iter_type, class Value_type >
-    Iter_type read_range_or_throw( Iter_type begin, Iter_type end, Value_type& value )
-    {
-        Semantic_actions< Value_type, Iter_type > semantic_actions( value );
-     
-        const spirit_namespace::parse_info< Iter_type > info = 
-                            spirit_namespace::parse( begin, end, 
-                                                    Json_grammer< Value_type, Iter_type >( semantic_actions ), 
-                                                    spirit_namespace::space_p | 
-                                                    spirit_namespace::comment_p("//") | 
-                                                    spirit_namespace::comment_p("/*", "*/") );
-
-        if( !info.hit )
-        {
-            assert( false ); // in theory exception should already have been thrown
-            throw_error( info.stop, "error" );
-        }
-
-        return info.stop;
-    }
-
-    // reads a JSON Value from a pair of input iterators, e.g.
-    //
-    // string::const_iterator start = str.begin();
-    // const bool success = read_string( start, str.end(), value );
-    //
-    // The iterator 'start' will point to the character past the 
-    // last one read.
-    //
-    template< class Iter_type, class Value_type >
-    bool read_range( Iter_type& begin, Iter_type end, Value_type& value )
-    {
-        try
-        {
-            begin = read_range_or_throw( begin, end, value );
-
-            return true;
-        }
-        catch( ... )
-        {
-            return false;
-        }
-    }
-
-    // reads a JSON Value from a string, e.g.
-    //
-    // const bool success = read_string( str, value );
-    //
-    template< class String_type, class Value_type >
-    bool read_string( const String_type& s, Value_type& value )
-    {
-        typename String_type::const_iterator begin = s.begin();
-
-        return read_range( begin, s.end(), value );
-    }
-
-    // reads a JSON Value from a string throwing an exception on invalid input, e.g.
-    //
-    // read_string_or_throw( is, value );
-    //
-    template< class String_type, class Value_type >
-    void read_string_or_throw( const String_type& s, Value_type& value )
-    {
-        add_posn_iter_and_read_range_or_throw( s.begin(), s.end(), value );
-    }
-
-    // reads a JSON Value from a stream, e.g.
-    //
-    // const bool success = read_stream( is, value );
-    //
     template< class Istream_type, class Value_type >
     bool read_stream( Istream_type& is, Value_type& value )
     {
@@ -634,10 +600,6 @@ namespace json_spirit
         return read_range( mp_iters.begin_, mp_iters.end_, value );
     }
 
-    // reads a JSON Value from a stream throwing an exception on invalid input, e.g.
-    //
-    // read_stream_or_throw( is, value );
-    //
     template< class Istream_type, class Value_type >
     void read_stream_or_throw( Istream_type& is, Value_type& value )
     {
