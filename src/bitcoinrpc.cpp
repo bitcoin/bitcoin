@@ -31,8 +31,6 @@ using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
 
-static const char* Value_type_name[]={"obj", "array", "str", "bool", "int", "real", "null"};
-
 static std::string strRPCUserColonPass;
 
 // These are created by StartRPCThreads, destroyed in StopRPCThreads
