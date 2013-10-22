@@ -115,7 +115,7 @@ inline void MilliSleep(int64 n)
 #elif defined(HAVE_WORKING_BOOST_SLEEP)
     boost::this_thread::sleep(boost::posix_time::milliseconds(n));
 #else
-  //should never get here
+//should never get here
 #error missing boost sleep implementation
 #endif
 }
