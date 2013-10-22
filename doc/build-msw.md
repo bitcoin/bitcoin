@@ -1,8 +1,6 @@
 WINDOWS BUILD NOTES
 ===================
 
-See [readme-qt.md](readme-qt.md) for instructions on building Bitcoin-Qt, the
-graphical user interface.
 
 Compilers Supported
 -------------------
