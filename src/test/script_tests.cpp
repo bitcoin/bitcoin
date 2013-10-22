@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(script_valid)
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
-        string strTest = write_string(tv, raw_utf8);
+        string strTest = write_string(tv, false);
         if (test.size() < 2) // Allow size > 2; extra stuff ignored (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(script_invalid)
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
-        string strTest = write_string(tv, raw_utf8);
+        string strTest = write_string(tv, false);
         if (test.size() < 2) // Allow size > 2; extra stuff ignored (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
