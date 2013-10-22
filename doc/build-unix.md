@@ -10,7 +10,6 @@ To Build
 	make
 
 This will build bitcoin-qt as well if the dependencies are met.
-See [readme-qt.md](readme-qt.md) for more information.
 
 Dependencies
 ---------------------
