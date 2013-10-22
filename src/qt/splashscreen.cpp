@@ -66,9 +66,8 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) :
     pixPaint.setFont(QFont(font, 10*fontFactor));
     pixPaint.drawText(newPixmap.width()-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace,copyrightText);
 
-    // draw testnet string if -testnet is on
-    if(QApplication::applicationName().contains(QString("-testnet"))) {
-        // draw copyright stuff
+    // draw testnet string if testnet is on
+    if(TestNet()) {
         QFont boldFont = QFont(font, 10*fontFactor);
         boldFont.setWeight(QFont::Bold);
         pixPaint.setFont(boldFont);
