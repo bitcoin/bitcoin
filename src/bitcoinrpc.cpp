@@ -31,6 +31,8 @@ using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
 
+static const char* Value_type_name[]={"obj", "array", "str", "bool", "int", "real", "null"};
+
 static std::string strRPCUserColonPass;
 
 // These are created by StartRPCThreads, destroyed in StopRPCThreads
@@ -531,7 +533,7 @@ string JSONRPCRequest(const string& strMethod, const Array& params, const Value&
     request.push_back(Pair("method", strMethod));
     request.push_back(Pair("params", params));
     request.push_back(Pair("id", id));
-    return write_string(Value(request), false) + "\n";
+    return write_string(Value(request), raw_utf8) + "\n";
 }
 
 Object JSONRPCReplyObj(const Value& result, const Value& error, const Value& id)
@@ -549,7 +551,7 @@ Object JSONRPCReplyObj(const Value& result, const Value& error, const Value& id)
 string JSONRPCReply(const Value& result, const Value& error, const Value& id)
 {
     Object reply = JSONRPCReplyObj(result, error, id);
-    return write_string(Value(reply), false) + "\n";
+    return write_string(Value(reply), raw_utf8) + "\n";
 }
 
 void ErrorReply(std::ostream& stream, const Object& objError, const Value& id)
@@ -980,7 +982,7 @@ static string JSONRPCExecBatch(const Array& vReq)
     for (unsigned int reqIdx = 0; reqIdx < vReq.size(); reqIdx++)
         ret.push_back(JSONRPCExecOne(vReq[reqIdx]));
 
-    return write_string(Value(ret), false) + "\n";
+    return write_string(Value(ret), raw_utf8) + "\n";
 }
 
 void ServiceConnection(AcceptedConnection *conn)
@@ -1282,7 +1284,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (error.type() != null_type)
         {
             // Error
-            strPrint = "error: " + write_string(error, false);
+            strPrint = "error: " + write_string(error, raw_utf8);
             int code = find_value(error.get_obj(), "code").get_int();
             nRet = abs(code);
         }
@@ -1294,7 +1296,7 @@ int CommandLineRPC(int argc, char *argv[])
             else if (result.type() == str_type)
                 strPrint = result.get_str();
             else
-                strPrint = write_string(result, true);
+                strPrint = write_string(result, pretty_print | raw_utf8);
         }
     }
     catch (boost::thread_interrupted) {
