@@ -763,11 +763,6 @@ void BitcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
     walletFrame->handlePaymentRequest(recipient);
 }
 
-void BitcoinGUI::showPaymentACK(const QString& msg)
-{
-    message(tr("Payment acknowledged"), GUIUtil::HtmlEscape(msg), CClientUIInterface::MODAL);
-}
-
 void BitcoinGUI::setEncryptionStatus(int status)
 {
     switch(status)
