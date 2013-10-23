@@ -13,10 +13,15 @@ BOOST_AUTO_TEST_CASE(scrypt_hashtest)
     const char* expected[HASHCOUNT] = { "00000000002bef4107f882f6115e0b01f348d21195dacd3582aa2dabd7985806" , "00000000003a0d11bdd5eb634e08b7feddcfbbf228ed35d250daf19f1c88fc94", "00000000000b40f895f288e13244728a6c2d9d59d8aff29c65f8dd5114a8ca81", "00000000003007005891cd4923031e99d8e8d72f6e8e7edc6a86181897e105fe", "000000000018f0b426a4afc7130ccb47fa02af730d345b4fe7c7724d3800ec8c" };
     uint256 scrypthash;
     std::vector<unsigned char> inputbytes;
-
+    char scratchpad[SCRYPT_SCRATCHPAD_SIZE];
     for (int i = 0; i < HASHCOUNT; i++) {
         inputbytes = ParseHex(inputhex[i]);
-        scrypt_1024_1_1_256((const char*)&inputbytes[0], BEGIN(scrypthash));
+#if defined(USE_SSE2)
+        // Test SSE2 scrypt
+        scrypt_1024_1_1_256_sp_sse2((const char*)&inputbytes[0], BEGIN(scrypthash), scratchpad);
+#endif
+        // Test generic scrypt
+        scrypt_1024_1_1_256_sp_generic((const char*)&inputbytes[0], BEGIN(scrypthash), scratchpad);
         BOOST_CHECK_EQUAL(scrypthash.ToString().c_str(), expected[i]);
     }
 }
