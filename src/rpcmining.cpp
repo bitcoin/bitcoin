@@ -192,6 +192,12 @@ Value getwork(const Array& params, bool fHelp)
         pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
+        // Deserialize PrimeChainMultiplier
+        unsigned char primemultiplier[48];
+        memcpy(primemultiplier, &pdata->bnPrimeChainMultiplier, 48);
+        CDataStream ssMult(BEGIN(primemultiplier), END(primemultiplier), SER_NETWORK, PROTOCOL_VERSION);
+        ssMult >> pblock->bnPrimeChainMultiplier;
+
         return CheckWork(pblock, *pwalletMain, *pMiningKey);
     }
 }
