@@ -49,10 +49,13 @@ enum RPCErrorCode
     RPC_INVALID_PARAMETER           = -8,  // Invalid, missing or duplicate parameter
     RPC_DATABASE_ERROR              = -20, // Database error
     RPC_DESERIALIZATION_ERROR       = -22, // Error parsing or validating structure in raw format
+    RPC_SERVER_NOT_STARTED          = -18, // RPC server was not started (StartRPCThreads() not called)
 
     // P2P client errors
     RPC_CLIENT_NOT_CONNECTED        = -9,  // Bitcoin is not connected
     RPC_CLIENT_IN_INITIAL_DOWNLOAD  = -10, // Still downloading initial blocks
+    RPC_CLIENT_NODE_ALREADY_ADDED   = -23, // Node is already added
+    RPC_CLIENT_NODE_NOT_ADDED       = -24, // Node has not been added before
 
     // Wallet errors
     RPC_WALLET_ERROR                = -4,  // Unspecified problem with wallet (key not found etc.)
