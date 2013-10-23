@@ -77,6 +77,8 @@ const string strMessageMagic = "NovaCoin Signed Message:\n";
 
 // Settings
 int64 nTransactionFee = MIN_TX_FEE;
+int64 nMinimumInputValue = MIN_TX_FEE;
+
 bool fStakeUsePooledKeys = false;
 extern enum Checkpoints::CPMode CheckpointsMode;
 

@@ -87,6 +87,7 @@ extern std::map<uint256, CBlock*> mapOrphanBlocks;
 
 // Settings
 extern int64 nTransactionFee;
+extern int64 nMinimumInputValue;
 extern bool fStakeUsePooledKeys;
 extern unsigned int nDerivationMethodIndex;
 
