@@ -170,12 +170,33 @@ BOOST_AUTO_TEST_CASE(rpc_rawsign)
 
 BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
 {
-    BOOST_CHECK(write_string(Value(0.0), false) == "0.00000000");
-    BOOST_CHECK(write_string(Value(1.0), false) == "1.00000000");
-    BOOST_CHECK(write_string(Value(0.5), false) == "0.50000000");
-    BOOST_CHECK(write_string(Value(0.00000001), false) == "0.00000001");
-    BOOST_CHECK(write_string(Value(0.17622195), false) == "0.17622195");
-    BOOST_CHECK(write_string(Value(0.89898989), false) == "0.89898989");
+    BOOST_CHECK(write_string(ValueFromAmount(0LL), false) == "0.00000000");
+    BOOST_CHECK(write_string(ValueFromAmount(1LL), false) == "0.00000001");
+    BOOST_CHECK(write_string(ValueFromAmount(17622195LL), false) == "0.17622195");
+    BOOST_CHECK(write_string(ValueFromAmount(50000000LL), false) == "0.50000000");
+    BOOST_CHECK(write_string(ValueFromAmount(89898989LL), false) == "0.89898989");
+    BOOST_CHECK(write_string(ValueFromAmount(100000000LL), false) == "1.00000000");
+    BOOST_CHECK(write_string(ValueFromAmount(2099999999999990LL), false) == "20999999.99999990");
+    BOOST_CHECK(write_string(ValueFromAmount(2099999999999999LL), false) == "20999999.99999999");
+}
+
+static Value ValueFromString(const std::string &str)
+{
+    Value value;
+    BOOST_CHECK(read_string(str, value));
+    return value;
+}
+
+BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
+{
+    BOOST_CHECK(AmountFromValue(ValueFromString("0.00000001")) == 1LL);
+    BOOST_CHECK(AmountFromValue(ValueFromString("0.17622195")) == 17622195LL);
+    BOOST_CHECK(AmountFromValue(ValueFromString("0.5")) == 50000000LL);
+    BOOST_CHECK(AmountFromValue(ValueFromString("0.50000000")) == 50000000LL);
+    BOOST_CHECK(AmountFromValue(ValueFromString("0.89898989")) == 89898989LL);
+    BOOST_CHECK(AmountFromValue(ValueFromString("1.00000000")) == 100000000LL);
+    BOOST_CHECK(AmountFromValue(ValueFromString("20999999.9999999")) == 2099999999999990LL);
+    BOOST_CHECK(AmountFromValue(ValueFromString("20999999.99999999")) == 2099999999999999LL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
