@@ -168,4 +168,14 @@ BOOST_AUTO_TEST_CASE(rpc_rawsign)
     BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool() == true);
 }
 
+BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
+{
+    BOOST_CHECK(write_string(Value(0.0), false) == "0.00000000");
+    BOOST_CHECK(write_string(Value(1.0), false) == "1.00000000");
+    BOOST_CHECK(write_string(Value(0.5), false) == "0.50000000");
+    BOOST_CHECK(write_string(Value(0.00000001), false) == "0.00000001");
+    BOOST_CHECK(write_string(Value(0.17622195), false) == "0.17622195");
+    BOOST_CHECK(write_string(Value(0.89898989), false) == "0.89898989");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
