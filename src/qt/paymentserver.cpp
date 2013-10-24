@@ -250,7 +250,12 @@ bool PaymentServer::ipcSendCommandLine(int argc, char* argv[])
     return fResult;
 }
 
-PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) : QObject(parent), saveURIs(true)
+PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
+    QObject(parent),
+    saveURIs(true),
+    uriServer(0),
+    netManager(0),
+    optionsModel(0)
 {
     // Verify that the version of the library that we linked against is
     // compatible with the version of the headers we compiled against.
