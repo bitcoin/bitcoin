@@ -280,9 +280,6 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
             connect(this, SIGNAL(receivedPaymentACK(QString)), this, SLOT(handlePaymentACK(QString)));
         }
     }
-
-    // netManager is null until uiReady() is called
-    netManager = NULL;
 }
 
 PaymentServer::~PaymentServer()
@@ -450,9 +447,36 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, QList<Sen
     if (!optionsModel)
         return false;
 
-    QList<std::pair<CScript,qint64> > sendingTos = request.getPayTo();
-    qint64 totalAmount = 0;
+    recipients.append(SendCoinsRecipient());
+
+    recipients[0].paymentRequest = request;
+    recipients[0].label = GUIUtil::HtmlEscape(request.getDetails().memo()); // Todo: Change to .message once available
+
+    request.getMerchant(PaymentServer::certStore, recipients[0].authenticatedMerchant);
+
+    QList<std::pair<CScript, qint64> > sendingTos = request.getPayTo();
+
+    int i = 0;
     foreach(const PAIRTYPE(CScript, qint64)& sendingTo, sendingTos) {
+        // Extract and check destination addresses
+        CTxDestination dest;
+        if (ExtractDestination(sendingTo.first, dest)) {
+            // Append destination address (for payment requests .address is used ONLY for GUI display)
+            recipients[0].address.append(QString::fromStdString(CBitcoinAddress(dest).ToString()));
+            if (i < sendingTos.size() - 1) // prevent new-line for last entry
+                recipients[0].address.append("<br />");
+        }
+        else if (!recipients[0].authenticatedMerchant.isEmpty()){
+            // Insecure payments to custom bitcoin addresses are not supported
+            // (there is no good way to tell the user where they are paying in a way
+            // they'd have a chance of understanding).
+            emit message(tr("Payment request error"),
+                tr("Unverified payment requests to custom payment scripts are unsupported."),
+                CClientUIInterface::MSG_ERROR);
+            return false;
+        }
+
+        // Extract and check amounts
         CTxOut txOut(sendingTo.second, sendingTo.first);
         if (txOut.IsDust(CTransaction::nMinRelayTxFee)) {
             QString msg = tr("Requested payment amount of %1 is too small (considered dust).")
@@ -463,43 +487,17 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, QList<Sen
             return false;
         }
 
-        totalAmount += sendingTo.second;
+        recipients[0].amount += sendingTo.second;
+        i++;
     }
+    // Store addresses and format them to fit nicely into the GUI
+    recipient.address = addresses.join("<br />");
 
-    recipients.append(SendCoinsRecipient());
-
-    if (request.getMerchant(PaymentServer::certStore, recipients[0].authenticatedMerchant)) {
-        recipients[0].paymentRequest = request;
-        recipients[0].amount = totalAmount;
-        qDebug() << "PaymentServer::processPaymentRequest : Payment request from " << recipients[0].authenticatedMerchant;
+    if (!recipient.authenticatedMerchant.isEmpty()) {
+        qDebug() << "PaymentServer::processPaymentRequest : Secure payment request from " << recipient.authenticatedMerchant;
     }
     else {
-        recipients.clear();
-        // Insecure payment requests may turn into more than one recipient if
-        // the merchant is requesting payment to more than one address.
-        for (int i = 0; i < sendingTos.size(); i++) {
-            std::pair<CScript, qint64>& sendingTo = sendingTos[i];
-            recipients.append(SendCoinsRecipient());
-            recipients[i].amount = sendingTo.second;
-            QString memo = QString::fromStdString(request.getDetails().memo());
-            recipients[i].label = GUIUtil::HtmlEscape(memo);
-            CTxDestination dest;
-            if (ExtractDestination(sendingTo.first, dest)) {
-                if (i == 0) // Tie request to first pay-to, we don't want multiple ACKs
-                    recipients[i].paymentRequest = request;
-                recipients[i].address = QString::fromStdString(CBitcoinAddress(dest).ToString());
-                qDebug() << "PaymentServer::processPaymentRequest : Payment request, insecure " << recipients[i].address;
-            }
-            else {
-                // Insecure payments to custom bitcoin addresses are not supported
-                // (there is no good way to tell the user where they are paying in a way
-                // they'd have a chance of understanding).
-                emit message(tr("Payment request error"),
-                    tr("Insecure requests to custom payment scripts unsupported"),
-                    CClientUIInterface::MSG_ERROR);
-                return false;
-            }
-        }
+        qDebug() << "PaymentServer::processPaymentRequest : Insecure payment request to " << addresses.join(", ");
     }
 
     return true;
