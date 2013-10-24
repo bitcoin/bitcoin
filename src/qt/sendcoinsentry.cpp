@@ -18,7 +18,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    setCurrentWidget(ui->SendCoinsInsecure);
+    setCurrentWidget(ui->SendCoins);
 
 #ifdef Q_OS_MAC
     ui->payToLayout->setSpacing(4);
@@ -28,10 +28,12 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
     ui->payTo->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
 #endif
-    setFocusPolicy(Qt::TabFocus);
     setFocusProxy(ui->payTo);
 
+    // normal bitcoin address field
     GUIUtil::setupAddressWidget(ui->payTo, this);
+    // just a label for displaying bitcoin address(es)
+    ui->payTo_is->setFont(GUIUtil::bitcoinAddressFont());
 }
 
 SendCoinsEntry::~SendCoinsEntry()
@@ -67,7 +69,7 @@ void SendCoinsEntry::setModel(WalletModel *model)
 {
     this->model = model;
 
-    if(model && model->getOptionsModel())
+    if (model && model->getOptionsModel())
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
     clear();
@@ -80,11 +82,15 @@ void SendCoinsEntry::setRemoveEnabled(bool enabled)
 
 void SendCoinsEntry::clear()
 {
-    // clear UI elements for insecure payments
+    // clear UI elements for normal payment
     ui->payTo->clear();
     ui->addAsLabel->clear();
     ui->payAmount->clear();
-    // and the ones for secure payments just to be sure
+    // clear UI elements for insecure payment request
+    ui->payTo_is->clear();
+    ui->memoTextLabel_is->clear();
+    ui->payAmount_is->clear();
+    // clear UI elements for secure payment request
     ui->payTo_s->clear();
     ui->memoTextLabel_s->clear();
     ui->payAmount_s->clear();
@@ -102,20 +108,23 @@ void SendCoinsEntry::on_deleteButton_clicked()
 
 bool SendCoinsEntry::validate()
 {
+    if (!model)
+        return false;
+
     // Check input validity
     bool retval = true;
 
-    if (!recipient.authenticatedMerchant.isEmpty())
+    // Skip checks for payment request
+    if (recipient.paymentRequest.IsInitialized())
         return retval;
 
-    if (!ui->payTo->hasAcceptableInput() ||
-        (model && !model->validateAddress(ui->payTo->text())))
+    if (!ui->payTo->hasAcceptableInput() || !model->validateAddress(ui->payTo->text()))
     {
         ui->payTo->setValid(false);
         retval = false;
     }
 
-    if(!ui->payAmount->validate())
+    if (!ui->payAmount->validate())
     {
         retval = false;
     }
@@ -131,10 +140,11 @@ bool SendCoinsEntry::validate()
 
 SendCoinsRecipient SendCoinsEntry::getValue()
 {
-    if (!recipient.authenticatedMerchant.isEmpty())
+    // Payment request
+    if (recipient.paymentRequest.IsInitialized())
         return recipient;
 
-    // User-entered or non-authenticated:
+    // Normal payment
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
     recipient.amount = ui->payAmount->value();
@@ -156,21 +166,30 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
 {
     recipient = value;
 
-    if (recipient.authenticatedMerchant.isEmpty())
+    if (recipient.paymentRequest.IsInitialized()) // payment request
+    {
+        if (recipient.authenticatedMerchant.isEmpty()) // insecure
+        {
+            ui->payTo_is->setText(recipient.address);
+            ui->memoTextLabel_is->setText(recipient.label);
+            ui->payAmount_is->setValue(recipient.amount);
+            ui->payAmount_is->setReadOnly(true);
+            setCurrentWidget(ui->SendCoins_InsecurePaymentRequest);
+        }
+        else // secure
+        {
+            ui->payTo_s->setText(recipient.authenticatedMerchant);
+            ui->memoTextLabel_s->setText(recipient.label);
+            ui->payAmount_s->setValue(recipient.amount);
+            ui->payAmount_s->setReadOnly(true);
+            setCurrentWidget(ui->SendCoins_SecurePaymentRequest);
+        }
+    }
+    else // normal payment
     {
         ui->payTo->setText(recipient.address);
         ui->addAsLabel->setText(recipient.label);
         ui->payAmount->setValue(recipient.amount);
-    }
-    else
-    {
-        const payments::PaymentDetails& details = recipient.paymentRequest.getDetails();
-
-        ui->payTo_s->setText(recipient.authenticatedMerchant);
-        ui->memoTextLabel_s->setText(QString::fromStdString(details.memo()));
-        ui->payAmount_s->setValue(recipient.amount);
-        ui->payAmount_s->setReadOnly(true);
-        setCurrentWidget(ui->SendCoinsSecure);
     }
 }
 
@@ -182,7 +201,7 @@ void SendCoinsEntry::setAddress(const QString &address)
 
 bool SendCoinsEntry::isClear()
 {
-    return ui->payTo->text().isEmpty() && ui->payTo_s->text().isEmpty();
+    return ui->payTo->text().isEmpty() && ui->payTo_is->text().isEmpty() && ui->payTo_s->text().isEmpty();
 }
 
 void SendCoinsEntry::setFocus()
@@ -196,6 +215,7 @@ void SendCoinsEntry::updateDisplayUnit()
     {
         // Update payAmount with the current unit
         ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
+        ui->payAmount_is->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_s->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     }
 }
