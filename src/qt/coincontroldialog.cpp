@@ -420,6 +420,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     qint64 nPayAmount = 0;
     bool fLowOutput = false;
     bool fDust = false;
+    unsigned int nQuantityDust = 0;
     CTransaction txDummy;
     foreach(const qint64 &amount, CoinControlDialog::payAmounts)
     {
@@ -427,8 +428,10 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         
         if (amount > 0)
         {
-            if (amount < CENT)
+            if (amount < CENT) {
                 fLowOutput = true;
+                nQuantityDust++;
+            }
 
             CTxOut txout(amount, (CScript)vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
@@ -501,7 +504,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         int64 nFee = nTransactionFee * (1 + (int64)nBytes / 1000);
         
         // Min Fee
-        int64 nMinFee = CTransaction::nMinTxFee * (1 + (int64)nBytes / 1000);
+        int64 nMinFee = CTransaction::nMinTxFee * (1 + (int64)nBytes / 1000) + CTransaction::nMinTxFee * nQuantityDust;
         if (CTransaction::AllowFree(dPriority) && nBytes < 10000)
             nMinFee = 0;
         
@@ -515,7 +518,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             if (nPayFee < CTransaction::nMinTxFee && fLowOutput)
             {
                 nChange = nChange + nPayFee - CTransaction::nMinTxFee;
-                nPayFee = CTransaction::nMinTxFee;
+                nPayFee = CTransaction::nMinTxFee * nQuantityDust;
             }
             
             // if sub-cent change is required, the fee must be raised to at least CTransaction::nMinTxFee   
