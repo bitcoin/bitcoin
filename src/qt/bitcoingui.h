@@ -5,13 +5,11 @@
 #include <QSystemTrayIcon>
 #include <QMap>
 
-class TransactionTableModel;
 class WalletFrame;
 class WalletView;
 class ClientModel;
 class WalletModel;
 class WalletStack;
-class TransactionView;
 class OverviewPage;
 class SendCoinsDialog;
 class SendCoinsRecipient;
@@ -50,11 +48,11 @@ public:
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
     void setClientModel(ClientModel *clientModel);
+
     /** Set the wallet model.
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
-
     bool addWallet(const QString& name, WalletModel *walletModel);
     bool setCurrentWallet(const QString& name);
 
@@ -98,7 +96,6 @@ private:
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
-    TransactionView *transactionView;
     RPCConsole *rpcConsole;
 
     QMovie *syncIconMovie;
