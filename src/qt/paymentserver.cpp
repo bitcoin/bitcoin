@@ -263,7 +263,7 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
 
     // Install global event filter to catch QFileOpenEvents
     // on Mac: sent when you click bitcoin: links
-    // other OSes: helpful when dealing with payment-request files (in the future)
+    // other OSes: helpful when dealing with payment request files (in the future)
     if (parent)
         parent->installEventFilter(this);
 
@@ -278,8 +278,10 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
 
         if (!uriServer->listen(name))
             qDebug() << "PaymentServer::PaymentServer : Cannot start bitcoin: click-to-pay handler";
-        else
+        else {
             connect(uriServer, SIGNAL(newConnection()), this, SLOT(handleURIConnection()));
+            connect(this, SIGNAL(receivedPaymentACK(QString)), this, SLOT(handlePaymentACK(QString)));
+        }
     }
 
     // netManager is null until uiReady() is called
@@ -321,7 +323,7 @@ void PaymentServer::initNetManager()
     // netManager is used to fetch paymentrequests given in bitcoin: URIs
     netManager = new QNetworkAccessManager(this);
 
-    // Use proxy settings from optionsModel:
+    // Use proxy settings from optionsModel
     QString proxyIP;
     quint16 proxyPort;
     if (optionsModel->getProxySettings(proxyIP, proxyPort))
@@ -457,7 +459,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, QList<Sen
     foreach(const PAIRTYPE(CScript, qint64)& sendingTo, sendingTos) {
         CTxOut txOut(sendingTo.second, sendingTo.first);
         if (txOut.IsDust(CTransaction::nMinRelayTxFee)) {
-            QString msg = QObject::tr("Requested payment amount (%1) too small")
+            QString msg = tr("Requested payment amount of %1 is too small (considered dust).")
                 .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second));
 
             qDebug() << "PaymentServer::processPaymentRequest : " << msg;
@@ -537,7 +539,7 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
     payment.add_transactions(transaction.data(), transaction.size());
 
     // Create a new refund address, or re-use:
-    QString account = tr("Refund from") + QString(" ") + recipient.authenticatedMerchant;
+    QString account = tr("Refund from %1").arg(recipient.authenticatedMerchant);
     std::string strAccount = account.toStdString();
     set<CTxDestination> refundAddresses = wallet->GetAccountAddresses(strAccount);
     if (!refundAddresses.empty()) {
@@ -579,9 +581,10 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
     reply->deleteLater();
     if (reply->error() != QNetworkReply::NoError)
     {
-        QString msg = QObject::tr("Error communicating with %1: %2")
+        QString msg = tr("Error communicating with %1: %2")
             .arg(reply->request().url().toString())
             .arg(reply->errorString());
+
         qDebug() << "PaymentServer::netRequestFinished : " << msg;
         emit message(tr("Network request error"), msg, CClientUIInterface::MSG_ERROR);
         return;
@@ -595,12 +598,13 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
         PaymentRequestPlus request;
         QList<SendCoinsRecipient> recipients;
         if (request.parse(data) && processPaymentRequest(request, recipients)) {
-            foreach (const SendCoinsRecipient& recipient, recipients){
+            foreach (const SendCoinsRecipient& recipient, recipients) {
                 emit receivedPaymentRequest(recipient);
             }
         }
         else
             qDebug() << "PaymentServer::netRequestFinished : Error processing payment request";
+
         return;
     }
     else if (requestType == "PaymentACK")
@@ -608,13 +612,14 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
         payments::PaymentACK paymentACK;
         if (!paymentACK.ParseFromArray(data.data(), data.size()))
         {
-            QString msg = QObject::tr("Bad response from server %1")
+            QString msg = tr("Bad response from server %1")
                 .arg(reply->request().url().toString());
+
             qDebug() << "PaymentServer::netRequestFinished : " << msg;
             emit message(tr("Network request error"), msg, CClientUIInterface::MSG_ERROR);
         }
         else {
-            emit receivedPaymentACK(QString::fromStdString(paymentACK.memo()));
+            emit receivedPaymentACK(GUIUtil::HtmlEscape(paymentACK.memo()));
         }
     }
 }
@@ -634,4 +639,10 @@ void PaymentServer::reportSslErrors(QNetworkReply* reply, const QList<QSslError>
 void PaymentServer::setOptionsModel(OptionsModel *optionsModel)
 {
     this->optionsModel = optionsModel;
+}
+
+void PaymentServer::handlePaymentACK(const QString& paymentACKMsg)
+{
+    // currently we don't futher process or store the paymentACK message
+    emit message(tr("Payment acknowledged"), paymentACKMsg, CClientUIInterface::ICON_INFORMATION | CClientUIInterface::MODAL);
 }

@@ -135,6 +135,7 @@ public slots:
        @param[in] ret       pointer to a bool that will be modified to whether Ok was clicked (modal only)
     */
     void message(const QString &title, const QString &message, unsigned int style, bool *ret = NULL);
+
     /** Asks the user whether to pay the transaction fee or to cancel the transaction.
        It is currently not possible to pass a return value to another thread through
        BlockingQueuedConnection, so an indirected pointer is used.
@@ -146,7 +147,6 @@ public slots:
     void askFee(qint64 nFeeRequired, bool *payFee);
 
     void handlePaymentRequest(const SendCoinsRecipient& recipient);
-    void showPaymentACK(const QString& msg);
 
     /** Show incoming transaction notification for new transactions. */
     void incomingTransaction(const QString& date, int unit, qint64 amount, const QString& type, const QString& address);
