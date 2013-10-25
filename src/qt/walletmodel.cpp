@@ -36,8 +36,19 @@ WalletModel::~WalletModel()
     unsubscribeFromCoreSignals();
 }
 
-qint64 WalletModel::getBalance() const
+qint64 WalletModel::getBalance(const CCoinControl *coinControl) const
 {
+    if (coinControl)
+    {
+        int64 nBalance = 0;
+        std::vector<COutput> vCoins;
+        wallet->AvailableCoins(vCoins, true, coinControl);
+        BOOST_FOREACH(const COutput& out, vCoins)
+            nBalance += out.tx->vout[out.i].nValue;   
+        
+        return nBalance;
+    }
+    
     return wallet->GetBalance();
 }
 
@@ -156,12 +167,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         return DuplicateAddress;
     }
 
-    // we do not use getBalance() here, because some coins could be locked or coin control could be active
-    int64 nBalance = 0;
-    std::vector<COutput> vCoins;
-    wallet->AvailableCoins(vCoins, true, coinControl);
-    BOOST_FOREACH(const COutput& out, vCoins)
-        nBalance += out.tx->vout[out.i].nValue;
+    int64 nBalance = getBalance(coinControl);
 
     if(total > nBalance)
     {

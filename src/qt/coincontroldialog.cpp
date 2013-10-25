@@ -6,6 +6,7 @@
 #include "walletmodel.h"
 #include "addresstablemodel.h"
 #include "optionsmodel.h"
+#include "guiutil.h"
 #include "coincontrol.h"
 
 #include <QApplication>
@@ -213,31 +214,31 @@ void CoinControlDialog::showMenu(const QPoint &point)
 // context menu action: copy amount
 void CoinControlDialog::copyAmount()
 {
-    QApplication::clipboard()->setText(contextMenuItem->text(COLUMN_AMOUNT));
+    GUIUtil::setClipboard(contextMenuItem->text(COLUMN_AMOUNT));
 }
 
 // context menu action: copy label
 void CoinControlDialog::copyLabel()
 {
     if (ui->radioTreeMode->isChecked() && contextMenuItem->text(COLUMN_LABEL).length() == 0 && contextMenuItem->parent())
-        QApplication::clipboard()->setText(contextMenuItem->parent()->text(COLUMN_LABEL));
+        GUIUtil::setClipboard(contextMenuItem->parent()->text(COLUMN_LABEL));
     else
-        QApplication::clipboard()->setText(contextMenuItem->text(COLUMN_LABEL));
+        GUIUtil::setClipboard(contextMenuItem->text(COLUMN_LABEL));
 }
 
 // context menu action: copy address
 void CoinControlDialog::copyAddress()
 {
     if (ui->radioTreeMode->isChecked() && contextMenuItem->text(COLUMN_ADDRESS).length() == 0 && contextMenuItem->parent())
-        QApplication::clipboard()->setText(contextMenuItem->parent()->text(COLUMN_ADDRESS));
+        GUIUtil::setClipboard(contextMenuItem->parent()->text(COLUMN_ADDRESS));
     else
-        QApplication::clipboard()->setText(contextMenuItem->text(COLUMN_ADDRESS));
+        GUIUtil::setClipboard(contextMenuItem->text(COLUMN_ADDRESS));
 }
 
 // context menu action: copy transaction id
 void CoinControlDialog::copyTransactionHash()
 {
-    QApplication::clipboard()->setText(contextMenuItem->text(COLUMN_TXHASH));
+    GUIUtil::setClipboard(contextMenuItem->text(COLUMN_TXHASH));
 }
 
 // context menu action: lock coin
@@ -266,49 +267,49 @@ void CoinControlDialog::unlockCoin()
 // copy label "Quantity" to clipboard
 void CoinControlDialog::clipboardQuantity()
 {
-    QApplication::clipboard()->setText(ui->labelCoinControlQuantity->text());
+    GUIUtil::setClipboard(ui->labelCoinControlQuantity->text());
 }
 
 // copy label "Amount" to clipboard
 void CoinControlDialog::clipboardAmount()
 {
-    QApplication::clipboard()->setText(ui->labelCoinControlAmount->text().left(ui->labelCoinControlAmount->text().indexOf(" ")));
+    GUIUtil::setClipboard(ui->labelCoinControlAmount->text().left(ui->labelCoinControlAmount->text().indexOf(" ")));
 }
 
 // copy label "Fee" to clipboard
 void CoinControlDialog::clipboardFee()
 {
-    QApplication::clipboard()->setText(ui->labelCoinControlFee->text().left(ui->labelCoinControlFee->text().indexOf(" ")));
+    GUIUtil::setClipboard(ui->labelCoinControlFee->text().left(ui->labelCoinControlFee->text().indexOf(" ")));
 }
 
 // copy label "After fee" to clipboard
 void CoinControlDialog::clipboardAfterFee()
 {
-    QApplication::clipboard()->setText(ui->labelCoinControlAfterFee->text().left(ui->labelCoinControlAfterFee->text().indexOf(" ")));
+    GUIUtil::setClipboard(ui->labelCoinControlAfterFee->text().left(ui->labelCoinControlAfterFee->text().indexOf(" ")));
 }
 
 // copy label "Bytes" to clipboard
 void CoinControlDialog::clipboardBytes()
 {
-    QApplication::clipboard()->setText(ui->labelCoinControlBytes->text());
+    GUIUtil::setClipboard(ui->labelCoinControlBytes->text());
 }
 
 // copy label "Priority" to clipboard
 void CoinControlDialog::clipboardPriority()
 {
-    QApplication::clipboard()->setText(ui->labelCoinControlPriority->text());
+    GUIUtil::setClipboard(ui->labelCoinControlPriority->text());
 }
 
 // copy label "Low output" to clipboard
 void CoinControlDialog::clipboardLowOutput()
 {
-    QApplication::clipboard()->setText(ui->labelCoinControlLowOutput->text());
+    GUIUtil::setClipboard(ui->labelCoinControlLowOutput->text());
 }
 
 // copy label "Change" to clipboard
 void CoinControlDialog::clipboardChange()
 {
-    QApplication::clipboard()->setText(ui->labelCoinControlChange->text().left(ui->labelCoinControlChange->text().indexOf(" ")));
+    GUIUtil::setClipboard(ui->labelCoinControlChange->text().left(ui->labelCoinControlChange->text().indexOf(" ")));
 }
 
 // treeview: sort
