@@ -75,12 +75,6 @@ public slots:
     void usedSendingAddresses();
     /** Show used receiving addresses */
     void usedReceivingAddresses();
-
-    /** Set the encryption status as shown in the UI.
-     @param[in] status            current encryption status
-     @see WalletModel::EncryptionStatus
-     */
-    void setEncryptionStatus();
 };
 
 #endif // WALLETFRAME_H
