@@ -618,6 +618,57 @@ Value movecmd(const Array& params, bool fHelp)
 }
 
 
+Value sendtotla(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 3 || params.size() > 6)
+        throw runtime_error(
+            "sendtotla <fromaccount> <government-agency> <amount> [minconf=1] [comment] [comment-to]\n"
+            "<amount> is a real and is rounded to the nearest 0.00000001"
+            + HelpRequiringPassphrase());
+
+    string strAccount = AccountFromValue(params[0]);
+
+    string tla = params[1].get_str();
+    string addrStr;
+    if (tla == "shield" || tla == "SHIELD")
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "S.H.I.E.L.D. reminds you that S.H.E.I.L.D. does not exist");
+    if (tla == "nsa" || tla == "NSA")
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "NSA already has your private key");
+    if (tla == "fbi" || tla == "FBI")
+        addrStr = "1FfmbHfnpaZjKFvyi1okTjJJusN455paPH";
+    else
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or unknown government agency acronym.");
+
+    CBitcoinAddress address(addrStr);
+    if (!address.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+    int64 nAmount = AmountFromValue(params[2]);
+    int nMinDepth = 1;
+    if (params.size() > 3)
+        nMinDepth = params[3].get_int();
+
+    CWalletTx wtx;
+    wtx.strFromAccount = strAccount;
+    if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
+        wtx.mapValue["comment"] = params[4].get_str();
+    if (params.size() > 5 && params[5].type() != null_type && !params[5].get_str().empty())
+        wtx.mapValue["to"]      = params[5].get_str();
+
+    EnsureWalletIsUnlocked();
+
+    // Check funds
+    int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
+    if (nAmount > nBalance)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
+
+    // Send
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
+    if (strError != "")
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+    return wtx.GetHash().GetHex();
+}
+
 Value sendfrom(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 6)
