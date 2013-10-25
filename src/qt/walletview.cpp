@@ -54,8 +54,8 @@ WalletView::WalletView(QWidget *parent):
     vbox->addLayout(hbox_buttons);
     transactionsPage->setLayout(vbox);
 
-    receiveCoinsPage = new ReceiveCoinsDialog(gui);
-    sendCoinsPage = new SendCoinsDialog(gui);
+    receiveCoinsPage = new ReceiveCoinsDialog();
+    sendCoinsPage = new SendCoinsDialog();
 
     addWidget(overviewPage);
     addWidget(transactionsPage);
