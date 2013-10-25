@@ -3,7 +3,6 @@
 
 #include "walletmodel.h"
 #include "bitcoinunits.h"
-#include "addressbookpage.h"
 #include "optionsmodel.h"
 #include "sendcoinsentry.h"
 #include "guiutil.h"
