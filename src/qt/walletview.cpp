@@ -79,9 +79,15 @@ WalletView::~WalletView()
 void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 {
     this->gui = gui;
-    if(gui)
+
+    if (gui)
     {
+        // Clicking on a transaction on the overview page sends you to the transactions tab
         connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), gui, SLOT(gotoHistoryPage()));
+
+        // Receive and report messages
+        connect(this, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
+        connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
     }
 }
 
@@ -185,15 +191,7 @@ void WalletView::gotoVerifyMessageTab(QString addr)
 
 bool WalletView::handlePaymentRequest(const SendCoinsRecipient& recipient)
 {
-    // URI has to be valid
-    if (sendCoinsPage->handlePaymentRequest(recipient))
-    {
-        gotoSendCoinsPage();
-        emit showNormalIfMinimized();
-        return true;
-    }
-    else
-        return false;
+    return sendCoinsPage->handlePaymentRequest(recipient);
 }
 
 void WalletView::showOutOfSyncWarning(bool fShow)
@@ -227,12 +225,12 @@ void WalletView::backupWallet()
     QString filename = QFileDialog::getSaveFileName(this, tr("Backup Wallet"), saveDir, tr("Wallet Data (*.dat)"));
     if (!filename.isEmpty()) {
         if (!walletModel->backupWallet(filename)) {
-            gui->message(tr("Backup Failed"), tr("There was an error trying to save the wallet data to the new location."),
-                      CClientUIInterface::MSG_ERROR);
+            emit message(tr("Backup Failed"), tr("There was an error trying to save the wallet data to the new location."),
+                CClientUIInterface::MSG_ERROR);
         }
         else
-            gui->message(tr("Backup Successful"), tr("The wallet data was successfully saved to the new location."),
-                      CClientUIInterface::MSG_INFORMATION);
+            emit message(tr("Backup Successful"), tr("The wallet data was successfully saved to the new location."),
+                CClientUIInterface::MSG_INFORMATION);
     }
 }
 
