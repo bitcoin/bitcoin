@@ -11,7 +11,9 @@ FORMS += \
     ../src/qt/forms/editaddressdialog.ui \
     ../src/qt/forms/askpassphrasedialog.ui \
     ../src/qt/forms/addressbookpage.ui \
-    ../src/qt/forms/aboutdialog.ui
+    ../src/qt/forms/aboutdialog.ui \
+    ../src/qt/forms/receivecoinsdialog.ui \
+    ../src/qt/forms/receiverequestdialog.ui
 
 RESOURCES += \
     ../src/qt/bitcoin.qrc

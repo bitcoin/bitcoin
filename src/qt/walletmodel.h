@@ -21,11 +21,14 @@ QT_END_NAMESPACE
 class SendCoinsRecipient
 {
 public:
-    SendCoinsRecipient() : amount(0) { }
+    explicit SendCoinsRecipient() : amount(0) { }
+    explicit SendCoinsRecipient(const QString &addr, const QString &label, quint64 amount, const QString &message):
+        address(addr), label(label), amount(amount), message(message) {}
 
     QString address;
     QString label;
     qint64 amount;
+    QString message;
 
     // If from a payment request, paymentRequest.IsInitialized() will be true
     PaymentRequestPlus paymentRequest;
