@@ -20,7 +20,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabSignMessage">
       <attribute name="title">
@@ -58,7 +58,7 @@
          <item>
           <widget class="QPushButton" name="addressBookButton_SM">
            <property name="toolTip">
-            <string>Choose an address from the address book</string>
+            <string>Choose previously used address</string>
            </property>
            <property name="text">
             <string/>
@@ -271,7 +271,7 @@
          <item>
           <widget class="QPushButton" name="addressBookButton_VM">
            <property name="toolTip">
-            <string>Choose an address from the address book</string>
+            <string>Choose previously used address</string>
            </property>
            <property name="text">
             <string/>

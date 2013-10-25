@@ -112,6 +112,11 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
             rv.label = i->second;
             fShouldReturnFalse = false;
         }
+        if (i->first == "message")
+        {
+            rv.message = i->second;
+            fShouldReturnFalse = false;
+        }
         else if (i->first == "amount")
         {
             if(!i->second.isEmpty())
@@ -146,6 +151,34 @@ bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
     }
     QUrl uriInstance(uri);
     return parseBitcoinURI(uriInstance, out);
+}
+
+QString formatBitcoinURI(const SendCoinsRecipient &info)
+{
+    QString ret = QString("bitcoin:%1").arg(info.address);
+    int paramCount = 0;
+
+    if (info.amount)
+    {
+        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, info.amount));
+        paramCount++;
+    }
+
+    if (!info.label.isEmpty())
+    {
+        QString lbl(QUrl::toPercentEncoding(info.label));
+        ret += QString("%1label=%2").arg(paramCount == 0 ? "?" : "&").arg(lbl);
+        paramCount++;
+    }
+
+    if (!info.message.isEmpty())
+    {
+        QString msg(QUrl::toPercentEncoding(info.message));;
+        ret += QString("%1message=%2").arg(paramCount == 0 ? "?" : "&").arg(msg);
+        paramCount++;
+    }
+
+    return ret;
 }
 
 bool isDust(const QString& address, qint64 amount)
