@@ -331,8 +331,6 @@ int main(int argc, char *argv[])
                                  &window, SLOT(handlePaymentRequest(SendCoinsRecipient)));
                 QObject::connect(&walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
                                  paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
-                QObject::connect(paymentServer, SIGNAL(receivedPaymentACK(QString)),
-                                 &window, SLOT(showPaymentACK(QString)));
                 QObject::connect(paymentServer, SIGNAL(message(QString,QString,unsigned int)),
                                  guiref, SLOT(message(QString,QString,unsigned int)));
                 QTimer::singleShot(100, paymentServer, SLOT(uiReady()));

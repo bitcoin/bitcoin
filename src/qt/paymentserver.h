@@ -88,7 +88,7 @@ signals:
     void receivedPaymentRequest(SendCoinsRecipient);
 
     // Fired when a valid PaymentACK is received
-    void receivedPaymentACK(QString);
+    void receivedPaymentACK(const QString &paymentACKMsg);
 
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
@@ -105,6 +105,7 @@ private slots:
     void handleURIConnection();
     void netRequestFinished(QNetworkReply*);
     void reportSslErrors(QNetworkReply*, const QList<QSslError> &);
+    void handlePaymentACK(const QString& paymentACKMsg);
 
 private:
     static bool readPaymentRequest(const QString& filename, PaymentRequestPlus& request);
