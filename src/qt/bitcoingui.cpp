@@ -752,9 +752,17 @@ bool BitcoinGUI::eventFilter(QObject *object, QEvent *event)
     return QMainWindow::eventFilter(object, event);
 }
 
-void BitcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
+bool BitcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
 {
-    walletFrame->handlePaymentRequest(recipient);
+    // URI has to be valid
+    if (walletFrame->handlePaymentRequest(recipient))
+    {
+        showNormalIfMinimized();
+        gotoSendCoinsPage();
+        return true;
+    }
+    else
+        return false;
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)
