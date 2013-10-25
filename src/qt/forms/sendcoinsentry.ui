@@ -87,7 +87,7 @@
       <item>
        <widget class="QToolButton" name="addressBookButton">
         <property name="toolTip">
-         <string>Choose address from address book</string>
+         <string>Choose previously used address</string>
         </property>
         <property name="text">
          <string/>
@@ -137,7 +137,7 @@
     <item row="4" column="1">
      <widget class="QValidatedLineEdit" name="addAsLabel">
       <property name="toolTip">
-       <string>Enter a label for this address to add it to your address book</string>
+       <string>Enter a label for this address to add it to the list of used addresses</string>
       </property>
      </widget>
     </item>
@@ -674,7 +674,6 @@
    <class>BitcoinAmountField</class>
    <extends>QLineEdit</extends>
    <header>bitcoinamountfield.h</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>QValidatedLineEdit</class>
