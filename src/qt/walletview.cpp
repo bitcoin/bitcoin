@@ -87,7 +87,6 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 
         // Receive and report messages
         connect(this, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
-        connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
     }
 }
 
