@@ -223,10 +223,9 @@ void copyEntryData(QAbstractItemView *view, int column, int role)
     }
 }
 
-QString getSaveFileName(QWidget *parent, const QString &caption,
-                                 const QString &dir,
-                                 const QString &filter,
-                                 QString *selectedSuffixOut)
+QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
+    const QString &filter,
+    QString *selectedSuffixOut)
 {
     QString selectedFilter;
     QString myDir;
@@ -242,7 +241,8 @@ QString getSaveFileName(QWidget *parent, const QString &caption,
     {
         myDir = dir;
     }
-    QString result = QFileDialog::getSaveFileName(parent, caption, myDir, filter, &selectedFilter);
+    /* Directly convert path to native OS path separators */
+    QString result = QDir::toNativeSeparators(QFileDialog::getSaveFileName(parent, caption, myDir, filter, &selectedFilter));
 
     /* Extract first suffix from filter pattern "Description (*.foo)" or "Description (*.foo *.bar ...) */
     QRegExp filter_re(".* \\(\\*\\.(.*)[ \\)]");
