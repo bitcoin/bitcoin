@@ -1750,25 +1750,36 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
         const CTransaction &tx = block.vtx[i];
         uint256 hash = tx.GetHash();
 
-        // check that all outputs are available
-        if (!view.HaveCoins(hash)) {
-            fClean = fClean && error("DisconnectBlock() : outputs still spent? database corrupted");
-            view.SetCoins(hash, CCoins());
+        // Remember that if every output of a transaction is unspendable the
+        // correct state for the UTXO set to be in is always to not have the
+        // transaction indexed at all.
+        bool all_txouts_unspendable = true;
+        BOOST_FOREACH(const CTxOut &txout, tx.vout) {
+            if (!txout.scriptPubKey.IsUnspendable()){
+                all_txouts_unspendable = false;
+                break;
+            }
         }
-        CCoins &outs = view.GetCoins(hash);
-        outs.ClearUnspendable();
+        if (!all_txouts_unspendable) {
+            if (!view.HaveCoins(hash)) {
+                fClean = fClean && error("DisconnectBlock() : outputs still spent? database corrupted");
+                view.SetCoins(hash, CCoins());
+            }
+            CCoins &outs = view.GetCoins(hash);
+            outs.ClearUnspendable();
 
-        CCoins outsBlock = CCoins(tx, pindex->nHeight);
-        // The CCoins serialization does not serialize negative numbers.
-        // No network rules currently depend on the version here, so an inconsistency is harmless
-        // but it must be corrected before txout nversion ever influences a network rule.
-        if (outsBlock.nVersion < 0)
-            outs.nVersion = outsBlock.nVersion;
-        if (outs != outsBlock)
-            fClean = fClean && error("DisconnectBlock() : added transaction mismatch? database corrupted");
+            CCoins outsBlock = CCoins(tx, pindex->nHeight);
+            // The CCoins serialization does not serialize negative numbers.
+            // No network rules currently depend on the version here, so an inconsistency is harmless
+            // but it must be corrected before txout nversion ever influences a network rule.
+            if (outsBlock.nVersion < 0)
+                outs.nVersion = outsBlock.nVersion;
+            if (outs != outsBlock)
+                fClean = fClean && error("DisconnectBlock() : added transaction mismatch? database corrupted");
 
-        // remove outputs
-        outs = CCoins();
+            // remove outputs
+            outs = CCoins();
+        }
 
         // restore inputs
         if (i > 0) { // not coinbases
