@@ -10,6 +10,7 @@
 #include "editaddressdialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
+#include "walletmodel.h"
 
 #include <QSortFilterProxyModel>
 #include <QClipboard>
@@ -97,14 +98,15 @@ AddressBookPage::~AddressBookPage()
     delete ui;
 }
 
-void AddressBookPage::setModel(AddressTableModel *model)
+void AddressBookPage::setModel(WalletModel *model)
 {
-    this->model = model;
-    if(!model)
+    if(!model && !model->getAddressTableModel())
         return;
 
+    this->model = model->getAddressTableModel();
+
     proxyModel = new QSortFilterProxyModel(this);
-    proxyModel->setSourceModel(model);
+    proxyModel->setSourceModel(this->model);
     proxyModel->setDynamicSortFilter(true);
     proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -138,6 +140,8 @@ void AddressBookPage::setModel(AddressTableModel *model)
 
     // Select row for newly created address
     connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewAddress(QModelIndex,int,int)));
+    // Receive and report messages (WalletModel is only used for passing through message())
+    connect(this, SIGNAL(message(QString,QString,unsigned int)), model, SIGNAL(message(QString,QString,unsigned int)));	
 
     selectionChanged();
 }
