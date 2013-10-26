@@ -56,7 +56,7 @@ WalletView::WalletView(QWidget *parent):
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
 
-    // Clicking on a transaction on the overview page simply sends you to transaction history page
+    // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
 
     // Double-clicking on a transaction on the transaction history page shows details
@@ -77,7 +77,7 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 {
     if (gui)
     {
-        // Clicking on a transaction on the overview page sends you to the transactions tab
+        // Clicking on a transaction on the overview page simply sends you to transaction history page
         connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), gui, SLOT(gotoHistoryPage()));
 
         // Receive and report messages
