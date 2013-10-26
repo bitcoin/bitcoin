@@ -6,15 +6,14 @@
 #include "ui_addressbookpage.h"
 
 #include "addresstablemodel.h"
-#include "bitcoingui.h"
 #include "editaddressdialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
 #include "walletmodel.h"
+#include "ui_interface.h"
 
 #include <QSortFilterProxyModel>
 #include <QClipboard>
-#include <QMessageBox>
 #include <QMenu>
 
 AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
@@ -140,8 +139,8 @@ void AddressBookPage::setModel(WalletModel *model)
 
     // Select row for newly created address
     connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewAddress(QModelIndex,int,int)));
-    // Receive and report messages (WalletModel is only used for passing through message())
-    connect(this, SIGNAL(message(QString,QString,unsigned int)), model, SIGNAL(message(QString,QString,unsigned int)));	
+    // Receive and forward messages (WalletModel is used for passing through message())
+    connect(this, SIGNAL(message(QString,QString,unsigned int)), model, SIGNAL(message(QString,QString,unsigned int)));
 
     selectionChanged();
 }
@@ -263,12 +262,12 @@ void AddressBookPage::done(int retval)
 void AddressBookPage::on_exportButton_clicked()
 {
     // CSV is currently the only supported format
-    QString filename = GUIUtil::getSaveFileName(
-            this,
-            tr("Export Address List"), QString(),
-            tr("Comma separated file (*.csv)"));
+    QString filename = GUIUtil::getSaveFileName(this,
+        tr("Export Address List"), QString(),
+        tr("Comma separated file (*.csv)"));
 
-    if (filename.isNull()) return;
+    if (filename.isNull())
+        return;
 
     CSVModelWriter writer(filename);
 
@@ -277,10 +276,13 @@ void AddressBookPage::on_exportButton_clicked()
     writer.addColumn("Label", AddressTableModel::Label, Qt::EditRole);
     writer.addColumn("Address", AddressTableModel::Address, Qt::EditRole);
 
-    if(!writer.write())
-    {
-        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
-                              QMessageBox::Abort, QMessageBox::Abort);
+    if(!writer.write()) {
+        emit message(tr("Exporting Failed"), tr("There was an error trying to save the address list to %1.").arg(filename),
+            CClientUIInterface::MSG_ERROR);
+    }
+    else {
+        emit message(tr("Exporting Successful"), tr("The address list was successfully saved to %1.").arg(filename),
+            CClientUIInterface::MSG_INFORMATION);
     }
 }
 
