@@ -11,6 +11,7 @@
 #include "editaddressdialog.h"
 #include "optionsmodel.h"
 #include "guiutil.h"
+#include "ui_interface.h"
 
 #include <QScrollBar>
 #include <QComboBox>
@@ -20,7 +21,6 @@
 #include <QLineEdit>
 #include <QTableView>
 #include <QHeaderView>
-#include <QMessageBox>
 #include <QPoint>
 #include <QMenu>
 #include <QLabel>
@@ -266,12 +266,12 @@ void TransactionView::changedAmount(const QString &amount)
 void TransactionView::exportClicked()
 {
     // CSV is currently the only supported format
-    QString filename = GUIUtil::getSaveFileName(
-            this,
-            tr("Export Transaction Data"), QString(),
-            tr("Comma separated file (*.csv)"));
+    QString filename = GUIUtil::getSaveFileName(this,
+        tr("Export Transaction History"), QString(),
+        tr("Comma separated file (*.csv)"));
 
-    if (filename.isNull()) return;
+    if (filename.isNull())
+        return;
 
     CSVModelWriter writer(filename);
 
@@ -285,10 +285,13 @@ void TransactionView::exportClicked()
     writer.addColumn(tr("Amount"), 0, TransactionTableModel::FormattedAmountRole);
     writer.addColumn(tr("ID"), 0, TransactionTableModel::TxIDRole);
 
-    if(!writer.write())
-    {
-        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
-                              QMessageBox::Abort, QMessageBox::Abort);
+    if(!writer.write()) {
+        emit message(tr("Exporting Failed"), tr("There was an error trying to save the transaction history to %1.").arg(filename),
+            CClientUIInterface::MSG_ERROR);
+    }
+    else {
+        emit message(tr("Exporting Successful"), tr("The transaction history was successfully saved to %1.").arg(filename),
+            CClientUIInterface::MSG_INFORMATION);
     }
 }
 
