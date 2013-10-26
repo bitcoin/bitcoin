@@ -87,7 +87,6 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 
         // Receive and report messages
         connect(this, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
-        connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
     }
 }
 
@@ -105,9 +104,6 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     this->walletModel = walletModel;
     if (walletModel && gui)
     {
-        // Receive and report messages from wallet thread
-        connect(walletModel, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
-
         // Put transaction list in tabs
         transactionView->setModel(walletModel);
         overviewPage->setWalletModel(walletModel);
