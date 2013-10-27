@@ -171,7 +171,7 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
         if (recipient.authenticatedMerchant.isEmpty()) // insecure
         {
             ui->payTo_is->setText(recipient.address);
-            ui->memoTextLabel_is->setText(recipient.label);
+            ui->memoTextLabel_is->setText(recipient.message);
             ui->payAmount_is->setValue(recipient.amount);
             ui->payAmount_is->setReadOnly(true);
             setCurrentWidget(ui->SendCoins_InsecurePaymentRequest);
@@ -179,7 +179,7 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
         else // secure
         {
             ui->payTo_s->setText(recipient.authenticatedMerchant);
-            ui->memoTextLabel_s->setText(recipient.label);
+            ui->memoTextLabel_s->setText(recipient.message);
             ui->payAmount_s->setValue(recipient.amount);
             ui->payAmount_s->setReadOnly(true);
             setCurrentWidget(ui->SendCoins_SecurePaymentRequest);
