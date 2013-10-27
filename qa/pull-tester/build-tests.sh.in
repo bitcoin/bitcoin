@@ -32,10 +32,7 @@ cd @abs_top_srcdir@
 make distdir
 mv $DISTDIR linux-build
 cd linux-build
-# TODO: re-enable blockchain tester tool, as of 11 Oct 2013 is it not working properly
-# on the pull-tester machine.
-#./configure --disable-silent-rules --disable-ccache --with-comparison-tool="$JAVA_COMPARISON_TOOL"
-./configure --disable-silent-rules --disable-ccache
+./configure --disable-silent-rules --disable-ccache --with-comparison-tool="$JAVA_COMPARISON_TOOL"
 make -j$JOBS
 
 # link interesting binaries to parent out/ directory, if it exists. Do this before
