@@ -10,9 +10,6 @@
     <height>597</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>Request coins</string>
-  </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
     <widget class="QRImageWidget" name="lblQRCode">
