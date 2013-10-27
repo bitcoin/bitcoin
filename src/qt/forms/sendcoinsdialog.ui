@@ -84,7 +84,7 @@
         </sizepolicy>
        </property>
        <property name="toolTip">
-        <string>Remove all transaction fields</string>
+        <string>Clear all fields of the form.</string>
        </property>
        <property name="text">
         <string>Clear &amp;All</string>
