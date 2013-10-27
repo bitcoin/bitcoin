@@ -450,7 +450,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, QList<Sen
     recipients.append(SendCoinsRecipient());
 
     recipients[0].paymentRequest = request;
-    recipients[0].label = GUIUtil::HtmlEscape(request.getDetails().memo()); // Todo: Change to .message once available
+    recipients[0].message = GUIUtil::HtmlEscape(request.getDetails().memo());
 
     request.getMerchant(PaymentServer::certStore, recipients[0].authenticatedMerchant);
 
