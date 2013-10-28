@@ -9,8 +9,9 @@ set -o xtrace
 
 MINGWPREFIX=$1
 JAVA_COMPARISON_TOOL=$2
-JOBS=${3-1}
-OUT_DIR=${4-}
+RUN_LARGE_REORGS=$3
+JOBS=${4-1}
+OUT_DIR=${5-}
 
 if [ $# -lt 2 ]; then
   echo "Usage: $0 [mingw-prefix] [java-comparison-tool] <make jobs> <save output dir>"
@@ -32,10 +33,11 @@ cd @abs_top_srcdir@
 make distdir
 mv $DISTDIR linux-build
 cd linux-build
-# TODO: re-enable blockchain tester tool, as of 11 Oct 2013 is it not working properly
-# on the pull-tester machine.
-#./configure --disable-silent-rules --disable-ccache --with-comparison-tool="$JAVA_COMPARISON_TOOL"
-./configure --disable-silent-rules --disable-ccache
+if [ $RUN_LARGE_REORGS = 1 ]; then
+  ./configure --disable-silent-rules --disable-ccache --with-comparison-tool="$JAVA_COMPARISON_TOOL" --enable-comparison-tool-reorg-tests
+else
+  ./configure --disable-silent-rules --disable-ccache --with-comparison-tool="$JAVA_COMPARISON_TOOL"
+fi
 make -j$JOBS
 
 # link interesting binaries to parent out/ directory, if it exists. Do this before
