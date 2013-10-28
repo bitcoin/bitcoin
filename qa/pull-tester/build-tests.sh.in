@@ -28,7 +28,11 @@ rsync -av $DISTDIR/ win32-build/
 rm -r $DISTDIR
 cd win32-build
 
-./configure --disable-silent-rules --disable-ccache --prefix=$MINGWPREFIX --host=i586-mingw32msvc --with-qt-bindir=$MINGWPREFIX/host/bin --with-qt-plugindir=$MINGWPREFIX/plugins --with-qt-incdir=$MINGWPREFIX/include --with-boost=$MINGWPREFIX --with-protoc-bindir=$MINGWPREFIX/host/bin CPPFLAGS=-I$MINGWPREFIX/include LDFLAGS=-L$MINGWPREFIX/lib
+if [ $RUN_EXPENSIVE_TESTS = 1 ]; then
+  ./configure --disable-silent-rules --disable-ccache --prefix=$MINGWPREFIX --host=i586-mingw32msvc --with-qt-bindir=$MINGWPREFIX/host/bin --with-qt-plugindir=$MINGWPREFIX/plugins --with-qt-incdir=$MINGWPREFIX/include --with-boost=$MINGWPREFIX --with-protoc-bindir=$MINGWPREFIX/host/bin CPPFLAGS=-I$MINGWPREFIX/include LDFLAGS=-L$MINGWPREFIX/lib --with-comparison-tool="$JAVA_COMPARISON_TOOL" --enable-comparison-tool-reorg-tests
+else
+  ./configure --disable-silent-rules --disable-ccache --prefix=$MINGWPREFIX --host=i586-mingw32msvc --with-qt-bindir=$MINGWPREFIX/host/bin --with-qt-plugindir=$MINGWPREFIX/plugins --with-qt-incdir=$MINGWPREFIX/include --with-boost=$MINGWPREFIX --with-protoc-bindir=$MINGWPREFIX/host/bin CPPFLAGS=-I$MINGWPREFIX/include LDFLAGS=-L$MINGWPREFIX/lib
+fi
 make -j$JOBS
 
 # And compile for Linux:
@@ -63,6 +67,12 @@ fi
 # Run unit tests and blockchain-tester on Linux:
 cd @abs_top_srcdir@/linux-build
 make check
+
+if [ $RUN_EXPENSIVE_TESTS = 1 ]; then
+  # Run unit tests and blockchain-tester on Windows:
+  cd @abs_top_srcdir@/win32-build
+  make check
+fi
 
 # Clean up builds (pull-tester machine doesn't have infinite disk space)
 cd @abs_top_srcdir@/linux-build
