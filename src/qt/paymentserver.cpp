@@ -375,6 +375,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
                 fetchRequest(fetchUrl);
             else
                 qDebug() << "PaymentServer::handleURIOrFile : Invalid URL: " << fetchUrl;
+
             return;
         }
 
@@ -385,18 +386,17 @@ void PaymentServer::handleURIOrFile(const QString& s)
             emit message(tr("URI handling"),
                 tr("URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters."),
                 CClientUIInterface::ICON_WARNING);
+
         return;
     }
 
     if (QFile::exists(s))
     {
         PaymentRequestPlus request;
-        QList<SendCoinsRecipient> recipients;
-        if (readPaymentRequest(s, request) && processPaymentRequest(request, recipients)) {
-            foreach (const SendCoinsRecipient& recipient, recipients){
-                emit receivedPaymentRequest(recipient);
-            }
-        }
+        SendCoinsRecipient recipient;
+        if (readPaymentRequest(s, request) && processPaymentRequest(request, recipient))
+            emit receivedPaymentRequest(recipient);
+
         return;
     }
 }
@@ -442,17 +442,15 @@ bool PaymentServer::readPaymentRequest(const QString& filename, PaymentRequestPl
     return request.parse(data);
 }
 
-bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, QList<SendCoinsRecipient>& recipients)
+bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoinsRecipient& recipient)
 {
     if (!optionsModel)
         return false;
 
-    recipients.append(SendCoinsRecipient());
+    recipient.paymentRequest = request;
+    recipient.message = GUIUtil::HtmlEscape(request.getDetails().memo());
 
-    recipients[0].paymentRequest = request;
-    recipients[0].message = GUIUtil::HtmlEscape(request.getDetails().memo());
-
-    request.getMerchant(PaymentServer::certStore, recipients[0].authenticatedMerchant);
+    request.getMerchant(PaymentServer::certStore, recipient.authenticatedMerchant);
 
     QList<std::pair<CScript, qint64> > sendingTos = request.getPayTo();
 
@@ -462,11 +460,11 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, QList<Sen
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest)) {
             // Append destination address (for payment requests .address is used ONLY for GUI display)
-            recipients[0].address.append(QString::fromStdString(CBitcoinAddress(dest).ToString()));
+            recipient.address.append(QString::fromStdString(CBitcoinAddress(dest).ToString()));
             if (i < sendingTos.size() - 1) // prevent new-line for last entry
-                recipients[0].address.append("<br />");
+                recipient.address.append("<br />");
         }
-        else if (!recipients[0].authenticatedMerchant.isEmpty()){
+        else if (!recipient.authenticatedMerchant.isEmpty()){
             // Insecure payments to custom bitcoin addresses are not supported
             // (there is no good way to tell the user where they are paying in a way
             // they'd have a chance of understanding).
@@ -487,7 +485,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, QList<Sen
             return false;
         }
 
-        recipients[0].amount += sendingTo.second;
+        recipient.amount += sendingTo.second;
         i++;
     }
     // Store addresses and format them to fit nicely into the GUI
@@ -588,12 +586,9 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
     if (requestType == "PaymentRequest")
     {
         PaymentRequestPlus request;
-        QList<SendCoinsRecipient> recipients;
-        if (request.parse(data) && processPaymentRequest(request, recipients)) {
-            foreach (const SendCoinsRecipient& recipient, recipients) {
-                emit receivedPaymentRequest(recipient);
-            }
-        }
+        SendCoinsRecipient recipient;
+        if (request.parse(data) && processPaymentRequest(request, recipient))
+            emit receivedPaymentRequest(recipient);
         else
             qDebug() << "PaymentServer::netRequestFinished : Error processing payment request";
 
