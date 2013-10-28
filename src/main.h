@@ -67,6 +67,16 @@ static const int fHaveUPnP = true;
 static const int fHaveUPnP = false;
 #endif
 
+/** "reject" message codes **/
+static const unsigned char REJECT_MALFORMED = 0x01;
+static const unsigned char REJECT_INVALID = 0x10;
+static const unsigned char REJECT_OBSOLETE = 0x11;
+static const unsigned char REJECT_DUPLICATE = 0x12;
+static const unsigned char REJECT_NONSTANDARD = 0x40;
+static const unsigned char REJECT_DUST = 0x41;
+static const unsigned char REJECT_INSUFFICIENTFEE = 0x42;
+static const unsigned char REJECT_CHECKPOINT = 0x43;
+
 
 extern CScript COINBASE_FLAGS;
 
@@ -926,19 +936,26 @@ private:
         MODE_ERROR,   // run-time error
     } mode;
     int nDoS;
+    std::string strRejectReason;
+    unsigned char chRejectCode;
     bool corruptionPossible;
 public:
     CValidationState() : mode(MODE_VALID), nDoS(0) {}
-    bool DoS(int level, bool ret = false, bool corruptionIn = false) {
+    bool DoS(int level, bool ret = false,
+             unsigned char chRejectCodeIn=0, std::string strRejectReasonIn="",
+             bool corruptionIn=false) {
+        chRejectCode = chRejectCodeIn;
+        strRejectReason = strRejectReasonIn;
+        corruptionPossible = corruptionIn;
         if (mode == MODE_ERROR)
             return ret;
         nDoS += level;
         mode = MODE_INVALID;
-        corruptionPossible = corruptionIn;
         return ret;
     }
-    bool Invalid(bool ret = false) {
-        return DoS(0, ret);
+    bool Invalid(bool ret = false,
+                 unsigned char _chRejectCode=0, std::string _strRejectReason="") {
+        return DoS(0, ret, _chRejectCode, _strRejectReason);
     }
     bool Error() {
         mode = MODE_ERROR;
@@ -967,6 +984,8 @@ public:
     bool CorruptionPossible() {
         return corruptionPossible;
     }
+    unsigned char GetRejectCode() const { return chRejectCode; }
+    std::string GetRejectReason() const { return strRejectReason; }
 };
 
 /** An in-memory indexed chain of blocks. */
