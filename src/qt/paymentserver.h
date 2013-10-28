@@ -109,7 +109,7 @@ private slots:
 
 private:
     static bool readPaymentRequest(const QString& filename, PaymentRequestPlus& request);
-    bool processPaymentRequest(PaymentRequestPlus& request, QList<SendCoinsRecipient>& recipients);
+    bool processPaymentRequest(PaymentRequestPlus& request, SendCoinsRecipient& recipient);
     void handleURIOrFile(const QString& s);
     void fetchRequest(const QUrl& url);
 
