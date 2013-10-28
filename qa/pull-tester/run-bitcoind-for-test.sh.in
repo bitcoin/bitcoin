@@ -5,7 +5,8 @@ mkdir -p "$DATADIR"/regtest
 touch "$DATADIR/regtest/debug.log"
 tail -q -n 1 -F "$DATADIR/regtest/debug.log" | grep -m 1 -q "Done loading" &
 WAITER=$!
-"@abs_top_builddir@/src/bitcoind@EXEEXT@" -connect=0.0.0.0 -datadir="$DATADIR" -rpcuser=user -rpcpassword=pass -listen -keypool=3 -debug -debug=net -logtimestamps -port=18444 -regtest &
+PORT=`expr $BASHPID + 10000`
+"@abs_top_builddir@/src/bitcoind@EXEEXT@" -connect=0.0.0.0 -datadir="$DATADIR" -rpcuser=user -rpcpassword=pass -listen -keypool=3 -debug -debug=net -logtimestamps -port=$PORT -regtest &
 BITCOIND=$!
 
 #Install a watchdog.
@@ -13,10 +14,10 @@ BITCOIND=$!
 wait $WAITER
 
 if [ -n "$TIMEOUT" ]; then
-  timeout "$TIMEOUT"s "$@"
+  timeout "$TIMEOUT"s "$@" $PORT
   RETURN=$?
 else
-  "$@"
+  "$@" $PORT
   RETURN=$?
 fi
 
