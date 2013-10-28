@@ -67,7 +67,12 @@ Contact BlueMatt on freenode if something looks broken."""
                                   auth=(os.environ['GITHUB_USER'], os.environ["GITHUB_AUTH_TOKEN"]))
 
     if success == True:
-        post_data = { "body" : "Automatic sanity-testing: PASSED, see " + linkUrl + " for binaries and test log." + common_message}
+        if needTests:
+            message = "Automatic sanity-testing: PLEASE ADD TEST-CASES, though technically passed. See " + linkUrl + " for binaries and test log."
+        else:
+            message = "Automatic sanity-testing: PASSED, see " + linkUrl + " for binaries and test log."
+
+        post_data = { "body" : message + common_message}
     elif inMerge:
         post_data = { "body" : "Automatic sanity-testing: FAILED MERGE, see " + linkUrl + " for test log." + """
 
@@ -113,7 +118,7 @@ def testpull(number, comment_url, clone_url, commit):
     run("chown -R ${BUILD_USER}:${BUILD_GROUP} ${CHROOT_COPY}/${OUT_DIR}", fail_hard=False)
 
     script = os.environ["BUILD_PATH"]+"/qa/pull-tester/pull-tester.sh"
-    script += " ${BUILD_PATH} ${MINGW_DEPS_DIR} ${SCRIPTS_DIR}/BitcoindComparisonTool.jar 6 ${OUT_DIR}"
+    script += " ${BUILD_PATH} ${MINGW_DEPS_DIR} ${SCRIPTS_DIR}/BitcoindComparisonTool_jar/BitcoindComparisonTool.jar 0 6 ${OUT_DIR}"
     returncode = run("chroot ${CHROOT_COPY} sudo -u ${BUILD_USER} -H timeout ${TEST_TIMEOUT} "+script,
                      fail_hard=False, stdout=out, stderr=out)
 
