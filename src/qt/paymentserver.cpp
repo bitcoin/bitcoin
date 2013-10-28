@@ -182,6 +182,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
 bool PaymentServer::ipcSendCommandLine(int argc, char* argv[])
 {
     bool fResult = false;
+    bool fNetworkDetected = false;
 
     for (int i = 1; i < argc; i++)
     {
@@ -200,9 +201,9 @@ bool PaymentServer::ipcSendCommandLine(int argc, char* argv[])
 
                 SelectParams(CChainParams::MAIN);
                 if (!address.IsValid())
-                {
                     SelectParams(CChainParams::TESTNET);
-                }
+
+                fNetworkDetected = true;
             }
         }
         else if (QFile::exists(arg)) // Filename
@@ -216,6 +217,8 @@ bool PaymentServer::ipcSendCommandLine(int argc, char* argv[])
                     SelectParams(CChainParams::MAIN);
                 else
                     SelectParams(CChainParams::TESTNET);
+
+                fNetworkDetected = true;
             }
         }
         else
@@ -226,12 +229,30 @@ bool PaymentServer::ipcSendCommandLine(int argc, char* argv[])
         }
     }
 
+    // Network detection can fail if URI parsing
+    // fails or payment request couldn't be read.
+    if (!fNetworkDetected && savedPaymentRequests.size() > 0)
+        SelectParams(CChainParams::MAIN);
+
     foreach (const QString& r, savedPaymentRequests)
     {
         QLocalSocket* socket = new QLocalSocket();
+
         socket->connectToServer(ipcServerName(), QIODevice::WriteOnly);
+        // If connect fails...
         if (!socket->waitForConnected(BITCOIN_IPC_CONNECT_TIMEOUT))
+        {
+            // ...and we had no autodetected network...
+            if (!fNetworkDetected)
+            {
+                // ...try testnet.
+                SelectParams(CChainParams::TESTNET);
+                socket->connectToServer(ipcServerName(), QIODevice::WriteOnly);
+                if (!socket->waitForConnected(BITCOIN_IPC_CONNECT_TIMEOUT))
+                    return false;
+            }
             return false;
+        }
 
         QByteArray block;
         QDataStream out(&block, QIODevice::WriteOnly);
