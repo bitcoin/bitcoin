@@ -69,9 +69,14 @@ AC_ARG_ENABLE(tests,
     [use_tests=yes])
 
 AC_ARG_WITH([comparison-tool],
-    AS_HELP_STRING([with-comparison-tool],[path to java comparison tool (requires --enable-tests)]),
+    AS_HELP_STRING([--with-comparison-tool],[path to java comparison tool (requires --enable-tests)]),
     [use_comparison_tool=$withval],
     [use_comparison_tool=no])
+
+AC_ARG_ENABLE([comparison-tool-reorg-tests],
+    AS_HELP_STRING([--enable-comparison-tool-reorg-tests],[enable expensive reorg tests in the comparison tool (default no)]),
+    [use_comparison_tool_reorg_tests=$enableval],
+    [use_comparison_tool_reorg_tests=no])
 
 AC_ARG_WITH([qrencode],
   [AS_HELP_STRING([--with-qrencode],
@@ -233,6 +238,15 @@ esac
 
 if test x$use_comparison_tool != xno; then
   AC_SUBST(JAVA_COMPARISON_TOOL, $use_comparison_tool)
+fi
+
+if test x$use_comparison_tool_reorg_tests != xno; then
+  if test x$use_comparison_tool == x; then
+    AC_MSG_ERROR("comparison tool reorg tests but comparison tool was not specified")
+  fi
+  AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 1)
+else
+  AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 0)
 fi
 
 if test x$use_lcov == xyes; then
@@ -678,6 +692,7 @@ AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov == xyes])
 AM_CONDITIONAL([USE_COMPARISON_TOOL],[test x$use_comparison_tool != xno])
+AM_CONDITIONAL([USE_COMPARISON_TOOL_REORG_TESTS],[test x$use_comparison_tool_reorg_test != xno])
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
 AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
