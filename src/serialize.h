@@ -1085,8 +1085,8 @@ public:
     }
 
     void GetAndClear(CSerializeData &data) {
-        vch.swap(data);
-        CSerializeData().swap(vch);
+        data.insert(data.end(), begin(), end());
+        clear();
     }
 };
 

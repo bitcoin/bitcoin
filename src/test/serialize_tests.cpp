@@ -42,4 +42,52 @@ BOOST_AUTO_TEST_CASE(varints)
 
 }
 
+BOOST_AUTO_TEST_CASE(insert_delete)
+{
+    // Test inserting/deleting bytes.
+    CDataStream ss(SER_DISK, 0);
+    BOOST_CHECK_EQUAL(ss.size(), 0);
+
+    ss.write("\x00\x01\x02\xff", 4);
+    BOOST_CHECK_EQUAL(ss.size(), 4);
+
+    char c = (char)11;
+
+    // Inserting at beginning/end/middle:
+    ss.insert(ss.begin(), c);
+    BOOST_CHECK_EQUAL(ss.size(), 5);
+    BOOST_CHECK_EQUAL(ss[0], c);
+    BOOST_CHECK_EQUAL(ss[1], 0);
+
+    ss.insert(ss.end(), c);
+    BOOST_CHECK_EQUAL(ss.size(), 6);
+    BOOST_CHECK_EQUAL(ss[4], (char)0xff);
+    BOOST_CHECK_EQUAL(ss[5], c);
+
+    ss.insert(ss.begin()+2, c);
+    BOOST_CHECK_EQUAL(ss.size(), 7);
+    BOOST_CHECK_EQUAL(ss[2], c);
+
+    // Delete at beginning/end/middle
+    ss.erase(ss.begin());
+    BOOST_CHECK_EQUAL(ss.size(), 6);
+    BOOST_CHECK_EQUAL(ss[0], 0);
+
+    ss.erase(ss.begin()+ss.size()-1);
+    BOOST_CHECK_EQUAL(ss.size(), 5);
+    BOOST_CHECK_EQUAL(ss[4], (char)0xff);
+
+    ss.erase(ss.begin()+1);
+    BOOST_CHECK_EQUAL(ss.size(), 4);
+    BOOST_CHECK_EQUAL(ss[0], 0);
+    BOOST_CHECK_EQUAL(ss[1], 1);
+    BOOST_CHECK_EQUAL(ss[2], 2);
+    BOOST_CHECK_EQUAL(ss[3], (char)0xff);
+
+    // Make sure GetAndClear does the right thing:
+    CSerializeData d;
+    ss.GetAndClear(d);
+    BOOST_CHECK_EQUAL(ss.size(), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
