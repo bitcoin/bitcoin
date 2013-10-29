@@ -67,8 +67,18 @@ Value importprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
-            "importprivkey <bitcoinprivkey> [label] [rescan=true]\n"
-            "Adds a private key (as returned by dumpprivkey) to your wallet.");
+            "importprivkey \"bitcoinprivkey\" ( \"label\" rescan )\n"
+            "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
+            "\nArguments:\n"
+            "1. \"bitcoinprivkey\"   (string, required) The private key (see dumpprivkey)\n"
+            "2. \"label\"            (string, optional) an optional label\n"
+            "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
+            "\nExamples:\n"
+            "> bitcoin-cli dumpprivkey \"myaddress\"\n"
+            "> bitcoin-cli importprivkey \"mykey\"\n"
+            "> bitcoin-cli importprivkey \"mykey\" \"testing\" false\n"
+            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"importprivkey\", \"params\": [ \"mykey\", \"testing\", false ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+        );
 
     string strSecret = params[0].get_str();
     string strLabel = "";
@@ -114,8 +124,15 @@ Value importwallet(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "importwallet <filename>\n"
-            "Imports keys from a wallet dump file (see dumpwallet).");
+            "importwallet \"filename\"\n"
+            "\nImports keys from a wallet dump file (see dumpwallet).\n"
+            "\nArguments:\n"
+            "1. \"filename\"    (string, required) The wallet file\n"
+            "\nExamples:\n"
+            "> bitcoin-cli dumpwallet \"test\"\n"
+            "> bitcoin-cli importwallet \"test\"\n"
+            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"importwallet\", \"params\": [ \"test\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+        );
 
     EnsureWalletIsUnlocked();
 
@@ -194,8 +211,18 @@ Value dumpprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "dumpprivkey <bitcoinaddress>\n"
-            "Reveals the private key corresponding to <bitcoinaddress>.");
+            "dumpprivkey \"bitcoinaddress\"\n"
+            "\nReveals the private key corresponding to 'bitcoinaddress'.\n"
+            "Then the importprivkey can be used with this output\n"
+            "\nArguments:\n"
+            "1. \"bitcoinaddress\"   (string, required) The bitcoin address for the private key\n"
+            "\nResult:\n"
+            "\"key\"                (string) The private key\n"
+            "\nExamples:\n"
+            "> bitcoin-cli dumpprivkey \"myaddress\"\n"
+            "> bitcoin-cli importprivkey \"mykey\"\n"
+            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"dumpprivkey\", \"params\": [ \"myaddress\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+        );
 
     EnsureWalletIsUnlocked();
 
@@ -217,8 +244,14 @@ Value dumpwallet(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "dumpwallet <filename>\n"
-            "Dumps all wallet keys in a human-readable format.");
+            "dumpwallet \"filename\"\n"
+            "\nDumps all wallet keys in a human-readable format.\n"
+            "\nArguments:\n"
+            "1. \"filename\"    (string, required) The filename\n"
+            "\nExamples:\n"
+            "> bitcoin-cli dumpwallet \"test\"\n"
+            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"dumpwallet\", \"params\": [ \"test\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+        );
 
     EnsureWalletIsUnlocked();
 
