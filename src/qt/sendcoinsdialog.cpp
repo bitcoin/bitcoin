@@ -1,13 +1,13 @@
 #include "sendcoinsdialog.h"
 #include "ui_sendcoinsdialog.h"
 
-#include "walletmodel.h"
 #include "bitcoinunits.h"
 #include "optionsmodel.h"
 #include "sendcoinsentry.h"
 #include "guiutil.h"
 #include "askpassphrasedialog.h"
 #include "base58.h"
+#include "ui_interface.h"
 
 #include <QMessageBox>
 #include <QTextDocument>
@@ -136,41 +136,9 @@ void SendCoinsDialog::on_sendButton_clicked()
     // prepare transaction for getting txFee earlier
     WalletModelTransaction currentTransaction(recipients);
     WalletModel::SendCoinsReturn prepareStatus = model->prepareTransaction(currentTransaction);
-
-    QString strSendCoins = tr("Send Coins");
-    switch(prepareStatus.status)
-    {
-    case WalletModel::InvalidAddress:
-        QMessageBox::warning(this, strSendCoins,
-            tr("The recipient address is not valid, please recheck."));
-        break;
-    case WalletModel::InvalidAmount:
-        QMessageBox::warning(this, strSendCoins,
-            tr("The amount to pay must be larger than 0."));
-        break;
-    case WalletModel::AmountExceedsBalance:
-        QMessageBox::warning(this, strSendCoins,
-            tr("The amount exceeds your balance."));
-        break;
-    case WalletModel::AmountWithFeeExceedsBalance:
-        QMessageBox::warning(this, strSendCoins,
-            tr("The total exceeds your balance when the %1 transaction fee is included.").
-            arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee())));
-        break;
-    case WalletModel::DuplicateAddress:
-        QMessageBox::warning(this, strSendCoins,
-            tr("Duplicate address found, can only send to each address once per send operation."));
-        break;
-    case WalletModel::TransactionCreationFailed:
-        QMessageBox::warning(this, strSendCoins,
-            tr("Error: Transaction creation failed!"));
-        break;
-    case WalletModel::TransactionCommitFailed:
-    case WalletModel::OK:
-    case WalletModel::Aborted: // User aborted, nothing to do
-    default:
-        break;
-    }
+    // process prepareStatus and on error generate message shown to user
+    processSendCoinsReturn(prepareStatus,
+        BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
 
     if(prepareStatus.status != WalletModel::OK) {
         fNewRecipientAllowed = true;
@@ -208,19 +176,13 @@ void SendCoinsDialog::on_sendButton_clicked()
     }
 
     // now send the prepared transaction
-    WalletModel::SendCoinsReturn sendstatus = model->sendCoins(currentTransaction);
-    switch(sendstatus.status)
+    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction);
+    // process sendStatus and on error generate message shown to user
+    processSendCoinsReturn(sendStatus);
+
+    if (sendStatus.status == WalletModel::OK)
     {
-    case WalletModel::TransactionCommitFailed:
-        QMessageBox::warning(this, strSendCoins,
-            tr("Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."));
-        break;
-    case WalletModel::OK:
         accept();
-        break;
-    case WalletModel::Aborted: // User aborted, nothing to do
-    default:
-        break;
     }
     fNewRecipientAllowed = true;
 }
@@ -356,16 +318,16 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
         const payments::PaymentDetails& details = rv.paymentRequest.getDetails();
         if (details.has_expires() && (int64)details.expires() < GetTime())
         {
-            QMessageBox::warning(this, strSendCoins,
-                tr("Payment request expired"));
+            emit message(strSendCoins, tr("Payment request expired"),
+                CClientUIInterface::MSG_WARNING);
             return false;
         }
     }
     else {
         CBitcoinAddress address(rv.address.toStdString());
         if (!address.IsValid()) {
-            QMessageBox::warning(this, strSendCoins,
-                tr("Invalid payment address %1").arg(rv.address));
+            emit message(strSendCoins, tr("Invalid payment address %1").arg(rv.address),
+                CClientUIInterface::MSG_WARNING);
             return false;
         }
     }
@@ -388,4 +350,48 @@ void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint
 void SendCoinsDialog::updateDisplayUnit()
 {
     setBalance(model->getBalance(), 0, 0);
+}
+
+void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
+{
+    QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
+    // Default to a warning message, override if error message is needed
+    msgParams.second = CClientUIInterface::MSG_WARNING;
+
+    // This comment is specific to SendCoinsDialog usage of WalletModel::SendCoinsReturn.
+    // WalletModel::TransactionCommitFailed is used only in WalletModel::sendCoins()
+    // all others are used only in WalletModel::prepareTransaction()
+    switch(sendCoinsReturn.status)
+    {
+    case WalletModel::InvalidAddress:
+        msgParams.first = tr("The recipient address is not valid, please recheck.");
+        break;
+    case WalletModel::InvalidAmount:
+        msgParams.first = tr("The amount to pay must be larger than 0.");
+        break;
+    case WalletModel::AmountExceedsBalance:
+        msgParams.first = tr("The amount exceeds your balance.");
+        break;
+    case WalletModel::AmountWithFeeExceedsBalance:
+        msgParams.first = tr("The total exceeds your balance when the %1 transaction fee is included.").arg(msgArg);
+        break;
+    case WalletModel::DuplicateAddress:
+        msgParams.first = tr("Duplicate address found, can only send to each address once per send operation.");
+        break;
+    case WalletModel::TransactionCreationFailed:
+        msgParams.first = tr("Transaction creation failed!");
+        msgParams.second = CClientUIInterface::MSG_ERROR;
+        break;
+    case WalletModel::TransactionCommitFailed:
+        msgParams.first = tr("The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+        msgParams.second = CClientUIInterface::MSG_ERROR;
+        break;
+    // OK and Aborted are included to prevent a compiler warning.
+    case WalletModel::OK:
+    case WalletModel::Aborted:
+    default:
+        return;
+    }
+
+    emit message(tr("Send Coins"), msgParams.first, msgParams.second);
 }
