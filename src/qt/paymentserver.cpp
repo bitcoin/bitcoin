@@ -453,16 +453,14 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
     request.getMerchant(PaymentServer::certStore, recipient.authenticatedMerchant);
 
     QList<std::pair<CScript, qint64> > sendingTos = request.getPayTo();
+    QStringList addresses;
 
-    int i = 0;
     foreach(const PAIRTYPE(CScript, qint64)& sendingTo, sendingTos) {
         // Extract and check destination addresses
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest)) {
-            // Append destination address (for payment requests .address is used ONLY for GUI display)
-            recipient.address.append(QString::fromStdString(CBitcoinAddress(dest).ToString()));
-            if (i < sendingTos.size() - 1) // prevent new-line for last entry
-                recipient.address.append("<br />");
+            // Append destination address
+            addresses.append(QString::fromStdString(CBitcoinAddress(dest).ToString()));
         }
         else if (!recipient.authenticatedMerchant.isEmpty()){
             // Insecure payments to custom bitcoin addresses are not supported
@@ -486,7 +484,6 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
         }
 
         recipient.amount += sendingTo.second;
-        i++;
     }
     // Store addresses and format them to fit nicely into the GUI
     recipient.address = addresses.join("<br />");
