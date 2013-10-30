@@ -77,9 +77,6 @@ public:
     // Return certificate store
     static X509_STORE* getCertStore() { return certStore; }
 
-    // Setup networking
-    void initNetManager();
-
     // Constructor registers this on the parent QApplication to
     // receive QEvent::FileOpen events
     bool eventFilter(QObject *object, QEvent *event);
@@ -116,6 +113,9 @@ private:
     bool processPaymentRequest(PaymentRequestPlus& request, SendCoinsRecipient& recipient);
     void handleURIOrFile(const QString& s);
     void fetchRequest(const QUrl& url);
+
+    // Setup networking
+    void initNetManager();
 
     bool saveURIs;                      // true during startup
     QLocalServer* uriServer;
