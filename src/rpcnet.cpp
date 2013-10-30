@@ -17,8 +17,8 @@ Value getconnectioncount(const Array& params, bool fHelp)
             "\nbResult:\n"
             "n          (numeric) The connection count\n"
             "\nExamples:\n"
-            "> bitcoin-cli getconnectioncount\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getconnectioncount\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getconnectioncount", "")
+            + HelpExampleRpc("getconnectioncount", "")
         );
 
     LOCK(cs_vNodes);
@@ -34,8 +34,8 @@ Value ping(const Array& params, bool fHelp)
             "Results provided in getpeerinfo, pingtime and pingwait fields are decimal seconds.\n"
             "Ping command is handled in queue with all other commands, so it measures processing backlog, not just network ping."
             "\nExamples:\n"
-            "> bitcoin-cli ping\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"ping\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("ping", "")
+            + HelpExampleRpc("ping", "")
         );
 
     // Request that each node send a ping during next message processing pass
@@ -90,8 +90,8 @@ Value getpeerinfo(const Array& params, bool fHelp)
             "}\n"
 
             "\nExamples:\n"
-            "> bitcoin-cli getpeerinfo\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getpeerinfo\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getpeerinfo", "")
+            + HelpExampleRpc("getpeerinfo", "")
         );
 
     vector<CNodeStats> vstats;
@@ -143,8 +143,8 @@ Value addnode(const Array& params, bool fHelp)
             "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
             "2. \"command\"  (string, required) 'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once\n"
             "\nExamples:\n"
-            "> bitcoin-cli addnode \"192.168.0.6:8333\" \"onetry\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"addnode\", \"params\": [ \"192.168.0.6\", \"onetry\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"")
+            + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
         );
 
     string strNode = params[0].get_str();
@@ -206,9 +206,9 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
             "  ,...\n"
             "]\n"
             "\nExamples:\n"
-            "> bitcoin-cli getaddednodeinfo true\n"
-            "> bitcoin-cli getaddednodeinfo true \"192.168.0.201\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getaddednodeinfo\", \"params\": [ true, \"192.168.0.201\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getaddednodeinfo", "true")
+            + HelpExampleCli("getaddednodeinfo", "true \"192.168.0.201\"")
+            + HelpExampleRpc("getaddednodeinfo", "true, \"192.168.0.201\"")
         );
 
     bool fDns = params[0].get_bool();
@@ -307,8 +307,8 @@ Value getnettotals(const Array& params, bool fHelp)
             "  \"timemillis\": t        (numeric) Total cpu time\n"
             "}\n"
             "\nExamples:\n"
-            "> bitcoin-cli getnettotals\n"
-            "> > curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getnettotals\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getnettotals", "")
+            + HelpExampleRpc("getnettotals", "")
        );
 
     Object obj;

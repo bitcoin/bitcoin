@@ -74,10 +74,14 @@ Value importprivkey(const Array& params, bool fHelp)
             "2. \"label\"            (string, optional) an optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "\nExamples:\n"
-            "> bitcoin-cli dumpprivkey \"myaddress\"\n"
-            "> bitcoin-cli importprivkey \"mykey\"\n"
-            "> bitcoin-cli importprivkey \"mykey\" \"testing\" false\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"importprivkey\", \"params\": [ \"mykey\", \"testing\", false ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            "\nDump a private key\n"
+            + HelpExampleCli("dumpprivkey", "\"myaddress\"") +
+            "\nImport the private key\n"
+            + HelpExampleCli("importprivkey", "\"mykey\"") +
+            "\nImport using a label\n"
+            + HelpExampleCli("importprivkey", "\"mykey\" \"testing\" false") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
         );
 
     string strSecret = params[0].get_str();
@@ -129,9 +133,12 @@ Value importwallet(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. \"filename\"    (string, required) The wallet file\n"
             "\nExamples:\n"
-            "> bitcoin-cli dumpwallet \"test\"\n"
-            "> bitcoin-cli importwallet \"test\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"importwallet\", \"params\": [ \"test\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            "\nDump the wallet\n"
+            + HelpExampleCli("dumpwallet", "\"test\"") +
+            "\nImport the wallet\n"
+            + HelpExampleCli("importwallet", "\"test\"") +
+            "\nImport using the json rpc call\n"
+            + HelpExampleRpc("importwallet", "\"test\"")
         );
 
     EnsureWalletIsUnlocked();
@@ -219,9 +226,9 @@ Value dumpprivkey(const Array& params, bool fHelp)
             "\nResult:\n"
             "\"key\"                (string) The private key\n"
             "\nExamples:\n"
-            "> bitcoin-cli dumpprivkey \"myaddress\"\n"
-            "> bitcoin-cli importprivkey \"mykey\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"dumpprivkey\", \"params\": [ \"myaddress\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("dumpprivkey", "\"myaddress\"")
+            + HelpExampleCli("importprivkey", "\"mykey\"")
+            + HelpExampleRpc("dumpprivkey", "\"myaddress\"")
         );
 
     EnsureWalletIsUnlocked();
@@ -249,8 +256,8 @@ Value dumpwallet(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. \"filename\"    (string, required) The filename\n"
             "\nExamples:\n"
-            "> bitcoin-cli dumpwallet \"test\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"dumpwallet\", \"params\": [ \"test\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("dumpwallet", "\"test\"")
+            + HelpExampleRpc("dumpwallet", "\"test\"")
         );
 
     EnsureWalletIsUnlocked();

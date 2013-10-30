@@ -84,8 +84,8 @@ Value getnetworkhashps(const Array& params, bool fHelp)
             "\nResult:\n"
             "x             (numeric) Hashes per second estimated\n"
             "\nExamples:\n"
-            "> bitcoin-cli getnetworkhashps\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getnetworkhashps\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getnetworkhashps", "")
+            + HelpExampleRpc("getnetworkhashps", "")
        );
 
     return GetNetworkHashPS(params.size() > 0 ? params[0].get_int() : 120, params.size() > 1 ? params[1].get_int() : -1);
@@ -103,8 +103,8 @@ Value getgenerate(const Array& params, bool fHelp)
             "\nResult\n"
             "true|false      (boolean) If the server is set to generate coins or not\n"
             "\nExamples:\n"
-            "> bitcoin-cli getgenerate\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getgenerate\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getgenerate", "")
+            + HelpExampleRpc("getgenerate", "")
         );
 
     if (!pMiningKey)
@@ -127,13 +127,13 @@ Value setgenerate(const Array& params, bool fHelp)
             "2. genproclimit     (numeric, optional) Set the processor limit for when generation is on. Can be -1 for unlimited.\n"
             "\nExamples:\n"
             "\nSet the generation on with a limit of one processor\n"
-            "> bitcoin-cli setgenerate true 1\n"
+            + HelpExampleCli("setgenerate", "true 1") +
             "\nCheck the setting\n"
-            "> bitcoin-cli getgenerate\n"
+            + HelpExampleCli("getgenerate", "") + 
             "\nTurn off generation\n"
-            "> bitcoin-cli setgenerate false\n"
+            + HelpExampleCli("setgenerate", "false") +
             "\nUsing json rpc\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"setgenerate\", \"params\": [ true, 1 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleRpc("setgenerate", "true, 1")
         );
 
     bool fGenerate = true;
@@ -165,8 +165,8 @@ Value gethashespersec(const Array& params, bool fHelp)
             "\nResult:\n"
             "n            (numeric) The recent hashes per second when generation is on (will return 0 if generation is off)\n"
             "\nExamples:\n"
-            "> bitcoin-cli gethashespersec\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gethashespersec\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("gethashespersec", "")
+            + HelpExampleRpc("gethashespersec", "")
         );
 
     if (GetTimeMillis() - nHPSTimerStart > 8000)
@@ -195,8 +195,8 @@ Value getmininginfo(const Array& params, bool fHelp)
             "  \"testnet\": true|false      (boolean) If using testnet or not\n"
             "}\n"
             "\nExamples:\n"
-            "> bitcoin-cli getmininginfo\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getmininginfo\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getmininginfo", "")
+            + HelpExampleRpc("getmininginfo", "")
         );
 
     Object obj;
@@ -234,8 +234,8 @@ Value getwork(const Array& params, bool fHelp)
             "\nResult (when 'data' is specified):\n"
             "true|false       (boolean) If solving the block specified in the 'data' was successfull\n"
             "\nExamples:\n"
-            "> bitcoin-cli getwork\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getwork\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getwork", "")
+            + HelpExampleRpc("getwork", "")
         );
 
     if (vNodes.empty())
@@ -344,7 +344,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getblocktemplate \"jsonrequestobject\"\n"
+            "getblocktemplate ( \"jsonrequestobject\" )\n"
             "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
             "It returns data needed to construct a block to work on.\n"
             "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n"
@@ -398,8 +398,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "}\n"
 
             "\nExamples:\n"
-            "> bitcoin-cli getblocktemplate\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getblocktemplate\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getblocktemplate", "")
+            + HelpExampleRpc("getblocktemplate", "")
          );
 
     std::string strMode = "template";
@@ -545,8 +545,8 @@ Value submitblock(const Array& params, bool fHelp)
             "    }\n"
             "\nResult:\n"
             "\nExamples:\n"
-            "> bitcoin-cli \"mydata\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"submitblock\", \"params\": [ \"mydata\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("submitblock", "\"mydata\"")
+            + HelpExampleRpc("submitblock", "\"mydata\"")
         );
 
     vector<unsigned char> blockData(ParseHex(params[0].get_str()));

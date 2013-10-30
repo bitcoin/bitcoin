@@ -26,6 +26,15 @@ std::string HelpRequiringPassphrase()
         : "";
 }
 
+std::string HelpExampleCli(string methodname, string args){
+    return "> bitcoin-cli " + methodname + " " + args + "\n";
+}
+
+std::string HelpExampleRpc(string methodname, string args){
+    return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+}
+
 void EnsureWalletIsUnlocked()
 {
     if (pwalletMain->IsLocked())
@@ -84,8 +93,8 @@ Value getinfo(const Array& params, bool fHelp)
             "  \"errors\": \"...\"           (string) any error messages\n"
             "}\n"
             "\nExamples:\n"
-            "> bitcoind getinfo\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getinfo\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getinfo", "")
+            + HelpExampleRpc("getinfo", "")
         );
 
     proxyType proxy;
@@ -130,10 +139,10 @@ Value getnewaddress(const Array& params, bool fHelp)
             "\nResult:\n"
             "\"bitcoinaddress\"    (string) The new bitcoin address\n"
             "\nExamples:\n"
-            "> bitcoin-cli getnewaddress\n"
-            "> bitcoin-cli getnewaddress \"\"\n"
-            "> bitcoin-cli getnewaddress \"myaccount\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getnewaddress\", \"params\": [ \"myaccount\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getnewaddress", "")
+            + HelpExampleCli("getnewaddress", "\"\"")
+            + HelpExampleCli("getnewaddress", "\"myaccount\"")
+            + HelpExampleRpc("getnewaddress", "\"myaccount\"")
         );
 
     // Parse the account first so we don't generate a key if there's an error
@@ -205,10 +214,10 @@ Value getaccountaddress(const Array& params, bool fHelp)
             "\nResult:\n"
             "\"bitcoinaddress\"   (string) The account bitcoin address\n"
             "\nExamples:\n"
-            "> bitcoin-cli getaccountaddress\n"
-            "> bitcoin-cli getaccountaddress \"\"\n"
-            "> bitcoin-cli getaccountaddress \"myaccount\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getaccountaddress\", \"params\": [ \"myaccount\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getaccountaddress", "")
+            + HelpExampleCli("getaccountaddress", "\"\"")
+            + HelpExampleCli("getaccountaddress", "\"myaccount\"")
+            + HelpExampleRpc("getaccountaddress", "\"myaccount\"")
         );
 
     // Parse the account first so we don't generate a key if there's an error
@@ -232,8 +241,8 @@ Value getrawchangeaddress(const Array& params, bool fHelp)
             "\nResult:\n"
             "\"address\"    (string) The address\n"
             "\nExamples:\n"
-            "> bitcoin-cli getrawchangeaddress\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getrawchangeaddress\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getrawchangeaddress", "")
+            + HelpExampleRpc("getrawchangeaddress", "")
        );
 
     if (!pwalletMain->IsLocked())
@@ -262,8 +271,8 @@ Value setaccount(const Array& params, bool fHelp)
             "1. \"bitcoinaddress\"  (string, required) The bitcoin address to be associated with an account.\n"
             "2. \"account\"         (string, required) The account to assign the address to.\n"
             "\nExamples:\n"
-            "> bitcoin-cli setaccount \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"tabby\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"setaccount\", \"params\": [ \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"joe\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"tabby\"")
+            + HelpExampleRpc("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"tabby\"")
         );
 
     CBitcoinAddress address(params[0].get_str());
@@ -300,8 +309,8 @@ Value getaccount(const Array& params, bool fHelp)
             "\nResult:\n"
             "\"accountname\"        (string) the account address\n"
             "\nExamples:\n"
-            "> bitcoin-cli getaccount \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getaccount\", \"params\": [ \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
+            + HelpExampleRpc("getaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
         );
 
     CBitcoinAddress address(params[0].get_str());
@@ -330,8 +339,8 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
             "  ,...\n"
             "]\n"
             "\nExamples:\n"
-            "> bitcoin-cli getaddressbyaccount \"tabby\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getaddressesbyaccount\", \"params\": [ \"tabby\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getaddressesbyaccount", "\"tabby\"")
+            + HelpExampleRpc("getaddressesbyaccount", "\"tabby\"")
         );
 
     string strAccount = AccountFromValue(params[0]);
@@ -358,14 +367,17 @@ Value sendtoaddress(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. \"bitcoinaddress\"  (string, required) The bitcoin address to send to.\n"
             "2. \"amount\"      (numeric, required) The amount in btc to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment-to\"  (string, optional) A comment to store the name of the person or organization to which you're sending the transaction. This is not part of the transaction, just kept in your wallet.\n"
+            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
+            "                             This is not part of the transaction, just kept in your wallet.\n"
+            "4. \"comment-to\"  (string, optional) A comment to store the name of the person or organization \n"
+            "                             to which you're sending the transaction. This is not part of the \n"
+            "                             transaction, just kept in your wallet.\n"
             "\nResult:\n"
             "\"transactionid\"  (string) The transaction id. (view at https://blockchain.info/tx/[transactionid])\n"
             "\nExamples:\n"
-            "> bitcoin-cli sendtoaddress \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1\n"
-            "> bitcoin-cli sendtoaddress \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"sendtoaddress\", \"params\": [ \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
+            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
+            + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
         );
 
     CBitcoinAddress address(params[0].get_str());
@@ -413,8 +425,8 @@ Value listaddressgroupings(const Array& params, bool fHelp)
             "  ,...\n"
             "]\n"
             "\nExamples:\n"
-            "> bitcoin-cli listaddressgroupings\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"listaddressgroupings\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("listaddressgroupings", "")
+            + HelpExampleRpc("listaddressgroupings", "")
         );
 
     Array jsonGroupings;
@@ -452,10 +464,14 @@ Value signmessage(const Array& params, bool fHelp)
             "\nResult:\n"
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
             "\nExamples:\n"
-            "> bitcoin-cli walletpassphrase \"mypassphrase\" 30   (unlock the wallet for 30 seconds)\n"
-            "> bitcoin-cli signmessage \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"my message\"    (create the signature)\n"
-            "> bitcoin-cli verifymessage \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"signature\" \"my message\"   (verify the signature)\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"signmessage\", \"params\": [ \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"my message\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            "\nUnlock the wallet for 30 seconds\n"
+            + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
+            "\nCreate the signature\n"
+            + HelpExampleCli("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"my message\"") +
+            "\nVerify the signature\n"
+            + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"signature\" \"my message\"") +
+            "\nAs json rpc\n"
+            + HelpExampleRpc("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"my message\"")
         );
 
     EnsureWalletIsUnlocked();
@@ -499,10 +515,14 @@ Value verifymessage(const Array& params, bool fHelp)
             "\nResult:\n"
             "true|false   (boolean) If the signature is verified or not.\n"
             "\nExamples:\n"
-            "> bitcoin-cli walletpassphrase \"mypassphrase\" 30   (unlock the wallet for 30 seconds)\n"
-            "> bitcoin-cli signmessage \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"my message\"    (create the signature)\n"
-            "> bitcoin-cli verifymessage \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"signature\" \"my message\"   (verify the signature)\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"verifymessage\", \"params\": [ \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"signature\", \"my message\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            "\nUnlock the wallet for 30 seconds\n"
+            + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
+            "\nCreate the signature\n"
+            + HelpExampleCli("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"my message\"") +
+            "\nVerify the signature\n"
+            + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"signature\" \"my message\"") +
+            "\nAs json rpc\n"
+            + HelpExampleRpc("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"signature\", \"my message\"")
         );
 
     string strAddress  = params[0].get_str();
@@ -547,10 +567,14 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
             "\nResult:\n"
             "amount   (numeric) The total amount in btc received at this address.\n"
             "\nExamples:\n"
-            "> bitcoin-cli getreceivedbyaddress \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"     (the amount from transactions with at least 1 confirmation)\n"
-            "> bitcoin-cli getreceivedbyaddress \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" 0   (the amount including unconfirmed transactions, zero confirmations)\n"
-            "> bitcoin-cli getreceivedbyaddress \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" 6   (the amount with at least 6 confirmation, very safe)\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getreceivedbyaddress\", \"params\": [ \"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", 6 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            "\nThe amount from transactions with at least 1 confirmation\n"
+            + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"") +
+            "\nThe amount including unconfirmed transactions, zero confirmations\n"
+            + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" 0") +
+            "\nThe amount with at least 6 confirmation, very safe\n"
+            + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" 6") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", 6")
        );
 
     // Bitcoin address
@@ -597,10 +621,14 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
             "\nResult:\n"
             "amount              (numeric) The total amount in btc received for this account.\n"
             "\nExamples:\n"
-            "> bitcoin-cli getreceivedbyaccount \"\"     (amount received by the default account with at least 1 confirmation)\n"
-            "> bitcoin-cli getreceivedbyaccount \"tabby\" 0   (amount received at the tabby account including unconfirmed amounts with zero confirmations)\n"
-            "> bitcoin-cli getreceivedbyaccount \"tabby\" 6   (the amount with at least 6 confirmation, very safe)\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getreceivedbyaccount\", \"params\": [ \"tabby\", 6 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            "\nAmount received by the default account with at least 1 confirmation\n"
+            + HelpExampleCli("getreceivedbyaccount", "\"\"") +
+            "\nAmount received at the tabby account including unconfirmed amounts with zero confirmations\n"
+            + HelpExampleCli("getreceivedbyaccount", "\"tabby\" 0") +
+            "\nThe amount with at least 6 confirmation, very safe\n"
+            + HelpExampleCli("getreceivedbyaccount", "\"tabby\" 6") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("getreceivedbyaccount", "\"tabby\", 6")
         );
 
     // Minimum confirmations
@@ -680,10 +708,14 @@ Value getbalance(const Array& params, bool fHelp)
             "\nResult:\n"
             "amount              (numeric) The total amount in btc received for this account.\n"
             "\nExamples:\n"
-            "> bitcoin-cli getbalance     (total amount in the server across all accounts)\n"
-            "> bitcoin-cli getbalance \"\"  (total amount in the default account with at least 1 confirmation)\n"
-            "> bitcoin-cli getbalance \"tabby\" 6  (total amount in the account named tabby with at least 6 confirmations)\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getbalance\", \"params\": [ \"tabby\", 6 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            "\nThe total amount in the server across all accounts\n"
+            + HelpExampleCli("getbalance", "") +
+            "\nThe total amount in the default account with at least 1 confirmation\n"
+            + HelpExampleCli("getbalance", "\"\"") +
+            "\nThe total amount in the account named tabby with at least 6 confirmations\n"
+            + HelpExampleCli("getbalance", "\"tabby\" 6") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("getbalance", "\"tabby\", 6")
         );
 
     if (params.size() == 0)
@@ -743,9 +775,12 @@ Value movecmd(const Array& params, bool fHelp)
             "\nResult:\n"
             "true|false           (boolean) true if successfull.\n"
             "\nExamples:\n"
-            "> bitcoin-cli move \"\" \"tabby\" 0.01     (move 0.01 btc from the default account to the account named tabby)\n"
-            "> bitcoin-cli move \"timotei\" \"akiko\" 0.01 6 \"happy birthday!\"     (move 0.01 btc timotei to akiko)\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"move\", \"params\": [ \"timotei\", \"akiko\", 0.01, 6, \"happy birthday!\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            "\nMove 0.01 btc from the default account to the account named tabby\n"
+            + HelpExampleCli("move", "\"\" \"tabby\" 0.01") +
+            "\nMove 0.01 btc timotei to akiko with a comment and funds have 6 confirmations\n"
+            + HelpExampleCli("move", "\"timotei\" \"akiko\" 0.01 6 \"happy birthday!\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("move", "\"timotei\", \"akiko\", 0.01, 6, \"happy birthday!\"")
         );
 
     string strFrom = AccountFromValue(params[0]);
@@ -804,16 +839,20 @@ Value sendfrom(const Array& params, bool fHelp)
             "2. \"tobitcoinaddress\"  (string, required) The bitcoin address to send funds to.\n"
             "3. amount                (numeric, required) The amount in btc. (transaction fee is added on top).\n"
             "4. minconf               (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
-            "5. \"comment\"           (string, optional) A comment used to store what the transaction is for. This is not part of the transaction, just kept in your wallet.\n"
-            "6. \"comment-to\"        (string, optional) An optional comment to store the name of the person or organization to which you're sending the transaction. This is not part of the transaction, just kept in your wallet.\n"
+            "5. \"comment\"           (string, optional) A comment used to store what the transaction is for. \n"
+            "                                     This is not part of the transaction, just kept in your wallet.\n"
+            "6. \"comment-to\"        (string, optional) An optional comment to store the name of the person or organization \n"
+            "                                     to which you're sending the transaction. This is not part of the transaction, \n"
+            "                                     it is just kept in your wallet.\n"
             "\nResult:\n"
             "\"transactionid\"        (string) The transaction id. (view at https://blockchain.info/tx/[transactionid])\n"
             "\nExamples:\n"
             "\nSend 0.01 btc from the default account to the address, must have at least 1 confirmation\n"
-            "> bitcoin-cli sendfrom \"\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01\n"
-            "\nsend 0.01 from the tabby account to the given address, funds must have at least 6 confirmations\n"
-            "> bitcoin-cli sendfrom \"tabby\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01 6 \"donation\" \"seans outpost\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"sendfrom\", \"params\": [ \"tabby\", \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.01, 6, \"donation\", \"seans outpost\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("sendfrom", "\"\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01") +
+            "\nSend 0.01 from the tabby account to the given address, funds must have at least 6 confirmations\n"
+            + HelpExampleCli("sendfrom", "\"tabby\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01 6 \"donation\" \"seans outpost\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("sendfrom", "\"tabby\", \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.01, 6, \"donation\", \"seans outpost\"")
         );
 
     string strAccount = AccountFromValue(params[0]);
@@ -865,13 +904,15 @@ Value sendmany(const Array& params, bool fHelp)
             "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
             "4. \"comment\"             (string, optional) A comment\n"
             "\nResult:\n"
-            "\"transactionid\"          (string) The transaction id for the send. Only 1 transaction is created regardless of the number of addresses. See https://blockchain.info/tx/[transactionid]\n"
+            "\"transactionid\"          (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
+            "                                    the number of addresses. See https://blockchain.info/tx/[transactionid]\n"
             "\nExamples:\n"
             "\nSend two amounts to two different addresses:\n"
-            "> bitcoin-cli sendmany \"tabby\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\"\n"
+            + HelpExampleCli("sendmany", "\"tabby\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\"") +
             "\nSend two amounts to two different addresses setting the confirmation and comment:\n"
-            "> bitcoin-cli sendmany \"tabby\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\" 6 \"testing\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"sendmany\", \"params\": [ \"tabby\", \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\", 6, \"testing\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("sendmany", "\"tabby\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\" 6 \"testing\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("sendmany", "\"tabby\", \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\", 6, \"testing\"")
         );
 
     string strAccount = AccountFromValue(params[0]);
@@ -1006,9 +1047,9 @@ Value addmultisigaddress(const Array& params, bool fHelp)
 
             "\nExamples:\n"
             "\nAdd a multisig address from 2 addresses\n"
-            "> bitcoin-cli addmultisigaddress 2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"\n"
+            + HelpExampleCli("addmultisigaddress", "2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"") +
             "\nAs json rpc call\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"addmultisigaddress\", \"params\": [2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"")
         ;
         throw runtime_error(msg);
     }
@@ -1050,8 +1091,9 @@ Value createmultisig(const Array& params, bool fHelp)
 
             "\nExamples:\n"
             "\nCreate a multisig address from 2 addresses\n"
-            "> bitcoin-cli createmultisig 2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"createmultisig\", \"params\": [2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("createmultisig", "2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("icreatemultisig", "2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"")
         ;
         throw runtime_error(msg);
     }
@@ -1194,18 +1236,18 @@ Value listreceivedbyaddress(const Array& params, bool fHelp)
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"address\" : \"receivingaddress\"   (string) The receiving address\n"
-            "    \"account\" : \"accountname\"        (string) The account of the receiving address. The default account is \"\".\n"
-            "    \"amount\" : x.xxx                   (numeric) The total amount in btc received by the address\n"
+            "    \"address\" : \"receivingaddress\",  (string) The receiving address\n"
+            "    \"account\" : \"accountname\",       (string) The account of the receiving address. The default account is \"\".\n"
+            "    \"amount\" : x.xxx,                  (numeric) The total amount in btc received by the address\n"
             "    \"confirmations\" : n                (numeric) The number of confirmations of the most recent transaction included\n"
             "  }\n"
             "  ,...\n"
             "]\n"
 
             "\nExamples:\n"
-            "> bitcoin-cli listreceivedbyaddress\n"
-            "> bitcoin-cli listreceivedbyaddress 6 true\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"listreceivedbyaddress\", \"params\": [ 6, true ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("listreceivedbyaddress", "")
+            + HelpExampleCli("listreceivedbyaddress", "6 true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true")
         );
 
     return ListReceived(params, false);
@@ -1224,17 +1266,17 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"account\" : \"accountname\"     (string) The account name of the receiving account\n"
-            "    \"amount\" : x.xxx                (numeric) The total amount received by addresses with this account\n"
-            "    \"confirmations\" : n             (numeric) The number of confirmations of the most recent transaction included\n"
+            "    \"account\" : \"accountname\",  (string) The account name of the receiving account\n"
+            "    \"amount\" : x.xxx,             (numeric) The total amount received by addresses with this account\n"
+            "    \"confirmations\" : n           (numeric) The number of confirmations of the most recent transaction included\n"
             "  }\n"
             "  ,...\n"
             "]\n"
 
             "\nExamples:\n"
-            "> bitcoin-cli listreceivedbyaccount\n"
-            "> bitcoin-cli listreceivedbyaccount 6 true\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"listreceivedbyaccount\", \"params\": [ 6, true ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("listreceivedbyaccount", "")
+            + HelpExampleCli("listreceivedbyaccount", "6 true")
+            + HelpExampleRpc("listreceivedbyaccount", "6, true")
         );
 
     return ListReceived(params, true);
@@ -1332,37 +1374,54 @@ Value listtransactions(const Array& params, bool fHelp)
             "listtransactions ( \"account\" count from )\n"
             "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
             "\nArguments:\n"
-            "1. \"account\"    (string, optional) The account name. If not included, it will list all transactions for all accounts. If \"\" is set, it will list transactions for the default account.\n"
+            "1. \"account\"    (string, optional) The account name. If not included, it will list all transactions for all accounts.\n"
+            "                                     If \"\" is set, it will list transactions for the default account.\n"
             "2. count          (numeric, optional, default=10) The number of transactions to return\n"
             "3. from           (numeric, optional, default=0) The number of transactions to skip\n"
 
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"account\":\"accountname\",       (string) The account name associated with the transaction. Will be \"\" for the default account.\n"
-            "    \"address\":\"bitcoinaddress\",    (string) The bitcoin address of the transaction. Not present for move transactions (category = move).\n"
-            "    \"category\":\"send|receive|move\", (string) The transaction category. 'move' is a local move transactio between accounts, and not associated with an address, transaction id or block. 'send' and 'receive' transactions are associated with an address, transaction id and block details\n"
-            "    \"amount\": x.xxx,          (numeric) The amount in btc. This is negative for the 'send' category, and for the 'move' category for moves outbound. It is positive for the 'receive' category, and for the 'move' category for inbound funds.\n"
-            "    \"fee\": x.xxx,             (numeric) The amount of the fee in btc. This is negative and only available for the 'send' category of transactions.\n"
-            "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
-            "    \"blockhash\": \"hashvalue\",     (string) The block hash containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
-            "    \"blockindex\": n,          (numeric) The block index containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
-            "    \"txid\": \"transactionid\",  (string) The transaction id (see https://blockchain.info/tx/[transactionid]. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"account\":\"accountname\",       (string) The account name associated with the transaction. \n"
+            "                                                It will be \"\" for the default account.\n"
+            "    \"address\":\"bitcoinaddress\",    (string) The bitcoin address of the transaction. Not present for \n"
+            "                                                move transactions (category = move).\n"
+            "    \"category\":\"send|receive|move\", (string) The transaction category. 'move' is a local (off blockchain)\n"
+            "                                                transaction between accounts, and not associated with an address,\n"
+            "                                                transaction id or block. 'send' and 'receive' transactions are \n"
+            "                                                associated with an address, transaction id and block details\n"
+            "    \"amount\": x.xxx,          (numeric) The amount in btc. This is negative for the 'send' category, and for the\n"
+            "                                         'move' category for moves outbound. It is positive for the 'receive' category,\n"
+            "                                         and for the 'move' category for inbound funds.\n"
+            "    \"fee\": x.xxx,             (numeric) The amount of the fee in btc. This is negative and only available for the \n"
+            "                                         'send' category of transactions.\n"
+            "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and \n"
+            "                                         'receive' category of transactions.\n"
+            "    \"blockhash\": \"hashvalue\", (string) The block hash containing the transaction. Available for 'send' and 'receive'\n"
+            "                                          category of transactions.\n"
+            "    \"blockindex\": n,          (numeric) The block index containing the transaction. Available for 'send' and 'receive'\n"
+            "                                          category of transactions.\n"
+            "    \"txid\": \"transactionid\", (string) The transaction id (see https://blockchain.info/tx/[transactionid]. Available \n"
+            "                                          for 'send' and 'receive' category of transactions.\n"
             "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (midnight Jan 1 1970 GMT).\n"
-            "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (midnight Jan 1 1970 GMT). Available for 'send' and 'receive' category of transactions.\n"
+            "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (midnight Jan 1 1970 GMT). Available \n"
+            "                                          for 'send' and 'receive' category of transactions.\n"
             "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
-            "    \"otheraccount\": \"accountname\",  (string) For the 'move' category of transactions, the account the funds came from (for receiving funds, positive amounts), or went to (for sending funds, negative amounts).\n"
+            "    \"otheraccount\": \"accountname\",  (string) For the 'move' category of transactions, the account the funds came \n"
+            "                                          from (for receiving funds, positive amounts), or went to (for sending funds,\n"
+            "                                          negative amounts).\n"
             "  }\n"
             "]\n"
 
             "\nExamples:\n"
             "\nList the most recent 10 transactions in the systems\n"
-            "> bitcoin-cli listtransactions\n"
+            + HelpExampleCli("listtransactions", "") +
             "\nList the most recent 10 transactions for the tabby account\n"
-            "> bitcoin-cli listtransactions \"tabby\"\n"
+            + HelpExampleCli("listtransactions", "\"tabby\"") +
             "\nList transactions 100 to 120 from the tabby account\n"
-            "> bitcoin-cli listtransactions \"tabby\" 20 100\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"listtransactions\", \"params\": [ \"tabby\", 20, 100 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("listtransactions", "\"tabby\" 20 100") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("listtransactions", "\"tabby\", 20, 100")
         );
 
     string strAccount = "*";
@@ -1425,18 +1484,19 @@ Value listaccounts(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. minconf     (numeric, optional, default=1) Only onclude transactions with at least this many confirmations\n"
             "\nResult:\n"
-            "{\n"
-            "  \"account\": x.xxx,      (numeric) The property name is the account name, and the value is the total balance for the account.\n"
+            "{                      (json object where keys are account names, and values are numeric balances\n"
+            "  \"account\": x.xxx,  (numeric) The property name is the account name, and the value is the total balance for the account.\n"
             "  ...\n"
             "}\n"
             "\nExamples:\n"
             "\nList account balances where there at least 1 confirmation\n"
-            "> bitcoin-cli listaccounts\n"
+            + HelpExampleCli("listaccounts", "") +
             "\nList account balances including zero confirmation transactions\n"
-            "> bitcoin-cli listaccounts 0\n"
+            + HelpExampleCli("listaccounts", "0") +
             "\nList account balances for 6 or more confirmations\n"
-            "> bitcoin-cli listaccounts 6\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"listaccounts\", \"params\": [ 6 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("listaccounts", "6") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("listaccounts", "6")
         );
 
     int nMinDepth = 1;
@@ -1497,7 +1557,8 @@ Value listsinceblock(const Array& params, bool fHelp)
             "    \"account\":\"accountname\",       (string) The account name associated with the transaction. Will be \"\" for the default account.\n"
             "    \"address\":\"bitcoinaddress\",    (string) The bitcoin address of the transaction. Not present for move transactions (category = move).\n"
             "    \"category\":\"send|receive\",     (string) The transaction category. 'send' has negative amounts, 'receive' has positive amounts.\n"
-            "    \"amount\": x.xxx,          (numeric) The amount in btc. This is negative for the 'send' category, and for the 'move' category for moves outbound. It is positive for the 'receive' category, and for the 'move' category for inbound funds.\n"
+            "    \"amount\": x.xxx,          (numeric) The amount in btc. This is negative for the 'send' category, and for the 'move' category for moves \n"
+            "                                          outbound. It is positive for the 'receive' category, and for the 'move' category for inbound funds.\n"
             "    \"fee\": x.xxx,             (numeric) The amount of the fee in btc. This is negative and only available for the 'send' category of transactions.\n"
             "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
             "    \"blockhash\": \"hashvalue\",     (string) The block hash containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
@@ -1512,9 +1573,9 @@ Value listsinceblock(const Array& params, bool fHelp)
             "  \"lastblock\": \"lastblockhash\"     (string) The hash of the last block\n"
             "}\n"
             "\nExamples:\n"
-            "> bitcoin-cli listsinceblock\n"
-            "> bitcoin-cli listsinceblock \"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\" 6\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"listsinceblock\", \"params\": [ \"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("listsinceblock", "")
+            + HelpExampleCli("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\" 6")
+            + HelpExampleRpc("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6")
         );
 
     CBlockIndex *pindex = NULL;
@@ -1590,8 +1651,8 @@ Value gettransaction(const Array& params, bool fHelp)
             "}\n"
 
             "\nbExamples\n"
-            "> bitcoin-cli gettransaction \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gettransaction\", \"params\": [ \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleRpc("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
     uint256 hash;
@@ -1630,8 +1691,8 @@ Value backupwallet(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. \"destination\"   (string) The destination directory or file\n"
             "\nExamples:\n"
-            "> bitcoin-cli backupwallet \"backup.dat\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"backupwallet\", \"params\": [ \"backup.dat\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("backupwallet", "\"backup.dat\"")
+            + HelpExampleRpc("backupwallet", "\"backup.dat\"")
         );
 
     string strDest = params[0].get_str();
@@ -1652,8 +1713,8 @@ Value keypoolrefill(const Array& params, bool fHelp)
             "\nArguments\n" 
             "1. newsize     (numeric, optional, default=100) The new keypool size\n"
             "\nExamples:\n"
-            "> bitcoin-cli keypoolrefill\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"keypoolrefill\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("keypoolrefill", "")
+            + HelpExampleRpc("keypoolrefill", "")
         );
 
     unsigned int kpSize = max(GetArg("-keypool", 100), 0LL);
@@ -1692,8 +1753,12 @@ Value walletpassphrase(const Array& params, bool fHelp)
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
             "\nExamples:\n"
-            "> bitcoin-cli walletpassphrase \"my pass phrase\" 60\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"walletpassphrase\", \"params\": [ \"my pass phrase\", 60 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            "\nunlock the wallet for 60 seconds\n"
+            + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60") +
+            "\nLock the wallet again (before 60 seconds)\n"
+            + HelpExampleCli("walletlock", "") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
         );
 
     if (fHelp)
@@ -1741,8 +1806,8 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
             "1. \"oldpassphrase\"      (string) The current passphrase\n"
             "2. \"newpassphrase\"      (string) The new passphrase\n"
             "\nExamples:\n"
-            "> bitcoin-cli walletpassphrasechange \"old one\" \"new one\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"walletpassphrasechange\", \"params\": [ \"old one\", \"new one\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("walletpassphrasechange", "\"old one\" \"new one\"")
+            + HelpExampleRpc("walletpassphrasechange", "\"old one\", \"new one\"")
         );
 
     if (fHelp)
@@ -1782,12 +1847,13 @@ Value walletlock(const Array& params, bool fHelp)
             "before being able to call any methods which require the wallet to be unlocked.\n"
             "\nExamples:\n"
             "\nSet the passphrase for 2 minutes to perform a transaction\n"
-            "> bitcoin-cli walletpassphrase \"my pass phrase\" 120\n"
+            + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 120") +
             "\nPerform a send (requires passphrase set)\n"
-            "> bitcoin-cli sendtoaddress \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 1.0\n"
+            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 1.0") +
             "\nClear the passphrase since we are done before 2 minutes is up\n"
-            "> bitcoin-cli walletlock\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"walletlock\", \"params\": [ ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("walletlock", "") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("walletlock", "")
         );
 
     if (fHelp)
@@ -1810,24 +1876,25 @@ Value encryptwallet(const Array& params, bool fHelp)
     if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
         throw runtime_error(
             "encryptwallet \"passphrase\"\n"
-            "\nEncrypts the wallet with <passphrase>. This is for first time encryption.\n"
+            "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
             "After this, any calls that interact with private keys such as sending or signing \n"
             "will require the passphrase to be set prior the making these calls.\n"
             "Use the walletpassphrase call for this, and then walletlock call.\n"
             "If the wallet is already encrypted, use the walletpassphrasechange call.\n"
+            "Note that this will shutdown the server.\n"
             "\nArguments:\n"
             "1. \"passphrase\"    (string) The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long.\n"
             "\nExamples:\n"
             "\nEncrypt you wallet\n"
-            "> bitcoin-cli encryptwallet \"my pass phrase\"\n"
+            + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
             "\nNow set the passphrase to use the wallet, such as for signing or sending bitcoin\n"
-            "> bitcoin-cli walletpassphrase \"my pass phrase\"\n"
+            + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
             "\nNow we can so something like sign\n"
-            "> bitcoin-cli signmessage \"bitcoinaddress\" \"test message\"\n"
+            + HelpExampleCli("signmessage", "\"bitcoinaddress\" \"test message\"") +
             "\nNow lock the wallet again by removing the passphrase\n"
-            "> bitcoin-cli walletlock\n"
-            "\nOr using RPC\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"encryptwallet\", \"params\": [ \"my pass phrase\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("walletlock", "") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("encryptwallet", "\"my pass phrase\"")
         );
 
     if (fHelp)
@@ -1911,8 +1978,8 @@ Value validateaddress(const Array& params, bool fHelp)
             "  \"account\" : \"account\"         (string) The account associated with the address, \"\" is the default account\n"
             "}\n"
             "\nExamples:\n"
-            "> bitcoin-cli validateaddress \"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"validateaddress\", \"params\": [ \"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+            + HelpExampleRpc("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
         );
 
     CBitcoinAddress address(params[0].get_str());
@@ -1964,15 +2031,15 @@ Value lockunspent(const Array& params, bool fHelp)
 
             "\nExamples:\n"
             "\nList the unspent transactions\n"
-            "> bitcoin-cli listunspent\n"
+            + HelpExampleCli("listunspent", "") +
             "\nLock an unspent transaction\n"
-            "> bitcoin-cli lockunspent false \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"\n"
+            + HelpExampleCli("lockunspent", "false \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
             "\nList the locked transactions\n"
-            "> bitcoin-cli listlockunspent\n"
+            + HelpExampleCli("listlockunspent", "") +
             "\nUnlock the transaction again\n"
-            "> bitcoin-cli lockunspent true \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"\n"
-            "\nAs json rpc call\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"lockunspent\", \"params\": [ false, \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("lockunspent", "true \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("lockunspent", "false, \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"")
         );
 
     if (params.size() == 1)
@@ -2033,15 +2100,15 @@ Value listlockunspent(const Array& params, bool fHelp)
             "]\n"
             "\nExamples:\n"
             "\nList the unspent transactions\n"
-            "> bitcoin-cli listunspent\n"
+            + HelpExampleCli("listunspent", "") +
             "\nLock an unspent transaction\n"
-            "> bitcoin-cli lockunspent false \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"\n"
+            + HelpExampleCli("lockunspent", "false \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
             "\nList the locked transactions\n"
-            "> bitcoin-cli listlockunspent\n"
+            + HelpExampleCli("listlockunspent", "") +
             "\nUnlock the transaction again\n"
-            "> bitcoin-cli lockunspent true \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"\n"
-            "\nAs json rpc call\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"listlockunspent\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("lockunspent", "true \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("listlockunspent", "")
         );
 
     vector<COutPoint> vOutpts;

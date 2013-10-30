@@ -157,9 +157,9 @@ Value getrawtransaction(const Array& params, bool fHelp)
             "}\n"
 
             "\nExamples:\n"
-            "> bitcoin-cli getrawtransaction \"mytxid\"\n"
-            "> bitcoin-cli getrawtransaction \"mytxid\" 1\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getrawtransaction\", \"params\": [ \"mytxid\", 1 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getrawtransaction", "\"mytxid\"")
+            + HelpExampleCli("getrawtransaction", "\"mytxid\" 1")
+            + HelpExampleRpc("getrawtransaction", "\"mytxid\", 1")
         );
 
     uint256 hash = ParseHashV(params[0], "parameter 1");
@@ -219,9 +219,9 @@ Value listunspent(const Array& params, bool fHelp)
             "]\n"
 
             "\nExamples\n"
-            "> bitcoin-cli listunspent\n"
-            "> bitcoin-cli listunspent 6 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"listunspent\", \"params\": [ 6, 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("listunspent", "")
+            + HelpExampleCli("listunspent", "6 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
+            + HelpExampleRpc("listunspent", "6, 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
         );
 
     RPCTypeCheck(params, list_of(int_type)(int_type)(array_type));
@@ -329,7 +329,8 @@ Value createrawtransaction(const Array& params, bool fHelp)
             "\"transaction\"            (string) hex string of the transaction\n"
 
             "\nExamples\n"
-            "> bitcoin-cli createrawtransaction \"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"{\\\"address\\\":0.01}\"\n"
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"{\\\"address\\\":0.01}\"")
+            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"{\\\"address\\\":0.01}\"")
         );
 
     RPCTypeCheck(params, list_of(array_type)(obj_type));
@@ -432,8 +433,8 @@ Value decoderawtransaction(const Array& params, bool fHelp)
             "}\n"
 
             "\nExamples:\n"
-            "> bitcoin-cli decoderawtransaction \"hexstring\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"decoderawtransaction\", \"params\": [ \"hexstring\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("decoderawtransaction", "\"hexstring\"")
+            + HelpExampleRpc("decoderawtransaction", "\"hexstring\"")
         );
 
     vector<unsigned char> txData(ParseHexV(params[0], "argument"));
@@ -473,8 +474,8 @@ Value decodescript(const Array& params, bool fHelp)
             "  \"p2sh\",\"address\" (string) script address\n"
             "}\n"
             "\nExamples:\n"
-            "> bitcoin-cli decodescript \"hexstring\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"decodescript\", \"params\": [ \"hexstring\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("decodescript", "\"hexstring\"")
+            + HelpExampleRpc("decodescript", "\"hexstring\"")
         );
 
     RPCTypeCheck(params, list_of(str_type));
@@ -537,8 +538,8 @@ Value signrawtransaction(const Array& params, bool fHelp)
             "}\n"
 
             "\nExamples:\n"
-            "> bitcoin-cli signrawtransaction \"myhex\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"signrawtransaction\", \"params\": [ \"myhex\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("signrawtransaction", "\"myhex\"")
+            + HelpExampleRpc("signrawtransaction", "\"myhex\"")
         );
 
     RPCTypeCheck(params, list_of(str_type)(array_type)(array_type)(str_type), true);
@@ -729,13 +730,13 @@ Value sendrawtransaction(const Array& params, bool fHelp)
             "\"hex\"             (string) The transaction hash in hex\n"
             "\nExamples:\n"
             "\nCreate a transaction\n"
-            "> bitcoin-cli createrawtransaction \"[{\\\"txid\\\" : \\\"mytxid\\\",\\\"vout\\\":0}]\" \"{\\\"myaddress\\\":0.01}\"\n"
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\" : \\\"mytxid\\\",\\\"vout\\\":0}]\" \"{\\\"myaddress\\\":0.01}\"") +
             "Sign the transaction, and get back the hex\n"
-            "> bitcoin-cli signrawtransaction \"myhex\"\n"
+            + HelpExampleCli("signrawtransaction", "\"myhex\"") +
             "\nSend the transaction (signed hex)\n"
-            "> bitcoin-cli sendrawtransaction \"signedhex\"\n"
+            + HelpExampleCli("sendrawtransaction", "\"signedhex\"") +
             "\nAs a json rpc call\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"sendrawtransaction\", \"params\": [ \"signedhex\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
         );
 
 

@@ -82,8 +82,8 @@ Value getblockcount(const Array& params, bool fHelp)
             "\nResult:\n"
             "n    (numeric) The current block count\n"
             "\nExamples:\n"
-            "> bitcoin-cli getblockcount\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getblockcount\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getblockcount", "")
+            + HelpExampleRpc("getblockcount", "")
         );
 
     return chainActive.Height();
@@ -98,8 +98,8 @@ Value getbestblockhash(const Array& params, bool fHelp)
             "\nResult\n"
             "\"hex\"      (string) the block hash hex encoded\n"
             "\nExamples\n"
-            "> bitcoin-cligetbestblockhash\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getbestblockhash\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getbestblockhash", "")
+            + HelpExampleRpc("getbestblockhash", "")
         );
 
     return chainActive.Tip()->GetBlockHash().GetHex();
@@ -114,8 +114,8 @@ Value getdifficulty(const Array& params, bool fHelp)
             "\nResult:\n"
             "n.nnn       (numeric) the proof-of-work difficulty as a multiple of the minimum difficulty.\n"
             "\nExamples:\n"
-            "> bitcoin-cli getdifficulty\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getdifficulty\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getdifficulty", "")
+            + HelpExampleRpc("getdifficulty", "")
         );
 
     return GetDifficulty();
@@ -133,8 +133,8 @@ Value settxfee(const Array& params, bool fHelp)
             "\nResult\n"
             "true|false        (boolean) Returns true if successful\n"
             "\nExamples:\n"
-            "> bitcoin-cli settxfee 0.00001\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"settxfee\", \"params\": [ 0.00001 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("settxfee", "0.00001")
+            + HelpExampleRpc("settxfee", "0.00001")
         );
 
     // Amount
@@ -158,8 +158,8 @@ Value getrawmempool(const Array& params, bool fHelp)
             "  ,...\n"
             "]\n"
             "\nExamples\n"
-            "> bitcoin-cli getrawmempool\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getrawmempool\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getrawmempool", "")
+            + HelpExampleRpc("getrawmempool", "")
         );
 
     vector<uint256> vtxid;
@@ -183,8 +183,8 @@ Value getblockhash(const Array& params, bool fHelp)
             "\nResult:\n"
             "\"hash\"         (string) The block hash\n"
             "\nExamples:\n"
-            "> bitcoin-cli getblockhash 1000\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getblockhash\", \"params\": [ 1000 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getblockhash", "1000")
+            + HelpExampleRpc("getblockhash", "1000")
         );
 
     int nHeight = params[0].get_int();
@@ -227,8 +227,8 @@ Value getblock(const Array& params, bool fHelp)
             "\nResult (for verbose=false):\n"
             "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
             "\nExamples:\n"
-            "> bitcoin-cli getblock \"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getblock\", \"params\": [ \"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+            + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
         );
 
     std::string strHash = params[0].get_str();
@@ -274,8 +274,8 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
             "  \"total_amount\": x.xxx          (numeric) The total amount\n"
             "}\n"
             "\nExamples:\n"
-            "> bitcoin-cli gettxoutsetinfo\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gettxoutsetinfo\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("gettxoutsetinfo", "")
+            + HelpExampleRpc("gettxoutsetinfo", "")
         );
 
     Object ret;
@@ -324,11 +324,11 @@ Value gettxout(const Array& params, bool fHelp)
 
             "\nExamples:\n"
             "\nGet unspent transactions\n"
-            "> bitcoin-cli listunspent\n"
+            + HelpExampleCli("listunspent", "") +
             "\nView the details\n"
-            "> bitcoin-cli gettxout \"txid\" 1\n"
-            "\nAs json rpc\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gettxout\", \"params\": [ \"txid\", 1 ] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("gettxout", "\"txid\" 1") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("gettxout", "\"txid\", 1")
         );
 
     Object ret;
@@ -381,8 +381,8 @@ Value verifychain(const Array& params, bool fHelp)
             "\nResult:\n"
             "true|false       (boolean) Verified or not\n"
             "\nExamples:\n"
-            "> bitcoin-cli verifychain\n"
-            "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"verifychain\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n"
+            + HelpExampleCli("verifychain", "")
+            + HelpExampleRpc("verifychain", "")
         );
 
     int nCheckLevel = GetArg("-checklevel", 3);
