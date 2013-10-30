@@ -1894,3 +1894,38 @@ uint64 CNode::GetTotalBytesSent()
     LOCK(cs_totalBytesSent);
     return nTotalBytesSent;
 }
+
+void CNode::Fuzz(int nChance)
+{
+    if (!fSuccessfullyConnected) return; // Don't fuzz initial handshake
+    if (GetRand(nChance) != 0) return; // Fuzz 1 of every nChance messages
+
+    switch (GetRand(3))
+    {
+    case 0:
+        // xor a random byte with a random value:
+        if (!ssSend.empty()) {
+            CDataStream::size_type pos = GetRand(ssSend.size());
+            ssSend[pos] ^= (unsigned char)(GetRand(256));
+        }
+        break;
+    case 1:
+        // delete a random byte:
+        if (!ssSend.empty()) {
+            CDataStream::size_type pos = GetRand(ssSend.size());
+            ssSend.erase(ssSend.begin()+pos);
+        }
+        break;
+    case 2:
+        // insert a random byte at a random position
+        {
+            CDataStream::size_type pos = GetRand(ssSend.size());
+            char ch = (char)GetRand(256);
+            ssSend.insert(ssSend.begin()+pos, ch);
+        }
+        break;
+    }
+    // Chance of more than one change half the time:
+    // (more changes exponentially less likely):
+    Fuzz(2);
+}
