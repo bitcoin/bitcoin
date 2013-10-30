@@ -341,7 +341,7 @@ void PaymentServer::initNetManager()
 
 void PaymentServer::uiReady()
 {
-    assert(netManager != NULL); // Must call initNetManager before uiReady()
+    initNetManager();
 
     saveURIs = false;
     foreach (const QString& s, savedPaymentRequests)
