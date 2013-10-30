@@ -80,7 +80,7 @@ public:
 /** A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
-class CWallet : public CCryptoKeyStore
+class CWallet : public CCryptoKeyStore, public CWalletInterface
 {
 private:
     bool SelectCoins(int64 nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
@@ -197,8 +197,9 @@ public:
 
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn);
-    bool AddToWalletIfInvolvingMe(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate = false, bool fFindBlock = false);
-    bool EraseFromWallet(uint256 hash);
+    void SyncTransaction(const uint256 &hash, const CTransaction& tx, const CBlock* pblock);
+    bool AddToWalletIfInvolvingMe(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate);
+    void EraseFromWallet(const uint256 &hash);
     void WalletUpdateSpent(const CTransaction& prevout);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
@@ -302,8 +303,6 @@ public:
 
     void UpdatedTransaction(const uint256 &hashTx);
 
-    void PrintWallet(const CBlock& block);
-
     void Inventory(const uint256 &hash)
     {
         {
@@ -318,8 +317,6 @@ public:
     {
         return setKeyPool.size();
     }
-
-    bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
 
     bool SetDefaultKey(const CPubKey &vchPubKey);
 
@@ -890,7 +887,5 @@ public:
 private:
     std::vector<char> _ssExtra;
 };
-
-bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
 #endif

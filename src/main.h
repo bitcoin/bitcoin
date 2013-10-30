@@ -17,7 +17,6 @@
 
 #include <list>
 
-class CWallet;
 class CBlock;
 class CBlockIndex;
 class CKeyItem;
@@ -81,8 +80,6 @@ extern uint64 nLastBlockTx;
 extern uint64 nLastBlockSize;
 extern const std::string strMessageMagic;
 extern int64 nTimeBestReceived;
-extern CCriticalSection cs_setpwalletRegistered;
-extern std::set<CWallet*> setpwalletRegistered;
 extern bool fImporting;
 extern bool fReindex;
 extern bool fBenchmark;
@@ -108,17 +105,18 @@ class CCoinsView;
 class CCoinsViewCache;
 class CScriptCheck;
 class CValidationState;
+class CWalletInterface;
 
 struct CBlockTemplate;
 
 /** Register a wallet to receive updates from core */
-void RegisterWallet(CWallet* pwalletIn);
+void RegisterWallet(CWalletInterface* pwalletIn);
 /** Unregister a wallet from core */
-void UnregisterWallet(CWallet* pwalletIn);
+void UnregisterWallet(CWalletInterface* pwalletIn);
 /** Unregister all wallets from core */
 void UnregisterAllWallets();
 /** Push an updated transaction to all registered wallets */
-void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false);
+void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock = NULL);
 
 /** Register with a network node to receive its signals */
 void RegisterNodeSignals(CNodeSignals& nodeSignals);
@@ -189,9 +187,6 @@ bool AbortNode(const std::string &msg);
 
 
 
-
-
-bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
 struct CDiskBlockPos
 {
@@ -1259,6 +1254,20 @@ public:
         READWRITE(header);
         READWRITE(txn);
     )
+};
+
+
+class CWalletInterface {
+protected:
+    virtual void SyncTransaction(const uint256 &hash, const CTransaction &tx, const CBlock *pblock) =0;
+    virtual void EraseFromWallet(const uint256 &hash) =0;
+    virtual void SetBestChain(const CBlockLocator &locator) =0;
+    virtual void UpdatedTransaction(const uint256 &hash) =0;
+    virtual void Inventory(const uint256 &hash) =0;
+    virtual void ResendWalletTransactions() =0;
+    friend void ::RegisterWallet(CWalletInterface*);
+    friend void ::UnregisterWallet(CWalletInterface*);
+    friend void ::UnregisterAllWallets();
 };
 
 #endif

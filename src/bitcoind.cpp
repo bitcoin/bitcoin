@@ -3,7 +3,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "ui_interface.h"
 #include "init.h"
+#include "util.h"
+#include "main.h"
 #include "bitcoinrpc.h"
 #include <boost/algorithm/string/predicate.hpp>
 
