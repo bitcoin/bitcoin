@@ -6,6 +6,9 @@
 
 #include "bitcoinunits.h"
 #include "init.h"
+#include "core.h"
+#include "wallet.h"
+#include "netbase.h"
 #include "walletdb.h"
 #include "guiutil.h"
 
