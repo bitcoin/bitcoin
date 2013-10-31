@@ -67,6 +67,8 @@ WalletView::WalletView(QWidget *parent):
 
     // Pass through messages from sendCoinsPage
     connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+    // Pass through messages from transactionView
+    connect(transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
 }
 
 WalletView::~WalletView()
@@ -110,7 +112,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
 
     if (walletModel)
     {
-        // Receive and report messages from wallet thread
+        // Receive and pass through messages from wallet model
         connect(walletModel, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
 
         // Handle changes in encryption status

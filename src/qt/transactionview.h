@@ -71,6 +71,9 @@ private slots:
 signals:
     void doubleClicked(const QModelIndex&);
 
+    /**  Fired when a message should be reported to the user */
+    void message(const QString &title, const QString &message, unsigned int style);
+
 public slots:
     void chooseDate(int idx);
     void chooseType(int idx);
