@@ -7,6 +7,7 @@
 
 #include "addrman.h"
 #include "alert.h"
+#include "bloom.h"
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
@@ -89,6 +90,10 @@ CBlockFileInfo infoLastBlockFile;
 int nLastBlockFile = 0;
 }
 
+// Forward reference functions defined here:
+static const unsigned int MAX_DOUBLESPEND_BLOOM = 1000;
+static void RelayDoubleSpend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter);
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // dispatching functions
@@ -118,6 +123,15 @@ struct CMainSignals {
     boost::signals2::signal<void (const COutPoint&, const CTransaction&, const CTransaction&, bool)> DetectedDoubleSpend;
 } g_signals;
 }
+
+void RegisterInternalSignals() {
+    static CBloomFilter doubleSpendFilter;
+    seed_insecure_rand();
+    doubleSpendFilter = CBloomFilter(MAX_DOUBLESPEND_BLOOM, 0.01, insecure_rand(), BLOOM_UPDATE_NONE);
+
+    g_signals.DetectedDoubleSpend.connect(boost::bind(RelayDoubleSpend, _1, _3, _4, doubleSpendFilter));
+}
+
 
 void RegisterWallet(CWalletInterface* pwalletIn) {
     g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
@@ -767,6 +781,32 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     g_signals.SyncTransaction(hash, tx, NULL);
 
     return true;
+}
+
+static void
+RelayDoubleSpend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter)
+{
+    // Relaying double-spend attempts to our peers lets them detect when
+    // somebody might be trying to cheat them. However, blindly relaying
+    // every double-spend across the entire network gives attackers
+    // a denial-of-service attack: just generate a stream of double-spends
+    // re-spending the same (limited) set of outpoints owned by the attacker.
+    // So, we use a bloom filter and only relay (at most) the first double
+    // spend for each outpoint. False-positives ("we have already relayed")
+    // are OK, because if the peer doesn't hear about the double-spend
+    // from us they are very likely to hear about it from another peer, since
+    // each peer uses a different, randomized bloom filter.
+
+    if (fInBlock || filter.contains(outPoint)) return;
+
+    // Clear the filter on average every MAX_DOUBLE_SPEND_BLOOM
+    // insertions
+    if (insecure_rand()%MAX_DOUBLESPEND_BLOOM == 0)
+        filter.clear();
+
+    filter.insert(outPoint);
+
+    RelayTransaction(doubleSpend, doubleSpend.GetHash());
 }
 
 
