@@ -73,7 +73,7 @@ public:
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
     bool remove(const CTransaction &tx, bool fRecursive = false);
-    bool removeConflicts(const CTransaction &tx);
+    std::map<COutPoint, CTransaction> removeConflicts(const CTransaction &tx);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);

@@ -110,6 +110,12 @@ struct CMainSignals {
     boost::signals2::signal<void (const uint256 &)> Inventory;
     // Tells listeners to broadcast their data.
     boost::signals2::signal<void ()> Broadcast;
+    // Notifies listeners of detection of a double-spent transaction. Arguments are outpoint that is
+    // double-spent, first transaction seen, double-spend transaction, and whether the second double-spend
+    // transaction was first seen in a block.
+    // Note: only notifies if the previous transaction is in the memory pool; if previous transction was in a block,
+    // then the double-spend simply fails when we try to lookup the inputs in the current UTXO set.
+    boost::signals2::signal<void (const COutPoint&, const CTransaction&, const CTransaction&, bool)> DetectedDoubleSpend;
 } g_signals;
 }
 
@@ -652,6 +658,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         COutPoint outpoint = tx.vin[i].prevout;
         if (pool.mapNextTx.count(outpoint))
         {
+            g_signals.DetectedDoubleSpend(outpoint, *pool.mapNextTx[outpoint].ptx, tx, false);
+
             // Disable replacement feature for now
             return false;
         }
@@ -1784,7 +1792,10 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     // Delete redundant memory transactions that are in the connected branch
     BOOST_FOREACH(CTransaction& tx, vDelete) {
         mempool.remove(tx);
-        mempool.removeConflicts(tx);
+        map<COutPoint, CTransaction> vConflicts = mempool.removeConflicts(tx);
+        BOOST_FOREACH(const PAIRTYPE(COutPoint, CTransaction)& conflict, vConflicts) {
+            g_signals.DetectedDoubleSpend(conflict.first, tx, conflict.second, true);
+        }
     }
 
     mempool.check(pcoinsTip);
