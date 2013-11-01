@@ -20,7 +20,9 @@ script: |
   #
   HOST=i686-w64-mingw32
   INSTDIR="$HOME/qt/"
-  #
+  # Integrity Check
+  echo "f1f72974f924861be04019f49f07cd43ab3c95056db2ba8f34b283487cccc728  qt-everywhere-opensource-src-4.8.3.tar.gz" | sha256sum -c
+
   mkdir $INSTDIR
   mkdir -p $INSTDIR/host/bin
   #
