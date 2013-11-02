@@ -306,6 +306,7 @@ std::string HelpMessage()
         "  -?                     " + _("This help message") + "\n" +
         "  -conf=<file>           " + _("Specify configuration file (default: litecoin.conf)") + "\n" +
         "  -pid=<file>            " + _("Specify pid file (default: litecoind.pid)") + "\n" +
+        "  -gen                   " + _("Generate coins (default: 0)") + "\n" +
         "  -datadir=<dir>         " + _("Specify data directory") + "\n" +
         "  -dbcache=<n>           " + _("Set database cache size in megabytes (default: 25)") + "\n" +
         "  -timeout=<n>           " + _("Specify connection timeout in milliseconds (default: 5000)") + "\n" +
@@ -1136,6 +1137,9 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     if (fServer)
         StartRPCThreads();
+
+    // Generate coins in the background
+    GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain);
 
     // ********************************************************* Step 12: finished
 
