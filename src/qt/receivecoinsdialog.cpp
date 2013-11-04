@@ -81,7 +81,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     {
         /* Choose existing receiving address */
         AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::ReceivingTab, this);
-        dlg.setModel(model->getAddressTableModel());
+        dlg.setModel(model);
         if(dlg.exec())
         {
             address = dlg.getReturnValue();
@@ -97,7 +97,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
     }
     SendCoinsRecipient info(address, label,
-            ui->reqAmount->value(), ui->reqMessage->text());
+        ui->reqAmount->value(), ui->reqMessage->text());
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
     dialog->setModel(model->getOptionsModel());
     dialog->setInfo(info);

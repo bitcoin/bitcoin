@@ -7,7 +7,7 @@ namespace Ui {
     class AddressBookPage;
 }
 class AddressTableModel;
-class OptionsModel;
+class WalletModel;
 
 QT_BEGIN_NAMESPACE
 class QTableView;
@@ -37,8 +37,7 @@ public:
     explicit AddressBookPage(Mode mode, Tabs tab, QWidget *parent = 0);
     ~AddressBookPage();
 
-    void setModel(AddressTableModel *model);
-    void setOptionsModel(OptionsModel *optionsModel);
+    void setModel(WalletModel *model);
     const QString &getReturnValue() const { return returnValue; }
 
 public slots:
@@ -47,7 +46,6 @@ public slots:
 private:
     Ui::AddressBookPage *ui;
     AddressTableModel *model;
-    OptionsModel *optionsModel;
     Mode mode;
     Tabs tab;
     QString returnValue;
@@ -79,6 +77,9 @@ private slots:
 
 signals:
     void sendCoins(QString addr);
+
+    /**  Fired when a message should be reported to the user */
+    void message(const QString &title, const QString &message, unsigned int style);
 };
 
 #endif // ADDRESSBOOKPAGE_H

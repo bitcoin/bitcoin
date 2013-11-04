@@ -261,7 +261,7 @@ void WalletView::usedSendingAddresses()
     if(!walletModel)
         return;
     AddressBookPage *dlg = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
-    dlg->setModel(walletModel->getAddressTableModel());
+    dlg->setModel(walletModel);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
 }
@@ -271,7 +271,7 @@ void WalletView::usedReceivingAddresses()
     if(!walletModel)
         return;
     AddressBookPage *dlg = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
-    dlg->setModel(walletModel->getAddressTableModel());
+    dlg->setModel(walletModel);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
 }
