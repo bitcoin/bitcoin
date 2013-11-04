@@ -108,7 +108,7 @@ bool AppInit(int argc, char* argv[])
 #endif
 
         detectShutdownThread = new boost::thread(boost::bind(&DetectShutdownThread, &threadGroup));
-        fRet = AppInit2(threadGroup);
+        fRet = AppInit2(threadGroup, true);
     }
     catch (std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");
@@ -142,7 +142,6 @@ extern void noui_connect();
 int main(int argc, char* argv[])
 {
     bool fRet = false;
-    fHaveGUI = false;
 
     // Connect bitcoind signal handlers
     noui_connect();
