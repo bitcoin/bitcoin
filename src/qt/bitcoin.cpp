@@ -173,8 +173,6 @@ int main(int argc, char *argv[])
     bool fMissingDatadir = false;
     bool fSelParFromCLFailed = false;
 
-    fHaveGUI = true;
-
     // Command-line options take precedence:
     ParseParameters(argc, argv);
     // ... then bitcoin.conf:
@@ -293,7 +291,7 @@ int main(int argc, char *argv[])
         QObject::connect(pollShutdownTimer, SIGNAL(timeout()), guiref, SLOT(detectShutdown()));
         pollShutdownTimer->start(200);
 
-        if(AppInit2(threadGroup))
+        if(AppInit2(threadGroup, false))
         {
             {
                 // Put this in a block, so that the Model objects are cleaned up before
