@@ -1,0 +1,4 @@
+AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
+  $(LEVELDB_CPPFLAGS)  \
+  $(BOOST_INCLUDES)
+AM_LDFLAGS = $(PTHREAD_CFLAGS)
