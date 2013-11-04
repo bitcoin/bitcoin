@@ -227,7 +227,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     {
         strUsage += ".\n";
     }
-        strUsage += "  -logtimestamps         " + _("Prepend debug output with timestamp") + "\n";
+        strUsage += "  -logtimestamps         " + _("Prepend debug output with timestamp (default: 1)") + "\n";
         strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
         strUsage += "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n";
         strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be "
@@ -500,7 +500,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         fServer = true;
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
     fPrintToDebugger = GetBoolArg("-printtodebugger", false);
-    fLogTimestamps = GetBoolArg("-logtimestamps", false);
+    fLogTimestamps = GetBoolArg("-logtimestamps", true);
 
     if (mapArgs.count("-timeout"))
     {
