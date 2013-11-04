@@ -63,6 +63,7 @@ int secp256k1_ecdsa_sign_compact(const unsigned char *msg, int msglen,
  *           0: otherwise.
  *  In:      msg:        the message assumed to be signed
  *           msglen:     the length of the message
+ *           sig64:      signature as 64 byte array
  *           compressed: whether to recover a compressed or uncompressed pubkey
  *           recid:      the recovery id (as returned by ecdsa_sign_compact)
  *  Out:     pubkey:     pointer to a 33 or 65 byte array to put the pubkey.
