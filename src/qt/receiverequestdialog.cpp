@@ -85,12 +85,10 @@ ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
 
 #ifndef USE_QRCODE
     ui->btnSaveAs->setVisible(false);
-    ui->btnCopyImage->setVisible(false);
     ui->lblQRCode->setVisible(false);
 #endif
 
     connect(ui->btnSaveAs, SIGNAL(clicked()), ui->lblQRCode, SLOT(saveImage()));
-    connect(ui->btnCopyImage, SIGNAL(clicked()), ui->lblQRCode, SLOT(copyImage()));
 }
 
 ReceiveRequestDialog::~ReceiveRequestDialog()
