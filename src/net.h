@@ -32,7 +32,6 @@
 
 class CAddrMan;
 class CBlockIndex;
-class CNetAddr;
 class CNode;
 
 namespace boost {
