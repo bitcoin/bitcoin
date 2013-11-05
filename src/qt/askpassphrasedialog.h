@@ -41,6 +41,8 @@ private:
 
 private slots:
     void textChanged();
+
+protected:
     bool event(QEvent *event);
     bool eventFilter(QObject *object, QEvent *event);
 };
