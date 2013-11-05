@@ -363,7 +363,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
  */
-bool AppInit2(boost::thread_group& threadGroup)
+bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
 {
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
@@ -490,14 +490,11 @@ bool AppInit2(boost::thread_group& threadGroup)
     else if (nScriptCheckThreads > MAX_SCRIPTCHECK_THREADS)
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
 
-    if (fDaemon)
+    if (fDaemon || fForceServer)
         fServer = true;
     else
         fServer = GetBoolArg("-server", false);
 
-    /* force fServer when running without GUI */
-    if (!fHaveGUI)
-        fServer = true;
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
     fPrintToDebugger = GetBoolArg("-printtodebugger", false);
     fLogTimestamps = GetBoolArg("-logtimestamps", true);
