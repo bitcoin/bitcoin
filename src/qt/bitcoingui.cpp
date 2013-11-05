@@ -711,30 +711,6 @@ void BitcoinGUI::dragEnterEvent(QDragEnterEvent *event)
         event->acceptProposedAction();
 }
 
-void BitcoinGUI::dropEvent(QDropEvent *event)
-{
-    if(event->mimeData()->hasUrls())
-    {
-        int nValidUrisFound = 0;
-        QList<QUrl> uris = event->mimeData()->urls();
-        foreach(const QUrl &uri, uris)
-        {
-            SendCoinsRecipient r;
-            if (GUIUtil::parseBitcoinURI(uri, &r) && walletFrame->handlePaymentRequest(r))
-                nValidUrisFound++;
-        }
-
-        // if valid URIs were found
-        if (nValidUrisFound)
-            walletFrame->gotoSendCoinsPage();
-        else
-            message(tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters."),
-                CClientUIInterface::ICON_WARNING);
-    }
-
-    event->acceptProposedAction();
-}
-
 bool BitcoinGUI::eventFilter(QObject *object, QEvent *event)
 {
     // Catch status tip events

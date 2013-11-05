@@ -290,16 +290,12 @@ PaymentServer::~PaymentServer()
     google::protobuf::ShutdownProtobufLibrary();
 }
 
-//
-// OSX-specific way of handling bitcoin: URIs and
-// PaymentRequest mime types
-//
-bool PaymentServer::eventFilter(QObject *, QEvent *event)
+bool PaymentServer::eventFilter(QObject *object, QEvent *event)
 {
-    // clicking on bitcoin: URIs creates FileOpen events on the Mac:
+    // clicking on bitcoin: URIs creates FileOpen events on the Mac
     if (event->type() == QEvent::FileOpen)
     {
-        QFileOpenEvent* fileEvent = static_cast<QFileOpenEvent*>(event);
+        QFileOpenEvent *fileEvent = static_cast<QFileOpenEvent*>(event);
         if (!fileEvent->file().isEmpty())
             handleURIOrFile(fileEvent->file());
         else if (!fileEvent->url().isEmpty())
@@ -307,7 +303,23 @@ bool PaymentServer::eventFilter(QObject *, QEvent *event)
 
         return true;
     }
-    return false;
+    // handle dropping payment request URLs or normal bitcoin: URIs
+    else if (event->type() == QEvent::Drop)
+    {
+        QDropEvent *dropEvent = static_cast<QDropEvent*>(event);
+        if (dropEvent->mimeData()->hasUrls())
+        {
+            QList<QUrl> uris = dropEvent->mimeData()->urls();
+            foreach(const QUrl &uri, uris)
+            {
+                handleURIOrFile(uri.toString());
+            }
+        }
+
+        return true;
+    }
+
+    return QObject::eventFilter(object, event);
 }
 
 void PaymentServer::initNetManager()
