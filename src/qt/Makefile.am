@@ -96,6 +96,7 @@ QT_MOC_CPP = moc_aboutdialog.cpp moc_addressbookpage.cpp \
   moc_optionsmodel.cpp moc_overviewpage.cpp moc_paymentserver.cpp \
   moc_receiverequestdialog.cpp moc_qvalidatedlineedit.cpp moc_qvaluecombobox.cpp \
   moc_receivecoinsdialog.cpp \
+  moc_recentrequeststablemodel.cpp \
   moc_rpcconsole.cpp moc_sendcoinsdialog.cpp moc_sendcoinsentry.cpp \
   moc_signverifymessagedialog.cpp moc_splashscreen.cpp moc_trafficgraphwidget.cpp moc_transactiondesc.cpp \
   moc_transactiondescdialog.cpp moc_transactionfilterproxy.cpp \
@@ -122,6 +123,7 @@ BITCOIN_QT_H  = aboutdialog.h addressbookpage.h addresstablemodel.h \
   optionsdialog.h \
   optionsmodel.h overviewpage.h paymentrequestplus.h paymentserver.h \
   receivecoinsdialog.h \
+  recentrequeststablemodel.h \
   receiverequestdialog.h qvalidatedlineedit.h qvaluecombobox.h rpcconsole.h \
   sendcoinsdialog.h sendcoinsentry.h signverifymessagedialog.h splashscreen.h \
   trafficgraphwidget.h transactiondescdialog.h transactiondesc.h transactionfilterproxy.h \
@@ -157,6 +159,7 @@ BITCOIN_QT_CPP = aboutdialog.cpp addressbookpage.cpp \
   optionsdialog.cpp optionsmodel.cpp overviewpage.cpp paymentrequestplus.cpp \
   paymentserver.cpp qvalidatedlineedit.cpp qvaluecombobox.cpp \
   receivecoinsdialog.cpp receiverequestdialog.cpp \
+  recentrequeststablemodel.cpp \
   rpcconsole.cpp sendcoinsdialog.cpp sendcoinsentry.cpp \
   signverifymessagedialog.cpp splashscreen.cpp trafficgraphwidget.cpp transactiondesc.cpp \
   transactiondescdialog.cpp transactionfilterproxy.cpp transactionrecord.cpp \
