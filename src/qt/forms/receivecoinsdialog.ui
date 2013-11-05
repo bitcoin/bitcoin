@@ -7,35 +7,60 @@
     <x>0</x>
     <y>0</y>
     <width>776</width>
-    <height>343</height>
+    <height>364</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="3" column="0">
-      <widget class="QLabel" name="label">
+     <item row="7" column="2">
+      <widget class="QCheckBox" name="reuseAddress">
+       <property name="toolTip">
+        <string>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</string>
+       </property>
        <property name="text">
-        <string>&amp;Amount:</string>
+        <string>R&amp;euse an existing receiving address (not recommended)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>&amp;Message:</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="buddy">
-        <cstring>reqAmount</cstring>
+        <cstring>reqMessage</cstring>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
-      <widget class="BitcoinAmountField" name="reqAmount">
-       <property name="minimumSize">
-        <size>
-         <width>80</width>
-         <height>0</height>
-        </size>
-       </property>
+     <item row="4" column="2">
+      <widget class="QLineEdit" name="reqLabel">
        <property name="toolTip">
-        <string>The amount to request</string>
+        <string>The label to associate with the new receiving address</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="2">
+      <widget class="QLineEdit" name="reqMessage">
+       <property name="toolTip">
+        <string>The message to attach to payment request</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Use this form to request payments. All fields are optional.</string>
        </property>
       </widget>
      </item>
@@ -52,71 +77,33 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
-      <widget class="QLineEdit" name="reqLabel">
-       <property name="toolTip">
-        <string>The label to associate with the receiving address</string>
-       </property>
-      </widget>
-     </item>
      <item row="5" column="0">
-      <widget class="QLabel" name="label_3">
+      <widget class="QLabel" name="label">
        <property name="text">
-        <string>&amp;Message:</string>
+        <string>&amp;Amount:</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="buddy">
-        <cstring>reqMessage</cstring>
+        <cstring>reqAmount</cstring>
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
-      <widget class="QLineEdit" name="reqMessage">
+     <item row="5" column="2">
+      <widget class="BitcoinAmountField" name="reqAmount">
+       <property name="minimumSize">
+        <size>
+         <width>80</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="toolTip">
-        <string>The message to attach to payment request</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QCheckBox" name="reuseAddress">
-       <property name="toolTip">
-        <string>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</string>
-       </property>
-       <property name="text">
-        <string>R&amp;euse an existing receiving address (not recommended)</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Use this form to request payments. All fields are optional.</string>
+        <string>The amount to request</string>
        </property>
       </widget>
      </item>
     </layout>
-   </item>
-   <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -178,6 +165,98 @@
      </item>
     </layout>
    </item>
+   <item>
+    <spacer name="verticalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QFrame" name="frame">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QLabel" name="label_6">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Previously requested payments</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableView" name="recentRequestsView"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QPushButton" name="showRequestButton">
+          <property name="toolTip">
+           <string>Show the selected request (does the same as double clicking an entry)</string>
+          </property>
+          <property name="text">
+           <string>Show</string>
+          </property>
+          <property name="icon">
+           <iconset resource="../bitcoin.qrc">
+            <normaloff>:/icons/edit</normaloff>:/icons/edit</iconset>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="removeRequestButton">
+          <property name="toolTip">
+           <string>Remove the selected entries from the list</string>
+          </property>
+          <property name="text">
+           <string>Remove</string>
+          </property>
+          <property name="icon">
+           <iconset resource="../bitcoin.qrc">
+            <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -187,6 +266,17 @@
    <header>bitcoinamountfield.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>reqLabel</tabstop>
+  <tabstop>reqAmount</tabstop>
+  <tabstop>reqMessage</tabstop>
+  <tabstop>reuseAddress</tabstop>
+  <tabstop>clearButton</tabstop>
+  <tabstop>receiveButton</tabstop>
+  <tabstop>recentRequestsView</tabstop>
+  <tabstop>showRequestButton</tabstop>
+  <tabstop>removeRequestButton</tabstop>
+ </tabstops>
  <resources>
   <include location="../bitcoin.qrc"/>
  </resources>
