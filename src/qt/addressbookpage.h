@@ -11,7 +11,6 @@ namespace Ui {
     class AddressBookPage;
 }
 class AddressTableModel;
-class OptionsModel;
 
 QT_BEGIN_NAMESPACE
 class QTableView;
@@ -42,7 +41,6 @@ public:
     ~AddressBookPage();
 
     void setModel(AddressTableModel *model);
-    void setOptionsModel(OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
 
 public slots:
@@ -51,7 +49,6 @@ public slots:
 private:
     Ui::AddressBookPage *ui;
     AddressTableModel *model;
-    OptionsModel *optionsModel;
     Mode mode;
     Tabs tab;
     QString returnValue;
