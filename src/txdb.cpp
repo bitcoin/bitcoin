@@ -40,30 +40,27 @@ bool CCoinsViewDB::HaveCoins(const uint256 &txid) {
     return db.Exists(make_pair('c', txid)); 
 }
 
-CBlockIndex *CCoinsViewDB::GetBestBlock() {
+uint256 CCoinsViewDB::GetBestBlock() {
     uint256 hashBestChain;
     if (!db.Read('B', hashBestChain))
-        return NULL;
-    std::map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(hashBestChain);
-    if (it == mapBlockIndex.end())
-        return NULL;
-    return it->second;
+        return uint256(0);
+    return hashBestChain;
 }
 
-bool CCoinsViewDB::SetBestBlock(CBlockIndex *pindex) {
+bool CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
     CLevelDBBatch batch;
-    BatchWriteHashBestChain(batch, pindex->GetBlockHash()); 
+    BatchWriteHashBestChain(batch, hashBlock);
     return db.WriteBatch(batch);
 }
 
-bool CCoinsViewDB::BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex) {
+bool CCoinsViewDB::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock) {
     LogPrint("coindb", "Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
 
     CLevelDBBatch batch;
     for (std::map<uint256, CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
         BatchWriteCoins(batch, it->first, it->second);
-    if (pindex)
-        BatchWriteHashBestChain(batch, pindex->GetBlockHash());
+    if (hashBlock != uint256(0))
+        BatchWriteHashBestChain(batch, hashBlock);
 
     return db.WriteBatch(batch);
 }
@@ -115,7 +112,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
     pcursor->SeekToFirst();
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    stats.hashBlock = GetBestBlock()->GetBlockHash();
+    stats.hashBlock = GetBestBlock();
     ss << stats.hashBlock;
     int64_t nTotalAmount = 0;
     while (pcursor->Valid()) {
@@ -155,7 +152,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
         }
     }
     delete pcursor;
-    stats.nHeight = GetBestBlock()->nHeight;
+    stats.nHeight = mapBlockIndex.find(GetBestBlock())->second->nHeight;
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
     return true;
