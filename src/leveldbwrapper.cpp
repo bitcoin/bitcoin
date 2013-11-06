@@ -1,8 +1,8 @@
-// Copyright (c) 2012 The Bitcoin developers
+// Copyright (c) 2012-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "leveldb.h"
+#include "leveldbwrapper.h"
 #include "util.h"
 
 #include <leveldb/env.h>
@@ -35,7 +35,7 @@ static leveldb::Options GetOptions(size_t nCacheSize) {
     return options;
 }
 
-CLevelDB::CLevelDB(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe) {
+CLevelDBWrapper::CLevelDBWrapper(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe) {
     penv = NULL;
     readoptions.verify_checksums = true;
     iteroptions.verify_checksums = true;
@@ -59,7 +59,7 @@ CLevelDB::CLevelDB(const boost::filesystem::path &path, size_t nCacheSize, bool 
     LogPrintf("Opened LevelDB successfully\n");
 }
 
-CLevelDB::~CLevelDB() {
+CLevelDBWrapper::~CLevelDBWrapper() {
     delete pdb;
     pdb = NULL;
     delete options.filter_policy;
@@ -70,7 +70,7 @@ CLevelDB::~CLevelDB() {
     options.env = NULL;
 }
 
-bool CLevelDB::WriteBatch(CLevelDBBatch &batch, bool fSync) throw(leveldb_error) {
+bool CLevelDBWrapper::WriteBatch(CLevelDBBatch &batch, bool fSync) throw(leveldb_error) {
     leveldb::Status status = pdb->Write(fSync ? syncoptions : writeoptions, &batch.batch);
     HandleError(status);
     return true;
