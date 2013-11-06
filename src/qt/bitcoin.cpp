@@ -334,6 +334,8 @@ int main(int argc, char *argv[])
                 // bitcoin: URIs or payment requests:
                 QObject::connect(paymentServer, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
                                  &window, SLOT(handlePaymentRequest(SendCoinsRecipient)));
+                QObject::connect(&window, SIGNAL(receivedURI(QString)),
+                                 paymentServer, SLOT(handleURIOrFile(QString)));
                 QObject::connect(&walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
                                  paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
                 QObject::connect(paymentServer, SIGNAL(message(QString,QString,unsigned int)),
