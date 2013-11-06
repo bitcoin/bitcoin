@@ -19,7 +19,7 @@ BITCOIN_CORE_H = addrman.h alert.h allocators.h base58.h bignum.h \
   rpcclient.h rpcprotocol.h rpcserver.h \
   bloom.h checkpoints.h checkpointsync.h checkqueue.h \
   clientversion.h compat.h crypter.h db.h hash.h init.h \
-  key.h kernel.h keystore.h leveldb.h limitedmap.h main.h mruset.h \
+  key.h kernel.h keystore.h leveldbwrapper.h limitedmap.h main.h mruset.h \
   netbase.h net.h protocol.h script.h serialize.h sync.h threadsafety.h \
   txdb.h ui_interface.h uint256.h util.h version.h walletdb.h wallet.h
 
@@ -46,7 +46,7 @@ libppcoin_server_a_SOURCES = \
   init.cpp \
   kernel.cpp \
   keystore.cpp \
-  leveldb.cpp \
+  leveldbwrapper.cpp \
   main.cpp \
   net.cpp \
   noui.cpp \
