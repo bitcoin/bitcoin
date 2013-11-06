@@ -29,14 +29,21 @@ public:
     explicit SendCoinsRecipient(const QString &addr, const QString &label, quint64 amount, const QString &message):
         address(addr), label(label), amount(amount), message(message) {}
 
+    // If from an insecure payment request, this is used for storing
+    // the addresses, e.g. address-A<br />address-B<br />address-C.
+    // Info: As we don't need to process addresses in here when using
+    // payment requests, we can abuse it for displaying an address list.
+    // Todo: This is a hack, should be replaced with a cleaner solution!
     QString address;
     QString label;
     qint64 amount;
+    // If from a payment request, this is used for storing the memo
     QString message;
 
     // If from a payment request, paymentRequest.IsInitialized() will be true
     PaymentRequestPlus paymentRequest;
-    QString authenticatedMerchant; // Empty if no authentication or invalid signature/cert/etc.
+    // Empty if no authentication or invalid signature/cert/etc.
+    QString authenticatedMerchant;
 };
 
 /** Interface to Bitcoin wallet from Qt view code. */
@@ -164,7 +171,7 @@ signals:
     // this means that the unlocking failed or was cancelled.
     void requireUnlock();
 
-    // Asynchronous message notification
+    // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 
     // Coins sent: from wallet, to recipient, in (serialized) transaction:
