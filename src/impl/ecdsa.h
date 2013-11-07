@@ -123,8 +123,11 @@ int static secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
     secp256k1_num_t rx;
     secp256k1_num_init(&rx);
     secp256k1_num_copy(&rx, &sig->r);
-    if (recid & 2)
+    if (recid & 2) {
         secp256k1_num_add(&rx, &rx, &c->order);
+        if (secp256k1_num_cmp(&rx, &secp256k1_fe_consts->p) >= 0)
+            return 0;
+    }
     unsigned char brx[32];
     secp256k1_num_get_bin(brx, 32, &rx);
     secp256k1_num_free(&rx);
