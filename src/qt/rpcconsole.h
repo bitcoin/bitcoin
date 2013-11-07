@@ -37,6 +37,8 @@ protected:
 private slots:
     void on_lineEdit_returnPressed();
     void on_tabWidget_currentChanged(int index);
+    /** toggle network activity */
+    void on_toggleNetworkActiveButton_clicked();
     /** open the debug.log from the current datadir */
     void on_openDebugLogfileButton_clicked();
     /** display messagebox with program parameters (same as bitcoin-qt --help) */
@@ -53,6 +55,8 @@ public slots:
     void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
+    /** Set network state shown in the UI */
+    void setNetworkActive(bool networkActive);
     /** Set number of blocks shown in the UI */
     void setNumBlocks(int count, int countOfPeers);
     /** Go forward or back in history */
@@ -74,6 +78,9 @@ private:
     int historyPtr;
 
     void startExecutor();
+
+    /** Update UI with latest network info from model. */
+    void updateNetworkState();
 };
 
 #endif // RPCCONSOLE_H

@@ -239,3 +239,15 @@ Value getnettotals(const Array& params, bool fHelp)
     obj.push_back(Pair("timemillis", static_cast<boost::int64_t>(GetTimeMillis())));
     return obj;
 }
+
+Value togglenetwork(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "togglenetwork\n"
+            "Toggle all network activity temporarily.");
+
+    SetNetworkActive(!fNetworkActive);
+
+    return fNetworkActive;
+}
