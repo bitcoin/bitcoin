@@ -18,7 +18,9 @@ script: |
   export TZ=UTC
   export INSTALLPREFIX=$OUTDIR/staging/deps
   export HOST=i686-w64-mingw32
-  #
+  # Integrity Check
+  echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
+
   #
   mkdir -p $INSTALLPREFIX
 

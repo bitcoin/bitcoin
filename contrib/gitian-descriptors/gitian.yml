@@ -35,7 +35,11 @@ files:
 script: |
   STAGING="$HOME/install"
   export LIBRARY_PATH="$STAGING/lib"
-  #
+  # Integrity Check
+  echo "bbd6b756e6af44b5a5b0f9b93eada3fb8922ed1d6451b7d6f184d0ae0c813994  miniupnpc-1.6.tar.gz"   | sha256sum -c
+  echo "03c4bc7cd9a75747c3815d509bbe061907d615764f2357923f0db948c567068f  qrencode-3.2.0.tar.bz2" | sha256sum -c
+  echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
+
   tar xzfm miniupnpc-1.6.tar.gz
   cd miniupnpc-1.6
   INSTALLPREFIX=$STAGING make $MAKEOPTS install
