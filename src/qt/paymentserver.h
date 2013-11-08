@@ -80,10 +80,6 @@ public:
     // Setup networking
     void initNetManager();
 
-    // Constructor registers this on the parent QApplication to
-    // receive QEvent::FileOpen events
-    bool eventFilter(QObject *object, QEvent *event);
-
     // OptionsModel is used for getting proxy settings and display unit
     void setOptionsModel(OptionsModel *optionsModel);
 
@@ -110,6 +106,11 @@ private slots:
     void netRequestFinished(QNetworkReply*);
     void reportSslErrors(QNetworkReply*, const QList<QSslError> &);
     void handlePaymentACK(const QString& paymentACKMsg);
+
+protected:
+    // Constructor registers this on the parent QApplication to
+    // receive QEvent::FileOpen and QEvent:Drop events
+    bool eventFilter(QObject *object, QEvent *event);
 
 private:
     static bool readPaymentRequest(const QString& filename, PaymentRequestPlus& request);
