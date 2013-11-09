@@ -15,7 +15,7 @@ DIST_SUBDIRS = . qt test
 BITCOIN_CORE_H = addrman.h alert.h allocators.h base58.h bignum.h \
   bitcoinrpc.h bloom.h chainparams.h checkpoints.h checkqueue.h \
   clientversion.h compat.h core.h crypter.h db.h hash.h init.h \
-  key.h keystore.h leveldb.h limitedmap.h main.h miner.h mruset.h \
+  key.h keystore.h leveldbwrapper.h limitedmap.h main.h miner.h mruset.h \
   netbase.h net.h protocol.h script.h serialize.h sync.h threadsafety.h \
   txdb.h txmempool.h ui_interface.h uint256.h util.h version.h walletdb.h wallet.h
 
@@ -33,7 +33,7 @@ version.o: obj/build.h
 
 libbitcoin_a_SOURCES = addrman.cpp alert.cpp allocators.cpp bitcoinrpc.cpp bloom.cpp \
   chainparams.cpp checkpoints.cpp core.cpp crypter.cpp db.cpp hash.cpp \
-  init.cpp key.cpp keystore.cpp leveldb.cpp main.cpp miner.cpp \
+  init.cpp key.cpp keystore.cpp leveldbwrapper.cpp main.cpp miner.cpp \
   netbase.cpp net.cpp noui.cpp protocol.cpp rpcblockchain.cpp rpcdump.cpp \
   rpcmining.cpp rpcnet.cpp rpcrawtransaction.cpp rpcwallet.cpp script.cpp \
   sync.cpp txdb.cpp txmempool.cpp util.cpp version.cpp wallet.cpp walletdb.cpp $(JSON_H) \
