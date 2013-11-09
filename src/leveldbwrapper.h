@@ -1,8 +1,9 @@
-// Copyright (c) 2012 The Bitcoin developers
+// Copyright (c) 2012-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_LEVELDB_H
-#define BITCOIN_LEVELDB_H
+
+#ifndef BITCOIN_LEVELDBWRAPPER_H
+#define BITCOIN_LEVELDBWRAPPER_H
 
 #include "serialize.h"
 #include "util.h"
@@ -20,10 +21,10 @@ public:
 
 void HandleError(const leveldb::Status &status) throw(leveldb_error);
 
-// Batch of changes queued to be written to a CLevelDB
+// Batch of changes queued to be written to a CLevelDBWrapper
 class CLevelDBBatch
 {
-    friend class CLevelDB;
+    friend class CLevelDBWrapper;
 
 private:
     leveldb::WriteBatch batch;
@@ -53,7 +54,7 @@ public:
     }
 };
 
-class CLevelDB
+class CLevelDBWrapper
 {
 private:
     // custom environment this database is using (may be NULL in case of default environment)
@@ -78,8 +79,8 @@ private:
     leveldb::DB *pdb;
 
 public:
-    CLevelDB(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-    ~CLevelDB();
+    CLevelDBWrapper(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    ~CLevelDBWrapper();
 
     template<typename K, typename V> bool Read(const K& key, V& value) throw(leveldb_error) {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
@@ -151,4 +152,4 @@ public:
     }
 };
 
-#endif // BITCOIN_LEVELDB_H
+#endif // BITCOIN_LEVELDBWRAPPER_H
