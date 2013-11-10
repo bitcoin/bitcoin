@@ -8,6 +8,8 @@
 #include "bitcoinrpc.h"
 #include "ui_interface.h" /* for _(...) */
 
+#include <boost/filesystem/operations.hpp>
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Start

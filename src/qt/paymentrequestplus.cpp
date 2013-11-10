@@ -7,16 +7,16 @@
 // with some extra methods
 //
 
+#include "paymentrequestplus.h"
+
+#include <stdexcept>
+
+#include <openssl/x509.h>
+#include <openssl/x509_vfy.h>
 #include <QDateTime>
 #include <QDebug>
 #include <QSslCertificate>
 
-#include <openssl/x509.h>
-#include <openssl/x509_vfy.h>
-
-#include <stdexcept>
-
-#include "paymentrequestplus.h"
 
 class SSLVerifyError : public std::runtime_error
 {

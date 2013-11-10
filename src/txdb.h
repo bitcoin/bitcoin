@@ -2,11 +2,21 @@
 // Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_TXDB_LEVELDB_H
 #define BITCOIN_TXDB_LEVELDB_H
 
-#include "main.h"
 #include "leveldbwrapper.h"
+#include "main.h"
+
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
+
+class CBigNum;
+class CCoins;
+class uint256;
 
 /** CCoinsView backed by the LevelDB coin database (chainstate/) */
 class CCoinsViewDB : public CCoinsView

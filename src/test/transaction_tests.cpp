@@ -1,12 +1,18 @@
-#include <map>
-#include <string>
-#include <boost/test/unit_test.hpp>
-#include "json/json_spirit_writer_template.h"
 
-#include "main.h"
-#include "wallet.h"
+
 #include "data/tx_invalid.json.h"
 #include "data/tx_valid.json.h"
+
+#include "key.h"
+#include "keystore.h"
+#include "main.h"
+#include "script.h"
+
+#include <map>
+#include <string>
+
+#include <boost/test/unit_test.hpp>
+#include "json/json_spirit_writer_template.h"
 
 using namespace std;
 using namespace json_spirit;

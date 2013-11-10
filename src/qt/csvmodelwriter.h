@@ -5,8 +5,8 @@
 #ifndef CSVMODELWRITER_H
 #define CSVMODELWRITER_H
 
-#include <QObject>
 #include <QList>
+#include <QObject>
 
 QT_BEGIN_NAMESPACE
 class QAbstractItemModel;

@@ -2,6 +2,23 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "paymentserver.h"
+
+#include "bitcoinunits.h"
+#include "guiconstants.h"
+#include "guiutil.h"
+#include "optionsmodel.h"
+#include "paymentserver.h"
+#include "walletmodel.h"
+
+#include "base58.h"
+#include "ui_interface.h"
+#include "wallet.h"
+
+#include <cstdlib>
+
+#include <openssl/x509.h>
+#include <openssl/x509_vfy.h>
 #include <QApplication>
 #include <QByteArray>
 #include <QDataStream>
@@ -13,8 +30,6 @@
 #include <QList>
 #include <QLocalServer>
 #include <QLocalSocket>
-#include <QStringList>
-#include <QTextDocument>
 #include <QNetworkAccessManager>
 #include <QNetworkProxy>
 #include <QNetworkReply>
@@ -22,27 +37,16 @@
 #include <QSslCertificate>
 #include <QSslError>
 #include <QSslSocket>
+#include <QStringList>
+#include <QTextDocument>
+
 #if QT_VERSION < 0x050000
 #include <QUrl>
 #else
 #include <QUrlQuery>
 #endif
 
-#include <cstdlib>
-
-#include <openssl/x509.h>
-#include <openssl/x509_vfy.h>
-
-#include "base58.h"
-#include "bitcoinunits.h"
-#include "guiconstants.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "paymentserver.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "wallet.h"
-#include "walletmodel.h"
+using namespace boost;
 
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
 const QString BITCOIN_IPC_PREFIX("bitcoin:");
@@ -357,10 +361,10 @@ void PaymentServer::handleURIOrFile(const QString& s)
 
     if (s.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcoin:
     {
-#if QT_VERSION >= 0x050000
-        QUrlQuery uri((QUrl(s)));
-#else
+#if QT_VERSION < 0x050000
         QUrl uri(s);
+#else
+        QUrlQuery uri((QUrl(s)));
 #endif
         if (uri.hasQueryItem("request"))
         {

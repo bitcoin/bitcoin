@@ -3,18 +3,23 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chainparams.h"
 #include "db.h"
-#include "util.h"
-#include "hash.h"
+
 #include "addrman.h"
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <openssl/rand.h>
+#include "hash.h"
+#include "protocol.h"
+#include "util.h"
+
+#include <inttypes.h>
+#include <stdint.h>
 
 #ifndef WIN32
-#include "sys/stat.h"
+#include <sys/stat.h>
 #endif
+
+#include <boost/filesystem.hpp>
+#include <boost/version.hpp>
+#include <openssl/rand.h>
 
 using namespace std;
 using namespace boost;
@@ -430,7 +435,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
 
 void CDBEnv::Flush(bool fShutdown)
 {
-    int64 nStart = GetTimeMillis();
+    int64_t nStart = GetTimeMillis();
     // Flush log data to the actual data file
     //  on all files that are not in use
     LogPrint("db", "Flush(%s)%s\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started");
@@ -459,7 +464,7 @@ void CDBEnv::Flush(bool fShutdown)
             else
                 mi++;
         }
-        LogPrint("db", "DBFlush(%s)%s ended %15"PRI64d"ms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started", GetTimeMillis() - nStart);
+        LogPrint("db", "DBFlush(%s)%s ended %15"PRId64"ms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started", GetTimeMillis() - nStart);
         if (fShutdown)
         {
             char** listp;

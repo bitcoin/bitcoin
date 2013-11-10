@@ -1,12 +1,14 @@
 // Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef __CRYPTER_H__
 #define __CRYPTER_H__
 
-#include "allocators.h" /* for SecureString */
-#include "key.h"
+#include "allocators.h"
 #include "serialize.h"
+
+class uint256;
 
 const unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
 const unsigned int WALLET_CRYPTO_SALT_SIZE = 8;

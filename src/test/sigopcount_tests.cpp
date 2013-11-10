@@ -1,9 +1,13 @@
-#include <vector>
-#include <boost/test/unit_test.hpp>
-#include <boost/foreach.hpp>
 
-#include "script.h"
+
 #include "key.h"
+#include "script.h"
+#include "uint256.h"
+
+#include <vector>
+
+#include <boost/foreach.hpp>
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 

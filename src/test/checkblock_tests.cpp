@@ -1,17 +1,17 @@
 //
 // Unit tests for block.CheckBlock()
 //
-#include <algorithm>
 
-#include <boost/assign/list_of.hpp> // for 'map_list_of()'
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-#include <boost/test/unit_test.hpp>
-#include <boost/foreach.hpp>
+
 
 #include "main.h"
-#include "wallet.h"
-#include "net.h"
-#include "util.h"
+
+#include <cstdio>
+
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/test/unit_test.hpp>
+
 
 BOOST_AUTO_TEST_SUITE(CheckBlock_tests)
 
