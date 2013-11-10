@@ -1,12 +1,14 @@
-#include <boost/test/unit_test.hpp>
+#include "key.h"
+
+#include "base58.h"
+#include "script.h"
+#include "uint256.h"
+#include "util.h"
 
 #include <string>
 #include <vector>
 
-#include "key.h"
-#include "base58.h"
-#include "uint256.h"
-#include "util.h"
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 

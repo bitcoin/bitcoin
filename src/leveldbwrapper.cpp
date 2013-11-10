@@ -3,14 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "leveldbwrapper.h"
+
 #include "util.h"
 
-#include <leveldb/env.h>
+#include <boost/filesystem.hpp>
 #include <leveldb/cache.h>
+#include <leveldb/env.h>
 #include <leveldb/filter_policy.h>
 #include <memenv/memenv.h>
-
-#include <boost/filesystem.hpp>
 
 void HandleError(const leveldb::Status &status) throw(leveldb_error) {
     if (status.ok())

@@ -1,6 +1,8 @@
-#include <boost/test/unit_test.hpp>
+
 
 #include "util.h"
+
+#include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(base32_tests)
 

@@ -1,8 +1,11 @@
-#include <boost/test/unit_test.hpp>
+
+
+#include "hash.h"
+#include "util.h"
+
 #include <vector>
 
-#include "util.h"
-#include "hash.h"
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 

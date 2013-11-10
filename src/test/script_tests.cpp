@@ -1,21 +1,28 @@
-#include <iostream>
+#include "script.h"
+
+#include "data/script_invalid.json.h"
+#include "data/script_valid.json.h"
+
+#include "key.h"
+#include "keystore.h"
+#include "main.h"
+
 #include <fstream>
+#include <stdint.h>
+#include <string>
 #include <vector>
+
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
-#include <boost/preprocessor/stringize.hpp>
 #include <boost/test/unit_test.hpp>
 #include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_utils.h"
-
-#include "main.h"
-#include "wallet.h"
-#include "data/script_invalid.json.h"
-#include "data/script_valid.json.h"
+#include "json/json_spirit_writer_template.h"
 
 using namespace std;
 using namespace json_spirit;
@@ -60,7 +67,7 @@ ParseScript(string s)
             (starts_with(w, "-") && all(string(w.begin()+1, w.end()), is_digit())))
         {
             // Number
-            int64 n = atoi64(w);
+            int64_t n = atoi64(w);
             result << n;
         }
         else if (starts_with(w, "0x") && IsHex(string(w.begin()+2, w.end())))

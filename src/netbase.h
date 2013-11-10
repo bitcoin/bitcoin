@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_NETBASE_H
 #define BITCOIN_NETBASE_H
 
@@ -8,11 +9,12 @@
 #include "bitcoin-config.h"
 #endif
 
+#include "compat.h"
+#include "serialize.h"
+
+#include <stdint.h>
 #include <string>
 #include <vector>
-
-#include "serialize.h"
-#include "compat.h"
 
 extern int nConnectTimeout;
 
@@ -69,7 +71,7 @@ class CNetAddr
         std::string ToString() const;
         std::string ToStringIP() const;
         unsigned int GetByte(int n) const;
-        uint64 GetHash() const;
+        uint64_t GetHash() const;
         bool GetInAddr(struct in_addr* pipv4Addr) const;
         std::vector<unsigned char> GetGroup() const;
         int GetReachabilityFrom(const CNetAddr *paddrPartner = NULL) const;

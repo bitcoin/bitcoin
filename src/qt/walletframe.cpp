@@ -3,12 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "walletframe.h"
-#include "walletview.h"
+
 #include "bitcoingui.h"
+#include "walletview.h"
+
+#include <cstdio>
 
 #include <QHBoxLayout>
-#include <QMessageBox>
-#include <QStackedWidget>
 
 WalletFrame::WalletFrame(BitcoinGUI *_gui) :
     QFrame(_gui),

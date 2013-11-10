@@ -1,10 +1,10 @@
 #ifndef PAYMENTSERVERTESTS_H
 #define PAYMENTSERVERTESTS_H
 
-#include <QTest>
-#include <QObject>
-
 #include "../paymentserver.h"
+
+#include <QObject>
+#include <QTest>
 
 class PaymentServerTests : public QObject
 {

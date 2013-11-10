@@ -3,28 +3,35 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bitcoingui.h"
+
 #include "clientmodel.h"
-#include "walletmodel.h"
-#include "optionsmodel.h"
-#include "guiutil.h"
 #include "guiconstants.h"
-#include "init.h"
-#include "util.h"
-#include "ui_interface.h"
+#include "guiutil.h"
+#include "intro.h"
+#include "optionsmodel.h"
 #include "paymentserver.h"
 #include "splashscreen.h"
-#include "intro.h"
+#include "walletmodel.h"
 
+#include "init.h"
+#include "main.h"
+#include "ui_interface.h"
+#include "util.h"
+
+#include <stdint.h>
+
+#include <boost/filesystem/operations.hpp>
 #include <QApplication>
+#include <QLibraryInfo>
+#include <QLocale>
 #include <QMessageBox>
+#include <QSettings>
+#include <QTimer>
+#include <QTranslator>
+
 #if QT_VERSION < 0x050000
 #include <QTextCodec>
 #endif
-#include <QLocale>
-#include <QTimer>
-#include <QTranslator>
-#include <QLibraryInfo>
-#include <QSettings>
 
 #if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
 #define _BITCOIN_QT_PLUGINS_INCLUDED
@@ -68,7 +75,7 @@ static bool ThreadSafeMessageBox(const std::string& message, const std::string& 
     }
 }
 
-static bool ThreadSafeAskFee(int64 nFeeRequired)
+static bool ThreadSafeAskFee(int64_t nFeeRequired)
 {
     if(!guiref)
         return false;

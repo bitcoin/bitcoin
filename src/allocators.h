@@ -2,16 +2,17 @@
 // Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_ALLOCATORS_H
 #define BITCOIN_ALLOCATORS_H
 
-#include <string.h>
+#include <map>
 #include <string>
+#include <string.h>
+
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/once.hpp>
-#include <map>
 #include <openssl/crypto.h> // for OPENSSL_cleanse()
-
 
 /**
  * Thread-safe class to keep track of locked (ie, non-swappable) memory pages.

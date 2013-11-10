@@ -8,18 +8,18 @@
 #include "walletmodel.h"
 
 #include <QDialog>
-#include <QVariant>
-#include <QPair>
 
-namespace Ui {
-    class SendCoinsDialog;
-}
+class OptionsModel;
 class SendCoinsEntry;
 class SendCoinsRecipient;
 
 QT_BEGIN_NAMESPACE
 class QUrl;
 QT_END_NAMESPACE
+
+namespace Ui {
+    class SendCoinsDialog;
+}
 
 /** Dialog for sending bitcoins */
 class SendCoinsDialog : public QDialog

@@ -4,7 +4,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "keystore.h"
+
+#include "crypter.h"
+#include "key.h"
 #include "script.h"
+
+#include <boost/foreach.hpp>
 
 bool CKeyStore::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) const
 {

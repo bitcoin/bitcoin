@@ -2,15 +2,17 @@
 // Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_KEY_H
 #define BITCOIN_KEY_H
 
-#include <vector>
-
 #include "allocators.h"
+#include "hash.h"
 #include "serialize.h"
 #include "uint256.h"
-#include "hash.h"
+
+#include <stdexcept>
+#include <vector>
 
 // secp256k1:
 // const unsigned int PRIVATE_KEY_SIZE = 279;

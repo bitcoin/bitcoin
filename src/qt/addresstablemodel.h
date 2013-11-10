@@ -9,8 +9,9 @@
 #include <QStringList>
 
 class AddressTablePriv;
-class CWallet;
 class WalletModel;
+
+class CWallet;
 
 /**
    Qt model of the address book in the core. This allows views to access and modify the address book.
