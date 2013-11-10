@@ -4,7 +4,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "core.h"
+
 #include "util.h"
+
+#include <stdint.h>
 
 std::string COutPoint::ToString() const
 {
@@ -50,7 +53,7 @@ void CTxIn::print() const
     LogPrintf("%s\n", ToString().c_str());
 }
 
-CTxOut::CTxOut(int64 nValueIn, CScript scriptPubKeyIn)
+CTxOut::CTxOut(int64_t nValueIn, CScript scriptPubKeyIn)
 {
     nValue = nValueIn;
     scriptPubKey = scriptPubKeyIn;
@@ -63,7 +66,7 @@ uint256 CTxOut::GetHash() const
 
 std::string CTxOut::ToString() const
 {
-    return strprintf("CTxOut(nValue=%"PRI64d".%08"PRI64d", scriptPubKey=%s)", nValue / COIN, nValue % COIN, scriptPubKey.ToString().substr(0,30).c_str());
+    return strprintf("CTxOut(nValue=%"PRId64".%08"PRId64", scriptPubKey=%s)", nValue / COIN, nValue % COIN, scriptPubKey.ToString().substr(0,30).c_str());
 }
 
 void CTxOut::print() const
@@ -135,7 +138,7 @@ void CTransaction::print() const
 // * if e==9, we only know the resulting number is not zero, so output 1 + 10*(n - 1) + 9
 // (this is decodable, as d is in [1-9] and e is in [0-9])
 
-uint64 CTxOutCompressor::CompressAmount(uint64 n)
+uint64_t CTxOutCompressor::CompressAmount(uint64_t n)
 {
     if (n == 0)
         return 0;
@@ -154,7 +157,7 @@ uint64 CTxOutCompressor::CompressAmount(uint64 n)
     }
 }
 
-uint64 CTxOutCompressor::DecompressAmount(uint64 x)
+uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
 {
     // x = 0  OR  x = 1+10*(9*n + d - 1) + e  OR  x = 1+10*(n - 1) + 9
     if (x == 0)
@@ -163,7 +166,7 @@ uint64 CTxOutCompressor::DecompressAmount(uint64 x)
     // x = 10*(9*n + d - 1) + e
     int e = x % 10;
     x /= 10;
-    uint64 n = 0;
+    uint64_t n = 0;
     if (e < 9) {
         // x = 9*n + d - 1
         int d = (x % 9) + 1;

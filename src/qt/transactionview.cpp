@@ -4,31 +4,32 @@
 
 #include "transactionview.h"
 
-#include "transactionfilterproxy.h"
-#include "transactionrecord.h"
-#include "walletmodel.h"
 #include "addresstablemodel.h"
-#include "transactiontablemodel.h"
 #include "bitcoinunits.h"
 #include "csvmodelwriter.h"
-#include "transactiondescdialog.h"
 #include "editaddressdialog.h"
-#include "optionsmodel.h"
 #include "guiutil.h"
+#include "optionsmodel.h"
+#include "transactiondescdialog.h"
+#include "transactionfilterproxy.h"
+#include "transactionrecord.h"
+#include "transactiontablemodel.h"
+#include "walletmodel.h"
+
 #include "ui_interface.h"
 
-#include <QScrollBar>
 #include <QComboBox>
+#include <QDateTimeEdit>
 #include <QDoubleValidator>
 #include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QLineEdit>
-#include <QTableView>
 #include <QHeaderView>
-#include <QPoint>
-#include <QMenu>
 #include <QLabel>
-#include <QDateTimeEdit>
+#include <QLineEdit>
+#include <QMenu>
+#include <QPoint>
+#include <QScrollBar>
+#include <QTableView>
+#include <QVBoxLayout>
 
 TransactionView::TransactionView(QWidget *parent) :
     QWidget(parent), model(0), transactionProxyModel(0),

@@ -9,17 +9,14 @@
 
 class BitcoinGUI;
 class ClientModel;
-class WalletModel;
-class TransactionView;
 class OverviewPage;
-class SendCoinsDialog;
 class ReceiveCoinsDialog;
+class SendCoinsDialog;
 class SendCoinsRecipient;
-class SignVerifyMessageDialog;
-class RPCConsole;
+class TransactionView;
+class WalletModel;
 
 QT_BEGIN_NAMESPACE
-class QLabel;
 class QModelIndex;
 QT_END_NAMESPACE
 

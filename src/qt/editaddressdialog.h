@@ -7,10 +7,11 @@
 
 #include <QDialog>
 
+class AddressTableModel;
+
 namespace Ui {
     class EditAddressDialog;
 }
-class AddressTableModel;
 
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;

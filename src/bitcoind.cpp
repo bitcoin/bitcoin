@@ -3,12 +3,17 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "ui_interface.h"
-#include "init.h"
-#include "util.h"
-#include "main.h"
+
+
 #include "bitcoinrpc.h"
+#include "init.h"
+#include "main.h"
+#include "noui.h"
+#include "ui_interface.h"
+#include "util.h"
+
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
 
 void DetectShutdownThread(boost::thread_group* threadGroup)
 {
@@ -138,7 +143,6 @@ bool AppInit(int argc, char* argv[])
     return fRet;
 }
 
-extern void noui_connect();
 int main(int argc, char* argv[])
 {
     bool fRet = false;

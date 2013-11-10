@@ -7,17 +7,17 @@
 
 #include <QWidget>
 
-class WalletModel;
 class TransactionFilterProxy;
+class WalletModel;
 
 QT_BEGIN_NAMESPACE
-class QTableView;
 class QComboBox;
-class QLineEdit;
-class QModelIndex;
-class QMenu;
-class QFrame;
 class QDateTimeEdit;
+class QFrame;
+class QLineEdit;
+class QMenu;
+class QModelIndex;
+class QTableView;
 QT_END_NAMESPACE
 
 /** Widget showing the transaction list for a wallet, including a filter row.

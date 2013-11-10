@@ -3,9 +3,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "assert.h"
-
 #include "chainparams.h"
+
+#include "assert.h"
 #include "core.h"
 #include "protocol.h"
 #include "util.h"
@@ -158,7 +158,7 @@ public:
             // it'll get a pile of addresses with newer timestamps.
             // Seed nodes are given a random 'last seen time' of between one and two
             // weeks ago.
-            const int64 nOneWeek = 7*24*60*60;
+            const int64_t nOneWeek = 7*24*60*60;
             struct in_addr ip;
             memcpy(&ip, &pnSeed[i], sizeof(ip));
             CAddress addr(CService(ip, GetDefaultPort()));

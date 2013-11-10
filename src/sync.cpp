@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "sync.h"
+
 #include "util.h"
 
 #include <boost/foreach.hpp>

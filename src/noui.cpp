@@ -3,10 +3,12 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "ui_interface.h"
-#include "init.h"
-#include "bitcoinrpc.h"
+#include "noui.h"
 
+#include "ui_interface.h"
+#include "util.h"
+
+#include <stdint.h>
 #include <string>
 
 static bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
@@ -32,7 +34,7 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
     return false;
 }
 
-static bool noui_ThreadSafeAskFee(int64 /*nFeeRequired*/)
+static bool noui_ThreadSafeAskFee(int64_t /*nFeeRequired*/)
 {
     return true;
 }

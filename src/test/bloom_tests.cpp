@@ -1,11 +1,15 @@
-#include <boost/test/unit_test.hpp>
+#include "bloom.h"
+
+#include "base58.h"
+#include "key.h"
+#include "main.h"
+#include "serialize.h"
+#include "uint256.h"
+#include "util.h"
+
 #include <vector>
 
-#include "bloom.h"
-#include "util.h"
-#include "key.h"
-#include "base58.h"
-#include "main.h"
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace boost::tuples;

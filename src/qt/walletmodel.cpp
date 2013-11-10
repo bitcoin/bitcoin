@@ -3,18 +3,25 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "walletmodel.h"
-#include "guiconstants.h"
-#include "optionsmodel.h"
+
 #include "addresstablemodel.h"
+#include "guiconstants.h"
 #include "transactiontablemodel.h"
 
-#include "ui_interface.h"
-#include "walletdb.h" // for BackupWallet
 #include "base58.h"
+#include "db.h"
+#include "keystore.h"
+#include "main.h"
+#include "sync.h"
+#include "ui_interface.h"
+#include "wallet.h"
+#include "walletdb.h" // for BackupWallet
 
+#include <stdint.h>
+
+#include <QDebug>
 #include <QSet>
 #include <QTimer>
-#include <QDebug>
 
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
@@ -133,7 +140,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 {
     qint64 total = 0;
     QList<SendCoinsRecipient> recipients = transaction.getRecipients();
-    std::vector<std::pair<CScript, int64> > vecSend;
+    std::vector<std::pair<CScript, int64_t> > vecSend;
 
     if(recipients.empty())
     {
@@ -148,7 +155,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     {
         if (rcp.paymentRequest.IsInitialized())
         {   // PaymentRequest...
-            int64 subtotal = 0;
+            int64_t subtotal = 0;
             const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
             for (int i = 0; i < details.outputs_size(); i++)
             {
@@ -157,7 +164,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
                 subtotal += out.amount();
                 const unsigned char* scriptStr = (const unsigned char*)out.script().data();
                 CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                vecSend.push_back(std::pair<CScript, int64>(scriptPubKey, out.amount()));
+                vecSend.push_back(std::pair<CScript, int64_t>(scriptPubKey, out.amount()));
             }
             if (subtotal <= 0)
             {
@@ -180,7 +187,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
             CScript scriptPubKey;
             scriptPubKey.SetDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
-            vecSend.push_back(std::pair<CScript, int64>(scriptPubKey, rcp.amount));
+            vecSend.push_back(std::pair<CScript, int64_t>(scriptPubKey, rcp.amount));
 
             total += rcp.amount;
         }
@@ -205,7 +212,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         LOCK2(cs_main, wallet->cs_wallet);
 
         transaction.newPossibleKeyChange(wallet);
-        int64 nFeeRequired = 0;
+        int64_t nFeeRequired = 0;
         std::string strFailReason;
 
         CWalletTx *newTx = transaction.getTransaction();

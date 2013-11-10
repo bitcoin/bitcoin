@@ -1,7 +1,12 @@
-#include <boost/test/unit_test.hpp>
 
-#include "uint256.h"
+
 #include "main.h"
+#include "serialize.h"
+#include "uint256.h"
+
+#include <vector>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 

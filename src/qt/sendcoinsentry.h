@@ -5,14 +5,15 @@
 #ifndef SENDCOINSENTRY_H
 #define SENDCOINSENTRY_H
 
+#include "walletmodel.h"
+
 #include <QStackedWidget>
 
-#include "walletmodel.h"
+class WalletModel;
 
 namespace Ui {
     class SendCoinsEntry;
 }
-class WalletModel;
 
 /**
  * A single entry in the dialog for sending bitcoins.

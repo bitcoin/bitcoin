@@ -2,11 +2,18 @@
 // Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_MINER_H
 #define BITCOIN_MINER_H
 
-#include "core.h"
-#include "wallet.h"
+#include <stdint.h>
+
+class CBlock;
+class CBlockIndex;
+class CBlockTemplate;
+class CReserveKey;
+class CScript;
+class CWallet;
 
 /** Run the miner threads */
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
@@ -23,6 +30,6 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 void SHA256Transform(void* pstate, void* pinput, const void* pinit);
 
 extern double dHashesPerSec;
-extern int64 nHPSTimerStart;
+extern int64_t nHPSTimerStart;
 
 #endif // BITCOIN_MINER_H
