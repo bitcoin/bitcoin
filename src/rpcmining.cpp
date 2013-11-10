@@ -3,11 +3,21 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+
+
+#include "bitcoinrpc.h"
 #include "chainparams.h"
 #include "db.h"
 #include "init.h"
+#include "net.h"
+#include "main.h"
 #include "miner.h"
-#include "bitcoinrpc.h"
+#include "wallet.h"
+
+#include <stdint.h>
+
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
 
 using namespace json_spirit;
 using namespace std;
@@ -51,11 +61,11 @@ Value GetNetworkHashPS(int lookup, int height) {
         lookup = pb->nHeight;
 
     CBlockIndex *pb0 = pb;
-    int64 minTime = pb0->GetBlockTime();
-    int64 maxTime = minTime;
+    int64_t minTime = pb0->GetBlockTime();
+    int64_t maxTime = minTime;
     for (int i = 0; i < lookup; i++) {
         pb0 = pb0->pprev;
-        int64 time = pb0->GetBlockTime();
+        int64_t time = pb0->GetBlockTime();
         minTime = std::min(time, minTime);
         maxTime = std::max(time, maxTime);
     }
@@ -65,7 +75,7 @@ Value GetNetworkHashPS(int lookup, int height) {
         return 0;
 
     uint256 workDiff = pb->nChainWork - pb0->nChainWork;
-    int64 timeDiff = maxTime - minTime;
+    int64_t timeDiff = maxTime - minTime;
 
     return (boost::int64_t)(workDiff.getdouble() / timeDiff);
 }
@@ -187,7 +197,7 @@ Value getwork(const Array& params, bool fHelp)
         // Update block
         static unsigned int nTransactionsUpdatedLast;
         static CBlockIndex* pindexPrev;
-        static int64 nStart;
+        static int64_t nStart;
         static CBlockTemplate* pblocktemplate;
         if (pindexPrev != chainActive.Tip() ||
             (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
@@ -323,7 +333,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     // Update block
     static unsigned int nTransactionsUpdatedLast;
     static CBlockIndex* pindexPrev;
-    static int64 nStart;
+    static int64_t nStart;
     static CBlockTemplate* pblocktemplate;
     if (pindexPrev != chainActive.Tip() ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))

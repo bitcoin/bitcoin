@@ -2,34 +2,45 @@
 // Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
+#include "bloom.h"
+#include "compat.h"
+#include "hash.h"
+#include "limitedmap.h"
+#include "mruset.h"
+#include "netbase.h"
+#include "protocol.h"
+#include "sync.h"
+#include "uint256.h"
+#include "util.h"
+
 #include <deque>
-#include <boost/array.hpp>
-#include <boost/foreach.hpp>
-#include <boost/signals2/signal.hpp>
-#include <openssl/rand.h>
+#include <inttypes.h>
+#include <stdint.h>
 
 #ifndef WIN32
 #include <arpa/inet.h>
 #endif
 
-#include "mruset.h"
-#include "limitedmap.h"
-#include "netbase.h"
-#include "protocol.h"
-#include "addrman.h"
-#include "hash.h"
-#include "bloom.h"
+//#include <boost/array.hpp>
+#include <boost/foreach.hpp>
+#include <boost/signals2/signal.hpp>
+#include <openssl/rand.h>
+
+class CAddrMan;
+class CBlockIndex;
+class CNetAddr;
+class CNode;
+
+namespace boost {
+    class thread_group;
+}
 
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
-
-class CNode;
-class CBlockIndex;
-
-
 
 inline unsigned int ReceiveFloodSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000); }
 inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
@@ -85,17 +96,17 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer = NULL);
 
 
 extern bool fDiscover;
-extern uint64 nLocalServices;
-extern uint64 nLocalHostNonce;
+extern uint64_t nLocalServices;
+extern uint64_t nLocalHostNonce;
 extern CAddrMan addrman;
 extern int nMaxConnections;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
 extern std::map<CInv, CDataStream> mapRelay;
-extern std::deque<std::pair<int64, CInv> > vRelayExpiration;
+extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
-extern limitedmap<CInv, int64> mapAlreadyAskedFor;
+extern limitedmap<CInv, int64_t> mapAlreadyAskedFor;
 
 extern std::vector<std::string> vAddedNodes;
 extern CCriticalSection cs_vAddedNodes;
@@ -106,18 +117,18 @@ extern CCriticalSection cs_vAddedNodes;
 class CNodeStats
 {
 public:
-    uint64 nServices;
-    int64 nLastSend;
-    int64 nLastRecv;
-    int64 nTimeConnected;
+    uint64_t nServices;
+    int64_t nLastSend;
+    int64_t nLastRecv;
+    int64_t nTimeConnected;
     std::string addrName;
     int nVersion;
     std::string strSubVer;
     bool fInbound;
     int nStartingHeight;
     int nMisbehavior;
-    uint64 nSendBytes;
-    uint64 nRecvBytes;
+    uint64_t nSendBytes;
+    uint64_t nRecvBytes;
     bool fSyncNode;
     double dPingTime;
     double dPingWait;
@@ -171,25 +182,25 @@ class CNode
 {
 public:
     // socket
-    uint64 nServices;
+    uint64_t nServices;
     SOCKET hSocket;
     CDataStream ssSend;
     size_t nSendSize; // total size of all vSendMsg entries
     size_t nSendOffset; // offset inside the first vSendMsg already sent
-    uint64 nSendBytes;
+    uint64_t nSendBytes;
     std::deque<CSerializeData> vSendMsg;
     CCriticalSection cs_vSend;
 
     std::deque<CInv> vRecvGetData;
     std::deque<CNetMessage> vRecvMsg;
     CCriticalSection cs_vRecvMsg;
-    uint64 nRecvBytes;
+    uint64_t nRecvBytes;
     int nRecvVersion;
 
-    int64 nLastSend;
-    int64 nLastRecv;
-    int64 nLastSendEmpty;
-    int64 nTimeConnected;
+    int64_t nLastSend;
+    int64_t nLastRecv;
+    int64_t nLastSendEmpty;
+    int64_t nTimeConnected;
     CAddress addr;
     std::string addrName;
     CService addrLocal;
@@ -214,7 +225,7 @@ protected:
 
     // Denial-of-service detection/prevention
     // Key is IP address, value is banned-until-time
-    static std::map<CNetAddr, int64> setBanned;
+    static std::map<CNetAddr, int64_t> setBanned;
     static CCriticalSection cs_setBanned;
     int nMisbehavior;
 
@@ -238,12 +249,12 @@ public:
     mruset<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
-    std::multimap<int64, CInv> mapAskFor;
+    std::multimap<int64_t, CInv> mapAskFor;
 
     // Ping time measurement
-    uint64 nPingNonceSent;
-    int64 nPingUsecStart;
-    int64 nPingUsecTime;
+    uint64_t nPingNonceSent;
+    int64_t nPingUsecStart;
+    int64_t nPingUsecTime;
     bool fPingQueued;
     
     CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false) : ssSend(SER_NETWORK, INIT_PROTO_VERSION)
@@ -305,8 +316,8 @@ private:
     // Network usage totals
     static CCriticalSection cs_totalBytesRecv;
     static CCriticalSection cs_totalBytesSent;
-    static uint64 nTotalBytesRecv;
-    static uint64 nTotalBytesSent;
+    static uint64_t nTotalBytesRecv;
+    static uint64_t nTotalBytesSent;
 
     CNode(const CNode&);
     void operator=(const CNode&);
@@ -389,17 +400,17 @@ public:
     {
         // We're using mapAskFor as a priority queue,
         // the key is the earliest time the request can be sent
-        int64 nRequestTime;
-        limitedmap<CInv, int64>::const_iterator it = mapAlreadyAskedFor.find(inv);
+        int64_t nRequestTime;
+        limitedmap<CInv, int64_t>::const_iterator it = mapAlreadyAskedFor.find(inv);
         if (it != mapAlreadyAskedFor.end())
             nRequestTime = it->second;
         else
             nRequestTime = 0;
-        LogPrint("net", "askfor %s   %"PRI64d" (%s)\n", inv.ToString().c_str(), nRequestTime, DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000).c_str());
+        LogPrint("net", "askfor %s   %"PRId64" (%s)\n", inv.ToString().c_str(), nRequestTime, DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000).c_str());
 
         // Make sure not to reuse time indexes to keep things in the same order
-        int64 nNow = (GetTime() - 1) * 1000000;
-        static int64 nLastTime;
+        int64_t nNow = (GetTime() - 1) * 1000000;
+        static int64_t nLastTime;
         ++nLastTime;
         nNow = std::max(nNow, nLastTime);
         nLastTime = nNow;
@@ -664,11 +675,11 @@ public:
     void copyStats(CNodeStats &stats);
 
     // Network stats
-    static void RecordBytesRecv(uint64 bytes);
-    static void RecordBytesSent(uint64 bytes);
+    static void RecordBytesRecv(uint64_t bytes);
+    static void RecordBytesSent(uint64_t bytes);
 
-    static uint64 GetTotalBytesRecv();
-    static uint64 GetTotalBytesSent();
+    static uint64_t GetTotalBytesRecv();
+    static uint64_t GetTotalBytesSent();
 };
 
 

@@ -1,17 +1,17 @@
-#include <QCoreApplication>
-#include <QDebug>
-#include <QTemporaryFile>
-#include <QVariant>
-#include <QFileOpenEvent>
+#include "paymentservertests.h"
+
+#include "optionsmodel.h"
+#include "paymentrequestdata.h"
+
+#include "util.h"
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
-
-#include "optionsmodel.h"
-#include "paymentservertests.h"
-#include "paymentrequestdata.h"
-#include "util.h"
-
+#include <QCoreApplication>
+#include <QDebug>
+#include <QFileOpenEvent>
+#include <QTemporaryFile>
+#include <QVariant>
 
 
 X509 *parse_b64der_cert(const char* cert_data)

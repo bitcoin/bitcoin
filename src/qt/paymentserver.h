@@ -4,8 +4,6 @@
 
 #ifndef PAYMENTSERVER_H
 #define PAYMENTSERVER_H
-
-//
 // This class handles payment requests from clicking on
 // bitcoin: URIs
 //
@@ -32,13 +30,13 @@
 // and, if a server is running in another process,
 // sends them to the server.
 //
-#include <QObject>
-#include <QString>
 
 #include "paymentrequestplus.h"
 #include "walletmodel.h"
 
-class CWallet;
+#include <QObject>
+#include <QString>
+
 class OptionsModel;
 
 QT_BEGIN_NAMESPACE
@@ -50,6 +48,8 @@ class QNetworkReply;
 class QSslError;
 class QUrl;
 QT_END_NAMESPACE
+
+class CWallet;
 
 class PaymentServer : public QObject
 {

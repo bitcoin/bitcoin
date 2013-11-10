@@ -7,9 +7,10 @@
 
 #include <QObject>
 
-class OptionsModel;
 class AddressTableModel;
+class OptionsModel;
 class TransactionTableModel;
+
 class CWallet;
 
 QT_BEGIN_NAMESPACE

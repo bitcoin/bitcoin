@@ -1,9 +1,8 @@
-#include <boost/test/unit_test.hpp>
+#include "netbase.h"
 
 #include <string>
-#include <vector>
 
-#include "netbase.h"
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 

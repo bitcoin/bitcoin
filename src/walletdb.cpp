@@ -4,15 +4,24 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "walletdb.h"
+
+#include "base58.h"
+#include "protocol.h"
+#include "serialize.h"
+#include "sync.h"
 #include "wallet.h"
-#include <boost/version.hpp>
+
+#include <inttypes.h>
+#include <stdint.h>
+
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace boost;
 
 
-static uint64 nAccountingEntryNumber = 0;
+static uint64_t nAccountingEntryNumber = 0;
 
 //
 // CWalletDB
@@ -44,6 +53,119 @@ bool CWalletDB::ErasePurpose(const string& strPurpose)
     return Erase(make_pair(string("purpose"), strPurpose));
 }
 
+bool CWalletDB::WriteTx(uint256 hash, const CWalletTx& wtx)
+{
+    nWalletDBUpdated++;
+    return Write(std::make_pair(std::string("tx"), hash), wtx);
+}
+
+bool CWalletDB::EraseTx(uint256 hash)
+{
+    nWalletDBUpdated++;
+    return Erase(std::make_pair(std::string("tx"), hash));
+}
+
+bool CWalletDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata& keyMeta)
+{
+    nWalletDBUpdated++;
+
+    if (!Write(std::make_pair(std::string("keymeta"), vchPubKey),
+               keyMeta, false))
+        return false;
+
+    // hash pubkey/privkey to accelerate wallet load
+    std::vector<unsigned char> vchKey;
+    vchKey.reserve(vchPubKey.size() + vchPrivKey.size());
+    vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
+    vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
+
+    return Write(std::make_pair(std::string("key"), vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey.begin(), vchKey.end())), false);
+}
+
+bool CWalletDB::WriteCryptedKey(const CPubKey& vchPubKey, 
+                                const std::vector<unsigned char>& vchCryptedSecret, 
+                                const CKeyMetadata &keyMeta)
+{
+    const bool fEraseUnencryptedKey = true;
+    nWalletDBUpdated++;
+
+    if (!Write(std::make_pair(std::string("keymeta"), vchPubKey),
+            keyMeta))
+        return false;
+
+    if (!Write(std::make_pair(std::string("ckey"), vchPubKey), vchCryptedSecret, false))
+        return false;
+    if (fEraseUnencryptedKey)
+    {
+        Erase(std::make_pair(std::string("key"), vchPubKey));
+        Erase(std::make_pair(std::string("wkey"), vchPubKey));
+    }
+    return true;
+}
+
+bool CWalletDB::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
+{
+    nWalletDBUpdated++;
+    return Write(std::make_pair(std::string("mkey"), nID), kMasterKey, true);
+}
+
+bool CWalletDB::WriteCScript(const uint160& hash, const CScript& redeemScript)
+{
+    nWalletDBUpdated++;
+    return Write(std::make_pair(std::string("cscript"), hash), redeemScript, false);
+}
+
+bool CWalletDB::WriteBestBlock(const CBlockLocator& locator)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("bestblock"), locator);
+}
+
+bool CWalletDB::ReadBestBlock(CBlockLocator& locator)
+{
+    return Read(std::string("bestblock"), locator);
+}
+
+bool CWalletDB::WriteOrderPosNext(int64_t nOrderPosNext)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("orderposnext"), nOrderPosNext);
+}
+
+bool CWalletDB::WriteDefaultKey(const CPubKey& vchPubKey)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("defaultkey"), vchPubKey);
+}
+
+bool CWalletDB::ReadPool(int64_t nPool, CKeyPool& keypool)
+{
+    return Read(std::make_pair(std::string("pool"), nPool), keypool);
+}
+
+bool CWalletDB::WritePool(int64_t nPool, const CKeyPool& keypool)
+{
+    nWalletDBUpdated++;
+    return Write(std::make_pair(std::string("pool"), nPool), keypool);
+}
+
+bool CWalletDB::ErasePool(int64_t nPool)
+{
+    nWalletDBUpdated++;
+    return Erase(std::make_pair(std::string("pool"), nPool));
+}
+
+bool CWalletDB::EraseSetting(const std::string& strKey)
+{
+    nWalletDBUpdated++;
+    return Erase(std::make_pair(std::string("setting"), strKey));
+}
+
+bool CWalletDB::WriteMinVersion(int nVersion)
+{
+    return Write(std::string("minversion"), nVersion);
+}
+
 bool CWalletDB::ReadAccount(const string& strAccount, CAccount& account)
 {
     account.SetNull();
@@ -55,7 +177,7 @@ bool CWalletDB::WriteAccount(const string& strAccount, const CAccount& account)
     return Write(make_pair(string("acc"), strAccount), account);
 }
 
-bool CWalletDB::WriteAccountingEntry(const uint64 nAccEntryNum, const CAccountingEntry& acentry)
+bool CWalletDB::WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry)
 {
     return Write(boost::make_tuple(string("acentry"), acentry.strAccount, nAccEntryNum), acentry);
 }
@@ -65,12 +187,12 @@ bool CWalletDB::WriteAccountingEntry(const CAccountingEntry& acentry)
     return WriteAccountingEntry(++nAccountingEntryNumber, acentry);
 }
 
-int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
+int64_t CWalletDB::GetAccountCreditDebit(const string& strAccount)
 {
     list<CAccountingEntry> entries;
     ListAccountCreditDebit(strAccount, entries);
 
-    int64 nCreditDebit = 0;
+    int64_t nCreditDebit = 0;
     BOOST_FOREACH (const CAccountingEntry& entry, entries)
         nCreditDebit += entry.nCreditDebit;
 
@@ -90,7 +212,7 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
         // Read next record
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         if (fFlags == DB_SET_RANGE)
-            ssKey << boost::make_tuple(string("acentry"), (fAllAccounts? string("") : strAccount), uint64(0));
+            ssKey << boost::make_tuple(string("acentry"), (fAllAccounts? string("") : strAccount), uint64_t(0));
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
         fFlags = DB_NEXT;
@@ -130,7 +252,7 @@ CWalletDB::ReorderTransactions(CWallet* pwallet)
 
     // First: get all CWalletTx and CAccountingEntry into a sorted-by-time multimap.
     typedef pair<CWalletTx*, CAccountingEntry*> TxPair;
-    typedef multimap<int64, TxPair > TxItems;
+    typedef multimap<int64_t, TxPair > TxItems;
     TxItems txByTime;
 
     for (map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it)
@@ -145,14 +267,14 @@ CWalletDB::ReorderTransactions(CWallet* pwallet)
         txByTime.insert(make_pair(entry.nTime, TxPair((CWalletTx*)0, &entry)));
     }
 
-    int64& nOrderPosNext = pwallet->nOrderPosNext;
+    int64_t& nOrderPosNext = pwallet->nOrderPosNext;
     nOrderPosNext = 0;
-    std::vector<int64> nOrderPosOffsets;
+    std::vector<int64_t> nOrderPosOffsets;
     for (TxItems::iterator it = txByTime.begin(); it != txByTime.end(); ++it)
     {
         CWalletTx *const pwtx = (*it).second.first;
         CAccountingEntry *const pacentry = (*it).second.second;
-        int64& nOrderPos = (pwtx != 0) ? pwtx->nOrderPos : pacentry->nOrderPos;
+        int64_t& nOrderPos = (pwtx != 0) ? pwtx->nOrderPos : pacentry->nOrderPos;
 
         if (nOrderPos == -1)
         {
@@ -166,8 +288,8 @@ CWalletDB::ReorderTransactions(CWallet* pwallet)
         }
         else
         {
-            int64 nOrderPosOff = 0;
-            BOOST_FOREACH(const int64& nOffsetStart, nOrderPosOffsets)
+            int64_t nOrderPosOff = 0;
+            BOOST_FOREACH(const int64_t& nOffsetStart, nOrderPosOffsets)
             {
                 if (nOrderPos >= nOffsetStart)
                     ++nOrderPosOff;
@@ -272,7 +394,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 
             //// debug print
             //LogPrintf("LoadWallet  %s\n", wtx.GetHash().ToString().c_str());
-            //LogPrintf(" %12"PRI64d"  %s  %s  %s\n",
+            //LogPrintf(" %12"PRId64"  %s  %s  %s\n",
             //    wtx.vout[0].nValue,
             //    DateTimeStrFormat("%Y-%m-%d %H:%M:%S", wtx.GetBlockTime()).c_str(),
             //    wtx.hashBlock.ToString().c_str(),
@@ -282,7 +404,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             string strAccount;
             ssKey >> strAccount;
-            uint64 nNumber;
+            uint64_t nNumber;
             ssKey >> nNumber;
             if (nNumber > nAccountingEntryNumber)
                 nAccountingEntryNumber = nNumber;
@@ -410,7 +532,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "pool")
         {
-            int64 nIndex;
+            int64_t nIndex;
             ssKey >> nIndex;
             CKeyPool keypool;
             ssValue >> keypool;
@@ -573,7 +695,7 @@ void ThreadFlushWalletDB(const string& strFile)
 
     unsigned int nLastSeen = nWalletDBUpdated;
     unsigned int nLastFlushed = nWalletDBUpdated;
-    int64 nLastWalletUpdate = GetTime();
+    int64_t nLastWalletUpdate = GetTime();
     while (true)
     {
         MilliSleep(500);
@@ -606,14 +728,14 @@ void ThreadFlushWalletDB(const string& strFile)
                     {
                         LogPrint("db", "Flushing wallet.dat\n");
                         nLastFlushed = nWalletDBUpdated;
-                        int64 nStart = GetTimeMillis();
+                        int64_t nStart = GetTimeMillis();
 
                         // Flush wallet.dat so it's self contained
                         bitdb.CloseDb(strFile);
                         bitdb.CheckpointLSN(strFile);
 
                         bitdb.mapFileUseCount.erase(mi++);
-                        LogPrint("db", "Flushed wallet.dat %"PRI64d"ms\n", GetTimeMillis() - nStart);
+                        LogPrint("db", "Flushed wallet.dat %"PRId64"ms\n", GetTimeMillis() - nStart);
                     }
                 }
             }
@@ -673,8 +795,8 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
     // Rewrite salvaged data to wallet.dat
     // Set -rescan so any missing transactions will be
     // found.
-    int64 now = GetTime();
-    std::string newFilename = strprintf("wallet.%"PRI64d".bak", now);
+    int64_t now = GetTime();
+    std::string newFilename = strprintf("wallet.%"PRId64".bak", now);
 
     int result = dbenv.dbenv.dbrename(NULL, filename.c_str(), NULL,
                                       newFilename.c_str(), DB_AUTO_COMMIT);

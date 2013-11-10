@@ -1,8 +1,10 @@
-#include <QTest>
-#include <QObject>
 
-#include "uritests.h"
+
 #include "paymentservertests.h"
+#include "uritests.h"
+
+#include <QObject>
+#include <QTest>
 
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
