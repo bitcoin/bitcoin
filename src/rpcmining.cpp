@@ -26,6 +26,56 @@
 
 using namespace std;
 
+bool CheckIsMiningSetup()
+{
+    if (!Params().MiningRequiresConfiguration())
+        return true;
+
+    if (!mapArgs.count("-blockminsize"))
+        return false;
+    if (!mapArgs.count("-blockmaxsize"))
+        return false;
+    if (!mapArgs.count("-blockprioritysize"))
+        return false;
+
+    // Either datacarriersize must be set, or datacarrier must be disabled
+    if (!(mapArgs.count("-datacarriersize") || !GetBoolArg("-datacarrier", true)))
+        return false;
+
+    return true;
+}
+
+void CheckMiningSetup(const char * const strWhatAmI)
+{
+    static bool fIsMiningSetup = false;
+    if (!fIsMiningSetup)
+        fIsMiningSetup = CheckIsMiningSetup();
+    if (fIsMiningSetup)
+        return;
+
+    unsigned long minsz = insecure_rand() % MAX_BLOCK_SIZE;
+    unsigned long maxsz = std::max((unsigned long)250000, minsz);
+    maxsz = maxsz + (insecure_rand() % (MAX_BLOCK_SIZE - maxsz));
+    unsigned long prisz = insecure_rand() % MAX_BLOCK_SIZE;
+    unsigned long datacarrier = insecure_rand() % 2;
+    unsigned long datacarriersize = insecure_rand() % 0x100;
+    throw JSONRPCError(RPC_NOT_CONFIGURED, strprintf(
+        _("To use %s, you must set mining options in the configuration file:\n"
+          "%s\n"
+          "For example (randomly chosen, please choose your own values):\n"
+          "blockminsize=%lu\n"
+          "blockmaxsize=%lu\n"
+          "blockprioritysize=%lu\n"
+          "datacarrier=%u\n"
+          "datacarriersize=%u\n"
+          "Please understand what each setting does by reading bitcoind --help\n"),
+            strWhatAmI,
+            GetConfigFile().string().c_str(),
+            minsz, maxsz, prisz,
+            datacarrier, datacarriersize
+    ));
+}
+
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,
  * or from the last difficulty change if 'lookup' is nonpositive.
@@ -127,6 +177,8 @@ UniValue generate(const UniValue& params, bool fHelp)
     if (!Params().MineBlocksOnDemand())
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "This method can only be used on regtest");
 
+    CheckMiningSetup("generate");
+
     int nHeightStart = 0;
     int nHeightEnd = 0;
     int nHeight = 0;
@@ -202,6 +254,9 @@ UniValue setgenerate(const UniValue& params, bool fHelp)
     bool fGenerate = true;
     if (params.size() > 0)
         fGenerate = params[0].get_bool();
+
+    if (fGenerate)
+        CheckMiningSetup("setgenerate");
 
     int nGenProcLimit = -1;
     if (params.size() > 1)
@@ -425,6 +480,8 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
     if (strMode != "template")
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
+
+    CheckMiningSetup("getblocktemplate");
 
     if (vNodes.empty())
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");

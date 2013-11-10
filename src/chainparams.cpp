@@ -101,6 +101,7 @@ public:
 
         fRequireRPCPassword = true;
         fMiningRequiresPeers = true;
+        fMiningRequiresConfiguration = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
@@ -173,6 +174,7 @@ public:
 
         fRequireRPCPassword = true;
         fMiningRequiresPeers = true;
+        fMiningRequiresConfiguration = false;
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
@@ -220,6 +222,7 @@ public:
 
         fRequireRPCPassword = false;
         fMiningRequiresPeers = false;
+        fMiningRequiresConfiguration = false;
         fDefaultConsistencyChecks = true;
         fRequireStandard = false;
         fMineBlocksOnDemand = true;
