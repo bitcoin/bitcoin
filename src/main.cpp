@@ -702,8 +702,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // you should add code here to check that the transaction does a
         // reasonable number of ECDSA signature verifications.
 
-        int64_t nFees = view.GetValueIn(tx)-tx.GetValueOut();
-        unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        int64_t nValueIn = view.GetValueIn(tx);
+        int64_t nValueOut = tx.GetValueOut();
+        int64_t nFees = nValueIn-nValueOut;
+        double dPriority = view.GetPriority(tx, chainActive.Height());
+
+        CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height());
+        unsigned int nSize = entry.GetTxSize();
 
         // Don't accept it if it can't get into a block
         int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
@@ -747,10 +752,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         {
             return error("AcceptToMemoryPool: : ConnectInputs failed %s", hash.ToString().c_str());
         }
+        // Store transaction in memory
+        pool.addUnchecked(hash, entry);
     }
-
-    // Store transaction in memory
-    pool.addUnchecked(hash, tx);
 
     g_signals.SyncTransaction(hash, tx, NULL);
 

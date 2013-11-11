@@ -54,11 +54,11 @@ public:
 class CInPoint
 {
 public:
-    CTransaction* ptx;
+    const CTransaction* ptx;
     unsigned int n;
 
     CInPoint() { SetNull(); }
-    CInPoint(CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
+    CInPoint(const CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
     void SetNull() { ptx = NULL; n = (unsigned int) -1; }
     bool IsNull() const { return (ptx == NULL && n == (unsigned int) -1); }
 };
@@ -225,6 +225,9 @@ public:
     int64_t GetValueOut() const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
+
+    // Compute priority, given priority of inputs and (optionally) tx size
+    double ComputePriority(double dPriorityInputs, unsigned int nTxSize=0) const;
 
     bool IsCoinBase() const
     {

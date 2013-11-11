@@ -118,6 +118,25 @@ int64_t CTransaction::GetValueOut() const
     return nValueOut;
 }
 
+double CTransaction::ComputePriority(double dPriorityInputs, unsigned int nTxSize) const
+{
+    // In order to avoid disincentivizing cleaning up the UTXO set we don't count
+    // the constant overhead for each txin and up to 110 bytes of scriptSig (which
+    // is enough to cover a compressed pubkey p2sh redemption) for priority.
+    // Providing any more cleanup incentive than making additional inputs free would
+    // risk encouraging people to create junk outputs to redeem later.
+    if (nTxSize == 0)
+        nTxSize = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
+    BOOST_FOREACH(const CTxIn& txin, vin)
+    {
+        unsigned int offset = 41U + std::min(110U, (unsigned int)txin.scriptSig.size());
+        if (nTxSize > offset)
+            nTxSize -= offset;
+    }
+    if (nTxSize == 0) return 0.0;
+    return dPriorityInputs / nTxSize;
+}
+
 std::string CTransaction::ToString() const
 {
     std::string str;
