@@ -81,7 +81,7 @@ This pull does not merge cleanly onto current master""" + common_message}
         post_data = { "body" : "Automatic sanity-testing: FAILED BUILD/TEST, see " + linkUrl + " for binaries and test log." + """
 
 This could happen for one of several reasons:
-1. It chanages paths in makefile.linux-mingw or otherwise changes build scripts in a way that made them incompatible with the automated testing scripts (please tweak those patches in qa/pull-tester)
+1. It chanages changes build scripts in a way that made them incompatible with the automated testing scripts (please tweak those patches in qa/pull-tester)
 2. It adds/modifies tests which test network rules (thanks for doing that), which conflicts with a patch applied at test time
 3. It does not build on either Linux i386 or Win32 (via MinGW cross compile)
 4. The test suite fails on either Linux i386 or Win32
