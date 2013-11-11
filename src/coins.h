@@ -340,7 +340,6 @@ public:
 
         @param[in] tx	transaction for which we are checking input total
         @return	Sum of value of all inputs (scriptSigs)
-        @see CTransaction::FetchInputs
      */
     int64_t GetValueIn(const CTransaction& tx);
 
