@@ -76,6 +76,8 @@ Bitcoin
 -------
 DOS prompt:
 
-	cd \bitcoin\src
-	mingw32-make -f makefile.mingw
+	cd \bitcoin
+	sh autogen.sh
+	sh configure
+	mingw32-make
 	strip bitcoind.exe
