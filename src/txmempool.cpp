@@ -105,7 +105,7 @@ void CTxMemPool::clear()
     ++nTransactionsUpdated;
 }
 
-void CTxMemPool::check(CTxMemPool::CoinLookupFunc fnLookup) const
+void CTxMemPool::check(CCoinsViewCache *pcoins) const
 {
     if (!fSanityCheck)
         return;
@@ -121,7 +121,7 @@ void CTxMemPool::check(CTxMemPool::CoinLookupFunc fnLookup) const
             if (it2 != mapTx.end()) {
                 assert(it2->second.vout.size() > txin.prevout.n && !it2->second.vout[txin.prevout.n].IsNull());
             } else {
-                CCoins &coins = (*fnLookup)(txin.prevout.hash);
+                CCoins &coins = pcoins->GetCoins(txin.prevout.hash);
                 assert(coins.IsAvailable(txin.prevout.n));
             }
             // Check whether its inputs are marked in mapNextTx.
@@ -160,3 +160,21 @@ bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
     result = i->second;
     return true;
 }
+
+CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView &baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
+
+bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) {
+    if (base->GetCoins(txid, coins))
+        return true;
+    CTransaction tx;
+    if (mempool.lookup(txid, tx)) {
+        coins = CCoins(tx, MEMPOOL_HEIGHT);
+        return true;
+    }
+    return false;
+}
+
+bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) {
+    return mempool.exists(txid) || base->HaveCoins(txid);
+}
+
