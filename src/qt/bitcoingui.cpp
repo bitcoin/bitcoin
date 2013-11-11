@@ -15,6 +15,7 @@
 #include "rpcconsole.h"
 #include "walletframe.h"
 #include "walletmodel.h"
+#include "openuridialog.h"
 
 #ifdef Q_OS_MAC
 #include "macdockiconhandler.h"
@@ -262,6 +263,9 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     usedReceivingAddressesAction = new QAction(QIcon(":/icons/address-book"), tr("Used &receiving addresses..."), this);
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
+    openAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_FileIcon), tr("Open URI..."), this);
+    openAction->setStatusTip(tr("Open a bitcoin: URI or payment request"));
+
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
@@ -274,6 +278,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
     connect(usedSendingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(usedSendingAddresses()));
     connect(usedReceivingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(usedReceivingAddresses()));
+    connect(openAction, SIGNAL(triggered()), this, SLOT(openClicked()));
 }
 
 void BitcoinGUI::createMenuBar()
@@ -288,6 +293,7 @@ void BitcoinGUI::createMenuBar()
 
     // Configure the menus
     QMenu *file = appMenuBar->addMenu(tr("&File"));
+    file->addAction(openAction);
     file->addAction(backupWalletAction);
     file->addAction(signMessageAction);
     file->addAction(verifyMessageAction);
@@ -443,6 +449,15 @@ void BitcoinGUI::aboutClicked()
     AboutDialog dlg;
     dlg.setModel(clientModel);
     dlg.exec();
+}
+
+void BitcoinGUI::openClicked()
+{
+    OpenURIDialog dlg;
+    if(dlg.exec())
+    {
+        emit receivedURI(dlg.getURI());
+    }
 }
 
 void BitcoinGUI::gotoOverviewPage()
@@ -720,23 +735,11 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
 {
     if(event->mimeData()->hasUrls())
     {
-        int nValidUrisFound = 0;
-        QList<QUrl> uris = event->mimeData()->urls();
-        foreach(const QUrl &uri, uris)
+        foreach(const QUrl &uri, event->mimeData()->urls())
         {
-            SendCoinsRecipient r;
-            if (GUIUtil::parseBitcoinURI(uri, &r) && walletFrame->handlePaymentRequest(r))
-                nValidUrisFound++;
+            emit receivedURI(uri.toString());
         }
-
-        // if valid URIs were found
-        if (nValidUrisFound)
-            walletFrame->gotoSendCoinsPage();
-        else
-            message(tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters."),
-                CClientUIInterface::ICON_WARNING);
     }
-
     event->acceptProposedAction();
 }
 

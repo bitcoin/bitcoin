@@ -33,6 +33,7 @@ QT_TS = locale/bitcoin_ach.ts locale/bitcoin_af_ZA.ts locale/bitcoin_ar.ts \
 
 QT_FORMS_UI = forms/aboutdialog.ui forms/addressbookpage.ui \
   forms/askpassphrasedialog.ui forms/editaddressdialog.ui forms/intro.ui \
+  forms/openuridialog.ui \
   forms/optionsdialog.ui forms/overviewpage.ui forms/receiverequestdialog.ui \
   forms/receivecoinsdialog.ui \
   forms/rpcconsole.ui forms/sendcoinsdialog.ui forms/sendcoinsentry.ui \
@@ -44,7 +45,9 @@ QT_MOC_CPP = moc_aboutdialog.cpp moc_addressbookpage.cpp \
   moc_bitcoingui.cpp moc_bitcoinunits.cpp moc_clientmodel.cpp \
   moc_csvmodelwriter.cpp moc_editaddressdialog.cpp moc_guiutil.cpp \
   moc_intro.cpp moc_macdockiconhandler.cpp moc_macnotificationhandler.cpp \
-  moc_monitoreddatamapper.cpp moc_notificator.cpp moc_optionsdialog.cpp \
+  moc_monitoreddatamapper.cpp moc_notificator.cpp \
+  moc_openuridialog.cpp \
+  moc_optionsdialog.cpp \
   moc_optionsmodel.cpp moc_overviewpage.cpp moc_paymentserver.cpp \
   moc_receiverequestdialog.cpp moc_qvalidatedlineedit.cpp moc_qvaluecombobox.cpp \
   moc_receivecoinsdialog.cpp \
@@ -69,7 +72,9 @@ BITCOIN_QT_H  = aboutdialog.h addressbookpage.h addresstablemodel.h \
   askpassphrasedialog.h bitcoinaddressvalidator.h bitcoinamountfield.h \
   bitcoingui.h bitcoinunits.h clientmodel.h csvmodelwriter.h \
   editaddressdialog.h guiconstants.h guiutil.h intro.h macdockiconhandler.h \
-  macnotificationhandler.h monitoreddatamapper.h notificator.h optionsdialog.h \
+  macnotificationhandler.h monitoreddatamapper.h notificator.h \
+  openuridialog.h \
+  optionsdialog.h \
   optionsmodel.h overviewpage.h paymentrequestplus.h paymentserver.h \
   receivecoinsdialog.h \
   receiverequestdialog.h qvalidatedlineedit.h qvaluecombobox.h rpcconsole.h \
@@ -100,6 +105,7 @@ BITCOIN_QT_CPP = aboutdialog.cpp addressbookpage.cpp \
   bitcoinamountfield.cpp bitcoin.cpp bitcoingui.cpp \
   bitcoinunits.cpp clientmodel.cpp csvmodelwriter.cpp editaddressdialog.cpp \
   guiutil.cpp intro.cpp monitoreddatamapper.cpp notificator.cpp \
+  openuridialog.cpp \
   optionsdialog.cpp optionsmodel.cpp overviewpage.cpp paymentrequestplus.cpp \
   paymentserver.cpp qvalidatedlineedit.cpp qvaluecombobox.cpp \
   receivecoinsdialog.cpp receiverequestdialog.cpp \
