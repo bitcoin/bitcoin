@@ -23,6 +23,7 @@
 #include "wallet.h"
 #include "walletdb.h"
 #endif
+#include "main.h"
 
 #include <stdint.h>
 
@@ -473,6 +474,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         return InitError(_("Not enough file descriptors available."));
     if (nFD - MIN_CORE_FILEDESCRIPTORS < nMaxConnections)
         nMaxConnections = nFD - MIN_CORE_FILEDESCRIPTORS;
+
+    // Limit number of blocks that may be requested in one go.
+    nMaxGetBlock = GetArg("-limitgetblock", 500);
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 
