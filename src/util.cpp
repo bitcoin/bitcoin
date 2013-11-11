@@ -475,6 +475,19 @@ bool ParseMoney(const char* pszIn, int64_t& nRet)
     return true;
 }
 
+// safeChars chosen to allow simple messages/URLs/email addresses, but avoid anything
+// even possibly remotely dangerous like & or >
+static string safeChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890 .,;_/:?@");
+string SanitizeString(const string& str)
+{
+    string strResult;
+    for (std::string::size_type i = 0; i < str.size(); i++)
+    {
+        if (safeChars.find(str[i]) != std::string::npos)
+            strResult.push_back(str[i]);
+    }
+    return strResult;
+}
 
 const signed char p_util_hexdigit[256] =
 { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
