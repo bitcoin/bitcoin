@@ -655,7 +655,7 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64_t> >& listReceived,
     int64_t nDebit = GetDebit();
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
-        int64_t nValueOut = GetValueOut(*this);
+        int64_t nValueOut = GetValueOut();
         nFee = nDebit - nValueOut;
     }
 

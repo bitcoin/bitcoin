@@ -49,9 +49,6 @@ static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
 static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
-/** No amount larger than this (in satoshi) is valid */
-static const int64_t MAX_MONEY = 21000000 * COIN;
-inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
@@ -319,11 +316,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state);
 bool IsStandardTx(const CTransaction& tx, std::string& reason);
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
-
-/** Amount of bitcoins spent by the transaction.
-    @return sum of all outputs (note: does not include fees)
- */
-int64_t GetValueOut(const CTransaction& tx);
 
 /** Undo information for a CBlock */
 class CBlockUndo
