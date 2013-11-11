@@ -1342,15 +1342,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                     strFailReason = _("Transaction too large");
                     return false;
                 }
-                unsigned int nTxSizeMod = nBytes;
-                // See miner.c's dPriority logic for the matching network-node side code.
-                BOOST_FOREACH(const CTxIn& txin, (*(CTransaction*)&wtxNew).vin)
-                {
-                    unsigned int offset = 41U + min(110U, (unsigned int)txin.scriptSig.size());
-                    if (nTxSizeMod > offset)
-                        nTxSizeMod -= offset;
-                }
-                dPriority /= nTxSizeMod;
+                dPriority = wtxNew.ComputePriority(dPriority, nBytes);
 
                 // Check that enough fee is included
                 int64_t nPayFee = nTransactionFee * (1 + (int64_t)nBytes / 1000);
