@@ -27,7 +27,7 @@
     alert.nID           = 1;
     alert.nCancel       = 0;   // cancels previous messages up to this ID number
     alert.nMinVer       = 0;  // These versions are protocol versions
-    alert.nMaxVer       = 70001;
+    alert.nMaxVer       = 999001;
     alert.nPriority     = 1;
     alert.strComment    = "Alert comment";
     alert.strStatusBar  = "Alert 1";
@@ -121,25 +121,25 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
 
     // Matches:
     BOOST_CHECK(alerts[0].AppliesTo(1, ""));
-    BOOST_CHECK(alerts[0].AppliesTo(70001, ""));
+    BOOST_CHECK(alerts[0].AppliesTo(999001, ""));
     BOOST_CHECK(alerts[0].AppliesTo(1, "/Satoshi:11.11.11/"));
 
     BOOST_CHECK(alerts[1].AppliesTo(1, "/Satoshi:0.1.0/"));
-    BOOST_CHECK(alerts[1].AppliesTo(70001, "/Satoshi:0.1.0/"));
+    BOOST_CHECK(alerts[1].AppliesTo(999001, "/Satoshi:0.1.0/"));
 
     BOOST_CHECK(alerts[2].AppliesTo(1, "/Satoshi:0.1.0/"));
     BOOST_CHECK(alerts[2].AppliesTo(1, "/Satoshi:0.2.0/"));
 
     // Don't match:
     BOOST_CHECK(!alerts[0].AppliesTo(-1, ""));
-    BOOST_CHECK(!alerts[0].AppliesTo(70002, ""));
+    BOOST_CHECK(!alerts[0].AppliesTo(999002, ""));
 
     BOOST_CHECK(!alerts[1].AppliesTo(1, ""));
     BOOST_CHECK(!alerts[1].AppliesTo(1, "Satoshi:0.1.0"));
     BOOST_CHECK(!alerts[1].AppliesTo(1, "/Satoshi:0.1.0"));
     BOOST_CHECK(!alerts[1].AppliesTo(1, "Satoshi:0.1.0/"));
     BOOST_CHECK(!alerts[1].AppliesTo(-1, "/Satoshi:0.1.0/"));
-    BOOST_CHECK(!alerts[1].AppliesTo(70002, "/Satoshi:0.1.0/"));
+    BOOST_CHECK(!alerts[1].AppliesTo(999002, "/Satoshi:0.1.0/"));
     BOOST_CHECK(!alerts[1].AppliesTo(1, "/Satoshi:0.2.0/"));
 
     BOOST_CHECK(!alerts[2].AppliesTo(1, "/Satoshi:0.3.0/"));
