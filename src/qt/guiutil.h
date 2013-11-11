@@ -65,9 +65,9 @@ namespace GUIUtil
       @param[out] selectedSuffixOut  Pointer to return the suffix (file type) that was selected (or 0).
                   Can be useful when choosing the save file format based on suffix.
      */
-    QString getSaveFileName(QWidget *parent=0, const QString &caption=QString(),
-                                   const QString &dir=QString(), const QString &filter=QString(),
-                                   QString *selectedSuffixOut=0);
+    QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
+        const QString &filter,
+        QString *selectedSuffixOut);
 
     /** Get open filename, convenience wrapper for QFileDialog::getOpenFileName.
 
