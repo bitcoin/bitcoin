@@ -61,7 +61,32 @@ AC_ARG_WITH([qt],
   [AS_HELP_STRING([--with-qt],
   [enable qt (default is yes)])],
   [use_qt=$withval],
-  [use_qt=yes])
+  [use_qt=auto])
+AC_DEFUN([BITCOIN_QT_FAIL],[
+  if test "x$use_qt" = "xauto"; then
+    AC_MSG_WARN([$1; bitcoin-qt frontend will not be built])
+    use_qt=no
+  else
+    AC_MSG_ERROR([$1])
+  fi
+])
+AC_DEFUN([BITCOIN_QT_CHECK],[
+  if test "x$use_qt" != "xno"; then
+    true
+    $1
+  else
+    true
+    $2
+  fi
+])
+AC_DEFUN([BITCOIN_QT_PATH_PROGS],[
+  BITCOIN_QT_CHECK([
+    AC_PATH_PROGS($1,$2,$3,$4)
+    if test "x$$1" = "x"; then
+      BITCOIN_QT_FAIL([$1 not found])
+    fi
+  ])
+])
 
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
@@ -136,12 +161,12 @@ AC_PATH_PROG(LCOV, lcov)
 AC_PATH_PROG(JAVA, java)
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
-AC_PATH_PROGS([MOC], [moc-qt4 moc4 moc],, $qt_bin_path:$PATH)
-AC_PATH_PROGS([UIC], [uic-qt4 uic4 uic],, $qt_bin_path:$PATH)
-AC_PATH_PROGS([RCC], [rcc-qt4 rcc4 rcc],, $qt_bin_path:$PATH)
-AC_PATH_PROGS([LRELEASE], [lrelease-qt4 lrelease4 lrelease],, $qt_bin_path:$PATH)
-AC_PATH_PROGS([LUPDATE], [lupdate-qt4 lupdate4 lupdate],, $qt_bin_path:$PATH)
-AC_PATH_PROG([PROTOC], [protoc],, $protoc_bin_path:$PATH)
+BITCOIN_QT_PATH_PROGS([MOC], [moc-qt4 moc4 moc],, $qt_bin_path:$PATH)
+BITCOIN_QT_PATH_PROGS([UIC], [uic-qt4 uic4 uic],, $qt_bin_path:$PATH)
+BITCOIN_QT_PATH_PROGS([RCC], [rcc-qt4 rcc4 rcc],, $qt_bin_path:$PATH)
+BITCOIN_QT_PATH_PROGS([LRELEASE], [lrelease-qt4 lrelease4 lrelease],, $qt_bin_path:$PATH)
+BITCOIN_QT_PATH_PROGS([LUPDATE], [lupdate-qt4 lupdate4 lupdate],, $qt_bin_path:$PATH)
+BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],, $protoc_bin_path:$PATH)
 AC_PATH_PROG(CCACHE,ccache)
 AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
@@ -222,11 +247,11 @@ case $host in
        fi
      fi
 
-     if test x$use_qt = xyes; then
+     BITCOIN_QT_CHECK([
        MOC_DEFS="-DQ_OS_MAC"
        base_frameworks="-framework Foundation -framework ApplicationServices -framework AppKit"
        AX_CHECK_LINK_FLAG([[$base_frameworks]],[LIBS="$LIBS $base_frameworks"],[AC_MSG_ERROR(could not find base frameworks)])
-     fi
+     ])
 
      CPPFLAGS="$CPPFLAGS -DMAC_OSX"
      TESTDEFS="-DBOOST_TEST_DYN_LINK"
@@ -427,8 +452,11 @@ if test x$use_pkgconfig = xyes; then
       PKG_CHECK_MODULES([SSL], [libssl], [INCLUDES="$INCLUDES $SSL_CFLAGS"; LIBS="$LIBS $SSL_LIBS"], [AC_MSG_ERROR(openssl  not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto], [INCLUDES="$INCLUDES $CRYPTO_CFLAGS"; LIBS="$LIBS $CRYPTO_LIBS"], [AC_MSG_ERROR(libcrypto  not found.)])
 
-      if test x$use_qt = xyes; then
-        PKG_CHECK_MODULES([QT], [QtCore QtGui QtNetwork], [QT_INCLUDES="$QT_CFLAGS"; have_qt=yes], [have_qt=no])
+      BITCOIN_QT_CHECK([
+        PKG_CHECK_MODULES([QT], [QtCore QtGui QtNetwork], [QT_INCLUDES="$QT_CFLAGS"; have_qt=yes],[
+          have_qt=no
+          BITCOIN_QT_FAIL([Qt dependencies not found])
+        ])
         if test x$use_tests = xyes; then
           PKG_CHECK_MODULES([QT_TEST], [QtTest], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
         fi
@@ -439,7 +467,7 @@ if test x$use_pkgconfig = xyes; then
           PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])
         fi
         PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [AC_MSG_ERROR(libprotobuf not found.)])
-      fi
+      ])
     ]
   )
 else
@@ -449,7 +477,7 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],, AC_MSG_ERROR(libssl missing))
 
-  if test x$use_qt = xyes; then
+  BITCOIN_QT_CHECK([
     TEMP_LIBS="$LIBS"
     LIBS=
     if test x$qt_lib_path != x; then
@@ -462,22 +490,25 @@ else
     fi
 
     if test x$TARGET_OS == xwindows; then
-      AC_CHECK_LIB([imm32],      [main],, AC_MSG_ERROR(libimm32 not found. Install it or use --without-qt.))
+      AC_CHECK_LIB([imm32],      [main],, BITCOIN_QT_FAIL(libimm32 not found))
     fi
+  ])
 
     #TODO: These are only needed when they're linked directly to parent libs. It really has nothing to do with windows.
     #Instead, check for missing functions in parent libs and assume static if they're absent.
     if test x$TARGET_OS == xwindows; then
-      AC_CHECK_LIB([qcncodecs],      [main],, AC_MSG_ERROR(libqcncodecs not found. Install it or use --without-qt.))
-      AC_CHECK_LIB([qjpcodecs],      [main],, AC_MSG_ERROR(libqjpcodecs not found. Install it or use --without-qt.))
-      AC_CHECK_LIB([qkrcodecs],      [main],, AC_MSG_ERROR(libqkrcodecs not found. Install it or use --without-qt.))
-      AC_CHECK_LIB([qtwcodecs],      [main],, AC_MSG_ERROR(libqtwcodecs not found. Install it or use --without-qt.))
+      BITCOIN_QT_CHECK(AC_CHECK_LIB([qcncodecs],[main],,BITCOIN_QT_FAIL(libqcncodecs not found)))
+      BITCOIN_QT_CHECK(AC_CHECK_LIB([qjpcodecs],[main],,BITCOIN_QT_FAIL(libqjpcodecs not found)))
+      BITCOIN_QT_CHECK(AC_CHECK_LIB([qkrcodecs],[main],,BITCOIN_QT_FAIL(libqkrcodecs not found)))
+      BITCOIN_QT_CHECK(AC_CHECK_LIB([qtwcodecs],[main],,BITCOIN_QT_FAIL(libqtwcodecs not found)))
     fi
 
-    AC_CHECK_LIB([QtCore],      [main],, AC_MSG_ERROR(libQtCore not found. Install it or use --without-qt.))
-    AC_CHECK_LIB([QtGui],      [main],, AC_MSG_ERROR(libQtGui not found. Install it or use --without-qt.))
-    AC_CHECK_LIB([QtNetwork],      [main],, AC_MSG_ERROR(libQtNetwork not found. Install it or use --without-qt.))
-    AC_CHECK_LIB([protobuf],      [main],, AC_MSG_ERROR(libprotobuf not found. Install it or use --without-qt.))
+    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtCore]   ,[main],,BITCOIN_QT_FAIL(libQtCore not found)))
+    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtGui]    ,[main],,BITCOIN_QT_FAIL(libQtGui not found)))
+    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtNetwork],[main],,BITCOIN_QT_FAIL(libQtNetwork not found)))
+    BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],,BITCOIN_QT_FAIL(libprotobuf not found)))
+
+  BITCOIN_QT_CHECK([
     QT_LIBS="$LIBS"
     LIBS="$TEMP_LIBS"
 
@@ -486,10 +517,13 @@ else
       QT_INCLUDES="-I$qt_include_path -I$qt_include_path/QtCore -I$qt_include_path/QtGui -I$qt_include_path/QtNetwork -I$qt_include_path/QtTest -I$qt_include_path/QtDBus"
       CPPFLAGS="$CPPFLAGS $QT_INCLUDES"
     fi
-    AC_CHECK_HEADER([QtPlugin],, AC_MSG_ERROR(QtCore headers missing. Install them or use --without-qt.),)
-    AC_CHECK_HEADER([QApplication],, AC_MSG_ERROR(QtGUI headers missing. Install them or use --without-qt.),)
-    AC_CHECK_HEADER([QLocalSocket],, AC_MSG_ERROR(QtNetwork headers missing. Install them or use --without-qt.),)
+  ])
 
+    BITCOIN_QT_CHECK(AC_CHECK_HEADER([QtPlugin],,BITCOIN_QT_FAIL(QtCore headers missing),))
+    BITCOIN_QT_CHECK(AC_CHECK_HEADER([QApplication],, BITCOIN_QT_FAIL(QtGui headers missing),))
+    BITCOIN_QT_CHECK(AC_CHECK_HEADER([QLocalSocket],, BITCOIN_QT_FAIL(QtNetwork headers missing),))
+
+  BITCOIN_QT_CHECK([
     if test x$use_tests = xyes; then
       TEMP_LIBS="$LIBS"
       LIBS=
@@ -517,7 +551,7 @@ else
       AC_CHECK_LIB([qrencode], [main],, [have_qrencode=no])
       AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)
     fi
-  fi
+  ])
 fi
 
 if test x$use_ipv6 = xyes; then
@@ -604,35 +638,19 @@ fi
 
 dnl enable qt support
 AC_MSG_CHECKING([if qt should be enabled])
-if test x$use_qt = xyes; then
-  if test x$have_qt = xno; then
-     AC_MSG_ERROR("qt support requested but qt could not be located. use --without-qt")
-  fi
-  if test x$MOC = x; then
-    AC_MSG_ERROR("qt support requested but moc was not found. use --without-qt")
-  fi
-  if test x$PROTOC = x; then
-    AC_MSG_ERROR("qt support requested but protoc was not found. use --without-qt")
-  fi
-  if test x$UIC = x; then
-    AC_MSG_ERROR("qt support requested but uic was not found. use --without-qt")
-  fi
-  if test x$RCC = x; then
-    AC_MSG_ERROR("qt support requested but rcc was not found. use --without-qt")
-  fi
-  if test x$LRELEASE = x; then
-    AC_MSG_ERROR("qt support requested but lrelease was not found. use --without-qt")
-  fi
+BITCOIN_QT_CHECK([
+  use_qt=yes
+  BUILD_QT=qt
   if test x$use_tests = xyes; then
     if test x$have_qt_test = xno; then
       AC_MSG_ERROR("libQtTest not found. Use --disable-tests or --without-qt.")
     fi
   fi
   if test x$have_qt_dbus = xno;  then
-    use_dbus=no
     if test x$use_dbus = xyes; then
-      AC_MSG_ERROR("libQtDBus not found. Use --without-qtdbus.")
+      AC_MSG_ERROR("libQtDBus not found. Install libQtDBus or remove --with-qtdbus.")
     fi
+    use_dbus=no
   fi
   if test x$XGETTEXT == x; then
     AC_MSG_WARN("xgettext is required to update qt translations")
@@ -640,11 +658,9 @@ if test x$use_qt = xyes; then
   if test x$LUPDATE == x; then
     AC_MSG_WARN("lupdate is required to update qt translations")
   fi
-
-  BUILD_QT=qt
-else
+],[
   use_qt=no
-fi
+])
 
 AC_MSG_RESULT($use_qt)
 
@@ -678,7 +694,7 @@ if test x$use_qt = xyes; then
     fi
   fi
 
-  if test x$use_tests = xyes; then
+  if test x$use_tests$have_qt_test = xyesyes; then
     BUILD_TEST_QT="test"
   fi
 fi

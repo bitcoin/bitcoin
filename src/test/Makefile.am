@@ -1,10 +1,6 @@
 include $(top_srcdir)/src/Makefile.include
 
-AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
-  -I$(top_srcdir)/src/leveldb/include -I$(top_srcdir)/src/leveldb/helpers \
-  -I$(top_srcdir)/src $(BOOST_INCLUDES) $(BDB_CPPFLAGS)
-
-AM_LDFLAGS = $(PTHREAD_CFLAGS)
+AM_CPPFLAGS += -I$(top_srcdir)/src
 
 bin_PROGRAMS = test_bitcoin
 
