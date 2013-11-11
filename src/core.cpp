@@ -106,6 +106,18 @@ bool CTransaction::IsNewerThan(const CTransaction& old) const
     return fNewer;
 }
 
+int64_t CTransaction::GetValueOut() const
+{
+    int64_t nValueOut = 0;
+    BOOST_FOREACH(const CTxOut& txout, vout)
+    {
+        nValueOut += txout.nValue;
+        if (!MoneyRange(txout.nValue) || !MoneyRange(nValueOut))
+            throw std::runtime_error("CTransaction::GetValueOut() : value out of range");
+    }
+    return nValueOut;
+}
+
 std::string CTransaction::ToString() const
 {
     std::string str;

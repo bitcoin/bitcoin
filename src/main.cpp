@@ -379,21 +379,6 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
     return true;
 }
 
-/** Amount of bitcoins spent by the transaction.
-    @return sum of all outputs (note: does not include fees)
- */
-int64_t GetValueOut(const CTransaction& tx)
-{
-    int64_t nValueOut = 0;
-    BOOST_FOREACH(const CTxOut& txout, tx.vout)
-    {
-        nValueOut += txout.nValue;
-        if (!MoneyRange(txout.nValue) || !MoneyRange(nValueOut))
-            throw std::runtime_error("GetValueOut() : value out of range");
-    }
-    return nValueOut;
-}
-
 //
 // Check transaction inputs, and make sure any
 // pay-to-script-hash transactions are evaluating IsStandard scripts
@@ -717,7 +702,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // you should add code here to check that the transaction does a
         // reasonable number of ECDSA signature verifications.
 
-        int64_t nFees = view.GetValueIn(tx)-GetValueOut(tx);
+        int64_t nFees = view.GetValueIn(tx)-tx.GetValueOut();
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
         // Don't accept it if it can't get into a block
@@ -1342,12 +1327,12 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 
         }
 
-        if (nValueIn < GetValueOut(tx))
+        if (nValueIn < tx.GetValueOut())
             return state.DoS(100, error("CheckInputs() : %s value in < value out", tx.GetHash().ToString().c_str()),
                              REJECT_INVALID, "in < out");
 
         // Tally transaction fees
-        int64_t nTxFee = nValueIn - GetValueOut(tx);
+        int64_t nTxFee = nValueIn - tx.GetValueOut();
         if (nTxFee < 0)
             return state.DoS(100, error("CheckInputs() : %s nTxFee < 0", tx.GetHash().ToString().c_str()),
                              REJECT_INVALID, "fee < 0");
@@ -1600,7 +1585,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
                                      REJECT_INVALID, "too many sigops");
             }
 
-            nFees += view.GetValueIn(tx)-GetValueOut(tx);
+            nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
             std::vector<CScriptCheck> vChecks;
             if (!CheckInputs(tx, state, view, fScriptChecks, flags, nScriptCheckThreads ? &vChecks : NULL))
@@ -1620,10 +1605,10 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
     if (fBenchmark)
         LogPrintf("- Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin)\n", (unsigned)block.vtx.size(), 0.001 * nTime, 0.001 * nTime / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs-1));
 
-    if (GetValueOut(block.vtx[0]) > GetBlockValue(pindex->nHeight, nFees))
+    if (block.vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
         return state.DoS(100,
                          error("ConnectBlock() : coinbase pays too much (actual=%"PRId64" vs limit=%"PRId64")",
-                               GetValueOut(block.vtx[0]), GetBlockValue(pindex->nHeight, nFees)),
+                               block.vtx[0].GetValueOut(), GetBlockValue(pindex->nHeight, nFees)),
                          REJECT_INVALID, "coinbase too large");
 
     if (!control.Wait())

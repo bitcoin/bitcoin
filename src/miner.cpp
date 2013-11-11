@@ -261,7 +261,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             // This is a more accurate fee-per-kilobyte than is used by the client code, because the
             // client code rounds up the size to the nearest 1K. That's good, because it gives an
             // incentive to create smaller transactions.
-            double dFeePerKb =  double(nTotalIn-GetValueOut(tx)) / (double(nTxSize)/1000.0);
+            double dFeePerKb =  double(nTotalIn-tx.GetValueOut()) / (double(nTxSize)/1000.0);
 
             if (porphan)
             {
@@ -318,7 +318,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             if (!view.HaveInputs(tx))
                 continue;
 
-            int64_t nTxFees = view.GetValueIn(tx)-GetValueOut(tx);
+            int64_t nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
 
             nTxSigOps += GetP2SHSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
