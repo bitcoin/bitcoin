@@ -13,8 +13,8 @@ This is a 'getwork' CPU mining client for Bitcoin. It is pure-python, and theref
 Use the raw transactions API to send coins received on a particular
 address (or addresses).
 
-### [Wallet Tools](/contrib/wallettools) ###
-Contains a wallet change password and unlock script. Used to prevent users from having to enter their password as a command-line argument.
+### WalletTools
+Removed. Please see [/contrib/bitrpc](/contrib/bitrpc).
 
 Repository Tools
 ---------------------
