@@ -55,7 +55,7 @@ MSYS shell:
 
 Boost
 -----
-DOS prompt:
+MSYS shell:
 
 	downloaded boost jam 3.1.18
 	cd \boost-1.50.0-mgw
@@ -74,7 +74,7 @@ MSYS shell:
 
 Bitcoin
 -------
-DOS prompt:
+MSYS shell:
 
 	cd \bitcoin
 	sh autogen.sh
