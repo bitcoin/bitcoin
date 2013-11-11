@@ -56,12 +56,13 @@ Installing the dependencies using MacPorts is very straightforward.
 
 2.  Build bitcoind:
 
-        cd src
-        make -f makefile.osx
+        ./autogen.sh
+        ./configure
+        make
 
 3.  It is a good idea to build and run the unit tests, too:
 
-        make -f makefile.osx test
+        make test
 
 Instructions: HomeBrew
 ----------------------
@@ -89,22 +90,15 @@ Rerunning "openssl version" should now return the correct version.
         git clone git@github.com:bitcoin/bitcoin.git bitcoin
         cd bitcoin
 
-2.  Modify source in order to pick up the `openssl` library.
+2.  Build bitcoind:
 
-    Edit `makefile.osx` to account for library location differences. There's a
-    diff in `contrib/homebrew/makefile.osx.patch` that shows what you need to
-    change, or you can just patch by doing
+        ./autogen.sh
+        ./configure
+        make
 
-        patch -p1 < contrib/homebrew/makefile.osx.patch
+3.  It is a good idea to build and run the unit tests, too:
 
-3.  Build bitcoind:
-
-        cd src
-        make -f makefile.osx
-
-4.  It is a good idea to build and run the unit tests, too:
-
-        make -f makefile.osx test
+        make test
 
 Creating a release build
 ------------------------
