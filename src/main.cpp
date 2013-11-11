@@ -660,7 +660,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         return false;
 
     // Check for conflicts with in-memory transactions
-    CTransaction* ptxOld = NULL;
     {
     LOCK(pool.cs); // protect pool.mapNextTx
     for (unsigned int i = 0; i < tx.vin.size(); i++)
@@ -670,22 +669,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         {
             // Disable replacement feature for now
             return false;
-
-            // Allow replacing with a newer version of the same transaction
-            if (i != 0)
-                return false;
-            ptxOld = pool.mapNextTx[outpoint].ptx;
-            if (IsFinalTx(*ptxOld))
-                return false;
-            if (!tx.IsNewerThan(*ptxOld))
-                return false;
-            for (unsigned int i = 0; i < tx.vin.size(); i++)
-            {
-                COutPoint outpoint = tx.vin[i].prevout;
-                if (!pool.mapNextTx.count(outpoint) || pool.mapNextTx[outpoint].ptx != ptxOld)
-                    return false;
-            }
-            break;
         }
     }
     }
@@ -782,19 +765,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     }
 
     // Store transaction in memory
-    {
-        if (ptxOld)
-        {
-            LogPrint("mempool", "AcceptToMemoryPool: : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
-            pool.remove(*ptxOld);
-        }
-        pool.addUnchecked(hash, tx);
-    }
+    pool.addUnchecked(hash, tx);
 
-    ///// are we sure this is ok when loading transactions or restoring block txes
-    // If updated, erase old tx from wallet
-    if (ptxOld)
-        g_signals.EraseTransaction(ptxOld->GetHash());
     g_signals.SyncTransaction(hash, tx, NULL);
 
     return true;
