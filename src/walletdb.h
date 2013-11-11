@@ -16,7 +16,7 @@
 
 class CAccount;
 class CAccountingEntry;
-class CBlockLocator;
+struct CBlockLocator;
 class CKeyPool;
 class CMasterKey;
 class CScript;
