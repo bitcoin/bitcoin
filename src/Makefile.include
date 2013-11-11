@@ -1,5 +1,9 @@
-# Helper for rules and subdir Makefiles to find parent targets.
-# Flags and other non-target variables should not be set here.
+AM_CPPFLAGS =  $(INCLUDES) \
+  -I$(top_builddir)/src/obj \
+  -I$(top_srcdir)/src/leveldb/include \
+  $(BDB_CPPFLAGS) \
+  $(BOOST_INCLUDES)
+AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
 LIBBITCOIN=$(top_builddir)/src/libbitcoin.a
 LIBLEVELDB=$(top_builddir)/src/leveldb/libleveldb.a

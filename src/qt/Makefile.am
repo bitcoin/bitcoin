@@ -1,11 +1,10 @@
 include $(top_srcdir)/src/Makefile.include
 
-AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
-  -I$(top_srcdir)/src/leveldb/include -I$(top_srcdir)/src \
-  -I$(top_srcdir)/src/leveldb/helpers -I$(top_builddir)/src/qt \
-  -I$(top_builddir)/src/qt/forms $(BOOST_INCLUDES) $(PROTOBUF_CFLAGS) \
-  $(QR_CFLAGS) $(BDB_CPPFLAGS)
-AM_LDFLAGS = $(PTHREAD_CFLAGS)
+AM_CPPFLAGS += -I$(top_srcdir)/src \
+  -I$(top_builddir)/src/qt \
+  -I$(top_builddir)/src/qt/forms \
+  $(PROTOBUF_CFLAGS) \
+  $(QR_CFLAGS)
 bin_PROGRAMS = bitcoin-qt
 noinst_LIBRARIES = libbitcoinqt.a
 SUBDIRS = $(BUILD_TEST_QT)
