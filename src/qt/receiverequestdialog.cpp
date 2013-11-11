@@ -64,7 +64,7 @@ void QRImageWidget::mousePressEvent(QMouseEvent *event)
 
 void QRImageWidget::saveImage()
 {
-    QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Images (*.png)"));
+    QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Image (*.png)"), NULL);
     if (!fn.isEmpty())
     {
         exportImage().save(fn);
