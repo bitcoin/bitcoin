@@ -25,7 +25,6 @@
 #include <arpa/inet.h>
 #endif
 
-//#include <boost/array.hpp>
 #include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
 #include <openssl/rand.h>
