@@ -1,11 +1,11 @@
 include Makefile.include
-AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
-  -I$(top_srcdir)/src/leveldb/include -I$(top_srcdir)/src/leveldb/helpers \
-  -I$(builddir) $(BOOST_INCLUDES) $(BDB_CPPFLAGS)
-AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
+AM_CPPFLAGS += -I$(builddir)
 
-noinst_LIBRARIES = libppcoin_server.a libppcoin_common.a libppcoin_cli.a
+noinst_LIBRARIES = \
+  libppcoin_server.a \
+  libppcoin_common.a \
+  libppcoin_cli.a
 if ENABLE_WALLET
 noinst_LIBRARIES += libppcoin_wallet.a
 endif
@@ -16,19 +16,57 @@ SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
 DIST_SUBDIRS = . qt test
 .PHONY: FORCE
 # bitcoin core #
-BITCOIN_CORE_H = addrman.h alert.h allocators.h base58.h bignum.h \
-  rpcclient.h rpcprotocol.h rpcserver.h \
-  bloom.h checkpoints.h checkpointsync.h checkqueue.h \
-  clientversion.h compat.h crypter.h db.h hash.h init.h \
-  key.h kernel.h keystore.h leveldbwrapper.h limitedmap.h main.h mruset.h \
-  netbase.h net.h protocol.h script.h serialize.h sync.h threadsafety.h \
-  txdb.h ui_interface.h uint256.h util.h version.h walletdb.h wallet.h
+BITCOIN_CORE_H = \
+  addrman.h \
+  alert.h \
+  allocators.h \
+  base58.h \
+  bignum.h \
+  rpcclient.h \
+  rpcprotocol.h \
+  rpcserver.h \
+  bloom.h \
+  checkpoints.h \
+  checkpointsync.h \
+  checkqueue.h \
+  clientversion.h \
+  compat.h \
+  crypter.h \
+  db.h \
+  hash.h \
+  init.h \
+  key.h \
+  kernel.h \
+  keystore.h \
+  leveldbwrapper.h \
+  limitedmap.h \
+  main.h \
+  mruset.h \
+  netbase.h \
+  net.h \
+  protocol.h \
+  script.h \
+  serialize.h \
+  sync.h \
+  threadsafety.h \
+  txdb.h \
+  ui_interface.h \
+  uint256.h \
+  util.h \
+  version.h \
+  walletdb.h \
+  wallet.h
 
-JSON_H = json/json_spirit.h json/json_spirit_error_position.h \
-  json/json_spirit_reader.h json/json_spirit_reader_template.h \
-  json/json_spirit_stream_reader.h json/json_spirit_utils.h \
-  json/json_spirit_value.h json/json_spirit_writer.h \
-  json/json_spirit_writer_template.h
+JSON_H = \
+  json/json_spirit.h \
+  json/json_spirit_error_position.h \
+  json/json_spirit_reader.h \
+  json/json_spirit_reader_template.h \
+  json/json_spirit_stream_reader.h \
+  json/json_spirit_utils.h \
+  json/json_spirit_value.h \
+  json/json_spirit_writer.h \
+  json/json_spirit_writer_template.h 
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(abs_top_builddir)/src/obj
@@ -88,7 +126,12 @@ nodist_libppcoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
 # ppcoind binary #
-ppcoind_LDADD = libppcoin_server.a libppcoin_cli.a libppcoin_common.a leveldb/libleveldb.a leveldb/libmemenv.a \
+ppcoind_LDADD = \
+  libppcoin_server.a \
+  libppcoin_cli.a \
+  libppcoin_common.a \
+  $(LIBLEVELDB) \
+  $(LIBMEMENV) \
   $(BOOST_LIBS)
 if ENABLE_WALLET
 ppcoind_LDADD += libppcoin_wallet.a
@@ -112,6 +155,7 @@ if TARGET_WINDOWS
 peercoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
+# NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
 leveldb/libleveldb.a: leveldb/libmemenv.a
 
 leveldb/%.a:
