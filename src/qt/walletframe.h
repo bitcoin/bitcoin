@@ -45,6 +45,8 @@ private:
 
     bool bOutOfSync;
 
+    WalletView *currentWalletView();
+
 public slots:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
