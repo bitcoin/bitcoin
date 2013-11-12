@@ -12,6 +12,8 @@
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
+class CMinerPolicyEstimator; // Internal class used for estimatefees functionality
+
 /*
  * CTxMemPool stores these:
  */
@@ -54,6 +56,9 @@ class CTxMemPool
 private:
     bool fSanityCheck; // Normally false, true if -checkmempool or -regtest
     unsigned int nTransactionsUpdated;
+    CMinerPolicyEstimator* minerPolicyEstimator; // For estimating transaction fees
+
+    void writeEntry(CAutoFile& file, const uint256& txid, std::set<uint256>& alreadyWritten) const;
 
 public:
     mutable CCriticalSection cs;
@@ -61,6 +66,7 @@ public:
     std::map<COutPoint, CInPoint> mapNextTx;
 
     CTxMemPool();
+    ~CTxMemPool();
 
     /*
      * If sanity-checking is turned on, check makes sure the pool is
@@ -72,11 +78,13 @@ public:
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
-    bool remove(const CTransaction &tx, bool fRecursive = false);
+    bool remove(const CTransaction &tx, bool fRecursive = false, unsigned int nBlockHeight = 0);
     bool removeConflicts(const CTransaction &tx);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
+    void estimateFees(double dPriorityMedian, double& dPriority, double dFeeMedian, double& dFee, bool fUseHardCoded=false);
+    bool isDust(const CTxOut& txout);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
 
@@ -93,6 +101,13 @@ public:
     }
 
     bool lookup(uint256 hash, CTransaction& result) const;
+
+    // Save to mempool.dat:
+    bool Write() const;
+    // Read from mempool.dat, return entries; does
+    // not automatically add them to the pool,
+    // because they might no longer be valid.
+    bool Read(std::list<CTxMemPoolEntry>& entries) const;
 };
 
 /** CCoinsView that brings transactions from a memorypool into view.

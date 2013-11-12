@@ -1731,7 +1731,6 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     }
 
     // Connect longer branch
-    vector<CTransaction> vDelete;
     BOOST_FOREACH(CBlockIndex *pindex, vConnect) {
         CBlock block;
         if (!ReadBlockFromDisk(block, pindex))
@@ -1747,9 +1746,12 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
         if (fBenchmark)
             LogPrintf("- Connect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
-        // Queue memory transactions to delete
+        // Accepted into block, means remove from memory pool
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
-            vDelete.push_back(tx);
+        {
+            mempool.remove(tx, false, pindex->nHeight-1);
+            mempool.removeConflicts(tx);
+        }
     }
 
     // Flush changes to global coin state
@@ -1790,12 +1792,6 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
         CValidationState stateDummy;
         if (!AcceptToMemoryPool(mempool,stateDummy, tx, false, NULL))
             mempool.remove(tx, true);
-    }
-
-    // Delete redundant memory transactions that are in the connected branch
-    BOOST_FOREACH(CTransaction& tx, vDelete) {
-        mempool.remove(tx);
-        mempool.removeConflicts(tx);
     }
 
     mempool.check(pcoinsTip);
