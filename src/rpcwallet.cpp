@@ -31,8 +31,17 @@ static CCriticalSection cs_nWalletUnlockTime;
 std::string HelpRequiringPassphrase()
 {
     return pwalletMain && pwalletMain->IsCrypted()
-        ? "\nrequires wallet passphrase to be set with walletpassphrase first"
+        ? "\nRequires wallet passphrase to be set with walletpassphrase call."
         : "";
+}
+
+std::string HelpExampleCli(string methodname, string args){
+    return "> bitcoin-cli " + methodname + " " + args + "\n";
+}
+
+std::string HelpExampleRpc(string methodname, string args){
+    return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
 }
 
 void EnsureWalletIsUnlocked()
@@ -73,7 +82,29 @@ Value getinfo(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getinfo\n"
-            "Returns an object containing various state info.");
+            "Returns an object containing various state info.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"version\": xxxxx,           (numeric) the server version\n"
+            "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
+            "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total bitcoin balance of the wallet\n"
+            "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
+            "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
+            "  \"connections\": xxxxx,       (numeric) the number of connections\n"
+            "  \"proxy\": \"host:port\",     (string, optional) the proxy used by the server\n"
+            "  \"difficulty\": xxxxxx,       (numeric) the current difficulty\n"
+            "  \"testnet\": true|false,      (boolean) if the server is using testnet or not\n"
+            "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since GMT epoch) of the oldest pre-generated key in the key pool\n"
+            "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
+            "  \"paytxfee\": x.xxxx,         (numeric) the transaction fee set in btc\n"
+            "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
+            "  \"errors\": \"...\"           (string) any error messages\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getinfo", "")
+            + HelpExampleRpc("getinfo", "")
+        );
 
     proxyType proxy;
     GetProxy(NET_IPV4, proxy);
@@ -108,10 +139,20 @@ Value getnewaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getnewaddress [account]\n"
-            "Returns a new Bitcoin address for receiving payments.  "
-            "If [account] is specified (recommended), it is added to the address book "
-            "so payments received with the address will be credited to [account].");
+            "getnewaddress ( \"account\" )\n"
+            "\nReturns a new Bitcoin address for receiving payments.\n"
+            "If 'account' is specified (recommended), it is added to the address book \n"
+            "so payments received with the address will be credited to 'account'.\n"
+            "\nArguments:\n"
+            "1. \"account\"        (string, optional) The account name for the address to be linked to. if not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "\nResult:\n"
+            "\"bitcoinaddress\"    (string) The new bitcoin address\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getnewaddress", "")
+            + HelpExampleCli("getnewaddress", "\"\"")
+            + HelpExampleCli("getnewaddress", "\"myaccount\"")
+            + HelpExampleRpc("getnewaddress", "\"myaccount\"")
+        );
 
     // Parse the account first so we don't generate a key if there's an error
     string strAccount;
@@ -175,8 +216,18 @@ Value getaccountaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "getaccountaddress <account>\n"
-            "Returns the current Bitcoin address for receiving payments to this account.");
+            "getaccountaddress \"account\"\n"
+            "\nReturns the current Bitcoin address for receiving payments to this account.\n"
+            "\nArguments:\n"
+            "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
+            "\nResult:\n"
+            "\"bitcoinaddress\"   (string) The account bitcoin address\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getaccountaddress", "")
+            + HelpExampleCli("getaccountaddress", "\"\"")
+            + HelpExampleCli("getaccountaddress", "\"myaccount\"")
+            + HelpExampleRpc("getaccountaddress", "\"myaccount\"")
+        );
 
     // Parse the account first so we don't generate a key if there's an error
     string strAccount = AccountFromValue(params[0]);
@@ -194,8 +245,14 @@ Value getrawchangeaddress(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getrawchangeaddress\n"
-            "Returns a new Bitcoin address, for receiving change.  "
-            "This is for use with raw transactions, NOT normal use.");
+            "\nReturns a new Bitcoin address, for receiving change.\n"
+            "This is for use with raw transactions, NOT normal use.\n"
+            "\nResult:\n"
+            "\"address\"    (string) The address\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getrawchangeaddress", "")
+            + HelpExampleRpc("getrawchangeaddress", "")
+       );
 
     if (!pwalletMain->IsLocked())
         pwalletMain->TopUpKeyPool();
@@ -217,8 +274,15 @@ Value setaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "setaccount <bitcoinaddress> <account>\n"
-            "Sets the account associated with the given address.");
+            "setaccount \"bitcoinaddress\" \"account\"\n"
+            "\nSets the account associated with the given address.\n"
+            "\nArguments:\n"
+            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to be associated with an account.\n"
+            "2. \"account\"         (string, required) The account to assign the address to.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"tabby\"")
+            + HelpExampleRpc("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"tabby\"")
+        );
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
@@ -247,8 +311,16 @@ Value getaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "getaccount <bitcoinaddress>\n"
-            "Returns the account associated with the given address.");
+            "getaccount \"bitcoinaddress\"\n"
+            "\nReturns the account associated with the given address.\n"
+            "\nArguments:\n"
+            "1. \"bitcoinaddress\"  (string, required) The bitcoin address for account lookup.\n"
+            "\nResult:\n"
+            "\"accountname\"        (string) the account address\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
+            + HelpExampleRpc("getaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
+        );
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
@@ -266,8 +338,19 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "getaddressesbyaccount <account>\n"
-            "Returns the list of addresses for the given account.");
+            "getaddressesbyaccount \"account\"\n"
+            "\nReturns the list of addresses for the given account.\n"
+            "\nArguments:\n"
+            "1. \"account\"  (string, required) The account name.\n"
+            "\nResult:\n"
+            "[                     (json array of string)\n"
+            "  \"bitcoinaddress\"  (string) a bitcoin address associated with the given account\n"
+            "  ,...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getaddressesbyaccount", "\"tabby\"")
+            + HelpExampleRpc("getaddressesbyaccount", "\"tabby\"")
+        );
 
     string strAccount = AccountFromValue(params[0]);
 
@@ -287,9 +370,24 @@ Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "sendtoaddress <bitcoinaddress> <amount> [comment] [comment-to]\n"
-            "<amount> is a real and is rounded to the nearest 0.00000001"
-            + HelpRequiringPassphrase());
+            "sendtoaddress \"bitcoinaddress\" amount ( \"comment\" \"comment-to\" )\n"
+            "\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to send to.\n"
+            "2. \"amount\"      (numeric, required) The amount in btc to send. eg 0.1\n"
+            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
+            "                             This is not part of the transaction, just kept in your wallet.\n"
+            "4. \"comment-to\"  (string, optional) A comment to store the name of the person or organization \n"
+            "                             to which you're sending the transaction. This is not part of the \n"
+            "                             transaction, just kept in your wallet.\n"
+            "\nResult:\n"
+            "\"transactionid\"  (string) The transaction id. (view at https://blockchain.info/tx/[transactionid])\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
+            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
+            + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
+        );
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
@@ -320,9 +418,25 @@ Value listaddressgroupings(const Array& params, bool fHelp)
     if (fHelp)
         throw runtime_error(
             "listaddressgroupings\n"
-            "Lists groups of addresses which have had their common ownership\n"
+            "\nLists groups of addresses which have had their common ownership\n"
             "made public by common use as inputs or as the resulting change\n"
-            "in past transactions");
+            "in past transactions\n"
+            "\nResult:\n"
+            "[\n"
+            "  [\n"
+            "    [\n"
+            "      \"bitcoinaddress\",     (string) The bitcoin address\n"
+            "      amount,                 (numeric) The amount in btc\n"
+            "      \"account\"             (string, optional) The account\n"
+            "    ]\n"
+            "    ,...\n"
+            "  ]\n"
+            "  ,...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listaddressgroupings", "")
+            + HelpExampleRpc("listaddressgroupings", "")
+        );
 
     Array jsonGroupings;
     map<CTxDestination, int64_t> balances = pwalletMain->GetAddressBalances();
@@ -350,8 +464,24 @@ Value signmessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "signmessage <bitcoinaddress> <message>\n"
-            "Sign a message with the private key of an address");
+            "signmessage \"bitcoinaddress\" \"message\"\n"
+            "\nSign a message with the private key of an address"
+            + HelpRequiringPassphrase() + "\n"
+            "\nArguments:\n"
+            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to use for the private key.\n"
+            "2. \"message\"         (string, required) The message to create a signature of.\n"
+            "\nResult:\n"
+            "\"signature\"          (string) The signature of the message encoded in base 64\n"
+            "\nExamples:\n"
+            "\nUnlock the wallet for 30 seconds\n"
+            + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
+            "\nCreate the signature\n"
+            + HelpExampleCli("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"my message\"") +
+            "\nVerify the signature\n"
+            + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"signature\" \"my message\"") +
+            "\nAs json rpc\n"
+            + HelpExampleRpc("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"my message\"")
+        );
 
     EnsureWalletIsUnlocked();
 
@@ -385,8 +515,24 @@ Value verifymessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
         throw runtime_error(
-            "verifymessage <bitcoinaddress> <signature> <message>\n"
-            "Verify a signed message");
+            "verifymessage \"bitcoinaddress\" \"signature\" \"message\"\n"
+            "\nVerify a signed message\n"
+            "\nArguments:\n"
+            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to use for the signature.\n"
+            "2. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
+            "3. \"message\"         (string, required) The message that was signed.\n"
+            "\nResult:\n"
+            "true|false   (boolean) If the signature is verified or not.\n"
+            "\nExamples:\n"
+            "\nUnlock the wallet for 30 seconds\n"
+            + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
+            "\nCreate the signature\n"
+            + HelpExampleCli("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"my message\"") +
+            "\nVerify the signature\n"
+            + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"signature\" \"my message\"") +
+            "\nAs json rpc\n"
+            + HelpExampleRpc("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"signature\", \"my message\"")
+        );
 
     string strAddress  = params[0].get_str();
     string strSign     = params[1].get_str();
@@ -422,8 +568,23 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getreceivedbyaddress <bitcoinaddress> [minconf=1]\n"
-            "Returns the total amount received by <bitcoinaddress> in transactions with at least [minconf] confirmations.");
+            "getreceivedbyaddress \"bitcoinaddress\" ( minconf )\n"
+            "\nReturns the total amount received by the given bitcoinaddress in transactions with at least minconf confirmations.\n"
+            "\nArguments:\n"
+            "1. \"bitcoinaddress\"  (string, required) The bitcoin address for transactions.\n"
+            "2. minconf             (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
+            "\nResult:\n"
+            "amount   (numeric) The total amount in btc received at this address.\n"
+            "\nExamples:\n"
+            "\nThe amount from transactions with at least 1 confirmation\n"
+            + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"") +
+            "\nThe amount including unconfirmed transactions, zero confirmations\n"
+            + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" 0") +
+            "\nThe amount with at least 6 confirmation, very safe\n"
+            + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" 6") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", 6")
+       );
 
     // Bitcoin address
     CBitcoinAddress address = CBitcoinAddress(params[0].get_str());
@@ -461,8 +622,23 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getreceivedbyaccount <account> [minconf=1]\n"
-            "Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.");
+            "getreceivedbyaccount \"account\" ( minconf )\n"
+            "\nReturns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.\n"
+            "\nArguments:\n"
+            "1. \"account\"      (string, required) The selected account, may be the default account using \"\".\n"
+            "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
+            "\nResult:\n"
+            "amount              (numeric) The total amount in btc received for this account.\n"
+            "\nExamples:\n"
+            "\nAmount received by the default account with at least 1 confirmation\n"
+            + HelpExampleCli("getreceivedbyaccount", "\"\"") +
+            "\nAmount received at the tabby account including unconfirmed amounts with zero confirmations\n"
+            + HelpExampleCli("getreceivedbyaccount", "\"tabby\" 0") +
+            "\nThe amount with at least 6 confirmation, very safe\n"
+            + HelpExampleCli("getreceivedbyaccount", "\"tabby\" 6") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("getreceivedbyaccount", "\"tabby\", 6")
+        );
 
     // Minimum confirmations
     int nMinDepth = 1;
@@ -530,9 +706,26 @@ Value getbalance(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
-            "getbalance [account] [minconf=1]\n"
-            "If [account] is not specified, returns the server's total available balance.\n"
-            "If [account] is specified, returns the balance in the account.");
+            "getbalance ( \"account\" minconf )\n"
+            "\nIf account is not specified, returns the server's total available balance.\n"
+            "If account is specified, returns the balance in the account.\n"
+            "Note that the account \"\" is not the same as leaving the parameter out.\n"
+            "The server total may be different to the balance in the default \"\" account.\n"
+            "\nArguments:\n"
+            "1. \"account\"      (string, optional) The selected account. It may be the default account using \"\".\n"
+            "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
+            "\nResult:\n"
+            "amount              (numeric) The total amount in btc received for this account.\n"
+            "\nExamples:\n"
+            "\nThe total amount in the server across all accounts\n"
+            + HelpExampleCli("getbalance", "") +
+            "\nThe total amount in the default account with at least 1 confirmation\n"
+            + HelpExampleCli("getbalance", "\"\"") +
+            "\nThe total amount in the account named tabby with at least 6 confirmations\n"
+            + HelpExampleCli("getbalance", "\"tabby\" 6") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("getbalance", "\"tabby\", 6")
+        );
 
     if (params.size() == 0)
         return  ValueFromAmount(pwalletMain->GetBalance());
@@ -581,8 +774,23 @@ Value movecmd(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
-            "move <fromaccount> <toaccount> <amount> [minconf=1] [comment]\n"
-            "Move from one account in your wallet to another.");
+            "move \"fromaccount\" \"toaccount\" amount ( minconf \"comment\" )\n"
+            "\nMove a specified amount from one account in your wallet to another.\n"
+            "\nArguments:\n"
+            "1. \"fromaccount\"   (string, required) The name of the account to move funds from. May be the default account using \"\".\n"
+            "2. \"toaccount\"     (string, required) The name of the account to move funds to. May be the default account using \"\".\n"
+            "3. minconf           (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
+            "4. \"comment\"       (string, optional) An optional comment, stored in the wallet only.\n"
+            "\nResult:\n"
+            "true|false           (boolean) true if successfull.\n"
+            "\nExamples:\n"
+            "\nMove 0.01 btc from the default account to the account named tabby\n"
+            + HelpExampleCli("move", "\"\" \"tabby\" 0.01") +
+            "\nMove 0.01 btc timotei to akiko with a comment and funds have 6 confirmations\n"
+            + HelpExampleCli("move", "\"timotei\" \"akiko\" 0.01 6 \"happy birthday!\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("move", "\"timotei\", \"akiko\", 0.01, 6, \"happy birthday!\"")
+        );
 
     string strFrom = AccountFromValue(params[0]);
     string strTo = AccountFromValue(params[1]);
@@ -631,9 +839,30 @@ Value sendfrom(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 6)
         throw runtime_error(
-            "sendfrom <fromaccount> <tobitcoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
-            "<amount> is a real and is rounded to the nearest 0.00000001"
-            + HelpRequiringPassphrase());
+            "sendfrom \"fromaccount\" \"tobitcoinaddress\" amount ( minconf \"comment\" \"comment-to\" )\n"
+            "\nSent an amount from an account to a bitcoin address.\n"
+            "The amount is a real and is rounded to the nearest 0.00000001."
+            + HelpRequiringPassphrase() + "\n"
+            "\nArguments:\n"
+            "1. \"fromaccount\"       (string, required) The name of the account to send funds from. May be the default account using \"\".\n"
+            "2. \"tobitcoinaddress\"  (string, required) The bitcoin address to send funds to.\n"
+            "3. amount                (numeric, required) The amount in btc. (transaction fee is added on top).\n"
+            "4. minconf               (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
+            "5. \"comment\"           (string, optional) A comment used to store what the transaction is for. \n"
+            "                                     This is not part of the transaction, just kept in your wallet.\n"
+            "6. \"comment-to\"        (string, optional) An optional comment to store the name of the person or organization \n"
+            "                                     to which you're sending the transaction. This is not part of the transaction, \n"
+            "                                     it is just kept in your wallet.\n"
+            "\nResult:\n"
+            "\"transactionid\"        (string) The transaction id. (view at https://blockchain.info/tx/[transactionid])\n"
+            "\nExamples:\n"
+            "\nSend 0.01 btc from the default account to the address, must have at least 1 confirmation\n"
+            + HelpExampleCli("sendfrom", "\"\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01") +
+            "\nSend 0.01 from the tabby account to the given address, funds must have at least 6 confirmations\n"
+            + HelpExampleCli("sendfrom", "\"tabby\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01 6 \"donation\" \"seans outpost\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("sendfrom", "\"tabby\", \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.01, 6, \"donation\", \"seans outpost\"")
+        );
 
     string strAccount = AccountFromValue(params[0]);
     CBitcoinAddress address(params[1].get_str());
@@ -671,9 +900,29 @@ Value sendmany(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "sendmany <fromaccount> {address:amount,...} [minconf=1] [comment]\n"
-            "amounts are double-precision floating point numbers"
-            + HelpRequiringPassphrase());
+            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" )\n"
+            "\nSend multiple times. Amounts are double-precision floating point numbers."
+            + HelpRequiringPassphrase() + "\n"
+            "\nArguments:\n"
+            "1. \"fromaccount\"         (string, required) The account to send the funds from, can be \"\" for the default account\n"
+            "2. \"amounts\"             (string, required) A json object with addresses and amounts\n"
+            "    {\n"
+            "      \"address\":amount   (numeric) The bitcoin address is the key, the numeric amount in btc is the value\n"
+            "      ,...\n"
+            "    }\n"
+            "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
+            "4. \"comment\"             (string, optional) A comment\n"
+            "\nResult:\n"
+            "\"transactionid\"          (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
+            "                                    the number of addresses. See https://blockchain.info/tx/[transactionid]\n"
+            "\nExamples:\n"
+            "\nSend two amounts to two different addresses:\n"
+            + HelpExampleCli("sendmany", "\"tabby\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\"") +
+            "\nSend two amounts to two different addresses setting the confirmation and comment:\n"
+            + HelpExampleCli("sendmany", "\"tabby\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\" 6 \"testing\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("sendmany", "\"tabby\", \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\", 6, \"testing\"")
+        );
 
     string strAccount = AccountFromValue(params[0]);
     Object sendTo = params[1].get_obj();
@@ -788,10 +1037,29 @@ Value addmultisigaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
     {
-        string msg = "addmultisigaddress <nrequired> <'[\"key\",\"key\"]'> [account]\n"
-            "Add a nrequired-to-sign multisignature address to the wallet\"\n"
-            "each key is a Bitcoin address or hex-encoded public key\n"
-            "If [account] is specified, assign address to [account].";
+        string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
+            "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
+            "Each key is a Bitcoin address or hex-encoded public key.\n"
+            "If 'account' is specified, assign address to that account.\n"
+
+            "\nArguments:\n"
+            "1. nrequired        (numeric, required) The number of required signatures out of the n keys or addresses.\n"
+            "2. \"keysobject\"   (string, required) A json array of bitcoin addresses or hex-encoded public keys\n"
+            "     [\n"
+            "       \"address\"  (string) bitcoin address or hex-encoded public key\n"
+            "       ...,\n"
+            "     ]\n"
+            "3. \"account\"      (string, optional) An account to assign the addresses to.\n"
+
+            "\nResult:\n"
+            "\"bitcoinaddress\"  (string) A bitcoin address associated with the keys.\n"
+
+            "\nExamples:\n"
+            "\nAdd a multisig address from 2 addresses\n"
+            + HelpExampleCli("addmultisigaddress", "2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"")
+        ;
         throw runtime_error(msg);
     }
 
@@ -812,11 +1080,30 @@ Value createmultisig(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 2)
     {
-        string msg = "createmultisig <nrequired> <'[\"key\",\"key\"]'>\n"
-            "Creates a multi-signature address and returns a json object\n"
-            "with keys:\n"
-            "address : bitcoin address\n"
-            "redeemScript : hex-encoded redemption script";
+        string msg = "createmultisig nrequired [\"key\",...]\n"
+            "\nCreates a multi-signature address with n signature of m keys required.\n"
+            "It returns a json object with the address and redeemScript.\n"
+
+            "\nArguments:\n"
+            "1. nrequired      (numeric, required) The number of required signatures out of the n keys or addresses.\n"
+            "2. \"keys\"       (string, required) A json array of keys which are bitcoin addresses or hex-encoded public keys\n"
+            "     [\n"
+            "       \"key\"    (string) bitcoin address or hex-encoded public key\n"
+            "       ,...\n"
+            "     ]\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"address\":\"multisigaddress\",  (string) The value of the new multisig address.\n"
+            "  \"redeemScript\":\"script\"       (string) The string value of the hex-encoded redemption script.\n"
+            "}\n"
+
+            "\nExamples:\n"
+            "\nCreate a multisig address from 2 addresses\n"
+            + HelpExampleCli("createmultisig", "2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("icreatemultisig", "2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"")
+        ;
         throw runtime_error(msg);
     }
 
@@ -949,15 +1236,28 @@ Value listreceivedbyaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
-            "listreceivedbyaddress [minconf=1] [includeempty=false]\n"
-            "[minconf] is the minimum number of confirmations before payments are included.\n"
-            "[includeempty] whether to include addresses that haven't received any payments.\n"
-            "Returns an array of objects containing:\n"
-            "  \"address\" : receiving address\n"
-            "  \"account\" : the account of the receiving address\n"
-            "  \"amount\" : total amount received by the address\n"
-            "  \"confirmations\" : number of confirmations of the most recent transaction included\n"
-            "  \"txids\" : list of transactions with outputs to the address\n");
+            "listreceivedbyaddress ( minconf includeempty )\n"
+            "\nList balances by receiving address.\n"
+            "\nArguments:\n"
+            "1. minconf       (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
+            "2. includeempty  (numeric, optional, dafault=false) Whether to include addresses that haven't received any payments.\n"
+
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"address\" : \"receivingaddress\",  (string) The receiving address\n"
+            "    \"account\" : \"accountname\",       (string) The account of the receiving address. The default account is \"\".\n"
+            "    \"amount\" : x.xxx,                  (numeric) The total amount in btc received by the address\n"
+            "    \"confirmations\" : n                (numeric) The number of confirmations of the most recent transaction included\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("listreceivedbyaddress", "")
+            + HelpExampleCli("listreceivedbyaddress", "6 true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true")
+        );
 
     return ListReceived(params, false);
 }
@@ -966,13 +1266,27 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
-            "listreceivedbyaccount [minconf=1] [includeempty=false]\n"
-            "[minconf] is the minimum number of confirmations before payments are included.\n"
-            "[includeempty] whether to include accounts that haven't received any payments.\n"
-            "Returns an array of objects containing:\n"
-            "  \"account\" : the account of the receiving addresses\n"
-            "  \"amount\" : total amount received by addresses with this account\n"
-            "  \"confirmations\" : number of confirmations of the most recent transaction included");
+            "listreceivedbyaccount ( minconf includeempty )\n"
+            "\nList balances by account.\n"
+            "\nArguments:\n"
+            "1. minconf      (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
+            "2. includeempty (boolean, optional, default=false) Whether to include accounts that haven't received any payments.\n"
+
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"account\" : \"accountname\",  (string) The account name of the receiving account\n"
+            "    \"amount\" : x.xxx,             (numeric) The total amount received by addresses with this account\n"
+            "    \"confirmations\" : n           (numeric) The number of confirmations of the most recent transaction included\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("listreceivedbyaccount", "")
+            + HelpExampleCli("listreceivedbyaccount", "6 true")
+            + HelpExampleRpc("listreceivedbyaccount", "6, true")
+        );
 
     return ListReceived(params, true);
 }
@@ -1066,8 +1380,58 @@ Value listtransactions(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 3)
         throw runtime_error(
-            "listtransactions [account] [count=10] [from=0]\n"
-            "Returns up to [count] most recent transactions skipping the first [from] transactions for account [account].");
+            "listtransactions ( \"account\" count from )\n"
+            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
+            "\nArguments:\n"
+            "1. \"account\"    (string, optional) The account name. If not included, it will list all transactions for all accounts.\n"
+            "                                     If \"\" is set, it will list transactions for the default account.\n"
+            "2. count          (numeric, optional, default=10) The number of transactions to return\n"
+            "3. from           (numeric, optional, default=0) The number of transactions to skip\n"
+
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"account\":\"accountname\",       (string) The account name associated with the transaction. \n"
+            "                                                It will be \"\" for the default account.\n"
+            "    \"address\":\"bitcoinaddress\",    (string) The bitcoin address of the transaction. Not present for \n"
+            "                                                move transactions (category = move).\n"
+            "    \"category\":\"send|receive|move\", (string) The transaction category. 'move' is a local (off blockchain)\n"
+            "                                                transaction between accounts, and not associated with an address,\n"
+            "                                                transaction id or block. 'send' and 'receive' transactions are \n"
+            "                                                associated with an address, transaction id and block details\n"
+            "    \"amount\": x.xxx,          (numeric) The amount in btc. This is negative for the 'send' category, and for the\n"
+            "                                         'move' category for moves outbound. It is positive for the 'receive' category,\n"
+            "                                         and for the 'move' category for inbound funds.\n"
+            "    \"fee\": x.xxx,             (numeric) The amount of the fee in btc. This is negative and only available for the \n"
+            "                                         'send' category of transactions.\n"
+            "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and \n"
+            "                                         'receive' category of transactions.\n"
+            "    \"blockhash\": \"hashvalue\", (string) The block hash containing the transaction. Available for 'send' and 'receive'\n"
+            "                                          category of transactions.\n"
+            "    \"blockindex\": n,          (numeric) The block index containing the transaction. Available for 'send' and 'receive'\n"
+            "                                          category of transactions.\n"
+            "    \"txid\": \"transactionid\", (string) The transaction id (see https://blockchain.info/tx/[transactionid]. Available \n"
+            "                                          for 'send' and 'receive' category of transactions.\n"
+            "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (midnight Jan 1 1970 GMT).\n"
+            "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (midnight Jan 1 1970 GMT). Available \n"
+            "                                          for 'send' and 'receive' category of transactions.\n"
+            "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
+            "    \"otheraccount\": \"accountname\",  (string) For the 'move' category of transactions, the account the funds came \n"
+            "                                          from (for receiving funds, positive amounts), or went to (for sending funds,\n"
+            "                                          negative amounts).\n"
+            "  }\n"
+            "]\n"
+
+            "\nExamples:\n"
+            "\nList the most recent 10 transactions in the systems\n"
+            + HelpExampleCli("listtransactions", "") +
+            "\nList the most recent 10 transactions for the tabby account\n"
+            + HelpExampleCli("listtransactions", "\"tabby\"") +
+            "\nList transactions 100 to 120 from the tabby account\n"
+            + HelpExampleCli("listtransactions", "\"tabby\" 20 100") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("listtransactions", "\"tabby\", 20, 100")
+        );
 
     string strAccount = "*";
     if (params.size() > 0)
@@ -1124,8 +1488,25 @@ Value listaccounts(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "listaccounts [minconf=1]\n"
-            "Returns Object that has account names as keys, account balances as values.");
+            "listaccounts ( minconf )\n"
+            "\nReturns Object that has account names as keys, account balances as values.\n"
+            "\nArguments:\n"
+            "1. minconf     (numeric, optional, default=1) Only onclude transactions with at least this many confirmations\n"
+            "\nResult:\n"
+            "{                      (json object where keys are account names, and values are numeric balances\n"
+            "  \"account\": x.xxx,  (numeric) The property name is the account name, and the value is the total balance for the account.\n"
+            "  ...\n"
+            "}\n"
+            "\nExamples:\n"
+            "\nList account balances where there at least 1 confirmation\n"
+            + HelpExampleCli("listaccounts", "") +
+            "\nList account balances including zero confirmation transactions\n"
+            + HelpExampleCli("listaccounts", "0") +
+            "\nList account balances for 6 or more confirmations\n"
+            + HelpExampleCli("listaccounts", "6") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("listaccounts", "6")
+        );
 
     int nMinDepth = 1;
     if (params.size() > 0)
@@ -1174,8 +1555,37 @@ Value listsinceblock(const Array& params, bool fHelp)
 {
     if (fHelp)
         throw runtime_error(
-            "listsinceblock [blockhash] [target-confirmations]\n"
-            "Get all wallet transactions in blocks since block [blockhash], or all wallet transactions if omitted");
+            "listsinceblock ( \"blockhash\" target-confirmations )\n"
+            "\nGet all transactions in blocks since block [blockhash], or all transactions if omitted\n"
+            "\nArguments:\n"
+            "1. \"blockhash\"   (string, optional) The block hash to list transactions since\n"
+            "2. target-confirmations:    (numeric, optional) The confirmations required, must be 1 or more\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"transactions\": [\n"
+            "    \"account\":\"accountname\",       (string) The account name associated with the transaction. Will be \"\" for the default account.\n"
+            "    \"address\":\"bitcoinaddress\",    (string) The bitcoin address of the transaction. Not present for move transactions (category = move).\n"
+            "    \"category\":\"send|receive\",     (string) The transaction category. 'send' has negative amounts, 'receive' has positive amounts.\n"
+            "    \"amount\": x.xxx,          (numeric) The amount in btc. This is negative for the 'send' category, and for the 'move' category for moves \n"
+            "                                          outbound. It is positive for the 'receive' category, and for the 'move' category for inbound funds.\n"
+            "    \"fee\": x.xxx,             (numeric) The amount of the fee in btc. This is negative and only available for the 'send' category of transactions.\n"
+            "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"blockhash\": \"hashvalue\",     (string) The block hash containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"blockindex\": n,          (numeric) The block index containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"blocktime\": xxx,         (numeric) The block time in seconds since epoch (1 Jan 1970 GMT).\n"
+            "    \"txid\": \"transactionid\",  (string) The transaction id (see https://blockchain.info/tx/[transactionid]. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT).\n"
+            "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (Jan 1 1970 GMT). Available for 'send' and 'receive' category of transactions.\n"
+            "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
+            "    \"to\": \"...\",            (string) If a comment to is associated with the transaction.\n"
+             "  ],\n"
+            "  \"lastblock\": \"lastblockhash\"     (string) The hash of the last block\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listsinceblock", "")
+            + HelpExampleCli("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\" 6")
+            + HelpExampleRpc("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6")
+        );
 
     CBlockIndex *pindex = NULL;
     int target_confirms = 1;
@@ -1224,8 +1634,35 @@ Value gettransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "gettransaction <txid>\n"
-            "Get detailed information about in-wallet transaction <txid>");
+            "gettransaction \"txid\"\n"
+            "\nGet detailed information about in-wallet transaction <txid>\n"
+            "\nArguments:\n"
+            "1. \"txid\"    (string, required) The transaction id\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"amount\" : x.xxx,        (numeric) The transaction amount in btc\n"
+            "  \"confirmations\" : n,     (numeric) The number of confirmations\n"
+            "  \"blockhash\" : \"hash\",  (string) The block hash\n"
+            "  \"blockindex\" : xx,       (numeric) The block index\n"
+            "  \"blocktime\" : ttt,       (numeric) The time in seconds since epoch (1 Jan 1970 GMT)\n"
+            "  \"txid\" : \"transactionid\",   (string) The transaction id, see also https://blockchain.info/tx/[transactionid]\n"
+            "  \"time\" : ttt,            (numeric) The transaction time in seconds since epoch (1 Jan 1970 GMT)\n"
+            "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
+            "  \"details\" : [\n"
+            "    {\n"
+            "      \"account\" : \"accountname\",  (string) The account name involved in the transaction, can be \"\" for the default account.\n"
+            "      \"address\" : \"bitcoinaddress\",   (string) The bitcoin address involved in the transaction\n"
+            "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
+            "      \"amount\" : x.xxx                  (numeric) The amount in btc\n"
+            "    }\n"
+            "    ,...\n"
+            "  ]\n"
+            "}\n"
+
+            "\nbExamples\n"
+            + HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleRpc("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+        );
 
     uint256 hash;
     hash.SetHex(params[0].get_str());
@@ -1258,8 +1695,14 @@ Value backupwallet(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "backupwallet <destination>\n"
-            "Safely copies wallet.dat to destination, which can be a directory or a path with filename.");
+            "backupwallet \"destination\"\n"
+            "\nSafely copies wallet.dat to destination, which can be a directory or a path with filename.\n"
+            "\nArguments:\n"
+            "1. \"destination\"   (string) The destination directory or file\n"
+            "\nExamples:\n"
+            + HelpExampleCli("backupwallet", "\"backup.dat\"")
+            + HelpExampleRpc("backupwallet", "\"backup.dat\"")
+        );
 
     string strDest = params[0].get_str();
     if (!BackupWallet(*pwalletMain, strDest))
@@ -1273,9 +1716,15 @@ Value keypoolrefill(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "keypoolrefill [new-size]\n"
-            "Fills the keypool."
-            + HelpRequiringPassphrase());
+            "keypoolrefill ( newsize )\n"
+            "\nFills the keypool."
+            + HelpRequiringPassphrase() + "\n"
+            "\nArguments\n"
+            "1. newsize     (numeric, optional, default=100) The new keypool size\n"
+            "\nExamples:\n"
+            + HelpExampleCli("keypoolrefill", "")
+            + HelpExampleRpc("keypoolrefill", "")
+        );
 
     unsigned int kpSize = max(GetArg("-keypool", 100), (int64_t) 0);
     if (params.size() > 0) {
@@ -1306,8 +1755,21 @@ Value walletpassphrase(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
-            "walletpassphrase <passphrase> <timeout>\n"
-            "Stores the wallet decryption key in memory for <timeout> seconds.");
+            "walletpassphrase \"passphrase\" timeout\n"
+            "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
+            "This is needed prior to performing transactions related to private keys such as sending bitcoins\n"
+            "\nArguments:\n"
+            "1. \"passphrase\"     (string, required) The wallet passphrase\n"
+            "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
+            "\nExamples:\n"
+            "\nunlock the wallet for 60 seconds\n"
+            + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60") +
+            "\nLock the wallet again (before 60 seconds)\n"
+            + HelpExampleCli("walletlock", "") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
+        );
+
     if (fHelp)
         return true;
     if (!fServer)
@@ -1347,8 +1809,16 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
-            "walletpassphrasechange <oldpassphrase> <newpassphrase>\n"
-            "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
+            "walletpassphrasechange \"oldpassphrase\" \"newpassphrase\"\n"
+            "\nChanges the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n"
+            "\nArguments:\n"
+            "1. \"oldpassphrase\"      (string) The current passphrase\n"
+            "2. \"newpassphrase\"      (string) The new passphrase\n"
+            "\nExamples:\n"
+            + HelpExampleCli("walletpassphrasechange", "\"old one\" \"new one\"")
+            + HelpExampleRpc("walletpassphrasechange", "\"old one\", \"new one\"")
+        );
+
     if (fHelp)
         return true;
     if (!pwalletMain->IsCrypted())
@@ -1381,9 +1851,20 @@ Value walletlock(const Array& params, bool fHelp)
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
         throw runtime_error(
             "walletlock\n"
-            "Removes the wallet encryption key from memory, locking the wallet.\n"
+            "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
             "After calling this method, you will need to call walletpassphrase again\n"
-            "before being able to call any methods which require the wallet to be unlocked.");
+            "before being able to call any methods which require the wallet to be unlocked.\n"
+            "\nExamples:\n"
+            "\nSet the passphrase for 2 minutes to perform a transaction\n"
+            + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 120") +
+            "\nPerform a send (requires passphrase set)\n"
+            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 1.0") +
+            "\nClear the passphrase since we are done before 2 minutes is up\n"
+            + HelpExampleCli("walletlock", "") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("walletlock", "")
+        );
+
     if (fHelp)
         return true;
     if (!pwalletMain->IsCrypted())
@@ -1403,8 +1884,28 @@ Value encryptwallet(const Array& params, bool fHelp)
 {
     if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
         throw runtime_error(
-            "encryptwallet <passphrase>\n"
-            "Encrypts the wallet with <passphrase>.");
+            "encryptwallet \"passphrase\"\n"
+            "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
+            "After this, any calls that interact with private keys such as sending or signing \n"
+            "will require the passphrase to be set prior the making these calls.\n"
+            "Use the walletpassphrase call for this, and then walletlock call.\n"
+            "If the wallet is already encrypted, use the walletpassphrasechange call.\n"
+            "Note that this will shutdown the server.\n"
+            "\nArguments:\n"
+            "1. \"passphrase\"    (string) The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long.\n"
+            "\nExamples:\n"
+            "\nEncrypt you wallet\n"
+            + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
+            "\nNow set the passphrase to use the wallet, such as for signing or sending bitcoin\n"
+            + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
+            "\nNow we can so something like sign\n"
+            + HelpExampleCli("signmessage", "\"bitcoinaddress\" \"test message\"") +
+            "\nNow lock the wallet again by removing the passphrase\n"
+            + HelpExampleCli("walletlock", "") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("encryptwallet", "\"my pass phrase\"")
+        );
+
     if (fHelp)
         return true;
     if (pwalletMain->IsCrypted())
@@ -1471,8 +1972,24 @@ Value validateaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "validateaddress <bitcoinaddress>\n"
-            "Return information about <bitcoinaddress>.");
+            "validateaddress \"bitcoinaddress\"\n"
+            "\nReturn information about the given bitcoin address.\n"
+            "\nArguments:\n"
+            "1. \"bitcoinaddress\"     (string, required) The bitcoin address to validate\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"isvalid\" : true|false,         (boolean) If the address is valid or not. If not, this is the only property returned.\n"
+            "  \"address\" : \"bitcoinaddress\", (string) The bitcoin address validated\n"
+            "  \"ismine\" : true|false,          (boolean) If the address is yours or not\n"
+            "  \"isscript\" : true|false,        (boolean) If the key is a script\n"
+            "  \"pubkey\" : \"publickeyhex\",    (string) The hex value of the raw public key\n"
+            "  \"iscompressed\" : true|false,    (boolean) If the address is compressed\n"
+            "  \"account\" : \"account\"         (string) The account associated with the address, \"\" is the default account\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+            + HelpExampleRpc("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+        );
 
     CBitcoinAddress address(params[0].get_str());
     bool isValid = address.IsValid();
@@ -1500,8 +2017,39 @@ Value lockunspent(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "lockunspent unlock? [array-of-Objects]\n"
-            "Updates list of temporarily unspendable outputs.");
+            "lockunspent unlock [{\"txid\":\"txid\",\"vout\":n},...]\n"
+            "\nUpdates list of temporarily unspendable outputs.\n"
+            "Temporarily lock (lock=true) or unlock (lock=false) specified transaction outputs.\n"
+            "A locked transaction output will not be chosen by automatic coin selection, when spending bitcoins.\n"
+            "Locks are stored in memory only. Nodes start with zero locked outputs, and the locked output list\n"
+            "is always cleared (by virtue of process exit) when a node stops or fails.\n"
+            "Also see the listunspent call\n"
+            "\nArguments:\n"
+            "1. unlock            (boolean, required) Whether to unlock (true) or lock (false) the specified transactions\n"
+            "2. \"transactions\"  (string, required) A json array of objects. Each object the txid (string) vout (numeric)\n"
+            "     [           (json array of json objects)\n"
+            "       {\n"
+            "         \"txid\":\"id\",    (string) The transaction id\n"
+            "         \"vout\": n         (numeric) The output number\n"
+            "       }\n"
+            "       ,...\n"
+            "     ]\n"
+
+            "\nResult:\n"
+            "true|false    (boolean) Whether the command was successful or not\n"
+
+            "\nExamples:\n"
+            "\nList the unspent transactions\n"
+            + HelpExampleCli("listunspent", "") +
+            "\nLock an unspent transaction\n"
+            + HelpExampleCli("lockunspent", "false \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
+            "\nList the locked transactions\n"
+            + HelpExampleCli("listlockunspent", "") +
+            "\nUnlock the transaction again\n"
+            + HelpExampleCli("lockunspent", "true \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("lockunspent", "false, \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"")
+        );
 
     if (params.size() == 1)
         RPCTypeCheck(params, list_of(bool_type));
@@ -1549,7 +2097,28 @@ Value listlockunspent(const Array& params, bool fHelp)
     if (fHelp || params.size() > 0)
         throw runtime_error(
             "listlockunspent\n"
-            "Returns list of temporarily unspendable outputs.");
+            "\nReturns list of temporarily unspendable outputs.\n"
+            "See the lockunspent call to lock and unlock transactions for spending.\n"
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"txid\" : \"transactionid\",     (string) The transaction id locked\n"
+            "    \"vout\" : n                      (numeric) The vout value\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+            "\nExamples:\n"
+            "\nList the unspent transactions\n"
+            + HelpExampleCli("listunspent", "") +
+            "\nLock an unspent transaction\n"
+            + HelpExampleCli("lockunspent", "false \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
+            "\nList the locked transactions\n"
+            + HelpExampleCli("listlockunspent", "") +
+            "\nUnlock the transaction again\n"
+            + HelpExampleCli("lockunspent", "true \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("listlockunspent", "")
+        );
 
     vector<COutPoint> vOutpts;
     pwalletMain->ListLockedCoins(vOutpts);
