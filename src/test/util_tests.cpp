@@ -303,4 +303,31 @@ BOOST_AUTO_TEST_CASE(util_TimingResistantEqual)
     BOOST_CHECK(!TimingResistantEqual(std::string("abc"), std::string("aba")));
 }
 
+/* Test strprintf formatting directives.
+ * Put a string before and after to ensure sanity of element sizes on stack. */
+#define B "check_prefix"
+#define E "check_postfix"
+BOOST_AUTO_TEST_CASE(strprintf_numbers)
+{
+    int64_t s64t = -9223372036854775807LL; /* signed 64 bit test value */
+    uint64_t u64t = 18446744073709551615ULL; /* unsigned 64 bit test value */
+    BOOST_CHECK(strprintf("%s %"PRId64" %s", B, s64t, E) == B" -9223372036854775807 "E);
+    BOOST_CHECK(strprintf("%s %"PRIu64" %s", B, u64t, E) == B" 18446744073709551615 "E);
+    BOOST_CHECK(strprintf("%s %"PRIx64" %s", B, u64t, E) == B" ffffffffffffffff "E);
+
+    size_t st = 12345678; /* unsigned size_t test value */
+    ssize_t sst = -12345678; /* signed size_t test value */
+    BOOST_CHECK(strprintf("%s %"PRIszd" %s", B, sst, E) == B" -12345678 "E);
+    BOOST_CHECK(strprintf("%s %"PRIszu" %s", B, st, E) == B" 12345678 "E);
+    BOOST_CHECK(strprintf("%s %"PRIszx" %s", B, st, E) == B" bc614e "E);
+
+    ptrdiff_t pt = 87654321; /* positive ptrdiff_t test value */
+    ptrdiff_t spt = -87654321; /* negative ptrdiff_t test value */
+    BOOST_CHECK(strprintf("%s %"PRIpdd" %s", B, spt, E) == B" -87654321 "E);
+    BOOST_CHECK(strprintf("%s %"PRIpdu" %s", B, pt, E) == B" 87654321 "E);
+    BOOST_CHECK(strprintf("%s %"PRIpdx" %s", B, pt, E) == B" 5397fb1 "E);
+}
+#undef B
+#undef E
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -336,11 +336,7 @@ string vstrprintf(const char *format, va_list ap)
     {
         va_list arg_ptr;
         va_copy(arg_ptr, ap);
-#ifdef WIN32
-        ret = _vsnprintf(p, limit, format, arg_ptr);
-#else
         ret = vsnprintf(p, limit, format, arg_ptr);
-#endif
         va_end(arg_ptr);
         if (ret >= 0 && ret < limit)
             break;
