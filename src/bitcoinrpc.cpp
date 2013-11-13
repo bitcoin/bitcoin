@@ -189,8 +189,13 @@ Value help(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "help [command]\n"
-            "List commands, or get help for a command.");
+            "help ( \"command\" )\n"
+            "\nList all commands, or get help for a specified command.\n"
+            "\nArguments:\n"
+            "1. \"command\"     (string, optional) The command to get help on\n"
+            "\nResult:\n"
+            "\"text\"     (string) The help text\n"
+        );
 
     string strCommand;
     if (params.size() > 0)
@@ -206,7 +211,7 @@ Value stop(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "stop\n"
-            "Stop Bitcoin server.");
+            "\nStop Bitcoin server.");
     // Shutdown will take long enough that the response should get back
     StartShutdown();
     return "Bitcoin server stopping";
