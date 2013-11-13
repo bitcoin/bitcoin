@@ -2559,8 +2559,6 @@ CBlockIndex * InsertBlockIndex(uint256 hash)
 
 bool static LoadBlockIndexDB()
 {
-    GeneratePrimeTable();
-
     if (!pblocktree->LoadBlockIndexGuts())
         return false;
 
@@ -2731,6 +2729,9 @@ bool LoadBlockIndex()
         nTargetInitialLength = 5; // primecoin: initial prime chain target
         nTargetMinLength = 2;     // primecoin: minimum prime chain target
     }
+
+    // Primecoin: Generate prime table when starting up
+    GeneratePrimeTable();
 
     //
     // Load block index from databases
@@ -4591,6 +4592,12 @@ void static BitcoinMiner(CWallet *pwallet)
         //
         unsigned int nTransactionsUpdatedLast = nTransactionsUpdated;
         CBlockIndex* pindexPrev = pindexBest;
+
+	// pindexBest may be NULL (e.g. when doing a -reindex)
+	if (!pindexPrev) {
+		MilliSleep(1000);
+		continue;
+	}
 
         auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(reservekey));
         if (!pblocktemplate.get())
