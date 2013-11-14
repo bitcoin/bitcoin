@@ -1,15 +1,15 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="lv_LV" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="de_AT" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Bitcoin</source>
-        <translation>Par Bitcoin</translation>
+        <translation>Iwa Bitcoin</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; versija</translation>
+        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; Veasion</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -37,12 +37,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="+30"/>
         <source>Double-click to edit address or label</source>
-        <translation>Adresi vai nosaukumu rediģē ar dubultklikšķi</translation>
+        <translation>Doppelklickn zan Editian vo Adress und Titl</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Create a new address</source>
-        <translation>Izveidot jaunu adresi</translation>
+        <translation>Eazeig a neiche Adress</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -52,7 +52,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+11"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopēt iezīmēto adresi uz starpliktuvi</translation>
+        <translation>Kopia di ausgwöhte Adress in&apos; Puffa</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -67,7 +67,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="+72"/>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Kopēt adresi</translation>
+        <translation>Adress &amp;Kopian</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="-41"/>
@@ -87,7 +87,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-27"/>
         <source>&amp;Delete</source>
-        <translation>&amp;Dzēst</translation>
+        <translation>&amp;Leschn</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="-30"/>
@@ -127,12 +127,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+7"/>
         <source>Copy &amp;Label</source>
-        <translation>Kopēt &amp;Nosaukumu</translation>
+        <translation>&amp;Titl Kopian</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>&amp;Edit</source>
-        <translation>&amp;Rediģēt</translation>
+        <translation>&amp;Ändan</translation>
     </message>
     <message>
         <location line="+197"/>
@@ -142,17 +142,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+        <translation>Beistrich &apos;trennte Weate (*.csv)</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Error exporting</source>
-        <translation>Kļūda eksportējot</translation>
+        <translation>Föhla beim Speichan</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>Nevar ierakstīt failā %1.</translation>
+        <translation>Hob ned in de Datei %1 einespeichan kennan.</translation>
     </message>
 </context>
 <context>
@@ -160,17 +160,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="+164"/>
         <source>Label</source>
-        <translation>Nosaukums</translation>
+        <translation>Titl</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation>Adrese</translation>
+        <translation>Adress</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>(no label)</source>
-        <translation>(bez nosaukuma)</translation>
+        <translation>nixda</translation>
     </message>
 </context>
 <context>
@@ -178,67 +178,67 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="+26"/>
         <source>Passphrase Dialog</source>
-        <translation>Paroles dialogs</translation>
+        <translation>Geheimwort-Eingabedialog</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Enter passphrase</source>
-        <translation>Ierakstiet paroli</translation>
+        <translation>Gib dei Geheimwuat ei</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>New passphrase</source>
-        <translation>Jauna parole</translation>
+        <translation>Gib a neix Geheimwuat ei</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation>Jaunā parole vēlreiz</translation>
+        <translation>Und des gleiche noamoi</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="+34"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Ierakstiet maciņa jauno paroli.&lt;br/&gt;Lūdzu izmantojiet &lt;b&gt;10 vai vairāk nejauši izvēlētas zīmes&lt;/b&gt;, vai &lt;b&gt;astoņus un vairāk vārdus&lt;/b&gt;.</translation>
+        <translation>A neix Geheimwuat fias Beasl vagebn.&lt;br/&gt;Vawend dabei entweda &lt;b&gt;10 (oda mea) zufölliche Zeichn&lt;/b&gt; (oiso Buchstobn, Ziffan, Sondazeichn), oda &lt;b&gt;ocht (oda mea) gaunze Weata&lt;/b&gt;.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Encrypt wallet</source>
-        <translation>Šifrēt maciņu</translation>
+        <translation>Vaschlissl &apos;s Beasl</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Lai veikto šo darbību, maciņš jāatslēdz ar paroli.</translation>
+        <translation>Dafia muasst dei Beasl mitm Geheimwuat aufspean.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Unlock wallet</source>
-        <translation>Atslēgt maciņu</translation>
+        <translation>Beasl aufspean</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Šai darbībai maciņš jāatšifrē ar maciņa paroli.</translation>
+        <translation>Dafia musst des Beasl mitm Geheimwuat entschlissln.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Decrypt wallet</source>
-        <translation>Atšifrēt maciņu</translation>
+        <translation>Beasl entschlissln</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Change passphrase</source>
-        <translation>Mainīt paroli</translation>
+        <translation>Geheimwuat ändan</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Ierakstiet maciņa veco un jauno paroli.</translation>
+        <translation>Gib des oite und des neiche Geheimwuat fias Beasl ei.</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation>Apstiprināt maciņa šifrēšanu</translation>
+        <translation>Beasl-Vaschlisselung bschtätign</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -265,12 +265,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="-130"/>
         <location line="+58"/>
         <source>Wallet encrypted</source>
-        <translation>Maciņš nošifrēts</translation>
+        <translation>Beasl is vaschlisslt</translation>
     </message>
     <message>
         <location line="-56"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin aizvērsies, lai pabeigtu šifrēšanu. Atcerieties, ka maciņa šifrēšana nevar pilnībā novērst bitkoinu zādzību, ko veic datorā ieviesušās kaitīgas programmas.</translation>
+        <translation>Bitcoin wiad si jetz vatschüssn um de Vaschlisselung obzschliaßn. Denk draun, doss di söbst de Vaschlisselung ned vua an Maleur schitzn kau, waunnst amoi a Ungeziefa (schadsoftware: viren, trojaner) auf dein Rechna host (oda losst).</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -278,35 +278,35 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+42"/>
         <location line="+6"/>
         <source>Wallet encryption failed</source>
-        <translation>Maciņa šifrēšana neizdevās</translation>
+        <translation>Vaschlisselung vom Beasl is föhgschlogn</translation>
     </message>
     <message>
         <location line="-54"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Maciņa šifrēšana neizdevās programmas kļūdas dēļ. Jūsu maciņš netika šifrēts.</translation>
+        <translation>Vaschlisselung vom Beasl is wegn an inteanen Föhla föhgschlogn. Bleede Gschicht. Jetz is&apos; immano unvaschlisslt.</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+48"/>
         <source>The supplied passphrases do not match.</source>
-        <translation>Ievadītās paroles nav vienādas.</translation>
+        <translation>howined gsogd: &lt;b&gt;des gleiche&lt;b/&gt; noamoi?</translation>
     </message>
     <message>
         <location line="-37"/>
         <source>Wallet unlock failed</source>
-        <translation>Maciņu atšifrēt neizdevās</translation>
+        <translation>Beasl aufspean is föhgschlogn</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+11"/>
         <location line="+19"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Maciņa atšifrēšanai ievadītā parole nav pareiza.</translation>
+        <translation>Des Geheimwuat fias Beasl-Entschlissln woa owa sowos vo foisch.</translation>
     </message>
     <message>
         <location line="-20"/>
         <source>Wallet decryption failed</source>
-        <translation>Maciņu neizdevās atšifrēt</translation>
+        <translation>Beasl-Entschlisselung is föhgschlogn</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -319,78 +319,78 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="+250"/>
         <source>Sign &amp;message...</source>
-        <translation>Parakstīt &amp;ziņojumu...</translation>
+        <translation>A Mödung untaschreim...</translation>
     </message>
     <message>
         <location line="+254"/>
         <source>Synchronizing with network...</source>
-        <translation>Sinhronizācija ar tīklu...</translation>
+        <translation>Obgleichn midm Netz...</translation>
     </message>
     <message>
         <location line="-324"/>
         <source>&amp;Overview</source>
-        <translation>&amp;Pārskats</translation>
+        <translation>&amp;Iwasicht</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show general overview of wallet</source>
-        <translation>Rādīt vispārēju maciņa pārskatu</translation>
+        <translation>Zeig de Gesaumt-Iwasicht iwa&apos;s Beasl</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transakcijas</translation>
+        <translation>&amp;Iwaweisungen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation>Skatīt transakciju vēsturi</translation>
+        <translation>Oite Iwaweisungen tscheckn</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>E&amp;xit</source>
-        <translation>&amp;Iziet</translation>
+        <translation>&amp;baba</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Quit application</source>
-        <translation>Aizvērt programmu</translation>
+        <translation>Baba und foi ned!</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Show information about Bitcoin</source>
-        <translation>Parādīt informāciju par Bitcoin</translation>
+        <translation>Zeig Infoamationen iwa Bitcoin</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+2"/>
         <source>About &amp;Qt</source>
-        <translation>Par &amp;Qt</translation>
+        <translation>Iwa &amp;Qt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Show information about Qt</source>
-        <translation>Parādīt informāciju par Qt</translation>
+        <translation>Zeig Infoamationen iwa Qt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation>&amp;Iespējas</translation>
+        <translation>&amp;Eistöllungen...</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>Š&amp;ifrēt maciņu...</translation>
+        <translation>&apos;s &amp;Beasl vaschlissln...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Izveidot maciņa rezerves kopiju</translation>
+        <translation>&amp;Sicharungskopie vom Beasl mochn...</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Mainīt paroli</translation>
+        <translation>&amp;Geheimwuat ändan...</translation>
     </message>
     <message>
         <location line="+259"/>
@@ -405,37 +405,37 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-322"/>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Nosūtīt bitkoinus uz Bitcoin adresi</translation>
+        <translation>Schick Zasta aun a Bitcoin Adress</translation>
     </message>
     <message>
         <location line="+47"/>
         <source>Modify configuration options for Bitcoin</source>
-        <translation>Mainīt Bitcoin konfigurācijas uzstādījumus</translation>
+        <translation>Ända de Eistöllungen fia Bitcoin</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Backup wallet to another location</source>
-        <translation>Izveidot maciņa rezerves kopiju citur</translation>
+        <translation>Moch a Sichaheitskopie woaundas hin</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Mainīt maciņa šifrēšanas paroli</translation>
+        <translation>Des Geheimwuat fia Beasl-Vaschlisselung ändan</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&amp;Debug window</source>
-        <translation>&amp;Debug logs</translation>
+        <translation>&amp;Debug Fensta</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Open debugging and diagnostic console</source>
-        <translation>Atvērt atkļūdošanas un diagnostikas konsoli</translation>
+        <translation>Debug und Diagnose Konsole öffnen</translation>
     </message>
     <message>
         <location line="-4"/>
         <source>&amp;Verify message...</source>
-        <translation>&amp;Pārbaudīt ziņojumu...</translation>
+        <translation>&amp;Untaschrift tscheckn...</translation>
     </message>
     <message>
         <location line="-180"/>
@@ -448,7 +448,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="-519"/>
         <location line="+6"/>
         <source>Wallet</source>
-        <translation>Maciņš</translation>
+        <translation>Beasl</translation>
     </message>
     <message>
         <location line="+109"/>
@@ -495,28 +495,28 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+35"/>
         <source>&amp;File</source>
-        <translation>&amp;Fails</translation>
+        <translation>&amp;Datei</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>&amp;Settings</source>
-        <translation>&amp;Uzstādījumi</translation>
+        <translation>&amp;Eistöllungen</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&amp;Help</source>
-        <translation>&amp;Palīdzība</translation>
+        <translation>&amp;Hüfe</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Tabs toolbar</source>
-        <translation>Ciļņu rīkjosla</translation>
+        <translation>Karteireita Werkzeigleistn</translation>
     </message>
     <message>
         <location line="-235"/>
         <location line="+294"/>
         <source>[testnet]</source>
-        <translation>[testnet]</translation>
+        <translation>[testnetz]</translation>
     </message>
     <message>
         <location line="-177"/>
@@ -547,12 +547,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+106"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
-        <translation>Bitcoin klients</translation>
+        <translation>Bitcoin Klient</translation>
     </message>
     <message numerus="yes">
         <location line="+120"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktīvu savienojumu ar Bitcoin tīklu</numerusform><numerusform>%n aktīvs savienojums ar Bitcoin tīklu</numerusform><numerusform>%n aktīvu savienojumu as Bitcoin tīklu</numerusform></translation>
+        <translation><numerusform>%n aktive Vabindung zum Netz</numerusform><numerusform>%n aktive Vabindungen zum Netz</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -572,17 +572,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location line="+20"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
@@ -602,12 +602,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+27"/>
         <source>Error</source>
-        <translation>Kļūda</translation>
+        <translation>Föhla</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning</source>
-        <translation>Brīdinājums</translation>
+        <translation>Pass auf</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -622,27 +622,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-152"/>
         <source>Up to date</source>
-        <translation>Sinhronizēts</translation>
+        <translation>Aktuö</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Catching up...</source>
-        <translation>Sinhronizējos...</translation>
+        <translation>Aufhoin...</translation>
     </message>
     <message>
         <location line="+124"/>
         <source>Confirm transaction fee</source>
-        <translation>Apstiprināt transakcijas maksu</translation>
+        <translation>Iwaweisungs-Gebühr bschtätign</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Sent transaction</source>
-        <translation>Transakcija nosūtīta</translation>
+        <translation>Iwaweisung oogschickt</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Incoming transaction</source>
-        <translation>Ienākoša transakcija</translation>
+        <translation>Iwaweisung aun dii</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -651,31 +651,31 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation>Datums: %1
-Daudzums: %2
-Tips: %3
-Adrese: %4
+        <translation>Waunn: %1
+Wiavü: %2
+Wos: %3
+Wohin: %4
 </translation>
     </message>
     <message>
         <location line="+34"/>
         <source>URI handling</source>
-        <translation type="unfinished"/>
+        <translation>URI Behaundlung</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>De URI is a Kas! Meglichaweis is de Bitcoin Adress foisch, oda hoit sunst wos vamuakst.</translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;atslēgts&lt;/b&gt;</translation>
+        <translation>&apos;s Beasl is &lt;b&gt;vaschlisslt&lt;/b&gt; und deazeit grod &lt;b&gt;aufgschpeat&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;slēgts&lt;/b&gt;</translation>
+        <translation>&apos;s Beasl is &lt;b&gt;vaschlisslt&lt;/b&gt; und deazeit grod &lt;b&gt;zuagschpeat&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="+110"/>
@@ -688,7 +688,7 @@ Adrese: %4
     <message>
         <location filename="../clientmodel.cpp" line="+115"/>
         <source>Network Alert</source>
-        <translation>Tīkla brīdinājums</translation>
+        <translation>Netz Alarm</translation>
     </message>
 </context>
 <context>
@@ -696,12 +696,12 @@ Adrese: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
         <source>Edit Address</source>
-        <translation>Mainīt adrese</translation>
+        <translation>Adress ändan</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Label</source>
-        <translation>&amp;Nosaukums</translation>
+        <translation>&amp;Titl</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -716,47 +716,47 @@ Adrese: %4
     <message>
         <location line="-10"/>
         <source>&amp;Address</source>
-        <translation>&amp;Adrese</translation>
+        <translation>&amp;Adress</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="+21"/>
         <source>New receiving address</source>
-        <translation>Jauna saņemšanas adrese</translation>
+        <translation>Neiche Empfaungsadress</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>New sending address</source>
-        <translation>Jauna nosūtīšanas adrese</translation>
+        <translation>Neiche Züü-Adress</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Edit receiving address</source>
-        <translation>Mainīt saņemšanas adresi</translation>
+        <translation>Empfaungs-Adress ändan</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Edit sending address</source>
-        <translation>Mainīt nosūtīšanas adresi</translation>
+        <translation>Züü-Adress ändan</translation>
     </message>
     <message>
         <location line="+76"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>Nupat ierakstītā adrese &quot;%1&quot; jau atrodas adrešu grāmatā.</translation>
+        <translation>De eingebene Adress &quot;%1&quot; gibts eh scho im Adressbiachl.</translation>
     </message>
     <message>
         <location line="-5"/>
         <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation>Ierakstītā adrese &quot;%1&quot; nav derīga Bitcoin adrese.</translation>
+        <translation>De eingebane Adress &quot;%1&quot; is a Kas.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Could not unlock wallet.</source>
-        <translation>Nav iespējams atslēgt maciņu.</translation>
+        <translation>&apos;s Aufspean vom Beasl is föhgschlogn.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>New key generation failed.</source>
-        <translation>Neizdevās ģenerēt jaunu atslēgu.</translation>
+        <translation>Neicha Schlissl hod ned eazeigt weadn kennan.</translation>
     </message>
 </context>
 <context>
@@ -798,37 +798,37 @@ Adrese: %4
     <message>
         <location line="-13"/>
         <source>version</source>
-        <translation>versija</translation>
+        <translation>veasion</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Usage:</source>
-        <translation>Lietojums:</translation>
+        <translation>Vawendung:</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>command-line options</source>
-        <translation>komandrindas izvēles</translation>
+        <translation>Kommandozeiln-Optionen</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>UI options</source>
-        <translation>Lietotāja interfeisa izvēlnes</translation>
+        <translation>UI Optionen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Uzstādiet valodu, piemēram &quot;de_DE&quot; (pēc noklusēšanas: sistēmas lokāle)</translation>
+        <translation>de Sproch, am Bestn &quot;de_AT&quot; (sunsta: de Standard-Sproch auf dera Maschin)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Start minimized</source>
-        <translation>Sākt minimizētu</translation>
+        <translation>Mid minimiatn Fensta startn</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation>Uzsākot, parādīt programmas informācijas logu (pēc noklusēšanas: 1)</translation>
+        <translation>Zeig a Willkommens-Fensterl beim Starten (waunn ned aundas aungebm: 1)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -871,7 +871,7 @@ Adrese: %4
     <message>
         <location filename="../intro.cpp" line="+105"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Föhla</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -889,12 +889,12 @@ Adrese: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="+14"/>
         <source>Options</source>
-        <translation>Iespējas</translation>
+        <translation>Eistöllungen</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>&amp;Main</source>
-        <translation>&amp;Galvenais</translation>
+        <translation>&amp;Masta</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -904,17 +904,17 @@ Adrese: %4
     <message>
         <location line="+15"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>&amp;Maksāt par transakciju</translation>
+        <translation>Iwaweisungs-Gebührn zoin</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Automātiski sākt Bitcoin pēc pieteikšanās sistēmā.</translation>
+        <translation>Bitcoin automatisch nochm Einloggn starten.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Sākt Bitcoin reizē ar sistēmu</translation>
+        <translation>Bitcoin beim System-Einloggen starten</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -929,27 +929,27 @@ Adrese: %4
     <message>
         <location line="+13"/>
         <source>&amp;Network</source>
-        <translation>&amp;Tīkls</translation>
+        <translation>&amp;Netzwerk</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Uz rūtera automātiski atvērt Bitcoin klienta portu. Tas strādā tikai tad, ja rūteris atbalsta UPnP un tas ir ieslēgts.</translation>
+        <translation>Automatisch den Router fia &apos;n Bitcoin port eistölln. Des geht nur, waunn da Router UPnP kaunn und waunns des durtn aa eigschoitn is.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>Kartēt portu, izmantojot &amp;UPnP</translation>
+        <translation>Port mit UPnP zuweisen</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation type="unfinished"/>
+        <translation>Ins Bitcoin-Netz iwa an Sockn-Proxy vabindn (z.B., wennst TOR vawendst)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Connect through SOCKS proxy:</source>
-        <translation>&amp;Savienoties caur SOCKS proxy:</translation>
+        <translation>Mit an Sockn-Proxy vabindn:</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -959,107 +959,107 @@ Adrese: %4
     <message>
         <location line="+19"/>
         <source>IP address of the proxy (e.g. 127.0.0.1)</source>
-        <translation>proxy IP adrese (piem. 127.0.0.1)</translation>
+        <translation>IP Adress vom Proxy (z.B. 127.0.0.1)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Port:</source>
-        <translation>&amp;Ports:</translation>
+        <translation>&amp;Port:</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Proxy ports (piem. 9050)</translation>
+        <translation>Port vom Proxy (z.B. 9050)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>SOCKS &amp;Version:</source>
-        <translation>SOCKS &amp;Versija:</translation>
+        <translation>SOCKS &amp;Version:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>proxy SOCKS versija (piem. 5)</translation>
+        <translation>SOCKS version vom Proxy (e.g. 5)</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>&amp;Window</source>
-        <translation>&amp;Logs</translation>
+        <translation>&amp;Fensta</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Pēc loga minimizācijas rādīt tikai ikonu sistēmas teknē.</translation>
+        <translation>Zeig nur &apos;s Tray-Büderl, waunns Fensta minimiat wird.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimizēt uz sistēmas tekni, nevis rīkjoslu</translation>
+        <translation>Minimier in&apos; Tray stott in&apos; Taskbar</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Logu aizverot, minimizēt, nevis beigt darbu. Kad šī izvēlne iespējota, programma aizvērsies tikai pēc Beigt komandas izvēlnē.</translation>
+        <translation>Waunns Fensta gschlossn wiad, moch kaan Exitus, sondan minimier di afoch nua. Zum wiaklichn Beendn muass ma daunn im Menü auf &quot;baba und foi ned&quot; klickn.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>M&amp;inimize on close</source>
-        <translation>M&amp;inimizēt aizverot</translation>
+        <translation>Minimian stott Schliaßn</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>&amp;Display</source>
-        <translation>&amp;Izskats</translation>
+        <translation>&amp;Anzeige</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>User Interface &amp;language:</source>
-        <translation>Lietotāja interfeiss un &amp;valoda:</translation>
+        <translation>Sproch fias UI:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Šeit var iestatīt lietotāja valodu. Iestatījums aktivizēsies pēc Bitcoin pārstartēšanas.</translation>
+        <translation>De UI Sproch kaunn do gsetzt weadn. Auswiakn tuat si des owa eascht beim nächsten Start.</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Vienības, kurās attēlot daudzumus:</translation>
+        <translation>&amp;Weat-Einheit, in dea Beträge zeigt weadn:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Izvēlēties dalījuma vienību pēc noklusēšanas, ko izmantot interfeisā un nosūtot bitkoinus.</translation>
+        <translation>Wöh de standard Unta-Einheit aus, mit der Beträge im UI und beim Vaschickn zeigt weadn.</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Whether to show Bitcoin addresses in the transaction list or not.</source>
-        <translation>Rādīt vai nē Bitcoin adreses transakciju sarakstā.</translation>
+        <translation>Ob Bitcoin Adressn in da Iwaweisungslistn zeigt weadn soin, oda ned.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>&amp;Attēlot adreses transakciju sarakstā</translation>
+        <translation>Zeig Adressn in a Iwaweisungslistn</translation>
     </message>
     <message>
         <location line="+71"/>
         <source>&amp;OK</source>
-        <translation>&amp;OK</translation>
+        <translation>&amp;Passt!</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Cancel</source>
-        <translation>&amp;Atcelt</translation>
+        <translation>&amp;Na Ned!</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>&amp;Apply</source>
-        <translation>&amp;Pielietot</translation>
+        <translation>&amp;Jo, genau!</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="+58"/>
         <source>default</source>
-        <translation>pēc noklusēšanas</translation>
+        <translation>sunsta</translation>
     </message>
     <message>
         <location line="+130"/>
@@ -1080,18 +1080,18 @@ Adrese: %4
         <location line="+42"/>
         <location line="+9"/>
         <source>Warning</source>
-        <translation>Brīdinājums</translation>
+        <translation>Pass auf</translation>
     </message>
     <message>
         <location line="-9"/>
         <location line="+9"/>
         <source>This setting will take effect after restarting Bitcoin.</source>
-        <translation>Iestatījums aktivizēsies pēc Bitkoin pārstartēšanas.</translation>
+        <translation>De Eistöllung wiakt eascht beim nächstn moi.</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Norādītā proxy adrese nav derīga.</translation>
+        <translation>De aungebane Proxy-Adress is a Kas.</translation>
     </message>
 </context>
 <context>
@@ -1099,23 +1099,23 @@ Adrese: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="+14"/>
         <source>Form</source>
-        <translation>Forma</translation>
+        <translation>Foamulaa</translation>
     </message>
     <message>
         <location line="+50"/>
         <location line="+202"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Attēlotā informācija var būt novecojusi. Jūsu maciņš pēc savienojuma izveides automātiski sinhronizējas ar Bitcoin tīklu, taču šis process vēl nav beidzies.</translation>
+        <translation>De aunzeigtn Datn san meglichaweis ned aktuö. Dei Beasl gleicht si automatisch mitm Netz au, soboid a Vabindung aufrecht is, owa soweit samma no ned.</translation>
     </message>
     <message>
         <location line="-131"/>
         <source>Unconfirmed:</source>
-        <translation>Neapstiprinātas:</translation>
+        <translation>Gerüchteweis:</translation>
     </message>
     <message>
         <location line="-78"/>
         <source>Wallet</source>
-        <translation>Maciņš</translation>
+        <translation>Beasl</translation>
     </message>
     <message>
         <location line="+49"/>
@@ -1135,12 +1135,12 @@ Adrese: %4
     <message>
         <location line="+13"/>
         <source>Immature:</source>
-        <translation type="unfinished"/>
+        <translation>Unreif:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Mined balance that has not yet matured</source>
-        <translation type="unfinished"/>
+        <translation>Gschiafta Betrog, dea no ned reif is</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1155,13 +1155,13 @@ Adrese: %4
     <message>
         <location line="+53"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Pēdējās transakcijas&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;unlängste Iwaweisungen&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="+116"/>
         <location line="+1"/>
         <source>out of sync</source>
-        <translation>nav sinhronizēts</translation>
+        <translation>nimma atkuö</translation>
     </message>
 </context>
 <context>
@@ -1169,12 +1169,12 @@ Adrese: %4
     <message>
         <location filename="../paymentserver.cpp" line="+392"/>
         <source>URI handling</source>
-        <translation type="unfinished"/>
+        <translation>URI Behaundlung</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>De URI is a Kas! Meglichaweis is de Bitcoin Adress foisch, oda hoit sunst wos vamuakst.</translation>
     </message>
     <message>
         <location line="+69"/>
@@ -1260,12 +1260,12 @@ Adrese: %4
     <message>
         <location line="+28"/>
         <source>Save QR Code</source>
-        <translation>Saglabāt QR kodu</translation>
+        <translation>QR-Büderl speichan</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>PNG Images (*.png)</source>
-        <translation>PNG attēli (*.png)</translation>
+        <translation>PNG Büda (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1273,7 +1273,7 @@ Adrese: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="+46"/>
         <source>Client name</source>
-        <translation>Klienta vārds</translation>
+        <translation>Klient Namen</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1287,82 +1287,82 @@ Adrese: %4
         <location line="+23"/>
         <location filename="../rpcconsole.cpp" line="+352"/>
         <source>N/A</source>
-        <translation>N/A</translation>
+        <translation>Nix</translation>
     </message>
     <message>
         <location line="-217"/>
         <source>Client version</source>
-        <translation>Klienta versija</translation>
+        <translation>Klient Veasion</translation>
     </message>
     <message>
         <location line="-45"/>
         <source>&amp;Information</source>
-        <translation>&amp;Informācija</translation>
+        <translation>&amp;Information</translation>
     </message>
     <message>
         <location line="+68"/>
         <source>Using OpenSSL version</source>
-        <translation type="unfinished"/>
+        <translation>Vawend OpenSSL in a Version</translation>
     </message>
     <message>
         <location line="+49"/>
         <source>Startup time</source>
-        <translation>Sākuma laiks</translation>
+        <translation>Startzeit</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Network</source>
-        <translation>Tīkls</translation>
+        <translation>Netz</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Number of connections</source>
-        <translation>Savienojumu skaits</translation>
+        <translation>Aunzoi von Vabindungen</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>On testnet</source>
-        <translation>Testa tīklā</translation>
+        <translation>Am Test-Netz</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Block chain</source>
-        <translation>Bloku virkne</translation>
+        <translation>Block-Kettn</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Current number of blocks</source>
-        <translation>Pašreizējais bloku skaits</translation>
+        <translation>Anzoi da Blöck</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Estimated total blocks</source>
-        <translation>Bloku skaita novērtējums</translation>
+        <translation>Gschätzte Aunzoi da Blöck insgesaumt</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Last block time</source>
-        <translation>Pēdējā bloka laiks</translation>
+        <translation>Zeit vom letztn Block</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>&amp;Open</source>
-        <translation>&amp;Atvērt</translation>
+        <translation>&amp;Lodn</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Kommandozeilen Optionen</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
-        <translation type="unfinished"/>
+        <translation>Zeig die Bitcoin-QT Hüfe-Mödung fiara Listn mit de Kommandozeilen-Optionen.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Show</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zeig</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -1397,7 +1397,7 @@ Adrese: %4
     <message>
         <location line="-541"/>
         <source>Build date</source>
-        <translation>Kompilācijas datums</translation>
+        <translation>Programm-Iwasetzunszeitpunkt</translation>
     </message>
     <message>
         <location line="-104"/>
@@ -1422,22 +1422,22 @@ Adrese: %4
     <message>
         <location line="+102"/>
         <source>Clear console</source>
-        <translation>Notīrīt konsoli</translation>
+        <translation>Konsole leermochn</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="-30"/>
         <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Laipni lūgti Bitcoin RPC konsolē.</translation>
+        <translation>Heazlich willkomman zua Bitcoin RPC Konsole.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Izmantojiet bultiņas uz augšu un leju, lai pārvietotos pa vēsturi, un &lt;b&gt;Ctrl-L&lt;/b&gt; ekrāna notīrīšanai.</translation>
+        <translation>Vawend de Rauf- und Runta Tastn um bisherige Kommandos zruckzhoin, oder druck Strg-L zum Leschn.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Ierakstiet &lt;b&gt;help&lt;/b&gt; lai iegūtu pieejamo komandu sarakstu.</translation>
+        <translation>Gib &lt;b&gt;help&lt;/b&gt; ein fiara Iwasicht iwa olle Kommandos.</translation>
     </message>
     <message>
         <location line="+128"/>
@@ -1490,7 +1490,7 @@ Adrese: %4
     <message>
         <location line="+7"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Nosaukums:</translation>
+        <translation>&amp;Titl:</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1583,32 +1583,32 @@ Adrese: %4
     <message>
         <location line="+2"/>
         <source>Address</source>
-        <translation>Adrese</translation>
+        <translation>Adress</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation>Betrog</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Label</source>
-        <translation>Nosaukums</translation>
+        <translation>Titl</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Mödung</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Rezultāta URI pārāk garš, mēģiniet saīsināt nosaukumu vai ziņojumu. </translation>
+        <translation>De URI is z&apos;laung. Tua hoit ned goa sovü fasln. </translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation>Kļūda kodējot URI QR kodā.</translation>
+        <translation>Föhla beim Eazeign vo an QR-Büderl fia de URI.</translation>
     </message>
 </context>
 <context>
@@ -1618,12 +1618,12 @@ Adrese: %4
         <location filename="../sendcoinsdialog.cpp" line="+140"/>
         <location line="+213"/>
         <source>Send Coins</source>
-        <translation>Sūtīt bitkoinus</translation>
+        <translation>Vaschick Zasta</translation>
     </message>
     <message>
         <location line="+50"/>
         <source>Send to multiple recipients at once</source>
-        <translation>Sūtīt vairākiem saņēmējiem uzreiz</translation>
+        <translation>Vaschick Zasta glei aun mehrare auf aamoi</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1638,22 +1638,22 @@ Adrese: %4
     <message>
         <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation>&amp;Notīrīt visu</translation>
+        <translation>&amp;Ois Leschn</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Balance:</source>
-        <translation>Bilance:</translation>
+        <translation>Kontostaund:</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>123.456 BTC</source>
-        <translation>123,456 BTC</translation>
+        <translation>123.456 BTC</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Confirm the send action</source>
-        <translation>Apstiprināt nosūtīšanu</translation>
+        <translation>Bschtätige de Iwaweisung</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1663,7 +1663,7 @@ Adrese: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-154"/>
         <source>Confirm send coins</source>
-        <translation>Apstiprināt bitkoinu sūtīšanu</translation>
+        <translation>Iwaweisung bschtätign</translation>
     </message>
     <message>
         <location line="-90"/>
@@ -1680,22 +1680,22 @@ Adrese: %4
     <message>
         <location line="+4"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>Nosūtāmajai summai jābūt lielākai par 0.</translation>
+        <translation>Waunnst nix vaschickn wüst, daunn loss&apos; hoit bleibm.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>The amount exceeds your balance.</source>
-        <translation>Daudzums pārsniedz pieejamo.</translation>
+        <translation>Des is mea ois wost host.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Kopsumma pārsniedz pieejamo, ja pieskaitīta %1 transakcijas maksa.</translation>
+        <translation>Ois zsamm und de Spesn vo %1 dazua is mea ois wost host.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Atrastas divas vienādas adreses, vienā nosūtīšanas reizē uz katru adresi var sūtīt tikai vienreiz.</translation>
+        <translation>A doppete Adress gfundn. (A jede Adress derfs immanua amoi in ana Iwaweisung gebm)</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1720,7 +1720,7 @@ Adrese: %4
     <message>
         <location line="+20"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Kļūda: transakcija tika atteikta. Tā var gadīties, ja kāds no maciņā esošiem bitkoiniem jau iztērēts, piemēram, izmantojot wallet.dat kopiju, kurā nav atzīmēti iztērētie bitkoini.</translation>
+        <translation>De Iwaweisung is obgwiesn wuadn. Des kau passian, waunnst Münzn scho ausgebn host, zum Beispü mit ana Kopie vom Beasl, während des Beasl hia no nix davon waas.</translation>
     </message>
     <message>
         <location line="+144"/>
@@ -1739,13 +1739,13 @@ Adrese: %4
         <location filename="../forms/sendcoinsentry.ui" line="+33"/>
         <location line="+585"/>
         <source>A&amp;mount:</source>
-        <translation>Apjo&amp;ms</translation>
+        <translation>&amp;Betrog:</translation>
     </message>
     <message>
         <location line="-572"/>
         <location line="+585"/>
         <source>Pay &amp;To:</source>
-        <translation>&amp;Saņēmējs:</translation>
+        <translation>wo&amp;hin:</translation>
     </message>
     <message>
         <location line="-551"/>
@@ -1755,12 +1755,12 @@ Adrese: %4
     <message>
         <location filename="../sendcoinsentry.cpp" line="+28"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>Lai pievienotu adresi adrešu grāmatai, tai jādod nosaukums</translation>
+        <translation>Gib an Titl fia de neiche Adress</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="-18"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Nosaukums:</translation>
+        <translation>&amp;Titl:</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -1775,7 +1775,7 @@ Adrese: %4
     <message>
         <location line="+7"/>
         <source>Paste address from clipboard</source>
-        <translation>ielīmēt adresi no starpliktuves</translation>
+        <translation>Eifügn da Adress ausm Puffa</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1785,7 +1785,7 @@ Adrese: %4
     <message>
         <location line="+7"/>
         <source>Remove this recipient</source>
-        <translation>Dzēst šo saņēmēju</translation>
+        <translation>Na, dea kriagt do nix</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1800,7 +1800,7 @@ Adrese: %4
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Ierakstiet Bitcoin adresi (piem. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Gib a Bitcoin-Adress ei (sowos wia: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1813,17 +1813,17 @@ Adrese: %4
     <message>
         <location line="+13"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"/>
+        <translation>Mödung &amp;untaschreim</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished"/>
+        <translation>Duachs Untaschreim vo ana Mödung mit deina Adress stöllst kloa, dass du den Schlissl dazua host. Pass owa auf, dassd ned glei ois untaschreibsd wos da iangdana hinhoit, weu sunst kennts leicht passian, dassd vasehentlich kwasi an Blanko-Scheck untaschreibst. Untaschreib nua konkrete Mödungen denenst aa wiakli zuastimmst.</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>The address to sign the message with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>De Adress mit dera&apos;st untaschreibst (z.B. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1840,7 +1840,7 @@ Adrese: %4
     <message>
         <location line="-203"/>
         <source>Paste address from clipboard</source>
-        <translation>ielīmēt adresi no starpliktuves</translation>
+        <translation>Eifügn da Adress ausm Puffa</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1850,7 +1850,7 @@ Adrese: %4
     <message>
         <location line="+12"/>
         <source>Enter the message you want to sign here</source>
-        <translation type="unfinished"/>
+        <translation>Gib de Mödung ei, de&apos;st untaschreibm wüst</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1860,12 +1860,12 @@ Adrese: %4
     <message>
         <location line="+27"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>De Untaschrift in den Puffa kopian</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Untaschreib de Mödung, damid kloa is, dass de Adress dia gheat</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1875,33 +1875,33 @@ Adrese: %4
     <message>
         <location line="+14"/>
         <source>Reset all sign message fields</source>
-        <translation type="unfinished"/>
+        <translation>Olle Föda zrucksetzn</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+146"/>
         <source>Clear &amp;All</source>
-        <translation>&amp;Notīrīt visu</translation>
+        <translation>&amp;Ois Leschn</translation>
     </message>
     <message>
         <location line="-87"/>
         <source>&amp;Verify Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Untaschrift tscheckn</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation type="unfinished"/>
+        <translation>Gib de Untaschrifts-Adress, de Mödung und de Untaschrift ei. De Mödung muass auf Punkt und Beistrich (und Leerzeichn, Tabulatorn, Zeulnumbrüch, usw) gaunz genau des gleiche sein, wos untaschriem wuan is. Pass auf, dassd ned mea in de Mödung eineliest, ois wos wiakli drinsteht, sunst kenntast leicht auf an Schmäh einefoin.</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>De Adress, mit dera untaschriem wuan is (z.B. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+40"/>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Tscheck, doss de Mödung a wiakli mit da aungebanan Adress untaschriem wuan is</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1911,29 +1911,29 @@ Adrese: %4
     <message>
         <location line="+14"/>
         <source>Reset all verify message fields</source>
-        <translation type="unfinished"/>
+        <translation>Olle Föda zrucksetzn</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Ierakstiet Bitcoin adresi (piem. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Gib a Bitcoin-Adress ei (sowos wia: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="-2"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation type="unfinished"/>
+        <translation>Klick auf &quot;Mödung untaschreim&quot; zum Untaschreim</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Enter Bitcoin signature</source>
-        <translation type="unfinished"/>
+        <translation>Gib de Untaschrift ei</translation>
     </message>
     <message>
         <location line="+85"/>
         <location line="+81"/>
         <source>The entered address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>De eingebane Adress is a Kas.</translation>
     </message>
     <message>
         <location line="-81"/>
@@ -1941,13 +1941,13 @@ Adrese: %4
         <location line="+73"/>
         <location line="+8"/>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Tscheck dassd Adress richtig is, und prowias noamoi.</translation>
     </message>
     <message>
         <location line="-81"/>
         <location line="+81"/>
         <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished"/>
+        <translation>De eingebene Adress gheat zu kaan Schlissl.</translation>
     </message>
     <message>
         <location line="-73"/>
@@ -1957,43 +1957,43 @@ Adrese: %4
     <message>
         <location line="+8"/>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished"/>
+        <translation>Zu dera Adress howi kaan Schlissl gspeichat.</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Message signing failed.</source>
-        <translation type="unfinished"/>
+        <translation>&apos;s Untaschreim is föhgschlogn.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Message signed.</source>
-        <translation type="unfinished"/>
+        <translation>Mödung is untaschriem.</translation>
     </message>
     <message>
         <location line="+59"/>
         <source>The signature could not be decoded.</source>
-        <translation type="unfinished"/>
+        <translation>De Untaschrift woara Kas.</translation>
     </message>
     <message>
         <location line="+0"/>
         <location line="+13"/>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Tscheck dassd Untaschrift richtig is, und prowias noamoi.</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The signature did not match the message digest.</source>
-        <translation type="unfinished"/>
+        <translation>De Untaschrift passt ned zu dera Mödung.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Message verification failed.</source>
-        <translation type="unfinished"/>
+        <translation>Iwaprifung da Untaschrift is föhgschlogn.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Message verified.</source>
-        <translation type="unfinished"/>
+        <translation>De Untaschrift hod zua Mödung passt.</translation>
     </message>
 </context>
 <context>
@@ -2006,7 +2006,7 @@ Adrese: %4
     <message>
         <location line="+1"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -2022,71 +2022,71 @@ Adrese: %4
     <message>
         <location filename="../transactiondesc.cpp" line="+22"/>
         <source>Open until %1</source>
-        <translation>Atvērts līdz %1</translation>
+        <translation>Offn bis %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>%1/offline</source>
-        <translation type="unfinished"/>
+        <translation>%1/koa netz</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1/unconfirmed</source>
-        <translation>%1/neapstiprinātas</translation>
+        <translation>%1/unbschtätigt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 confirmations</source>
-        <translation>%1 apstiprinājumu</translation>
+        <translation>%1 Bschtätigungan</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>Status</source>
-        <translation type="unfinished"/>
+        <translation>Zuastaund</translation>
     </message>
     <message numerus="yes">
         <location line="+7"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>, iwa %n Knotn vateult</numerusform><numerusform>, iwa %n Knotn vateult</numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Date</source>
-        <translation>Datums</translation>
+        <translation>Waunn</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Kwöön</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Generated</source>
-        <translation type="unfinished"/>
+        <translation>Gschiaft</translation>
     </message>
     <message>
         <location line="+5"/>
         <location line="+17"/>
         <source>From</source>
-        <translation type="unfinished"/>
+        <translation>Vo</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+22"/>
         <location line="+58"/>
         <source>To</source>
-        <translation type="unfinished"/>
+        <translation>Aun</translation>
     </message>
     <message>
         <location line="-77"/>
         <location line="+2"/>
         <source>own address</source>
-        <translation type="unfinished"/>
+        <translation>eigane Adress</translation>
     </message>
     <message>
         <location line="-2"/>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>Titl</translation>
     </message>
     <message>
         <location line="+37"/>
@@ -2095,17 +2095,17 @@ Adrese: %4
         <location line="+17"/>
         <location line="+48"/>
         <source>Credit</source>
-        <translation type="unfinished"/>
+        <translation>eahoitena Betrog</translation>
     </message>
     <message numerus="yes">
         <location line="-120"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>eascht noch %n Block vawendboa</numerusform><numerusform>eascht noch %n Bleckn vawendboa</numerusform></translation>
     </message>
     <message>
         <location line="+2"/>
         <source>not accepted</source>
-        <translation type="unfinished"/>
+        <translation>ned aungnumman</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2113,32 +2113,32 @@ Adrese: %4
         <location line="+15"/>
         <location line="+48"/>
         <source>Debit</source>
-        <translation type="unfinished"/>
+        <translation>ausgebana Betrog</translation>
     </message>
     <message>
         <location line="-57"/>
         <source>Transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>Iwaweisungsgebüa</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Net amount</source>
-        <translation type="unfinished"/>
+        <translation>Untam Strich</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Mödung</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Comment</source>
-        <translation type="unfinished"/>
+        <translation>Bemeakung</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Iwaweisungs Nr</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -2153,47 +2153,47 @@ Adrese: %4
     <message>
         <location line="+8"/>
         <source>Debug information</source>
-        <translation type="unfinished"/>
+        <translation>Debug Infoamation</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Transaction</source>
-        <translation type="unfinished"/>
+        <translation>Iwaweisung</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Eingobn</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation>Betrog</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>true</source>
-        <translation type="unfinished"/>
+        <translation>woah</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>false</source>
-        <translation type="unfinished"/>
+        <translation>foisch</translation>
     </message>
     <message>
         <location line="-227"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation>, vēl nav veiksmīgi izziņots</translation>
+        <translation>, is no ned eafoigreich oogschickt wuan.</translation>
     </message>
     <message numerus="yes">
         <location line="-35"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+70"/>
         <source>unknown</source>
-        <translation>nav zināms</translation>
+        <translation>unbekaunnt</translation>
     </message>
 </context>
 <context>
@@ -2201,12 +2201,12 @@ Adrese: %4
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="+14"/>
         <source>Transaction details</source>
-        <translation>Transakcijas detaļas</translation>
+        <translation>Iwaweisungsdatn</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Šis panelis parāda transakcijas detaļas</translation>
+        <translation>Do sichst de Einzlheitn fo dera Iwaweisung</translation>
     </message>
 </context>
 <context>
@@ -2214,117 +2214,117 @@ Adrese: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="+227"/>
         <source>Date</source>
-        <translation>Datums</translation>
+        <translation>Waunn</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Type</source>
-        <translation>Tips</translation>
+        <translation>Oat</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation>Adrese</translation>
+        <translation>Adress</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation>Betrog</translation>
     </message>
     <message numerus="yes">
         <location line="+57"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open until %1</source>
-        <translation>Atvērts līdz %1</translation>
+        <translation>Offn bis %1</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Offline (%1 confirmations)</source>
-        <translation>Nav pieslēgts (%1 apstiprinājumu)</translation>
+        <translation>Koa Netz (%1 Bschtätigungen)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation>Nav apstiprināts (%1 no %2 apstiprinājumu)</translation>
+        <translation>unbschtätigt (nua %1 vo %2 Bschtätigungen)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>Apstiprināts (%1 apstiprinājumu)</translation>
+        <translation>bschtätigt (%1 Bschtätigungen)</translation>
     </message>
     <message numerus="yes">
         <location line="+8"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+5"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Neviens cits mezgls šo bloku nav saņēmis un droši vien netiks akceptēts!</translation>
+        <translation>Den Block kaunnst da in d&apos; Hoa schmian!</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Generated but not accepted</source>
-        <translation>Ģenerēts, taču nav akceptēts</translation>
+        <translation>Eazeigt, owa ned aungnumman</translation>
     </message>
     <message>
         <location line="+43"/>
         <source>Received with</source>
-        <translation>Saņemts ar</translation>
+        <translation>Empfaungen mid</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Received from</source>
-        <translation>Saņemts no</translation>
+        <translation>Empfaungen vo</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Sent to</source>
-        <translation>Nosūtīts</translation>
+        <translation>gschickt aun</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Payment to yourself</source>
-        <translation>Maksājums sev</translation>
+        <translation>Aun di söbst</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Mined</source>
-        <translation>Atrasts</translation>
+        <translation>gschiaft</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>(n/a)</source>
-        <translation>(nav pieejams)</translation>
+        <translation>(nix)</translation>
     </message>
     <message>
         <location line="+199"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Transakcijas statuss. Turiet peli virs šī lauka, lai redzētu apstiprinājumu skaitu.</translation>
+        <translation>Zuastaund da Iwaweisung. Fia de Aunzoi da Bschtätigungan foah mid da Maus driwa.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>Transakcijas saņemšanas datums un laiks.</translation>
+        <translation>Waunn de Iwaweisung einakumman is.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation>Transakcijas tips.</translation>
+        <translation>Oat da Iwaweisung.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Destination address of transaction.</source>
-        <translation>Transakcijas mērķa adrese.</translation>
+        <translation>Züü-Adress da Iwaweisung.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>Bilancei pievienotais vai atņemtais daudzums.</translation>
+        <translation>Da Betrog, den wos&apos;d zoit oda kriagd host.</translation>
     </message>
 </context>
 <context>
@@ -2333,87 +2333,87 @@ Adrese: %4
         <location filename="../transactionview.cpp" line="+52"/>
         <location line="+16"/>
         <source>All</source>
-        <translation>Visi</translation>
+        <translation>Ois</translation>
     </message>
     <message>
         <location line="-15"/>
         <source>Today</source>
-        <translation>Šodien</translation>
+        <translation>Heit</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This week</source>
-        <translation>Šonedēļ</translation>
+        <translation>de Wochn</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This month</source>
-        <translation>Šomēnes</translation>
+        <translation>den Monat</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Last month</source>
-        <translation>Pēdējais mēnesis</translation>
+        <translation>letztn Monat</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This year</source>
-        <translation>Šogad</translation>
+        <translation>des Joa</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Range...</source>
-        <translation>Diapazons...</translation>
+        <translation>Bereich...</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Received with</source>
-        <translation>Saņemts ar</translation>
+        <translation>Empfaungen mid</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Sent to</source>
-        <translation>Nosūtīts</translation>
+        <translation>Gsendet aun</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>To yourself</source>
-        <translation>Sev</translation>
+        <translation>Aun di söbst</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Mined</source>
-        <translation>Atrasts</translation>
+        <translation>Gschiaft</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Other</source>
-        <translation>Cits</translation>
+        <translation>Aundare</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Enter address or label to search</source>
-        <translation>Ierakstiet meklējamo nosaukumu vai adresi</translation>
+        <translation>Suach noch ana Adress oda an Titl</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Min amount</source>
-        <translation>Minimālais daudzums</translation>
+        <translation>klaaansta Betrog</translation>
     </message>
     <message>
         <location line="+34"/>
         <source>Copy address</source>
-        <translation>Kopēt adresi</translation>
+        <translation>Adress in&apos; Puffa kopian</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy label</source>
-        <translation>Kopēt nosaukumu</translation>
+        <translation>Titl in&apos; Puffa kopian</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation>Kopēt daudzumu</translation>
+        <translation>Betrog in&apos; Puffa kopian</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2423,77 +2423,77 @@ Adrese: %4
     <message>
         <location line="+1"/>
         <source>Edit label</source>
-        <translation>Mainīt nosaukumu</translation>
+        <translation>Titl ändan</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show transaction details</source>
-        <translation>Rādīt transakcijas detaļas</translation>
+        <translation>Zeig de Einzlheitn vo da Iwaweisung</translation>
     </message>
     <message>
         <location line="+143"/>
         <source>Export Transaction Data</source>
-        <translation>Eksportēt transakcijas datus</translation>
+        <translation>Iwaweisungsdatn speichan</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+        <translation>Beistrich &apos;trennte Weate (*.csv)</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Confirmed</source>
-        <translation>Apstiprināts</translation>
+        <translation>Bschtätigt</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Date</source>
-        <translation>Datums</translation>
+        <translation>Waunn</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type</source>
-        <translation>Tips</translation>
+        <translation>Oat</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Label</source>
-        <translation>Nosaukums</translation>
+        <translation>Titl</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Address</source>
-        <translation>Adrese</translation>
+        <translation>Adress</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation>Betrog</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>ID</source>
-        <translation>ID</translation>
+        <translation>Nr</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Error exporting</source>
-        <translation>Eksportēšanas kļūda</translation>
+        <translation>Föhla beim Speichan</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>Nevar ierakstīt failā %1.</translation>
+        <translation>Hob ned in de Datei %1 einespeichan kennan.</translation>
     </message>
     <message>
         <location line="+100"/>
         <source>Range:</source>
-        <translation>Diapazons:</translation>
+        <translation>Bereich:</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>to</source>
-        <translation type="unfinished"/>
+        <translation>bis</translation>
     </message>
 </context>
 <context>
@@ -2501,7 +2501,7 @@ Adrese: %4
     <message>
         <location filename="../walletmodel.cpp" line="+218"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Vaschick Zasta</translation>
     </message>
 </context>
 <context>
@@ -2519,22 +2519,22 @@ Adrese: %4
     <message>
         <location line="+183"/>
         <source>Backup Wallet</source>
-        <translation>Izveidot maciņa rezerves kopiju</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+0"/>
         <source>Wallet Data (*.dat)</source>
-        <translation>Maciņa dati (*.dat)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Backup Failed</source>
-        <translation>Rezerves kopēšana neizdevās</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+0"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation>Kļūda, saglabājot maciņu jaunajā vietā.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+4"/>
@@ -2552,77 +2552,77 @@ Adrese: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="+102"/>
         <source>Bitcoin version</source>
-        <translation>Bitcoin versija</translation>
+        <translation>Bitcoin Veasion</translation>
     </message>
     <message>
         <location line="+107"/>
         <source>Usage:</source>
-        <translation>Lietojums:</translation>
+        <translation>Vawendung:</translation>
     </message>
     <message>
         <location line="-55"/>
         <source>List commands</source>
-        <translation>Komandu saraksts</translation>
+        <translation>Kommandos aunzeign</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>Get help for a command</source>
-        <translation>Palīdzība par komandu</translation>
+        <translation>Hüfe fiara Kommando</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Options:</source>
-        <translation>Iespējas:</translation>
+        <translation>Eistöllungen:</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Norādiet konfigurācijas failu (pēc noklusēšanas: bitcoin.conf)</translation>
+        <translation>Gib de Konfigurationsdatei aun (sunsta: bitcoin.conf)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Norādiet pid failu (pēc noklusēšanas: bitcoind.pid)</translation>
+        <translation>Datei, wo de Prozessnumma gspeichat wiad (sunsta: bitcoin.pid)</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>Specify data directory</source>
-        <translation>Norādiet datu direktoriju</translation>
+        <translation>Vazeichnis fia de Datein</translation>
     </message>
     <message>
         <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>Uzstādiet datu bāzes bufera izmēru megabaitos (pēc noklusēšanas: 25)</translation>
+        <translation>Zwischnspeichagreß fia de Datenbank in megabeits (sunsta: 25)</translation>
     </message>
     <message>
         <location line="-28"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Gaidīt savienojumus portā &lt;port&gt; (pēc noklusēšanas: 8333 vai testnet: 18333)</translation>
+        <translation>Auf Vabindungen am &lt;port&gt; lauschn (sunsta: 8333 bzw. testnet: 18333)</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Uzturēt līdz &lt;n&gt; savienojumiem ar citiem mezgliem(pēc noklusēšanas: 125)</translation>
+        <translation>Hechstns &lt;n&gt; Vabindungen zu aundare Netz-Knotn aufrecht eahoitn (sunsta: 125)</translation>
     </message>
     <message>
         <location line="-49"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Pievienoties mezglam, lai iegūtu citu mezglu adreses, un atvienoties</translation>
+        <translation>Vabind di mid an Netz-Knotn, owa frog nua noch aundare Knotn, danoch vapäulisia di wieda</translation>
     </message>
     <message>
         <location line="+84"/>
         <source>Specify your own public address</source>
-        <translation>Norādiet savu publisko adresi</translation>
+        <translation>Gib dei eigene öffentliche Adress aun</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Slieksnis pārkāpējmezglu atvienošanai (pēc noklusēšanas: 100)</translation>
+        <translation>Geduidsfodnstärke gegniwa deppate Netz-Knotn (sunsta: 100)</translation>
     </message>
     <message>
         <location line="-142"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Sekundes, cik ilgi atturēt pārkāpējmezglus no atkārtotas pievienošanās (pēc noklusēšanas: 86400)</translation>
+        <translation>Waunn Geduidsfodn amoi grissn, daunn wia long bis wieda guat (sunsta: 86400)</translation>
     </message>
     <message>
         <location line="-33"/>
@@ -2637,22 +2637,22 @@ Adrese: %4
     <message>
         <location line="+40"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation>Pieņemt komandrindas un JSON-RPC komandas</translation>
+        <translation>Hob a Uawaschl offn fia de Kommandozeuln und JSON-RPC Beföhle</translation>
     </message>
     <message>
         <location line="+79"/>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation>Darbināt fonā kā servisu un pieņemt komandas</translation>
+        <translation>Ois Dämon im Hintagrund laafn und auf Beföhle lauschn</translation>
     </message>
     <message>
         <location line="+40"/>
         <source>Use the test network</source>
-        <translation>Izmantot testa tīklu</translation>
+        <translation>Des Test-Netz vawenden</translation>
     </message>
     <message>
         <location line="-118"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Nimm Vabindungen vo aussn aun (waunn nix aungebn is, güt 1, aussa waunn -proxy oda -connect optionen aungebm san)</translation>
     </message>
     <message>
         <location line="-87"/>
@@ -2707,7 +2707,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+6"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished"/>
+        <translation>A programmal startn, waunn si a unbstätigte Iwaweisung ändat. (a %s wiad dabei duachn Iwaweisungs-Hash easetzt)</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -2767,7 +2767,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+5"/>
         <source>Connect only to the specified node(s)</source>
-        <translation type="unfinished"/>
+        <translation>Nur mit de aungebanen Netz-Knotn vabindn.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2782,7 +2782,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation type="unfinished"/>
+        <translation>Find söbst de eigane IP-Adress (waunn nix aungebn is: 1, aussa mit -externalip oda waunns Lauschn oisagaunza oodraht is)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2827,7 +2827,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished"/>
+        <translation>Föhla beim Lauschn aufn port. Waunn des so gwoit is, dann gib de Option -listen=0 aun.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2972,7 +2972,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="-98"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation type="unfinished"/>
+        <translation>A programmal startn, waunn de Alarmglockn leitn, oda waunn de Block-Kettn oag vazweigt. (a %s wiad dabei duach a Nochricht easetzt)</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -3032,7 +3032,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+2"/>
         <source>Prepend debug output with timestamp</source>
-        <translation>Debug izvadei sākumā pievienot laika zīmogu</translation>
+        <translation>Fia Protokoi-Einträge imma vuan dazuaschreibn, waunns passiat san</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -3042,17 +3042,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Select the version of socks proxy to use (4-5, default: 5)</source>
-        <translation type="unfinished"/>
+        <translation>Wöche Version vom Sockn-Proxy gwinscht is (4 oda 5; waunn nix, daunn 5)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Debug/trace informāciju izvadīt konsolē, nevis debug.log failā</translation>
+        <translation>Protokoi anstott in de Datei debug.log liawa direkt aussaschreibn</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send trace/debug info to debugger</source>
-        <translation>Debug/trace informāciju izvadīt debug programmai</translation>
+        <translation>Protokoi zum Debugger schickn</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -3102,12 +3102,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+8"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Vawend UPnP um den Lausch-Port zuzuweisn (sunsta: 0)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation type="unfinished"/>
+        <translation>Vawend UPnP um den Lausch-Port zuzuweisn (wenn nix aungebm is: 1, wenns Lauschn eigschoitn is)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3117,12 +3117,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+2"/>
         <source>Username for JSON-RPC connections</source>
-        <translation>JSON-RPC savienojumu lietotājvārds</translation>
+        <translation>Benutza fia JSON-RPC Vabindungen</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Warning</source>
-        <translation>Brīdinājums</translation>
+        <translation>Pass auf</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3137,201 +3137,201 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="-54"/>
         <source>Password for JSON-RPC connections</source>
-        <translation>JSON-RPC savienojumu parole</translation>
+        <translation>Geheimwuat fia JSON-RPC Vabindungen</translation>
     </message>
     <message>
         <location line="-70"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation>Atļaut JSON-RPC savienojumus no norādītās IP adreses</translation>
+        <translation>JSON-RPC Beföhle nua vo da aungebanen Netz-Adress ealaubn</translation>
     </message>
     <message>
         <location line="+79"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation>Nosūtīt komandas mezglam, kas darbojas adresē &lt;ip&gt; (pēc noklusēšanas: 127.0.0.1)</translation>
+        <translation>Beföhle zum Netz-Knotn mit da &lt;ip&gt;-Adress schickn (sunsta: 127.0.0.1)</translation>
     </message>
     <message>
         <location line="-126"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Izpildīt komandu, kad labāk atbilstošais bloks izmainās (%s cmd aizvieto ar bloka hešu)</translation>
+        <translation>A programmal startn, waunn si wos am bestn Block ändat. (a %s wiad dabei duachn Block-Hash easetzt)</translation>
     </message>
     <message>
         <location line="+155"/>
         <source>Upgrade wallet to latest format</source>
-        <translation>Atjaunot maciņa formātu uz jaunāko</translation>
+        <translation>&apos;s Beasl ins neichaste Foamat bringan</translation>
     </message>
     <message>
         <location line="-23"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Uzstādīt atslēgu bufera izmēru uz &lt;n&gt; (pēc noklusēšanas: 100)</translation>
+        <translation>Schlisslvorratsgreß auf &lt;n&gt; setzn (sunsta: 100)</translation>
     </message>
     <message>
         <location line="-12"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Atkārtoti skanēt bloku virkni, meklējot trūkstošās maciņa transakcijas</translation>
+        <translation>De gaunze Block-kettn noch föhlende Iwaweisungen oosuachn</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>JSON-RPC savienojumiem izmantot OpenSSL (https)</translation>
+        <translation>Vawend OpenSSL (https) fia JSON-RPC Vabindungan</translation>
     </message>
     <message>
         <location line="-29"/>
         <source>Server certificate file (default: server.cert)</source>
-        <translation>Servera sertifikāta fails (pēc noklusēšanas: server.cert)</translation>
+        <translation>Söawa Zeatifikatsdatei (sunsta: server.cert)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Server private key (default: server.pem)</source>
-        <translation>Servera privātā atslēga (pēc noklusēšanas: server.pem)</translation>
+        <translation>Söawa Privatschlissl (sunsta: server.pem)</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>This help message</source>
-        <translation>Šis palīdzības paziņojums</translation>
+        <translation>Dea Hüfe-Text</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
-        <translation>Nevar pievienoties pie %s šajā datorā (pievienošanās atgrieza kļūdu %d, %s)</translation>
+        <translation>Kaun mi ned aun %s auf dera Maschin draunhängan (bind returned error %d, %s)</translation>
     </message>
     <message>
         <location line="-95"/>
         <source>Connect through socks proxy</source>
-        <translation>Savienoties caurs socks proxy</translation>
+        <translation>Iwa an sockn-Zwischnsöawa vabindn</translation>
     </message>
     <message>
         <location line="-11"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Atļaut DNS uzmeklēšanu priekš -addnode, -seednode un -connect</translation>
+        <translation>Ealaub DNS nochfrogn fia -addnode, -seednode und -connect</translation>
     </message>
     <message>
         <location line="+58"/>
         <source>Loading addresses...</source>
-        <translation>Ielādē adreses...</translation>
+        <translation>Adressbiachl lodn...</translation>
     </message>
     <message>
         <location line="-36"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Nevar ielādēt wallet.dat: maciņš bojāts</translation>
+        <translation>Föhla beim Lodn vom Beasl: &apos;s Beasl is leida hinnich</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation>Nevar ielādēt wallet.dat: maciņa atvēršanai nepieciešama jaunāka Bitcoin versija</translation>
+        <translation>Föhla beim Lodn vom Beasl: fia des Beasl brauchst a neichare Bitcoin veasion</translation>
     </message>
     <message>
         <location line="+98"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation>Bija nepieciešams pārstartēt maciņu: pabeigšanai pārstartējiet Bitcoin</translation>
+        <translation>&apos;s Beasl hod neich gschriem weadn miassn: beend des Programmal und starts noamoi zum Featigmochn</translation>
     </message>
     <message>
         <location line="-100"/>
         <source>Error loading wallet.dat</source>
-        <translation>Kļūda ielādējot wallet.dat</translation>
+        <translation>Föhla beim Lodn vom Beasl (wallet.dat)</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>Nederīga -proxy adrese: &apos;%s&apos;</translation>
+        <translation>Ungültige &quot;-proxy&quot; Adress: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+57"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>-onlynet komandā norādīts nepazīstams tīkls: &apos;%s&apos;</translation>
+        <translation>Des Netzwerk in -onlynet is a Kas: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>Unknown -socks proxy version requested: %i</source>
-        <translation>Pieprasīta nezināma -socks proxy versija: %i</translation>
+        <translation>De valongte -socks proxy version is ned bekaunnt: %i</translation>
     </message>
     <message>
         <location line="-100"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation>Nevar uzmeklēt -bind adresi: &apos;%s&apos;</translation>
+        <translation>Kaunn de -bind Adressn ned auflösn: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation>Nevar atrisināt -externalip adresi: &apos;%s&apos;</translation>
+        <translation>Kaunn de -externalip Adressn ned auflösn: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Nederīgs daudzums priekš -paytxfree=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation>Da Betrog fia -paytxfee=&lt;amount&gt; is a Kas: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount</source>
-        <translation>Nederīgs daudzums</translation>
+        <translation>Ungültiga Betrog</translation>
     </message>
     <message>
         <location line="-6"/>
         <source>Insufficient funds</source>
-        <translation>Nepietiek bitkoinu</translation>
+        <translation>Sovü host goaned</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Loading block index...</source>
-        <translation>Ielādē bloku indeksu...</translation>
+        <translation>Block index lodn...</translation>
     </message>
     <message>
         <location line="-60"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Pievienot mezglu, kam pievienoties un turēt savienojumu atvērtu</translation>
+        <translation>An Netz-Knotn aufnehman, und bei da Staungan hoitn</translation>
     </message>
     <message>
         <location line="-28"/>
         <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
-        <translation>Nevar pievienoties %s uz šī datora. Bitcoin droši vien jau darbojas.</translation>
+        <translation>Konnt mi ned aun %s auf dera Maschin aunhängan. Meglichaweis rennt des Programmal scho.</translation>
     </message>
     <message>
         <location line="+69"/>
         <source>Fee per KB to add to transactions you send</source>
-        <translation>Maksa par KB, ko pievienot nosūtāmajām transakcijām</translation>
+        <translation>Gebühr pro Kilobeit fia oogschickte Iwaweisungen</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Loading wallet...</source>
-        <translation>Ielādē maciņu...</translation>
+        <translation>Beasl lodn...</translation>
     </message>
     <message>
         <location line="-54"/>
         <source>Cannot downgrade wallet</source>
-        <translation>Nevar maciņa formātu padarīt vecāku</translation>
+        <translation>Zrucksteign geht nimma beim Beasl</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Cannot write default address</source>
-        <translation>Nevar ierakstīt adresi pēc noklusēšanas</translation>
+        <translation>De Easotz Adress kaunn ned gschriem weadn</translation>
     </message>
     <message>
         <location line="+66"/>
         <source>Rescanning...</source>
-        <translation>Skanēju no jauna...</translation>
+        <translation>Noch-tscheckn...</translation>
     </message>
     <message>
         <location line="-58"/>
         <source>Done loading</source>
-        <translation>Ielāde pabeigta</translation>
+        <translation>Featig midm Lodn</translation>
     </message>
     <message>
         <location line="+85"/>
         <source>To use the %s option</source>
-        <translation>Izmantot opciju %s</translation>
+        <translation>Um de Option %s z&apos;vawendn</translation>
     </message>
     <message>
         <location line="-77"/>
         <source>Error</source>
-        <translation>Kļūda</translation>
+        <translation>Föhla</translation>
     </message>
     <message>
         <location line="-33"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
-        <translation>Konfigurācijas failā jāuzstāda rpcpassword=&lt;password&gt;:
+        <translation>Du muasst rpcpassword=&lt;password&gt; in da Konfigurationsdatei:
 %s
-Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.</translation>
+setzn. Waunns de Datei no ned gibt, daunn eazeigs so, dass&apos; ka aundara lesn kau.</translation>
     </message>
 </context>
 </TS>

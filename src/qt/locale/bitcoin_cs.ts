@@ -40,12 +40,7 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
 <context>
     <name>AddressBookPage</name>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="+14"/>
-        <source>Address Book</source>
-        <translation>Adresář</translation>
-    </message>
-    <message>
-        <location line="+19"/>
+        <location filename="../forms/addressbookpage.ui" line="+30"/>
         <source>Double-click to edit address or label</source>
         <translation>Dvojklikem myši začneš upravovat označení adresy</translation>
     </message>
@@ -55,42 +50,32 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Vytvoř novou adresu</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+3"/>
+        <source>&amp;New</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Zkopíruj aktuálně vybranou adresu do systémové schránky</translation>
     </message>
     <message>
-        <location line="-11"/>
-        <source>&amp;New Address</source>
-        <translation>Nová &amp;adresa</translation>
+        <location line="+3"/>
+        <source>&amp;Copy</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+63"/>
-        <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Tohle jsou tvé Bitcoinové adresy pro příjem plateb. Můžeš dát pokaždé každému plátci novou adresu, abys věděl, kdo ti kdy kolik platil.</translation>
+        <location line="+52"/>
+        <source>C&amp;lose</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="+14"/>
+        <location filename="../addressbookpage.cpp" line="+72"/>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopíruj adresu</translation>
     </message>
     <message>
-        <location line="+11"/>
-        <source>Show &amp;QR Code</source>
-        <translation>Zobraz &amp;QR kód</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <source>Sign a message to prove you own a Bitcoin address</source>
-        <translation>Podepiš zprávu, čímž prokážeš, že jsi vlastníkem Bitcoinové adresy</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Sign &amp;Message</source>
-        <translation>Po&amp;depiš zprávu</translation>
-    </message>
-    <message>
-        <location line="+25"/>
+        <location filename="../forms/addressbookpage.ui" line="-41"/>
         <source>Delete the currently selected address from the list</source>
         <translation>Smaž zvolenou adresu ze seznamu</translation>
     </message>
@@ -105,27 +90,47 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>&amp;Export</translation>
     </message>
     <message>
-        <location line="-44"/>
-        <source>Verify a message to ensure it was signed with a specified Bitcoin address</source>
-        <translation>Ověř zprávu, aby ses ujistil, že byla podepsána danou Bitcoinovou adresou</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>&amp;Verify Message</source>
-        <translation>&amp;Ověř zprávu</translation>
-    </message>
-    <message>
-        <location line="+14"/>
+        <location line="-27"/>
         <source>&amp;Delete</source>
         <translation>S&amp;maž</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="-5"/>
+        <location filename="../addressbookpage.cpp" line="-30"/>
+        <source>Choose the address to send coins to</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>C&amp;hoose</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Sending addresses</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Receiving addresses</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Tohle jsou tvé Bitcoinové adresy pro posílání plateb. Před odesláním mincí si vždy zkontroluj částku a cílovou adresu.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+4"/>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Copy &amp;Label</source>
         <translation>Kopíruj &amp;označení</translation>
     </message>
@@ -135,14 +140,9 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>&amp;Uprav</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Send &amp;Coins</source>
-        <translation>Pošli min&amp;ce</translation>
-    </message>
-    <message>
-        <location line="+265"/>
-        <source>Export Address Book Data</source>
-        <translation>Exportuj data adresáře</translation>
+        <location line="+197"/>
+        <source>Export Address List</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -163,7 +163,7 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="+144"/>
+        <location filename="../addresstablemodel.cpp" line="+164"/>
         <source>Label</source>
         <translation>Označení</translation>
     </message>
@@ -201,7 +201,7 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Totéž heslo ještě jednou</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="+33"/>
+        <location filename="../askpassphrasedialog.cpp" line="+34"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Zadej nové heslo k peněžence.&lt;br/&gt;Použij &lt;b&gt;alespoň 10 náhodných znaků&lt;/b&gt; nebo &lt;b&gt;alespoň osm slov&lt;/b&gt;.</translation>
     </message>
@@ -322,17 +322,17 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+254"/>
+        <location filename="../bitcoingui.cpp" line="+250"/>
         <source>Sign &amp;message...</source>
         <translation>Po&amp;depiš zprávu...</translation>
     </message>
     <message>
-        <location line="+246"/>
+        <location line="+254"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronizuji se se sítí...</translation>
     </message>
     <message>
-        <location line="-321"/>
+        <location line="-324"/>
         <source>&amp;Overview</source>
         <translation>&amp;Přehled</translation>
     </message>
@@ -352,17 +352,7 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Procházej historii transakcí</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Edit the list of stored addresses and labels</source>
-        <translation>Uprav seznam uložených adres a jejich označení</translation>
-    </message>
-    <message>
-        <location line="-14"/>
-        <source>Show the list of addresses for receiving payments</source>
-        <translation>Zobraz seznam adres pro příjem plateb</translation>
-    </message>
-    <message>
-        <location line="+31"/>
+        <location line="+15"/>
         <source>E&amp;xit</source>
         <translation>&amp;Konec</translation>
     </message>
@@ -377,12 +367,13 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Zobraz informace o Bitcoinu</translation>
     </message>
     <message>
+        <location line="+3"/>
         <location line="+2"/>
         <source>About &amp;Qt</source>
         <translation>O &amp;Qt</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Show information about Qt</source>
         <translation>Zobraz informace o Qt</translation>
     </message>
@@ -407,7 +398,7 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Změň &amp;heslo...</translation>
     </message>
     <message>
-        <location line="+251"/>
+        <location line="+259"/>
         <source>Importing blocks from disk...</source>
         <translation>Importuji bloky z disku...</translation>
     </message>
@@ -417,12 +408,12 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Vytvářím nový index bloků na disku...</translation>
     </message>
     <message>
-        <location line="-319"/>
+        <location line="-322"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Pošli mince na Bitcoinovou adresu</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+47"/>
         <source>Modify configuration options for Bitcoin</source>
         <translation>Uprav nastavení Bitcoinu</translation>
     </message>
@@ -452,20 +443,20 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>&amp;Ověř zprávu...</translation>
     </message>
     <message>
-        <location line="-183"/>
+        <location line="-180"/>
         <location line="+6"/>
-        <location line="+508"/>
+        <location line="+513"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-514"/>
+        <location line="-519"/>
         <location line="+6"/>
         <source>Wallet</source>
         <translation>Peněženka</translation>
     </message>
     <message>
-        <location line="+107"/>
+        <location line="+109"/>
         <source>&amp;Send</source>
         <translation>&amp;Pošli</translation>
     </message>
@@ -475,18 +466,13 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Při&amp;jmi</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>&amp;Addresses</source>
-        <translation>&amp;Adresy</translation>
-    </message>
-    <message>
-        <location line="+23"/>
+        <location line="+28"/>
         <location line="+2"/>
         <source>&amp;About Bitcoin</source>
         <translation>O &amp;Bitcoinu</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+14"/>
         <location line="+2"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Zobraz/Skryj</translation>
@@ -512,12 +498,12 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Ověř zprávy, aby ses ujistil, že byly podepsány danými Bitcoinovými adresami</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+35"/>
         <source>&amp;File</source>
         <translation>&amp;Soubor</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+10"/>
         <source>&amp;Settings</source>
         <translation>&amp;Nastavení</translation>
     </message>
@@ -532,19 +518,44 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Panel s listy</translation>
     </message>
     <message>
-        <location line="-228"/>
-        <location line="+288"/>
+        <location line="-235"/>
+        <location line="+294"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location line="-5"/>
+        <location line="-177"/>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+63"/>
+        <source>&amp;Used sending addresses...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Used &amp;receiving addresses...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+106"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
         <translation>Bitcoin klient</translation>
     </message>
     <message numerus="yes">
-        <location line="+121"/>
+        <location line="+120"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n aktivní spojení do Bitcoinové sítě</numerusform><numerusform>%n aktivní spojení do Bitcoinové sítě</numerusform><numerusform>%n aktivních spojení do Bitcoinové sítě</numerusform></translation>
     </message>
@@ -594,7 +605,7 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Následné transakce ještě nebudou vidět.</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+27"/>
         <source>Error</source>
         <translation>Chyba</translation>
     </message>
@@ -609,12 +620,12 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Informace</translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+77"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
         <translation>Tahle transakce přesahuje velikostní limit. I tak ji ale můžeš poslat, pokud za ni zaplatíš poplatek %1, který půjde uzlům, které tvou transakci zpracují, a navíc tak podpoříš síť. Chceš zaplatit poplatek?</translation>
     </message>
     <message>
-        <location line="-140"/>
+        <location line="-152"/>
         <source>Up to date</source>
         <translation>Aktuální</translation>
     </message>
@@ -624,7 +635,7 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Stahuji...</translation>
     </message>
     <message>
-        <location line="+113"/>
+        <location line="+124"/>
         <source>Confirm transaction fee</source>
         <translation>Potvrď transakční poplatek</translation>
     </message>
@@ -652,19 +663,17 @@ Adresa: %4
 </translation>
     </message>
     <message>
-        <location line="+33"/>
-        <location line="+23"/>
+        <location line="+34"/>
         <source>URI handling</source>
         <translation>Zpracování URI</translation>
     </message>
     <message>
-        <location line="-23"/>
-        <location line="+23"/>
+        <location line="+0"/>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
         <translation>Nepodařilo se analyzovat URI! Důvodem může být neplatná Bitcoinová adresa nebo poškozené parametry URI.</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+45"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Peněženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálně &lt;b&gt;odemčená&lt;/b&gt;</translation>
     </message>
@@ -682,7 +691,7 @@ Adresa: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+105"/>
+        <location filename="../clientmodel.cpp" line="+115"/>
         <source>Network Alert</source>
         <translation>Upozornění sítě</translation>
     </message>
@@ -701,18 +710,18 @@ Adresa: %4
     </message>
     <message>
         <location line="+10"/>
-        <source>The label associated with this address book entry</source>
-        <translation>Označení spojené s tímto záznamem v adresáři</translation>
+        <source>The label associated with this address list entry</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+17"/>
+        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-10"/>
         <source>&amp;Address</source>
         <translation>&amp;Adresa</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>The address associated with this address book entry. This can only be modified for sending addresses.</source>
-        <translation>Adresa spojená s tímto záznamem v adresáři. Lze upravovat jen pro odesílací adresy.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="+21"/>
@@ -786,7 +795,7 @@ Adresa: %4
 <context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+517"/>
+        <location filename="../guiutil.cpp" line="+558"/>
         <location line="+13"/>
         <source>Bitcoin-Qt</source>
         <translation>Bitcoin-Qt</translation>
@@ -865,7 +874,7 @@ Adresa: %4
         <translation>Použij tento adresář pro data:</translation>
     </message>
     <message>
-        <location filename="../intro.cpp" line="+100"/>
+        <location filename="../intro.cpp" line="+105"/>
         <source>Error</source>
         <translation>Chyba</translation>
     </message>
@@ -1053,7 +1062,7 @@ Adresa: %4
         <translation>&amp;Uložit</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+54"/>
+        <location filename="../optionsdialog.cpp" line="+58"/>
         <source>default</source>
         <translation>výchozí</translation>
     </message>
@@ -1163,23 +1172,77 @@ Adresa: %4
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+108"/>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Nemůžu spustit bitcoin: obsluha click-to-pay</translation>
+        <location filename="../paymentserver.cpp" line="+392"/>
+        <source>URI handling</source>
+        <translation>Zpracování URI</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <translation>Nepodařilo se analyzovat URI! Důvodem může být neplatná Bitcoinová adresa nebo poškozené parametry URI.</translation>
+    </message>
+    <message>
+        <location line="+69"/>
+        <source>Requested payment amount of %1 is too small (considered dust).</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location line="+37"/>
+        <source>Payment request error</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insecure requests to custom payment scripts unsupported</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>Refund from %1</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>Error communicating with %1: %2</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Bad response from server %1</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Payment acknowledged</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-58"/>
+        <location line="+30"/>
+        <location line="+17"/>
+        <source>Network request error</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoin.cpp" line="+92"/>
+        <location filename="../bitcoin.cpp" line="+114"/>
+        <location line="+5"/>
         <location filename="../intro.cpp" line="-32"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-4"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation>Chyba: Zadaný adresář pro data „%1“ neexistuje.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Error: Invalid combination of -regtest and -testnet.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../intro.cpp" line="+1"/>
@@ -1188,54 +1251,19 @@ Adresa: %4
     </message>
 </context>
 <context>
-    <name>QRCodeDialog</name>
+    <name>QRImageWidget</name>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="+14"/>
-        <source>QR Code Dialog</source>
-        <translation>QR kód</translation>
+        <location filename="../receiverequestdialog.cpp" line="+32"/>
+        <source>&amp;Save Image...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+59"/>
-        <source>Request Payment</source>
-        <translation>Požadovat platbu</translation>
+        <location line="+3"/>
+        <source>&amp;Copy Image</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+56"/>
-        <source>Amount:</source>
-        <translation>Částka:</translation>
-    </message>
-    <message>
-        <location line="-44"/>
-        <source>Label:</source>
-        <translation>Označení:</translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>Message:</source>
-        <translation>Zpráva:</translation>
-    </message>
-    <message>
-        <location line="+71"/>
-        <source>&amp;Save As...</source>
-        <translation>&amp;Ulož jako...</translation>
-    </message>
-    <message>
-        <location filename="../qrcodedialog.cpp" line="+64"/>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Chyba při kódování URI do QR kódu.</translation>
-    </message>
-    <message>
-        <location line="+40"/>
-        <source>The entered amount is invalid, please check.</source>
-        <translation>Zadaná částka je neplatná, překontroluj ji prosím.</translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Výsledná URI je příliš dlouhá, zkus zkrátit text označení / zprávy.</translation>
-    </message>
-    <message>
-        <location line="+25"/>
+        <location line="+28"/>
         <source>Save QR Code</source>
         <translation>Ulož QR kód</translation>
     </message>
@@ -1262,7 +1290,7 @@ Adresa: %4
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+345"/>
+        <location filename="../rpcconsole.cpp" line="+352"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
@@ -1347,7 +1375,32 @@ Adresa: %4
         <translation>&amp;Konzole</translation>
     </message>
     <message>
-        <location line="-260"/>
+        <location line="+72"/>
+        <source>&amp;Network Traffic</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>&amp;Clear</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Totals</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+64"/>
+        <source>In:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+80"/>
+        <source>Out:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-541"/>
         <source>Build date</source>
         <translation>Datum kompilace</translation>
     </message>
@@ -1391,18 +1444,184 @@ Adresa: %4
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>Napsáním &lt;b&gt;help&lt;/b&gt; si vypíšeš přehled dostupných příkazů.</translation>
     </message>
+    <message>
+        <location line="+128"/>
+        <source>%1 B</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 KB</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 MB</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 GB</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1 m</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>%1 h</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 h %2 m</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <location filename="../forms/receivecoinsdialog.ui" line="+22"/>
+        <source>&amp;Amount:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>The amount to request</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Label:</source>
+        <translation>O&amp;značení:</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The label to associate with the receiving address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Message:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The message to attach to payment request</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>R&amp;euse an existing receiving address (not recommended)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Use this form to request payments. All fields are optional.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Clear all fields of the form.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Clear</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>&amp;Request payment</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
+    <name>ReceiveRequestDialog</name>
+    <message>
+        <location filename="../forms/receiverequestdialog.ui" line="+29"/>
+        <source>QR Code</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Copy &amp;URI</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Copy &amp;Address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Copy Image</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Save Image...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../receiverequestdialog.cpp" line="+58"/>
+        <source>Request payment to %1</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Payment information</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>URI</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Address</source>
+        <translation>Adresa</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Amount</source>
+        <translation>Částka</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Label</source>
+        <translation>Popis</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message</source>
+        <translation>Zpráva</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Výsledná URI je příliš dlouhá, zkus zkrátit text označení / zprávy.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Chyba při kódování URI do QR kódu.</translation>
+    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+128"/>
-        <location line="+5"/>
-        <location line="+5"/>
-        <location line="+5"/>
-        <location line="+6"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location filename="../sendcoinsdialog.cpp" line="+140"/>
+        <location line="+213"/>
         <source>Send Coins</source>
         <translation>Pošli mince</translation>
     </message>
@@ -1418,8 +1637,8 @@ Adresa: %4
     </message>
     <message>
         <location line="+20"/>
-        <source>Remove all transaction fields</source>
-        <translation>Smaž všechny transakční formuláře</translation>
+        <source>Clear all fields of the form.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
@@ -1447,99 +1666,111 @@ Adresa: %4
         <translation>P&amp;ošli</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-62"/>
-        <location line="+2"/>
-        <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
-        <translation>&lt;b&gt;%1&lt;/b&gt; pro %2 (%3)</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location filename="../sendcoinsdialog.cpp" line="-154"/>
         <source>Confirm send coins</source>
         <translation>Potvrď odeslání mincí</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Are you sure you want to send %1?</source>
-        <translation>Jsi si jistý, že chceš poslat %1?</translation>
+        <location line="-90"/>
+        <location line="+5"/>
+        <location line="+5"/>
+        <source>%1 to %2</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+0"/>
-        <source> and </source>
-        <translation> a </translation>
-    </message>
-    <message>
-        <location line="+23"/>
+        <location line="+26"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Adresa příjemce je neplatná, překontroluj ji prosím.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Odesílaná částka musí být větší než 0.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>The amount exceeds your balance.</source>
         <translation>Částka překračuje stav účtu.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Celková částka při připočítání poplatku %1 překročí stav účtu.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Zaznamenána duplikovaná adresa; každá adresa může být v odesílané platbě pouze jednou.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>Error: Transaction creation failed!</source>
         <translation>Chyba: Vytvoření transakce selhalo!</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+15"/>
+        <source>Are you sure you want to send?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>added as transaction fee</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Total Amount %1</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Chyba: Transakce byla odmítnuta. Tohle může nastat, pokud nějaké mince z tvé peněženky už jednou byly utraceny, například pokud používáš kopii souboru wallet.dat a mince byly utraceny v druhé kopii, ale nebyly označeny jako utracené v této.</translation>
+    </message>
+    <message>
+        <location line="+144"/>
+        <source>Payment request expired</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Invalid payment address %1</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+14"/>
-        <source>Form</source>
-        <translation>Formulář</translation>
-    </message>
-    <message>
-        <location line="+15"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+33"/>
+        <location line="+585"/>
         <source>A&amp;mount:</source>
         <translation>Čás&amp;tka:</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="-572"/>
+        <location line="+585"/>
         <source>Pay &amp;To:</source>
         <translation>&amp;Komu:</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="-551"/>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Adresa příjemce (např. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+60"/>
-        <location filename="../sendcoinsentry.cpp" line="+26"/>
+        <location filename="../sendcoinsentry.cpp" line="+28"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>Zadej označení této adresy; obojí se ti pak uloží do adresáře</translation>
     </message>
     <message>
-        <location line="-78"/>
+        <location filename="../forms/sendcoinsentry.ui" line="-18"/>
         <source>&amp;Label:</source>
         <translation>O&amp;značení:</translation>
     </message>
     <message>
         <location line="+28"/>
-        <source>Choose address from address book</source>
-        <translation>Vyber adresu z adresáře</translation>
+        <source>Choose previously used address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+10"/>
@@ -1560,6 +1791,16 @@ Adresa: %4
         <location line="+7"/>
         <source>Remove this recipient</source>
         <translation>Smaž tohoto příjemce</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Enter a label for this address to add it to the list of used addresses</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+465"/>
+        <source>Memo:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
@@ -1592,8 +1833,8 @@ Adresa: %4
     <message>
         <location line="+10"/>
         <location line="+213"/>
-        <source>Choose an address from the address book</source>
-        <translation>Vyber adresu z adresáře</translation>
+        <source>Choose previously used address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-203"/>
@@ -1694,7 +1935,7 @@ Adresa: %4
         <translation>Vlož Bitcoinový podpis</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+85"/>
         <location line="+81"/>
         <source>The entered address is invalid.</source>
         <translation>Zadaná adresa je neplatná.</translation>
@@ -1763,7 +2004,7 @@ Adresa: %4
 <context>
     <name>SplashScreen</name>
     <message>
-        <location filename="../splashscreen.cpp" line="+22"/>
+        <location filename="../splashscreen.cpp" line="+23"/>
         <source>The Bitcoin developers</source>
         <translation>Vývojáři Bitcoinu</translation>
     </message>
@@ -1774,9 +2015,17 @@ Adresa: %4
     </message>
 </context>
 <context>
+    <name>TrafficGraphWidget</name>
+    <message>
+        <location filename="../trafficgraphwidget.cpp" line="+75"/>
+        <source>KB/s</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+20"/>
+        <location filename="../transactiondesc.cpp" line="+22"/>
         <source>Open until %1</source>
         <translation>Otřevřeno dokud %1</translation>
     </message>
@@ -1849,12 +2098,12 @@ Adresa: %4
         <location line="+12"/>
         <location line="+45"/>
         <location line="+17"/>
-        <location line="+30"/>
+        <location line="+48"/>
         <source>Credit</source>
         <translation>Příjem</translation>
     </message>
     <message numerus="yes">
-        <location line="-102"/>
+        <location line="-120"/>
         <source>matures in %n more block(s)</source>
         <translation><numerusform>dozraje po jednom bloku</numerusform><numerusform>dozraje po %n blocích</numerusform><numerusform>dozraje po %n blocích</numerusform></translation>
     </message>
@@ -1867,12 +2116,12 @@ Adresa: %4
         <location line="+44"/>
         <location line="+8"/>
         <location line="+15"/>
-        <location line="+30"/>
+        <location line="+48"/>
         <source>Debit</source>
         <translation>Výdaj</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-57"/>
         <source>Transaction fee</source>
         <translation>Transakční poplatek</translation>
     </message>
@@ -1897,12 +2146,17 @@ Adresa: %4
         <translation>ID transakce</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Generated coins must mature 120 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Vygenerované mince musí čekat 120 bloků, než mohou být utraceny. Když jsi vygeneroval tenhle blok, tak byl rozposlán do sítě, aby byl přidán do řetězce bloků. Pokud se mu nepodaří dostat se do řetězce, změní se na &quot;neakceptovaný&quot; a nepůjde utratit. To se občas může stát, pokud jiný uzel vygeneruje blok zhruba ve stejném okamžiku jako ty.</translation>
+        <location line="+13"/>
+        <source>Merchant</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+7"/>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Debug information</source>
         <translation>Ladicí informace</translation>
     </message>
@@ -1932,7 +2186,7 @@ Adresa: %4
         <translation>false</translation>
     </message>
     <message>
-        <location line="-209"/>
+        <location line="-227"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, ještě nebylo rozesláno</translation>
     </message>
@@ -1963,7 +2217,7 @@ Adresa: %4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+225"/>
+        <location filename="../transactiontablemodel.cpp" line="+227"/>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
@@ -2250,7 +2504,7 @@ Adresa: %4
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+193"/>
+        <location filename="../walletmodel.cpp" line="+218"/>
         <source>Send Coins</source>
         <translation>Pošli mince</translation>
     </message>
@@ -2268,7 +2522,7 @@ Adresa: %4
         <translation>Exportuj data z tohoto panelu do souboru</translation>
     </message>
     <message>
-        <location line="+197"/>
+        <location line="+183"/>
         <source>Backup Wallet</source>
         <translation>Záloha peněženky</translation>
     </message>
@@ -2301,22 +2555,17 @@ Adresa: %4
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+98"/>
+        <location filename="../bitcoinstrings.cpp" line="+102"/>
         <source>Bitcoin version</source>
         <translation>Verze Bitcoinu</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+107"/>
         <source>Usage:</source>
         <translation>Užití:</translation>
     </message>
     <message>
-        <location line="-30"/>
-        <source>Send command to -server or bitcoind</source>
-        <translation>Poslat příkaz pro -server nebo bitcoind</translation>
-    </message>
-    <message>
-        <location line="-23"/>
+        <location line="-55"/>
         <source>List commands</source>
         <translation>Výpis příkazů</translation>
     </message>
@@ -2371,12 +2620,12 @@ Adresa: %4
         <translation>Specifikuj svou veřejnou adresu</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Práh pro odpojování zlobivých uzlů (výchozí: 100)</translation>
     </message>
     <message>
-        <location line="-136"/>
+        <location line="-142"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Doba ve vteřinách, po kterou se nebudou moci zlobivé uzly znovu připojit (výchozí: 86400)</translation>
     </message>
@@ -2391,27 +2640,27 @@ Adresa: %4
         <translation>Čekat na JSON RPC spojení na &lt;portu&gt; (výchozí: 8332 nebo testnet: 18332)</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+40"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Akceptovat příkazy z příkazové řádky a přes JSON-RPC</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+79"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Běžet na pozadí jako démon a akceptovat příkazy</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+40"/>
         <source>Use the test network</source>
         <translation>Použít testovací síť (testnet)</translation>
     </message>
     <message>
-        <location line="-114"/>
+        <location line="-118"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Přijímat spojení zvenčí (výchozí: 1, pokud není zadáno -proxy nebo -connect)</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-87"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -2436,7 +2685,12 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
 </translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+12"/>
+        <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
         <translation>Při nastavování naslouchacího RPC portu %u pro IPv6 nastala chyba, vracím se k IPv4: %s</translation>
     </message>
@@ -2466,12 +2720,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Chyba: Tahle transakce vyžaduje transakční poplatek nejméně %s kvůli velikosti zasílané částky, komplexnosti nebo použití nedávno přijatých mincí!</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Execute command when a relevant alert is received (%s in cmd is replaced by message)</source>
-        <translation>Spustit příkaz po přijetí relevantního hlášení (%s se v příkazu nahradí za zprávu)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Spustit příkaz, když se objeví transakce týkající se peněženky (%s se v příkazu nahradí za TxID)</translation>
     </message>
@@ -2492,13 +2741,18 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+3"/>
-        <source>Warning: Displayed transactions may not be correct! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Upozornění: Zobrazené transakce nemusí být správné! Možná potřebuješ aktualizovat nebo ostatní uzly potřebují aktualizovat.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
+        <translation>Upozornění: Zkontroluj, že máš v počítači správně nastavený datum a čas! Pokud jsou nastaveny špatně, Bitcoin nebude fungovat správně.</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
-        <translation>Upozornění: Zkontroluj, že máš v počítači správně nastavený datum a čas! Pokud jsou nastaveny špatně, Bitcoin nebude fungovat správně.</translation>
+        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
@@ -2516,6 +2770,11 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Pokusit se zachránit soukromé klíče z poškozeného souboru wallet.dat</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Bitcoin RPC client version</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Block creation options:</source>
         <translation>Možnosti vytvoření bloku:</translation>
@@ -2526,7 +2785,12 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Připojit se pouze k zadanému uzlu (příp. zadaným uzlům)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Corrupted block database detected</source>
         <translation>Bylo zjištěno poškození databáze bloků</translation>
     </message>
@@ -2656,7 +2920,12 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nemám žádný nebo jen špatný genesis blok. Není špatně nastavený datadir?</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+3"/>
+        <source>Invalid -onion address: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Not enough file descriptors available.</source>
         <translation>Je nedostatek deskriptorů souborů.</translation>
     </message>
@@ -2666,7 +2935,12 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Znovu vytvořit index řetězce bloků z aktuálních blk000??.dat souborů</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Send command to Bitcoin server</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
         <translation>Nastavení počtu vláken pro servisní RPC volání (výchozí: 4)</translation>
     </message>
@@ -2676,7 +2950,17 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Udej název souboru s peněženkou (v rámci datového adresáře)</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+2"/>
+        <source>Start Bitcoin server</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Usage (deprecated, use bitcoin-cli):</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Verifying blocks...</source>
         <translation>Ověřuji bloky...</translation>
     </message>
@@ -2696,27 +2980,27 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Je třeba přestavět databázi použitím -reindex, aby bylo možné změnit -txindex</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-78"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importovat bloky z externího souboru blk000??.dat</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-98"/>
+        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
         <translation>Nastavení počtu vláken pro verifikaci skriptů (max. 16, 0 = automaticky, &lt;0 = nechat daný počet jader volný, výchozí: 0)</translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+83"/>
         <source>Information</source>
         <translation>Informace</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Invalid -tor address: &apos;%s&apos;</source>
-        <translation>Neplatná -tor adresa: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Neplatná částka pro -minrelaytxfee=&lt;částka&gt;: &apos;%s&apos;</translation>
     </message>
@@ -2811,7 +3095,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Zadej časový limit spojení v milisekundách (výchozí: 5000)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>System error: </source>
         <translation>Systémová chyba: </translation>
     </message>
@@ -2831,7 +3115,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Transace je příliš velká</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Použít UPnP k namapování naslouchacího portu (výchozí: 0)</translation>
     </message>
@@ -2866,32 +3150,32 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Soubor wallet.dat je poškozen, jeho záchrana se nezdařila</translation>
     </message>
     <message>
-        <location line="-52"/>
+        <location line="-54"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Heslo pro JSON-RPC spojení</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-70"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Povolit JSON-RPC spojení ze specifikované IP adresy</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+79"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Posílat příkazy uzlu běžícím na &lt;ip&gt; (výchozí: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-121"/>
+        <location line="-126"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Spustit příkaz, když se změní nejlepší blok (%s se v příkazu nahradí hashem bloku)</translation>
     </message>
     <message>
-        <location line="+149"/>
+        <location line="+155"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Převést peněženku na nejnovější formát</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-23"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Nastavit zásobník klíčů na velikost &lt;n&gt; (výchozí: 100)</translation>
     </message>
@@ -2901,12 +3185,12 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Přeskenovat řetězec bloků na chybějící transakce tvé pěněženky</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+38"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Použít OpenSSL (https) pro JSON-RPC spojení</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-29"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Soubor se serverovým certifikátem (výchozí: server.cert)</translation>
     </message>
@@ -2916,12 +3200,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Soubor se serverovým soukromým klíčem (výchozí: server.pem)</translation>
     </message>
     <message>
-        <location line="-156"/>
-        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
-        <translation>Akceptovatelné šifry (výchozí: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
-    </message>
-    <message>
-        <location line="+171"/>
+        <location line="+16"/>
         <source>This help message</source>
         <translation>Tato nápověda</translation>
     </message>
@@ -2931,17 +3210,17 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nedaří se mi připojit na %s na tomhle počítači (operace bind vrátila chybu %d, %s)</translation>
     </message>
     <message>
-        <location line="-93"/>
+        <location line="-95"/>
         <source>Connect through socks proxy</source>
         <translation>Připojit se přes socks proxy</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-11"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Povolit DNS dotazy pro -addnode (přidání uzlu), -seednode a -connect (připojení)</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+58"/>
         <source>Loading addresses...</source>
         <translation>Načítám adresy...</translation>
     </message>
@@ -2956,17 +3235,17 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Chyba při načítání wallet.dat: peněženka vyžaduje novější verzi Bitcoinu</translation>
     </message>
     <message>
-        <location line="+96"/>
+        <location line="+98"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Soubor s peněženkou potřeboval přepsat: restartuj Bitcoin, aby se operace dokončila</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-100"/>
         <source>Error loading wallet.dat</source>
         <translation>Chyba při načítání wallet.dat</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+30"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Neplatná -proxy adresa: &apos;%s&apos;</translation>
     </message>
@@ -2981,7 +3260,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>V -socks byla požadována neznámá verze proxy: %i</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-100"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Nemohu přeložit -bind adresu: &apos;%s&apos;</translation>
     </message>
@@ -2991,7 +3270,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nemohu přeložit -externalip adresu: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Neplatná částka pro -paytxfee=&lt;částka&gt;: &apos;%s&apos;</translation>
     </message>
@@ -3011,17 +3290,17 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Načítám index bloků...</translation>
     </message>
     <message>
-        <location line="-58"/>
+        <location line="-60"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Přidat uzel, ke kterému se připojit a snažit se spojení udržet</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-28"/>
         <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
         <translation>Nedaří se mi připojit na %s na tomhle počítači. Bitcoin už pravděpodobně jednou běží.</translation>
     </message>
     <message>
-        <location line="+64"/>
+        <location line="+69"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Poplatek za kB, který se přidá ke každé odeslané transakci</translation>
     </message>
@@ -3031,7 +3310,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Načítám peněženku...</translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-54"/>
         <source>Cannot downgrade wallet</source>
         <translation>Nemohu převést peněženku do staršího formátu</translation>
     </message>
@@ -3041,7 +3320,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nemohu napsat výchozí adresu</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+66"/>
         <source>Rescanning...</source>
         <translation>Přeskenovávám...</translation>
     </message>
@@ -3051,17 +3330,17 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Načítání dokončeno</translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+85"/>
         <source>To use the %s option</source>
         <translation>K použití volby %s</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-77"/>
         <source>Error</source>
         <translation>Chyba</translation>
     </message>
     <message>
-        <location line="-31"/>
+        <location line="-33"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
