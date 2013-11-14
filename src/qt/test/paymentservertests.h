@@ -20,8 +20,10 @@ private slots:
 class RecipientCatcher : public QObject
 {
     Q_OBJECT
+
 public slots:
     void getRecipient(SendCoinsRecipient r);
+
 public:
     SendCoinsRecipient recipient;
 };
