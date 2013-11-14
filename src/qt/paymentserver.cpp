@@ -232,7 +232,10 @@ bool PaymentServer::ipcSendCommandLine(int argc, char* argv[])
         QLocalSocket* socket = new QLocalSocket();
         socket->connectToServer(ipcServerName(), QIODevice::WriteOnly);
         if (!socket->waitForConnected(BITCOIN_IPC_CONNECT_TIMEOUT))
+        {
+            delete socket;
             return false;
+        }
 
         QByteArray block;
         QDataStream out(&block, QIODevice::WriteOnly);
@@ -277,8 +280,11 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
     {
         uriServer = new QLocalServer(this);
 
-        if (!uriServer->listen(name))
-            qDebug() << "PaymentServer::PaymentServer : Cannot start bitcoin: click-to-pay handler";
+        if (!uriServer->listen(name)) {
+            // constructor is called early in init, so don't use "emit message()" here
+            QMessageBox::critical(0, tr("Payment request error"),
+                tr("Cannot start bitcoin: click-to-pay handler"));
+        }
         else {
             connect(uriServer, SIGNAL(newConnection()), this, SLOT(handleURIConnection()));
             connect(this, SIGNAL(receivedPaymentACK(QString)), this, SLOT(handlePaymentACK(QString)));
@@ -295,12 +301,12 @@ PaymentServer::~PaymentServer()
 // OSX-specific way of handling bitcoin: URIs and
 // PaymentRequest mime types
 //
-bool PaymentServer::eventFilter(QObject *, QEvent *event)
+bool PaymentServer::eventFilter(QObject *object, QEvent *event)
 {
-    // clicking on bitcoin: URIs creates FileOpen events on the Mac:
+    // clicking on bitcoin: URIs creates FileOpen events on the Mac
     if (event->type() == QEvent::FileOpen)
     {
-        QFileOpenEvent* fileEvent = static_cast<QFileOpenEvent*>(event);
+        QFileOpenEvent *fileEvent = static_cast<QFileOpenEvent*>(event);
         if (!fileEvent->file().isEmpty())
             handleURIOrFile(fileEvent->file());
         else if (!fileEvent->url().isEmpty())
@@ -308,7 +314,8 @@ bool PaymentServer::eventFilter(QObject *, QEvent *event)
 
         return true;
     }
-    return false;
+
+    return QObject::eventFilter(object, event);
 }
 
 void PaymentServer::initNetManager()
@@ -359,7 +366,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
         return;
     }
 
-    if (s.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcoin:
+    if (s.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcoin: URI
     {
 #if QT_VERSION < 0x050000
         QUrl uri(s);
