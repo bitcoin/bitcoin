@@ -11,25 +11,65 @@ SUBDIRS = $(BUILD_TEST_QT)
 DIST_SUBDIRS = test
 
 # bitcoin qt core #
-QT_TS = locale/bitcoin_ach.ts locale/bitcoin_af_ZA.ts locale/bitcoin_ar.ts \
-  locale/bitcoin_be_BY.ts locale/bitcoin_bg.ts locale/bitcoin_bs.ts \
-  locale/bitcoin_ca_ES.ts locale/bitcoin_ca.ts locale/bitcoin_cs.ts \
-  locale/bitcoin_cy.ts locale/bitcoin_da.ts locale/bitcoin_de.ts \
-  locale/bitcoin_el_GR.ts locale/bitcoin_en.ts locale/bitcoin_eo.ts \
-  locale/bitcoin_es_CL.ts locale/bitcoin_es.ts locale/bitcoin_et.ts \
-  locale/bitcoin_eu_ES.ts locale/bitcoin_fa_IR.ts locale/bitcoin_fa.ts \
-  locale/bitcoin_fi.ts locale/bitcoin_fr_CA.ts locale/bitcoin_fr.ts \
-  locale/bitcoin_gu_IN.ts locale/bitcoin_he.ts locale/bitcoin_hi_IN.ts \
-  locale/bitcoin_hr.ts locale/bitcoin_hu.ts locale/bitcoin_id_ID.ts \
-  locale/bitcoin_it.ts locale/bitcoin_ja.ts locale/bitcoin_kk_KZ.ts \
-  locale/bitcoin_ko_KR.ts locale/bitcoin_la.ts locale/bitcoin_lt.ts \
-  locale/bitcoin_lv_LV.ts locale/bitcoin_ms_MY.ts locale/bitcoin_nb.ts \
-  locale/bitcoin_nl.ts locale/bitcoin_pl.ts locale/bitcoin_pt_BR.ts \
-  locale/bitcoin_pt_PT.ts locale/bitcoin_ro_RO.ts locale/bitcoin_ru.ts \
-  locale/bitcoin_sk.ts locale/bitcoin_sq.ts locale/bitcoin_sr.ts \
-  locale/bitcoin_sv.ts locale/bitcoin_th_TH.ts locale/bitcoin_tr.ts \
-  locale/bitcoin_uk.ts locale/bitcoin_vi.ts locale/bitcoin_vi_VN.ts \
-  locale/bitcoin_zh_CN.ts locale/bitcoin_zh_TW.ts
+QT_TS = locale/bitcoin_ach.ts \
+  locale/bitcoin_af_ZA.ts \
+  locale/bitcoin_ar.ts \
+  locale/bitcoin_be_BY.ts \
+  locale/bitcoin_bg.ts \
+  locale/bitcoin_bs.ts \
+  locale/bitcoin_ca_ES.ts \
+  locale/bitcoin_ca.ts \
+  locale/bitcoin_cs.ts \
+  locale/bitcoin_cy.ts \
+  locale/bitcoin_da.ts \
+  locale/bitcoin_de.ts \
+  locale/bitcoin_de_AT.ts \
+  locale/bitcoin_el_GR.ts \
+  locale/bitcoin_en.ts \
+  locale/bitcoin_eo.ts \
+  locale/bitcoin_es_CL.ts \
+  locale/bitcoin_es.ts \
+  locale/bitcoin_et.ts \
+  locale/bitcoin_eu_ES.ts \
+  locale/bitcoin_fa_IR.ts \
+  locale/bitcoin_fa.ts \
+  locale/bitcoin_fi.ts \
+  locale/bitcoin_fr_CA.ts \
+  locale/bitcoin_fr.ts \
+  locale/bitcoin_gl.ts \
+  locale/bitcoin_gu_IN.ts \
+  locale/bitcoin_he.ts \
+  locale/bitcoin_hi_IN.ts \
+  locale/bitcoin_hr.ts \
+  locale/bitcoin_hu.ts \
+  locale/bitcoin_id_ID.ts \
+  locale/bitcoin_it.ts \
+  locale/bitcoin_ja.ts \
+  locale/bitcoin_kk_KZ.ts \
+  locale/bitcoin_ko_KR.ts \
+  locale/bitcoin_la.ts \
+  locale/bitcoin_lt.ts \
+  locale/bitcoin_lv_LV.ts \
+  locale/bitcoin_ms_MY.ts \
+  locale/bitcoin_nb.ts \
+  locale/bitcoin_nl.ts \
+  locale/bitcoin_pl.ts \
+  locale/bitcoin_pt_BR.ts \
+  locale/bitcoin_pt_PT.ts \
+  locale/bitcoin_ro_RO.ts \
+  locale/bitcoin_ru.ts \
+  locale/bitcoin_sk.ts \
+  locale/bitcoin_sl_SI.ts \
+  locale/bitcoin_sq.ts \
+  locale/bitcoin_sr.ts \
+  locale/bitcoin_sv.ts \
+  locale/bitcoin_th_TH.ts \
+  locale/bitcoin_tr.ts \
+  locale/bitcoin_uk.ts \
+  locale/bitcoin_vi.ts \
+  locale/bitcoin_vi_VN.ts \
+  locale/bitcoin_zh_CN.ts \
+  locale/bitcoin_zh_TW.ts
 
 QT_FORMS_UI = forms/aboutdialog.ui forms/addressbookpage.ui \
   forms/askpassphrasedialog.ui forms/editaddressdialog.ui forms/intro.ui \
