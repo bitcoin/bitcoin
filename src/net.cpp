@@ -15,9 +15,6 @@
 #include "db.h"
 #include "ui_interface.h"
 
-#include <inttypes.h>
-#include <stdint.h>
-
 #ifdef WIN32
 #include <string.h>
 #else
