@@ -1542,7 +1542,7 @@ Dirección: %4</translation>
     <message>
         <location line="+28"/>
         <source>Choose address from address book</source>
-        <translation>Elije dirección de la guia</translation>
+        <translation>Elige dirección de la guia</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1596,7 +1596,7 @@ Dirección: %4</translation>
         <location line="+10"/>
         <location line="+213"/>
         <source>Choose an address from the address book</source>
-        <translation>Elije dirección de la guia</translation>
+        <translation>Elige dirección de la guia</translation>
     </message>
     <message>
         <location line="-203"/>
