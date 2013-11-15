@@ -82,8 +82,8 @@ bool CWalletDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, c
     return Write(std::make_pair(std::string("key"), vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey.begin(), vchKey.end())), false);
 }
 
-bool CWalletDB::WriteCryptedKey(const CPubKey& vchPubKey, 
-                                const std::vector<unsigned char>& vchCryptedSecret, 
+bool CWalletDB::WriteCryptedKey(const CPubKey& vchPubKey,
+                                const std::vector<unsigned char>& vchCryptedSecret,
                                 const CKeyMetadata &keyMeta)
 {
     const bool fEraseUnencryptedKey = true;
@@ -429,7 +429,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             CKey key;
             CPrivKey pkey;
             uint256 hash = 0;
-            
+
             if (strType == "key")
             {
                 wss.nKeys++;
@@ -439,7 +439,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 ssValue >> wkey;
                 pkey = wkey.vchPrivKey;
             }
-            
+
             // Old wallets store keys as "key" [pubkey] => [privkey]
             // ... which was slow for wallets with lots of keys, because the public key is re-derived from the private key
             // using EC operations as a checksum.
@@ -450,9 +450,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 ssValue >> hash;
             }
             catch(...){}
-            
+
             bool fSkipCheck = false;
-            
+
             if (hash != 0)
             {
                 // hash pubkey/privkey to accelerate wallet load
@@ -460,16 +460,16 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 vchKey.reserve(vchPubKey.size() + pkey.size());
                 vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
                 vchKey.insert(vchKey.end(), pkey.begin(), pkey.end());
-                
+
                 if (Hash(vchKey.begin(), vchKey.end()) != hash)
                 {
                     strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
                     return false;
                 }
-                
+
                 fSkipCheck = true;
             }
-            
+
             if (!key.Load(pkey, vchPubKey, fSkipCheck))
             {
                 strErr = "Error reading wallet database: CPrivKey corrupt";

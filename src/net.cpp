@@ -626,7 +626,7 @@ void CNode::copyStats(CNodeStats &stats)
     X(nSendBytes);
     X(nRecvBytes);
     stats.fSyncNode = (this == pnodeSync);
-    
+
     // It is common for nodes with good ping times to suddenly become lagged,
     // due to a new block arriving or other large transfer.
     // Merely reporting pingtime might fool the caller into thinking the node was still responsive,
@@ -637,11 +637,11 @@ void CNode::copyStats(CNodeStats &stats)
     if ((0 != nPingNonceSent) && (0 != nPingUsecStart)) {
         nPingUsecWait = GetTimeMicros() - nPingUsecStart;
     }
-    
+
     // Raw ping time is in microseconds, but show it to user as whole seconds (Bitcoin users should be well used to small numbers with many decimal places by now :)
     stats.dPingTime = (((double)nPingUsecTime) / 1e6);
     stats.dPingWait = (((double)nPingUsecWait) / 1e6);
-    
+
     // Leave string empty if addrLocal invalid (not filled in yet)
     stats.addrLocal = addrLocal.IsValid() ? addrLocal.ToString() : "";
 }
@@ -1542,9 +1542,9 @@ void ThreadMessageHandler()
         CNode* pnodeTrickle = NULL;
         if (!vNodesCopy.empty())
             pnodeTrickle = vNodesCopy[GetRand(vNodesCopy.size())];
-        
+
         bool fSleep = true;
-        
+
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
             if (pnode->fDisconnect)
@@ -1557,7 +1557,7 @@ void ThreadMessageHandler()
                 {
                     if (!g_signals.ProcessMessages(pnode))
                         pnode->CloseSocketDisconnect();
-                    
+
                     if (pnode->nSendSize < SendBufferSize())
                     {
                         if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete()))
@@ -1583,7 +1583,7 @@ void ThreadMessageHandler()
             BOOST_FOREACH(CNode* pnode, vNodesCopy)
                 pnode->Release();
         }
-        
+
         if (fSleep)
             MilliSleep(100);
     }
