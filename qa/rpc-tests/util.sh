@@ -30,12 +30,36 @@ function CreateDataDir {
   done
 }
 
+function AssertNotEmpty {
+  if [ -z  "$1" ]
+  then
+    echoerr "Unexpected empty result."
+    exit 1
+  fi
+}
+
 function AssertEqual {
   if (( $( echo "$1 == $2" | bc ) == 0 ))
   then
     echoerr "AssertEqual: $1 != $2"
     exit 1
   fi
+}
+
+function AssertGreater {
+  if (( $( echo "$1 > $2" | bc ) == 0 ))
+  then
+    echoerr "AssertGreater: $1 <= $2"
+    exit 1
+  fi
+}
+
+# WaitBlock -datadir=... block#
+function WaitForBlock {
+  while [ $( $CLI $1 getblockcount) -lt $2 ]
+  do
+    sleep 1
+  done
 }
 
 # CheckBalance -datadir=... amount account minconf
@@ -60,6 +84,7 @@ function Send {
   amount=$3
   address=$(Address $to)
   txid=$( $CLI $from sendtoaddress $address $amount )
+  AssertNotEmpty "$txid"
 }
 
 # Use: Unspent <datadir> <n'th-last-unspent> <var>
@@ -75,10 +100,13 @@ function CreateTxn1 {
   AMOUNT=$(Unspent $1 $2 amount)
   VOUT=$(Unspent $1 $2 vout)
   RAWTXN=$( $CLI $1 createrawtransaction "[{\"txid\":\"$TXID\",\"vout\":$VOUT}]" "{\"$3\":$AMOUNT}")
+  AssertNotEmpty "$RAWTXN"
   ExtractKey hex "$( $CLI $1 signrawtransaction $RAWTXN )"
 }
 
 # Use: SendRawTxn <datadir> <hex_txn_data>
 function SendRawTxn {
-  $CLI $1 sendrawtransaction $2
+  TXID=$($CLI $1 sendrawtransaction $2)
+  AssertNotEmpty "$TXID"
+  echo $TXID
 }

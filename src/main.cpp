@@ -587,36 +587,86 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     return true;
 }
 
-int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, enum GetMinFee_mode mode)
+bool AllowFree(const CTransaction& tx, double dPriority, unsigned int nBytes, enum GetMinFee_mode mode)
 {
-    // Base fee is either nMinTxFee or nMinRelayTxFee
-    int64_t nBaseFee = (mode == GMF_RELAY) ? tx.nMinRelayTxFee : tx.nMinTxFee;
+    // There is a free transaction area in blocks created by most miners,
+    // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
+    //   to be considered to fall into this category. We don't want to encourage sending
+    //   multiple transactions instead of one big transaction to avoid fees.
+    // * If we are creating a transaction we allow transactions up to 1,000 bytes
+    //   to be considered safe and assume they can likely make it into this section.
+    if (nBytes >= (mode == GMF_SEND ? 1000 : (DEFAULT_BLOCK_PRIORITY_SIZE - 1000)))
+        return false;
 
-    int64_t nMinFee = (1 + (int64_t)nBytes / 1000) * nBaseFee;
+    if (mode == GMF_RELAY)
+        return true; // Relay almost everything (free txn rate-limiter keeps spam under control)
 
-    if (fAllowFree)
-    {
-        // There is a free transaction area in blocks created by most miners,
-        // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
-        //   to be considered to fall into this category. We don't want to encourage sending
-        //   multiple transactions instead of one big transaction to avoid fees.
-        // * If we are creating a transaction we allow transactions up to 1,000 bytes
-        //   to be considered safe and assume they can likely make it into this section.
-        if (nBytes < (mode == GMF_SEND ? 1000 : (DEFAULT_BLOCK_PRIORITY_SIZE - 1000)))
-            nMinFee = 0;
-    }
-
-    // This code can be removed after enough miners have upgraded to version 0.9.
+    // This check can be removed after enough miners have upgraded to version 0.9.
     // Until then, be safe when sending and require a fee if any output
     // is less than CENT:
-    if (nMinFee < nBaseFee && mode == GMF_SEND)
+    BOOST_FOREACH(const CTxOut& txout, tx.vout)
+        if (txout.nValue < CENT) return false;
+
+    return dPriority >= mempool.estimateFreePriority(0.5, true);
+}
+
+// Minimum fee as of version 0.8.5.
+// Remove this when network has upgraded.
+static int64_t GetMinFee08(unsigned int nBytes, enum GetMinFee_mode mode)
+{
+    int64_t nBaseFee = (mode == GMF_RELAY) ? CTransaction::nMinRelayTxFee : CTransaction::nMinTxFee;
+
+    // nBytes is rounded up to the next nearest 1,000 bytes, and nBaseFee per
+    // 1,000 bytes is required.
+    int64_t nMinFee = (1 + (int64_t)nBytes / 1000) * nBaseFee;
+
+    return nMinFee;
+}
+
+int64_t GetMinFee(unsigned int nBytes, enum GetMinFee_mode mode)
+{
+    // The fee rules have evolved over time, and are more complicated
+    // than we'd like. Changing them requires first changing miners,
+    // and then changing wallet software.
+    //
+    // Summary of fee-related settings:
+    // -paytxfee / ::nTransactionFee : User setting, means
+    //   "pay at least this much per transaction."  Default 0.
+    //   If -paytxfee is not set, then current fees are
+    //   estimated.
+    //
+    // -mintxfee / CTransaction::nMinTxFee : Miner setting,
+    //   means "transactions that pay less than this
+    //   per kilobyte considered free when creating blocks."
+    //
+    // -minrelaytxfee / CTransaction::nMinRelayTxFee : Relay
+    //   setting, means "transactions that pay less than
+    //   this per kb considered free when relaying."
+    //
+
+    int64_t nFee08 = GetMinFee08(nBytes, mode); // Remove when network has upgraded
+
+
+    int64_t nFee = 0;
+
+    if (mode == GMF_SEND)
     {
-        BOOST_FOREACH(const CTxOut& txout, tx.vout)
-            if (txout.nValue < CENT)
-                nMinFee = nBaseFee;
+        // If user set nTransactionFee, pay at least that
+        // (pay nTransactionFee per kb, if transaction is > 1,000 bytes):
+        if (nTransactionFee > 0)
+            nFee = max(nTransactionFee, nTransactionFee*nBytes/1000);
+        // Otherwise pay median estimated fee-per-byte:
+        else
+            nFee = nBytes*mempool.estimateFee(0.5, true);
+    }
+    else // Relay:
+    {
+        nFee = nBytes*CTransaction::nMinRelayTxFee/1000;
     }
 
-    if (!MoneyRange(nMinFee))
+    int64_t nMinFee = max(nFee08, nFee);
+
+    if (!MoneyRange(nMinFee)) // belt-and-suspenders sanity check
         nMinFee = MAX_MONEY;
     return nMinFee;
 }
@@ -715,7 +765,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         unsigned int nSize = entry.GetTxSize();
 
         // Don't accept it if it can't get into a block
-        int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
+        int64_t txMinFee = 0;
+        if (!AllowFree(tx, dPriority, nSize, GMF_RELAY))
+            txMinFee = GetMinFee(nSize, GMF_RELAY);
         if (fLimitFree && nFees < txMinFee)
             return state.DoS(0, error("AcceptToMemoryPool : not enough fees %s, %"PRId64" < %"PRId64,
                                       hash.ToString().c_str(), nFees, txMinFee),

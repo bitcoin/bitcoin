@@ -51,9 +51,9 @@ private:
 
     // Results of estimate() are cached between new blocks, because
     // the estimate doesn't change until a new block pulls transactions
-    // from the memory pool and because the transaction relaying code
-    // calls estimate on every transaction to decide whether or not it
-    // should be relayed.
+    // from the memory pool and because estimation is O(N) where N
+    // is the number of data points; that becomes O(N^2) if an estimate
+    // is done for every transaction
     map<double, double> byPriorityCache;
     map<double, double> byFeeCache;
 
@@ -124,16 +124,22 @@ public:
             byFee.insert(TimeValue(GetTimeMillis(), dFeePerByte));
             resize(byFee, nMax);
             byFeeCache.clear();
+            LogPrint("estimatefee", "est.fee+ %g\n", dFeePerByte);
         }
         else if (dFeePerByte == 0 && dPriority > 0)
         {
             byPriority.insert(TimeValue(GetTimeMillis(), dPriority));
             resize(byPriority, nMax);
             byPriorityCache.clear();
+            LogPrint("estimatefee", "est.pri+ %g\n", dPriority);
         }
-        // Ignore transactions with both fee and priority > 0,
-        // because we can't tell why miners included them (might
-        // have been priority, might have been fee)
+        else
+        {
+            LogPrint("estimatefee", "est.ignore: %g %g\n", dFeePerByte, dPriority);
+            // Ignore transactions with both fee and priority > 0,
+            // because we can't tell why miners included them (might
+            // have been priority, might have been fee)
+        }
     }
 
     double estimatePriority(double fraction)
@@ -348,37 +354,21 @@ bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
     return true;
 }
 
-void CTxMemPool::estimateFees(double dPriorityMedian, double& dPriority,
-                              double dFeeMedian, double& dFee, bool fUseHardCoded)
+double CTxMemPool::estimateFreePriority(double dPriorityMedian, bool fUseHardCoded)
 {
     LOCK(cs);
-    dPriority = minerPolicyEstimator->estimatePriority(dPriorityMedian);
+    double dPriority = minerPolicyEstimator->estimatePriority(dPriorityMedian);
     // Hard-coded priority is 1-BTC, 144-confirmation old, 250-byte txn:
     if (dPriority < 0 && fUseHardCoded) dPriority = COIN*144 / 250;
-    dFee = minerPolicyEstimator->estimateFee(dFeeMedian);
-    // Hard-coded fee is 10,000 satoshis per kilobyte (10 satoshis per byte):
-    if (dFee < 0 && fUseHardCoded) dFee = 10.0;
+    return dPriority;
 }
 
-bool CTxMemPool::isDust(const CTxOut& txout)
+double CTxMemPool::estimateFee(double dFeeMedian, bool fUseHardCoded)
 {
-    // "Dust" is defined as outputs so small
-    // (in value) that they would require that
-    // more than 1/3 of their value in fees to
-    // have a reasonable chance of being accepted into
-    // a block right now.
-    // Fees are per-byte, so:
-    int nSize = (int)::GetSerializeSize(txout, SER_DISK,0);
-    // ... and assume it will need a 148-byte CTxIn to spend:
-    nSize += 148;
-
-    // Use 0.01 (lowest 1%) as threshold to estimate fee-per-byte:
-    double dMinFee, dUnused;
-    estimateFees(0.01, dUnused, 0.01, dMinFee, true);
-
-    // Need to pay more than 1/3 of value?
-    bool fIsDust = dMinFee*nSize > txout.nValue/3;
-    return fIsDust;
+    LOCK(cs);
+    double dFee = minerPolicyEstimator->estimateFee(dFeeMedian);
+    if (dFee < 0 && fUseHardCoded) dFee = CTransaction::nMinTxFee / 1000.0;
+    return dFee;
 }
 
 void CTxMemPool::writeEntry(CAutoFile& file, const uint256& txid, std::set<uint256>& alreadyWritten) const

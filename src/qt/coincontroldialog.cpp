@@ -395,20 +395,23 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
 // return human readable label for priority number
 QString CoinControlDialog::getPriorityLabel(double dPriority)
 {
-    if (AllowFree(dPriority)) // at least medium
+    double dPriorityLow = mempool.estimateFreePriority(0.1, true);
+    double dPriorityMedian = mempool.estimateFreePriority(0.5, true);
+    if (dPriorityMedian <= dPriorityLow) dPriorityMedian=dPriorityLow*100;
+    double dPriorityHigh = mempool.estimateFreePriority(0.9, true);
+    if (dPriorityHigh <= dPriorityMedian) dPriorityHigh=dPriorityMedian*100;
+
+    if (dPriority > dPriorityLow) // at least medium
     {
-        if      (AllowFree(dPriority / 1000000))  return tr("highest");
-        else if (AllowFree(dPriority / 100000))   return tr("higher");
-        else if (AllowFree(dPriority / 10000))    return tr("high");
-        else if (AllowFree(dPriority / 1000))     return tr("medium-high");
+        if      (dPriority > dPriorityHigh)  return tr("highest");
+        else if (dPriority > dPriorityMedian)   return tr("high");
         else                                      return tr("medium");
     }
     else
     {
-        if      (AllowFree(dPriority * 10))   return tr("low-medium");
-        else if (AllowFree(dPriority * 100))  return tr("low");
-        else if (AllowFree(dPriority * 1000)) return tr("lower");
-        else                                  return tr("lowest");
+        if      (dPriority * 10 > dPriorityLow)  return tr("low");
+        else if (dPriority * 100 > dPriorityLow) return tr("lower");
+        else                                     return tr("lowest");
     }
 }
 
@@ -506,6 +509,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     }
 
     // calculation
+    // Much of this code is duplicated from CWallet::CreateTransaction;
+    // it should be refactored one day
     if (nQuantity > 0)
     {
         // Bytes
@@ -515,19 +520,21 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         dPriority = dPriorityInputs / (nBytes - nBytesInputs + (nQuantityUncompressed * 29)); // 29 = 180 - 151 (uncompressed public keys are over the limit. max 151 bytes of the input are ignored for priority)
         sPriorityLabel = CoinControlDialog::getPriorityLabel(dPriority);
 
-        // Fee
-        int64_t nFee = nTransactionFee * (1 + (int64_t)nBytes / 1000);
-
-        // Min Fee
-        int64_t nMinFee = GetMinFee(txDummy, nBytes, AllowFree(dPriority), GMF_SEND);
-
-        nPayFee = max(nFee, nMinFee);
+        if (!AllowFree(txDummy, dPriority, nBytes, GMF_SEND))
+        {
+            // If we have to pay a fee:
+            // Pay either nTransactionFee, the user-set "I want to pay at least this much"
+            // OR the minimum estimated fee, whichever is larger.
+            // This must match the logic in CWallet::CreateTransaction
+            nPayFee = max(nTransactionFee, GetMinFee(nBytes, GMF_SEND));
+        }
 
         if (nPayAmount > 0)
         {
             nChange = nAmount - nPayFee - nPayAmount;
 
             // if sub-cent change is required, the fee must be raised to at least CTransaction::nMinTxFee
+            // CENT rule is going away, this code can eventually be removed:
             if (nPayFee < CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
             {
                 if (nChange < CTransaction::nMinTxFee) // change < 0.0001 => simply move all change to fees
@@ -595,7 +602,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
     // turn labels "red"
     l5->setStyleSheet((nBytes >= 1000) ? "color:red;" : "");                // Bytes >= 1000
-    l6->setStyleSheet((!AllowFree(dPriority)) ? "color:red;" : "");         // Priority < "medium"
+    l6->setStyleSheet((!AllowFree(txDummy, dPriority, nBytes, GMF_SEND)) ? "color:red;" : ""); // Priority < "medium"
     l7->setStyleSheet((fLowOutput) ? "color:red;" : "");                    // Low Output = "yes"
     l8->setStyleSheet((nChange > 0 && nChange < CENT) ? "color:red;" : ""); // Change < 0.01BTC
 

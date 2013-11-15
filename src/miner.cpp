@@ -247,9 +247,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
             dPriority = tx.ComputePriority(dPriority, nTxSize);
 
-            // This is a more accurate fee-per-kilobyte than is used by the client code, because the
-            // client code rounds up the size to the nearest 1K. That's good, because it gives an
-            // incentive to create smaller transactions.
             double dFeePerKb =  double(nTotalIn-tx.GetValueOut()) / (double(nTxSize)/1000.0);
 
             if (porphan)
@@ -297,7 +294,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             // Prioritize by fee once past the priority size or we run out of high-priority
             // transactions:
             if (!fSortedByFee &&
-                ((nBlockSize + nTxSize >= nBlockPrioritySize) || !AllowFree(dPriority)))
+                ((nBlockSize + nTxSize >= nBlockPrioritySize) || !AllowFree(tx, dPriority, nTxSize, GMF_SEND)))
             {
                 fSortedByFee = true;
                 comparer = TxPriorityCompare(fSortedByFee);

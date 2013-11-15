@@ -12,7 +12,7 @@
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
-class CMinerPolicyEstimator; // Internal class used for estimatefees functionality
+class CMinerPolicyEstimator; // Internal class used for estimatefee functionality
 
 /*
  * CTxMemPool stores these:
@@ -83,8 +83,8 @@ public:
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
-    void estimateFees(double dPriorityMedian, double& dPriority, double dFeeMedian, double& dFee, bool fUseHardCoded=false);
-    bool isDust(const CTxOut& txout);
+    double estimateFreePriority(double dPriorityMedian, bool fUseHardCoded=false);
+    double estimateFee(double dFeeMedian, bool fUseHardCoded=false); // Returns satoshi-per-byte estimate
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
 
