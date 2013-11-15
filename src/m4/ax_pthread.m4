@@ -82,7 +82,7 @@
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 20
+#serial 21
 
 AU_ALIAS([ACX_PTHREAD], [AX_PTHREAD])
 AC_DEFUN([AX_PTHREAD], [
@@ -103,8 +103,8 @@ if test x"$PTHREAD_LIBS$PTHREAD_CFLAGS" != x; then
         save_LIBS="$LIBS"
         LIBS="$PTHREAD_LIBS $LIBS"
         AC_MSG_CHECKING([for pthread_join in LIBS=$PTHREAD_LIBS with CFLAGS=$PTHREAD_CFLAGS])
-        AC_TRY_LINK_FUNC(pthread_join, ax_pthread_ok=yes)
-        AC_MSG_RESULT($ax_pthread_ok)
+        AC_TRY_LINK_FUNC([pthread_join], [ax_pthread_ok=yes])
+        AC_MSG_RESULT([$ax_pthread_ok])
         if test x"$ax_pthread_ok" = xno; then
                 PTHREAD_LIBS=""
                 PTHREAD_CFLAGS=""
@@ -164,6 +164,20 @@ case ${host_os} in
         ;;
 esac
 
+# Clang doesn't consider unrecognized options an error unless we specify
+# -Werror. We throw in some extra Clang-specific options to ensure that
+# this doesn't happen for GCC, which also accepts -Werror.
+
+AC_MSG_CHECKING([if compiler needs -Werror to reject unknown flags])
+save_CFLAGS="$CFLAGS"
+ax_pthread_extra_flags="-Werror"
+CFLAGS="$CFLAGS $ax_pthread_extra_flags -Wunknown-warning-option -Wsizeof-array-argument"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([int foo(void);],[foo()])],
+                  [AC_MSG_RESULT([yes])],
+                  [ax_pthread_extra_flags=
+                   AC_MSG_RESULT([no])])
+CFLAGS="$save_CFLAGS"
+
 if test x"$ax_pthread_ok" = xno; then
 for flag in $ax_pthread_flags; do
 
@@ -178,7 +192,7 @@ for flag in $ax_pthread_flags; do
                 ;;
 
                 pthread-config)
-                AC_CHECK_PROG(ax_pthread_config, pthread-config, yes, no)
+                AC_CHECK_PROG([ax_pthread_config], [pthread-config], [yes], [no])
                 if test x"$ax_pthread_config" = xno; then continue; fi
                 PTHREAD_CFLAGS="`pthread-config --cflags`"
                 PTHREAD_LIBS="`pthread-config --ldflags` `pthread-config --libs`"
@@ -193,7 +207,7 @@ for flag in $ax_pthread_flags; do
         save_LIBS="$LIBS"
         save_CFLAGS="$CFLAGS"
         LIBS="$PTHREAD_LIBS $LIBS"
-        CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+        CFLAGS="$CFLAGS $PTHREAD_CFLAGS $ax_pthread_extra_flags"
 
         # Check for various functions.  We must include pthread.h,
         # since some functions may be macros.  (On the Sequent, we
@@ -219,7 +233,7 @@ for flag in $ax_pthread_flags; do
         LIBS="$save_LIBS"
         CFLAGS="$save_CFLAGS"
 
-        AC_MSG_RESULT($ax_pthread_ok)
+        AC_MSG_RESULT([$ax_pthread_ok])
         if test "x$ax_pthread_ok" = xyes; then
                 break;
         fi
@@ -245,9 +259,9 @@ if test "x$ax_pthread_ok" = xyes; then
                 [attr_name=$attr; break],
                 [])
         done
-        AC_MSG_RESULT($attr_name)
+        AC_MSG_RESULT([$attr_name])
         if test "$attr_name" != PTHREAD_CREATE_JOINABLE; then
-            AC_DEFINE_UNQUOTED(PTHREAD_CREATE_JOINABLE, $attr_name,
+            AC_DEFINE_UNQUOTED([PTHREAD_CREATE_JOINABLE], [$attr_name],
                                [Define to necessary symbol if this constant
                                 uses a non-standard name on your system.])
         fi
@@ -261,24 +275,25 @@ if test "x$ax_pthread_ok" = xyes; then
             if test "$GCC" = "yes"; then
                 flag="-D_REENTRANT"
             else
+                # TODO: What about Clang on Solaris?
                 flag="-mt -D_REENTRANT"
             fi
             ;;
         esac
-        AC_MSG_RESULT(${flag})
+        AC_MSG_RESULT([$flag])
         if test "x$flag" != xno; then
             PTHREAD_CFLAGS="$flag $PTHREAD_CFLAGS"
         fi
 
         AC_CACHE_CHECK([for PTHREAD_PRIO_INHERIT],
-            ax_cv_PTHREAD_PRIO_INHERIT, [
-                AC_LINK_IFELSE([
-                    AC_LANG_PROGRAM([[#include <pthread.h>]], [[int i = PTHREAD_PRIO_INHERIT;]])],
+            [ax_cv_PTHREAD_PRIO_INHERIT], [
+                AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]],
+                                                [[int i = PTHREAD_PRIO_INHERIT;]])],
                     [ax_cv_PTHREAD_PRIO_INHERIT=yes],
                     [ax_cv_PTHREAD_PRIO_INHERIT=no])
             ])
         AS_IF([test "x$ax_cv_PTHREAD_PRIO_INHERIT" = "xyes"],
-            AC_DEFINE([HAVE_PTHREAD_PRIO_INHERIT], 1, [Have PTHREAD_PRIO_INHERIT.]))
+            [AC_DEFINE([HAVE_PTHREAD_PRIO_INHERIT], [1], [Have PTHREAD_PRIO_INHERIT.])])
 
         LIBS="$save_LIBS"
         CFLAGS="$save_CFLAGS"
@@ -301,13 +316,13 @@ fi
 
 test -n "$PTHREAD_CC" || PTHREAD_CC="$CC"
 
-AC_SUBST(PTHREAD_LIBS)
-AC_SUBST(PTHREAD_CFLAGS)
-AC_SUBST(PTHREAD_CC)
+AC_SUBST([PTHREAD_LIBS])
+AC_SUBST([PTHREAD_CFLAGS])
+AC_SUBST([PTHREAD_CC])
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test x"$ax_pthread_ok" = xyes; then
-        ifelse([$1],,AC_DEFINE(HAVE_PTHREAD,1,[Define if you have POSIX threads libraries and header files.]),[$1])
+        ifelse([$1],,[AC_DEFINE([HAVE_PTHREAD],[1],[Define if you have POSIX threads libraries and header files.])],[$1])
         :
 else
         ax_pthread_ok=no
