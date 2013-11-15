@@ -4,12 +4,12 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Bitcoin</source>
-        <translation>關於位元幣</translation>
+        <translation>關於 Bitcoin</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;位元幣&lt;/b&gt;版本</translation>
+        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; 版本</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -40,57 +40,42 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>AddressBookPage</name>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="+14"/>
-        <source>Address Book</source>
-        <translation>位址簿</translation>
-    </message>
-    <message>
-        <location line="+19"/>
+        <location filename="../forms/addressbookpage.ui" line="+30"/>
         <source>Double-click to edit address or label</source>
-        <translation>點兩下來修改位址或標記</translation>
+        <translation>點兩下以編輯位置或位址</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Create a new address</source>
-        <translation>產生新位址</translation>
+        <translation>建立新位址</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+3"/>
+        <source>&amp;New</source>
+        <translation>新增(&amp;N)</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>複製目前選取的位址到系統剪貼簿</translation>
+        <translation>複製所選位址至系統剪貼簿</translation>
     </message>
     <message>
-        <location line="-11"/>
-        <source>&amp;New Address</source>
-        <translation>新增位址</translation>
+        <location line="+3"/>
+        <source>&amp;Copy</source>
+        <translation>複製(&amp;C)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+63"/>
-        <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>這些是你用來收款的位元幣位址. 你可以提供不同的位址給不同的付款人, 來追蹤是誰支付給你.</translation>
+        <location line="+52"/>
+        <source>C&amp;lose</source>
+        <translation>關閉(&amp;L)</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="+14"/>
+        <location filename="../addressbookpage.cpp" line="+72"/>
         <source>&amp;Copy Address</source>
         <translation>複製位址</translation>
     </message>
     <message>
-        <location line="+11"/>
-        <source>Show &amp;QR Code</source>
-        <translation>顯示 &amp;QR 條碼</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <source>Sign a message to prove you own a Bitcoin address</source>
-        <translation>簽署訊息是用來證明位元幣位址是你的</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Sign &amp;Message</source>
-        <translation>訊息簽署</translation>
-    </message>
-    <message>
-        <location line="+25"/>
+        <location filename="../forms/addressbookpage.ui" line="-41"/>
         <source>Delete the currently selected address from the list</source>
         <translation>從列表中刪除目前選取的位址</translation>
     </message>
@@ -105,27 +90,47 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>匯出</translation>
     </message>
     <message>
-        <location line="-44"/>
-        <source>Verify a message to ensure it was signed with a specified Bitcoin address</source>
-        <translation>驗證訊息是用來確認訊息是用指定的位元幣位址簽署的</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>&amp;Verify Message</source>
-        <translation>訊息驗證</translation>
-    </message>
-    <message>
-        <location line="+14"/>
+        <location line="-27"/>
         <source>&amp;Delete</source>
-        <translation>刪除</translation>
+        <translation>刪除(&amp;D)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="-5"/>
+        <location filename="../addressbookpage.cpp" line="-30"/>
+        <source>Choose the address to send coins to</source>
+        <translation>選取位址以傳送金錢至</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Choose the address to receive coins with</source>
+        <translation>選取位址以接受金錢自</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>C&amp;hoose</source>
+        <translation>選取(&amp;H)</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Sending addresses</source>
+        <translation>正在傳送位址</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Receiving addresses</source>
+        <translation>正在接收位址</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>這是你用來付款的位元幣位址. 在付錢之前, 務必要檢查金額和收款位址是否正確.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+4"/>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>此處為您用於收款的 Bitcoin 位址。建議於每個新的交易中都使用一個新的收款位址。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Copy &amp;Label</source>
         <translation>複製標記</translation>
     </message>
@@ -135,24 +140,19 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>編輯</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Send &amp;Coins</source>
-        <translation>付錢</translation>
-    </message>
-    <message>
-        <location line="+265"/>
-        <source>Export Address Book Data</source>
-        <translation>匯出位址簿資料</translation>
+        <location line="+197"/>
+        <source>Export Address List</source>
+        <translation>匯出位址清單</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>逗號區隔資料檔 (*.csv)</translation>
+        <translation>逗點分隔檔 (*.csv)</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Error exporting</source>
-        <translation>匯出失敗</translation>
+        <translation>匯出錯誤</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -163,7 +163,7 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="+144"/>
+        <location filename="../addresstablemodel.cpp" line="+164"/>
         <source>Label</source>
         <translation>標記</translation>
     </message>
@@ -175,7 +175,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+36"/>
         <source>(no label)</source>
-        <translation>(沒有標記)</translation>
+        <translation>(無標記)</translation>
     </message>
 </context>
 <context>
@@ -188,12 +188,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+21"/>
         <source>Enter passphrase</source>
-        <translation>輸入密碼</translation>
+        <translation>請輸入密碼</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>New passphrase</source>
-        <translation>新的密碼</translation>
+        <translation>新密碼</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -201,49 +201,49 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>重複新密碼</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="+33"/>
+        <location filename="../askpassphrasedialog.cpp" line="+34"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>輸入錢包的新密碼.&lt;br/&gt;請用&lt;b&gt;10個以上的字元&lt;/b&gt;, 或是&lt;b&gt;8個以上的單字&lt;/b&gt;.</translation>
+        <translation>請輸入新密碼至錢包。&lt;br/&gt;請使用&lt;b&gt;10 個以上的任意字元&lt;/b&gt;或&lt;b&gt;8 個以上單字&lt;/b&gt;作為密碼。</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Encrypt wallet</source>
-        <translation>錢包加密</translation>
+        <translation>加密錢包</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>這個動作需要用你的錢包密碼來解鎖</translation>
+        <translation>此動作需要您的錢包密碼以解鎖錢包。</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Unlock wallet</source>
-        <translation>錢包解鎖</translation>
+        <translation>解鎖錢包</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>這個動作需要用你的錢包密碼來解密</translation>
+        <translation>此動作需要您的錢包密碼以解鎖錢包。</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Decrypt wallet</source>
-        <translation>錢包解密</translation>
+        <translation>解鎖錢包</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Change passphrase</source>
-        <translation>變更密碼</translation>
+        <translation>更改密碼</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>輸入錢包的新舊密碼.</translation>
+        <translation>請輸入舊密碼以及新的密碼至錢包。</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation>錢包加密確認</translation>
+        <translation>確認錢包加密</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -270,12 +270,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="-130"/>
         <location line="+58"/>
         <source>Wallet encrypted</source>
-        <translation>錢包已加密</translation>
+        <translation>已加密錢包</translation>
     </message>
     <message>
         <location line="-56"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>位元幣現在要關閉以完成加密程序. 請記住, 加密錢包無法完全防止入侵電腦的惡意程式偷取你的位元幣.</translation>
+        <translation>Bitcoin  即將關閉以完成加密程序。請注意，加密您的錢包並無法完整保護您的 Bitcoin 不被您電腦中的惡意程式竊取。</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -288,13 +288,13 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-54"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>錢包加密因程式內部錯誤而失敗. 你的錢包還是沒有加密.</translation>
+        <translation>因內部錯誤導致錢包加密失敗。您的錢包尚未加密。</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+48"/>
         <source>The supplied passphrases do not match.</source>
-        <translation>提供的密碼不符.</translation>
+        <translation>給定的密碼不相符。</translation>
     </message>
     <message>
         <location line="-37"/>
@@ -306,12 +306,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+11"/>
         <location line="+19"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>用來解密錢包的密碼輸入錯誤.</translation>
+        <translation>以輸入之錢包密碼解密失敗。</translation>
     </message>
     <message>
         <location line="-20"/>
         <source>Wallet decryption failed</source>
-        <translation>錢包解密失敗</translation>
+        <translation>解密錢包失敗</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -322,29 +322,29 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+254"/>
+        <location filename="../bitcoingui.cpp" line="+250"/>
         <source>Sign &amp;message...</source>
         <translation>訊息簽署...</translation>
     </message>
     <message>
-        <location line="+246"/>
+        <location line="+254"/>
         <source>Synchronizing with network...</source>
-        <translation>網路同步中...</translation>
+        <translation>正在進行網路同步...</translation>
     </message>
     <message>
-        <location line="-321"/>
+        <location line="-324"/>
         <source>&amp;Overview</source>
-        <translation>總覽</translation>
+        <translation>縱覽(&amp;O)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show general overview of wallet</source>
-        <translation>顯示錢包一般總覽</translation>
+        <translation>顯示錢包之基本縱覽</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>&amp;Transactions</source>
-        <translation>交易</translation>
+        <translation>交易(&amp;T)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -352,19 +352,9 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>瀏覽交易紀錄</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Edit the list of stored addresses and labels</source>
-        <translation>編輯位址與標記的儲存列表</translation>
-    </message>
-    <message>
-        <location line="-14"/>
-        <source>Show the list of addresses for receiving payments</source>
-        <translation>顯示收款位址的列表</translation>
-    </message>
-    <message>
-        <location line="+31"/>
+        <location line="+15"/>
         <source>E&amp;xit</source>
-        <translation>結束</translation>
+        <translation>結束(&amp;E)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -374,22 +364,23 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+7"/>
         <source>Show information about Bitcoin</source>
-        <translation>顯示位元幣相關資訊</translation>
+        <translation>顯示 Bitcoin 相關資訊</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <location line="+2"/>
+        <source>About &amp;Qt</source>
+        <translation>關於 Qt(&amp;Q)</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>About &amp;Qt</source>
-        <translation>關於 &amp;Qt</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Show information about Qt</source>
-        <translation>顯示有關於 Qt 的資訊</translation>
+        <translation>顯示 Qt 相關資訊</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation>選項...</translation>
+        <translation>選項(&amp;O)...</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -407,7 +398,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>密碼變更...</translation>
     </message>
     <message>
-        <location line="+251"/>
+        <location line="+259"/>
         <source>Importing blocks from disk...</source>
         <translation>從磁碟匯入區塊中...</translation>
     </message>
@@ -417,24 +408,24 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>重建磁碟區塊索引中...</translation>
     </message>
     <message>
-        <location line="-319"/>
+        <location line="-322"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>付錢到位元幣位址</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+47"/>
         <source>Modify configuration options for Bitcoin</source>
         <translation>修改位元幣的設定選項</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Backup wallet to another location</source>
-        <translation>將錢包備份到其它地方</translation>
+        <translation>備份錢包至他處</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>變更錢包加密用的密碼</translation>
+        <translation>更改已用於錢包加密之密碼</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -452,20 +443,20 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>驗證訊息...</translation>
     </message>
     <message>
-        <location line="-183"/>
+        <location line="-180"/>
         <location line="+6"/>
-        <location line="+508"/>
+        <location line="+513"/>
         <source>Bitcoin</source>
         <translation>位元幣</translation>
     </message>
     <message>
-        <location line="-514"/>
+        <location line="-519"/>
         <location line="+6"/>
         <source>Wallet</source>
         <translation>錢包</translation>
     </message>
     <message>
-        <location line="+107"/>
+        <location line="+109"/>
         <source>&amp;Send</source>
         <translation>付出</translation>
     </message>
@@ -475,18 +466,13 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>收受</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>&amp;Addresses</source>
-        <translation>位址</translation>
-    </message>
-    <message>
-        <location line="+23"/>
+        <location line="+28"/>
         <location line="+2"/>
         <source>&amp;About Bitcoin</source>
         <translation>關於位元幣</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+14"/>
         <location line="+2"/>
         <source>&amp;Show / Hide</source>
         <translation>顯示或隱藏</translation>
@@ -512,41 +498,66 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>驗證訊息來確認是用指定的位元幣位址簽署的</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+35"/>
         <source>&amp;File</source>
-        <translation>檔案</translation>
+        <translation>檔案(&amp;F)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+10"/>
         <source>&amp;Settings</source>
-        <translation>設定</translation>
+        <translation>設定(&amp;S)</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&amp;Help</source>
-        <translation>求助</translation>
+        <translation>說明(&amp;H)</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Tabs toolbar</source>
-        <translation>分頁工具列</translation>
+        <translation>工具列分頁</translation>
     </message>
     <message>
-        <location line="-228"/>
-        <location line="+288"/>
+        <location line="-235"/>
+        <location line="+294"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location line="-5"/>
+        <location line="-177"/>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>付款請求(產生QR Code 與 Bitcoin：URI)</translation>
+    </message>
+    <message>
+        <location line="+63"/>
+        <source>&amp;Used sending addresses...</source>
+        <translation>已使用的付款位址(&amp;U)...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>顯示已使用的付款位址於標記清單</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Used &amp;receiving addresses...</source>
+        <translation>已使用的收款位址(&amp;R)...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>顯示已使用的收款位址於標記清單</translation>
+    </message>
+    <message>
+        <location line="+106"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
-        <translation>位元幣客戶端軟體</translation>
+        <translation>Bitcoin 用戶端</translation>
     </message>
     <message numerus="yes">
-        <location line="+121"/>
+        <location line="+120"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>與位元幣網路有 %n 個連線在使用中</numerusform></translation>
+        <translation><numerusform>%n 個已啟用之 Bitcoin 網路連線</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -594,7 +605,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>會看不見在這之後的交易.</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+27"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
@@ -609,12 +620,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>資訊</translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+77"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
         <translation>這筆交易的資料大小超過限制了. 你還是可以付出 %1 的費用來傳送, 這筆費用會付給處理你的交易的節點, 並幫助維持整個網路. 你願意支付這項費用嗎?</translation>
     </message>
     <message>
-        <location line="-140"/>
+        <location line="-152"/>
         <source>Up to date</source>
         <translation>最新狀態</translation>
     </message>
@@ -624,14 +635,14 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>進度追趕中...</translation>
     </message>
     <message>
-        <location line="+113"/>
+        <location line="+124"/>
         <source>Confirm transaction fee</source>
         <translation>確認交易手續費</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Sent transaction</source>
-        <translation>付款交易</translation>
+        <translation>已送出交易</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -645,32 +656,31 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation>日期: %1
-金額: %2
-類別: %3
-位址: %4</translation>
+        <translation>日期： %1
+金額： %2
+類型： %3
+位址： %4
+</translation>
     </message>
     <message>
-        <location line="+33"/>
-        <location line="+23"/>
+        <location line="+34"/>
         <source>URI handling</source>
         <translation>URI 處理</translation>
     </message>
     <message>
-        <location line="-23"/>
-        <location line="+23"/>
+        <location line="+0"/>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
         <translation>無法解析 URI! 也許位元幣位址無效或 URI 參數有誤.</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+45"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且正&lt;b&gt;解鎖中&lt;/b&gt;</translation>
+        <translation>現&lt;b&gt;已解鎖&lt;/b&gt;&lt;b&gt;加密&lt;/b&gt;之錢包</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且正&lt;b&gt;上鎖中&lt;/b&gt;</translation>
+        <translation>現已&lt;b&gt;已加密&lt;/b&gt;並&lt;b&gt;鎖定&lt;/b&gt;錢包</translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="+110"/>
@@ -681,7 +691,7 @@ Address: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+105"/>
+        <location filename="../clientmodel.cpp" line="+115"/>
         <source>Network Alert</source>
         <translation>網路警報</translation>
     </message>
@@ -696,22 +706,22 @@ Address: %4
     <message>
         <location line="+11"/>
         <source>&amp;Label</source>
-        <translation>標記</translation>
+        <translation>標記(&amp;L)</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>The label associated with this address book entry</source>
-        <translation>與這個位址簿項目關聯的標記</translation>
+        <source>The label associated with this address list entry</source>
+        <translation>該標記關聯於位址清單條目</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+17"/>
+        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
+        <translation>該位址關聯於位址清單條目。將只能修改傳送位址。</translation>
+    </message>
+    <message>
+        <location line="-10"/>
         <source>&amp;Address</source>
-        <translation>位址</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>The address associated with this address book entry. This can only be modified for sending addresses.</source>
-        <translation>與這個位址簿項目關聯的位址. 付款位址才能被更改.</translation>
+        <translation>位址(&amp;A)</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="+21"/>
@@ -736,7 +746,7 @@ Address: %4
     <message>
         <location line="+76"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>輸入的位址&quot;%1&quot;已存在於位址簿中.</translation>
+        <translation>輸入的位址「%1」已存在於位址簿中。</translation>
     </message>
     <message>
         <location line="-5"/>
@@ -746,12 +756,12 @@ Address: %4
     <message>
         <location line="+10"/>
         <source>Could not unlock wallet.</source>
-        <translation>無法將錢包解鎖.</translation>
+        <translation>無法解鎖錢包。</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>New key generation failed.</source>
-        <translation>新密鑰產生失敗.</translation>
+        <translation>產生新密鑰失敗。</translation>
     </message>
 </context>
 <context>
@@ -785,7 +795,7 @@ Address: %4
 <context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+517"/>
+        <location filename="../guiutil.cpp" line="+558"/>
         <location line="+13"/>
         <source>Bitcoin-Qt</source>
         <translation>位元幣-Qt</translation>
@@ -865,7 +875,7 @@ Address: %4
         <translation>用自定的資料目錄:</translation>
     </message>
     <message>
-        <location filename="../intro.cpp" line="+100"/>
+        <location filename="../intro.cpp" line="+105"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
@@ -1053,7 +1063,7 @@ Address: %4
         <translation>套用</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+54"/>
+        <location filename="../optionsdialog.cpp" line="+58"/>
         <source>default</source>
         <translation>預設</translation>
     </message>
@@ -1106,7 +1116,7 @@ Address: %4
     <message>
         <location line="-131"/>
         <source>Unconfirmed:</source>
-        <translation>未確認金額:</translation>
+        <translation>未確認：</translation>
     </message>
     <message>
         <location line="-78"/>
@@ -1163,23 +1173,77 @@ Address: %4
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+108"/>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>無法啟動 bitcoin 隨按隨付處理器</translation>
+        <location filename="../paymentserver.cpp" line="+392"/>
+        <source>URI handling</source>
+        <translation>URI 處理</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <translation>無法解析 URI ！這可能代表 Bitcoin 位址無效或 URI 參數異常。</translation>
+    </message>
+    <message>
+        <location line="+69"/>
+        <source>Requested payment amount of %1 is too small (considered dust).</source>
+        <translation>請求付款的金額 %1 太少（會被網路認為是沒必要的沙子錢）。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location line="+37"/>
+        <source>Payment request error</source>
+        <translation>發出付款要求時發生錯誤</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insecure requests to custom payment scripts unsupported</source>
+        <translation>不支援以不安全的方式要求客製的付款指令碼</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>Refund from %1</source>
+        <translation>來自 %1 的退款</translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>Error communicating with %1: %2</source>
+        <translation>與 %1 交談時發生錯誤: %2</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Bad response from server %1</source>
+        <translation>伺服器 %1 的回應有誤</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Payment acknowledged</source>
+        <translation>已確認付款</translation>
+    </message>
+    <message>
+        <location line="-58"/>
+        <location line="+30"/>
+        <location line="+17"/>
+        <source>Network request error</source>
+        <translation>發出要求時發生網路錯誤</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoin.cpp" line="+92"/>
+        <location filename="../bitcoin.cpp" line="+114"/>
+        <location line="+5"/>
         <location filename="../intro.cpp" line="-32"/>
         <source>Bitcoin</source>
         <translation>位元幣</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-4"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation>錯誤: 不存在指定的資料目錄 &quot;%1&quot;.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Error: Invalid combination of -regtest and -testnet.</source>
+        <translation>錯誤：-regtest 和 -testnet 的使用組合無效</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="+1"/>
@@ -1188,56 +1252,21 @@ Address: %4
     </message>
 </context>
 <context>
-    <name>QRCodeDialog</name>
+    <name>QRImageWidget</name>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="+14"/>
-        <source>QR Code Dialog</source>
-        <translation>QR 條碼對話視窗</translation>
+        <location filename="../receiverequestdialog.cpp" line="+32"/>
+        <source>&amp;Save Image...</source>
+        <translation>保存圖片(&amp;S)</translation>
     </message>
     <message>
-        <location line="+59"/>
-        <source>Request Payment</source>
-        <translation>付款單</translation>
+        <location line="+3"/>
+        <source>&amp;Copy Image</source>
+        <translation>複製圖片(&amp;C)</translation>
     </message>
     <message>
-        <location line="+56"/>
-        <source>Amount:</source>
-        <translation>金額:</translation>
-    </message>
-    <message>
-        <location line="-44"/>
-        <source>Label:</source>
-        <translation>標記:</translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>Message:</source>
-        <translation>訊息:</translation>
-    </message>
-    <message>
-        <location line="+71"/>
-        <source>&amp;Save As...</source>
-        <translation>儲存為...</translation>
-    </message>
-    <message>
-        <location filename="../qrcodedialog.cpp" line="+64"/>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>將 URI 編碼成 QR 條碼失敗</translation>
-    </message>
-    <message>
-        <location line="+40"/>
-        <source>The entered amount is invalid, please check.</source>
-        <translation>輸入的金額無效, 請檢查看看.</translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>造出的網址太長了,請把標籤或訊息的文字縮短再試看看.</translation>
-    </message>
-    <message>
-        <location line="+25"/>
+        <location line="+28"/>
         <source>Save QR Code</source>
-        <translation>儲存 QR 條碼</translation>
+        <translation>儲存 QR Code</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1262,7 +1291,7 @@ Address: %4
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+345"/>
+        <location filename="../rpcconsole.cpp" line="+352"/>
         <source>N/A</source>
         <translation>無</translation>
     </message>
@@ -1347,7 +1376,32 @@ Address: %4
         <translation>主控台</translation>
     </message>
     <message>
-        <location line="-260"/>
+        <location line="+72"/>
+        <source>&amp;Network Traffic</source>
+        <translation>網路流量(&amp;N)</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>&amp;Clear</source>
+        <translation>清除(&amp;C)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Totals</source>
+        <translation>總計</translation>
+    </message>
+    <message>
+        <location line="+64"/>
+        <source>In:</source>
+        <translation>輸入：</translation>
+    </message>
+    <message>
+        <location line="+80"/>
+        <source>Out:</source>
+        <translation>輸出：</translation>
+    </message>
+    <message>
+        <location line="-541"/>
         <source>Build date</source>
         <translation>建置日期</translation>
     </message>
@@ -1391,25 +1445,191 @@ Address: %4
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>請打 &lt;b&gt;help&lt;/b&gt; 來看可用指令的簡介.</translation>
     </message>
+    <message>
+        <location line="+128"/>
+        <source>%1 B</source>
+        <translation>%1 位元組</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 KB</source>
+        <translation>%1 千位元組</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1 m</source>
+        <translation>%1 分</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>%1 h</source>
+        <translation>%1 時</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 h %2 m</source>
+        <translation>%1 時 %2 分</translation>
+    </message>
+</context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <location filename="../forms/receivecoinsdialog.ui" line="+22"/>
+        <source>&amp;Amount:</source>
+        <translation>金額(&amp;A)：</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>The amount to request</source>
+        <translation>請求金額</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Label:</source>
+        <translation>標記(&amp;L)：</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The label to associate with the receiving address</source>
+        <translation>此標記關聯於收款位址</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Message:</source>
+        <translation>訊息(&amp;M)：</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The message to attach to payment request</source>
+        <translation>此訊息將附加至付款請求中</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
+        <translation>重複使用先前使用的收款位址。重複使用位址將會有安全與隱私方面的疑慮。在重新產生付款請求前請勿使用。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>R&amp;euse an existing receiving address (not recommended)</source>
+        <translation>重複使用現有的收款位址（不建議使用）(&amp;E)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Use this form to request payments. All fields are optional.</source>
+        <translation>使用該表單進行付款請求。欄位皆可選填。</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Clear all fields of the form.</source>
+        <translation>清除表單中的所有欄位</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Clear</source>
+        <translation>清除</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>&amp;Request payment</source>
+        <translation>付款請求(&amp;R)</translation>
+    </message>
+</context>
+<context>
+    <name>ReceiveRequestDialog</name>
+    <message>
+        <location filename="../forms/receiverequestdialog.ui" line="+29"/>
+        <source>QR Code</source>
+        <translation>QR Code</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Copy &amp;URI</source>
+        <translation>複製URI(&amp;U)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Copy &amp;Address</source>
+        <translation>複製位址(&amp;A)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Copy Image</source>
+        <translation>複製圖片(&amp;C)...</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Save Image...</source>
+        <translation>保存圖片(&amp;S)...</translation>
+    </message>
+    <message>
+        <location filename="../receiverequestdialog.cpp" line="+58"/>
+        <source>Request payment to %1</source>
+        <translation>要 %1 付款的請求</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Payment information</source>
+        <translation>付款資訊</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>URI</source>
+        <translation>URI</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Address</source>
+        <translation>位址</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Amount</source>
+        <translation>金額</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Label</source>
+        <translation>標記</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message</source>
+        <translation>訊息</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>產生的 URI 過長，請嘗試將標記/訊息的文字縮短。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>將 URI 編碼為 QR Code 錯誤</translation>
+    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+128"/>
-        <location line="+5"/>
-        <location line="+5"/>
-        <location line="+5"/>
-        <location line="+6"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location filename="../sendcoinsdialog.cpp" line="+140"/>
+        <location line="+213"/>
         <source>Send Coins</source>
-        <translation>付錢</translation>
+        <translation>付款</translation>
     </message>
     <message>
         <location line="+50"/>
         <source>Send to multiple recipients at once</source>
-        <translation>一次付給多個人</translation>
+        <translation>付款至多個收款人</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1418,8 +1638,8 @@ Address: %4
     </message>
     <message>
         <location line="+20"/>
-        <source>Remove all transaction fields</source>
-        <translation>移除所有交易欄位</translation>
+        <source>Clear all fields of the form.</source>
+        <translation>清除所有表單欄位</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1429,7 +1649,7 @@ Address: %4
     <message>
         <location line="+22"/>
         <source>Balance:</source>
-        <translation>餘額:</translation>
+        <translation>餘額：</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1447,99 +1667,111 @@ Address: %4
         <translation>付出</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-62"/>
-        <location line="+2"/>
-        <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
-        <translation>&lt;b&gt;%1&lt;/b&gt; 給 %2 (%3)</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location filename="../sendcoinsdialog.cpp" line="-154"/>
         <source>Confirm send coins</source>
-        <translation>確認要付錢</translation>
+        <translation>確認付款金額</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Are you sure you want to send %1?</source>
-        <translation>確定要付出 %1 嗎?</translation>
+        <location line="-90"/>
+        <location line="+5"/>
+        <location line="+5"/>
+        <source>%1 to %2</source>
+        <translation>%1 至 %2</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source> and </source>
-        <translation>和</translation>
-    </message>
-    <message>
-        <location line="+23"/>
+        <location line="+26"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>無效的收款位址, 請再檢查看看.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>付款金額必須大於 0.</translation>
+        <translation>付款金額需大於 0 。</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>The amount exceeds your balance.</source>
         <translation>金額超過餘額了.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>包含 %1 的交易手續費後, 總金額超過你的餘額了.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>發現有重複的位址. 每個付款動作中, 只能付給個別的位址一次.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>Error: Transaction creation failed!</source>
         <translation>錯誤: 交易產生失敗!</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+15"/>
+        <source>Are you sure you want to send?</source>
+        <translation>你確定要付款嗎？</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>added as transaction fee</source>
+        <translation>附加為交易手續費</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Total Amount %1</source>
+        <translation>總價 %1</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>錯誤: 交易被拒絕. 有時候會發生這種錯誤, 是因為你錢包中的一些錢已經被花掉了. 比如說你複製了錢包檔 wallet.dat, 然後用複製的錢包花掉了錢, 你現在所用的原來的錢包中卻沒有該筆交易紀錄.</translation>
+    </message>
+    <message>
+        <location line="+144"/>
+        <source>Payment request expired</source>
+        <translation>付款的要求已經過期</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Invalid payment address %1</source>
+        <translation>無效的付款位址 %1</translation>
     </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+14"/>
-        <source>Form</source>
-        <translation>表單</translation>
-    </message>
-    <message>
-        <location line="+15"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+33"/>
+        <location line="+585"/>
         <source>A&amp;mount:</source>
-        <translation>金額:</translation>
+        <translation>金額(&amp;M)：</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="-572"/>
+        <location line="+585"/>
         <source>Pay &amp;To:</source>
-        <translation>付給:</translation>
+        <translation>付款至(&amp;T)：</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="-551"/>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>付款的目標位址 (比如說 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+60"/>
-        <location filename="../sendcoinsentry.cpp" line="+26"/>
+        <location filename="../sendcoinsentry.cpp" line="+28"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>輸入一個標記給這個位址, 並加到位址簿中</translation>
+        <translation>請輸入該地址之標記以將其加入位址簿中</translation>
     </message>
     <message>
-        <location line="-78"/>
+        <location filename="../forms/sendcoinsentry.ui" line="-18"/>
         <source>&amp;Label:</source>
-        <translation>標記:</translation>
+        <translation>標記(&amp;L)：</translation>
     </message>
     <message>
         <location line="+28"/>
-        <source>Choose address from address book</source>
-        <translation>從位址簿中選一個位址</translation>
+        <source>Choose previously used address</source>
+        <translation>選擇先前使用的位址</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1559,12 +1791,22 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Remove this recipient</source>
-        <translation>去掉這個收款人</translation>
+        <translation>移除此收款人</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Enter a label for this address to add it to the list of used addresses</source>
+        <translation>請輸入該位址的標記並將其加入至使用位址清單。</translation>
+    </message>
+    <message>
+        <location line="+465"/>
+        <source>Memo:</source>
+        <translation>備註:</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>輸入位元幣位址 (比如說 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>請輸入 Bitcoin 位址（地址應該長得像這樣： 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L）</translation>
     </message>
 </context>
 <context>
@@ -1592,8 +1834,8 @@ Address: %4
     <message>
         <location line="+10"/>
         <location line="+213"/>
-        <source>Choose an address from the address book</source>
-        <translation>從位址簿選一個位址</translation>
+        <source>Choose previously used address</source>
+        <translation>選擇先前使用之位址</translation>
     </message>
     <message>
         <location line="-203"/>
@@ -1694,7 +1936,7 @@ Address: %4
         <translation>輸入位元幣簽章</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+85"/>
         <location line="+81"/>
         <source>The entered address is invalid.</source>
         <translation>輸入的位址無效.</translation>
@@ -1763,7 +2005,7 @@ Address: %4
 <context>
     <name>SplashScreen</name>
     <message>
-        <location filename="../splashscreen.cpp" line="+22"/>
+        <location filename="../splashscreen.cpp" line="+23"/>
         <source>The Bitcoin developers</source>
         <translation>位元幣開發人員</translation>
     </message>
@@ -1774,9 +2016,17 @@ Address: %4
     </message>
 </context>
 <context>
+    <name>TrafficGraphWidget</name>
+    <message>
+        <location filename="../trafficgraphwidget.cpp" line="+75"/>
+        <source>KB/s</source>
+        <translation>KB/s</translation>
+    </message>
+</context>
+<context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+20"/>
+        <location filename="../transactiondesc.cpp" line="+22"/>
         <source>Open until %1</source>
         <translation>在 %1 前未定</translation>
     </message>
@@ -1793,7 +2043,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>%1 confirmations</source>
-        <translation>經確認 %1 次</translation>
+        <translation>%1 次確認</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -1849,12 +2099,12 @@ Address: %4
         <location line="+12"/>
         <location line="+45"/>
         <location line="+17"/>
-        <location line="+30"/>
+        <location line="+48"/>
         <source>Credit</source>
         <translation>入帳</translation>
     </message>
     <message numerus="yes">
-        <location line="-102"/>
+        <location line="-120"/>
         <source>matures in %n more block(s)</source>
         <translation><numerusform>將在 %n 個區塊產出後熟成</numerusform></translation>
     </message>
@@ -1867,12 +2117,12 @@ Address: %4
         <location line="+44"/>
         <location line="+8"/>
         <location line="+15"/>
-        <location line="+30"/>
+        <location line="+48"/>
         <source>Debit</source>
         <translation>出帳</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-57"/>
         <source>Transaction fee</source>
         <translation>交易手續費</translation>
     </message>
@@ -1897,12 +2147,17 @@ Address: %4
         <translation>交易識別碼</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Generated coins must mature 120 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>生產出來的錢要再等 120 個區塊熟成之後, 才能夠花用. 當你產出區塊時, 它會被公布到網路上, 以被串連至區塊鎖鏈. 如果串連失敗了, 它的狀態就會變成&quot;不被接受&quot;, 且不能被花用. 當你產出區塊的幾秒鐘內, 也有其他節點產出區塊的話, 有時候就會發生這種情形.</translation>
+        <location line="+13"/>
+        <source>Merchant</source>
+        <translation>商家</translation>
     </message>
     <message>
         <location line="+7"/>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>生產出來的錢要再等 %1 個區塊熟成之後，才能夠花用。當你產出區塊時，它會被公告到網路上，以被串連至區塊鏈。如果串連失敗了，它的狀態就會變成&quot;不被接受&quot;。且不能夠花用。當你產出區塊的幾秒鐘內，也有其他節點產出區塊的話，有時候就會發生這種情形。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Debug information</source>
         <translation>除錯資訊</translation>
     </message>
@@ -1932,7 +2187,7 @@ Address: %4
         <translation>否</translation>
     </message>
     <message>
-        <location line="-209"/>
+        <location line="-227"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, 尚未成功公告出去</translation>
     </message>
@@ -1957,20 +2212,20 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>此版面顯示交易的詳細說明</translation>
+        <translation>此版面顯示該交易之明細</translation>
     </message>
 </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+225"/>
+        <location filename="../transactiontablemodel.cpp" line="+227"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Type</source>
-        <translation>種類</translation>
+        <translation>類型</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1995,17 +2250,17 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Offline (%1 confirmations)</source>
-        <translation>離線中 (經確認 %1 次)</translation>
+        <translation>離線（%1 次確認）</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation>未確認 (經確認 %1 次, 應確認 %2 次)</translation>
+        <translation>未確認 （%1 次確認，應 %2 次）</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>已確認 (經確認 %1 次)</translation>
+        <translation>已確認（%1 次確認）</translation>
     </message>
     <message numerus="yes">
         <location line="+8"/>
@@ -2015,12 +2270,12 @@ Address: %4
     <message>
         <location line="+5"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>沒有其他節點收到這個區塊, 也許它不被接受!</translation>
+        <translation>其它節點尚未收到該區塊且可能不允許接收。</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Generated but not accepted</source>
-        <translation>生產出但不被接受</translation>
+        <translation>已產生但不允許。</translation>
     </message>
     <message>
         <location line="+43"/>
@@ -2035,12 +2290,12 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Sent to</source>
-        <translation>付出至</translation>
+        <translation>付款至</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Payment to yourself</source>
-        <translation>付給自己</translation>
+        <translation>付款給自己</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2050,32 +2305,32 @@ Address: %4
     <message>
         <location line="+38"/>
         <source>(n/a)</source>
-        <translation>(不適用)</translation>
+        <translation>(n/a)</translation>
     </message>
     <message>
         <location line="+199"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>交易狀態. 移動游標至欄位上方來顯示確認次數.</translation>
+        <translation>交易狀態。將滑鼠移至此欄位以顯示確認次數。</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>收到交易的日期與時間.</translation>
+        <translation>收到款項的日期與時間。</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation>交易的種類.</translation>
+        <translation>交易類型。</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Destination address of transaction.</source>
-        <translation>交易的目標位址.</translation>
+        <translation>交易之目標位址。</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>減去或加入至餘額的金額</translation>
+        <translation>將金額從餘額中移除或加入至餘額。</translation>
     </message>
 </context>
 <context>
@@ -2094,12 +2349,12 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>This week</source>
-        <translation>這週</translation>
+        <translation>本週</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This month</source>
-        <translation>這個月</translation>
+        <translation>本月</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2114,7 +2369,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Range...</source>
-        <translation>指定範圍...</translation>
+        <translation>範圍...</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -2124,7 +2379,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Sent to</source>
-        <translation>付出至</translation>
+        <translation>付款給</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2139,12 +2394,12 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Other</source>
-        <translation>其他</translation>
+        <translation>其它</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Enter address or label to search</source>
-        <translation>輸入位址或標記來搜尋</translation>
+        <translation>請輸入位址或標籤以進行搜尋</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2189,7 +2444,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>逗號分隔資料檔 (*.csv)</translation>
+        <translation>逗點分隔檔 (*.csv)</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2204,7 +2459,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Type</source>
-        <translation>種類</translation>
+        <translation>類型</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2229,17 +2484,17 @@ Address: %4
     <message>
         <location line="+4"/>
         <source>Error exporting</source>
-        <translation>匯出失敗</translation>
+        <translation>匯出錯誤</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>無法寫入至 %1 檔案.</translation>
+        <translation>無法寫入至檔案 %1 檔案。</translation>
     </message>
     <message>
         <location line="+100"/>
         <source>Range:</source>
-        <translation>範圍:</translation>
+        <translation>範圍：</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2250,7 +2505,7 @@ Address: %4
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+193"/>
+        <location filename="../walletmodel.cpp" line="+218"/>
         <source>Send Coins</source>
         <translation>付錢</translation>
     </message>
@@ -2268,7 +2523,7 @@ Address: %4
         <translation>將目前分頁的資料匯出存成檔案</translation>
     </message>
     <message>
-        <location line="+197"/>
+        <location line="+183"/>
         <source>Backup Wallet</source>
         <translation>錢包備份</translation>
     </message>
@@ -2301,71 +2556,59 @@ Address: %4
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+98"/>
+        <location filename="../bitcoinstrings.cpp" line="+102"/>
         <source>Bitcoin version</source>
-        <translation>位元幣版本</translation>
+        <translation>Bitcoin 版本</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+107"/>
         <source>Usage:</source>
-        <translation>用法:</translation>
+        <translation>使用：</translation>
     </message>
     <message>
-        <location line="-30"/>
-        <source>Send command to -server or bitcoind</source>
-        <translation>送指令給 -server 或 bitcoind
-</translation>
-    </message>
-    <message>
-        <location line="-23"/>
+        <location line="-55"/>
         <source>List commands</source>
-        <translation>列出指令
-</translation>
+        <translation>列出指令</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>Get help for a command</source>
-        <translation>取得指令說明
-</translation>
+        <translation>取得指令說明</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Options:</source>
-        <translation>選項:
-</translation>
+        <translation>選項：</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>指定設定檔 (預設: bitcoin.conf)
-</translation>
+        <translation>指定組態檔 （預設為 bitcoin.conf ）</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>指定行程識別碼檔案 (預設: bitcoind.pid)
-</translation>
+        <translation>指定 PID 檔（預設為 bitcoind.pid ）</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>Specify data directory</source>
-        <translation>指定資料目錄
-</translation>
+        <translation>指定資料目錄</translation>
     </message>
     <message>
         <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>設定資料庫快取大小為多少百萬位元組(MB, 預設: 25)</translation>
+        <translation>設定資料庫快取大小為若干 MB （預設為 25）</translation>
     </message>
     <message>
         <location line="-28"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>在通訊埠 &lt;port&gt; 聽候連線 (預設: 8333, 或若為測試網路: 18333)</translation>
+        <translation>監聽 &lt;port&gt; 通訊埠上的連線（預設為 8333，測試網路為 18333）</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>維持與節點連線數的上限為 &lt;n&gt; 個 (預設: 125)</translation>
+        <translation>保持平行連線數的最大上限在 &lt;n&gt; 個（預設為 125）</translation>
     </message>
     <message>
         <location line="-49"/>
@@ -2378,14 +2621,14 @@ Address: %4
         <translation>指定自己公開的位址</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>與亂搞的節點斷線的臨界值 (預設: 100)</translation>
+        <translation>切斷異常的平行連線之臨界值（預設為 100）</translation>
     </message>
     <message>
-        <location line="-136"/>
+        <location line="-142"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>避免與亂搞的節點連線的秒數 (預設: 86400)</translation>
+        <translation>保持在指定秒數內重新連線異常之平行連線（預設為 86400）</translation>
     </message>
     <message>
         <location line="-33"/>
@@ -2398,29 +2641,28 @@ Address: %4
         <translation>在通訊埠 &lt;port&gt; 聽候 JSON-RPC 連線 (預設: 8332, 或若為測試網路: 18332)</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+40"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation>接受命令列與 JSON-RPC 指令
+        <translation>接受指令列與 JSON-RPC 指令
 </translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+79"/>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation>以背景程式執行並接受指令</translation>
+        <translation>在背景中執行為 Daemon 並接收指令。</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+40"/>
         <source>Use the test network</source>
-        <translation>使用測試網路
-</translation>
+        <translation>使用測試網路</translation>
     </message>
     <message>
-        <location line="-114"/>
+        <location line="-118"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>是否接受外來連線 (預設: 當沒有 -proxy 或 -connect 時預設為 1)</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-87"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -2446,7 +2688,12 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
 </translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+12"/>
+        <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
+        <translation>可允許的加密算法（預設為 TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH）</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
         <translation>設定在 IPv6 網路的通訊埠 %u 上聽候 RPC 連線失敗, 退而改用 IPv4 網路: %s</translation>
     </message>
@@ -2476,12 +2723,7 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>錯誤: 這筆交易需要至少 %s 的手續費! 因為它的金額太大, 或複雜度太高, 或是使用了最近才剛收到的款項.</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Execute command when a relevant alert is received (%s in cmd is replaced by message)</source>
-        <translation>當收到相關警示時所要執行的指令 (指令中的 %s 會被取代為警示訊息)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>當錢包有交易改變時所要執行的指令 (指令中的 %s 會被取代為交易識別碼)</translation>
     </message>
@@ -2502,13 +2744,18 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <location line="+3"/>
-        <source>Warning: Displayed transactions may not be correct! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>警告: 顯示的交易可能不正確! 你可能需要升級, 或者需要等其它的節點升級.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
+        <translation>警告: 請檢查電腦時間與日期是否正確! 位元幣無法在時鐘不準的情況下正常運作.</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
-        <translation>警告: 請檢查電腦時間與日期是否正確! 位元幣無法在時鐘不準的情況下正常運作.</translation>
+        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
+        <translation>警告: 位元幣網路對於區塊鏈結的決定目前有分歧! 看來有些礦工會有問題.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation>警告: 我們和某些連線的節點對於區塊鏈結的決定不同! 你可能需要升級, 或是需要等其它的節點升級.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2526,6 +2773,11 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>嘗試從壞掉的錢包檔 wallet.dat 復原密鑰</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Bitcoin RPC client version</source>
+        <translation>Bitcoin RPC 用戶端版本</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Block creation options:</source>
         <translation>區塊產生選項:</translation>
@@ -2536,7 +2788,12 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>只連線至指定節點(可多個)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
+        <translation>連線至 &lt;port&gt; 上的 JSON-RPC （預設為 8332 ，測試網路為 18332）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Corrupted block database detected</source>
         <translation>發現區塊資料庫壞掉了</translation>
     </message>
@@ -2666,7 +2923,12 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>創世區塊不正確或找不到. 資料目錄錯了嗎?</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+3"/>
+        <source>Invalid -onion address: &apos;%s&apos;</source>
+        <translation>無效的 -onion 位址：「%s」</translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Not enough file descriptors available.</source>
         <translation>檔案描述器不足.</translation>
     </message>
@@ -2676,7 +2938,12 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>從目前的區塊檔 blk000??.dat 重建鎖鏈索引</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Send command to Bitcoin server</source>
+        <translation>傳送指令至 Bitcoin 伺服器</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
         <translation>設定處理 RPC 服務請求的執行緒數目 (預設為 4)</translation>
     </message>
@@ -2686,7 +2953,17 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>指定錢包檔(會在資料目錄中)</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+2"/>
+        <source>Start Bitcoin server</source>
+        <translation>啟動 Bitcoin 伺服器</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Usage (deprecated, use bitcoin-cli):</source>
+        <translation>使用（棄用，使用 Bitcoin-cli）：</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Verifying blocks...</source>
         <translation>驗證區塊資料中...</translation>
     </message>
@@ -2706,27 +2983,27 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>改變 -txindex 參數後, 必須要用 -reindex 參數來重建資料庫</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-78"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>從其它來源的 blk000??.dat 檔匯入區塊</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-98"/>
+        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
+        <translation>當收到相關警示, 或發現相當長的分支時, 所要執行的指令 (指令中的 %s 會被取代為警示訊息)</translation>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
         <translation>設定指令碼驗證的執行緒數目 (最多為 16, 若為 0 表示程式自動決定, 小於 0 表示保留不用的處理器核心數目, 預設為 0)</translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+83"/>
         <source>Information</source>
         <translation>資訊</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Invalid -tor address: &apos;%s&apos;</source>
-        <translation>無效的 -tor 位址: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>設定 -minrelaytxfee=&lt;金額&gt; 的金額無效: &apos;%s&apos;</translation>
     </message>
@@ -2773,7 +3050,7 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     <message>
         <location line="+2"/>
         <source>Prepend debug output with timestamp</source>
-        <translation>在除錯輸出內容前附加時間</translation>
+        <translation>附加時戳於偵錯輸出</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2788,12 +3065,12 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     <message>
         <location line="+3"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>在終端機顯示追蹤或除錯資訊, 而非寫到 debug.log 檔</translation>
+        <translation>不將追蹤/偵錯資訊輸出至 debug.log 檔案中，將其輸出至終端機。</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send trace/debug info to debugger</source>
-        <translation>輸出追蹤或除錯資訊給除錯器</translation>
+        <translation>輸出追蹤/偵錯資訊至偵錯工具</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2821,7 +3098,7 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>指定連線在幾毫秒後逾時 (預設: 5000)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>System error: </source>
         <translation>系統錯誤:</translation>
     </message>
@@ -2841,7 +3118,7 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>交易位元量太大</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>是否使用通用即插即用(UPnP)協定來設定聽候連線的通訊埠 (預設: 0)</translation>
     </message>
@@ -2876,71 +3153,60 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>錢包檔 weallet.dat 壞掉了, 拯救失敗</translation>
     </message>
     <message>
-        <location line="-52"/>
+        <location line="-54"/>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC 連線密碼</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-70"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation>只允許從指定網路位址來的 JSON-RPC 連線</translation>
+        <translation>允許自指定的 IP 位址進行 JSON-RPC 連線</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+79"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation>送指令給在 &lt;ip&gt; 的節點 (預設: 127.0.0.1)
-</translation>
+        <translation>傳送至 &lt;ip&gt; 上的節點（預設為 127.0.0.1）</translation>
     </message>
     <message>
-        <location line="-121"/>
+        <location line="-126"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>當最新區塊改變時所要執行的指令 (指令中的 %s 會被取代為區塊的雜湊值)</translation>
+        <translation>當最新區塊改變時執行指令（指令中的 %s 會被取代為區塊雜湊值）</translation>
     </message>
     <message>
-        <location line="+149"/>
+        <location line="+155"/>
         <source>Upgrade wallet to latest format</source>
-        <translation>將錢包升級成最新的格式</translation>
+        <translation>將錢包升級成最新格式</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-23"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>設定密鑰池大小為 &lt;n&gt; (預設: 100)
-</translation>
+        <translation>設定密鑰池大小至 &lt;n&gt; （預設為 100）</translation>
     </message>
     <message>
         <location line="-12"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>重新掃描區塊鎖鏈, 以尋找錢包所遺漏的交易.</translation>
+        <translation>為錢包遺失的交易重新掃描區塊鏈</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+38"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>於 JSON-RPC 連線使用 OpenSSL (https)
-</translation>
+        <translation>使用 OpenSSL (https) 於 JSON-RPC 連線</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-29"/>
         <source>Server certificate file (default: server.cert)</source>
-        <translation>伺服器憑證檔 (預設: server.cert)
+        <translation>伺服器憑證檔（預設為 server.cert）
 </translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Server private key (default: server.pem)</source>
-        <translation>伺服器密鑰檔 (預設: server.pem)
-</translation>
+        <translation>伺服器私鑰（預設: server.pem）</translation>
     </message>
     <message>
-        <location line="-156"/>
-        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
-        <translation>可以接受的加密法 (預設: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)
-</translation>
-    </message>
-    <message>
-        <location line="+171"/>
+        <location line="+16"/>
         <source>This help message</source>
-        <translation>此協助訊息
-</translation>
+        <translation>此說明訊息</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2948,42 +3214,42 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>無法和這台電腦上的 %s 繫結 (繫結回傳錯誤 %d, %s)</translation>
     </message>
     <message>
-        <location line="-93"/>
+        <location line="-95"/>
         <source>Connect through socks proxy</source>
         <translation>透過 SOCKS 代理伺服器連線</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-11"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>允許對 -addnode, -seednode, -connect 的參數使用域名查詢 </translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+58"/>
         <source>Loading addresses...</source>
-        <translation>載入位址中...</translation>
+        <translation>正在加載位址...</translation>
     </message>
     <message>
         <location line="-36"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>載入檔案 wallet.dat 失敗: 錢包壞掉了</translation>
+        <translation>加載 wallet.dat 檔案錯誤：錢包已損毀</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation>載入檔案 wallet.dat 失敗: 此錢包需要新版的 Bitcoin</translation>
+        <translation>加載 wallet.dat 檔案錯誤：錢包要求新版的 Bitcoin</translation>
     </message>
     <message>
-        <location line="+96"/>
+        <location line="+98"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation>錢包需要重寫: 請重啟位元幣來完成</translation>
+        <translation>錢包需要複寫：請重新啟動 Bitcoin 以完成</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-100"/>
         <source>Error loading wallet.dat</source>
-        <translation>載入檔案 wallet.dat 失敗</translation>
+        <translation>加載 wallet.dat 檔案錯誤</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+30"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>無效的 -proxy 位址: &apos;%s&apos;</translation>
     </message>
@@ -2998,7 +3264,7 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>在 -socks 指定了不明的代理協定版本: %i</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-100"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>無法解析 -bind 位址: &apos;%s&apos;</translation>
     </message>
@@ -3008,7 +3274,7 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>無法解析 -externalip 位址: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>設定 -paytxfee=&lt;金額&gt; 的金額無效: &apos;%s&apos;</translation>
     </message>
@@ -3025,30 +3291,30 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     <message>
         <location line="+10"/>
         <source>Loading block index...</source>
-        <translation>載入區塊索引中...</translation>
+        <translation>正在加載區塊索引...</translation>
     </message>
     <message>
-        <location line="-58"/>
+        <location line="-60"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>加入一個要連線的節線, 並試著保持對它的連線暢通</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-28"/>
         <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
         <translation>無法和這台電腦上的 %s 繫結. 也許位元幣已經在執行了.</translation>
     </message>
     <message>
-        <location line="+64"/>
+        <location line="+69"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>交易付款時每 KB 的交易手續費</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Loading wallet...</source>
-        <translation>載入錢包中...</translation>
+        <translation>正在加載錢包...</translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-54"/>
         <source>Cannot downgrade wallet</source>
         <translation>無法將錢包格式降級</translation>
     </message>
@@ -3058,27 +3324,27 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>無法寫入預設位址</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+66"/>
         <source>Rescanning...</source>
-        <translation>重新掃描中...</translation>
+        <translation>正在重新掃描...</translation>
     </message>
     <message>
         <location line="-58"/>
         <source>Done loading</source>
-        <translation>載入完成</translation>
+        <translation>加載完成</translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+85"/>
         <source>To use the %s option</source>
         <translation>為了要使用 %s 選項</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-77"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
     <message>
-        <location line="-31"/>
+        <location line="-33"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>

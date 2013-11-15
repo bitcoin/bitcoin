@@ -1,15 +1,15 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="lv_LV" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="gl" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Bitcoin</source>
-        <translation>Par Bitcoin</translation>
+        <translation>Sobre Bitcoin</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; versija</translation>
+        <translation>Versión &lt;b&gt;Bitcoin&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -19,17 +19,22 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"/>
+        <translation>
+Isto é software experimental.
+
+Distribuído baixo a licencia de software MIT/X11, véxase o arquivo que acompaña COPYING ou http://www.opensource.org/licenses/mit-license.php.
+
+Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no OpenSSL Toolkit (http://www.openssl.org/) e software criptográfico escrito por Eric Young (eay@cryptsoft.com) e software UPnP escrito por Thomas Bernard.</translation>
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="+14"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>Copyright</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The Bitcoin developers</source>
-        <translation type="unfinished"/>
+        <translation>Os desenvolvedores de Bitcoin.</translation>
     </message>
 </context>
 <context>
@@ -37,122 +42,122 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="+30"/>
         <source>Double-click to edit address or label</source>
-        <translation>Adresi vai nosaukumu rediģē ar dubultklikšķi</translation>
+        <translation>Doble click para editar a dirección ou a etiqueta</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Create a new address</source>
-        <translation>Izveidot jaunu adresi</translation>
+        <translation>Crear unha nova dirección</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Novo</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopēt iezīmēto adresi uz starpliktuvi</translation>
+        <translation>Copiar a dirección seleccionada ao cartafol</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Copiar</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Pechar</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="+72"/>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Kopēt adresi</translation>
+        <translation>&amp;Copiar Dirección</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="-41"/>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"/>
+        <translation>Borrar a dirección actualmente seleccionada da listaxe</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Exportar os datos da pestaña actual a un arquivo.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Exportar</translation>
     </message>
     <message>
         <location line="-27"/>
         <source>&amp;Delete</source>
-        <translation>&amp;Dzēst</translation>
+        <translation>&amp;Borrar</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="-30"/>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Escolle a dirección á que enviar moedas</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Escolle a dirección da que recibir moedas</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Escoller</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>Direccións para enviar</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Direccións para recibir</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Estas son as túas direccións Bitcoin para enviar pagos. Revisa sempre a cantidade e a dirección receptora antes de enviar moedas.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Estas son as túas direccións Bitcoin para recibir pagos. Recoméndase empregar unha nova dirección de recepción por cada transacción.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Copy &amp;Label</source>
-        <translation>Kopēt &amp;Nosaukumu</translation>
+        <translation>Copiar &amp;Etiqueta</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>&amp;Edit</source>
-        <translation>&amp;Rediģēt</translation>
+        <translation>&amp;Modificar</translation>
     </message>
     <message>
         <location line="+197"/>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Exportar Lista de Direccións</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+        <translation>Arquivo separado por comas (*.csv)</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Error exporting</source>
-        <translation>Kļūda eksportējot</translation>
+        <translation>Error na exportación</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>Nevar ierakstīt failā %1.</translation>
+        <translation>Non se puido escribir ao arquivo %1.</translation>
     </message>
 </context>
 <context>
@@ -160,17 +165,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="+164"/>
         <source>Label</source>
-        <translation>Nosaukums</translation>
+        <translation>Etiqueta</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation>Adrese</translation>
+        <translation>Dirección</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>(no label)</source>
-        <translation>(bez nosaukuma)</translation>
+        <translation>(sen etiqueta)</translation>
     </message>
 </context>
 <context>
@@ -178,99 +183,99 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="+26"/>
         <source>Passphrase Dialog</source>
-        <translation>Paroles dialogs</translation>
+        <translation>Diálogo de Contrasinal</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Enter passphrase</source>
-        <translation>Ierakstiet paroli</translation>
+        <translation>Introduce contrasinal</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>New passphrase</source>
-        <translation>Jauna parole</translation>
+        <translation>Novo contrasinal</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation>Jaunā parole vēlreiz</translation>
+        <translation>Repite novo contrasinal</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="+34"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Ierakstiet maciņa jauno paroli.&lt;br/&gt;Lūdzu izmantojiet &lt;b&gt;10 vai vairāk nejauši izvēlētas zīmes&lt;/b&gt;, vai &lt;b&gt;astoņus un vairāk vārdus&lt;/b&gt;.</translation>
+        <translation>Introduce o novo contrasinal ao moedeiro.&lt;br/&gt;Por favor empregue un contrasinal de &lt;b&gt;10 ou máis caracteres aleatorios&lt;/b&gt;, ou &lt;b&gt;oito ou máis palabras&lt;/b&gt;.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Encrypt wallet</source>
-        <translation>Šifrēt maciņu</translation>
+        <translation>Encriptar moedeiro</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Lai veikto šo darbību, maciņš jāatslēdz ar paroli.</translation>
+        <translation>Esta operación precisa o contrasinal do teu moedeiro para desbloquear o moedeiro.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Unlock wallet</source>
-        <translation>Atslēgt maciņu</translation>
+        <translation>Desbloquear moedeiro</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Šai darbībai maciņš jāatšifrē ar maciņa paroli.</translation>
+        <translation>Esta operación precisa o contrasinal do teu moedeiro para desencriptar o moedeiro.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Decrypt wallet</source>
-        <translation>Atšifrēt maciņu</translation>
+        <translation>Desencriptar moedeiro</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Change passphrase</source>
-        <translation>Mainīt paroli</translation>
+        <translation>Cambiar contrasinal</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Ierakstiet maciņa veco un jauno paroli.</translation>
+        <translation>Introduce o vello e novo contrasinais no moedeiro.</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation>Apstiprināt maciņa šifrēšanu</translation>
+        <translation>Confirmar encriptación de moedeiro</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished"/>
+        <translation>Precaución: Se encriptas o teu moedeiro e perdes o teu contrasinal, ti &lt;b&gt;PERDERÁS TÓDOLOS TEUS BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished"/>
+        <translation>Estás seguro de que desexas encriptar o teu moedeiro?</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"/>
+        <translation>IMPORTANTE: Calquera copia de seguridade previa que fixeses do teu arquivo de moedeiro debería ser substituída polo recén xerado arquivo encriptado de moedeiro. Por razóns de seguridade, as copias de seguridade previas de un arquivo de moedeiro desencriptado tornaránse inútiles no momento no que comeces a emprega-lo novo, encriptado, moedeiro.</translation>
     </message>
     <message>
         <location line="+100"/>
         <location line="+24"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished"/>
+        <translation>Precaución: A tecla de Bloqueo de Maiúsculas está activada!</translation>
     </message>
     <message>
         <location line="-130"/>
         <location line="+58"/>
         <source>Wallet encrypted</source>
-        <translation>Maciņš nošifrēts</translation>
+        <translation>Moedeiro encriptado</translation>
     </message>
     <message>
         <location line="-56"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin aizvērsies, lai pabeigtu šifrēšanu. Atcerieties, ka maciņa šifrēšana nevar pilnībā novērst bitkoinu zādzību, ko veic datorā ieviesušās kaitīgas programmas.</translation>
+        <translation>Bitcoin se pechará agora para rematar o proceso de encriptación. Lembra que encriptar o teu moedeiro non protexe totalmente os teus bitcoins de ser robados por malware que infecte o teu ordenador.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -278,40 +283,40 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+42"/>
         <location line="+6"/>
         <source>Wallet encryption failed</source>
-        <translation>Maciņa šifrēšana neizdevās</translation>
+        <translation>Encriptación de moedeiro fallida</translation>
     </message>
     <message>
         <location line="-54"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Maciņa šifrēšana neizdevās programmas kļūdas dēļ. Jūsu maciņš netika šifrēts.</translation>
+        <translation>A encriptación do moedeiro fallou por mor dun erro interno. O teu moedeiro non foi encriptado.</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+48"/>
         <source>The supplied passphrases do not match.</source>
-        <translation>Ievadītās paroles nav vienādas.</translation>
+        <translation>Os contrasinais suministrados non coinciden.</translation>
     </message>
     <message>
         <location line="-37"/>
         <source>Wallet unlock failed</source>
-        <translation>Maciņu atšifrēt neizdevās</translation>
+        <translation>Desbloqueo de moedeiro fallido</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+11"/>
         <location line="+19"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Maciņa atšifrēšanai ievadītā parole nav pareiza.</translation>
+        <translation>O contrasinal introducido para a desencriptación do moedeiro foi incorrecto.</translation>
     </message>
     <message>
         <location line="-20"/>
         <source>Wallet decryption failed</source>
-        <translation>Maciņu neizdevās atšifrēt</translation>
+        <translation>Desencriptación de moedeiro fallida</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>Cambiouse con éxito o contrasinal do moedeiro.</translation>
     </message>
 </context>
 <context>
@@ -319,198 +324,198 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="+250"/>
         <source>Sign &amp;message...</source>
-        <translation>Parakstīt &amp;ziņojumu...</translation>
+        <translation>&amp;Asinar mensaxe...</translation>
     </message>
     <message>
         <location line="+254"/>
         <source>Synchronizing with network...</source>
-        <translation>Sinhronizācija ar tīklu...</translation>
+        <translation>Sincronizando coa rede...</translation>
     </message>
     <message>
         <location line="-324"/>
         <source>&amp;Overview</source>
-        <translation>&amp;Pārskats</translation>
+        <translation>&amp;Vista xeral</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show general overview of wallet</source>
-        <translation>Rādīt vispārēju maciņa pārskatu</translation>
+        <translation>Amosar vista xeral do moedeiro</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transakcijas</translation>
+        <translation>&amp;Transacciones</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation>Skatīt transakciju vēsturi</translation>
+        <translation>Navegar historial de transaccións</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>E&amp;xit</source>
-        <translation>&amp;Iziet</translation>
+        <translation>&amp;Saír</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Quit application</source>
-        <translation>Aizvērt programmu</translation>
+        <translation>Saír da aplicación</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Show information about Bitcoin</source>
-        <translation>Parādīt informāciju par Bitcoin</translation>
+        <translation>Amosar información sobre Bitcoin</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+2"/>
         <source>About &amp;Qt</source>
-        <translation>Par &amp;Qt</translation>
+        <translation>Acerca de &amp;Qt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Show information about Qt</source>
-        <translation>Parādīt informāciju par Qt</translation>
+        <translation>Amosar información acerca de Qt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation>&amp;Iespējas</translation>
+        <translation>&amp;Opcións...</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>Š&amp;ifrēt maciņu...</translation>
+        <translation>&amp;Encriptar Moedeiro...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Izveidot maciņa rezerves kopiju</translation>
+        <translation>Copia de &amp;Seguridade do Moedeiro...</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Mainīt paroli</translation>
+        <translation>&amp;Cambiar contrasinal...</translation>
     </message>
     <message>
         <location line="+259"/>
         <source>Importing blocks from disk...</source>
-        <translation type="unfinished"/>
+        <translation>Importando bloques de disco...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Reindexing blocks on disk...</source>
-        <translation type="unfinished"/>
+        <translation>Reindexando bloques no disco...</translation>
     </message>
     <message>
         <location line="-322"/>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Nosūtīt bitkoinus uz Bitcoin adresi</translation>
+        <translation>Enviar moedas a unha dirección Bitcoin</translation>
     </message>
     <message>
         <location line="+47"/>
         <source>Modify configuration options for Bitcoin</source>
-        <translation>Mainīt Bitcoin konfigurācijas uzstādījumus</translation>
+        <translation>Modificar opcións de configuración para Bitcoin</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Backup wallet to another location</source>
-        <translation>Izveidot maciņa rezerves kopiju citur</translation>
+        <translation>Facer copia de seguridade do moedeiro noutra localización</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Mainīt maciņa šifrēšanas paroli</translation>
+        <translation>Cambiar o contrasinal empregado para a encriptación do moedeiro</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&amp;Debug window</source>
-        <translation>&amp;Debug logs</translation>
+        <translation>Ventana de &amp;Depuración</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Open debugging and diagnostic console</source>
-        <translation>Atvērt atkļūdošanas un diagnostikas konsoli</translation>
+        <translation>Abrir consola de depuración e diagnóstico</translation>
     </message>
     <message>
         <location line="-4"/>
         <source>&amp;Verify message...</source>
-        <translation>&amp;Pārbaudīt ziņojumu...</translation>
+        <translation>&amp;Verificar mensaxe...</translation>
     </message>
     <message>
         <location line="-180"/>
         <location line="+6"/>
         <location line="+513"/>
         <source>Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <location line="-519"/>
         <location line="+6"/>
         <source>Wallet</source>
-        <translation>Maciņš</translation>
+        <translation>Moedeiro</translation>
     </message>
     <message>
         <location line="+109"/>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Enviar</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Receive</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Recibir</translation>
     </message>
     <message>
         <location line="+28"/>
         <location line="+2"/>
         <source>&amp;About Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Acerca de Bitcoin</translation>
     </message>
     <message>
         <location line="+14"/>
         <location line="+2"/>
         <source>&amp;Show / Hide</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Amosar/Agachar</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show or hide the main Window</source>
-        <translation type="unfinished"/>
+        <translation>Amosar ou agachar a ventana principal</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
+        <translation>Encriptar as claves privadas que pertencen ao teu moedeiro</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>Asina mensaxes coas túas direccións Bitcoin para probar que te pertencen</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished"/>
+        <translation>Verificar mensaxes para asegurar que foron asinados con direccións Bitcoin dadas.</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>&amp;File</source>
-        <translation>&amp;Fails</translation>
+        <translation>&amp;Arquivo</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>&amp;Settings</source>
-        <translation>&amp;Uzstādījumi</translation>
+        <translation>Axus&amp;tes</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&amp;Help</source>
-        <translation>&amp;Palīdzība</translation>
+        <translation>A&amp;xuda</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Tabs toolbar</source>
-        <translation>Ciļņu rīkjosla</translation>
+        <translation>Barra de ferramentas</translation>
     </message>
     <message>
         <location line="-235"/>
@@ -521,128 +526,128 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-177"/>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished"/>
+        <translation>Solicitar pagos (xenera códigos QR e bitcoin: URIs)</translation>
     </message>
     <message>
         <location line="+63"/>
         <source>&amp;Used sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Direccións para enviar &amp;empregadas</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Amosar a listaxe de direccións e etiquetas para enviar empregadas</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Used &amp;receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Direccións para &amp;recibir empregadas</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Amosar a listaxe de etiquetas e direccións para recibir empregadas</translation>
     </message>
     <message>
         <location line="+106"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
-        <translation>Bitcoin klients</translation>
+        <translation>Cliente Bitcoin</translation>
     </message>
     <message numerus="yes">
         <location line="+120"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktīvu savienojumu ar Bitcoin tīklu</numerusform><numerusform>%n aktīvs savienojums ar Bitcoin tīklu</numerusform><numerusform>%n aktīvu savienojumu as Bitcoin tīklu</numerusform></translation>
+        <translation><numerusform>%n conexión activa coa rede Bitcoin</numerusform><numerusform>%n conexións activas coa rede Bitcoin</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
         <source>No block source available...</source>
-        <translation type="unfinished"/>
+        <translation>Non hai orixe de bloques dispoñible...</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
-        <translation type="unfinished"/>
+        <translation>Procesados %1 de %2 bloques (estimados) del historial de transacciones.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation type="unfinished"/>
+        <translation>Procesados %1 bloques do historial de transacccións.</translation>
     </message>
     <message numerus="yes">
         <location line="+20"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n hora</numerusform><numerusform>%n horas</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n día</numerusform><numerusform>%n días</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n semana</numerusform><numerusform>%n semanas</numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>%1 behind</source>
-        <translation type="unfinished"/>
+        <translation>%1 detrás</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished"/>
+        <translation>O último bloque recibido foi xerado fai %1.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished"/>
+        <translation>As transaccións despois desta non serán todavía visibles.</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Error</source>
-        <translation>Kļūda</translation>
+        <translation>Erro</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning</source>
-        <translation>Brīdinājums</translation>
+        <translation>Precaución</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Información</translation>
     </message>
     <message>
         <location line="+77"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
-        <translation type="unfinished"/>
+        <translation>Esta transacción está sobre o límite de tamaño. Aínda así podes enviala por unha tarifa de %1, que vai aos nodos que procesan a túa transacción e axuda a soporta-la rede. Queres paga-la tarifa?</translation>
     </message>
     <message>
         <location line="-152"/>
         <source>Up to date</source>
-        <translation>Sinhronizēts</translation>
+        <translation>Actualizado</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Catching up...</source>
-        <translation>Sinhronizējos...</translation>
+        <translation>Poñendo ao día...</translation>
     </message>
     <message>
         <location line="+124"/>
         <source>Confirm transaction fee</source>
-        <translation>Apstiprināt transakcijas maksu</translation>
+        <translation>Confirmar tarifa de transacción</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Sent transaction</source>
-        <translation>Transakcija nosūtīta</translation>
+        <translation>Transacción enviada</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Incoming transaction</source>
-        <translation>Ienākoša transakcija</translation>
+        <translation>Transacción entrante</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -651,36 +656,36 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation>Datums: %1
-Daudzums: %2
-Tips: %3
-Adrese: %4
+        <translation>Data: %1
+Cantidade: %2
+Tipo: %3
+Dirección: %4
 </translation>
     </message>
     <message>
         <location line="+34"/>
         <source>URI handling</source>
-        <translation type="unfinished"/>
+        <translation>Manexo de URI</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>Non se pode parsear a URI! Esto pode ser causado por unha dirección Bitcoin inválida ou parámetros da URI malformados.</translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;atslēgts&lt;/b&gt;</translation>
+        <translation>O moedeiro está &lt;b&gt;encriptado&lt;/b&gt; e actualmente &lt;b&gt;desbloqueado&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;slēgts&lt;/b&gt;</translation>
+        <translation>O moedeiro está &lt;b&gt;encriptado&lt;/b&gt; e actualmente &lt;b&gt;bloqueado&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="+110"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"/>
+        <translation>Ocorriu un erro fatal. Bitcoin non pode continuar en condicións de seguridade e pecharáse.</translation>
     </message>
 </context>
 <context>
@@ -688,7 +693,7 @@ Adrese: %4
     <message>
         <location filename="../clientmodel.cpp" line="+115"/>
         <source>Network Alert</source>
-        <translation>Tīkla brīdinājums</translation>
+        <translation>Alerta de Rede</translation>
     </message>
 </context>
 <context>
@@ -696,67 +701,67 @@ Adrese: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
         <source>Edit Address</source>
-        <translation>Mainīt adrese</translation>
+        <translation>Modificar Dirección</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Label</source>
-        <translation>&amp;Nosaukums</translation>
+        <translation>&amp;Etiqueta</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>A etiqueta asociada con esta entrada da listaxe de direccións</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"/>
+        <translation>A dirección asociada con esta entrada na listaxe de dirección. Esta so pode ser modificada por direccións para enviar.</translation>
     </message>
     <message>
         <location line="-10"/>
         <source>&amp;Address</source>
-        <translation>&amp;Adrese</translation>
+        <translation>&amp;Dirección</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="+21"/>
         <source>New receiving address</source>
-        <translation>Jauna saņemšanas adrese</translation>
+        <translation>Nova dirección para recibir</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>New sending address</source>
-        <translation>Jauna nosūtīšanas adrese</translation>
+        <translation>Nova dirección para enviar</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Edit receiving address</source>
-        <translation>Mainīt saņemšanas adresi</translation>
+        <translation>Modificar dirección para recibir</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Edit sending address</source>
-        <translation>Mainīt nosūtīšanas adresi</translation>
+        <translation>Modificar dirección para enviar</translation>
     </message>
     <message>
         <location line="+76"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>Nupat ierakstītā adrese &quot;%1&quot; jau atrodas adrešu grāmatā.</translation>
+        <translation>A dirección introducida &quot;%1&quot; xa está no libro de direccións.</translation>
     </message>
     <message>
         <location line="-5"/>
         <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation>Ierakstītā adrese &quot;%1&quot; nav derīga Bitcoin adrese.</translation>
+        <translation>A dirección introducida &apos;%1&apos; non é unha dirección Bitcoin válida.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Could not unlock wallet.</source>
-        <translation>Nav iespējams atslēgt maciņu.</translation>
+        <translation>Non se puido desbloquear o moedeiro.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>New key generation failed.</source>
-        <translation>Neizdevās ģenerēt jaunu atslēgu.</translation>
+        <translation>A xeración de nova clave fallou.</translation>
     </message>
 </context>
 <context>
@@ -764,27 +769,27 @@ Adrese: %4
     <message>
         <location filename="../intro.cpp" line="+61"/>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
+        <translation>Crearáse un novo directorio de datos.</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>name</source>
-        <translation type="unfinished"/>
+        <translation>nome</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished"/>
+        <translation>O directorio xa existe. Engade %1 se queres crear un novo directorio aquí.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Path already exists, and is not a directory.</source>
-        <translation type="unfinished"/>
+        <translation>A ruta xa existe e non é un directorio.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Non se pode crear directorio de datos aquí</translation>
     </message>
 </context>
 <context>
@@ -798,42 +803,42 @@ Adrese: %4
     <message>
         <location line="-13"/>
         <source>version</source>
-        <translation>versija</translation>
+        <translation>versión</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Usage:</source>
-        <translation>Lietojums:</translation>
+        <translation>Emprego:</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>command-line options</source>
-        <translation>komandrindas izvēles</translation>
+        <translation>opcións da liña de comandos</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>UI options</source>
-        <translation>Lietotāja interfeisa izvēlnes</translation>
+        <translation>opcións de UI</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Uzstādiet valodu, piemēram &quot;de_DE&quot; (pēc noklusēšanas: sistēmas lokāle)</translation>
+        <translation>Fixar idioma, por exemplo &quot;de_DE&quot; (por defecto: locale del sistema)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Start minimized</source>
-        <translation>Sākt minimizētu</translation>
+        <translation>Comezar minimizado</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation>Uzsākot, parādīt programmas informācijas logu (pēc noklusēšanas: 1)</translation>
+        <translation>Amosar pantalla splash no arranque (por defecto: 1)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Choose data directory on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Escolle directorio de datos ao arrancar (por defecto: 0)</translation>
     </message>
 </context>
 <context>
@@ -841,47 +846,47 @@ Adrese: %4
     <message>
         <location filename="../forms/intro.ui" line="+14"/>
         <source>Welcome</source>
-        <translation type="unfinished"/>
+        <translation>Benvido</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Welcome to Bitcoin-Qt.</source>
-        <translation type="unfinished"/>
+        <translation>Benvido a Bitcoin-Qt</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>Como é a primeira vez que se lanza este programa, podes escroller onde almacenará Bitcoin os seus datos.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin-Qt descargará e almacenará unha copia da cadea de bloque. Alomenos %1 GB de datos van ser almacenados neste directorio, e crecerá co tempo. O moedeiro tamén se almacenará neste directorio.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Use the default data directory</source>
-        <translation type="unfinished"/>
+        <translation>Empregar o directorio de datos por defecto</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Use a custom data directory:</source>
-        <translation type="unfinished"/>
+        <translation>Empregar un directorio de datos personalizado</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="+105"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Erro</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>GB of free space available</source>
-        <translation type="unfinished"/>
+        <translation>GB de espacio libre dispoñible</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>(of %1GB needed)</source>
-        <translation type="unfinished"/>
+        <translation>(de %1 GB precisados)</translation>
     </message>
 </context>
 <context>
@@ -889,157 +894,157 @@ Adrese: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="+14"/>
         <source>Options</source>
-        <translation>Iespējas</translation>
+        <translation>Opcións</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>&amp;Main</source>
-        <translation>&amp;Galvenais</translation>
+        <translation>&amp;Principal</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation type="unfinished"/>
+        <translation>Tarifa por kB de transacción opcional que axuda a asegurar que as túas transaccións son procesadas rapidamente. A maioría das transaccións son 1 kB.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>&amp;Maksāt par transakciju</translation>
+        <translation>Pagar &amp;tarifa da transacción</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Automātiski sākt Bitcoin pēc pieteikšanās sistēmā.</translation>
+        <translation>Comezar Bitcoin automáticamente despois de loguearse no sistema.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Sākt Bitcoin reizē ar sistēmu</translation>
+        <translation>&amp;Comezar Bitcoin ao facer login no sistema</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
-        <translation type="unfinished"/>
+        <translation>Restaurar todas as opcións de cliente ás por defecto</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Reset Options</source>
-        <translation type="unfinished"/>
+        <translation>Opcións de &amp;Restaurar</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>&amp;Network</source>
-        <translation>&amp;Tīkls</translation>
+        <translation>&amp;Rede</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Uz rūtera automātiski atvērt Bitcoin klienta portu. Tas strādā tikai tad, ja rūteris atbalsta UPnP un tas ir ieslēgts.</translation>
+        <translation>Abrir automáticamente o porto do cliente Bitcoin no router. Esto so funciona se o teu router soporta UPnP e está habilitado.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>Kartēt portu, izmantojot &amp;UPnP</translation>
+        <translation>Mapear porto empregando &amp;UPnP</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation type="unfinished"/>
+        <translation>Conectar coa rede Bitcoin a través dun proxy SOCKS (exemplo: ao conectar a través de Tor).</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Connect through SOCKS proxy:</source>
-        <translation>&amp;Savienoties caur SOCKS proxy:</translation>
+        <translation>&amp;Connectar a través do proxy SOCKS:</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Proxy &amp;IP:</source>
-        <translation>Proxy &amp;IP:</translation>
+        <translation>&amp;IP do Proxy:</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>IP address of the proxy (e.g. 127.0.0.1)</source>
-        <translation>proxy IP adrese (piem. 127.0.0.1)</translation>
+        <translation>Dirección IP do proxy (exemplo: 127.0.0.1)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Port:</source>
-        <translation>&amp;Ports:</translation>
+        <translation>&amp;Porto:</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Proxy ports (piem. 9050)</translation>
+        <translation>Porto do proxy (exemplo: 9050)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>SOCKS &amp;Version:</source>
-        <translation>SOCKS &amp;Versija:</translation>
+        <translation>&amp;Version de SOCKS:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>proxy SOCKS versija (piem. 5)</translation>
+        <translation>Versión SOCKS del proxy (exemplo: 5)</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>&amp;Window</source>
-        <translation>&amp;Logs</translation>
+        <translation>&amp;Xanela</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Pēc loga minimizācijas rādīt tikai ikonu sistēmas teknē.</translation>
+        <translation>Amosar so un icono na bandexa tras minimiza-la xanela.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimizēt uz sistēmas tekni, nevis rīkjoslu</translation>
+        <translation>&amp;Minimizar á bandexa en lugar de á barra de tarefas.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Logu aizverot, minimizēt, nevis beigt darbu. Kad šī izvēlne iespējota, programma aizvērsies tikai pēc Beigt komandas izvēlnē.</translation>
+        <translation>Minimizar en lugar de saír da aplicación cando se pecha a xanela. Cando se habilita esta opción, a aplicación so se pechará tras seleccionar Saír no menú.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>M&amp;inimize on close</source>
-        <translation>M&amp;inimizēt aizverot</translation>
+        <translation>M&amp;inimizar ao pechar</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>&amp;Display</source>
-        <translation>&amp;Izskats</translation>
+        <translation>&amp;Visualización</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>User Interface &amp;language:</source>
-        <translation>Lietotāja interfeiss un &amp;valoda:</translation>
+        <translation>&amp;Linguaxe de interface de usuario:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Šeit var iestatīt lietotāja valodu. Iestatījums aktivizēsies pēc Bitcoin pārstartēšanas.</translation>
+        <translation>A linguaxe de interface de usuario pode fixarse aquí. Esta configuración terá efecto tras reiniciar Bitcoin.</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Vienības, kurās attēlot daudzumus:</translation>
+        <translation>&amp;Unidade na que amosar as cantidades:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Izvēlēties dalījuma vienību pēc noklusēšanas, ko izmantot interfeisā un nosūtot bitkoinus.</translation>
+        <translation>Escolle a unidade de subdivisión por defecto para amosar na interface e ao enviar moedas.</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Whether to show Bitcoin addresses in the transaction list or not.</source>
-        <translation>Rādīt vai nē Bitcoin adreses transakciju sarakstā.</translation>
+        <translation>Se se amosan ou non as direccións Bitcoin na listaxe de transaccións.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>&amp;Attēlot adreses transakciju sarakstā</translation>
+        <translation>&amp;Visualizar direccións na listaxe de transaccións</translation>
     </message>
     <message>
         <location line="+71"/>
@@ -1049,49 +1054,49 @@ Adrese: %4
     <message>
         <location line="+7"/>
         <source>&amp;Cancel</source>
-        <translation>&amp;Atcelt</translation>
+        <translation>&amp;Cancelar</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>&amp;Apply</source>
-        <translation>&amp;Pielietot</translation>
+        <translation>&amp;Aplicar</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="+58"/>
         <source>default</source>
-        <translation>pēc noklusēšanas</translation>
+        <translation>por defecto</translation>
     </message>
     <message>
         <location line="+130"/>
         <source>Confirm options reset</source>
-        <translation type="unfinished"/>
+        <translation>Confirmar opcións de restaurar</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Some settings may require a client restart to take effect.</source>
-        <translation type="unfinished"/>
+        <translation>Algúns axustes poden precisar un reinicio do cliente para ter efecto.</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>Queres proceder?</translation>
     </message>
     <message>
         <location line="+42"/>
         <location line="+9"/>
         <source>Warning</source>
-        <translation>Brīdinājums</translation>
+        <translation>Precaución</translation>
     </message>
     <message>
         <location line="-9"/>
         <location line="+9"/>
         <source>This setting will take effect after restarting Bitcoin.</source>
-        <translation>Iestatījums aktivizēsies pēc Bitkoin pārstartēšanas.</translation>
+        <translation>Esta configuración terá efecto tras reiniciar Bitcoin</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Norādītā proxy adrese nav derīga.</translation>
+        <translation>A dirección de proxy suministrada é inválida.</translation>
     </message>
 </context>
 <context>
@@ -1099,69 +1104,69 @@ Adrese: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="+14"/>
         <source>Form</source>
-        <translation>Forma</translation>
+        <translation>Formulario</translation>
     </message>
     <message>
         <location line="+50"/>
         <location line="+202"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Attēlotā informācija var būt novecojusi. Jūsu maciņš pēc savienojuma izveides automātiski sinhronizējas ar Bitcoin tīklu, taču šis process vēl nav beidzies.</translation>
+        <translation>A información amosada por estar desactualizada. O teu moedeiro sincronízase automáticamente coa rede Bitcoin despois de que se estableza unha conexión, pero este proceso non está todavía rematado.</translation>
     </message>
     <message>
         <location line="-131"/>
         <source>Unconfirmed:</source>
-        <translation>Neapstiprinātas:</translation>
+        <translation>Sen confirmar:</translation>
     </message>
     <message>
         <location line="-78"/>
         <source>Wallet</source>
-        <translation>Maciņš</translation>
+        <translation>Moedeiro</translation>
     </message>
     <message>
         <location line="+49"/>
         <source>Confirmed:</source>
-        <translation type="unfinished"/>
+        <translation>Confirmado:</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Your current spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>O teu balance actualmente dispoñible</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Total de transaccións que aínda teñen que ser confirmadas, e non contan todavía dentro do balance gastable</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Immature:</source>
-        <translation type="unfinished"/>
+        <translation>Inmaduro:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Mined balance that has not yet matured</source>
-        <translation type="unfinished"/>
+        <translation>O balance minado todavía non madurou</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Total:</source>
-        <translation type="unfinished"/>
+        <translation>Total:</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Your current total balance</source>
-        <translation type="unfinished"/>
+        <translation>O teu balance actual total</translation>
     </message>
     <message>
         <location line="+53"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Pēdējās transakcijas&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Transaccións recentes&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="+116"/>
         <location line="+1"/>
         <source>out of sync</source>
-        <translation>nav sinhronizēts</translation>
+        <translation>non sincronizado</translation>
     </message>
 </context>
 <context>
@@ -1169,55 +1174,55 @@ Adrese: %4
     <message>
         <location filename="../paymentserver.cpp" line="+392"/>
         <source>URI handling</source>
-        <translation type="unfinished"/>
+        <translation>Manexo de URI</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>Non se pode parsear a URI! Esto pode ser causado por unha dirección Bitcoin inválida ou parámetros da URI malformados.</translation>
     </message>
     <message>
         <location line="+69"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation type="unfinished"/>
+        <translation>A cantidade de %1 na solicitude de pado é moi pequena (considerada po).</translation>
     </message>
     <message>
         <location line="+4"/>
         <location line="+37"/>
         <source>Payment request error</source>
-        <translation type="unfinished"/>
+        <translation>Erro na petición de pago</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Insecure requests to custom payment scripts unsupported</source>
-        <translation type="unfinished"/>
+        <translation>Non se soportan as peticións inseguras a scrips de pagos propios</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>Refund from %1</source>
-        <translation type="unfinished"/>
+        <translation>Devolución dende %1</translation>
     </message>
     <message>
         <location line="+42"/>
         <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"/>
+        <translation>Erro comunicando con %1: %2</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Bad response from server %1</source>
-        <translation type="unfinished"/>
+        <translation>Responsa errónea do servidor %1</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Payment acknowledged</source>
-        <translation type="unfinished"/>
+        <translation>Pago admitido</translation>
     </message>
     <message>
         <location line="-58"/>
         <location line="+30"/>
         <location line="+17"/>
         <source>Network request error</source>
-        <translation type="unfinished"/>
+        <translation>Erro de solicitude de rede</translation>
     </message>
 </context>
 <context>
@@ -1227,22 +1232,22 @@ Adrese: %4
         <location line="+5"/>
         <location filename="../intro.cpp" line="-32"/>
         <source>Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <location line="-4"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation type="unfinished"/>
+        <translation>Erro: O directorio de datos especificado &quot;%1&quot; non existe.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"/>
+        <translation>Erro: combinación inválida de -regtest e -testnet.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="+1"/>
         <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation type="unfinished"/>
+        <translation>Erro: O directorio de datos especificado &quot;%1&quot; non pode ser creado.</translation>
     </message>
 </context>
 <context>
@@ -1250,22 +1255,22 @@ Adrese: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="+32"/>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Gardar Imaxe...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Copiar Imaxe</translation>
     </message>
     <message>
         <location line="+28"/>
         <source>Save QR Code</source>
-        <translation>Saglabāt QR kodu</translation>
+        <translation>Gardar Código QR</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>PNG Images (*.png)</source>
-        <translation>PNG attēli (*.png)</translation>
+        <translation>Imaxes PNG (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1273,7 +1278,7 @@ Adrese: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="+46"/>
         <source>Client name</source>
-        <translation>Klienta vārds</translation>
+        <translation>Nome do cliente</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1292,187 +1297,187 @@ Adrese: %4
     <message>
         <location line="-217"/>
         <source>Client version</source>
-        <translation>Klienta versija</translation>
+        <translation>Versión do cliente</translation>
     </message>
     <message>
         <location line="-45"/>
         <source>&amp;Information</source>
-        <translation>&amp;Informācija</translation>
+        <translation>&amp;Información</translation>
     </message>
     <message>
         <location line="+68"/>
         <source>Using OpenSSL version</source>
-        <translation type="unfinished"/>
+        <translation>Usar versión OpenSSL</translation>
     </message>
     <message>
         <location line="+49"/>
         <source>Startup time</source>
-        <translation>Sākuma laiks</translation>
+        <translation>Tempo de arranque</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Network</source>
-        <translation>Tīkls</translation>
+        <translation>Rede</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Number of connections</source>
-        <translation>Savienojumu skaits</translation>
+        <translation>Número de conexións</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>On testnet</source>
-        <translation>Testa tīklā</translation>
+        <translation>Na testnet</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Block chain</source>
-        <translation>Bloku virkne</translation>
+        <translation>Cadea de bloques</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Current number of blocks</source>
-        <translation>Pašreizējais bloku skaits</translation>
+        <translation>Número actual de bloques</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Estimated total blocks</source>
-        <translation>Bloku skaita novērtējums</translation>
+        <translation>Bloques totais estimados</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Last block time</source>
-        <translation>Pēdējā bloka laiks</translation>
+        <translation>Hora do último bloque</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>&amp;Open</source>
-        <translation>&amp;Atvērt</translation>
+        <translation>&amp;Abrir</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Opcións da liña de comandos</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
-        <translation type="unfinished"/>
+        <translation>Amosar a mensaxe de axuda de Bitcoin-Qt para obter unha lista coas posibles opcións da liña de comandos de Bitcoin.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Show</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Amosar</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>&amp;Console</source>
-        <translation>&amp;Konsole</translation>
+        <translation>&amp;Consola</translation>
     </message>
     <message>
         <location line="+72"/>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Tráfico de Rede</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>&amp;Clear</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Limpar</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>Totais</translation>
     </message>
     <message>
         <location line="+64"/>
         <source>In:</source>
-        <translation type="unfinished"/>
+        <translation>Dentro:</translation>
     </message>
     <message>
         <location line="+80"/>
         <source>Out:</source>
-        <translation type="unfinished"/>
+        <translation>Fóra:</translation>
     </message>
     <message>
         <location line="-541"/>
         <source>Build date</source>
-        <translation>Kompilācijas datums</translation>
+        <translation>Data de construción</translation>
     </message>
     <message>
         <location line="-104"/>
         <source>Bitcoin - Debug window</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin - Ventana de depuración</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Core de Bitcoin</translation>
     </message>
     <message>
         <location line="+279"/>
         <source>Debug log file</source>
-        <translation type="unfinished"/>
+        <translation>Arquivo de log de depuración</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished"/>
+        <translation>Abrir o arquivo de log de depuración de Bitcoin dende o directorio actual de datos. Esto pode levar uns cantos segundos para grandes arquivos de log.</translation>
     </message>
     <message>
         <location line="+102"/>
         <source>Clear console</source>
-        <translation>Notīrīt konsoli</translation>
+        <translation>Limpar consola</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="-30"/>
         <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Laipni lūgti Bitcoin RPC konsolē.</translation>
+        <translation>Benvido á consola RPC de Bitcoin</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Izmantojiet bultiņas uz augšu un leju, lai pārvietotos pa vēsturi, un &lt;b&gt;Ctrl-L&lt;/b&gt; ekrāna notīrīšanai.</translation>
+        <translation>Emprega as flechas arriba e abaixo para navegar polo historial, e &lt;b&gt;Ctrl-L&lt;/b&gt; para limpar a pantalla.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Ierakstiet &lt;b&gt;help&lt;/b&gt; lai iegūtu pieejamo komandu sarakstu.</translation>
+        <translation>Escribe &lt;b&gt;axuda&lt;/b&gt; para unha vista xeral dos comandos dispoñibles.</translation>
     </message>
     <message>
         <location line="+128"/>
         <source>%1 B</source>
-        <translation type="unfinished"/>
+        <translation>%1 B</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 KB</source>
-        <translation type="unfinished"/>
+        <translation>%1 KB</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 MB</source>
-        <translation type="unfinished"/>
+        <translation>%1 MB</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 GB</source>
-        <translation type="unfinished"/>
+        <translation>%1 GB</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>%1 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 m</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>%1 h</source>
-        <translation type="unfinished"/>
+        <translation>%1 h</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 h %2 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 h %2 m</translation>
     </message>
 </context>
 <context>
@@ -1480,62 +1485,62 @@ Adrese: %4
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="+22"/>
         <source>&amp;Amount:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Cantidade:</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>The amount to request</source>
-        <translation type="unfinished"/>
+        <translation>A cantidade a solicitar</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Nosaukums:</translation>
+        <translation>&amp;Etiqueta:</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The label to associate with the receiving address</source>
-        <translation type="unfinished"/>
+        <translation>A etiqueta asociada coa dirección para recibir</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Message:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Mensaxe:</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The message to attach to payment request</source>
-        <translation type="unfinished"/>
+        <translation>A mensaxe para incluír na solicitude de pago</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation type="unfinished"/>
+        <translation>Reutilizar unha das direccións para recibir previas. Reutilizar direccións ten problemas de seguridade e privacidade. Non empregues esto agás que antes se fixese unha solicitude de rexeneración dun pago.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation type="unfinished"/>
+        <translation>R&amp;eutilizar unha dirección para recibir existente (non recomendado)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Use this form to request payments. All fields are optional.</source>
-        <translation type="unfinished"/>
+        <translation>Emprega este formulario para solicitar pagos. Tódolos campos son opcionais.</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>Limpar todos os campos do formulario</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Clear</source>
-        <translation type="unfinished"/>
+        <translation>Limpar</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>&amp;Request payment</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Solicitar pago</translation>
     </message>
 </context>
 <context>
@@ -1543,72 +1548,72 @@ Adrese: %4
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="+29"/>
         <source>QR Code</source>
-        <translation type="unfinished"/>
+        <translation>Código QR</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished"/>
+        <translation>Copiar &amp;URI</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>Copiar &amp;Dirección</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Copiar Imaxe</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Gardar Imaxe...</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="+58"/>
         <source>Request payment to %1</source>
-        <translation type="unfinished"/>
+        <translation>Solicitar pago a %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Payment information</source>
-        <translation type="unfinished"/>
+        <translation>Información de Pago</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>URI</source>
-        <translation type="unfinished"/>
+        <translation>URI</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Address</source>
-        <translation>Adrese</translation>
+        <translation>Dirección</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation>Cantidade</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Label</source>
-        <translation>Nosaukums</translation>
+        <translation>Etiqueta</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Mensaxe</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Rezultāta URI pārāk garš, mēģiniet saīsināt nosaukumu vai ziņojumu. </translation>
+        <translation>A URI resultante é demasiado larga, tenta reducir o texto para a etiqueta / mensaxe.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation>Kļūda kodējot URI QR kodā.</translation>
+        <translation>Erro codificando URI nun Código QR.</translation>
     </message>
 </context>
 <context>
@@ -1618,119 +1623,119 @@ Adrese: %4
         <location filename="../sendcoinsdialog.cpp" line="+140"/>
         <location line="+213"/>
         <source>Send Coins</source>
-        <translation>Sūtīt bitkoinus</translation>
+        <translation>Moedas Enviadas</translation>
     </message>
     <message>
         <location line="+50"/>
         <source>Send to multiple recipients at once</source>
-        <translation>Sūtīt vairākiem saņēmējiem uzreiz</translation>
+        <translation>Enviar a múltiples receptores á vez</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Add &amp;Recipient</source>
-        <translation type="unfinished"/>
+        <translation>Engadir &amp;Receptor</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>Limpar tódolos campos do formulario</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation>&amp;Notīrīt visu</translation>
+        <translation>Limpar &amp;Todo</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Balance:</source>
-        <translation>Bilance:</translation>
+        <translation>Balance:</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>123.456 BTC</source>
-        <translation>123,456 BTC</translation>
+        <translation>123.456 BTC</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Confirm the send action</source>
-        <translation>Apstiprināt nosūtīšanu</translation>
+        <translation>Confirmar a acción de envío</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>S&amp;end</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Enviar</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-154"/>
         <source>Confirm send coins</source>
-        <translation>Apstiprināt bitkoinu sūtīšanu</translation>
+        <translation>Confirmar envío de moedas</translation>
     </message>
     <message>
         <location line="-90"/>
         <location line="+5"/>
         <location line="+5"/>
         <source>%1 to %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 a %2</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation type="unfinished"/>
+        <translation>A dirección de recepción non é válida, por favor compróbea.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>Nosūtāmajai summai jābūt lielākai par 0.</translation>
+        <translation>A cantidade a pagar debe ser maior que 0.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>The amount exceeds your balance.</source>
-        <translation>Daudzums pārsniedz pieejamo.</translation>
+        <translation>A cantidade sobrepasa o teu balance.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Kopsumma pārsniedz pieejamo, ja pieskaitīta %1 transakcijas maksa.</translation>
+        <translation>O total sobrepasa o teu balance cando se inclúe a tarifa de transacción %1.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Atrastas divas vienādas adreses, vienā nosūtīšanas reizē uz katru adresi var sūtīt tikai vienreiz.</translation>
+        <translation>Atopouse dirección duplicada, so se pode enviar a cada dirección unha vez por operación.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Error: Transaction creation failed!</source>
-        <translation type="unfinished"/>
+        <translation>Erro: Fallou a creación da transacción!</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Are you sure you want to send?</source>
-        <translation type="unfinished"/>
+        <translation>Seguro que queres enviar?</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>added as transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>engadido como tarifa de transacción</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Total Amount %1</source>
-        <translation type="unfinished"/>
+        <translation>Cantidade Total %1</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Kļūda: transakcija tika atteikta. Tā var gadīties, ja kāds no maciņā esošiem bitkoiniem jau iztērēts, piemēram, izmantojot wallet.dat kopiju, kurā nav atzīmēti iztērētie bitkoini.</translation>
+        <translation>Erro: a transacción foi rexeitada. Esto pode ocorrer se algunha das moedas no teu moedeiro xa foi gastada, como por exemplo se tés unha copia de wallet.dat e gastas algunhas moedas na copia pero todavía non están marcadas como gastadas aquí.</translation>
     </message>
     <message>
         <location line="+144"/>
         <source>Payment request expired</source>
-        <translation type="unfinished"/>
+        <translation>A petición de pago expirou</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Invalid payment address %1</source>
-        <translation type="unfinished"/>
+        <translation>Dirección de pago %1 inválida</translation>
     </message>
 </context>
 <context>
@@ -1739,33 +1744,33 @@ Adrese: %4
         <location filename="../forms/sendcoinsentry.ui" line="+33"/>
         <location line="+585"/>
         <source>A&amp;mount:</source>
-        <translation>Apjo&amp;ms</translation>
+        <translation>&amp;Cantidade:</translation>
     </message>
     <message>
         <location line="-572"/>
         <location line="+585"/>
         <source>Pay &amp;To:</source>
-        <translation>&amp;Saņēmējs:</translation>
+        <translation>Pagar &amp;A:</translation>
     </message>
     <message>
         <location line="-551"/>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>A dirección á que enviar o pago (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+28"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>Lai pievienotu adresi adrešu grāmatai, tai jādod nosaukums</translation>
+        <translation>Introduce unha etiqueta para esta dirección para engadila ao teu libro de direccións</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="-18"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Nosaukums:</translation>
+        <translation>&amp;Etiqueta:</translation>
     </message>
     <message>
         <location line="+28"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Escoller dirección previamente empregada</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1775,7 +1780,7 @@ Adrese: %4
     <message>
         <location line="+7"/>
         <source>Paste address from clipboard</source>
-        <translation>ielīmēt adresi no starpliktuves</translation>
+        <translation>Pegar dirección dende portapapeis</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1785,22 +1790,22 @@ Adrese: %4
     <message>
         <location line="+7"/>
         <source>Remove this recipient</source>
-        <translation>Dzēst šo saņēmēju</translation>
+        <translation>Eliminar este receptor</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished"/>
+        <translation>Introduce unha etiqueta para esta dirección para engadila á listaxe de direccións empregadas</translation>
     </message>
     <message>
         <location line="+465"/>
         <source>Memo:</source>
-        <translation type="unfinished"/>
+        <translation>Memo:</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Ierakstiet Bitcoin adresi (piem. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Introduce unha dirección Bitcoin (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1808,28 +1813,28 @@ Adrese: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="+14"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation type="unfinished"/>
+        <translation>Sinaturas - Asinar / Verificar unha Mensaxe</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Asinar Mensaxe</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished"/>
+        <translation>Podes asinar mensaxes coas túas direccións para probar que ti as posees. Ten conta de non asinar nada vago, xa que hai ataques de phishing que tentarán que asines coa túa identidade por riba deles. Asina únicamente declaracións totalmente detalladas coas que esteas de acordo.</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>The address to sign the message with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>A dirección coa que asinar a mensaxe (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+10"/>
         <location line="+213"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Escoller dirección previamente empregada</translation>
     </message>
     <message>
         <location line="-203"/>
@@ -1840,7 +1845,7 @@ Adrese: %4
     <message>
         <location line="-203"/>
         <source>Paste address from clipboard</source>
-        <translation>ielīmēt adresi no starpliktuves</translation>
+        <translation>Pegar dirección dende portapapeis</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1850,90 +1855,90 @@ Adrese: %4
     <message>
         <location line="+12"/>
         <source>Enter the message you want to sign here</source>
-        <translation type="unfinished"/>
+        <translation>Introduce a mensaxe que queres asinar aquí</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Signature</source>
-        <translation type="unfinished"/>
+        <translation>Sinatura</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Copiar a sinatura actual ao portapapeis do sistema</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Asina a mensaxe para probar que posees esta dirección Bitcoin</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Sign &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>Asinar &amp;Mensaxe</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Reset all sign message fields</source>
-        <translation type="unfinished"/>
+        <translation>Restaurar todos os campos de sinatura de mensaxe</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+146"/>
         <source>Clear &amp;All</source>
-        <translation>&amp;Notīrīt visu</translation>
+        <translation>Limpar &amp;Todo</translation>
     </message>
     <message>
         <location line="-87"/>
         <source>&amp;Verify Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Verificar Mensaxe</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation type="unfinished"/>
+        <translation>Introduce a dirección coa que asinar, a mensaxe (asegúrate de copiar exactamente os saltos de liña, espacios, tabulacións, etc.) e a sinatura debaixo para verificar a mensaxe. Ten coidado de non ler máis na sinatura do que hai no mensaxe asinado mesmo, a fin de evitar ser cazado nun ataque de home no medio.</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>A dirección coa que foi firmada a mensaxe (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+40"/>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección Bitcoin especificada</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Verify &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>Verificar &amp;Mensaxe</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Reset all verify message fields</source>
-        <translation type="unfinished"/>
+        <translation>Restaurar todos os campos de verificación de mensaxe</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Ierakstiet Bitcoin adresi (piem. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Introduza unha dirección Bitcoin (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="-2"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation type="unfinished"/>
+        <translation>Click en &quot;Asinar Mensaxe&quot; para xerar sinatura</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Enter Bitcoin signature</source>
-        <translation type="unfinished"/>
+        <translation>Introduce sinatura Bitcoin</translation>
     </message>
     <message>
         <location line="+85"/>
         <location line="+81"/>
         <source>The entered address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>A dirección introducida é inválida.</translation>
     </message>
     <message>
         <location line="-81"/>
@@ -1941,59 +1946,59 @@ Adrese: %4
         <location line="+73"/>
         <location line="+8"/>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Por favor comproba a dirección e proba de novo.</translation>
     </message>
     <message>
         <location line="-81"/>
         <location line="+81"/>
         <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished"/>
+        <translation>A dirección introducida non se refire a ninguna clave.</translation>
     </message>
     <message>
         <location line="-73"/>
         <source>Wallet unlock was cancelled.</source>
-        <translation type="unfinished"/>
+        <translation>Cancelouse o desbloqueo do moedeiro.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished"/>
+        <translation>A clave privada da dirección introducida non está dispoñible.</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Message signing failed.</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a sinatura da mensaxe.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Message signed.</source>
-        <translation type="unfinished"/>
+        <translation>Mensaxe asinada.</translation>
     </message>
     <message>
         <location line="+59"/>
         <source>The signature could not be decoded.</source>
-        <translation type="unfinished"/>
+        <translation>A sinatura non puido ser decodificada.</translation>
     </message>
     <message>
         <location line="+0"/>
         <location line="+13"/>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Por favor revise a sinatura e probe de novo.</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The signature did not match the message digest.</source>
-        <translation type="unfinished"/>
+        <translation>A sinatura non coincide co resumo da mensaxe.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Message verification failed.</source>
-        <translation type="unfinished"/>
+        <translation>A verificación da mensaxe fallou.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Message verified.</source>
-        <translation type="unfinished"/>
+        <translation>Mensaxe verificada.</translation>
     </message>
 </context>
 <context>
@@ -2001,12 +2006,12 @@ Adrese: %4
     <message>
         <location filename="../splashscreen.cpp" line="+23"/>
         <source>The Bitcoin developers</source>
-        <translation type="unfinished"/>
+        <translation>Os desenvolvedores de Bitcoin.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -2014,7 +2019,7 @@ Adrese: %4
     <message>
         <location filename="../trafficgraphwidget.cpp" line="+75"/>
         <source>KB/s</source>
-        <translation type="unfinished"/>
+        <translation>KB/s</translation>
     </message>
 </context>
 <context>
@@ -2022,71 +2027,71 @@ Adrese: %4
     <message>
         <location filename="../transactiondesc.cpp" line="+22"/>
         <source>Open until %1</source>
-        <translation>Atvērts līdz %1</translation>
+        <translation>Aberto ata %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>%1/offline</source>
-        <translation type="unfinished"/>
+        <translation>%1/fóra de liña</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1/unconfirmed</source>
-        <translation>%1/neapstiprinātas</translation>
+        <translation>%1/sen confirmar</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 confirmations</source>
-        <translation>%1 apstiprinājumu</translation>
+        <translation>%1 confirmacións</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>Status</source>
-        <translation type="unfinished"/>
+        <translation>Estado</translation>
     </message>
     <message numerus="yes">
         <location line="+7"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>, propagado a % nodo</numerusform><numerusform>, propagado a % nodos</numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Date</source>
-        <translation>Datums</translation>
+        <translation>Data</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Orixe</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Generated</source>
-        <translation type="unfinished"/>
+        <translation>Xerado</translation>
     </message>
     <message>
         <location line="+5"/>
         <location line="+17"/>
         <source>From</source>
-        <translation type="unfinished"/>
+        <translation>Dende</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+22"/>
         <location line="+58"/>
         <source>To</source>
-        <translation type="unfinished"/>
+        <translation>A</translation>
     </message>
     <message>
         <location line="-77"/>
         <location line="+2"/>
         <source>own address</source>
-        <translation type="unfinished"/>
+        <translation>dirección propia</translation>
     </message>
     <message>
         <location line="-2"/>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>etiqueta</translation>
     </message>
     <message>
         <location line="+37"/>
@@ -2095,17 +2100,17 @@ Adrese: %4
         <location line="+17"/>
         <location line="+48"/>
         <source>Credit</source>
-        <translation type="unfinished"/>
+        <translation>Crédito</translation>
     </message>
     <message numerus="yes">
         <location line="-120"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>madura nun bloque máis</numerusform><numerusform>madura en %n bloques máis</numerusform></translation>
     </message>
     <message>
         <location line="+2"/>
         <source>not accepted</source>
-        <translation type="unfinished"/>
+        <translation>non aceptado</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2113,87 +2118,87 @@ Adrese: %4
         <location line="+15"/>
         <location line="+48"/>
         <source>Debit</source>
-        <translation type="unfinished"/>
+        <translation>Débito</translation>
     </message>
     <message>
         <location line="-57"/>
         <source>Transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>Tarifa de transacción</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Net amount</source>
-        <translation type="unfinished"/>
+        <translation>Cantidade neta</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Mensaxe</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Comment</source>
-        <translation type="unfinished"/>
+        <translation>Comentario</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>ID de Transacción</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Merchant</source>
-        <translation type="unfinished"/>
+        <translation>Comerciante</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation>As moedas xeradas deben madurar %1 bloques antes de que poidan ser gastadas. Cando xeraste este bloque, foi propagado á rede para ser engadido á cadeas de bloques. Se falla ao tentar meterse na cadea, o seu estado cambiará a &quot;non aceptado&quot; e non poderá ser gastado. Esto pode ocorrir ocasionalmente se outro nodo xera un bloque en poucos segundos de diferencia co teu.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Debug information</source>
-        <translation type="unfinished"/>
+        <translation>Información de depuración</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Transaction</source>
-        <translation type="unfinished"/>
+        <translation>Transacción</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Entradas</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation>Cantidade</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>true</source>
-        <translation type="unfinished"/>
+        <translation>verdadeiro</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>false</source>
-        <translation type="unfinished"/>
+        <translation>falso</translation>
     </message>
     <message>
         <location line="-227"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation>, vēl nav veiksmīgi izziņots</translation>
+        <translation>, non foi propagado con éxito todavía</translation>
     </message>
     <message numerus="yes">
         <location line="-35"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Abrir para %s bloque máis</numerusform><numerusform>Abrir para %n bloques máis</numerusform></translation>
     </message>
     <message>
         <location line="+70"/>
         <source>unknown</source>
-        <translation>nav zināms</translation>
+        <translation>descoñecido</translation>
     </message>
 </context>
 <context>
@@ -2201,12 +2206,12 @@ Adrese: %4
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="+14"/>
         <source>Transaction details</source>
-        <translation>Transakcijas detaļas</translation>
+        <translation>Detalles de transacción</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Šis panelis parāda transakcijas detaļas</translation>
+        <translation>Este panel amosa unha descripción detallada da transacción</translation>
     </message>
 </context>
 <context>
@@ -2214,117 +2219,117 @@ Adrese: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="+227"/>
         <source>Date</source>
-        <translation>Datums</translation>
+        <translation>Data</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Type</source>
-        <translation>Tips</translation>
+        <translation>Tipo</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation>Adrese</translation>
+        <translation>Dirección</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation>Cantidade</translation>
     </message>
     <message numerus="yes">
         <location line="+57"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Abrir para %n bloque máis</numerusform><numerusform>Abrir para %n bloques máis</numerusform></translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open until %1</source>
-        <translation>Atvērts līdz %1</translation>
+        <translation>Aberto ata %1</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Offline (%1 confirmations)</source>
-        <translation>Nav pieslēgts (%1 apstiprinājumu)</translation>
+        <translation>Sen liña (%1 confirmacións)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation>Nav apstiprināts (%1 no %2 apstiprinājumu)</translation>
+        <translation>Sen confirmar (%1 de %2 confirmacións)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>Apstiprināts (%1 apstiprinājumu)</translation>
+        <translation>Confirmado (%1 confirmacións)</translation>
     </message>
     <message numerus="yes">
         <location line="+8"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>O balance minado estará dispoñible cando madure nun bloque máis</numerusform><numerusform>O balance minado estará dispoñible cando madure en %n bloques máis</numerusform></translation>
     </message>
     <message>
         <location line="+5"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Neviens cits mezgls šo bloku nav saņēmis un droši vien netiks akceptēts!</translation>
+        <translation>Este bloque non foi recibido por ningún outro nodo e probablemente non será aceptado!</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Generated but not accepted</source>
-        <translation>Ģenerēts, taču nav akceptēts</translation>
+        <translation>Xerado pero non aceptado</translation>
     </message>
     <message>
         <location line="+43"/>
         <source>Received with</source>
-        <translation>Saņemts ar</translation>
+        <translation>Recibido con</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Received from</source>
-        <translation>Saņemts no</translation>
+        <translation>Recibido de</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Sent to</source>
-        <translation>Nosūtīts</translation>
+        <translation>Enviado a</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Payment to yourself</source>
-        <translation>Maksājums sev</translation>
+        <translation>Pago a ti mesmo</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Mined</source>
-        <translation>Atrasts</translation>
+        <translation>Minado</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>(n/a)</source>
-        <translation>(nav pieejams)</translation>
+        <translation>(n/a)</translation>
     </message>
     <message>
         <location line="+199"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Transakcijas statuss. Turiet peli virs šī lauka, lai redzētu apstiprinājumu skaitu.</translation>
+        <translation>Estado da transacción. Pasa por riba deste campo para amosar o número de confirmacións.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>Transakcijas saņemšanas datums un laiks.</translation>
+        <translation>Data e hora na que foi recibida a transacción.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation>Transakcijas tips.</translation>
+        <translation>Tipo de transacción.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Destination address of transaction.</source>
-        <translation>Transakcijas mērķa adrese.</translation>
+        <translation>Dirección de destino da transacción.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>Bilancei pievienotais vai atņemtais daudzums.</translation>
+        <translation>Cantidade borrada ou engadida no balance.</translation>
     </message>
 </context>
 <context>
@@ -2333,142 +2338,142 @@ Adrese: %4
         <location filename="../transactionview.cpp" line="+52"/>
         <location line="+16"/>
         <source>All</source>
-        <translation>Visi</translation>
+        <translation>Todo</translation>
     </message>
     <message>
         <location line="-15"/>
         <source>Today</source>
-        <translation>Šodien</translation>
+        <translation>Hoxe</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This week</source>
-        <translation>Šonedēļ</translation>
+        <translation>Esta semana</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This month</source>
-        <translation>Šomēnes</translation>
+        <translation>Este mes</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Last month</source>
-        <translation>Pēdējais mēnesis</translation>
+        <translation>O último mes</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This year</source>
-        <translation>Šogad</translation>
+        <translation>Este ano</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Range...</source>
-        <translation>Diapazons...</translation>
+        <translation>Periodo...</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Received with</source>
-        <translation>Saņemts ar</translation>
+        <translation>Recibido con</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Sent to</source>
-        <translation>Nosūtīts</translation>
+        <translation>Enviado a</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>To yourself</source>
-        <translation>Sev</translation>
+        <translation>A ti mesmo</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Mined</source>
-        <translation>Atrasts</translation>
+        <translation>Minado</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Other</source>
-        <translation>Cits</translation>
+        <translation>Outro</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Enter address or label to search</source>
-        <translation>Ierakstiet meklējamo nosaukumu vai adresi</translation>
+        <translation>Introduce dirección ou etiqueta para buscar</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Min amount</source>
-        <translation>Minimālais daudzums</translation>
+        <translation>Cantidade mínima</translation>
     </message>
     <message>
         <location line="+34"/>
         <source>Copy address</source>
-        <translation>Kopēt adresi</translation>
+        <translation>Copiar dirección</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy label</source>
-        <translation>Kopēt nosaukumu</translation>
+        <translation>Copiar etiqueta</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation>Kopēt daudzumu</translation>
+        <translation>Copiar cantidade</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Copiar ID de transacción</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Edit label</source>
-        <translation>Mainīt nosaukumu</translation>
+        <translation>Modificar etiqueta</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show transaction details</source>
-        <translation>Rādīt transakcijas detaļas</translation>
+        <translation>Amosar detalles da transacción</translation>
     </message>
     <message>
         <location line="+143"/>
         <source>Export Transaction Data</source>
-        <translation>Eksportēt transakcijas datus</translation>
+        <translation>Exportar Datos de Transacción</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+        <translation>Arquivo separado por comas (*.csv)</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Confirmed</source>
-        <translation>Apstiprināts</translation>
+        <translation>Confirmado</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Date</source>
-        <translation>Datums</translation>
+        <translation>Data</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type</source>
-        <translation>Tips</translation>
+        <translation>Tipo</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Label</source>
-        <translation>Nosaukums</translation>
+        <translation>Etiqueta</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Address</source>
-        <translation>Adrese</translation>
+        <translation>Dirección</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation>Cantidade</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2478,22 +2483,22 @@ Adrese: %4
     <message>
         <location line="+4"/>
         <source>Error exporting</source>
-        <translation>Eksportēšanas kļūda</translation>
+        <translation>Error na exportación</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>Nevar ierakstīt failā %1.</translation>
+        <translation>Non se pudo escribir ao arquivo %1.</translation>
     </message>
     <message>
         <location line="+100"/>
         <source>Range:</source>
-        <translation>Diapazons:</translation>
+        <translation>Periodo:</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>to</source>
-        <translation type="unfinished"/>
+        <translation>a</translation>
     </message>
 </context>
 <context>
@@ -2501,7 +2506,7 @@ Adrese: %4
     <message>
         <location filename="../walletmodel.cpp" line="+218"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Moedas Enviadas</translation>
     </message>
 </context>
 <context>
@@ -2509,42 +2514,42 @@ Adrese: %4
     <message>
         <location filename="../walletview.cpp" line="+46"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Exportar</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Exportar os datos da pestaña actual a un arquivo.</translation>
     </message>
     <message>
         <location line="+183"/>
         <source>Backup Wallet</source>
-        <translation>Izveidot maciņa rezerves kopiju</translation>
+        <translation>Copia de Seguridade de Moedeiro</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Wallet Data (*.dat)</source>
-        <translation>Maciņa dati (*.dat)</translation>
+        <translation>Datos de Moedeiro (*.dat)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Backup Failed</source>
-        <translation>Rezerves kopēšana neizdevās</translation>
+        <translation>Copia de Seguridade Fallida</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation>Kļūda, saglabājot maciņu jaunajā vietā.</translation>
+        <translation>Houbo un erro ao tentar gardar os datos do moedeiro á nova localización.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Backup Successful</source>
-        <translation type="unfinished"/>
+        <translation>Copia de Seguridade Correcta</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The wallet data was successfully saved to the new location.</source>
-        <translation type="unfinished"/>
+        <translation>Os datos do moedeiro foron gardados con éxito na nova localización.</translation>
     </message>
 </context>
 <context>
@@ -2552,107 +2557,107 @@ Adrese: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="+102"/>
         <source>Bitcoin version</source>
-        <translation>Bitcoin versija</translation>
+        <translation>Versión de Bitcoin</translation>
     </message>
     <message>
         <location line="+107"/>
         <source>Usage:</source>
-        <translation>Lietojums:</translation>
+        <translation>Emprego:</translation>
     </message>
     <message>
         <location line="-55"/>
         <source>List commands</source>
-        <translation>Komandu saraksts</translation>
+        <translation>Listar comandos</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>Get help for a command</source>
-        <translation>Palīdzība par komandu</translation>
+        <translation>Obter axuda para un comando</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Options:</source>
-        <translation>Iespējas:</translation>
+        <translation>Opcións:</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Norādiet konfigurācijas failu (pēc noklusēšanas: bitcoin.conf)</translation>
+        <translation>Especificar arquivo de configuración (por defecto: bitcoin.conf)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Norādiet pid failu (pēc noklusēšanas: bitcoind.pid)</translation>
+        <translation>Especificar arquivo de pid (por defecto: bitcoind.pid)</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>Specify data directory</source>
-        <translation>Norādiet datu direktoriju</translation>
+        <translation>Especificar directorio de datos</translation>
     </message>
     <message>
         <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>Uzstādiet datu bāzes bufera izmēru megabaitos (pēc noklusēšanas: 25)</translation>
+        <translation>Fixar tamaño da caché da base de datos en megabytes (por defecto: 25)</translation>
     </message>
     <message>
         <location line="-28"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Gaidīt savienojumus portā &lt;port&gt; (pēc noklusēšanas: 8333 vai testnet: 18333)</translation>
+        <translation>Escoitar conexións no &lt;porto&gt; (por defecto: 8333 ou testnet: 18333)</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Uzturēt līdz &lt;n&gt; savienojumiem ar citiem mezgliem(pēc noklusēšanas: 125)</translation>
+        <translation>Manter como moito &lt;n&gt; conexións con pares (por defecto: 125)</translation>
     </message>
     <message>
         <location line="-49"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Pievienoties mezglam, lai iegūtu citu mezglu adreses, un atvienoties</translation>
+        <translation>Conectar a nodo para recuperar direccións de pares, e desconectar</translation>
     </message>
     <message>
         <location line="+84"/>
         <source>Specify your own public address</source>
-        <translation>Norādiet savu publisko adresi</translation>
+        <translation>Especificar a túa propia dirección pública</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Slieksnis pārkāpējmezglu atvienošanai (pēc noklusēšanas: 100)</translation>
+        <translation>Umbral para desconectar pares con mal comportamento (por defecto: 100)</translation>
     </message>
     <message>
         <location line="-142"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Sekundes, cik ilgi atturēt pārkāpējmezglus no atkārtotas pievienošanās (pēc noklusēšanas: 86400)</translation>
+        <translation>Número de segundos para manter sen reconectar aos pares con mal comportamento (por defecto: 86400)</translation>
     </message>
     <message>
         <location line="-33"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Ocorreu un erro mentres se establecía o porto RPC %u para escoitar sobre IPv4: %s</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation type="unfinished"/>
+        <translation>Escoitar conexións JSON-RPC no &lt;porto&gt; (por defecto: 8332 ou testnet: 18332)</translation>
     </message>
     <message>
         <location line="+40"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation>Pieņemt komandrindas un JSON-RPC komandas</translation>
+        <translation>Aceptar liña de comandos e comandos JSON-RPC</translation>
     </message>
     <message>
         <location line="+79"/>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation>Darbināt fonā kā servisu un pieņemt komandas</translation>
+        <translation>Executar no fondo como un demo e aceptar comandos</translation>
     </message>
     <message>
         <location line="+40"/>
         <source>Use the test network</source>
-        <translation>Izmantot testa tīklu</translation>
+        <translation>Empregar a rede de proba</translation>
     </message>
     <message>
         <location line="-118"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Aceptar conexións de fóra (por defecto: 1 se non -proxy ou -connect)</translation>
     </message>
     <message>
         <location line="-87"/>
@@ -2667,671 +2672,681 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
 </source>
-        <translation type="unfinished"/>
+        <translation>%s, debes fixar unha rpcpassword no arquivo de configuración:
+%s
+Reoméndase usar o seguinte contrasinal aleatorio:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(non precisas lembrar este contrasinal)
+O nome do usuario e o contrasinal DEBEN NON ser o mesmo.
+Se o arquivo non existe, debes crealo con permisos de so lectura para o propietario.
+Tamén é recomendable fixar alertnotify de modo que recibas notificación dos problemas;
+por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
+</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation type="unfinished"/>
+        <translation>Cifradores aceptables (por defecto: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Ocorreu un erro mentres se establecía o porto RPC %u para escoitar sobre IPv6, voltando a IPv4: %s</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
+        <translation>Enlazar a unha dirección dada e escoitar sempre nela. Emprega a notación [host]:post para IPv6</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Non se pode obter un bloqueo sobre o directorio de datos %s. Bitcoin está probablemente xa executándose.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>Entra en modo de test de regresión, que emprega unha cadea especial na que os bloques poden ser resoltos instantáneamente. Esto está pensado para ferramentes de testing de regresión e desenvolvemento de aplicacións.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Erro: A transacción foi rexeitada! Esto podería suceder se unha das moedas do teu moedeiro xa foi gastada, como se usas unha copia de wallet.dat e hai moedas que se gastaron na copia pero non foron marcadas como gastadas aquí.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation type="unfinished"/>
+        <translation>Erro: Esta transacción require unha tarifa de transacción de alomenos %s debido á súa cantidade, complexidade ou emprego de fondos recentemente recibidos!</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished"/>
+        <translation>Executar comando cando unha transacción do moedeiro cambia (%s no comando é substituído por TxID)</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
-        <translation type="unfinished"/>
+        <translation>Fixar tamaño máximo das transaccións de alta-prioridade/baixa-tarifa en bytes (por defecto: 27000)</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"/>
+        <translation>Esta é unha build de test pre-lanzamento - emprégaa baixo o teu propio risco - non empregar para minado ou aplicacións de comerciantes</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Precaución: -paytxfee está posto moi algo! Esta é a tarifa de transacción que ti pagarás se envías unha transacción.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
-        <translation type="unfinished"/>
+        <translation>Precaución; Por favor revisa que a data e hora do teu ordenador son correctas! Se o teu reloxo está equivocato Bitcoin non funcionará adecuadamente.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation type="unfinished"/>
+        <translation>Precaución: A rede non parece estar totalmente de acordo! Algúns mineitos parecen estar experimentando problemas.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"/>
+        <translation>Precaución: Non parece que esteamos totalmente de acordo cos nosos pares! Pode que precises actualizar, ou outros nodos poden precisar actualizarse.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Precaución: erro lendo wallet.dat! Tódalas claves lidas correctamente, pero os datos de transacción ou as entradas do libro de direccións podrían estar ausentes ou incorrectos.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"/>
+        <translation>Precaución: wallet.dat corrupto, datos salvagardados! O wallet.dat orixinal foi gardado como wallet.{timestamp}.bak en %s; se o teu balance ou transaccións son incorrectas deberías restauralas dende unha copia de seguridade.</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>Tentar recuperar claves privadas dende un wallet.dat corrupto</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Bitcoin RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>Versión de cliente RPC de Bitcoin</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Block creation options:</source>
-        <translation type="unfinished"/>
+        <translation>Opcións de creación de bloque:</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Connect only to the specified node(s)</source>
-        <translation type="unfinished"/>
+        <translation>Conectar so ao(s) nodo(s) especificado(s)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation type="unfinished"/>
+        <translation>Conectar a JSON-RPC no &lt;porto&gt; (por defecto: 8332 ou testnet: 18332)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Corrupted block database detected</source>
-        <translation type="unfinished"/>
+        <translation>Detectada base de datos de bloques corrupta.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation type="unfinished"/>
+        <translation>Descobrir dirección IP propia (por defecto: 1 se á escoita e non -externalip)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished"/>
+        <translation>Queres reconstruír a base de datos de bloques agora?</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Error initializing block database</source>
-        <translation type="unfinished"/>
+        <translation>Erro inicializando a base de datos de bloques</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished"/>
+        <translation>Erro inicializando entorno de base de datos de moedeiro %s!</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading block database</source>
-        <translation type="unfinished"/>
+        <translation>Erro cargando base de datos do bloque</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Error opening block database</source>
-        <translation type="unfinished"/>
+        <translation>Erro abrindo base de datos de bloques</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Error: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>Erro: Espacio en disco escaso!</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation type="unfinished"/>
+        <translation>Erro: Moedeiro bloqueado, imposible crear transacción!</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: system error: </source>
-        <translation type="unfinished"/>
+        <translation>Erro: erro do sistema:</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished"/>
+        <translation>Fallou escoitar en calquera porto. Emprega -listen=0 se queres esto.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to read block info</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a lectura da información do bloque</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to read block</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a lectura do bloque</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to sync block index</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a sincronización do índice do bloque</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write block index</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a escritura do índice do bloque</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write block info</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a escritura da información do bloque</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write block</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a escritura do bloque</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write file info</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a escritura da información do arquivo</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write to coin database</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a escritura na base de datos de moedas</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write transaction index</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a escritura do índice de transaccións</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write undo data</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a escritura dos datos para desfacer</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Atopar pares usando lookup DNS (por defecto: 1 agás -connect)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Generate coins (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Xerar moedas (por defecto: 0)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation type="unfinished"/>
+        <translation>Cantos bloques para chequear ao arrancar (por defecto: 288, 0 = todos)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>How thorough the block verification is (0-4, default: 3)</source>
-        <translation type="unfinished"/>
+        <translation>Como de exhaustiva é a verificación de bloques (0-4, pro defecto: 3)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished"/>
+        <translation>Bloque genesis incorrecto o no existente. Datadir erróneo para a rede?</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Dirección -onion inválida: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation>Non hai suficientes descritores de arquivo dispoñibles.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation type="unfinished"/>
+        <translation>Reconstruír índice de cadea de bloque dende os ficheiros actuais blk000??.dat</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Send command to Bitcoin server</source>
-        <translation type="unfinished"/>
+        <translation>Enviar comando a servidor Bitcoin</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation type="unfinished"/>
+        <translation>Fixar o número de fíos para as chamadas aos servicios RPC (por defecto: 4)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Specify wallet file (within data directory)</source>
-        <translation type="unfinished"/>
+        <translation>Especificar arquivo do moedeiro (dentro do directorio de datos)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Start Bitcoin server</source>
-        <translation type="unfinished"/>
+        <translation>Comezar servidor Bitcoin</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Usage (deprecated, use bitcoin-cli):</source>
-        <translation type="unfinished"/>
+        <translation>Emprego (desaconsellado, usar bitcoin-cli)</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Verifying blocks...</source>
-        <translation type="unfinished"/>
+        <translation>Verificando bloques...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Verifying wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Verificando moedeiro...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
+        <translation>O moedeiro %s reside fóra do directorio de datos %s</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation type="unfinished"/>
+        <translation>Precisas reconstruír a base de datos empregando -reindex para cambiar -txindex</translation>
     </message>
     <message>
         <location line="-78"/>
         <source>Imports blocks from external blk000??.dat file</source>
-        <translation type="unfinished"/>
+        <translation>Importa bloques dende arquivos blk000??.dat externos</translation>
     </message>
     <message>
         <location line="-98"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation type="unfinished"/>
+        <translation>Executar comando cando se recibe unha alerta relevante ou vemos un fork realmente longo (%s no cmd é substituído pola mensaxe)</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Fixar o número de fíos para sripts de verificación (ata 16, 0 = auto, &lt;0 = deixa tantos cores libres, por defecto: 0)</translation>
     </message>
     <message>
         <location line="+83"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Información</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Cantidade inválida para -minrelaytxfee=&lt;cantidade&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Cantidade inválida para -mintxfee=&lt;cantidade&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Maintain a full transaction index (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Manter un índice completo de transaccións (por defecto: 0)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation>Máximo buffer por-conexión para recibir, &lt;n&gt;*1000 bytes (por defecto: 5000)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation type="unfinished"/>
+        <translation>Máximo buffer por-conexión para enviar, &lt;n&gt;*1000 bytes (por defecto: 1000)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Aceptar so cadeas de bloques coincidentes con check-points incorporados (por defecto: 1)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation type="unfinished"/>
+        <translation>Conectar so a nodos na rede &lt;net&gt; (IPv4, IPv6 ou Tor)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Output extra debugging information. Implies all other -debug* options</source>
-        <translation type="unfinished"/>
+        <translation>Emitir información extra de depuración. Implica todas as demáis opcións -debug*.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Output extra network debugging information</source>
-        <translation type="unfinished"/>
+        <translation>Emitir información extra de depuración de rede</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Prepend debug output with timestamp</source>
-        <translation>Debug izvadei sākumā pievienot laika zīmogu</translation>
+        <translation>Prefixar saída de depuración coa marca de tempo</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>Opcións SSL: (ver ńa Wiki Bitcoin as instrucción de configuración de SSL)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Select the version of socks proxy to use (4-5, default: 5)</source>
-        <translation type="unfinished"/>
+        <translation>Seleccionar a versión do proxy socks que usar (4-5, por defecto: 5)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Debug/trace informāciju izvadīt konsolē, nevis debug.log failā</translation>
+        <translation>Enviar traza/información de depuración á consola en lugar de ao arquivo debug.log</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send trace/debug info to debugger</source>
-        <translation>Debug/trace informāciju izvadīt debug programmai</translation>
+        <translation>Enviar traza/información de depuración ao depurador</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Set maximum block size in bytes (default: 250000)</source>
-        <translation type="unfinished"/>
+        <translation>Fixar tamaño máximo de bloque en bytes (por defecto: 250000)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Set minimum block size in bytes (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Fixar tamaño mínimo de bloque en bytes (por defecto: 0)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation type="unfinished"/>
+        <translation>Recortar o arquivo debug.log ao arrancar o cliente (por defecto: 1 cando no-debug)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Signing transaction failed</source>
-        <translation type="unfinished"/>
+        <translation>Fallou a sinatura da transacción</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation>Especificar tempo límite da conexión en milisegundos (por defecto: 5000)</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>System error: </source>
-        <translation type="unfinished"/>
+        <translation>Erro do sistema:</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Transaction amount too small</source>
-        <translation type="unfinished"/>
+        <translation>A cantidade da transacción é demasiado pequena</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
+        <translation>As cantidades da transacción deben ser positivas</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>A transacción é demasiado grande</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Usar UPnP para mapear o porto de escoita (por defecto: 0)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation type="unfinished"/>
+        <translation>Usar UPnP para mapear o porto de escoita (por defecto: 1 se á escoita)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Use proxy to reach tor hidden services (default: same as -proxy)</source>
-        <translation type="unfinished"/>
+        <translation>Empregar proxy para chegar os servicios ocultos de tor (por defecto: mesmo que -proxy)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Username for JSON-RPC connections</source>
-        <translation>JSON-RPC savienojumu lietotājvārds</translation>
+        <translation>Nome de usuario para conexións JSON-RPC</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Warning</source>
-        <translation>Brīdinājums</translation>
+        <translation>Precaución</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation type="unfinished"/>
+        <translation>Precaución: Esta versión é obsoleta, precísase unha actualización!</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat corrupto, fallou o gardado</translation>
     </message>
     <message>
         <location line="-54"/>
         <source>Password for JSON-RPC connections</source>
-        <translation>JSON-RPC savienojumu parole</translation>
+        <translation>Contrasinal para conexións JSON-RPC</translation>
     </message>
     <message>
         <location line="-70"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation>Atļaut JSON-RPC savienojumus no norādītās IP adreses</translation>
+        <translation>Permitir conexións JSON-RPC dende direccións IP especificadas</translation>
     </message>
     <message>
         <location line="+79"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation>Nosūtīt komandas mezglam, kas darbojas adresē &lt;ip&gt; (pēc noklusēšanas: 127.0.0.1)</translation>
+        <translation>Enviar comandos a nodo executando na &lt;ip&gt; (por defecto: 127.0.0.1)</translation>
     </message>
     <message>
         <location line="-126"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Izpildīt komandu, kad labāk atbilstošais bloks izmainās (%s cmd aizvieto ar bloka hešu)</translation>
+        <translation>Executar comando cando o mellor bloque cambie (%s no comando é sustituído polo hash do bloque)</translation>
     </message>
     <message>
         <location line="+155"/>
         <source>Upgrade wallet to latest format</source>
-        <translation>Atjaunot maciņa formātu uz jaunāko</translation>
+        <translation>Actualizar moedeiro ao formato máis recente</translation>
     </message>
     <message>
         <location line="-23"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Uzstādīt atslēgu bufera izmēru uz &lt;n&gt; (pēc noklusēšanas: 100)</translation>
+        <translation>Fixar tamaño do pool de claves a &lt;n&gt; (por defecto: 100)</translation>
     </message>
     <message>
         <location line="-12"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Atkārtoti skanēt bloku virkni, meklējot trūkstošās maciņa transakcijas</translation>
+        <translation>Rescanear transaccións ausentes na cadea de bloques</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>JSON-RPC savienojumiem izmantot OpenSSL (https)</translation>
+        <translation>Empregar OpenSSL (https) para conexións JSON-RPC</translation>
     </message>
     <message>
         <location line="-29"/>
         <source>Server certificate file (default: server.cert)</source>
-        <translation>Servera sertifikāta fails (pēc noklusēšanas: server.cert)</translation>
+        <translation>Arquivo de certificado do servidor (por defecto: server.cert)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Server private key (default: server.pem)</source>
-        <translation>Servera privātā atslēga (pēc noklusēšanas: server.pem)</translation>
+        <translation>Clave privada do servidor (por defecto: server.perm)</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>This help message</source>
-        <translation>Šis palīdzības paziņojums</translation>
+        <translation>Esta mensaxe de axuda</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
-        <translation>Nevar pievienoties pie %s šajā datorā (pievienošanās atgrieza kļūdu %d, %s)</translation>
+        <translation>Imposible enlazar con %s neste ordenador (enlace devolveu erro %d, %s)</translation>
     </message>
     <message>
         <location line="-95"/>
         <source>Connect through socks proxy</source>
-        <translation>Savienoties caurs socks proxy</translation>
+        <translation>Conectar a través de proxy de socks</translation>
     </message>
     <message>
         <location line="-11"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Atļaut DNS uzmeklēšanu priekš -addnode, -seednode un -connect</translation>
+        <translation>Permitir lookup de DNS para -addnote, -seednote e -connect</translation>
     </message>
     <message>
         <location line="+58"/>
         <source>Loading addresses...</source>
-        <translation>Ielādē adreses...</translation>
+        <translation>Cargando direccións...</translation>
     </message>
     <message>
         <location line="-36"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Nevar ielādēt wallet.dat: maciņš bojāts</translation>
+        <translation>Erro cargando wallet.dat: Moedeiro corrupto</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation>Nevar ielādēt wallet.dat: maciņa atvēršanai nepieciešama jaunāka Bitcoin versija</translation>
+        <translation>Erro cargando wallet.dat: O moedeiro precisa unha versión máis nova de Bitcoin</translation>
     </message>
     <message>
         <location line="+98"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation>Bija nepieciešams pārstartēt maciņu: pabeigšanai pārstartējiet Bitcoin</translation>
+        <translation>Precísase rescribir o moedeiro: reinicie Bitcoin para completar</translation>
     </message>
     <message>
         <location line="-100"/>
         <source>Error loading wallet.dat</source>
-        <translation>Kļūda ielādējot wallet.dat</translation>
+        <translation>Erro cargando wallet.dat</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>Nederīga -proxy adrese: &apos;%s&apos;</translation>
+        <translation>Dirección -proxy inválida: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+57"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>-onlynet komandā norādīts nepazīstams tīkls: &apos;%s&apos;</translation>
+        <translation>Rede descoñecida especificada en -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>Unknown -socks proxy version requested: %i</source>
-        <translation>Pieprasīta nezināma -socks proxy versija: %i</translation>
+        <translation>Versión solicitada de proxy -socks descoñecida: %i</translation>
     </message>
     <message>
         <location line="-100"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation>Nevar uzmeklēt -bind adresi: &apos;%s&apos;</translation>
+        <translation>Non se pode resolver a dirección -bind: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation>Nevar atrisināt -externalip adresi: &apos;%s&apos;</translation>
+        <translation>Non se pode resolver dirección -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Nederīgs daudzums priekš -paytxfree=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation>Cantidade inválida para -paytxfee=&lt;cantidade&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount</source>
-        <translation>Nederīgs daudzums</translation>
+        <translation>Cantidade inválida</translation>
     </message>
     <message>
         <location line="-6"/>
         <source>Insufficient funds</source>
-        <translation>Nepietiek bitkoinu</translation>
+        <translation>Fondos insuficientes</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Loading block index...</source>
-        <translation>Ielādē bloku indeksu...</translation>
+        <translation>Cargando índice de bloques...</translation>
     </message>
     <message>
         <location line="-60"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Pievienot mezglu, kam pievienoties un turēt savienojumu atvērtu</translation>
+        <translation>Engadir un nodo ao que conectarse e tentar manter a conexión aberta</translation>
     </message>
     <message>
         <location line="-28"/>
         <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
-        <translation>Nevar pievienoties %s uz šī datora. Bitcoin droši vien jau darbojas.</translation>
+        <translation>Imposible enlazar a %s neste ordenador. Bitcoin probablemente xa se estea executando.</translation>
     </message>
     <message>
         <location line="+69"/>
         <source>Fee per KB to add to transactions you send</source>
-        <translation>Maksa par KB, ko pievienot nosūtāmajām transakcijām</translation>
+        <translation>Tarifa por KB para engadir ás transaccións que vostede envía</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Loading wallet...</source>
-        <translation>Ielādē maciņu...</translation>
+        <translation>Cargando moedeiro...</translation>
     </message>
     <message>
         <location line="-54"/>
         <source>Cannot downgrade wallet</source>
-        <translation>Nevar maciņa formātu padarīt vecāku</translation>
+        <translation>Non se pode desactualizar o moedeiro</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Cannot write default address</source>
-        <translation>Nevar ierakstīt adresi pēc noklusēšanas</translation>
+        <translation>Non se pode escribir a dirección por defecto</translation>
     </message>
     <message>
         <location line="+66"/>
         <source>Rescanning...</source>
-        <translation>Skanēju no jauna...</translation>
+        <translation>Rescaneando...</translation>
     </message>
     <message>
         <location line="-58"/>
         <source>Done loading</source>
-        <translation>Ielāde pabeigta</translation>
+        <translation>Carga completa</translation>
     </message>
     <message>
         <location line="+85"/>
         <source>To use the %s option</source>
-        <translation>Izmantot opciju %s</translation>
+        <translation>Empregar a opción %s</translation>
     </message>
     <message>
         <location line="-77"/>
         <source>Error</source>
-        <translation>Kļūda</translation>
+        <translation>Erro</translation>
     </message>
     <message>
         <location line="-33"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
-        <translation>Konfigurācijas failā jāuzstāda rpcpassword=&lt;password&gt;:
+        <translation>Debes fixar rpcpassword=&lt;contrasinal&gt; no arquivo de configuración:
 %s
-Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.</translation>
+Se o arquivo non existe, debes crealo con permisos de so lectura para o propietario.</translation>
     </message>
 </context>
 </TS>
