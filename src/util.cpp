@@ -12,9 +12,7 @@
 #include "uint256.h"
 #include "version.h"
 
-#include <inttypes.h>
 #include <stdarg.h>
-#include <stdint.h>
 
 #ifndef WIN32
 // for posix_fallocate
