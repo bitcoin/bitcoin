@@ -19,7 +19,6 @@
 
 #include <inttypes.h>
 #include <sstream>
-#include <stdint.h>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>

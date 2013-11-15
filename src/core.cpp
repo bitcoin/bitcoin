@@ -7,8 +7,6 @@
 
 #include "util.h"
 
-#include <stdint.h>
-
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10).c_str(), n);
