@@ -323,4 +323,15 @@ BOOST_AUTO_TEST_CASE(util_seed_insecure_rand)
     }
 }
 
+BOOST_AUTO_TEST_CASE(util_TimingResistantEqual)
+{
+    BOOST_CHECK(TimingResistantEqual(std::string(""), std::string("")));
+    BOOST_CHECK(!TimingResistantEqual(std::string("abc"), std::string("")));
+    BOOST_CHECK(!TimingResistantEqual(std::string(""), std::string("abc")));
+    BOOST_CHECK(!TimingResistantEqual(std::string("a"), std::string("aa")));
+    BOOST_CHECK(!TimingResistantEqual(std::string("aa"), std::string("a")));
+    BOOST_CHECK(TimingResistantEqual(std::string("abc"), std::string("abc")));
+    BOOST_CHECK(!TimingResistantEqual(std::string("abc"), std::string("aba")));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

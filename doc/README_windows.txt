@@ -35,7 +35,7 @@ Sourceforge (release builds): https://sourceforge.net/projects/primecoin
 
 
 
-Bitcoin 0.8.3 BETA
+Bitcoin 0.8.5 BETA
 ==================
 
 Copyright (c) 2009-2013 Bitcoin Developers
