@@ -6,8 +6,8 @@
 #include "wallet.h"
 
 #include "base58.h"
-#include "net.h"
 #include "coincontrol.h"
+#include "net.h"
 
 #include <inttypes.h>
 #include <stdint.h>
