@@ -292,12 +292,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case Language:
             settings.setValue("language", value);
             break;
-        case CoinControlFeatures: {
+        case CoinControlFeatures:
             fCoinControlFeatures = value.toBool();
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
             emit coinControlFeaturesChanged(fCoinControlFeatures);
-        }
-        break;
+            break;
         default:
             break;
         }
@@ -310,11 +309,6 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
 qint64 OptionsModel::getTransactionFee()
 {
     return (qint64) nTransactionFee;
-}
-
-bool OptionsModel::getCoinControlFeatures()
-{
-    return fCoinControlFeatures;
 }
 
 bool OptionsModel::getProxySettings(QString& proxyIP, quint16 &proxyPort) const
