@@ -75,6 +75,8 @@ void SendCoinsEntry::setModel(WalletModel *model)
     if (model && model->getOptionsModel())
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
+    connect(ui->payAmount, SIGNAL(textChanged()), this, SIGNAL(payAmountChanged()));
+
     clear();
 }
 
