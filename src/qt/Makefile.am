@@ -72,7 +72,10 @@ QT_TS = locale/bitcoin_ach.ts \
   locale/bitcoin_zh_TW.ts
 
 QT_FORMS_UI = forms/aboutdialog.ui forms/addressbookpage.ui \
-  forms/askpassphrasedialog.ui forms/editaddressdialog.ui forms/intro.ui \
+  forms/askpassphrasedialog.ui \
+  forms/coincontroldialog.ui \
+  forms/editaddressdialog.ui \
+  forms/intro.ui \
   forms/openuridialog.ui \
   forms/optionsdialog.ui forms/overviewpage.ui forms/receiverequestdialog.ui \
   forms/receivecoinsdialog.ui \
@@ -83,6 +86,8 @@ QT_MOC_CPP = moc_aboutdialog.cpp moc_addressbookpage.cpp \
   moc_addresstablemodel.cpp moc_askpassphrasedialog.cpp \
   moc_bitcoinaddressvalidator.cpp moc_bitcoinamountfield.cpp \
   moc_bitcoingui.cpp moc_bitcoinunits.cpp moc_clientmodel.cpp \
+  moc_coincontroldialog.cpp \
+  moc_coincontroltreewidget.cpp \
   moc_csvmodelwriter.cpp moc_editaddressdialog.cpp moc_guiutil.cpp \
   moc_intro.cpp moc_macdockiconhandler.cpp moc_macnotificationhandler.cpp \
   moc_monitoreddatamapper.cpp moc_notificator.cpp \
@@ -110,7 +115,7 @@ PROTOBUF_PROTO = paymentrequest.proto
 
 BITCOIN_QT_H  = aboutdialog.h addressbookpage.h addresstablemodel.h \
   askpassphrasedialog.h bitcoinaddressvalidator.h bitcoinamountfield.h \
-  bitcoingui.h bitcoinunits.h clientmodel.h csvmodelwriter.h \
+  bitcoingui.h bitcoinunits.h clientmodel.h coincontroldialog.h coincontroltreewidget.h csvmodelwriter.h \
   editaddressdialog.h guiconstants.h guiutil.h intro.h macdockiconhandler.h \
   macnotificationhandler.h monitoreddatamapper.h notificator.h \
   openuridialog.h \
@@ -143,7 +148,10 @@ RES_ICONS = res/icons/bitcoin.png res/icons/address-book.png \
 BITCOIN_QT_CPP = aboutdialog.cpp addressbookpage.cpp \
   addresstablemodel.cpp askpassphrasedialog.cpp bitcoinaddressvalidator.cpp \
   bitcoinamountfield.cpp bitcoin.cpp bitcoingui.cpp \
-  bitcoinunits.cpp clientmodel.cpp csvmodelwriter.cpp editaddressdialog.cpp \
+  bitcoinunits.cpp clientmodel.cpp \
+  coincontroldialog.cpp \
+  coincontroltreewidget.cpp \
+  csvmodelwriter.cpp editaddressdialog.cpp \
   guiutil.cpp intro.cpp monitoreddatamapper.cpp notificator.cpp \
   openuridialog.cpp \
   optionsdialog.cpp optionsmodel.cpp overviewpage.cpp paymentrequestplus.cpp \
