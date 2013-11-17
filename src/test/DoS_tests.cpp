@@ -5,12 +5,15 @@
 
 
 #include "bignum.h"
+#include "bitcointime.h"
 #include "keystore.h"
+#include "log.h"
 #include "main.h"
 #include "net.h"
 #include "script.h"
 #include "serialize.h"
 
+#include <iostream>
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
@@ -69,8 +72,8 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
 BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
     CNode::ClearBanned();
-    int64_t nStartTime = GetTime();
-    SetMockTime(nStartTime); // Overrides future calls to GetTime()
+    int64_t nStartTime = BitcoinTime::GetTime();
+    BitcoinTime::SetMockTime(nStartTime); // Overrides future calls to BitcoinTime::GetTime()
 
     CAddress addr(ip(0xa0b0c001));
     CNode dummyNode(INVALID_SOCKET, addr, "", true);
@@ -78,10 +81,10 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     dummyNode.Misbehaving(100);
     BOOST_CHECK(CNode::IsBanned(addr));
 
-    SetMockTime(nStartTime+60*60);
+    BitcoinTime::SetMockTime(nStartTime+60*60);
     BOOST_CHECK(CNode::IsBanned(addr));
 
-    SetMockTime(nStartTime+60*60*24+1);
+    BitcoinTime::SetMockTime(nStartTime+60*60*24+1);
     BOOST_CHECK(!CNode::IsBanned(addr));
 }
 
@@ -261,7 +264,7 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     boost::posix_time::ptime mst2 = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration msdiff = mst2 - mst1;
     long nOneValidate = msdiff.total_milliseconds();
-    if (fDebug) printf("DoS_Checksig sign: %ld\n", nOneValidate);
+    if (Log::fDebug) std::cout << "DoS_Checksig sign: " << nOneValidate << "\n";
 
     // ... now validating repeatedly should be quick:
     // 2.8GHz machine, -g build: Sign takes ~760ms,
@@ -274,7 +277,7 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     mst2 = boost::posix_time::microsec_clock::local_time();
     msdiff = mst2 - mst1;
     long nManyValidate = msdiff.total_milliseconds();
-    if (fDebug) printf("DoS_Checksig five: %ld\n", nManyValidate);
+    if (Log::fDebug) std::cout << "DoS_Checksig five: " << nManyValidate << "\n";
 
     BOOST_CHECK_MESSAGE(nManyValidate < nOneValidate, "Signature cache timing failed");
 

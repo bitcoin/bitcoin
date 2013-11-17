@@ -6,6 +6,11 @@
 #ifndef BITCOIN_UINT256_H
 #define BITCOIN_UINT256_H
 
+#include "log.h"
+
+#include <iomanip>
+#include <ios>
+#include <sstream>
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
@@ -299,10 +304,13 @@ public:
 
     std::string GetHex() const
     {
-        char psz[sizeof(pn)*2 + 1];
+        std::ostringstream oss;
+        oss << std::hex << std::setfill('0');
+
         for (unsigned int i = 0; i < sizeof(pn); i++)
-            sprintf(psz + i*2, "%02x", ((unsigned char*)pn)[sizeof(pn) - i - 1]);
-        return std::string(psz, psz + sizeof(pn)*2);
+            oss << std::setw(2) << static_cast<unsigned>(reinterpret_cast<const unsigned char*>(pn)[sizeof(pn) - i - 1]);
+        
+        return oss.str();
     }
 
     void SetHex(const char* psz)
@@ -654,39 +662,39 @@ inline int Testuint256AdHoc(std::vector<std::string> vArg)
     uint256 g(0);
 
 
-    LogPrintf("%s\n", g.ToString().c_str());
-    g--;  LogPrintf("g--\n");
-    LogPrintf("%s\n", g.ToString().c_str());
-    g--;  LogPrintf("g--\n");
-    LogPrintf("%s\n", g.ToString().c_str());
-    g++;  LogPrintf("g++\n");
-    LogPrintf("%s\n", g.ToString().c_str());
-    g++;  LogPrintf("g++\n");
-    LogPrintf("%s\n", g.ToString().c_str());
-    g++;  LogPrintf("g++\n");
-    LogPrintf("%s\n", g.ToString().c_str());
-    g++;  LogPrintf("g++\n");
-    LogPrintf("%s\n", g.ToString().c_str());
+    Log() << g.ToString() << "\n";
+    g--;  Log() << "g--\n";
+    Log() << g.ToString() << "\n";
+    g--;  Log() << "g--\n";
+    Log() << g.ToString() << "\n";
+    g++;  Log() << "g++\n";
+    Log() << g.ToString() << "\n";
+    g++;  Log() << "g++\n";
+    Log() << g.ToString() << "\n";
+    g++;  Log() << "g++\n";
+    Log() << g.ToString() << "\n";
+    g++;  Log() << "g++\n";
+    Log() << g.ToString() << "\n";
 
 
 
     uint256 a(7);
-    LogPrintf("a=7\n");
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << "a=7\n";
+    Log() << a.ToString() << "\n";
 
     uint256 b;
-    LogPrintf("b undefined\n");
-    LogPrintf("%s\n", b.ToString().c_str());
+    Log() << "b undefined\n";
+    Log() << b.ToString() << "\n";
     int c = 3;
 
     a = c;
     a.pn[3] = 15;
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
     uint256 k(c);
 
     a = 5;
     a.pn[3] = 15;
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
     b = 1;
     b <<= 52;
 
@@ -694,86 +702,88 @@ inline int Testuint256AdHoc(std::vector<std::string> vArg)
 
     a ^= 0x500;
 
-    LogPrintf("a %s\n", a.ToString().c_str());
+    Log() << "a " << a.ToString() << "\n";
 
     a = a | b | (uint256)0x1000;
 
 
-    LogPrintf("a %s\n", a.ToString().c_str());
-    LogPrintf("b %s\n", b.ToString().c_str());
+    Log() << "a " << a.ToString() << "\n";
+    Log() << "b " << b.ToString() << "\n";
 
     a = 0xfffffffe;
     a.pn[4] = 9;
 
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
     a++;
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
     a++;
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
     a++;
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
     a++;
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
 
     a--;
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
     a--;
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
     a--;
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
     uint256 d = a--;
-    LogPrintf("%s\n", d.ToString().c_str());
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << d.ToString() << "\n";
+    Log() << a.ToString() << "\n";
     a--;
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
     a--;
-    LogPrintf("%s\n", a.ToString().c_str());
+    Log() << a.ToString() << "\n";
 
     d = a;
 
-    LogPrintf("%s\n", d.ToString().c_str());
-    for (int i = uint256::WIDTH-1; i >= 0; i--) LogPrintf("%08x", d.pn[i]); LogPrintf("\n");
+    Log() << d.ToString() << "\n";
+    for (int i = uint256::WIDTH-1; i >= 0; i--) 
+        Log() << boost::format("%08x") % d.pn[i]; 
+    Log() << "\n";
 
     uint256 neg = d;
     neg = ~neg;
-    LogPrintf("%s\n", neg.ToString().c_str());
+    Log() << neg.ToString() << "\n";
 
 
     uint256 e = uint256("0xABCDEF123abcdef12345678909832180000011111111");
-    LogPrintf("\n");
-    LogPrintf("%s\n", e.ToString().c_str());
+    Log() << "\n";
+    Log() << e.ToString() << "\n";
 
 
-    LogPrintf("\n");
+    Log() << "\n";
     uint256 x1 = uint256("0xABCDEF123abcdef12345678909832180000011111111");
     uint256 x2;
-    LogPrintf("%s\n", x1.ToString().c_str());
+    Log() << x1.ToString() << "\n";
     for (int i = 0; i < 270; i += 4)
     {
         x2 = x1 << i;
-        LogPrintf("%s\n", x2.ToString().c_str());
+        Log() << x2.ToString() << "\n";
     }
 
-    LogPrintf("\n");
-    LogPrintf("%s\n", x1.ToString().c_str());
+    Log("\n");
+    Log() << x1.ToString() << "\n";
     for (int i = 0; i < 270; i += 4)
     {
         x2 = x1;
         x2 >>= i;
-        LogPrintf("%s\n", x2.ToString().c_str());
+        Log() << x2.ToString() << "\n";
     }
 
 
     for (int i = 0; i < 100; i++)
     {
         uint256 k = (~uint256(0) >> i);
-        LogPrintf("%s\n", k.ToString().c_str());
+        Log() << k.ToString() << "\n";
     }
 
     for (int i = 0; i < 100; i++)
     {
         uint256 k = (~uint256(0) << i);
-        LogPrintf("%s\n", k.ToString().c_str());
+        Log() << k.ToString() << "\n";
     }
 
     return (0);

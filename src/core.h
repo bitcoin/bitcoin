@@ -11,6 +11,7 @@
 #include "uint256.h"
 
 #include <stdint.h>
+#include <string>
 
 class CTransaction;
 

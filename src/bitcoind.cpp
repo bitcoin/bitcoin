@@ -11,6 +11,9 @@
 #include "ui_interface.h"
 #include "util.h"
 
+#include <iostream>
+#include <string>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 
@@ -65,31 +68,31 @@ bool AppInit(int argc, char* argv[])
         ParseParameters(argc, argv);
         if (!boost::filesystem::is_directory(GetDataDir(false)))
         {
-            fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
+            std::cerr << "Error: Specified data directory \"" << mapArgs["-datadir"] << "\" does not exist.\n";
             return false;
         }
         ReadConfigFile(mapArgs, mapMultiArgs);
         // Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
         if (!SelectParamsFromCommandLine()) {
-            fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
+            std::cerr << "Error: Invalid combination of -regtest and -testnet.\n";
             return false;
         }
 
         if (mapArgs.count("-?") || mapArgs.count("--help"))
         {
             // First part of help message is specific to bitcoind / RPC client
-            std::string strUsage = _("Bitcoin version") + " " + FormatFullVersion() + "\n\n" +
-                _("Usage:") + "\n" +
-                  "  bitcoind [options]                     " + _("Start Bitcoin server") + "\n" +
-                _("Usage (deprecated, use bitcoin-cli):") + "\n" +
-                  "  bitcoind [options] <command> [params]  " + _("Send command to Bitcoin server") + "\n" +
-                  "  bitcoind [options] help                " + _("List commands") + "\n" +
-                  "  bitcoind [options] help <command>      " + _("Get help for a command") + "\n";
+            std::string strUsage = _<std::string>("Bitcoin version") + " " + FormatFullVersion() + "\n\n" +
+                _<std::string>("Usage:") + "\n" +
+                  "  bitcoind [options]                     " + _<std::string>("Start Bitcoin server") + "\n" +
+                _<std::string>("Usage (deprecated, use bitcoin-cli):") + "\n" +
+                  "  bitcoind [options] <command> [params]  " + _<std::string>("Send command to Bitcoin server") + "\n" +
+                  "  bitcoind [options] help                " + _<std::string>("List commands") + "\n" +
+                  "  bitcoind [options] help <command>      " + _<std::string>("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessage(HMM_BITCOIND);
             strUsage += "\n" + HelpMessageCli(false);
 
-            fprintf(stdout, "%s", strUsage.c_str());
+            std::cout << strUsage;
             return false;
         }
 
@@ -112,7 +115,7 @@ bool AppInit(int argc, char* argv[])
             pid_t pid = fork();
             if (pid < 0)
             {
-                fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
+                std::cerr << "Error: fork() returned " << pid << " errno " << errno << "\n";
                 return false;
             }
             if (pid > 0) // Parent process, pid is child process id
@@ -124,7 +127,7 @@ bool AppInit(int argc, char* argv[])
 
             pid_t sid = setsid();
             if (sid < 0)
-                fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
+                std::cerr << "Error: setsid() returned " << sid << " errno " << errno << "\n";
         }
 #endif
 

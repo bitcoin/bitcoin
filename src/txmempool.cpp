@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "core.h"
+#include "log.h"
 #include "txmempool.h"
 
 using namespace std;
@@ -138,7 +139,7 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
     if (!fSanityCheck)
         return;
 
-    LogPrint("mempool", "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
+    Log("mempool") << "Checking mempool with " << (unsigned int) mapTx.size() << " transactions and " << (unsigned int)mapNextTx.size() << " inputs\n";
 
     LOCK(cs);
     for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {

@@ -14,6 +14,7 @@
 #include "walletmodel.h"
 
 #include "base58.h"
+#include "bitcointime.h"
 #include "coincontrol.h"
 #include "ui_interface.h"
 
@@ -380,7 +381,7 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     if (rv.paymentRequest.IsInitialized()) {
         // Expired payment request?
         const payments::PaymentDetails& details = rv.paymentRequest.getDetails();
-        if (details.has_expires() && (int64_t)details.expires() < GetTime())
+        if (details.has_expires() && (int64_t)details.expires() < BitcoinTime::GetTime())
         {
             emit message(strSendCoins, tr("Payment request expired"),
                 CClientUIInterface::MSG_WARNING);

@@ -2,7 +2,9 @@
 
 
 
+#include "bitcointime.h"
 #include "db.h"
+#include "log.h"
 #include "main.h"
 #include "txdb.h"
 #include "ui_interface.h"
@@ -10,6 +12,7 @@
 #include "wallet.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <boost/test/unit_test.hpp>
 
 
@@ -24,10 +27,10 @@ struct TestingSetup {
     boost::thread_group threadGroup;
 
     TestingSetup() {
-        fPrintToDebugger = true; // don't want to write to debug.log file
+        Log::fPrintToDebugger = true; // don't want to write to debug.log file
         noui_connect();
         bitdb.MakeMock();
-        pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
+        pathTemp = GetTempPath() / boost::str(boost::format("test_bitcoin_%u_%d") % (unsigned long) BitcoinTime::GetTime() % (int) GetRand(100000));
         boost::filesystem::create_directories(pathTemp);
         mapArgs["-datadir"] = pathTemp.string();
         pblocktree = new CBlockTreeDB(1 << 20, true);

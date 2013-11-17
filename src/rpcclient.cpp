@@ -10,6 +10,7 @@
 #include "ui_interface.h"
 #include "chainparams.h" // for Params().RPCPort()
 
+#include <sstream>
 #include <stdint.h>
 
 #include <boost/algorithm/string.hpp>
@@ -18,6 +19,7 @@
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
+#include <boost/format.hpp>
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/lexical_cast.hpp>
@@ -32,10 +34,11 @@ using namespace json_spirit;
 Object CallRPC(const string& strMethod, const Array& params)
 {
     if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
-        throw runtime_error(strprintf(
+    {
+        throw runtime_error(str(
             _("You must set rpcpassword=<password> in the configuration file:\n%s\n"
-              "If the file does not exist, create it with owner-readable-only file permissions."),
-                GetConfigFile().string().c_str()));
+              "If the file does not exist, create it with owner-readable-only file permissions.") % GetConfigFile().string()));
+    }
 
     // Connect to localhost
     bool fUseSSL = GetBoolArg("-rpcssl", false);
@@ -48,7 +51,7 @@ Object CallRPC(const string& strMethod, const Array& params)
 
     bool fWait = GetBoolArg("-rpcwait", false); // -rpcwait means try until server has started
     do {
-        bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", itostr(Params().RPCPort())));
+        bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", tostr(Params().RPCPort())));
         if (fConnected) break;
         if (fWait)
             MilliSleep(1000);
@@ -78,7 +81,7 @@ Object CallRPC(const string& strMethod, const Array& params)
     if (nStatus == HTTP_UNAUTHORIZED)
         throw runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
     else if (nStatus >= 400 && nStatus != HTTP_BAD_REQUEST && nStatus != HTTP_NOT_FOUND && nStatus != HTTP_INTERNAL_SERVER_ERROR)
-        throw runtime_error(strprintf("server returned HTTP error %d", nStatus));
+        throw runtime_error(str(boost::format("server returned HTTP error %d") % nStatus));
     else if (strReply.empty())
         throw runtime_error("no response from server");
 
@@ -248,32 +251,33 @@ int CommandLineRPC(int argc, char *argv[])
 
 std::string HelpMessageCli(bool mainProgram)
 {
-    string strUsage;
+    ostringstream ossUsage;
     if(mainProgram)
     {
-        strUsage += _("Options:") + "\n";
-        strUsage += "  -?                     " + _("This help message") + "\n";
-        strUsage += "  -conf=<file>           " + _("Specify configuration file (default: bitcoin.conf)") + "\n";
-        strUsage += "  -datadir=<dir>         " + _("Specify data directory") + "\n";
-        strUsage += "  -testnet               " + _("Use the test network") + "\n";
-        strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be "
-                                            "solved instantly. This is intended for regression testing tools and app development.") + "\n";
+        ossUsage << _("Options:").str() << "\n"
+                 << "  -?                     " << _("This help message").str() + "\n"
+                 << "  -conf=<file>           " << _("Specify configuration file (default: bitcoin.conf)").str() + "\n"
+                 << "  -datadir=<dir>         " << _("Specify data directory").str() + "\n"
+                 << "  -testnet               " << _("Use the test network").str() + "\n"
+                 << "  -regtest               " << _("Enter regression test mode, which uses a special chain in which blocks can be "
+                                            "solved instantly. This is intended for regression testing tools and app development.").str() + "\n";
     } else {
-        strUsage += _("RPC client options:") + "\n";
+        ossUsage << _("RPC client options:").str() << "\n";
     }
 
-    strUsage += "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n";
-    strUsage += "  -rpcport=<port>        " + _("Connect to JSON-RPC on <port> (default: 8332 or testnet: 18332)") + "\n";
-    strUsage += "  -rpcwait               " + _("Wait for RPC server to start") + "\n";
-    strUsage += "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n";
-    strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
+    ossUsage << "  -rpcconnect=<ip>       " << _("Send commands to node running on <ip> (default: 127.0.0.1)").str() << "\n"
+             << "  -rpcport=<port>        " << _("Connect to JSON-RPC on <port> (default: 8332 or testnet: 18332)").str() << "\n"
+             << "  -rpcwait               " << _("Wait for RPC server to start").str() << "\n"
+             << "  -rpcuser=<user>        " << _("Username for JSON-RPC connections").str() << "\n"
+             << "  -rpcpassword=<pw>      " << _("Password for JSON-RPC connections").str() << "\n";
 
     if(mainProgram)
     {
-        strUsage += "\n" + _("SSL options: (see the Bitcoin Wiki for SSL setup instructions)") + "\n";
-        strUsage += "  -rpcssl                " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n";
+        ossUsage << "\n"
+                 << _("SSL options: (see the Bitcoin Wiki for SSL setup instructions)").str() << "\n"
+                 << "  -rpcssl                " << _("Use OpenSSL (https) for JSON-RPC connections").str() << "\n";
     }
 
-    return strUsage;
+    return ossUsage.str();
 }
 

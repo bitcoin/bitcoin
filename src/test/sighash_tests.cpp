@@ -3,6 +3,8 @@
 #include "main.h"
 #include "util.h"
 
+#include <iostream>
+
 extern uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 
 // Old script.cpp SignatureHash function
@@ -10,7 +12,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
 {
     if (nIn >= txTo.vin.size())
     {
-        printf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
+        std::cout << "ERROR: SignatureHash() : nIn=" << nIn << " out of range\n";
         return 1;
     }
     CTransaction txTmp(txTo);
@@ -41,7 +43,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
         unsigned int nOut = nIn;
         if (nOut >= txTmp.vout.size())
         {
-            printf("ERROR: SignatureHash() : nOut=%d out of range\n", nOut);
+            std::cout << "ERROR: SignatureHash() : nOut=" << nOut << " out of range\n";
             return 1;
         }
         txTmp.vout.resize(nOut+1);

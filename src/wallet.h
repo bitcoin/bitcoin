@@ -5,10 +5,12 @@
 #ifndef BITCOIN_WALLET_H
 #define BITCOIN_WALLET_H
 
+#include "bitcointime.h"
 #include "core.h"
 #include "crypter.h"
 #include "key.h"
 #include "keystore.h"
+#include "log.h"
 #include "main.h"
 #include "ui_interface.h"
 #include "util.h"
@@ -22,6 +24,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <boost/format.hpp>
 
 class CAccountingEntry;
 class CCoinControl;
@@ -51,12 +55,12 @@ public:
 
     CKeyPool()
     {
-        nTime = GetTime();
+        nTime = BitcoinTime::GetTime();
     }
 
     CKeyPool(const CPubKey& vchPubKeyIn)
     {
-        nTime = GetTime();
+        nTime = BitcoinTime::GetTime();
         vchPubKey = vchPubKeyIn;
     }
 
@@ -384,7 +388,7 @@ static void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
         nOrderPos = -1; // TODO: calculate elsewhere
         return;
     }
-    nOrderPos = atoi64(mapValue["n"].c_str());
+    nOrderPos = fromstr<int64_t>(mapValue["n"]);
 }
 
 
@@ -392,7 +396,7 @@ static void WriteOrderPos(const int64_t& nOrderPos, mapValue_t& mapValue)
 {
     if (nOrderPos == -1)
         return;
-    mapValue["n"] = i64tostr(nOrderPos);
+    mapValue["n"] = tostr(nOrderPos);
 }
 
 
@@ -496,7 +500,7 @@ public:
             WriteOrderPos(pthis->nOrderPos, pthis->mapValue);
 
             if (nTimeSmart)
-                pthis->mapValue["timesmart"] = strprintf("%u", nTimeSmart);
+                pthis->mapValue["timesmart"] = tostr(nTimeSmart);
         }
 
         nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion,ser_action);
@@ -520,7 +524,7 @@ public:
 
             ReadOrderPos(pthis->nOrderPos, pthis->mapValue);
 
-            pthis->nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(pthis->mapValue["timesmart"]) : 0;
+            pthis->nTimeSmart = mapValue.count("timesmart") ? fromstr<unsigned int>(pthis->mapValue["timesmart"]) : 0;
         }
 
         pthis->mapValue.erase("fromaccount");
@@ -742,12 +746,12 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString().c_str(), i, nDepth, FormatMoney(tx->vout[i].nValue).c_str());
+        return boost::str(boost::format("COutput(%s, %d, %d) [%s]") % tx->GetHash().ToString() % i % nDepth % FormatMoney(tx->vout[i].nValue));
     }
 
     void print() const
     {
-        LogPrintf("%s\n", ToString().c_str());
+        Log() << ToString() << "\n";
     }
 };
 
@@ -767,7 +771,7 @@ public:
 
     CWalletKey(int64_t nExpires=0)
     {
-        nTimeCreated = (nExpires ? GetTime() : 0);
+        nTimeCreated = (nExpires ? BitcoinTime::GetTime() : 0);
         nTimeExpires = nExpires;
     }
 

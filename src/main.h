@@ -14,6 +14,7 @@
 #include "chainparams.h"
 #include "coins.h"
 #include "core.h"
+#include "log.h"
 #include "net.h"
 #include "script.h"
 #include "sync.h"
@@ -24,10 +25,13 @@
 #include <exception>
 #include <map>
 #include <set>
+#include <sstream>
 #include <stdint.h>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <boost/format.hpp>
 
 class CBlockIndex;
 class CBloomFilter;
@@ -332,7 +336,10 @@ public:
         // Open history file to append
         CAutoFile fileout = CAutoFile(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
         if (!fileout)
-            return error("CBlockUndo::WriteToDisk() : OpenUndoFile failed");
+        {
+            Log() << "ERROR: CBlockUndo::WriteToDisk() : OpenUndoFile failed\n";
+            return false;
+        }
 
         // Write index header
         unsigned int nSize = fileout.GetSerializeSize(*this);
@@ -341,7 +348,11 @@ public:
         // Write undo data
         long fileOutPos = ftell(fileout);
         if (fileOutPos < 0)
-            return error("CBlockUndo::WriteToDisk() : ftell failed");
+        {
+            Log() << "ERROR: CBlockUndo::WriteToDisk() : ftell failed\n";
+            return false;
+        }
+
         pos.nPos = (unsigned int)fileOutPos;
         fileout << *this;
 
@@ -364,7 +375,10 @@ public:
         // Open history file to read
         CAutoFile filein = CAutoFile(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
         if (!filein)
-            return error("CBlockUndo::ReadFromDisk() : OpenBlockFile failed");
+        {
+            Log() << "ERROR: CBlockUndo::ReadFromDisk() : OpenBlockFile failed\n";
+            return false;
+        }
 
         // Read block
         uint256 hashChecksum;
@@ -373,7 +387,8 @@ public:
             filein >> hashChecksum;
         }
         catch (std::exception &e) {
-            return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+            Log() << "ERROR: " << __PRETTY_FUNCTION__ << "() : deserialize or I/O error\n";
+            return false;
         }
 
         // Verify checksum
@@ -381,7 +396,10 @@ public:
         hasher << hashBlock;
         hasher << *this;
         if (hashChecksum != hasher.GetHash())
-            return error("CBlockUndo::ReadFromDisk() : checksum mismatch");
+        {
+            Log() << "ERROR: CBlockUndo::ReadFromDisk() : checksum mismatch\n";
+            return false;
+        }
 
         return true;
     }
@@ -631,7 +649,10 @@ public:
      }
 
      std::string ToString() const {
-         return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst).c_str(), DateTimeStrFormat("%Y-%m-%d", nTimeLast).c_str());
+         return boost::str(boost::format("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)") % 
+                                        nBlocks % nSize % nHeightFirst % nHeightLast % 
+                                        BitcoinTime::DateTimeStrFormat("%Y-%m-%d", nTimeFirst) % 
+                                        BitcoinTime::DateTimeStrFormat("%Y-%m-%d", nTimeLast));
      }
 
      // update statistics (does not update nSize)
@@ -835,15 +856,15 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
-            pprev, nHeight,
-            hashMerkleRoot.ToString().c_str(),
-            GetBlockHash().ToString().c_str());
+        return boost::str(boost::format("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)") %
+            pprev % nHeight %
+            hashMerkleRoot.ToString() %
+            GetBlockHash().ToString());
     }
 
     void print() const
     {
-        LogPrintf("%s\n", ToString().c_str());
+        Log() << ToString() << "\n";
     }
 };
 
@@ -902,17 +923,12 @@ public:
 
     std::string ToString() const
     {
-        std::string str = "CDiskBlockIndex(";
-        str += CBlockIndex::ToString();
-        str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
-            GetBlockHash().ToString().c_str(),
-            hashPrev.ToString().c_str());
-        return str;
+        return boost::str(boost::format("CDiskBlockIndex(%s\nhashBlock=%s, hashPrev=%s)") % CBlockIndex::ToString() % GetBlockHash().ToString() % hashPrev.ToString());
     }
 
     void print() const
     {
-        LogPrintf("%s\n", ToString().c_str());
+        Log() << ToString() << "\n";
     }
 };
 

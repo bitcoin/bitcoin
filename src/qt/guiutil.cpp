@@ -12,6 +12,8 @@
 #include "init.h"
 #include "util.h"
 
+#include <iostream>
+
 #ifdef WIN32
 #ifdef _WIN32_WINNT
 #undef _WIN32_WINNT
@@ -617,7 +619,7 @@ void HelpMessageBox::printToConsole()
 {
     // On other operating systems, the expected action is to print the message to the console.
     QString strUsage = header + "\n" + coreOptions + "\n" + uiOptions;
-    fprintf(stdout, "%s", strUsage.toStdString().c_str());
+    std::cout << strUsage.toStdString();
 }
 
 void HelpMessageBox::showOrPrint()

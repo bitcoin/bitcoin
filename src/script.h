@@ -8,8 +8,10 @@
 
 #include "bignum.h"
 #include "key.h"
+#include "log.h"
 #include "util.h"
 
+#include <sstream>
 #include <stdexcept>
 #include <stdint.h>
 #include <string>
@@ -224,7 +226,7 @@ const char* GetOpName(opcodetype opcode);
 inline std::string ValueString(const std::vector<unsigned char>& vch)
 {
     if (vch.size() <= 4)
-        return strprintf("%d", CBigNum(vch).getint());
+        return tostr(CBigNum(vch).getint());
     else
         return HexStr(vch);
 }
@@ -574,35 +576,35 @@ public:
 
     void PrintHex() const
     {
-        LogPrintf("CScript(%s)\n", HexStr(begin(), end(), true).c_str());
+        Log() << "CScript(" << HexStr(begin(), end(), true) << "\n";
     }
 
     std::string ToString() const
     {
-        std::string str;
+        std::ostringstream oss;
         opcodetype opcode;
         std::vector<unsigned char> vch;
         const_iterator pc = begin();
         while (pc < end())
         {
-            if (!str.empty())
-                str += " ";
+            if (oss.tellp() > 0)
+                oss << " ";
             if (!GetOp(pc, opcode, vch))
             {
-                str += "[error]";
-                return str;
+                oss << "[error]";
+                return oss.str();
             }
             if (0 <= opcode && opcode <= OP_PUSHDATA4)
-                str += ValueString(vch);
+                oss << ValueString(vch);
             else
-                str += GetOpName(opcode);
+                oss << GetOpName(opcode);
         }
-        return str;
+        return oss.str();
     }
 
     void print() const
     {
-        LogPrintf("%s\n", ToString().c_str());
+        Log() << ToString() << "\n";
     }
 
     CScriptID GetID() const

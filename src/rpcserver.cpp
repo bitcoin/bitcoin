@@ -7,9 +7,15 @@
 
 #include "base58.h"
 #include "init.h"
+#include "log.h"
 #include "main.h"
+#include "ui_interface.h"
 #include "util.h"
 #include "wallet.h"
+
+#include <iostream>
+#include <sstream>
+#include <stdint.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
@@ -17,6 +23,7 @@
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
+#include <boost/format.hpp>
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/lexical_cast.hpp>
@@ -48,11 +55,7 @@ void RPCTypeCheck(const Array& params,
 
         const Value& v = params[i];
         if (!((v.type() == t) || (fAllowNull && (v.type() == null_type))))
-        {
-            string err = strprintf("Expected type %s, got %s",
-                                   Value_type_name[t], Value_type_name[v.type()]);
-            throw JSONRPCError(RPC_TYPE_ERROR, err);
-        }
+            throw JSONRPCError(RPC_TYPE_ERROR, boost::str(boost::format("Expected type %s, got %s") % Value_type_name[t] % Value_type_name[v.type()]));
         i++;
     }
 }
@@ -65,14 +68,10 @@ void RPCTypeCheck(const Object& o,
     {
         const Value& v = find_value(o, t.first);
         if (!fAllowNull && v.type() == null_type)
-            throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first.c_str()));
+            throw JSONRPCError(RPC_TYPE_ERROR, boost::str(boost::format("Missing %s") % t.first));
 
         if (!((v.type() == t.second) || (fAllowNull && (v.type() == null_type))))
-        {
-            string err = strprintf("Expected type %s for %s, got %s",
-                                   Value_type_name[t.second], t.first.c_str(), Value_type_name[v.type()]);
-            throw JSONRPCError(RPC_TYPE_ERROR, err);
-        }
+            throw JSONRPCError(RPC_TYPE_ERROR, boost::str(boost::format("Expected type %s for %s, got %s") % Value_type_name[t.second] % t.first % Value_type_name[v.type()]));
     }
 }
 
@@ -138,7 +137,7 @@ vector<unsigned char> ParseHexO(const Object& o, string strKey)
 
 string CRPCTable::help(string strCommand) const
 {
-    string strRet;
+    ostringstream ossRet;
     set<rpcfn_type> setDone;
     for (map<string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
     {
@@ -166,13 +165,13 @@ string CRPCTable::help(string strCommand) const
             if (strCommand == "")
                 if (strHelp.find('\n') != string::npos)
                     strHelp = strHelp.substr(0, strHelp.find('\n'));
-            strRet += strHelp + "\n";
+            ossRet << strHelp + "\n";
         }
     }
-    if (strRet == "")
-        strRet = strprintf("help: unknown command: %s\n", strCommand.c_str());
-    strRet = strRet.substr(0,strRet.size()-1);
-    return strRet;
+    if (ossRet.tellp() == 0)
+        ossRet << "help: unknown command: " << strCommand << "\n";
+
+    return ossRet.str().substr(0, (size_t) ossRet.tellp() - 1);
 }
 
 Value help(const Array& params, bool fHelp)
@@ -484,10 +483,10 @@ void StartRPCThreads()
         RAND_bytes(rand_pwd, 32);
         string strWhatAmI = "To use bitcoind";
         if (mapArgs.count("-server"))
-            strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
+            strWhatAmI = str(_("To use the %s option") % "\"-server\"");
         else if (mapArgs.count("-daemon"))
-            strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
-        uiInterface.ThreadSafeMessageBox(strprintf(
+            strWhatAmI = str(_("To use the %s option") % "\"-daemon\"");
+        uiInterface.ThreadSafeMessageBox(str(
             _("%s, you must set a rpcpassword in the configuration file:\n"
               "%s\n"
               "It is recommended you use the following random password:\n"
@@ -497,10 +496,10 @@ void StartRPCThreads()
               "The username and password MUST NOT be the same.\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"
               "It is also recommended to set alertnotify so you are notified of problems;\n"
-              "for example: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com\n"),
-                strWhatAmI.c_str(),
-                GetConfigFile().string().c_str(),
-                EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str()),
+              "for example: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com\n")
+                % strWhatAmI
+                % GetConfigFile().string()
+                % EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32)),
                 "", CClientUIInterface::MSG_ERROR);
         StartShutdown();
         return;
@@ -519,12 +518,12 @@ void StartRPCThreads()
         filesystem::path pathCertFile(GetArg("-rpcsslcertificatechainfile", "server.cert"));
         if (!pathCertFile.is_complete()) pathCertFile = filesystem::path(GetDataDir()) / pathCertFile;
         if (filesystem::exists(pathCertFile)) rpc_ssl_context->use_certificate_chain_file(pathCertFile.string());
-        else LogPrintf("ThreadRPCServer ERROR: missing server certificate file %s\n", pathCertFile.string().c_str());
+        else Log() << "ThreadRPCServer ERROR: missing server certificate file " << pathCertFile.string() << "\n";
 
         filesystem::path pathPKFile(GetArg("-rpcsslprivatekeyfile", "server.pem"));
         if (!pathPKFile.is_complete()) pathPKFile = filesystem::path(GetDataDir()) / pathPKFile;
         if (filesystem::exists(pathPKFile)) rpc_ssl_context->use_private_key_file(pathPKFile.string(), ssl::context::pem);
-        else LogPrintf("ThreadRPCServer ERROR: missing server private key file %s\n", pathPKFile.string().c_str());
+        else Log() << "ThreadRPCServer ERROR: missing server private key file " << pathPKFile.string() << "\n";
 
         string strCiphers = GetArg("-rpcsslciphers", "TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH");
         SSL_CTX_set_cipher_list(rpc_ssl_context->impl(), strCiphers.c_str());
@@ -556,7 +555,7 @@ void StartRPCThreads()
     }
     catch(boost::system::system_error &e)
     {
-        strerr = strprintf(_("An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s"), endpoint.port(), e.what());
+        strerr = str(_("An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s") % endpoint.port() % e.what());
     }
 
     try {
@@ -579,7 +578,7 @@ void StartRPCThreads()
     }
     catch(boost::system::system_error &e)
     {
-        strerr = strprintf(_("An error occurred while setting up the RPC port %u for listening on IPv4: %s"), endpoint.port(), e.what());
+        strerr = str(_("An error occurred while setting up the RPC port %u for listening on IPv4: %s") % endpoint.port() % e.what());
     }
 
     if (!fListening) {
@@ -654,7 +653,7 @@ void JSONRequest::parse(const Value& valRequest)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
     strMethod = valMethod.get_str();
     if (strMethod != "getwork" && strMethod != "getblocktemplate")
-        LogPrint("rpc", "ThreadRPCServer method=%s\n", strMethod.c_str());
+        Log("rpc") << "ThreadRPCServer method=" << strMethod << "\n";
 
     // Parse params
     Value valParams = find_value(request, "params");
@@ -729,7 +728,7 @@ void ServiceConnection(AcceptedConnection *conn)
         }
         if (!HTTPAuthorized(mapHeaders))
         {
-            LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", conn->peer_address_to_string().c_str());
+            Log() << "ThreadRPCServer incorrect password attempt from " << conn->peer_address_to_string() << "\n";
             /* Deter brute-forcing short passwords.
                If this results in a DoS the user really
                shouldn't have their RPC port exposed. */

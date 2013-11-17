@@ -5,18 +5,21 @@
 
 #include "alert.h"
 
+#include "bitcointime.h"
 #include "key.h"
+#include "log.h"
 #include "net.h"
 #include "ui_interface.h"
 #include "util.h"
 
 #include <algorithm>
-#include <inttypes.h>
 #include <map>
+#include <sstream>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/foreach.hpp>
+#include <boost/format.hpp>
 
 using namespace std;
 
@@ -43,44 +46,38 @@ void CUnsignedAlert::SetNull()
 
 std::string CUnsignedAlert::ToString() const
 {
-    std::string strSetCancel;
+    std::ostringstream oss;
+    oss << "CAlert(\n"
+        << "    nVersion     = " << nVersion << "\n"
+        << "    nRelayUntil  = " << nRelayUntil << "\n"
+        << "    nExpiration  = " << nExpiration << "\n"
+        << "    nID          = " << nID << "\n"
+        << "    nCancel      = " << nCancel << "\n"
+        << "    setCancel    =";
+    
     BOOST_FOREACH(int n, setCancel)
-        strSetCancel += strprintf("%d ", n);
-    std::string strSetSubVer;
+        oss << " " << n;
+    oss << "\n";
+
+    oss << "    nMinVer      = " << nMinVer << "\n"
+        << "    nMaxVer      = " << nMaxVer << "\n"
+        << "    setSubVer    =";
+    
     BOOST_FOREACH(std::string str, setSubVer)
-        strSetSubVer += "\"" + str + "\" ";
-    return strprintf(
-        "CAlert(\n"
-        "    nVersion     = %d\n"
-        "    nRelayUntil  = %"PRId64"\n"
-        "    nExpiration  = %"PRId64"\n"
-        "    nID          = %d\n"
-        "    nCancel      = %d\n"
-        "    setCancel    = %s\n"
-        "    nMinVer      = %d\n"
-        "    nMaxVer      = %d\n"
-        "    setSubVer    = %s\n"
-        "    nPriority    = %d\n"
-        "    strComment   = \"%s\"\n"
-        "    strStatusBar = \"%s\"\n"
-        ")\n",
-        nVersion,
-        nRelayUntil,
-        nExpiration,
-        nID,
-        nCancel,
-        strSetCancel.c_str(),
-        nMinVer,
-        nMaxVer,
-        strSetSubVer.c_str(),
-        nPriority,
-        strComment.c_str(),
-        strStatusBar.c_str());
+        oss << " \"" << str << "\"";
+    oss << "\n";
+
+    oss << "    nPriority    = " << nPriority << "\n"
+        << "    strComment   = \"" << strComment << "\"\n"
+        << "    strStatusBar = \"" << strStatusBar << "\"\n"
+        << ")\n";
+
+    return oss.str();
 }
 
 void CUnsignedAlert::print() const
 {
-    LogPrintf("%s", ToString().c_str());
+    Log() << ToString();
 }
 
 void CAlert::SetNull()
@@ -102,7 +99,7 @@ uint256 CAlert::GetHash() const
 
 bool CAlert::IsInEffect() const
 {
-    return (GetAdjustedTime() < nExpiration);
+    return (BitcoinTime::GetAdjustedTime() < nExpiration);
 }
 
 bool CAlert::Cancels(const CAlert& alert) const
@@ -134,7 +131,7 @@ bool CAlert::RelayTo(CNode* pnode) const
     {
         if (AppliesTo(pnode->nVersion, pnode->strSubVer) ||
             AppliesToMe() ||
-            GetAdjustedTime() < nRelayUntil)
+            BitcoinTime::GetAdjustedTime() < nRelayUntil)
         {
             pnode->PushMessage("alert", *this);
             return true;
@@ -147,7 +144,10 @@ bool CAlert::CheckSignature() const
 {
     CPubKey key(Params().AlertKey());
     if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
-        return error("CAlert::CheckSignature() : verify signature failed");
+    {
+        Log() << "ERROR: CAlert::CheckSignature() : verify signature failed\n";
+        return false;
+    }
 
     // Now unserialize the data
     CDataStream sMsg(vchMsg, SER_NETWORK, PROTOCOL_VERSION);
@@ -204,13 +204,13 @@ bool CAlert::ProcessAlert(bool fThread)
             const CAlert& alert = (*mi).second;
             if (Cancels(alert))
             {
-                LogPrint("alert", "cancelling alert %d\n", alert.nID);
+                Log("alert") << "cancelling alert " << alert.nID << "\n";
                 uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
                 mapAlerts.erase(mi++);
             }
             else if (!alert.IsInEffect())
             {
-                LogPrint("alert", "expiring alert %d\n", alert.nID);
+                Log("alert") << "expiring alert " << alert.nID << "\n";
                 uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
                 mapAlerts.erase(mi++);
             }
@@ -224,7 +224,7 @@ bool CAlert::ProcessAlert(bool fThread)
             const CAlert& alert = item.second;
             if (alert.Cancels(*this))
             {
-                LogPrint("alert", "alert already cancelled by %d\n", alert.nID);
+                Log("alert") << "alert already cancelled by " << alert.nID << "\n";
                 return false;
             }
         }
@@ -254,6 +254,6 @@ bool CAlert::ProcessAlert(bool fThread)
         }
     }
 
-    LogPrint("alert", "accepted alert %d, AppliesToMe()=%d\n", nID, AppliesToMe());
+    Log("alert") << "accepted alert " << nID << ", AppliesToMe()=" << AppliesToMe() << "\n";
     return true;
 }

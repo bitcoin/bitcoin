@@ -5,6 +5,7 @@
 #include "alert.h"
 #include "data/alertTests.raw.h"
 
+#include "bitcointime.h"
 #include "serialize.h"
 #include "util.h"
 #include "version.h"
@@ -110,7 +111,7 @@ BOOST_FIXTURE_TEST_SUITE(Alert_tests, ReadAlerts)
 
 BOOST_AUTO_TEST_CASE(AlertApplies)
 {
-    SetMockTime(11);
+    BitcoinTime::SetMockTime(11);
 
     BOOST_FOREACH(const CAlert& alert, alerts)
     {
@@ -144,7 +145,7 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
 
     BOOST_CHECK(!alerts[2].AppliesTo(1, "/Satoshi:0.3.0/"));
 
-    SetMockTime(0);
+    BitcoinTime::SetMockTime(0);
 }
 
 
@@ -153,7 +154,7 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
 #ifndef WIN32
 BOOST_AUTO_TEST_CASE(AlertNotify)
 {
-    SetMockTime(11);
+    BitcoinTime::SetMockTime(11);
 
     boost::filesystem::path temp = GetTempPath() / "alertnotify.txt";
     boost::filesystem::remove(temp);
@@ -172,7 +173,7 @@ BOOST_AUTO_TEST_CASE(AlertNotify)
 
     boost::filesystem::remove(temp);
 
-    SetMockTime(0);
+    BitcoinTime::SetMockTime(0);
 }
 #endif
 

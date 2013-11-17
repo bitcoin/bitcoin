@@ -2,9 +2,12 @@
 
 #include "sync.h"
 
+#include <ios>
+#include <sstream>
 #include <stdint.h>
 #include <vector>
 
+#include <boost/format.hpp>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
@@ -303,30 +306,98 @@ BOOST_AUTO_TEST_CASE(util_TimingResistantEqual)
     BOOST_CHECK(!TimingResistantEqual(std::string("abc"), std::string("aba")));
 }
 
-/* Test strprintf formatting directives.
+/* Test ostream and boost::format formatting directives.
  * Put a string before and after to ensure sanity of element sizes on stack. */
 #define B "check_prefix"
 #define E "check_postfix"
-BOOST_AUTO_TEST_CASE(strprintf_numbers)
+BOOST_AUTO_TEST_CASE(ostream_numbers)
 {
-    int64_t s64t = -9223372036854775807LL; /* signed 64 bit test value */
-    uint64_t u64t = 18446744073709551615ULL; /* unsigned 64 bit test value */
-    BOOST_CHECK(strprintf("%s %"PRId64" %s", B, s64t, E) == B" -9223372036854775807 "E);
-    BOOST_CHECK(strprintf("%s %"PRIu64" %s", B, u64t, E) == B" 18446744073709551615 "E);
-    BOOST_CHECK(strprintf("%s %"PRIx64" %s", B, u64t, E) == B" ffffffffffffffff "E);
+    {
+        int64_t s64t = -9223372036854775807LL; /* signed 64 bit test value */
+        uint64_t u64t = 18446744073709551615ULL; /* unsigned 64 bit test value */
 
-    size_t st = 12345678; /* unsigned size_t test value */
-    ssize_t sst = -12345678; /* signed size_t test value */
-    BOOST_CHECK(strprintf("%s %"PRIszd" %s", B, sst, E) == B" -12345678 "E);
-    BOOST_CHECK(strprintf("%s %"PRIszu" %s", B, st, E) == B" 12345678 "E);
-    BOOST_CHECK(strprintf("%s %"PRIszx" %s", B, st, E) == B" bc614e "E);
+        ostringstream ossSigned64, ossUnsigned64, ossHex64;
+        ossSigned64   << B" " << s64t << " "E;
+        ossUnsigned64 << B" " << u64t << " "E;
+        ossHex64      << B" " << hex << u64t << " "E;
 
-    ptrdiff_t pt = 87654321; /* positive ptrdiff_t test value */
-    ptrdiff_t spt = -87654321; /* negative ptrdiff_t test value */
-    BOOST_CHECK(strprintf("%s %"PRIpdd" %s", B, spt, E) == B" -87654321 "E);
-    BOOST_CHECK(strprintf("%s %"PRIpdu" %s", B, pt, E) == B" 87654321 "E);
-    BOOST_CHECK(strprintf("%s %"PRIpdx" %s", B, pt, E) == B" 5397fb1 "E);
+        BOOST_CHECK(ossSigned64.str() == B" -9223372036854775807 "E);
+        BOOST_CHECK(ossUnsigned64.str() == B" 18446744073709551615 "E);
+        BOOST_CHECK(ossHex64.str() == B" ffffffffffffffff "E);
+    }
+
+    {
+        ssize_t sst = -12345678; /* signed size_t test value */
+        size_t st = 12345678; /* unsigned size_t test value */
+        
+        ostringstream ossSSizet, ossSizet, ossHexSizet;
+        ossSSizet   << B" " << sst << " "E;
+        ossSizet    << B" " << st << " "E;
+        ossHexSizet << B" " << hex << st << " "E;
+        
+        BOOST_CHECK(ossSSizet.str() == B" -12345678 "E);
+        BOOST_CHECK(ossSizet.str() == B" 12345678 "E);
+        BOOST_CHECK(ossHexSizet.str() == B" bc614e "E);
+    }
+
+    {
+        ptrdiff_t spt = -87654321; /* negative ptrdiff_t test value */
+        ptrdiff_t pt = 87654321; /* positive ptrdiff_t test value */
+
+        ostringstream ossSPtrDiff, ossPtrDiff, ossHexPtrDiff;
+        ossSPtrDiff   << B" " << spt << " "E;
+        ossPtrDiff    << B" " << pt << " "E;
+        ossHexPtrDiff << B" " << hex << pt << " "E;
+
+        BOOST_CHECK(ossSPtrDiff.str() == B" -87654321 "E);
+        BOOST_CHECK(ossPtrDiff.str() == B" 87654321 "E);
+        BOOST_CHECK(ossHexPtrDiff.str() == B" 5397fb1 "E);
+    }
 }
+
+BOOST_AUTO_TEST_CASE(boost_format_numbers)
+{
+    {
+        int64_t s64t = -9223372036854775807LL; /* signed 64 bit test value */
+        uint64_t u64t = 18446744073709551615ULL; /* unsigned 64 bit test value */
+
+        string strSigned64   = boost::str(boost::format(B" %d "E) % s64t);
+        string strUnsigned64 = boost::str(boost::format(B" %u "E) % u64t);
+        string strHex64      = boost::str(boost::format(B" %x "E) % u64t);
+
+        BOOST_CHECK(strSigned64   == B" -9223372036854775807 "E);
+        BOOST_CHECK(strUnsigned64 == B" 18446744073709551615 "E);
+        BOOST_CHECK(strHex64      == B" ffffffffffffffff "E);
+    }
+
+    {
+        ssize_t sst = -12345678; /* signed size_t test value */
+        size_t st = 12345678; /* unsigned size_t test value */
+        
+        string strSSizet   = boost::str(boost::format(B" %d "E) % sst);
+        string strSizet    = boost::str(boost::format(B" %u "E) % st);
+        string strHexSizet = boost::str(boost::format(B" %x "E) % st);
+        
+        BOOST_CHECK(strSSizet   == B" -12345678 "E);
+        BOOST_CHECK(strSizet    == B" 12345678 "E);
+        BOOST_CHECK(strHexSizet == B" bc614e "E);
+    }
+
+    {
+        ptrdiff_t spt = -87654321; /* negative ptrdiff_t test value */
+        ptrdiff_t pt = 87654321; /* positive ptrdiff_t test value */
+
+        string strSPtrDiff   = boost::str(boost::format(B" %d "E) % spt);
+        string strPtrDiff    = boost::str(boost::format(B" %u "E) % pt);
+        string strHexPtrDiff = boost::str(boost::format(B" %x "E) % pt);
+
+        BOOST_CHECK(strSPtrDiff   == B" -87654321 "E);
+        BOOST_CHECK(strPtrDiff    == B" 87654321 "E);
+        BOOST_CHECK(strHexPtrDiff == B" 5397fb1 "E);
+    }
+    
+}
+
 #undef B
 #undef E
 

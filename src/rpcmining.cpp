@@ -3,13 +3,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpcserver.h"
+#include "bitcointime.h"
 #include "chainparams.h"
 #include "db.h"
 #include "init.h"
 #include "net.h"
 #include "main.h"
 #include "miner.h"
+#include "rpcserver.h"
 #include "wallet.h"
 
 #include <stdint.h>
@@ -156,6 +157,7 @@ Value setgenerate(const Array& params, bool fHelp)
     if (params.size() > 1)
     {
         nGenProcLimit = params[1].get_int();
+
         if (nGenProcLimit == 0)
             fGenerate = false;
     }
@@ -212,7 +214,7 @@ Value gethashespersec(const Array& params, bool fHelp)
             + HelpExampleRpc("gethashespersec", "")
         );
 
-    if (GetTimeMillis() - nHPSTimerStart > 8000)
+    if (BitcoinTime::GetTimeMillis() - nHPSTimerStart > 8000)
         return (boost::int64_t)0;
     return (boost::int64_t)dHashesPerSec;
 }
@@ -299,7 +301,7 @@ Value getwork(const Array& params, bool fHelp)
         static int64_t nStart;
         static CBlockTemplate* pblocktemplate;
         if (pindexPrev != chainActive.Tip() ||
-            (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
+            (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && BitcoinTime::GetTime() - nStart > 60))
         {
             if (pindexPrev != chainActive.Tip())
             {
@@ -316,7 +318,7 @@ Value getwork(const Array& params, bool fHelp)
             // Store the pindexBest used before CreateNewBlock, to avoid races
             nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrevNew = chainActive.Tip();
-            nStart = GetTime();
+            nStart = BitcoinTime::GetTime();
 
             // Create new block
             pblocktemplate = CreateNewBlockWithKey(*pMiningKey);
@@ -475,7 +477,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     static int64_t nStart;
     static CBlockTemplate* pblocktemplate;
     if (pindexPrev != chainActive.Tip() ||
-        (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
+        (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && BitcoinTime::GetTime() - nStart > 5))
     {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = NULL;
@@ -483,7 +485,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
         // Store the pindexBest used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
         CBlockIndex* pindexPrevNew = chainActive.Tip();
-        nStart = GetTime();
+        nStart = BitcoinTime::GetTime();
 
         // Create new block
         if(pblocktemplate)

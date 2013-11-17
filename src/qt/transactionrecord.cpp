@@ -5,9 +5,12 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
+#include "bitcointime.h"
 #include "wallet.h"
 
 #include <stdint.h>
+
+#include <boost/format.hpp>
 
 /* Return positive answer if transaction should be shown in list.
  */
@@ -159,11 +162,12 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         pindex = (*mi).second;
 
     // Sort order, unrecorded transactions sort to the top
-    status.sortKey = strprintf("%010d-%01d-%010u-%03d",
-        (pindex ? pindex->nHeight : std::numeric_limits<int>::max()),
-        (wtx.IsCoinBase() ? 1 : 0),
-        wtx.nTimeReceived,
+    status.sortKey = boost::str(boost::format("%010d-%01d-%010u-%03d") %
+        (pindex ? pindex->nHeight : std::numeric_limits<int>::max()) %
+        (wtx.IsCoinBase() ? 1 : 0) %
+        wtx.nTimeReceived %
         idx);
+
     status.confirmed = wtx.IsConfirmed();
     status.depth = wtx.GetDepthInMainChain();
     status.cur_num_blocks = chainActive.Height();
@@ -183,7 +187,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     }
     else
     {
-        if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+        if (BitcoinTime::GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
         {
             status.status = TransactionStatus::Offline;
         }
@@ -210,7 +214,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
                 status.matures_in = wtx.GetBlocksToMaturity();
 
                 // Check if the block was requested by anyone
-                if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                if (BitcoinTime::GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
                     status.maturity = TransactionStatus::MaturesWarning;
             }
             else
@@ -237,6 +241,6 @@ QString TransactionRecord::getTxID() const
 
 QString TransactionRecord::formatSubTxId(const uint256 &hash, int vout)
 {
-    return QString::fromStdString(hash.ToString() + strprintf("-%03d", vout));
+    return QString::fromStdString(boost::str(boost::format("%s-%03d") % hash.ToString() % vout));
 }
 

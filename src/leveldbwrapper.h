@@ -5,6 +5,7 @@
 #ifndef BITCOIN_LEVELDBWRAPPER_H
 #define BITCOIN_LEVELDBWRAPPER_H
 
+#include "log.h"
 #include "serialize.h"
 #include "util.h"
 #include "version.h"
@@ -93,7 +94,7 @@ public:
         if (!status.ok()) {
             if (status.IsNotFound())
                 return false;
-            LogPrintf("LevelDB read failure: %s\n", status.ToString().c_str());
+            Log() << "LevelDB read failure: " << status.ToString() << "\n";
             HandleError(status);
         }
         try {
@@ -122,7 +123,7 @@ public:
         if (!status.ok()) {
             if (status.IsNotFound())
                 return false;
-            LogPrintf("LevelDB read failure: %s\n", status.ToString().c_str());
+            Log() << "LevelDB read failure: " << status.ToString() << "\n";
             HandleError(status);
         }
         return true;

@@ -304,7 +304,7 @@ void CAddrMan::Good_(const CService &addr, int64_t nTime)
     // TODO: maybe re-add the node, but for now, just bail out
     if (nUBucket == -1) return;
 
-    LogPrint("addrman", "Moving %s to tried\n", addr.ToString().c_str());
+    Log("addrman") << "Moving " << addr.ToString() << " to tried\n";
 
     // move nId to the tried tables
     MakeTried(info, nId, nUBucket);
@@ -322,7 +322,7 @@ bool CAddrMan::Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimeP
     if (pinfo)
     {
         // periodically update nTime
-        bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
+        bool fCurrentlyOnline = (BitcoinTime::GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
         int64_t nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
         if (addr.nTime && (!pinfo->nTime || pinfo->nTime < addr.nTime - nUpdateInterval - nTimePenalty))
             pinfo->nTime = max((int64_t)0, addr.nTime - nTimePenalty);

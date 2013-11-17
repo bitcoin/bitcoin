@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <string>
 
+#include <boost/format.hpp>
 #include <boost/signals2/last_value.hpp>
 #include <boost/signals2/signal.hpp>
 
@@ -103,10 +104,30 @@ extern CClientUIInterface uiInterface;
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
  * If no translation slot is registered, nothing is returned, and simply return the input.
  */
-inline std::string _(const char* psz)
+inline boost::format _(const char* psz)
 {
     boost::optional<std::string> rv = uiInterface.Translate(psz);
-    return rv ? (*rv) : psz;
+    return boost::format(rv ? (*rv) : psz);
 }
+
+
+template <typename T>
+inline T _(const char* psz);
+
+template <>
+inline std::string _<std::string>(const char* psz)
+{
+    boost::optional<std::string> rv = uiInterface.Translate(psz);
+    return (rv ? (*rv) : std::string(psz));\
+    }
+
+/* TODO: Move fromstr out of util.h to allow:
+
+template <typename T>
+inline T _(const char* psz)
+{
+    return fromstr<T>(_<std::string>(psz));
+}
+*/
 
 #endif

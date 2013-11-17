@@ -6,10 +6,12 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
+#include "bitcointime.h"
 #include "bloom.h"
 #include "compat.h"
 #include "hash.h"
 #include "limitedmap.h"
+#include "log.h"
 #include "mruset.h"
 #include "netbase.h"
 #include "protocol.h"
@@ -18,7 +20,6 @@
 #include "util.h"
 
 #include <deque>
-#include <inttypes.h>
 #include <stdint.h>
 
 #ifndef WIN32
@@ -268,8 +269,8 @@ public:
         nLastRecv = 0;
         nSendBytes = 0;
         nRecvBytes = 0;
-        nLastSendEmpty = GetTime();
-        nTimeConnected = GetTime();
+        nLastSendEmpty = BitcoinTime::GetTime();
+        nTimeConnected = BitcoinTime::GetTime();
         addr = addrIn;
         addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
         nVersion = 0;
@@ -408,10 +409,10 @@ public:
             nRequestTime = it->second;
         else
             nRequestTime = 0;
-        LogPrint("net", "askfor %s   %"PRId64" (%s)\n", inv.ToString().c_str(), nRequestTime, DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000).c_str());
+        Log("net") << "askfor " << inv.ToString() << "   " << nRequestTime << " (" << BitcoinTime::DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000) << ")\n";
 
         // Make sure not to reuse time indexes to keep things in the same order
-        int64_t nNow = (GetTime() - 1) * 1000000;
+        int64_t nNow = (BitcoinTime::GetTime() - 1) * 1000000;
         static int64_t nLastTime;
         ++nLastTime;
         nNow = std::max(nNow, nLastTime);
@@ -434,7 +435,7 @@ public:
         ENTER_CRITICAL_SECTION(cs_vSend);
         assert(ssSend.size() == 0);
         ssSend << CMessageHeader(pszCommand, 0);
-        LogPrint("net", "sending: %s ", pszCommand);
+        Log("net") << "sending: " << pszCommand << " ";
     }
 
     // TODO: Document the precondition of this function.  Is cs_vSend locked?
@@ -444,7 +445,7 @@ public:
 
         LEAVE_CRITICAL_SECTION(cs_vSend);
 
-        LogPrint("net", "(aborted)\n");
+        Log("net") << "(aborted)\n";
     }
 
     // TODO: Document the precondition of this function.  Is cs_vSend locked?
@@ -455,7 +456,7 @@ public:
         // not intended for end-users.
         if (mapArgs.count("-dropmessagestest") && GetRand(GetArg("-dropmessagestest", 2)) == 0)
         {
-            LogPrint("net", "dropmessages DROPPING SEND MESSAGE\n");
+            Log("net") << "dropmessages DROPPING SEND MESSAGE\n";
             AbortMessage();
             return;
         }
@@ -476,7 +477,7 @@ public:
         assert(ssSend.size () >= CMessageHeader::CHECKSUM_OFFSET + sizeof(nChecksum));
         memcpy((char*)&ssSend[CMessageHeader::CHECKSUM_OFFSET], &nChecksum, sizeof(nChecksum));
 
-        LogPrint("net", "(%d bytes)\n", nSize);
+        Log("net") << "(" << nSize << " bytes)\n";
 
         std::deque<CSerializeData>::iterator it = vSendMsg.insert(vSendMsg.end(), CSerializeData());
         ssSend.GetAndClear(*it);
