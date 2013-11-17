@@ -217,12 +217,19 @@ void SendCoinsDialog::on_sendButton_clicked()
         questionString.append("</span> ");
         questionString.append(tr("added as transaction fee"));
     }
-    if(txFee > 0 || recipients.count() > 1)
+
+    // add total amount in all subdivision units
+    questionString.append("<hr />");
+    qint64 totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
+    QStringList alternativeUnits;
+    foreach(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
     {
-        // add total amount string if there are more then one recipients or a fee is required
-        questionString.append("<hr />");
-        questionString.append(tr("Total Amount %1").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTotalTransactionAmount()+txFee)));
+        if(u != model->getOptionsModel()->getDisplayUnit())
+            alternativeUnits.append(BitcoinUnits::formatWithUnit(u, totalAmount));
     }
+    questionString.append(tr("Total Amount %1 (= %2)")
+            .arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
+            .arg(alternativeUnits.join(" "+tr("or")+" ")));
 
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
         questionString.arg(formatted.join("<br />")),
