@@ -14,6 +14,7 @@
 #include "addresstablemodel.h"
 
 #include "base58.h"
+#include "chainparams.h"
 #include "ui_interface.h"
 #include "coincontrol.h"
 
@@ -380,8 +381,17 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
 {
     QString strSendCoins = tr("Send Coins");
     if (rv.paymentRequest.IsInitialized()) {
-        // Expired payment request?
         const payments::PaymentDetails& details = rv.paymentRequest.getDetails();
+
+        // Payment request network matches client network?
+        if ((details.network() == "main" && TestNet()) ||
+            (details.network() == "test" && !TestNet()))
+        {
+            emit message(strSendCoins, tr("Payment request network doesn't match clients network."),
+                CClientUIInterface::MSG_WARNING);
+            return false;
+        }
+        // Expired payment request?
         if (details.has_expires() && (int64_t)details.expires() < GetTime())
         {
             emit message(strSendCoins, tr("Payment request expired"),
