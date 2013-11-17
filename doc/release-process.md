@@ -121,6 +121,8 @@ repackage gitian builds for release as stand-alone zip/tar/installer exe
 
 * update bitcoin.org version
   make sure all OS download links go to the right versions
+  
+* update download sizes on bitcoin.org/_templates/download.html
 
 * update forum version
 
