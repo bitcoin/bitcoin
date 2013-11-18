@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <fstream>
 #include <limits>
 #include <ios>
 #include <map>
@@ -421,6 +422,7 @@ template<typename Stream, typename K, typename Pred, typename A> void Unserializ
 
 
 
+
 //
 // If none of the specialized versions above matched, default to calling member function.
 // "int nType" is changed to "long nType" to keep from getting an ambiguous overload error.
@@ -444,8 +446,6 @@ inline void Unserialize(Stream& is, T& a, long nType, int nVersion)
 {
     a.Unserialize(is, (int)nType, nVersion);
 }
-
-
 
 
 
@@ -789,11 +789,6 @@ struct ser_streamplaceholder
 
 
 
-
-
-
-
-
 typedef std::vector<char, zero_after_free_allocator<char> > CSerializeData;
 
 /** Double ended buffer combining vector and stream-like interfaces.
@@ -1100,71 +1095,50 @@ public:
 
 
 
-
-
-
-
-/** RAII wrapper for FILE*.
+/** RAII Wrapper for std::fstream.
  *
- * Will automatically close the file when it goes out of scope if not null.
- * If you're returning the file pointer, return file.release().
- * If you need to close the file early, use file.fclose() instead of fclose(file).
+ * Also allows the underlying std::fstream to be used in spite of being wrapped by a
+ * CAutoFile, if and only if it is referenced as a std::fstream and not a CAutoFile
+ *
+ * Will automatically close the file when it goes out of scope if opened.
+ * If you need to close the file early, use file.close().
  */
-class CAutoFile
+class CAutoFile : protected std::fstream
 {
-protected:
-    FILE* file;
-    short state;
-    short exceptmask;
 public:
     int nType;
     int nVersion;
 
-    CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn)
+    CAutoFile(int nTypeIn, int nVersionIn)
     {
-        file = filenew;
         nType = nTypeIn;
         nVersion = nVersionIn;
-        state = 0;
-        exceptmask = std::ios::badbit | std::ios::failbit;
     }
 
     ~CAutoFile()
     {
-        fclose();
+        // .close() would also be called by the std::fstream destructor if a file is still open
+        if (std::fstream::is_open())
+            std::fstream::close();
     }
 
-    void fclose()
+    bool open(const char *pszFile, std::ios_base::openmode mode = std::ios::binary | std::ios::in | std::ios::out)
     {
-        if (file != NULL && file != stdin && file != stdout && file != stderr)
-            ::fclose(file);
-        file = NULL;
+        std::fstream::open(pszFile, mode);
+        return std::fstream::is_open();
     }
 
-    FILE* release()             { FILE* ret = file; file = NULL; return ret; }
-    operator FILE*()            { return file; }
-    FILE* operator->()          { return file; }
-    FILE& operator*()           { return *file; }
-    FILE** operator&()          { return &file; }
-    FILE* operator=(FILE* pnew) { return file = pnew; }
-    bool operator!()            { return (file == NULL); }
+    void close() { std::fstream::close(); }
 
+    // functions when reading from files
+    void sync() { std::fstream::sync(); }
+    void seekg(uint64_t nFPtrPosIn) { std::fstream::seekg(nFPtrPosIn, std::ios::beg); }
+    uint64_t tellg() { return (uint64_t)std::fstream::tellg(); }
 
-    //
-    // Stream subset
-    //
-    void setstate(short bits, const char* psz)
-    {
-        state |= bits;
-        if (state & exceptmask)
-            throw std::ios_base::failure(psz);
-    }
-
-    bool fail() const            { return state & (std::ios::badbit | std::ios::failbit); }
-    bool good() const            { return state == 0; }
-    void clear(short n = 0)      { state = n; }
-    short exceptions()           { return exceptmask; }
-    short exceptions(short mask) { short prev = exceptmask; exceptmask = mask; setstate(0, "CAutoFile"); return prev; }
+    // functions when writing to files
+    void flush() { std::fstream::flush(); } // write
+    void seekp(uint64_t nFPtrPosIn) { std::fstream::seekp(nFPtrPosIn, std::ios::beg); }
+    uint64_t tellp() { return (uint64_t)std::fstream::tellp(); } // write
 
     void SetType(int n)          { nType = n; }
     int GetType()                { return nType; }
@@ -1175,19 +1149,25 @@ public:
 
     CAutoFile& read(char* pch, size_t nSize)
     {
-        if (!file)
-            throw std::ios_base::failure("CAutoFile::read : file handle is NULL");
-        if (fread(pch, 1, nSize, file) != nSize)
-            setstate(std::ios::failbit, feof(file) ? "CAutoFile::read : end of file" : "CAutoFile::read : fread failed");
+        if (!std::fstream::is_open())
+            throw std::ios_base::failure("CAutoFile::read : no file opened");
+
+        std::fstream::read(pch, nSize);
+        if (!std::fstream::good())
+            throw std::ios_base::failure("CAutoFile::read : failed to read from file");
+
         return (*this);
     }
 
     CAutoFile& write(const char* pch, size_t nSize)
     {
-        if (!file)
-            throw std::ios_base::failure("CAutoFile::write : file handle is NULL");
-        if (fwrite(pch, 1, nSize, file) != nSize)
-            setstate(std::ios::failbit, "CAutoFile::write : write failed");
+        if (!std::fstream::is_open())
+            throw std::ios_base::failure("CAutoFile::write : no file opened");
+
+        std::fstream::write(pch, nSize);
+        if (!std::fstream::good())
+            throw std::ios_base::failure("CAutoFile::write : failed to write to file");
+
         return (*this);
     }
 
@@ -1202,8 +1182,8 @@ public:
     CAutoFile& operator<<(const T& obj)
     {
         // Serialize to this stream
-        if (!file)
-            throw std::ios_base::failure("CAutoFile::operator<< : file handle is NULL");
+        if (!std::fstream::is_open())
+            throw std::ios_base::failure("CAutoFile::operator<< : no file opened");
         ::Serialize(*this, obj, nType, nVersion);
         return (*this);
     }
@@ -1212,8 +1192,8 @@ public:
     CAutoFile& operator>>(T& obj)
     {
         // Unserialize from this stream
-        if (!file)
-            throw std::ios_base::failure("CAutoFile::operator>> : file handle is NULL");
+        if (!std::fstream::is_open())
+            throw std::ios_base::failure("CAutoFile::operator>> : no file opened");
         ::Unserialize(*this, obj, nType, nVersion);
         return (*this);
     }

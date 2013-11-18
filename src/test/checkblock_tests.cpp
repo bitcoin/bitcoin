@@ -15,8 +15,7 @@
 
 BOOST_AUTO_TEST_SUITE(CheckBlock_tests)
 
-bool
-read_block(const std::string& filename, CBlock& block)
+bool read_block(const std::string& filename, CBlock& block)
 {
     namespace fs = boost::filesystem;
     fs::path testFile = fs::current_path() / "data" / filename;
@@ -26,15 +25,16 @@ read_block(const std::string& filename, CBlock& block)
         testFile = fs::path(BOOST_PP_STRINGIZE(TEST_DATA_DIR)) / filename;
     }
 #endif
-    FILE* fp = fopen(testFile.string().c_str(), "rb");
-    if (!fp) return false;
 
-    fseek(fp, 8, SEEK_SET); // skip msgheader/size
+    CAutoFile fileIn(SER_DISK, CLIENT_VERSION);
+    // open input file
+    if (!fileIn.open(testFile.string().c_str(), std::ios::binary | std::ios::in))
+        return false;
 
-    CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
-    if (!filein) return false;
+    // skip msgheader/size
+    fileIn.seekg(8);
 
-    filein >> block;
+    fileIn >> block;
 
     return true;
 }

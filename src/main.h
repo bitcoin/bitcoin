@@ -137,6 +137,10 @@ bool CheckDiskSpace(uint64_t nAdditionalBytes = 0);
 FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Open an undo file (rev?????.dat) */
 FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+/** Get full path for the block file referenced by pos */
+const std::string& GetBlockFile(const CDiskBlockPos &pos);
+/** Get full path for the undo file referenced by pos */
+const std::string& GetUndoFile(const CDiskBlockPos &pos);
 /** Import blocks from an external file */
 bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp = NULL);
 /** Initialize a new block tree database + block data on disk */
@@ -329,51 +333,57 @@ public:
 
     bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock)
     {
-        // Open history file to append
-        CAutoFile fileout = CAutoFile(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
-        if (!fileout)
-            return error("CBlockUndo::WriteToDisk() : OpenUndoFile failed");
+        int64_t nStart = GetTimeMicros();
+
+        CAutoFile undoFileOut(SER_DISK, CLIENT_VERSION);
+        // Open undo file
+        if (!undoFileOut.open(GetUndoFile(pos).c_str()))
+            return error("CBlockUndo::WriteToDisk : Failed to open undo file %s", GetUndoFile(pos).c_str());
+        else
+            undoFileOut.seekp(pos.nPos);
 
         // Write index header
-        unsigned int nSize = fileout.GetSerializeSize(*this);
-        fileout << FLATDATA(Params().MessageStart()) << nSize;
+        undoFileOut << FLATDATA(Params().MessageStart()) << undoFileOut.GetSerializeSize(*this);
+
+        // Save new block position (used in the block-index)
+        pos.nPos = (unsigned int)undoFileOut.tellp();
 
         // Write undo data
-        long fileOutPos = ftell(fileout);
-        if (fileOutPos < 0)
-            return error("CBlockUndo::WriteToDisk() : ftell failed");
-        pos.nPos = (unsigned int)fileOutPos;
-        fileout << *this;
+        undoFileOut << *this;
 
         // calculate & write checksum
         CHashWriter hasher(SER_GETHASH, PROTOCOL_VERSION);
         hasher << hashBlock;
         hasher << *this;
-        fileout << hasher.GetHash();
+        undoFileOut << hasher.GetHash();
 
-        // Flush stdio buffers and commit to disk before returning
-        fflush(fileout);
-        if (!IsInitialBlockDownload())
-            FileCommit(fileout);
+        if (fDebug)
+            LogPrintf("CBlockUndo::WriteToDisk : Current position in undo file %s after writing block is %"PRIu64"\n", GetUndoFile(pos).c_str(), undoFileOut.tellp());
+        if (fBenchmark)
+            LogPrintf("CBlockUndo::WriteToDisk : Function executed in %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
         return true;
     }
 
     bool ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock)
     {
-        // Open history file to read
-        CAutoFile filein = CAutoFile(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
-        if (!filein)
-            return error("CBlockUndo::ReadFromDisk() : OpenBlockFile failed");
+        int64_t nStart = GetTimeMicros();
+
+        CAutoFile undoFileIn(SER_DISK, CLIENT_VERSION);
+        // Open undo file to read
+        if (!undoFileIn.open(GetUndoFile(pos).c_str(), std::ios::binary | std::ios::in))
+            return error("CBlockUndo::ReadFromDisk : Failed to open undo file %s", GetUndoFile(pos).c_str());
+        else
+            undoFileIn.seekg(pos.nPos);
 
         // Read block
         uint256 hashChecksum;
         try {
-            filein >> *this;
-            filein >> hashChecksum;
+            undoFileIn >> *this;
+            undoFileIn >> hashChecksum;
         }
         catch (std::exception &e) {
-            return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+            return error("%s : Deserialize or I/O error - %s", __PRETTY_FUNCTION__, e.what());
         }
 
         // Verify checksum
@@ -381,7 +391,12 @@ public:
         hasher << hashBlock;
         hasher << *this;
         if (hashChecksum != hasher.GetHash())
-            return error("CBlockUndo::ReadFromDisk() : checksum mismatch");
+            return error("CBlockUndo::ReadFromDisk : Checksum mismatch");
+
+        if (fDebug)
+            LogPrintf("CBlockUndo::ReadFromDisk : Current position in undo file %s after reading block is %"PRIu64"\n", GetUndoFile(pos).c_str(), undoFileIn.tellg());
+        if (fBenchmark)
+            LogPrintf("CBlockUndo::ReadFromDisk : Function executed in %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
         return true;
     }
