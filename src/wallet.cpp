@@ -1534,7 +1534,19 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const string& strNam
 
 bool CWallet::DelAddressBook(const CTxDestination& address)
 {
+
     AssertLockHeld(cs_wallet); // mapAddressBook
+
+    if(fFileBacked)
+    {
+        // Delete destdata tuples associated with address
+        std::string strAddress = CBitcoinAddress(address).ToString();
+        BOOST_FOREACH(const PAIRTYPE(string, string) &item, mapAddressBook[address].destdata)
+        {
+            CWalletDB(strWalletFile).EraseDestData(strAddress, item.first);
+        }
+    }
+
     mapAddressBook.erase(address);
     NotifyAddressBookChanged(this, address, "", ::IsMine(*this, address), "", CT_DELETED);
     if (!fFileBacked)
@@ -2007,4 +2019,43 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const {
     // Extract block timestamps for those keys
     for (std::map<CKeyID, CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); it++)
         mapKeyBirth[it->first] = it->second->nTime - 7200; // block times can be 2h off
+}
+
+bool CWallet::AddDestData(const CTxDestination &dest, const std::string &key, const std::string &value)
+{
+    mapAddressBook[dest].destdata.insert(std::make_pair(key, value));
+    if (!fFileBacked)
+        return true;
+    return CWalletDB(strWalletFile).WriteDestData(CBitcoinAddress(dest).ToString(), key, value);
+}
+
+bool CWallet::EraseDestData(const CTxDestination &dest, const std::string &key)
+{
+    if (!mapAddressBook[dest].destdata.erase(key))
+        return false;
+    if (!fFileBacked)
+        return true;
+    return CWalletDB(strWalletFile).EraseDestData(CBitcoinAddress(dest).ToString(), key);
+}
+
+bool CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value)
+{
+    mapAddressBook[dest].destdata.insert(std::make_pair(key, value));
+    return true;
+}
+
+bool CWallet::GetDestData(const CTxDestination &dest, const std::string &key, std::string *value) const
+{
+    std::map<CTxDestination, CAddressBookData>::const_iterator i = mapAddressBook.find(dest);
+    if(i != mapAddressBook.end())
+    {
+        CAddressBookData::StringMap::const_iterator j = i->second.destdata.find(key);
+        if(j != i->second.destdata.end())
+        {
+            if(value)
+                *value = j->second;
+            return true;
+        }
+    }
+    return false;
 }

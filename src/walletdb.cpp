@@ -564,6 +564,18 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             ssValue >> pwallet->nOrderPosNext;
         }
+        else if (strType == "destdata")
+        {
+            std::string strAddress, strKey, strValue;
+            ssKey >> strAddress;
+            ssKey >> strKey;
+            ssValue >> strValue;
+            if (!pwallet->LoadDestData(CBitcoinAddress(strAddress).Get(), strKey, strValue))
+            {
+                strErr = "Error reading wallet database: LoadDestData failed";
+                return false;
+            }
+        }
     } catch (...)
     {
         return false;
@@ -864,4 +876,16 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
 bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename)
 {
     return CWalletDB::Recover(dbenv, filename, false);
+}
+
+bool CWalletDB::WriteDestData(const std::string &address, const std::string &key, const std::string &value)
+{
+    nWalletDBUpdated++;
+    return Write(boost::make_tuple(std::string("destdata"), address, key), value);
+}
+
+bool CWalletDB::EraseDestData(const std::string &address, const std::string &key)
+{
+    nWalletDBUpdated++;
+    return Erase(boost::make_tuple(string("destdata"), address, key));
 }
