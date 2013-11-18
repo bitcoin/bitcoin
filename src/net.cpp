@@ -80,6 +80,9 @@ CCriticalSection cs_setservAddNodeAddresses;
 vector<std::string> vAddedNodes;
 CCriticalSection cs_vAddedNodes;
 
+NodeId nLastNodeId = 0;
+CCriticalSection cs_nLastNodeId;
+
 static CSemaphore *semOutbound = NULL;
 
 // Signals for message handling
@@ -581,35 +584,21 @@ bool CNode::IsBanned(CNetAddr ip)
     return fResult;
 }
 
-bool CNode::Misbehaving(int howmuch)
-{
-    if (addr.IsLocal())
+bool CNode::Ban(const CNetAddr &addr) {
+    int64_t banTime = GetTime()+GetArg("-bantime", 60*60*24);  // Default 24-hour ban
     {
-        LogPrintf("Warning: Local node %s misbehaving (delta: %d)!\n", addrName.c_str(), howmuch);
-        return false;
+        LOCK(cs_setBanned);
+        if (setBanned[addr] < banTime)
+            setBanned[addr] = banTime;
     }
-
-    nMisbehavior += howmuch;
-    if (nMisbehavior >= GetArg("-banscore", 100))
-    {
-        int64_t banTime = GetTime()+GetArg("-bantime", 60*60*24);  // Default 24-hour ban
-        LogPrintf("Misbehaving: %s (%d -> %d) DISCONNECTING\n", addr.ToString().c_str(), nMisbehavior-howmuch, nMisbehavior);
-        {
-            LOCK(cs_setBanned);
-            if (setBanned[addr] < banTime)
-                setBanned[addr] = banTime;
-        }
-        CloseSocketDisconnect();
-        return true;
-    } else
-        LogPrintf("Misbehaving: %s (%d -> %d)\n", addr.ToString().c_str(), nMisbehavior-howmuch, nMisbehavior);
-    return false;
+    return true;
 }
 
 #undef X
 #define X(name) stats.name = name
 void CNode::copyStats(CNodeStats &stats)
 {
+    stats.nodeid = this->GetId();
     X(nServices);
     X(nLastSend);
     X(nLastRecv);
@@ -619,7 +608,6 @@ void CNode::copyStats(CNodeStats &stats)
     X(cleanSubVer);
     X(fInbound);
     X(nStartingHeight);
-    X(nMisbehavior);
     X(nSendBytes);
     X(nRecvBytes);
     stats.fSyncNode = (this == pnodeSync);
