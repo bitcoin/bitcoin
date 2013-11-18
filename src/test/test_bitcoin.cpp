@@ -47,11 +47,13 @@ struct TestingSetup {
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
+        RegisterNodeSignals(GetNodeSignals());
     }
     ~TestingSetup()
     {
         threadGroup.interrupt_all();
         threadGroup.join_all();
+        UnregisterNodeSignals(GetNodeSignals());
 #ifdef ENABLE_WALLET
         delete pwalletMain;
         pwalletMain = NULL;

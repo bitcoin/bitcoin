@@ -110,6 +110,7 @@ class CTxUndo;
 class CScriptCheck;
 class CValidationState;
 class CWalletInterface;
+struct CNodeStateStats;
 
 struct CBlockTemplate;
 
@@ -182,6 +183,8 @@ CBlockIndex * InsertBlockIndex(uint256 hash);
 bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 /** Abort with a message */
 bool AbortNode(const std::string &msg);
+/** Get statistics from node state */
+bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
@@ -193,6 +196,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
 
 
+
+struct CNodeStateStats {
+    int nMisbehavior;
+};
 
 struct CDiskBlockPos
 {
