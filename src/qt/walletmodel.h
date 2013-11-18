@@ -10,22 +10,23 @@
 
 #include "allocators.h" /* for SecureString */
 
-#include <QObject>
-#include <vector>
 #include <map>
+#include <vector>
+
+#include <QObject>
 
 class AddressTableModel;
 class OptionsModel;
 class TransactionTableModel;
 class WalletModelTransaction;
-class CKeyID;
-class CPubKey;
-class COutput;
-class COutPoint;
-class uint256;
-class CCoinControl;
 
+class CCoinControl;
+class CKeyID;
+class COutPoint;
+class COutput;
+class CPubKey;
 class CWallet;
+class uint256;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -88,7 +89,7 @@ public:
     AddressTableModel *getAddressTableModel();
     TransactionTableModel *getTransactionTableModel();
 
-    qint64 getBalance(const CCoinControl *coinControl=NULL) const;
+    qint64 getBalance(const CCoinControl *coinControl = NULL) const;
     qint64 getUnconfirmedBalance() const;
     qint64 getImmatureBalance() const;
     int getNumTransactions() const;
@@ -100,13 +101,13 @@ public:
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
     {
-        SendCoinsReturn(StatusCode status=Aborted):
+        SendCoinsReturn(StatusCode status = Aborted):
             status(status) {}
         StatusCode status;
     };
 
     // prepare transaction for getting txfee before sending coins
-    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl=NULL);
+    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);
