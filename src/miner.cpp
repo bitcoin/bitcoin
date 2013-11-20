@@ -10,8 +10,6 @@
 #include "net.h"
 #include "wallet.h"
 
-#include <stdint.h>
-
 double dHashesPerSec = 0.0;
 int64_t nHPSTimerStart = 0;
 

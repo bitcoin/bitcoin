@@ -10,8 +10,6 @@
 #include "uint256.h"
 #include "util.h"
 
-#include <stdint.h>
-
 #ifndef WIN32
 #include <fcntl.h>
 #endif
