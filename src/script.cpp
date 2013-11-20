@@ -14,8 +14,6 @@
 #include "uint256.h"
 #include "util.h"
 
-#include <stdint.h>
-
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
