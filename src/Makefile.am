@@ -12,7 +12,10 @@ DIST_SUBDIRS = . qt test
 .PHONY: FORCE
 # bitcoin core #
 BITCOIN_CORE_H = addrman.h alert.h allocators.h base58.h bignum.h \
-  bitcoinrpc.h bloom.h chainparams.h checkpoints.h checkqueue.h \
+  rpcclient.h \
+  rpcprotocol.h \
+  rpcserver.h \
+  bloom.h chainparams.h checkpoints.h checkqueue.h \
   clientversion.h coincontrol.h compat.h core.h coins.h crypter.h db.h hash.h init.h \
   key.h keystore.h leveldbwrapper.h limitedmap.h main.h miner.h mruset.h \
   netbase.h net.h noui.h protocol.h script.h serialize.h sync.h threadsafety.h \
@@ -30,7 +33,11 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 version.o: obj/build.h
 
-libbitcoin_a_SOURCES = addrman.cpp alert.cpp allocators.cpp bitcoinrpc.cpp bloom.cpp \
+libbitcoin_a_SOURCES = addrman.cpp alert.cpp allocators.cpp \
+  rpcclient.cpp \
+  rpcprotocol.cpp \
+  rpcserver.cpp \
+  bloom.cpp \
   chainparams.cpp checkpoints.cpp core.cpp coins.cpp crypter.cpp db.cpp hash.cpp \
   init.cpp key.cpp keystore.cpp leveldbwrapper.cpp main.cpp miner.cpp \
   netbase.cpp net.cpp noui.cpp protocol.cpp rpcblockchain.cpp rpcdump.cpp \
