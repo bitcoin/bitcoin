@@ -3,10 +3,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "init.h" // for pwalletMain
-#include "bitcoinrpc.h"
-#include "ui_interface.h"
 #include "base58.h"
+#include "rpcserver.h"
+#include "init.h"
+#include "main.h"
+#include "sync.h"
+#include "wallet.h"
+
+#include <fstream>
+#include <stdint.h>
 
 #include <boost/lexical_cast.hpp>
 

@@ -8,11 +8,9 @@
 #include "bitcoin-config.h"
 #endif
 
-#include "init.h"
-#include "main.h"
-#include "txdb.h"
-#include "walletdb.h"
-#include "bitcoinrpc.h"
+#include "addrman.h"
+#include "rpcserver.h"
+#include "checkpoints.h"
 #include "net.h"
 #include "init.h"
 #include "util.h"
