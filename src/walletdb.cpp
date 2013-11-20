@@ -12,7 +12,6 @@
 #include "wallet.h"
 
 #include <inttypes.h>
-#include <stdint.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
