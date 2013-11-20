@@ -8,7 +8,8 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 
-#include "bitcoinrpc.h"
+#include "rpcserver.h"
+#include "rpcclient.h"
 
 #include "json/json_spirit_value.h"
 #include <openssl/crypto.h>

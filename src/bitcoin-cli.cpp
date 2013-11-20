@@ -5,7 +5,7 @@
 
 #include "util.h"
 #include "init.h"
-#include "bitcoinrpc.h"
+#include "rpcclient.h"
 #include "ui_interface.h" /* for _(...) */
 
 #include <boost/filesystem/operations.hpp>
