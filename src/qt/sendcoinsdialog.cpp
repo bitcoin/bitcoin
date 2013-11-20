@@ -33,9 +33,8 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     ui->clearButton->setIcon(QIcon());
     ui->sendButton->setIcon(QIcon());
 #endif
-#if QT_VERSION >= 0x040700
-    ui->lineEditCoinControlChange->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
-#endif
+
+    GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
 
     addEntry();
 
@@ -43,7 +42,6 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 
     // Coin Control
-    ui->lineEditCoinControlChange->setFont(GUIUtil::bitcoinAddressFont());
     connect(ui->pushButtonCoinControl, SIGNAL(clicked()), this, SLOT(coinControlButtonClicked()));
     connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
     connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
@@ -536,7 +534,6 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
     if (state == Qt::Unchecked)
     {
         CoinControlDialog::coinControl->destChange = CNoDestination();
-        ui->lineEditCoinControlChange->setValid(true);
         ui->labelCoinControlChangeLabel->clear();
     }
     else
@@ -563,7 +560,6 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else if (!addr.IsValid()) // Invalid address
         {
-            ui->lineEditCoinControlChange->setValid(false);
             ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Bitcoin address"));
         }
         else // Valid address
@@ -573,7 +569,6 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
             addr.GetKeyID(keyid);
             if (!model->getPubKey(keyid, pubkey)) // Unknown change address
             {
-                ui->lineEditCoinControlChange->setValid(false);
                 ui->labelCoinControlChangeLabel->setText(tr("Warning: Unknown change address"));
             }
             else // Known change address
