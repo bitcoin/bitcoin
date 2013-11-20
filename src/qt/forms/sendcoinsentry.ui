@@ -141,7 +141,7 @@
      </layout>
     </item>
     <item row="4" column="1">
-     <widget class="QValidatedLineEdit" name="addAsLabel">
+     <widget class="QLineEdit" name="addAsLabel">
       <property name="toolTip">
        <string>Enter a label for this address to add it to the list of used addresses</string>
       </property>
