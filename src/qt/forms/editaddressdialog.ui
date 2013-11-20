@@ -47,7 +47,7 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLineEdit" name="addressEdit">
+      <widget class="QValidatedLineEdit" name="addressEdit">
        <property name="toolTip">
         <string>The address associated with this address list entry. This can only be modified for sending addresses.</string>
        </property>
@@ -67,6 +67,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QValidatedLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qvalidatedlineedit.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
