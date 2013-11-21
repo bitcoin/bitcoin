@@ -4,18 +4,25 @@
 <dict>
   <key>CFBundleIconFile</key>
   <string>bitcoin.icns</string>
+
   <key>CFBundlePackageType</key>
   <string>APPL</string>
+
   <key>CFBundleGetInfoString</key>
   <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@, Copyright © 2009-@COPYRIGHT_YEAR@ The Bitcoin developers</string>
+
   <key>CFBundleShortVersionString</key>
   <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@</string>
+
   <key>CFBundleVersion</key>
   <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@</string>
+
   <key>CFBundleSignature</key>
   <string>????</string>
+
   <key>CFBundleExecutable</key>
   <string>Bitcoin-Qt</string>
+
   <key>CFBundleIdentifier</key>
   <string>org.bitcoinfoundation.Bitcoin-Qt</string>
 
@@ -69,7 +76,11 @@
       <string>Owner</string>
     </dict>
   </array>
+
+  <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+
   <key>NSHighResolutionCapable</key>
-  <true/>
+    <string>True</string>
 </dict>
 </plist>
