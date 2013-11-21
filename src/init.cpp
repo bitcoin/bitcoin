@@ -253,6 +253,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     if (hmm == HMM_BITCOIND || hmm == HMM_BITCOIN_CLI)
     {
         strUsage += "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n";
+        strUsage += "  -rpcwait               " + _("Wait for RPC server to start") + "\n";
     }
 
     strUsage += "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n";
