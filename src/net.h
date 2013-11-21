@@ -254,7 +254,7 @@ public:
     int64_t nPingUsecStart;
     int64_t nPingUsecTime;
     bool fPingQueued;
-    
+
     CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false) : ssSend(SER_NETWORK, INIT_PROTO_VERSION)
     {
         nServices = 0;
