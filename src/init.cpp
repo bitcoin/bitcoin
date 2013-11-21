@@ -112,7 +112,7 @@ void Shutdown()
     ShutdownRPCMining();
     if (pwalletMain)
         bitdb.Flush(false);
-    GenerateBitcoins(false, NULL);
+    GenerateBitcoins(false, NULL, 0);
     StopNode();
     {
         LOCK(cs_main);
@@ -1050,7 +1050,7 @@ bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
 
     // Generate coins in the background
     if (pwalletMain)
-        GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain);
+        GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain, GetArg("-genproclimit", -1));
 
     // ********************************************************* Step 12: finished
 
