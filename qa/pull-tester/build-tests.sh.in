@@ -68,6 +68,9 @@ fi
 cd @abs_top_srcdir@/linux-build
 make check
 
+# Run RPC integration test on Linux:
+@abs_top_srcdir@/qa/rpc-tests/wallet.sh @abs_top_srcdir@/linux-build/src
+
 if [ $RUN_EXPENSIVE_TESTS = 1 ]; then
   # Run unit tests and blockchain-tester on Windows:
   cd @abs_top_srcdir@/win32-build
