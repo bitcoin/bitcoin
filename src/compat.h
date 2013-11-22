@@ -26,6 +26,7 @@
 #include <windows.h>
 #include <ws2tcpip.h>
 #else
+#include <sys/types.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 #include <limits.h>
@@ -35,7 +36,6 @@
 #include <sys/fcntl.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
 #endif
 
