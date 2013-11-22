@@ -46,7 +46,7 @@ public slots:
     void reject();
     void accept();
     SendCoinsEntry *addEntry();
-    void updateRemoveEnabled();
+    void updateTabsAndLabels();
     void setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
 
 private:
