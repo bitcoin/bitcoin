@@ -177,7 +177,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return QVariant(fMinimizeOnClose);
         case ProxyUse: {
             proxyType proxy;
-            return QVariant(GetProxy(NET_IPV4, proxy));
+            return QVariant(settings.value("fUseProxy", false).toBool());
         }
         case ProxyIP: {
             proxyType proxy;
