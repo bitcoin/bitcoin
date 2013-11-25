@@ -133,6 +133,7 @@ Value setgenerate(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. generate         (boolean, required) Set to true to turn on generation, off to turn off.\n"
             "2. genproclimit     (numeric, optional) Set the processor limit for when generation is on. Can be -1 for unlimited.\n"
+            "                    Note: in -regtest mode, genproclimit controls how many blocks are generated immediately.\n"
             "\nExamples:\n"
             "\nSet the generation on with a limit of one processor\n"
             + HelpExampleCli("setgenerate", "true 1") +
@@ -144,21 +145,55 @@ Value setgenerate(const Array& params, bool fHelp)
             + HelpExampleRpc("setgenerate", "true, 1")
         );
 
+    if (pwalletMain == NULL)
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
+
     bool fGenerate = true;
     if (params.size() > 0)
         fGenerate = params[0].get_bool();
 
+    int nGenProcLimit = -1;
     if (params.size() > 1)
     {
-        int nGenProcLimit = params[1].get_int();
-        mapArgs["-genproclimit"] = itostr(nGenProcLimit);
+        nGenProcLimit = params[1].get_int();
         if (nGenProcLimit == 0)
             fGenerate = false;
     }
-    mapArgs["-gen"] = (fGenerate ? "1" : "0");
 
-    assert(pwalletMain != NULL);
-    GenerateBitcoins(fGenerate, pwalletMain);
+    // -regtest mode: don't return until nGenProcLimit blocks are generated
+    if (fGenerate && Params().NetworkID() == CChainParams::REGTEST)
+    {
+        int nHeightStart = 0;
+        int nHeightEnd = 0;
+        int nHeight = 0;
+        int nGenerate = (nGenProcLimit > 0 ? nGenProcLimit : 1);
+        {   // Don't keep cs_main locked
+            LOCK(cs_main);
+            nHeightStart = chainActive.Height();
+            nHeight = nHeightStart;
+            nHeightEnd = nHeightStart+nGenerate;
+        }
+        int nHeightLast = -1;
+        while (nHeight < nHeightEnd)
+        {
+            if (nHeightLast != nHeight)
+            {
+                nHeightLast = nHeight;
+                GenerateBitcoins(fGenerate, pwalletMain, 1);
+            }
+            MilliSleep(1);
+            {   // Don't keep cs_main locked
+                LOCK(cs_main);
+                nHeight = chainActive.Height();
+            }
+        }
+    }
+    else // Not -regtest: start generate thread, return immediately
+    {
+        mapArgs["-gen"] = (fGenerate ? "1" : "0");
+        GenerateBitcoins(fGenerate, pwalletMain, nGenProcLimit);
+    }
+
     return Value::null;
 }
 
