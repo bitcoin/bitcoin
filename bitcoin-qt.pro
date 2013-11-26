@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = bitcoin-qt
 macx:TARGET = "Bitcoin-Qt"
-VERSION = 0.8.5
+VERSION = 0.8.6
 INCLUDEPATH += src src/json src/qt
 QT += network
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE

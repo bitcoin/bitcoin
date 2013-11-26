@@ -18,7 +18,7 @@ WORKINGDIR="/tmp/bitcoin"
 TMPFILE="hashes.tmp"
 
 #this URL is used if a version number is not specified as an argument to the script
-SIGNATUREFILE="http://downloads.sourceforge.net/project/bitcoin/Bitcoin/bitcoin-0.8.5/SHA256SUMS.asc"
+SIGNATUREFILE="http://downloads.sourceforge.net/project/bitcoin/Bitcoin/bitcoin-0.8.6/SHA256SUMS.asc"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test/"

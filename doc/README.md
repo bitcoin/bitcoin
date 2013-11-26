@@ -1,4 +1,4 @@
-Bitcoin 0.8.5 BETA
+Bitcoin 0.8.6 BETA
 ====================
 
 Copyright (c) 2009-2013 Bitcoin Developers
