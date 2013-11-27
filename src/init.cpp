@@ -10,7 +10,7 @@
 #include "init.h"
 
 #include "addrman.h"
-#include "bitcoinrpc.h"
+#include "rpcserver.h"
 #include "checkpoints.h"
 #include "miner.h"
 #include "net.h"
