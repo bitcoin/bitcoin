@@ -5,7 +5,9 @@ AM_CPPFLAGS =  $(INCLUDES) \
   $(BOOST_INCLUDES)
 AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
-LIBBITCOIN=$(top_builddir)/src/libbitcoin.a
+LIBBITCOIN_SERVER=$(top_builddir)/src/libbitcoin_server.a
+LIBBITCOIN_COMMON=$(top_builddir)/src/libbitcoin_common.a
+LIBBITCOIN_CLI=$(top_builddir)/src/libbitcoin_cli.a
 LIBLEVELDB=$(top_builddir)/src/leveldb/libleveldb.a
 LIBMEMENV=$(top_builddir)/src/leveldb/libmemenv.a
 LIBBITCOINQT=$(top_builddir)/src/qt/libbitcoinqt.a
