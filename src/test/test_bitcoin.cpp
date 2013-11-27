@@ -14,7 +14,6 @@
 
 
 CWallet* pwalletMain;
-CClientUIInterface uiInterface;
 
 extern bool fPrintToConsole;
 extern void noui_connect();
