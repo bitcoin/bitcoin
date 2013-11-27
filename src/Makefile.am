@@ -3,9 +3,9 @@ AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
   $(BOOST_INCLUDES)
 AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
-noinst_LIBRARIES = libppcoin.a
+noinst_LIBRARIES = libppcoin_server.a libppcoin_common.a libppcoin_cli.a
 
-bin_PROGRAMS = ppcoind
+bin_PROGRAMS = ppcoind peercoin-cli
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
 DIST_SUBDIRS = . qt test
@@ -30,30 +30,64 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 version.o: obj/build.h
 
-libppcoin_a_SOURCES = addrman.cpp alert.cpp bitcoinrpc.cpp bloom.cpp \
-  checkpoints.cpp checkpointsync.cpp crypter.cpp db.cpp hash.cpp \
-  init.cpp key.cpp kernel.cpp keystore.cpp leveldb.cpp main.cpp \
-  netbase.cpp net.cpp noui.cpp protocol.cpp rpcblockchain.cpp rpcdump.cpp \
-  rpcmining.cpp rpcnet.cpp rpcrawtransaction.cpp rpcwallet.cpp script.cpp \
-  sync.cpp txdb.cpp util.cpp version.cpp wallet.cpp walletdb.cpp $(JSON_H) \
+libppcoin_server_a_SOURCES = addrman.cpp alert.cpp bloom.cpp \
+  checkpoints.cpp checkpointsync.cpp crypter.cpp db.cpp \
+  init.cpp kernel.cpp keystore.cpp leveldb.cpp main.cpp \
+  net.cpp noui.cpp rpcblockchain.cpp rpcdump.cpp \
+  rpcmining.cpp rpcnet.cpp rpcrawtransaction.cpp rpcwallet.cpp \
+  txdb.cpp wallet.cpp walletdb.cpp $(JSON_H) \
   $(BITCOIN_CORE_H)
 
-nodist_libppcoin_a_SOURCES = $(top_srcdir)/src/obj/build.h
+libppcoin_common_a_SOURCES = \
+  hash.cpp \
+  key.cpp \
+  netbase.cpp \
+  protocol.cpp \
+  script.cpp \
+  sync.cpp \
+  util.cpp \
+  version.cpp \
+  $(BITCOIN_CORE_H)
+
+libppcoin_cli_a_SOURCES = \
+  rpcclient.cpp \
+  $(BITCOIN_CORE_H)
+
+nodist_libppcoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
 # ppcoind binary #
-ppcoind_LDADD = libppcoin.a leveldb/libleveldb.a leveldb/libmemenv.a \
+ppcoind_LDADD = libppcoin_server.a libppcoin_cli.a libppcoin_common.a leveldb/libleveldb.a leveldb/libmemenv.a \
   $(BOOST_LIBS)
 ppcoind_SOURCES = bitcoind.cpp
 #
 
-leveldb/libleveldb.a:
-	@echo "Building LevelDB ..." && cd leveldb && CXX="$(CXX)" CC="$(CC)" \
-	  PLATFORM=$(TARGET_OS) AR="$(AR)" $(MAKE) $(LEVELDB_TARGET_FLAGS) OPT="$(CXXFLAGS) $(CPPFLAGS)" libleveldb.a
+if TARGET_WINDOWS
+ppcoind_SOURCES += bitcoind-res.rc
+endif
 
-leveldb/libmemenv.a:
-	@echo "Building LevelDB ..." && cd leveldb && CXX="$(CXX)" CC="$(CC)" \
-	  PLATFORM=$(TARGET_OS) AR="$(AR)" $(MAKE) $(LEVELDB_TARGET_FLAGS) OPT="$(CXXFLAGS) $(CPPFLAGS)" libmemenv.a
+AM_CPPFLAGS += $(BDB_CPPFLAGS)
+ppcoind_LDADD += $(BDB_LIBS)
+
+# bitcoin-cli binary #
+peercoin_cli_LDADD = libppcoin_cli.a libppcoin_common.a $(BOOST_LIBS)
+peercoin_cli_SOURCES = bitcoin-cli.cpp
+#
+
+if TARGET_WINDOWS
+peercoin_cli_SOURCES += bitcoin-cli-res.rc
+endif
+
+leveldb/libleveldb.a: leveldb/libmemenv.a
+
+leveldb/%.a:
+	@echo "Building LevelDB ..." && $(MAKE) -C $(@D) $(@F) CXX="$(CXX)" \
+	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
+	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
+
+qt/bitcoinstrings.cpp: $(libppcoin_server_a_SOURCES) $(libppcoin_common_a_SOURCES) $(libppcoin_cli_a_SOURCES)
+	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
+	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
 
 CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
 

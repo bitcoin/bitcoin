@@ -21,8 +21,8 @@ TEST_DATA_FILES= $(TEST_DATA_DIR)/alertTests $(TEST_DATA_DIR)/base58_encode_deco
 # test_ppcoin binary #
 test_ppcoin_CPPFLAGS = $(AM_CPPFLAGS) $(TESTDEFS) \
   -DTEST_DATA_DIR=$(TEST_DATA_DIR)
-test_ppcoin_LDADD = $(LIBPPCOIN) $(LIBLEVELDB) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+test_ppcoin_LDADD = $(LIBPPCOIN_SERVER) $(LIBPPCOIN_CLI) $(LIBPPCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
+  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB $(BDB_LIBS))
 test_ppcoin_SOURCES = accounting_tests.cpp allocator_tests.cpp base32_tests.cpp \
   base58_tests.cpp base64_tests.cpp bignum_tests.cpp canonical_tests.cpp \
   checkblock_tests.cpp Checkpoints_tests.cpp compress_tests.cpp DoS_tests.cpp \

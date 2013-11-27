@@ -12,7 +12,20 @@ extern CWallet* pwalletMain;
 void StartShutdown();
 bool ShutdownRequested();
 void Shutdown();
+<<<<<<< HEAD
 bool AppInit2(boost::thread_group& threadGroup);
 std::string HelpMessage();
+=======
+bool AppInit2(boost::thread_group& threadGroup, bool fForceServer);
+
+/* The help message mode determines what help message to show */
+enum HelpMessageMode
+{
+    HMM_BITCOIND,
+    HMM_BITCOIN_QT
+};
+
+std::string HelpMessage(HelpMessageMode mode);
+>>>>>>> 0b47fe6... bitcoin-cli: remove unneeded dependencies (only code movement)
 
 #endif

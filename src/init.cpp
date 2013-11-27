@@ -34,7 +34,6 @@ using namespace std;
 using namespace boost;
 
 CWallet* pwalletMain;
-CClientUIInterface uiInterface;
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -321,33 +320,42 @@ std::string HelpMessage()
 
 #ifdef USE_UPNP
 #if USE_UPNP
-        "  -upnp                  " + _("Use UPnP to map the listening port (default: 1 when listening)") + "\n" +
+    strUsage += "  -upnp                  " + _("Use UPnP to map the listening port (default: 1 when listening)") + "\n";
 #else
-        "  -upnp                  " + _("Use UPnP to map the listening port (default: 0)") + "\n" +
+    strUsage += "  -upnp                  " + _("Use UPnP to map the listening port (default: 0)") + "\n";
 #endif
 #endif
-        "  -paytxfee=<amt>        " + _("Fee per KB to add to transactions you send") + "\n" +
-#ifdef QT_GUI
-        "  -server                " + _("Accept command line and JSON-RPC commands") + "\n" +
-#endif
-#if !defined(WIN32) && !defined(QT_GUI)
-        "  -daemon                " + _("Run in the background as a daemon and accept commands") + "\n" +
-#endif
-        "  -testnet               " + _("Use the test network") + "\n" +
-        "  -debug                 " + _("Output extra debugging information. Implies all other -debug* options") + "\n" +
-        "  -debugnet              " + _("Output extra network debugging information") + "\n" +
-        "  -logtimestamps         " + _("Prepend debug output with timestamp (default: 1)") + "\n" +
-        "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n" +
-        "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n" +
+    strUsage += "  -paytxfee=<amt>        " + _("Fee per KB to add to transactions you send") + "\n";
+    strUsage += "  -debug=<category>      " + _("Output debugging information (default: 0, supplying <category> is optional)") + "\n";
+    strUsage +=                               _("If <category> is not supplied, output all debugging information.") + "\n";
+    strUsage +=                               _("<category> can be:");
+    strUsage +=                                 " addrman, alert, coindb, db, lock, rand, rpc, selectcoins, mempool, net"; // Don't translate these and qt below
+    if (hmm == HMM_BITCOIN_QT)
+    {
+        strUsage += ", qt.\n";
+    }
+    else
+    {
+        strUsage += ".\n";
+    }
+    strUsage += "  -logtimestamps         " + _("Prepend debug output with timestamp (default: 1)") + "\n";
+    strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
+    strUsage += "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n";
+    strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be "
+                                            "solved instantly. This is intended for regression testing tools and app development.") + "\n";
 #ifdef WIN32
-        "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n" +
+    strUsage += "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n";
 #endif
-        "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n" +
-        "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n" +
-        "  -rpcport=<port>        " + _("Listen for JSON-RPC connections on <port> (default: 9902)") + "\n" +
-        "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified IP address") + "\n" +
-#ifndef QT_GUI
-        "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n" +
+
+    if (hmm == HMM_BITCOIN_QT)
+    {
+        strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
+    }
+
+    if (hmm == HMM_BITCOIND)
+    {
+#if !defined(WIN32)
+        strUsage += "  -daemon                " + _("Run in the background as a daemon and accept commands") + "\n";
 #endif
         "  -rpcthreads=<n>        " + _("Set the number of threads to service RPC calls (default: 4)") + "\n" +
         "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n" +
