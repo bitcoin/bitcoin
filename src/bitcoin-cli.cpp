@@ -42,7 +42,7 @@ static bool AppInitRPC(int argc, char* argv[])
               "  bitcoin-cli [options] help                " + _("List commands") + "\n" +
               "  bitcoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
-        strUsage += "\n" + HelpMessage(HMM_BITCOIN_CLI);
+        strUsage += "\n" + HelpMessageCli(true);
 
         fprintf(stdout, "%s", strUsage.c_str());
         return false;
