@@ -209,6 +209,11 @@ class PosixMmapFile : public WritableFile {
   bool UnmapCurrentRegion() {
     bool result = true;
     if (base_ != NULL) {
+#if defined(OS_MACOSX)
+      if (msync(base_, limit_ - base_, MS_SYNC) != 0) {
+        result = false;
+      }
+#endif
       if (last_sync_ < limit_) {
         // Defer syncing this data until next Sync() call, if any
         pending_sync_ = true;
