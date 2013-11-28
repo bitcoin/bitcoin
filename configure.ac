@@ -342,7 +342,11 @@ BITCOIN_FIND_BDB48
 
 dnl Check for libminiupnpc (optional)
 if test x$use_upnp != xno; then
-  AC_CHECK_LIB([miniupnpc], [main],, [have_miniupnpc=no])
+  AC_CHECK_HEADERS(
+    [miniupnpc/miniwget.h miniupnpc/miniupnpc.h miniupnpc/upnpcommands.h miniupnpc/upnperrors.h],
+    [AC_CHECK_LIB([miniupnpc], [main],, [have_miniupnpc=no])],
+    [have_miniupnpc=no]
+  )
 fi
 
 dnl Check for boost libs
