@@ -7,6 +7,7 @@
 #include "init.h"
 #include "rpcclient.h"
 #include "ui_interface.h" /* for _(...) */
+#include "chainparams.h"
 
 #include <boost/filesystem/operations.hpp>
 
@@ -26,6 +27,11 @@ static bool AppInitRPC(int argc, char* argv[])
         return false;
     }
     ReadConfigFile(mapArgs, mapMultiArgs);
+    // Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
+    if (!SelectParamsFromCommandLine()) {
+        fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
+        return false;
+    }
 
     if (argc<2 || mapArgs.count("-?") || mapArgs.count("--help"))
     {
