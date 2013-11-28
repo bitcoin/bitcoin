@@ -85,5 +85,4 @@ EXTRA_DIST = leveldb Makefile.include
 
 clean-local:
 	-$(MAKE) -C leveldb clean
-	rm -f leveldb/port/*.gcno leveldb/db/*.gcno leveldb/table/*.gcno leveldb/helpers/*.gcno
-	rm -f leveldb/util/*.gcno leveldb/helpers/memenv/*.gcno
+	rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
