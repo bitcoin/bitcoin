@@ -7,7 +7,9 @@
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
+#ifdef ENABLE_WALLET
 #include "wallet.h"
+#endif
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
@@ -26,7 +28,9 @@ struct TestingSetup {
     TestingSetup() {
         fPrintToDebugger = true; // don't want to write to debug.log file
         noui_connect();
+#ifdef ENABLE_WALLET
         bitdb.MakeMock();
+#endif
         pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
         boost::filesystem::create_directories(pathTemp);
         mapArgs["-datadir"] = pathTemp.string();
@@ -34,10 +38,12 @@ struct TestingSetup {
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
         InitBlockIndex();
+#ifdef ENABLE_WALLET
         bool fFirstRun;
         pwalletMain = new CWallet("wallet.dat");
         pwalletMain->LoadWallet(fFirstRun);
         RegisterWallet(pwalletMain);
+#endif
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
@@ -46,12 +52,16 @@ struct TestingSetup {
     {
         threadGroup.interrupt_all();
         threadGroup.join_all();
+#ifdef ENABLE_WALLET
         delete pwalletMain;
         pwalletMain = NULL;
+#endif
         delete pcoinsTip;
         delete pcoinsdbview;
         delete pblocktree;
+#ifdef ENABLE_WALLET
         bitdb.Flush(true);
+#endif
         boost::filesystem::remove_all(pathTemp);
     }
 };
