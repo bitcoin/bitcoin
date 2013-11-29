@@ -820,4 +820,13 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
     }
 }
 
+std::string HelpExampleCli(string methodname, string args){
+    return "> bitcoin-cli " + methodname + " " + args + "\n";
+}
+
+std::string HelpExampleRpc(string methodname, string args){
+    return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+}
+
 const CRPCTable tableRPC;
