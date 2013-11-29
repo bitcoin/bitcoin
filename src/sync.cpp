@@ -42,6 +42,8 @@ struct CLockLocation
         return mutexName+"  "+sourceFile+":"+itostr(sourceLine);
     }
 
+    std::string MutexName() const { return mutexName; }
+
 private:
     std::string mutexName;
     std::string sourceFile;
@@ -124,6 +126,22 @@ void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs
 void LeaveCritical()
 {
     pop_lock();
+}
+
+std::string LocksHeld()
+{
+    std::string result;
+    BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)&i, *lockstack)
+        result += i.second.ToString() + std::string("\n");
+    return result;
+}
+
+void AssertLockHeld(std::string strName)
+{
+    BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)&i, *lockstack)
+        if (i.second.MutexName() == strName) return;
+    LogPrintf("Lock %s not held; locks held:\n%s", strName.c_str(), LocksHeld().c_str());
+    assert(0);
 }
 
 #endif /* DEBUG_LOCKORDER */
