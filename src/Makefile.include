@@ -1,7 +1,7 @@
 .PHONY: FORCE
 
-
 LIBPPCOIN_SERVER=$(top_builddir)/src/libppcoin_server.a
+LIBPPCOIN_WALLET=$(top_builddir)/src/libppcoin_wallet.a
 LIBPPCOIN_COMMON=$(top_builddir)/src/libppcoin_common.a
 LIBPPCOIN_CLI=$(top_builddir)/src/libppcoin_cli.a
 LIBLEVELDB=$(top_builddir)/src/leveldb/libleveldb.a

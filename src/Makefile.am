@@ -3,7 +3,11 @@ AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
   $(BOOST_INCLUDES)
 AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
+
 noinst_LIBRARIES = libppcoin_server.a libppcoin_common.a libppcoin_cli.a
+if ENABLE_WALLET
+noinst_LIBRARIES += libppcoin_wallet.a
+endif
 
 bin_PROGRAMS = ppcoind peercoin-cli
 
@@ -31,12 +35,36 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 version.o: obj/build.h
 
-libppcoin_server_a_SOURCES = addrman.cpp alert.cpp rpcserver.cpp bloom.cpp \
-  checkpoints.cpp checkpointsync.cpp crypter.cpp db.cpp \
-  init.cpp kernel.cpp keystore.cpp leveldb.cpp main.cpp \
-  net.cpp noui.cpp rpcblockchain.cpp rpcdump.cpp \
-  rpcmining.cpp rpcnet.cpp rpcrawtransaction.cpp rpcserver.cpp rpcwallet.cpp \
-  txdb.cpp wallet.cpp walletdb.cpp $(JSON_H) \
+libppcoin_server_a_SOURCES = \
+  addrman.cpp \
+  alert.cpp \
+  rpcserver.cpp \
+  bloom.cpp \
+  checkpoints.cpp \
+  checkpointsync.cpp \
+  crypter.cpp \
+  init.cpp \
+  kernel.cpp \
+  keystore.cpp \
+  leveldb.cpp \
+  main.cpp \
+  net.cpp \
+  noui.cpp \
+  rpcblockchain.cpp \
+  rpcnet.cpp \
+  rpcrawtransaction.cpp \
+  rpcserver.cpp \
+  txdb.cpp \
+  $(JSON_H) \
+  $(BITCOIN_CORE_H)
+
+libppcoin_wallet_a_SOURCES = \
+  db.cpp \
+  rpcdump.cpp \
+  rpcmining.cpp \
+  wallet.cpp \
+  walletdb.cpp \
+  rpcwallet.cpp \
   $(BITCOIN_CORE_H)
 
 libppcoin_common_a_SOURCES = \
@@ -61,6 +89,9 @@ nodist_libppcoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 # ppcoind binary #
 ppcoind_LDADD = libppcoin_server.a libppcoin_cli.a libppcoin_common.a leveldb/libleveldb.a leveldb/libmemenv.a \
   $(BOOST_LIBS)
+if ENABLE_WALLET
+ppcoind_LDADD += libppcoin_wallet.a
+endif
 ppcoind_SOURCES = bitcoind.cpp
 #
 
