@@ -23,6 +23,7 @@ createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
     return result;
 }
 
+#ifdef ENABLE_WALLET
 BOOST_AUTO_TEST_CASE(rpc_addmultisig)
 {
     rpcfn_type addmultisig = tableRPC["addmultisigaddress"]->actor;
@@ -59,6 +60,7 @@ BOOST_AUTO_TEST_CASE(rpc_addmultisig)
     string short2(address1Hex+1, address1Hex+sizeof(address1Hex)); // first byte missing
     BOOST_CHECK_THROW(addmultisig(createArgs(2, short2.c_str()), false), runtime_error);
 }
+#endif
 
 static Value CallRPC(string args)
 {
@@ -79,6 +81,7 @@ static Value CallRPC(string args)
     }
 }
 
+#ifdef ENABLE_WALLET
 BOOST_AUTO_TEST_CASE(rpc_wallet)
 {
     // Test RPC calls for various wallet statistics
@@ -106,7 +109,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaccount 0 true"));
     BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount 0 true extra"), runtime_error);
 }
-
+#endif
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
 {
