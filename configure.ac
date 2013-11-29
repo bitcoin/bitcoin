@@ -37,6 +37,13 @@ AM_MAINTAINER_MODE([enable])
 dnl make the compilation flags quiet unless V=1 is used
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+# Enable wallet
+AC_ARG_ENABLE([wallet],
+  [AS_HELP_STRING([--enable-wallet],
+  [enable wallet (default is yes)])],
+  [enable_wallet=$enableval],
+  [enable_wallet=yes])
+
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
   [enable UPNP (default is yes if libminiupnpc is found)])],
@@ -362,8 +369,10 @@ AC_TRY_COMPILE([#include <sys/socket.h>],
  [ AC_MSG_RESULT(no)]
 )
 
-dnl Check for libdb_cxx
-BITCOIN_FIND_BDB48
+if test x$enable_wallet != xno; then
+    dnl Check for libdb_cxx only if wallet enabled
+    BITCOIN_FIND_BDB48
+fi
 
 dnl Check for libminiupnpc (optional)
 if test x$use_upnp != xno; then
@@ -593,6 +602,20 @@ if test "x$use_ccache" != "xno"; then
   AC_MSG_RESULT($use_ccache)
 fi
 
+dnl enable wallet
+AC_MSG_CHECKING([if wallet should be enabled])
+if test x$enable_wallet != xno; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_WALLET],[1],[Define to 1 to enable wallet functions])
+
+else
+  AC_MSG_RESULT(no)
+
+  if test "x$use_qt" != "xno"; then
+    AC_MSG_ERROR([Cannot currently build Qt GUI with wallet disabled. Use --without-qt.])
+  fi
+fi
+
 dnl enable ipv6 support
 AC_MSG_CHECKING([if ipv6 should be enabled])
 if test x$have_ipv6 = xno; then
@@ -705,6 +728,7 @@ fi
 
 AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
+AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet == xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov == xyes])
 AM_CONDITIONAL([USE_COMPARISON_TOOL],[test x$use_comparison_tool != xno])
