@@ -39,7 +39,6 @@ version.o: obj/build.h
 libbitcoin_server_a_SOURCES = \
   addrman.cpp \
   alert.cpp \
-  crypter.cpp \
   rpcserver.cpp \
   bloom.cpp \
   chainparams.cpp \
@@ -61,6 +60,7 @@ libbitcoin_server_a_SOURCES = \
 
 libbitcoin_wallet_a_SOURCES = \
   db.cpp \
+  crypter.cpp \
   miner.cpp \
   rpcdump.cpp \
   rpcmining.cpp \
