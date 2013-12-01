@@ -98,11 +98,13 @@ void static secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
 /** Get a hex representation of a point. *rlen will be overwritten with the real length. */
 void static secp256k1_gej_get_hex(char *r, int *rlen, const secp256k1_gej_t *a);
 
+#ifdef USE_ENDOMORPHISM
 /** Set r to be equal to lambda times a, where lambda is chosen in a way such that this is very fast. */
 void static secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *a);
 
 /** Find r1 and r2 such that r1+r2*lambda = a, and r1 and r2 are maximum 128 bits long (given that a is
     not more than 256 bits). */
 void static secp256k1_gej_split_exp(secp256k1_num_t *r1, secp256k1_num_t *r2, const secp256k1_num_t *a);
+#endif
 
 #endif

@@ -114,6 +114,9 @@ for arg in "$@"; do
 	--use-5x64)
 	    HAVE_LIMB=64
             ;;
+        --use-endomorphism)
+            USE_ENDOMORPHISM=1
+            ;;
     esac
 done
 
@@ -163,7 +166,9 @@ CFLAGS_TEST_EXTRA=""
 if [ "$HAVE_OPENSSL_EC" = "1" ]; then
     CFLAGS_TEST_EXTRA="-DENABLE_OPENSSL_TESTS"
 fi
-
+if [ "$USE_ENDOMORPHISM" = "1" ]; then
+    CFLAGS_EXTRA="$(CFLAGS_EXTRA) -DUSE_ENDOMORPHISM"
+fi
 echo "CC=$CC" > config.mk
 echo "YASM=$YASM" >>config.mk
 echo "CFLAGS_EXTRA=$CFLAGS_EXTRA" >> config.mk
