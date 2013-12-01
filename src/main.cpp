@@ -819,18 +819,25 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
         if (fTxIndex) {
             CDiskTxPos postx;
             if (pblocktree->ReadTxIndex(hash, postx)) {
-                CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+                CAutoFile blockFileIn(SER_DISK, CLIENT_VERSION);
+                // Open block file to read
+                if (!blockFileIn.open(GetBlockFile(postx).c_str(), std::ios::binary | std::ios::in))
+                    return error("GetTransaction : Failed to open block file %s", GetBlockFile(postx).c_str());
+                else
+                    blockFileIn.seekg(postx.nPos);
+
+                // Read block
                 CBlockHeader header;
                 try {
-                    file >> header;
-                    fseek(file, postx.nTxOffset, SEEK_CUR);
-                    file >> txOut;
+                    blockFileIn >> header;
+                    blockFileIn.seekg(postx.nTxOffset);
+                    blockFileIn >> txOut;
                 } catch (std::exception &e) {
-                    return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+                    return error("%s : Deserialize or I/O error - %s", __PRETTY_FUNCTION__, e.what());
                 }
                 hashBlock = header.GetHash();
                 if (txOut.GetHash() != hash)
-                    return error("%s() : txid mismatch", __PRETTY_FUNCTION__);
+                    return error("%s : txid mismatch", __PRETTY_FUNCTION__);
                 return true;
             }
         }
@@ -876,50 +883,61 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 
 bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
 {
-    // Open history file to append
-    CAutoFile fileout = CAutoFile(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
-    if (!fileout)
-        return error("WriteBlockToDisk() : OpenBlockFile failed");
+    int64_t nStart = GetTimeMicros();
+
+    CAutoFile blockFileOut(SER_DISK, CLIENT_VERSION);
+    // Open block file
+    if (!blockFileOut.open(GetBlockFile(pos).c_str()))
+        return error("WriteBlockToDisk : Failed to open block file %s", GetBlockFile(pos).c_str());
+    else
+        blockFileOut.seekp(pos.nPos);
 
     // Write index header
-    unsigned int nSize = fileout.GetSerializeSize(block);
-    fileout << FLATDATA(Params().MessageStart()) << nSize;
+    blockFileOut << FLATDATA(Params().MessageStart()) << blockFileOut.GetSerializeSize(block);
+
+    // Save new block position (used in the block-index)
+    pos.nPos = (unsigned int)blockFileOut.tellp();
 
     // Write block
-    long fileOutPos = ftell(fileout);
-    if (fileOutPos < 0)
-        return error("WriteBlockToDisk() : ftell failed");
-    pos.nPos = (unsigned int)fileOutPos;
-    fileout << block;
+    blockFileOut << block;
 
-    // Flush stdio buffers and commit to disk before returning
-    fflush(fileout);
-    if (!IsInitialBlockDownload())
-        FileCommit(fileout);
+    if (fDebug)
+        LogPrintf("WriteBlockToDisk : Current position in block file %s after writing block is %"PRIu64"\n", GetBlockFile(pos).c_str(), blockFileOut.tellp());
+    if (fBenchmark)
+        LogPrintf("WriteBlockToDisk : Function executed in %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
     return true;
 }
 
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
 {
+    int64_t nStart = GetTimeMicros();
+
     block.SetNull();
 
-    // Open history file to read
-    CAutoFile filein = CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
-    if (!filein)
-        return error("ReadBlockFromDisk(CBlock&, CDiskBlockPos&) : OpenBlockFile failed");
+    CAutoFile blockFileIn(SER_DISK, CLIENT_VERSION);
+    // Open block file to read
+    if (!blockFileIn.open(GetBlockFile(pos).c_str(), std::ios::binary | std::ios::in))
+        return error("ReadBlockFromDisk : Failed to open block file %s", GetBlockFile(pos).c_str());
+    else
+        blockFileIn.seekg(pos.nPos);
 
     // Read block
     try {
-        filein >> block;
+        blockFileIn >> block;
     }
     catch (std::exception &e) {
-        return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+        return error("%s : Deserialize or I/O error - %s", __PRETTY_FUNCTION__, e.what());
     }
 
     // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits))
-        return error("ReadBlockFromDisk(CBlock&, CDiskBlockPos&) : errors in block header");
+        return error("ReadBlockFromDisk : Errors in block header");
+
+    if (fDebug)
+        LogPrintf("ReadBlockFromDisk : Current position in block file %s after reading block is %"PRIu64"\n", GetBlockFile(pos).c_str(), blockFileIn.tellg());
+    if (fBenchmark)
+        LogPrintf("ReadBlockFromDisk : Function executed in %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
     return true;
 }
@@ -2465,6 +2483,41 @@ FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
     return OpenDiskFile(pos, "rev", fReadOnly);
 }
 
+const std::string& GetDiskFile(const CDiskBlockPos &pos, const char *prefix, bool fIsUndoFile)
+{
+    if (pos.IsNull())
+        LogPrintf("GetDiskFile : Error, pos.IsNull() was true\n");
+
+    static std::string strPathCached[2];
+    static int nFileCached[2] = {-1, -1};
+    int nFileCur = pos.nFile;
+
+    if (nFileCached[fIsUndoFile] == nFileCur)
+    {
+        return strPathCached[fIsUndoFile];
+    }
+    else
+    {
+        boost::filesystem::path pathDiskFile = GetDataDir() / "blocks" / strprintf("%s%05u.dat", prefix, nFileCur);
+        boost::filesystem::create_directories(pathDiskFile.parent_path());
+
+        strPathCached[fIsUndoFile] = pathDiskFile.string();
+        nFileCached[fIsUndoFile] = nFileCur;
+    }
+
+    return strPathCached[fIsUndoFile];
+}
+
+const std::string& GetBlockFile(const CDiskBlockPos &pos)
+{
+    return GetDiskFile(pos, "blk", false);
+}
+
+const std::string& GetUndoFile(const CDiskBlockPos &pos)
+{
+    return GetDiskFile(pos, "rev", true);
+}
+
 CBlockIndex * InsertBlockIndex(uint256 hash)
 {
     if (hash == 0)
@@ -2791,7 +2844,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
                         break;
                 }
             } catch (std::exception &e) {
-                LogPrintf("%s() : Deserialize or I/O error caught during load\n", __PRETTY_FUNCTION__);
+                LogPrintf("%s : Deserialize or I/O error - %s", __PRETTY_FUNCTION__, e.what());
             }
         }
         fclose(fileIn);
