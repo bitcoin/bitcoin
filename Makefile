@@ -8,7 +8,7 @@ JAVA_FILES := src/java/org_bitcoin_NativeSecp256k1.h src/java/org_bitcoin_Native
 OBJS :=
 
 ifeq ($(USE_ASM), 1)
-    OBJS := $(OBJS) obj/field_5x$(HAVE_LIMB)_asm.o
+    OBJS := $(OBJS) obj/field_5x52_asm.o
 endif
 STD="gnu99"
 
@@ -19,9 +19,6 @@ clean:
 
 obj/field_5x52_asm.o: src/field_5x52_asm.asm
 	$(YASM) -f elf64 -o obj/field_5x52_asm.o src/field_5x52_asm.asm
-
-obj/field_5x64_asm.o: src/field_5x64_asm.asm
-	$(YASM) -f elf64 -o obj/field_5x64_asm.o src/field_5x64_asm.asm
 
 obj/secp256k1.o: $(FILES) src/secp256k1.c include/secp256k1.h
 	$(CC) -fPIC -std=$(STD) $(CFLAGS) $(CFLAGS_EXTRA) -DNDEBUG -$(OPTLEVEL) src/secp256k1.c -c -o obj/secp256k1.o

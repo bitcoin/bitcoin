@@ -22,8 +22,6 @@
 #include "field_10x26.h"
 #elif defined(USE_FIELD_5X52)
 #include "field_5x52.h"
-#elif defined(USE_FIELD_5X64)
-#include "field_5x64.h"
 #else
 #error "Please select field implementation"
 #endif

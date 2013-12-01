@@ -97,9 +97,6 @@ if [ "$?" = 0 ]; then
     HAVE_INT128=1
 fi
 
-#default limb size
-HAVE_LIMB=52
-
 for arg in "$@"; do
     case "$arg" in
         --no-yasm)
@@ -110,9 +107,6 @@ for arg in "$@"; do
             ;;
         --no-openssl)
             HAVE_OPENSSL=0
-	    ;;
-	--use-5x64)
-	    HAVE_LIMB=64
             ;;
         --use-endomorphism)
             USE_ENDOMORPHISM=1
@@ -126,10 +120,10 @@ USE_ASM=0
 
 # select field implementation
 if [ "$HAVE_YASM" = "1" ]; then
-    CFLAGS_FIELD="-DUSE_FIELD_5X$HAVE_LIMB -DUSE_FIELD_5X${HAVE_LIMB}_ASM"
+    CFLAGS_FIELD="-DUSE_FIELD_5X52 -DUSE_FIELD_5X52_ASM"
     USE_ASM=1
 elif [ "$HAVE_INT128" = "1" ]; then
-    CFLAGS_FIELD="-DUSE_FIELD_5X$HAVE_LIMB -DUSE_FIELD_5X${HAVE_LIMB}_INT128"
+    CFLAGS_FIELD="-DUSE_FIELD_5X52 -DUSE_FIELD_5X52_INT128"
 elif [ "$HAVE_GMP" = "1" ]; then
     CFLAGS_FIELD="-DUSE_FIELD_GMP"
     LINK_GMP=1
@@ -176,5 +170,4 @@ echo "CFLAGS_TEST_EXTRA=$CFLAGS_TEST_EXTRA" >> config.mk
 echo "LDFLAGS_EXTRA=$LDFLAGS_EXTRA" >> config.mk
 echo "LDFLAGS_TEST_EXTRA=$LDFLAGS_TEST_EXTRA" >> config.mk
 echo "USE_ASM=$USE_ASM" >>config.mk
-echo "HAVE_LIMB=$HAVE_LIMB" >>config.mk
 echo "OPTLEVEL=O2" >>config.mk
