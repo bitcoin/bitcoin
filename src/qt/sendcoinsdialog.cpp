@@ -227,8 +227,8 @@ void SendCoinsDialog::on_sendButton_clicked()
             alternativeUnits.append(BitcoinUnits::formatWithUnit(u, totalAmount));
     }
     questionString.append(tr("Total Amount %1 (= %2)")
-            .arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
-            .arg(alternativeUnits.join(" "+tr("or")+" ")));
+        .arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
+        .arg(alternativeUnits.join(" " + tr("or") + " ")));
 
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
         questionString.arg(formatted.join("<br />")),
@@ -264,9 +264,7 @@ void SendCoinsDialog::clear()
     }
     addEntry();
 
-    updateRemoveEnabled();
-
-    ui->sendButton->setDefault(true);
+    updateTabsAndLabels();
 }
 
 void SendCoinsDialog::reject()
@@ -287,7 +285,7 @@ SendCoinsEntry *SendCoinsDialog::addEntry()
     connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
     connect(entry, SIGNAL(payAmountChanged()), this, SLOT(coinControlUpdateLabels()));
 
-    updateRemoveEnabled();
+    updateTabsAndLabels();
 
     // Focus the field, so that entry can start immediately
     entry->clear();
@@ -300,27 +298,21 @@ SendCoinsEntry *SendCoinsDialog::addEntry()
     return entry;
 }
 
-void SendCoinsDialog::updateRemoveEnabled()
+void SendCoinsDialog::updateTabsAndLabels()
 {
-    // Remove buttons are enabled as soon as there is more than one send-entry
-    bool enabled = (ui->entries->count() > 1);
-    for(int i = 0; i < ui->entries->count(); ++i)
-    {
-        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
-        if(entry)
-        {
-            entry->setRemoveEnabled(enabled);
-        }
-    }
     setupTabChain(0);
-
     coinControlUpdateLabels();
 }
 
 void SendCoinsDialog::removeEntry(SendCoinsEntry* entry)
 {
     delete entry;
-    updateRemoveEnabled();
+
+    // If the last entry was removed add an empty one
+    if (!ui->entries->count())
+        addEntry();
+
+    updateTabsAndLabels();
 }
 
 QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
@@ -379,7 +371,7 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
     }
 
     entry->setValue(rv);
-    coinControlUpdateLabels();
+    updateTabsAndLabels();
 }
 
 bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
@@ -619,4 +611,3 @@ void SendCoinsDialog::coinControlUpdateLabels()
         ui->labelCoinControlInsuffFunds->hide();
     }
 }
-
