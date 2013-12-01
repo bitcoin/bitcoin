@@ -57,7 +57,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+11"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l&apos;adresse courante sélectionnée dans le presse-papiers</translation>
+        <translation>Copier l&apos;adresse courante sélectionnée dans le presse-papier</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1896,7 +1896,7 @@ Adresse : %4
     <message>
         <location line="+6"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Saisir ci-dessous l&apos;adresse de signature, le message (assurez-vous d&apos;avoir copié exactement les retours à la ligne, les espacements, tabulations etc.) et la signature pour vérifier le message. Faire attention à ne pas déduire davantage de la signature que ce qui est contenu dans le message signé lui-même pour éviter d&apos;être trompé par une attaque d&apos;homme du milieu.</translation>
+        <translation>Saisir ci-dessous l&apos;adresse de signature, le message (assurez-vous d&apos;avoir copié exactement les retours à la ligne, les espacements, tabulations, etc.) et la signature pour vérifier le message. Faire attention à ne pas déduire davantage de la signature que ce qui est contenu dans le message signé lui-même pour éviter d&apos;être trompé par une attaque de l&apos;homme du milieu.</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -2787,7 +2787,7 @@ par exemple : alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
     <message>
         <location line="+2"/>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Se connecter à JSON-RPC sur le &lt;port&gt; (par défaut : 8332 ou testnet: 18332)</translation>
+        <translation>Se connecter à JSON-RPC sur le &lt;port&gt; (par défaut : 8332 ou testnet : 18332)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2932,7 +2932,7 @@ par exemple : alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
     <message>
         <location line="+8"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>Reconstruire l&apos;index de la chaîne des blocs à partir des fichiers blk000??.dat courrants</translation>
+        <translation>Reconstruire l&apos;index de la chaîne des blocs à partir des fichiers blk000??.dat courants</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -3312,7 +3312,7 @@ par exemple : alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
     <message>
         <location line="-54"/>
         <source>Cannot downgrade wallet</source>
-        <translation>Impossible de revenir à une version inférieur du porte-monnaie</translation>
+        <translation>Impossible de revenir à une version inférieure du porte-monnaie</translation>
     </message>
     <message>
         <location line="+3"/>
