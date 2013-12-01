@@ -16,9 +16,6 @@
   <property name="autoFillBackground">
    <bool>false</bool>
   </property>
-  <property name="currentIndex">
-   <number>0</number>
-  </property>
   <widget class="QFrame" name="SendCoins">
    <property name="toolTip">
     <string>This is a normal payment.</string>
@@ -33,20 +30,7 @@
     <property name="spacing">
      <number>12</number>
     </property>
-    <item row="5" column="0">
-     <widget class="QLabel" name="amountLabel">
-      <property name="text">
-       <string>A&amp;mount:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-      <property name="buddy">
-       <cstring>payAmount</cstring>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0">
+    <item row="0" column="0">
      <widget class="QLabel" name="payToLabel">
       <property name="text">
        <string>Pay &amp;To:</string>
@@ -59,23 +43,7 @@
       </property>
      </widget>
     </item>
-    <item row="5" column="1">
-     <widget class="BitcoinAmountField" name="payAmount"/>
-    </item>
-    <item row="4" column="0">
-     <widget class="QLabel" name="labellLabel">
-      <property name="text">
-       <string>&amp;Label:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-      <property name="buddy">
-       <cstring>addAsLabel</cstring>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1">
+    <item row="0" column="1">
      <layout class="QHBoxLayout" name="payToLayout">
       <property name="spacing">
        <number>0</number>
@@ -84,9 +52,6 @@
        <widget class="QValidatedLineEdit" name="payTo">
         <property name="toolTip">
          <string>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</string>
-        </property>
-        <property name="maxLength">
-         <number>34</number>
         </property>
        </widget>
       </item>
@@ -127,7 +92,7 @@
       <item>
        <widget class="QToolButton" name="deleteButton">
         <property name="toolTip">
-         <string>Remove this recipient</string>
+         <string>Remove this entry</string>
         </property>
         <property name="text">
          <string/>
@@ -140,12 +105,41 @@
       </item>
      </layout>
     </item>
-    <item row="4" column="1">
+    <item row="1" column="0">
+     <widget class="QLabel" name="labellLabel">
+      <property name="text">
+       <string>&amp;Label:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="buddy">
+       <cstring>addAsLabel</cstring>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
      <widget class="QLineEdit" name="addAsLabel">
       <property name="toolTip">
        <string>Enter a label for this address to add it to the list of used addresses</string>
       </property>
      </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="amountLabel">
+      <property name="text">
+       <string>A&amp;mount:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="buddy">
+       <cstring>payAmount</cstring>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <widget class="BitcoinAmountField" name="payAmount"/>
     </item>
    </layout>
   </widget>
@@ -581,27 +575,7 @@
     <property name="spacing">
      <number>12</number>
     </property>
-    <item row="4" column="0">
-     <widget class="QLabel" name="memoLabel_is">
-      <property name="text">
-       <string>Memo:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="0">
-     <widget class="QLabel" name="amountLabel_is">
-      <property name="text">
-       <string>Amount:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0">
+    <item row="0" column="0">
      <widget class="QLabel" name="payToLabel_is">
       <property name="text">
        <string>Pay To:</string>
@@ -611,14 +585,7 @@
       </property>
      </widget>
     </item>
-    <item row="5" column="2">
-     <widget class="BitcoinAmountField" name="payAmount_is">
-      <property name="acceptDrops">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="2">
+    <item row="0" column="1">
      <layout class="QHBoxLayout" name="payToLayout_is">
       <property name="spacing">
        <number>0</number>
@@ -626,12 +593,56 @@
       <item>
        <widget class="QLabel" name="payTo_is"/>
       </item>
+      <item>
+       <widget class="QToolButton" name="deleteButton_is">
+        <property name="toolTip">
+         <string>Remove this entry</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../bitcoin.qrc">
+          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
-    <item row="4" column="2">
+    <item row="1" column="0">
+     <widget class="QLabel" name="memoLabel_is">
+      <property name="text">
+       <string>Memo:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
      <widget class="QLabel" name="memoTextLabel_is">
       <property name="textFormat">
        <enum>Qt::PlainText</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="amountLabel_is">
+      <property name="text">
+       <string>A&amp;mount:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="buddy">
+       <cstring>payAmount_is</cstring>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <widget class="BitcoinAmountField" name="payAmount_is">
+      <property name="acceptDrops">
+       <bool>false</bool>
       </property>
      </widget>
     </item>
@@ -1096,27 +1107,7 @@
     <property name="spacing">
      <number>12</number>
     </property>
-    <item row="4" column="0">
-     <widget class="QLabel" name="memoLabel_s">
-      <property name="text">
-       <string>Memo:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="0">
-     <widget class="QLabel" name="amountLabel_s">
-      <property name="text">
-       <string>Amount:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0">
+    <item row="0" column="0">
      <widget class="QLabel" name="payToLabel_s">
       <property name="text">
        <string>Pay To:</string>
@@ -1126,14 +1117,7 @@
       </property>
      </widget>
     </item>
-    <item row="5" column="2">
-     <widget class="BitcoinAmountField" name="payAmount_s">
-      <property name="acceptDrops">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="2">
+    <item row="0" column="1">
      <layout class="QHBoxLayout" name="payToLayout_s">
       <property name="spacing">
        <number>0</number>
@@ -1145,12 +1129,56 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QToolButton" name="deleteButton_s">
+        <property name="toolTip">
+         <string>Remove this entry</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../bitcoin.qrc">
+          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
-    <item row="4" column="2">
+    <item row="1" column="0">
+     <widget class="QLabel" name="memoLabel_s">
+      <property name="text">
+       <string>Memo:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
      <widget class="QLabel" name="memoTextLabel_s">
       <property name="textFormat">
        <enum>Qt::PlainText</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="amountLabel_s">
+      <property name="text">
+       <string>A&amp;mount:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="buddy">
+       <cstring>payAmount_s</cstring>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <widget class="BitcoinAmountField" name="payAmount_s">
+      <property name="acceptDrops">
+       <bool>false</bool>
       </property>
      </widget>
     </item>
@@ -1159,16 +1187,28 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BitcoinAmountField</class>
-   <extends>QLineEdit</extends>
-   <header>bitcoinamountfield.h</header>
-  </customwidget>
-  <customwidget>
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
    <header>qvalidatedlineedit.h</header>
   </customwidget>
+  <customwidget>
+   <class>BitcoinAmountField</class>
+   <extends>QLineEdit</extends>
+   <header>bitcoinamountfield.h</header>
+  </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>payTo</tabstop>
+  <tabstop>addressBookButton</tabstop>
+  <tabstop>pasteButton</tabstop>
+  <tabstop>deleteButton</tabstop>
+  <tabstop>addAsLabel</tabstop>
+  <tabstop>payAmount</tabstop>
+  <tabstop>payAmount_is</tabstop>
+  <tabstop>deleteButton_is</tabstop>
+  <tabstop>payAmount_s</tabstop>
+  <tabstop>deleteButton_s</tabstop>
+ </tabstops>
  <resources>
   <include location="../bitcoin.qrc"/>
  </resources>
