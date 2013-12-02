@@ -215,8 +215,11 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlQuantityText">
-                 <property name="styleSheet">
-                  <string notr="true">font-weight:bold;</string>
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
                  </property>
                  <property name="text">
                   <string>Quantity:</string>
@@ -247,8 +250,11 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="labelCoinControlBytesText">
-                 <property name="styleSheet">
-                  <string notr="true">font-weight:bold;</string>
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
                  </property>
                  <property name="text">
                   <string>Bytes:</string>
@@ -292,8 +298,11 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlAmountText">
-                 <property name="styleSheet">
-                  <string notr="true">font-weight:bold;</string>
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
                  </property>
                  <property name="text">
                   <string>Amount:</string>
@@ -321,8 +330,11 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="labelCoinControlPriorityText">
-                 <property name="styleSheet">
-                  <string notr="true">font-weight:bold;</string>
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
                  </property>
                  <property name="text">
                   <string>Priority:</string>
@@ -338,7 +350,7 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
-                  <string>medium</string>
+                  <string notr="true">medium</string>
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -366,8 +378,11 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlFeeText">
-                 <property name="styleSheet">
-                  <string notr="true">font-weight:bold;</string>
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
                  </property>
                  <property name="text">
                   <string>Fee:</string>
@@ -395,8 +410,11 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="labelCoinControlLowOutputText">
-                 <property name="styleSheet">
-                  <string notr="true">font-weight:bold;</string>
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
                  </property>
                  <property name="text">
                   <string>Low Output:</string>
@@ -412,7 +430,7 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
-                  <string>no</string>
+                  <string notr="true">no</string>
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -440,8 +458,11 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlAfterFeeText">
-                 <property name="styleSheet">
-                  <string notr="true">font-weight:bold;</string>
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
                  </property>
                  <property name="text">
                   <string>After Fee:</string>
@@ -469,8 +490,11 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="labelCoinControlChangeText">
-                 <property name="styleSheet">
-                  <string notr="true">font-weight:bold;</string>
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
                  </property>
                  <property name="text">
                   <string>Change:</string>
@@ -693,7 +717,7 @@
           <cursorShape>IBeamCursor</cursorShape>
          </property>
          <property name="text">
-          <string>123.456 BTC</string>
+          <string notr="true">123.456 BTC</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
