@@ -377,6 +377,91 @@ class PosixMmapFile : public WritableFile {
   }
 };
 
+class PosixWriteableFile : public WritableFile {
+ private:
+  std::string filename_;
+  int fd_;
+ public:
+  PosixWriteableFile(const std::string& fname, int fd)
+  : filename_(fname),
+  fd_(fd)
+  { }
+
+
+  ~PosixWriteableFile() {
+    if (fd_ >= 0) {
+      PosixWriteableFile::Close();
+    }
+  }
+
+  virtual Status Append(const Slice& data) {
+    Status s;
+    int ret;
+    ret = write(fd_, data.data(), data.size());
+    if (ret < 0) {
+      s = IOError(filename_, errno);
+    } else if (ret < data.size()) {
+      s = Status::IOError(filename_, "short write");
+    }
+    
+    return s;
+  }
+
+  virtual Status Close() {
+    Status s;
+    if (close(fd_) < 0) {
+      s = IOError(filename_, errno);
+    }
+    fd_ = -1;
+    return s;
+  }
+
+  virtual Status Flush() {
+    return Status::OK();
+  }
+  
+  Status SyncDirIfManifest() {
+    const char* f = filename_.c_str();
+    const char* sep = strrchr(f, '/');
+    Slice basename;
+    std::string dir;
+    if (sep == NULL) {
+      dir = ".";
+      basename = f;
+    } else {
+      dir = std::string(f, sep - f);
+      basename = sep + 1;
+    }
+    Status s;
+    if (basename.starts_with("MANIFEST")) {
+      int fd = open(dir.c_str(), O_RDONLY);
+      if (fd < 0) {
+        s = IOError(dir, errno);
+      } else {
+        if (fsync(fd) < 0) {
+          s = IOError(dir, errno);
+        }
+        close(fd);
+      }
+    }
+    return s;
+  }
+  
+  virtual Status Sync() {
+    // Ensure new files referred to by the manifest are in the filesystem.
+    Status s = SyncDirIfManifest();
+    if (!s.ok()) {
+      return s;
+    }
+    
+    if (fdatasync(fd_) < 0) {
+      s = IOError(filename_, errno);
+    }
+    
+    return s;
+  }
+};
+
 static int LockOrUnlock(int fd, bool lock) {
   errno = 0;
   struct flock f;
@@ -439,21 +524,6 @@ class PosixEnv : public Env {
     int fd = open(fname.c_str(), O_RDONLY);
     if (fd < 0) {
       s = IOError(fname, errno);
-    } else if (mmap_limit_.Acquire()) {
-      uint64_t size;
-      s = GetFileSize(fname, &size);
-      if (s.ok()) {
-        void* base = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
-        if (base != MAP_FAILED) {
-          *result = new PosixMmapReadableFile(fname, base, size, &mmap_limit_);
-        } else {
-          s = IOError(fname, errno);
-        }
-      }
-      close(fd);
-      if (!s.ok()) {
-        mmap_limit_.Release();
-      }
     } else {
       *result = new PosixRandomAccessFile(fname, fd);
     }
@@ -468,7 +538,7 @@ class PosixEnv : public Env {
       *result = NULL;
       s = IOError(fname, errno);
     } else {
-      *result = new PosixMmapFile(fname, fd, page_size_);
+      *result = new PosixWriteableFile(fname, fd);
     }
     return s;
   }
