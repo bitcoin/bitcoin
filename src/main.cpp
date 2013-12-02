@@ -18,6 +18,10 @@
 using namespace std;
 using namespace boost;
 
+#if defined(NDEBUG)
+# error "Litecoin cannot be compiled without assertions."
+#endif
+
 //
 // Global state
 //
@@ -1343,12 +1347,14 @@ unsigned int CTransaction::GetP2SHSigOpCount(CCoinsViewCache& inputs) const
 
 void CTransaction::UpdateCoins(CValidationState &state, CCoinsViewCache &inputs, CTxUndo &txundo, int nHeight, const uint256 &txhash) const
 {
+    bool ret;
     // mark inputs spent
     if (!IsCoinBase()) {
         BOOST_FOREACH(const CTxIn &txin, vin) {
             CCoins &coins = inputs.GetCoins(txin.prevout.hash);
             CTxInUndo undo;
-            assert(coins.Spend(txin.prevout, undo));
+            ret = coins.Spend(txin.prevout, undo);
+            assert(ret);
             txundo.vprevout.push_back(undo);
         }
     }
