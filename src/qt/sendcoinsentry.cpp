@@ -97,8 +97,6 @@ void SendCoinsEntry::clear()
     ui->memoTextLabel_s->clear();
     ui->payAmount_s->clear();
 
-    ui->payTo->setFocus();
-
     // update the display unit, to not use the default ("BTC")
     updateDisplayUnit();
 }
