@@ -32,6 +32,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QClipboard>

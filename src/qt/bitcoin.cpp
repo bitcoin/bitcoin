@@ -53,7 +53,6 @@ static SplashScreen *splashref;
 
 static bool ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
-    // Message from network thread
     if(guiref)
     {
         bool modal = (style & CClientUIInterface::MODAL);
@@ -160,7 +159,7 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
 
 /* qDebug() message handler --> debug.log */
 #if QT_VERSION < 0x050000
-void DebugMessageHandler(QtMsgType type, const char * msg)
+void DebugMessageHandler(QtMsgType type, const char *msg)
 {
     Q_UNUSED(type);
     LogPrint("qt", "Bitcoin-Qt: %s\n", msg);
@@ -313,11 +312,12 @@ int main(int argc, char *argv[])
                     splash.finish(&window);
 
                 ClientModel clientModel(&optionsModel);
+                window.setClientModel(&clientModel);
+
                 WalletModel *walletModel = 0;
                 if(pwalletMain)
                     walletModel = new WalletModel(pwalletMain, &optionsModel);
 
-                window.setClientModel(&clientModel);
                 if(walletModel)
                 {
                     window.addWallet("~Default", walletModel);
