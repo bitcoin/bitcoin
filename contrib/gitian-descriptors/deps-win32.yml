@@ -29,8 +29,8 @@ script: |
   export HOST=i686-w64-mingw32
   # Input Integrity Check
   echo "2a9eb3cd4e8b114eb9179c0d3884d61658e7d8e8bf4984798a5f5bd48e325ebe  openssl-1.0.1c.tar.gz"  | sha256sum -c
-  echo "b75dae26151f9b031062c8d2f577a094b08da0ae44fe8c11175d0b9ff434cc02  libpng-1.5.9.tar.gz"    | sha256sum -c
   echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"    | sha256sum -c
+  echo "bbd6b756e6af44b5a5b0f9b93eada3fb8922ed1d6451b7d6f184d0ae0c813994  miniupnpc-1.6.tar.gz"   | sha256sum -c
   echo "21235e08552e6feba09ea5e8d750805b3391c62fb81c71a235c0044dc7a8a61b  zlib-1.2.6.tar.gz"      | sha256sum -c
   echo "b75dae26151f9b031062c8d2f577a094b08da0ae44fe8c11175d0b9ff434cc02  libpng-1.5.9.tar.gz"    | sha256sum -c
   echo "03c4bc7cd9a75747c3815d509bbe061907d615764f2357923f0db948c567068f  qrencode-3.2.0.tar.bz2" | sha256sum -c
