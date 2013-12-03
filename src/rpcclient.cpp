@@ -257,7 +257,7 @@ std::string HelpMessageCli(bool mainProgram)
         strUsage += "  -datadir=<dir>         " + _("Specify data directory") + "\n";
         strUsage += "  -testnet               " + _("Use the test network") + "\n";
         strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be "
-                                            "solved instantly. This is intended for regression testing tools and app development.") + "\n";
+                                                    "solved instantly. This is intended for regression testing tools and app development.") + "\n";
     } else {
         strUsage += _("RPC client options:") + "\n";
     }
