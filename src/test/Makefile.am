@@ -20,7 +20,7 @@ BUILT_SOURCES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
 # test_bitcoin binary #
 test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(TESTDEFS)
-test_bitcoin_LDADD = $(LIBBITCOIN) $(LIBLEVELDB) $(LIBMEMENV) \
+test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BDB_LIBS)
 test_bitcoin_SOURCES = accounting_tests.cpp alert_tests.cpp \
   allocator_tests.cpp base32_tests.cpp base58_tests.cpp base64_tests.cpp \
