@@ -377,6 +377,7 @@ class PosixMmapFile : public WritableFile {
   }
 };
 
+#if defined(OS_MACOSX)
 class PosixWriteableFile : public WritableFile {
  private:
   std::string filename_;
@@ -461,6 +462,7 @@ class PosixWriteableFile : public WritableFile {
     return s;
   }
 };
+#endif
 
 static int LockOrUnlock(int fd, bool lock) {
   errno = 0;
@@ -524,6 +526,23 @@ class PosixEnv : public Env {
     int fd = open(fname.c_str(), O_RDONLY);
     if (fd < 0) {
       s = IOError(fname, errno);
+#if !defined(OS_MACOSX)
+    } else if (mmap_limit_.Acquire()) {
+      uint64_t size;
+      s = GetFileSize(fname, &size);
+      if (s.ok()) {
+        void* base = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
+        if (base != MAP_FAILED) {
+          *result = new PosixMmapReadableFile(fname, base, size, &mmap_limit_);
+        } else {
+          s = IOError(fname, errno);
+        }
+      }
+      close(fd);
+      if (!s.ok()) {
+        mmap_limit_.Release();
+      }
+#endif
     } else {
       *result = new PosixRandomAccessFile(fname, fd);
     }
@@ -538,7 +557,11 @@ class PosixEnv : public Env {
       *result = NULL;
       s = IOError(fname, errno);
     } else {
+#if defined(OS_MACOSX)
       *result = new PosixWriteableFile(fname, fd);
+#else
+      *result = new PosixMmapFile(fname, fd, page_size_);
+#endif
     }
     return s;
   }
