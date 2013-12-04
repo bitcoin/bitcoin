@@ -366,10 +366,10 @@ void PaymentServer::handleURIOrFile(const QString& s)
 #else
         QUrlQuery uri((QUrl(s)));
 #endif
-        if (uri.hasQueryItem("request"))
+        if (uri.hasQueryItem("r"))
         {
             QByteArray temp;
-            temp.append(uri.queryItemValue("request"));
+            temp.append(uri.queryItemValue("r"));
             QString decoded = QUrl::fromPercentEncoding(temp);
             QUrl fetchUrl(decoded, QUrl::StrictMode);
 
