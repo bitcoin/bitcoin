@@ -315,7 +315,7 @@ Value getnettotals(const Array& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"totalbytesrecv\": n,   (numeric) Total bytes received\n"
-            "  \"totalbytessent\": n,   (numeric) Total Bytes sent\n"
+            "  \"totalbytessent\": n,   (numeric) Total bytes sent\n"
             "  \"timemillis\": t        (numeric) Total cpu time\n"
             "}\n"
             "\nExamples:\n"
