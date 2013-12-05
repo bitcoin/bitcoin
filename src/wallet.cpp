@@ -765,6 +765,10 @@ void CWalletTx::AddSupportingTransactions()
                 {
                     tx = *mapWalletPrev[hash];
                 }
+                else
+                {
+                    continue;
+                }
 
                 int nDepth = tx.SetMerkleBranch();
                 vtxPrev.push_back(tx);
