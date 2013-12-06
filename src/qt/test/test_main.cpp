@@ -1,8 +1,7 @@
-
-
 #include "paymentservertests.h"
 #include "uritests.h"
 
+#include <QCoreApplication>
 #include <QObject>
 #include <QTest>
 
@@ -10,6 +9,11 @@
 int main(int argc, char *argv[])
 {
     bool fInvalid = false;
+
+    // Don't remove this, it's needed to access
+    // QCoreApplication:: in the tests
+    QCoreApplication app(argc, argv);
+    app.setApplicationName("Bitcoin-Qt-test");
 
     URITests test1;
     if (QTest::qExec(&test1) != 0)
