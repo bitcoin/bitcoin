@@ -17,7 +17,7 @@ Release Process
 
 ###tag version in git
 
-	git tag -a v(new version, e.g. 0.8.0)
+	git tag -s v(new version, e.g. 0.8.0)
 
 ###write release notes. git shortlog helps a lot, for example:
 
