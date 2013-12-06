@@ -66,9 +66,7 @@ ParseScript(string s)
         if (all(w, is_digit()) ||
             (starts_with(w, "-") && all(string(w.begin()+1, w.end()), is_digit())))
         {
-            // Number
-            int64_t n = atoi64(w);
-            result << n;
+            result << fromstr<int64_t>(w);
         }
         else if (starts_with(w, "0x") && IsHex(string(w.begin()+2, w.end())))
         {

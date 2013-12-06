@@ -11,12 +11,13 @@
 #endif
 
 #include "compat.h"
+#include "log.h"
 #include "serialize.h"
 
 #include <cstdio>
 #include <exception>
-#include <inttypes.h>
 #include <map>
+#include <sstream>
 #include <stdarg.h>
 #include <stdint.h>
 #include <string>
@@ -25,11 +26,11 @@
 
 #ifndef WIN32
 #include <sys/resource.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #endif
 
 #include <boost/filesystem/path.hpp>
+#include <boost/format.hpp>
 #include <boost/thread.hpp>
 
 class CNetAddr;
@@ -43,14 +44,6 @@ static const int64_t CENT = 1000000;
 #define UBEGIN(a)           ((unsigned char*)&(a))
 #define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
-
-/* Format characters for (s)size_t and ptrdiff_t (C99 standard) */
-#define PRIszx    "zx"
-#define PRIszu    "zu"
-#define PRIszd    "zd"
-#define PRIpdx    "tx"
-#define PRIpdu    "tu"
-#define PRIpdd    "td"
 
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
 #define PAIRTYPE(t1, t2)    std::pair<t1, t2>
@@ -99,18 +92,6 @@ inline void MilliSleep(int64_t n)
 #endif
 }
 
-/* This GNU C extension enables the compiler to check the format string against the parameters provided.
- * X is the number of the "format string" parameter, and Y is the number of the first variadic parameter.
- * Parameters count from 1.
- */
-#ifdef __GNUC__
-#define ATTR_WARN_PRINTF(X,Y) __attribute__((format(gnu_printf,X,Y)))
-#else
-#define ATTR_WARN_PRINTF(X,Y)
-#endif
-
-
-
 
 
 
@@ -118,40 +99,13 @@ inline void MilliSleep(int64_t n)
 
 extern std::map<std::string, std::string> mapArgs;
 extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
-extern bool fDebug;
-extern bool fPrintToConsole;
-extern bool fPrintToDebugger;
 extern bool fDaemon;
 extern bool fServer;
 extern std::string strMiscWarning;
 extern bool fNoListen;
-extern bool fLogTimestamps;
-extern volatile bool fReopenDebugLog;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
-
-// Print to debug.log if -debug=category switch is given OR category is NULL.
-int ATTR_WARN_PRINTF(2,3) LogPrint(const char* category, const char* pszFormat, ...);
-#define LogPrintf(...) LogPrint(NULL, __VA_ARGS__)
-
-/*
-  Rationale for the real_strprintf / strprintf construction:
-    It is not allowed to use va_start with a pass-by-reference argument.
-    (C++ standard, 18.7, paragraph 3). Use a dummy argument to work around this, and use a
-    macro to keep similar semantics.
-*/
-
-/** Overload strprintf for char*, so that GCC format type warnings can be given */
-std::string ATTR_WARN_PRINTF(1,3) real_strprintf(const char *format, int dummy, ...);
-/** Overload strprintf for std::string, to be able to use it with _ (translation).
- * This will not support GCC format type warnings (-Wformat) so be careful.
- */
-std::string real_strprintf(const std::string &format, int dummy, ...);
-#define strprintf(format, ...) real_strprintf(format, 0, __VA_ARGS__)
-std::string vstrprintf(const char *format, va_list ap);
-
-bool ATTR_WARN_PRINTF(1,2) error(const char *format, ...);
 
 void LogException(std::exception* pex, const char* pszThread);
 void PrintException(std::exception* pex, const char* pszThread);
@@ -197,10 +151,6 @@ void ShrinkDebugFile();
 int GetRandInt(int nMax);
 uint64_t GetRand(uint64_t nMax);
 uint256 GetRandHash();
-int64_t GetTime();
-void SetMockTime(int64_t nMockTimeIn);
-int64_t GetAdjustedTime();
-int64_t GetTimeOffset();
 std::string FormatFullVersion();
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
 void AddTimeData(const CNetAddr& ip, int64_t nTime);
@@ -213,38 +163,20 @@ void runCommand(std::string strCommand);
 
 
 
-
-inline std::string i64tostr(int64_t n)
+template<typename T>
+inline std::string tostr(const T n)
 {
-    return strprintf("%"PRId64, n);
+    std::ostringstream oss;
+    oss << n;
+    return oss.str();
 }
 
-inline std::string itostr(int n)
+template<typename T>
+inline T fromstr(const std::string& str)
 {
-    return strprintf("%d", n);
-}
-
-inline int64_t atoi64(const char* psz)
-{
-#ifdef _MSC_VER
-    return _atoi64(psz);
-#else
-    return strtoll(psz, NULL, 10);
-#endif
-}
-
-inline int64_t atoi64(const std::string& str)
-{
-#ifdef _MSC_VER
-    return _atoi64(str.c_str());
-#else
-    return strtoll(str.c_str(), NULL, 10);
-#endif
-}
-
-inline int atoi(const std::string& str)
-{
-    return atoi(str.c_str());
+    T tTemp = T();
+    std::istringstream(str) >> tTemp;
+    return tTemp;
 }
 
 inline int roundint(double d)
@@ -290,12 +222,12 @@ inline std::string HexStr(const T& vch, bool fSpaces=false)
 template<typename T>
 void PrintHex(const T pbegin, const T pend, const char* pszFormat="%s", bool fSpaces=true)
 {
-    LogPrintf(pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
+    Log() << HexStr(pbegin, pend, fSpaces);
 }
 
 inline void PrintHex(const std::vector<unsigned char>& vch, const char* pszFormat="%s", bool fSpaces=true)
 {
-    LogPrintf(pszFormat, HexStr(vch, fSpaces).c_str());
+    Log() << HexStr(vch, fSpaces);
 }
 
 inline int64_t GetPerformanceCounter()
@@ -309,27 +241,6 @@ inline int64_t GetPerformanceCounter()
     nCounter = (int64_t) t.tv_sec * 1000000 + t.tv_usec;
 #endif
     return nCounter;
-}
-
-inline int64_t GetTimeMillis()
-{
-    return (boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time()) -
-            boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_milliseconds();
-}
-
-inline int64_t GetTimeMicros()
-{
-    return (boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time()) -
-            boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_microseconds();
-}
-
-inline std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
-{
-    time_t n = nTime;
-    struct tm* ptmTime = gmtime(&n);
-    char pszTime[200];
-    strftime(pszTime, sizeof(pszTime), pszFormat, ptmTime);
-    return pszTime;
 }
 
 template<typename T>
@@ -531,9 +442,10 @@ inline uint32_t ByteReverse(uint32_t value)
 //    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
 template <typename Callable> void LoopForever(const char* name,  Callable func, int64_t msecs)
 {
-    std::string s = strprintf("bitcoin-%s", name);
-    RenameThread(s.c_str());
-    LogPrintf("%s thread start\n", name);
+    std::string strNameVersion = boost::str(boost::format("bitcoin-%s") % name);
+
+    RenameThread(strNameVersion.c_str());
+    Log() << name << " thread start\n";
     try
     {
         while (1)
@@ -544,7 +456,7 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
     }
     catch (boost::thread_interrupted)
     {
-        LogPrintf("%s thread stop\n", name);
+        Log() << name << " thread stop\n";
         throw;
     }
     catch (std::exception& e) {
@@ -557,17 +469,18 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
 // .. and a wrapper that just calls func once
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-    std::string s = strprintf("bitcoin-%s", name);
-    RenameThread(s.c_str());
+    std::string strNameVersion = boost::str(boost::format("bitcoin-%s") % name);
+
+    RenameThread(strNameVersion.c_str());
     try
     {
-        LogPrintf("%s thread start\n", name);
+        Log() << name << " thread start\n";
         func();
-        LogPrintf("%s thread exit\n", name);
+        Log() << name << " thread exit\n";
     }
     catch (boost::thread_interrupted)
     {
-        LogPrintf("%s thread interrupt\n", name);
+        Log() << name << " thread interrupt\n";
         throw;
     }
     catch (std::exception& e) {

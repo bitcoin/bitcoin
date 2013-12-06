@@ -4,6 +4,7 @@
 
 
 
+#include "bitcointime.h"
 #include "main.h"
 
 #include <cstdio>
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE(May15)
     // test/data/Mar12Fork.dat from
     // http://sourceforge.net/projects/bitcoin/files/Bitcoin/blockchain/Mar12Fork.dat/download
     unsigned int tMay15 = 1368576000;
-    SetMockTime(tMay15); // Test as if it was right at May 15
+    BitcoinTime::SetMockTime(tMay15); // Test as if it was right at May 15
 
     CBlock forkingBlock;
     if (read_block("Mar12Fork.dat", forkingBlock))
@@ -58,7 +59,7 @@ BOOST_AUTO_TEST_CASE(May15)
         BOOST_CHECK(CheckBlock(forkingBlock, state, false, false));
     }
 
-    SetMockTime(0);
+    BitcoinTime::SetMockTime(0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

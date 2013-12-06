@@ -5,10 +5,16 @@
 
 #include "miner.h"
 
+#include "bitcointime.h"
 #include "core.h"
+#include "log.h"
 #include "main.h"
 #include "net.h"
 #include "wallet.h"
+
+#include <iomanip>
+#include <ios>
+#include <stdint.h>
 
 double dHashesPerSec = 0.0;
 int64_t nHPSTimerStart = 0;
@@ -106,10 +112,10 @@ public:
 
     void print() const
     {
-        LogPrintf("COrphan(hash=%s, dPriority=%.1f, dFeePerKb=%.1f)\n",
-               ptx->GetHash().ToString().c_str(), dPriority, dFeePerKb);
+        Log() << "COrphan(hash=" << ptx->GetHash().ToString() << ", dPriority=" << std::fixed << std::setprecision(1) << dPriority << "," 
+                              << " dFeePerKb=" << std::fixed << std::setprecision(1) << dFeePerKb << ")\n";
         BOOST_FOREACH(uint256 hash, setDependsOn)
-            LogPrintf("   setDependsOn %s\n", hash.ToString().c_str());
+            Log() << "   setDependsOn " << hash.ToString() << "\n";
     }
 };
 
@@ -212,8 +218,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                     // or other transactions in the memory pool.
                     if (!mempool.mapTx.count(txin.prevout.hash))
                     {
-                        LogPrintf("ERROR: mempool transaction missing input\n");
-                        if (fDebug) assert("mempool transaction missing input" == 0);
+                        Log() << "ERROR: mempool transaction missing input\n";
+                        if (Log::fDebug) assert("mempool transaction missing input" == 0);
                         fMissingInputs = true;
                         if (porphan)
                             vOrphan.pop_back();
@@ -332,8 +338,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
             if (fPrintPriority)
             {
-                LogPrintf("priority %.1f feeperkb %.1f txid %s\n",
-                       dPriority, dFeePerKb, tx.GetHash().ToString().c_str());
+                Log() << "priority " << std::fixed << std::setprecision(1) << dPriority 
+                      << " feeperkb " << std::fixed << std::setprecision(1) << dFeePerKb 
+                      << " txid " << tx.GetHash().ToString() << "\n";
             }
 
             // Add transactions that depend on this one to the priority queue
@@ -356,7 +363,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
-        LogPrintf("CreateNewBlock(): total size %"PRIu64"\n", nBlockSize);
+        Log() << "CreateNewBlock(): total size " << nBlockSize << "\n";
 
         pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
         pblocktemplate->vTxFees[0] = -nFees;
@@ -464,16 +471,19 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
         return false;
 
     //// debug print
-    LogPrintf("BitcoinMiner:\n");
-    LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
+    Log() << "BitcoinMiner:\n";
+    Log() << "proof-of-work found  \n  hash: " << hash.GetHex() << "  \ntarget: " << hashTarget.GetHex() << "\n";
     pblock->print();
-    LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
+    Log() << "generated " << FormatMoney(pblock->vtx[0].vout[0].nValue) << "\n";
 
     // Found a solution
     {
         LOCK(cs_main);
         if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
-            return error("BitcoinMiner : generated block is stale");
+        {
+            Log() << "ERROR: BitcoinMiner : generated block is stale\n";
+            return false;
+        }
 
         // Remove key from key pool
         reservekey.KeepKey();
@@ -487,7 +497,10 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
         // Process this block the same as if we had received it from another node
         CValidationState state;
         if (!ProcessBlock(state, NULL, pblock))
-            return error("BitcoinMiner : ProcessBlock, block not accepted");
+        {
+            Log() << "ERROR: BitcoinMiner : ProcessBlock, block not accepted\n";
+            return false;
+        }
     }
 
     return true;
@@ -495,7 +508,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 
 void static BitcoinMiner(CWallet *pwallet)
 {
-    LogPrintf("BitcoinMiner started\n");
+    Log() << "BitcoinMiner started\n";
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("bitcoin-miner");
 
@@ -523,8 +536,7 @@ void static BitcoinMiner(CWallet *pwallet)
         CBlock *pblock = &pblocktemplate->block;
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
-        LogPrintf("Running BitcoinMiner with %"PRIszu" transactions in block (%u bytes)\n", pblock->vtx.size(),
-               ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
+        Log() << "Running BitcoinMiner with " << pblock->vtx.size() << " transactions in block (" << ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION) << " bytes)\n";
 
         //
         // Pre-build hash buffers
@@ -543,7 +555,7 @@ void static BitcoinMiner(CWallet *pwallet)
         //
         // Search
         //
-        int64_t nStart = GetTime();
+        int64_t nStart = BitcoinTime::GetTime();
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
         uint256 hashbuf[2];
         uint256& hash = *alignup<16>(hashbuf);
@@ -585,26 +597,26 @@ void static BitcoinMiner(CWallet *pwallet)
             static int64_t nHashCounter;
             if (nHPSTimerStart == 0)
             {
-                nHPSTimerStart = GetTimeMillis();
+                nHPSTimerStart = BitcoinTime::GetTimeMillis();
                 nHashCounter = 0;
             }
             else
                 nHashCounter += nHashesDone;
-            if (GetTimeMillis() - nHPSTimerStart > 4000)
+            if (BitcoinTime::GetTimeMillis() - nHPSTimerStart > 4000)
             {
                 static CCriticalSection cs;
                 {
                     LOCK(cs);
-                    if (GetTimeMillis() - nHPSTimerStart > 4000)
+                    if (BitcoinTime::GetTimeMillis() - nHPSTimerStart > 4000)
                     {
-                        dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
-                        nHPSTimerStart = GetTimeMillis();
+                        dHashesPerSec = 1000.0 * nHashCounter / (BitcoinTime::GetTimeMillis() - nHPSTimerStart);
+                        nHPSTimerStart = BitcoinTime::GetTimeMillis();
                         nHashCounter = 0;
                         static int64_t nLogTime;
-                        if (GetTime() - nLogTime > 30 * 60)
+                        if (BitcoinTime::GetTime() - nLogTime > 30 * 60)
                         {
-                            nLogTime = GetTime();
-                            LogPrintf("hashmeter %6.0f khash/s\n", dHashesPerSec/1000.0);
+                            nLogTime = BitcoinTime::GetTime();
+                            Log() << "hashmeter " << std::fixed << std::setw(6) << std::setprecision(0) << (dHashesPerSec/1000.0) << " khash/s\n";
                         }
                     }
                 }
@@ -616,7 +628,7 @@ void static BitcoinMiner(CWallet *pwallet)
                 break;
             if (nBlockNonce >= 0xffff0000)
                 break;
-            if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
+            if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && BitcoinTime::GetTime() - nStart > 60)
                 break;
             if (pindexPrev != chainActive.Tip())
                 break;
@@ -634,7 +646,7 @@ void static BitcoinMiner(CWallet *pwallet)
     } }
     catch (boost::thread_interrupted)
     {
-        LogPrintf("BitcoinMiner terminated\n");
+        Log() << "BitcoinMiner terminated\n";
         throw;
     }
 }

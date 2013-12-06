@@ -15,10 +15,10 @@ BITCOIN_CORE_H = addrman.h alert.h allocators.h base58.h bignum.h \
   rpcclient.h \
   rpcprotocol.h \
   rpcserver.h \
-  bloom.h chainparams.h checkpoints.h checkqueue.h \
+  bitcointime.h bloom.h chainparams.h checkpoints.h checkqueue.h \
   clientversion.h coincontrol.h compat.h core.h coins.h crypter.h db.h hash.h init.h \
-  key.h keystore.h leveldbwrapper.h limitedmap.h main.h miner.h mruset.h \
-  netbase.h net.h noui.h protocol.h script.h serialize.h sync.h threadsafety.h \
+  key.h keystore.h leveldbwrapper.h limitedmap.h log.h main.h miner.h mruset.h \
+  netbase.h net.h noui.h protocol.h script.h serialize.h sync.h threadsafety.h  \
   txdb.h txmempool.h ui_interface.h uint256.h util.h version.h walletdb.h wallet.h
 
 JSON_H = json/json_spirit.h json/json_spirit_error_position.h \
@@ -45,10 +45,12 @@ libbitcoin_server_a_SOURCES = addrman.cpp alert.cpp \
 
 libbitcoin_common_a_SOURCES = \
   allocators.cpp \
+  bitcointime.cpp \
   chainparams.cpp \
   core.cpp \
   hash.cpp \
   key.cpp \
+  log.cpp \
   netbase.cpp \
   protocol.cpp \
   rpcprotocol.cpp \

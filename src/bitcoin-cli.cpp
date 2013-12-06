@@ -9,6 +9,9 @@
 #include "ui_interface.h" /* for _(...) */
 #include "chainparams.h"
 
+#include <iostream>
+#include <string>
+
 #include <boost/filesystem/operations.hpp>
 
 //////////////////////////////////////////////////////////////////////////////
@@ -23,7 +26,7 @@ static bool AppInitRPC(int argc, char* argv[])
     ParseParameters(argc, argv);
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
-        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
+        std::cerr << "Error: Specified data directory \"" << mapArgs["-datadir"] << "\" does not exist.\n";
         return false;
     }
     ReadConfigFile(mapArgs, mapMultiArgs);
@@ -36,15 +39,15 @@ static bool AppInitRPC(int argc, char* argv[])
     if (argc<2 || mapArgs.count("-?") || mapArgs.count("--help"))
     {
         // First part of help message is specific to RPC client
-        std::string strUsage = _("Bitcoin RPC client version") + " " + FormatFullVersion() + "\n\n" +
-            _("Usage:") + "\n" +
-              "  bitcoin-cli [options] <command> [params]  " + _("Send command to Bitcoin server") + "\n" +
-              "  bitcoin-cli [options] help                " + _("List commands") + "\n" +
-              "  bitcoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
+        std::cout << _<std::string>("Bitcoin RPC client version") << " " << FormatFullVersion() << "\n" 
+                  << "\n"
+                  << _<std::string>("Usage:") << "\n"
+                  << "  bitcoin-cli [options] <command> [params]  " << _<std::string>("Send command to Bitcoin server") << "\n"
+                  << "  bitcoin-cli [options] help                " << _<std::string>("List commands") << "\n"
+                  << "  bitcoin-cli [options] help <command>      " << _<std::string>("Get help for a command") << "\n"
+                  << "\n" 
+                  << HelpMessageCli(true);
 
-        strUsage += "\n" + HelpMessageCli(true);
-
-        fprintf(stdout, "%s", strUsage.c_str());
         return false;
     }
     return true;

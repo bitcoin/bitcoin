@@ -6,6 +6,7 @@
 #include "chainparams.h"
 
 #include "assert.h"
+#include "bitcointime.h"
 #include "core.h"
 #include "protocol.h"
 #include "util.h"
@@ -162,7 +163,7 @@ public:
             struct in_addr ip;
             memcpy(&ip, &pnSeed[i], sizeof(ip));
             CAddress addr(CService(ip, GetDefaultPort()));
-            addr.nTime = GetTime() - GetRand(nOneWeek) - nOneWeek;
+            addr.nTime = BitcoinTime::GetTime() - GetRand(nOneWeek) - nOneWeek;
             vFixedSeeds.push_back(addr);
         }
     }

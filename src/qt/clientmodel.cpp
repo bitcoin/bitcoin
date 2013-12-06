@@ -7,6 +7,7 @@
 #include "guiconstants.h"
 
 #include "alert.h"
+#include "bitcointime.h"
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "main.h"
@@ -19,7 +20,7 @@
 #include <QDebug>
 #include <QTimer>
 
-static const int64_t nClientStartupTime = GetTime();
+static const int64_t nClientStartupTime = BitcoinTime::GetTime();
 
 ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), optionsModel(optionsModel),

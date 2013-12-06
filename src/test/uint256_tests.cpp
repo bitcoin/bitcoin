@@ -1,6 +1,7 @@
 #include "uint256.h"
 #include <string>
 
+#include <iostream>
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>

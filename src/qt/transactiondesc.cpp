@@ -8,7 +8,9 @@
 #include "guiutil.h"
 
 #include "base58.h"
+#include "bitcointime.h"
 #include "db.h"
+#include "log.h"
 #include "main.h"
 #include "paymentserver.h"
 #include "transactionrecord.h"
@@ -30,7 +32,7 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
     else
     {
         int nDepth = wtx.GetDepthInMainChain();
-        if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+        if (BitcoinTime::GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
             return tr("%1/offline").arg(nDepth);
         else if (nDepth < 6)
             return tr("%1/unconfirmed").arg(nDepth);
@@ -248,7 +250,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, int vout, int u
         //
         // Debug view
         //
-        if (fDebug)
+        if (Log::fDebug)
         {
             strHTML += "<hr><br>" + tr("Debug information") + "<br><br>";
             BOOST_FOREACH(const CTxIn& txin, wtx.vin)

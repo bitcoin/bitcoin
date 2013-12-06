@@ -3,13 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
-#include "rpcserver.h"
+#include "bitcointime.h"
 #include "init.h"
+#include "log.h"
 #include "main.h"
+#include "rpcserver.h"
 #include "sync.h"
 #include "wallet.h"
 
 #include <fstream>
+#include <sstream>
 #include <stdint.h>
 
 #include <boost/algorithm/string.hpp>
@@ -23,7 +26,7 @@ using namespace std;
 void EnsureWalletIsUnlocked();
 
 std::string static EncodeDumpTime(int64_t nTime) {
-    return DateTimeStrFormat("%Y-%m-%"PRId64"T%H:%M:%SZ", nTime);
+    return BitcoinTime::DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", nTime);
 }
 
 int64_t static DecodeDumpTime(const std::string &str) {
@@ -68,23 +71,26 @@ std::string DecodeDumpString(const std::string &str) {
 Value importprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
-        throw runtime_error(
-            "importprivkey \"bitcoinprivkey\" ( \"label\" rescan )\n"
-            "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
-            "\nArguments:\n"
-            "1. \"bitcoinprivkey\"   (string, required) The private key (see dumpprivkey)\n"
-            "2. \"label\"            (string, optional) an optional label\n"
-            "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
-            "\nExamples:\n"
-            "\nDump a private key\n"
-            + HelpExampleCli("dumpprivkey", "\"myaddress\"") +
-            "\nImport the private key\n"
-            + HelpExampleCli("importprivkey", "\"mykey\"") +
-            "\nImport using a label\n"
-            + HelpExampleCli("importprivkey", "\"mykey\" \"testing\" false") +
-            "\nAs a json rpc call\n"
-            + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
-        );
+    {
+        std::ostringstream ossError;
+        ossError << "importprivkey \"bitcoinprivkey\" ( \"label\" rescan )\n"
+                 << "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
+                 << "\nArguments:\n"
+                 << "1. \"bitcoinprivkey\"   (string, required) The private key (see dumpprivkey)\n"
+                 << "2. \"label\"            (string, optional) an optional label\n"
+                 << "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
+                 << "\nExamples:\n"
+                 << "\nDump a private key\n"
+                 << HelpExampleCli("dumpprivkey", "\"myaddress\"")
+                 << "\nImport the private key\n"
+                 << HelpExampleCli("importprivkey", "\"mykey\"")
+                 << "\nImport using a label\n"
+                 << HelpExampleCli("importprivkey", "\"mykey\" \"testing\" false")
+                 << "\nAs a json rpc call\n"
+                 << HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false");
+
+        throw runtime_error(ossError.str());
+    }
 
     string strSecret = params[0].get_str();
     string strLabel = "";
@@ -171,7 +177,7 @@ Value importwallet(const Array& params, bool fHelp)
         CPubKey pubkey = key.GetPubKey();
         CKeyID keyid = pubkey.GetID();
         if (pwalletMain->HaveKey(keyid)) {
-            LogPrintf("Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString().c_str());
+            Log() << "Skipping import of " << CBitcoinAddress(keyid).ToString() << " (key already present)\n";
             continue;
         }
         int64_t nTime = DecodeDumpTime(vstr[1]);
@@ -189,7 +195,7 @@ Value importwallet(const Array& params, bool fHelp)
                 fLabel = true;
             }
         }
-        LogPrintf("Importing %s...\n", CBitcoinAddress(keyid).ToString().c_str());
+        Log() << "Importing " << CBitcoinAddress(keyid).ToString() << "...\n";
         if (!pwalletMain->AddKeyPubKey(key, pubkey)) {
             fGood = false;
             continue;
@@ -205,7 +211,7 @@ Value importwallet(const Array& params, bool fHelp)
     while (pindex && pindex->pprev && pindex->nTime > nTimeBegin - 7200)
         pindex = pindex->pprev;
 
-    LogPrintf("Rescanning last %i blocks\n", chainActive.Height() - pindex->nHeight + 1);
+    Log() << "Rescanning last " << (chainActive.Height() - pindex->nHeight + 1) << " blocks\n";
     pwalletMain->ScanForWalletTransactions(pindex);
     pwalletMain->ReacceptWalletTransactions();
     pwalletMain->MarkDirty();
@@ -219,19 +225,22 @@ Value importwallet(const Array& params, bool fHelp)
 Value dumpprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "dumpprivkey \"bitcoinaddress\"\n"
-            "\nReveals the private key corresponding to 'bitcoinaddress'.\n"
-            "Then the importprivkey can be used with this output\n"
-            "\nArguments:\n"
-            "1. \"bitcoinaddress\"   (string, required) The bitcoin address for the private key\n"
-            "\nResult:\n"
-            "\"key\"                (string) The private key\n"
-            "\nExamples:\n"
-            + HelpExampleCli("dumpprivkey", "\"myaddress\"")
-            + HelpExampleCli("importprivkey", "\"mykey\"")
-            + HelpExampleRpc("dumpprivkey", "\"myaddress\"")
-        );
+    {
+        std::ostringstream oss;
+        oss << "dumpprivkey \"bitcoinaddress\"\n"
+            << "\nReveals the private key corresponding to 'bitcoinaddress'.\n"
+            << "Then the importprivkey can be used with this output\n"
+            << "\nArguments:\n"
+            << "1. \"bitcoinaddress\"   (string, required) The bitcoin address for the private key\n"
+            << "\nResult:\n"
+            << "\"key\"                (string) The private key\n"
+            << "\nExamples:\n"
+            << HelpExampleCli("dumpprivkey", "\"myaddress\"")
+            << HelpExampleCli("importprivkey", "\"mykey\"")
+            << HelpExampleRpc("dumpprivkey", "\"myaddress\"");
+
+        throw runtime_error(oss.str());
+    }
 
     EnsureWalletIsUnlocked();
 
@@ -283,11 +292,11 @@ Value dumpwallet(const Array& params, bool fHelp)
     std::sort(vKeyBirth.begin(), vKeyBirth.end());
 
     // produce output
-    file << strprintf("# Wallet dump created by Bitcoin %s (%s)\n", CLIENT_BUILD.c_str(), CLIENT_DATE.c_str());
-    file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()).c_str());
-    file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString().c_str());
-    file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->nTime).c_str());
-    file << "\n";
+    file << "# Wallet dump created by Bitcoin " << CLIENT_BUILD << " (" << CLIENT_DATE << ")\n"
+         << "# * Created on " << EncodeDumpTime(BitcoinTime::GetTime()) << "\n"
+         << "# * Best block at time of backup was " <<  chainActive.Height() << " (" << chainActive.Tip()->GetBlockHash().ToString() << "),\n"
+         << "#   mined on " << EncodeDumpTime(chainActive.Tip()->nTime) << "\n" 
+         << "\n";
     for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
         const CKeyID &keyid = it->second;
         std::string strTime = EncodeDumpTime(it->first);
@@ -295,16 +304,16 @@ Value dumpwallet(const Array& params, bool fHelp)
         CKey key;
         if (pwalletMain->GetKey(keyid, key)) {
             if (pwalletMain->mapAddressBook.count(keyid)) {
-                file << strprintf("%s %s label=%s # addr=%s\n", CBitcoinSecret(key).ToString().c_str(), strTime.c_str(), EncodeDumpString(pwalletMain->mapAddressBook[keyid].name).c_str(), strAddr.c_str());
+                file << CBitcoinSecret(key).ToString() << " " << strTime << " label=" << EncodeDumpString(pwalletMain->mapAddressBook[keyid].name) << " # addr=" << strAddr << "\n";
             } else if (setKeyPool.count(keyid)) {
-                file << strprintf("%s %s reserve=1 # addr=%s\n", CBitcoinSecret(key).ToString().c_str(), strTime.c_str(), strAddr.c_str());
+                file << CBitcoinSecret(key).ToString() << " " << strTime << " reserve=1 # addr=" << strAddr << "\n";
             } else {
-                file << strprintf("%s %s change=1 # addr=%s\n", CBitcoinSecret(key).ToString().c_str(), strTime.c_str(), strAddr.c_str());
+                file << CBitcoinSecret(key).ToString() << " " << strTime << " change=1 # addr=" << strAddr << "\n";
             }
         }
     }
-    file << "\n";
-    file << "# End of dump\n";
+    file << "\n"
+         << "# End of dump\n";
     file.close();
     return Value::null;
 }

@@ -102,7 +102,7 @@ int BitcoinUnits::decimals(int unit)
 
 QString BitcoinUnits::format(int unit, qint64 n, bool fPlus)
 {
-    // Note: not using straight sprintf here because we do NOT want
+    // Note: not using straight float formatting here because we do NOT want
     // localized number formatting.
     if(!valid(unit))
         return QString(); // Refuse to format invalid unit

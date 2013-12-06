@@ -5,6 +5,8 @@
 #ifndef _BITCOIN_ADDRMAN
 #define _BITCOIN_ADDRMAN 1
 
+#include "bitcointime.h"
+#include "log.h"
 #include "netbase.h"
 #include "protocol.h"
 #include "sync.h"
@@ -87,10 +89,10 @@ public:
     }
 
     // Determine whether the statistics about this entry are bad enough so that it can just be deleted
-    bool IsTerrible(int64_t nNow = GetAdjustedTime()) const;
+    bool IsTerrible(int64_t nNow = BitcoinTime::GetAdjustedTime()) const;
 
     // Calculate the relative chance this entry should be given when selecting nodes to connect to
-    double GetChance(int64_t nNow = GetAdjustedTime()) const;
+    double GetChance(int64_t nNow = BitcoinTime::GetAdjustedTime()) const;
 
 };
 
@@ -404,7 +406,7 @@ public:
             LOCK(cs);
             int err;
             if ((err=Check_()))
-                LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
+                Log() << "ADDRMAN CONSISTENCY CHECK FAILED!!! err=" << err << "\n";
         }
 #endif
     }
@@ -420,7 +422,7 @@ public:
             Check();
         }
         if (fRet)
-            LogPrint("addrman", "Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort().c_str(), source.ToString().c_str(), nTried, nNew);
+            Log("addrman") << "Added " << addr.ToStringIPPort() << " from " << source.ToString() << ": " << nTried << " tried, " << nNew << " new\n";
         return fRet;
     }
 
@@ -436,12 +438,12 @@ public:
             Check();
         }
         if (nAdd)
-            LogPrint("addrman", "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString().c_str(), nTried, nNew);
+            Log("addrman") << "Added " << nAdd << " addresses from " << source.ToString() << ": " << nTried << " tried, " << nNew << " new\n";
         return nAdd > 0;
     }
 
     // Mark an entry as accessible.
-    void Good(const CService &addr, int64_t nTime = GetAdjustedTime())
+    void Good(const CService &addr, int64_t nTime = BitcoinTime::GetAdjustedTime())
     {
         {
             LOCK(cs);
@@ -452,7 +454,7 @@ public:
     }
 
     // Mark an entry as connection attempted to.
-    void Attempt(const CService &addr, int64_t nTime = GetAdjustedTime())
+    void Attempt(const CService &addr, int64_t nTime = BitcoinTime::GetAdjustedTime())
     {
         {
             LOCK(cs);
@@ -490,7 +492,7 @@ public:
     }
 
     // Mark an entry as currently-connected-to.
-    void Connected(const CService &addr, int64_t nTime = GetAdjustedTime())
+    void Connected(const CService &addr, int64_t nTime = BitcoinTime::GetAdjustedTime())
     {
         {
             LOCK(cs);

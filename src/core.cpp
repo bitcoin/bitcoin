@@ -5,16 +5,23 @@
 
 #include "core.h"
 
+#include "log.h"
 #include "util.h"
+
+#include <iomanip>
+#include <sstream>
+#include <stdint.h>
+
+#include <boost/format.hpp>
 
 std::string COutPoint::ToString() const
 {
-    return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10).c_str(), n);
+    return boost::str(boost::format("COutPoint(%s, %u)") % hash.ToString().substr(0,10) % n);
 }
 
 void COutPoint::print() const
 {
-    LogPrintf("%s\n", ToString().c_str());
+    Log() << ToString() << "\n";
 }
 
 CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, unsigned int nSequenceIn)
@@ -33,22 +40,21 @@ CTxIn::CTxIn(uint256 hashPrevTx, unsigned int nOut, CScript scriptSigIn, unsigne
 
 std::string CTxIn::ToString() const
 {
-    std::string str;
-    str += "CTxIn(";
-    str += prevout.ToString();
+    std::ostringstream oss;
+    oss << "CTxIn(" <<  prevout.ToString();
     if (prevout.IsNull())
-        str += strprintf(", coinbase %s", HexStr(scriptSig).c_str());
+        oss << ", coinbase " << HexStr(scriptSig);
     else
-        str += strprintf(", scriptSig=%s", scriptSig.ToString().substr(0,24).c_str());
+        oss << ", scriptSig=" << scriptSig.ToString().substr(0,24);
     if (nSequence != std::numeric_limits<unsigned int>::max())
-        str += strprintf(", nSequence=%u", nSequence);
-    str += ")";
-    return str;
+        oss << ", nSequence=" << nSequence;
+    oss << ")";
+    return oss.str();
 }
 
 void CTxIn::print() const
 {
-    LogPrintf("%s\n", ToString().c_str());
+    Log() << ToString() << "\n";
 }
 
 CTxOut::CTxOut(int64_t nValueIn, CScript scriptPubKeyIn)
@@ -64,12 +70,12 @@ uint256 CTxOut::GetHash() const
 
 std::string CTxOut::ToString() const
 {
-    return strprintf("CTxOut(nValue=%"PRId64".%08"PRId64", scriptPubKey=%s)", nValue / COIN, nValue % COIN, scriptPubKey.ToString().substr(0,30).c_str());
+    return boost::str(boost::format("CTxOut(nValue=%d.%08d, scriptPubKey=%s)") % (nValue / COIN) % (nValue % COIN) % scriptPubKey.ToString().substr(0,30));
 }
 
 void CTxOut::print() const
 {
-    LogPrintf("%s\n", ToString().c_str());
+    Log() << ToString() << "\n";
 }
 
 uint256 CTransaction::GetHash() const
@@ -139,23 +145,18 @@ double CTransaction::ComputePriority(double dPriorityInputs, unsigned int nTxSiz
 
 std::string CTransaction::ToString() const
 {
-    std::string str;
-    str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%"PRIszu", vout.size=%"PRIszu", nLockTime=%u)\n",
-        GetHash().ToString().substr(0,10).c_str(),
-        nVersion,
-        vin.size(),
-        vout.size(),
-        nLockTime);
+    std::ostringstream oss;
+    oss << boost::format("CTransaction(hash=%s, ver=%d, vin.size=%u, vout.size=%u, nLockTime=%u)\n") % GetHash().ToString().substr(0,10) % nVersion % vin.size() % vout.size() % nLockTime;
     for (unsigned int i = 0; i < vin.size(); i++)
-        str += "    " + vin[i].ToString() + "\n";
+        oss << "    " << vin[i].ToString() << "\n";
     for (unsigned int i = 0; i < vout.size(); i++)
-        str += "    " + vout[i].ToString() + "\n";
-    return str;
+        oss << "    " << vout[i].ToString() << "\n";
+    return oss.str();
 }
 
 void CTransaction::print() const
 {
-    LogPrintf("%s", ToString().c_str());
+    Log() << ToString();
 }
 
 // Amount compression:
@@ -269,20 +270,23 @@ uint256 CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMer
 
 void CBlock::print() const
 {
-    LogPrintf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu")\n",
-        GetHash().ToString().c_str(),
-        nVersion,
-        hashPrevBlock.ToString().c_str(),
-        hashMerkleRoot.ToString().c_str(),
-        nTime, nBits, nNonce,
-        vtx.size());
+    Log() << "CBlock(hash=" << GetHash().ToString() 
+          << ", ver=" << nVersion 
+          << ", hashPrevBlock=" << hashPrevBlock.ToString()
+          << ", hashMerkleRoot=" << hashMerkleRoot.ToString() 
+          << ", nTime=" << nTime 
+          << ", nBits=" << boost::format("%08x") % nBits
+          << ", nNonce=" << nNonce 
+          << ", vtx=" << vtx.size() 
+          << ")\n";
+    
     for (unsigned int i = 0; i < vtx.size(); i++)
     {
-        LogPrintf("  ");
+        Log() << "  ";
         vtx[i].print();
     }
-    LogPrintf("  vMerkleTree: ");
+    Log() << "  vMerkleTree: ";
     for (unsigned int i = 0; i < vMerkleTree.size(); i++)
-        LogPrintf("%s ", vMerkleTree[i].ToString().c_str());
-    LogPrintf("\n");
+        Log() << vMerkleTree[i].ToString() << " ";
+    Log() << "\n";
 }

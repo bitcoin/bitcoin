@@ -6,6 +6,7 @@
 #include "txdb.h"
 
 #include "core.h"
+#include "log.h"
 #include "uint256.h"
 
 #include <stdint.h>
@@ -54,7 +55,7 @@ bool CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
 }
 
 bool CCoinsViewDB::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock) {
-    LogPrint("coindb", "Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
+    Log("coindb") << "Committing " << (unsigned int) mapCoins.size() << " changed transactions to coin database...\n";
 
     CLevelDBBatch batch;
     for (std::map<uint256, CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
@@ -148,7 +149,8 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
             }
             pcursor->Next();
         } catch (std::exception &e) {
-            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+            Log() << "ERROR: " << __PRETTY_FUNCTION__ << "() : deserialize error\n";
+            return false;
         }
     }
     delete pcursor;
@@ -219,14 +221,18 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nTx            = diskindex.nTx;
 
                 if (!pindexNew->CheckIndex())
-                    return error("LoadBlockIndex() : CheckIndex failed: %s", pindexNew->ToString().c_str());
+                {
+                    Log() << "ERROR: LoadBlockIndex() : CheckIndex failed: " << pindexNew->ToString() << "\n";
+                    return false;
+                }
 
                 pcursor->Next();
             } else {
                 break; // if shutdown requested or finished loading block index
             }
         } catch (std::exception &e) {
-            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+            Log() << "ERROR: " << __PRETTY_FUNCTION__ << "() : deserialize error\n";
+            return false;
         }
     }
     delete pcursor;

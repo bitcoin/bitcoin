@@ -5,32 +5,35 @@
 
 #include "noui.h"
 
+#include "log.h"
 #include "ui_interface.h"
 #include "util.h"
 
+#include <iostream>
+#include <sstream>
 #include <stdint.h>
 #include <string>
 
 static bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
-    std::string strCaption;
+    std::ostringstream ossCaption;
     // Check for usage of predefined caption
     switch (style) {
     case CClientUIInterface::MSG_ERROR:
-        strCaption += _("Error");
+        ossCaption << _<std::string>("Error");
         break;
     case CClientUIInterface::MSG_WARNING:
-        strCaption += _("Warning");
+        ossCaption << _<std::string>("Warning");
         break;
     case CClientUIInterface::MSG_INFORMATION:
-        strCaption += _("Information");
+        ossCaption << _<std::string>("Information");
         break;
     default:
-        strCaption += caption; // Use supplied caption (can be empty)
+        ossCaption << caption; // Use supplied caption (can be empty)
     }
 
-    LogPrintf("%s: %s\n", strCaption.c_str(), message.c_str());
-    fprintf(stderr, "%s: %s\n", strCaption.c_str(), message.c_str());
+    Log() << ossCaption << ": " << message << "\n";
+    std::cerr << ossCaption << ": " << message << "\n";
     return false;
 }
 
@@ -41,7 +44,7 @@ static bool noui_ThreadSafeAskFee(int64_t /*nFeeRequired*/)
 
 static void noui_InitMessage(const std::string &message)
 {
-    LogPrintf("init message: %s\n", message.c_str());
+    Log() << "init message: " << message << "\n";
 }
 
 void noui_connect()

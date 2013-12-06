@@ -14,10 +14,12 @@
 #include "walletmodel.h"
 
 #include "init.h"
+#include "log.h"
 #include "main.h"
 #include "ui_interface.h"
 #include "util.h"
 
+#include <iostream>
 #include <stdint.h>
 
 #include <boost/filesystem/operations.hpp>
@@ -69,8 +71,8 @@ static bool ThreadSafeMessageBox(const std::string& message, const std::string& 
     }
     else
     {
-        LogPrintf("%s: %s\n", caption.c_str(), message.c_str());
-        fprintf(stderr, "%s: %s\n", caption.c_str(), message.c_str());
+        Log() << caption << ": " << message << "\n";
+        std::cerr << caption << ": " << message << "\n";
         return false;
     }
 }
@@ -98,7 +100,7 @@ static void InitMessage(const std::string &message)
         splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(55,55,55));
         qApp->processEvents();
     }
-    LogPrintf("init message: %s\n", message.c_str());
+    Log() << "init message: " << message << "\n";
 }
 
 /*
@@ -163,14 +165,14 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
 void DebugMessageHandler(QtMsgType type, const char * msg)
 {
     Q_UNUSED(type);
-    LogPrint("qt", "Bitcoin-Qt: %s\n", msg);
+    Log("qt") << "Bitcoin-Qt: " << msg << "\n";
 }
 #else
 void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString &msg)
 {
     Q_UNUSED(type);
     Q_UNUSED(context);
-    LogPrint("qt", "Bitcoin-Qt: %s\n", qPrintable(msg));
+    Log("qt") << "Bitcoin-Qt: " << qPrintable(msg) << "\n";
 }
 #endif
 
