@@ -67,6 +67,9 @@ else
 DEBUGFLAGS = -g
 endif
 
+# osx 10.9 has changed the stdlib default to libc++. To prevent some link error, you may need to use libstdc++
+CFLAGS += -stdlib=libstdc++
+
 # ppc doesn't work because we don't support big-endian
 CFLAGS += -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter \
     $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
