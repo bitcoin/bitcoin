@@ -8,7 +8,12 @@
 #include "init.h"
 #include "net.h"
 #include "uint256.h"
+#include "core.h"
+#include "main.h"
+#include "keystore.h"
+#ifdef ENABLE_WALLET
 #include "wallet.h"
+#endif
 
 #include <stdint.h>
 
@@ -190,6 +195,7 @@ Value getrawtransaction(const Array& params, bool fHelp)
     return result;
 }
 
+#ifdef ENABLE_WALLET
 Value listunspent(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 3)
@@ -303,6 +309,7 @@ Value listunspent(const Array& params, bool fHelp)
 
     return results;
 }
+#endif
 
 Value createrawtransaction(const Array& params, bool fHelp)
 {
@@ -508,7 +515,9 @@ Value signrawtransaction(const Array& params, bool fHelp)
             "this transaction depends on but may not yet be in the block chain.\n"
             "The third optional argument (may be null) is an array of base58-encoded private\n"
             "keys that, if given, will be the only keys used to sign the transaction.\n"
+#ifdef ENABLE_WALLET
             + HelpRequiringPassphrase() + "\n"
+#endif
 
             "\nArguments:\n"
             "1. \"hexstring\"     (string, required) The transaction hex string\n"
@@ -605,8 +614,10 @@ Value signrawtransaction(const Array& params, bool fHelp)
             tempKeystore.AddKey(key);
         }
     }
+#ifdef ENABLE_WALLET
     else
         EnsureWalletIsUnlocked();
+#endif
 
     // Add previous txouts given in the RPC call:
     if (params.size() > 1 && params[1].type() != null_type)
@@ -662,7 +673,11 @@ Value signrawtransaction(const Array& params, bool fHelp)
         }
     }
 
+#ifdef ENABLE_WALLET
     const CKeyStore& keystore = ((fGivenKeys || !pwalletMain) ? tempKeystore : *pwalletMain);
+#else
+    const CKeyStore& keystore = tempKeystore;
+#endif
 
     int nHashType = SIGHASH_ALL;
     if (params.size() > 3 && params[3].type() != null_type)
