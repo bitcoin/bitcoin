@@ -113,8 +113,8 @@ void Shutdown()
     RenameThread("bitcoin-shutoff");
     mempool.AddTransactionsUpdated(1);
     StopRPCThreads();
-#ifdef ENABLE_WALLET
     ShutdownRPCMining();
+#ifdef ENABLE_WALLET
     if (pwalletMain)
         bitdb.Flush(false);
     GenerateBitcoins(false, NULL, 0);
@@ -1041,10 +1041,8 @@ bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
 #endif
 
     StartNode(threadGroup);
-#ifdef ENABLE_WALLET
     // InitRPCMining is needed here so getwork/getblocktemplate in the GUI debug console works properly.
     InitRPCMining();
-#endif
     if (fServer)
         StartRPCThreads();
 
