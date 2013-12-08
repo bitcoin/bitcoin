@@ -22,7 +22,7 @@ Dependencies
  Library     Purpose           Description
  -------     -------           -----------
  libssl      SSL Support       Secure communications
- libdb4.8    Berkeley DB       Blockchain & wallet storage
+ libdb4.8    Berkeley DB       Wallet storage
  libboost    Boost             C++ Library
  miniupnpc   UPnP Support      Optional firewall-jumping support
  qt          GUI               GUI toolkit
@@ -178,3 +178,12 @@ Hardening enables the following features:
 	RW- R-- RW-
 
     The STK RW- means that the stack is readable and writeable but not executable.
+
+Disable-wallet mode
+--------------------
+When the intention is to run only a P2P node without a wallet, bitcoin may be compiled in
+disable-wallet mode with:
+
+    ./configure --disable-wallet
+
+In this case there is no dependency on Berkeley DB 4.8.
