@@ -10,8 +10,11 @@
 #include "net.h"
 #include "wallet.h"
 
+#ifdef ENABLE_WALLET
+// These globals are only used by the built-in miner
 double dHashesPerSec = 0.0;
 int64_t nHPSTimerStart = 0;
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -381,6 +384,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     return pblocktemplate.release();
 }
 
+#ifdef ENABLE_WALLET
 CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
 {
     CPubKey pubkey;
@@ -390,6 +394,7 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
     CScript scriptPubKey = CScript() << pubkey << OP_CHECKSIG;
     return CreateNewBlock(scriptPubKey);
 }
+#endif
 
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
@@ -454,7 +459,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
     memcpy(phash1, &tmp.hash1, 64);
 }
 
-
+#ifdef ENABLE_WALLET
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
     uint256 hash = pblock->GetHash();
@@ -665,5 +670,5 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
         minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
 }
 
-
+#endif
 
