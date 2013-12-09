@@ -12,6 +12,7 @@
 #include "miner.h"
 #include "wallet.h"
 
+#include <boost/assign/list_of.hpp>
 #include <stdint.h>
 
 #include "json/json_spirit_utils.h"
@@ -608,4 +609,80 @@ Value submitblock(const Array& params, bool fHelp)
         return "rejected"; // TODO: report validation state
 
     return Value::null;
+}
+
+Value estimatefee(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "estimatefee ( feemedian )\n"
+            "\nEstimates the fee-per-kilobyte needed for \n"
+            "transactions to be relayed across the network and\n"
+            "confirmed in the block chain.\n"
+            "feemedian is a value from 0.0 to 1.0, where\n"
+            "0.0 will return the smallest\n"
+            "recently-included-in-a-block fee seen,\n"
+            "1.0 the largest, and 0.5 the median fee paid.\n"
+            "\nArguments:\n"
+            "1. feemedian          (numeric, optional, default=0.5)\n"
+            "\nResult:\n"
+            "n :        (numeric) fee, in bitcoins/1000-bytes, needed to out-compete a\n"
+            "           feemedian fraction of fee-paying transactions.\n"
+            "\n"
+            "-1.0 is returned if not enough transactions and\n"
+            "blocks have been observed to make an estimate.\n"
+            "\nExample:\n"
+            + HelpExampleCli("estimatefee", "0.75")
+        );
+
+    RPCTypeCheck(params, boost::assign::list_of(real_type));
+
+    double dFeeMedian = 0.5;
+    if (params.size() > 0)
+        dFeeMedian = params[0].get_real();
+    if (dFeeMedian < 0.0 || dFeeMedian > 1.0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid fee median (must be 0.0 to 1.0)");
+
+    double dFee = mempool.estimateFee(dFeeMedian);
+    if (dFee > 0.0)
+        return ValueFromAmount(1000*dFee);  // Convert from satoshi-per-byte to bitcon-per-kilobyte
+
+    return -1.0;
+}
+
+Value estimatepriority(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "estimatepriority ( prioritymedian )\n"
+            "\nEstimates the priority sufficient\n"
+            "for a transaction to be relayed across the network and\n"
+            "confirmed in the block chain.\n"
+            "prioritymedian ranges from 0.0\n"
+            "to 1.0, where 0.0 will return the smallest\n"
+            "recently-included-in-a-block priority seen,\n"
+            "1.0 the largest, and 0.5 the median\n"
+            "for transactions that were broadcast on the network and\n"
+            "included in a block.\n"
+            "\nArguments:\n"
+            "1. prioritymedian     (numeric, optional, default=0.5)\n"
+            "\nResult:\n"
+            "n :    (numeric) priority needed to out-compete a prioritymedian\n"
+            "       fraction of free transactions to be relayed and included in blocks.\n"
+            "\n"
+            "-1.0 is returned if not enough transactions and\n"
+            "blocks have been observed to make an estimate.\n"
+            "\nExample:\n"
+            + HelpExampleCli("estimatepriority", "0.1")
+        );
+
+    RPCTypeCheck(params, boost::assign::list_of(real_type));
+
+    double dPriorityMedian = 0.5;
+    if (params.size() > 0)
+        dPriorityMedian = params[0].get_real();
+    if (dPriorityMedian < 0.0 || dPriorityMedian > 1.0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid priority median (must be 0.0 to 1.0)");
+
+    return mempool.estimateFreePriority(dPriorityMedian);
 }

@@ -247,6 +247,8 @@ static const CRPCCommand vRPCCommands[] =
     { "gettxoutsetinfo",        &gettxoutsetinfo,        true,      false,      false },
     { "gettxout",               &gettxout,               true,      false,      false },
     { "verifychain",            &verifychain,            true,      false,      false },
+    { "estimatefee",            &estimatefee,            true,      true,       false },
+    { "estimatepriority",       &estimatepriority,       true,      true,       false },
 
 #ifdef ENABLE_WALLET
     { "getnetworkhashps",       &getnetworkhashps,       true,      false,      false },

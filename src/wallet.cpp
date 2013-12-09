@@ -1232,6 +1232,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
     {
         LOCK2(cs_main, cs_wallet);
         {
+            // If user set nTransactionFee, always pay at least
+            // that in fees
             nFeeRet = nTransactionFee;
             while (true)
             {
@@ -1240,7 +1242,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                 wtxNew.fFromMe = true;
 
                 int64_t nTotalValue = nValue + nFeeRet;
-                double dPriority = 0;
+                double dPriorityInputs = 0;
                 // vouts to the payees
                 BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
                 {
@@ -1267,7 +1269,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                     //The priority after the next block (depth+1) is used instead of the current,
                     //reflecting an assumption the user would accept a bit more delay for
                     //a chance at a free transaction.
-                    dPriority += (double)nCredit * (pcoin.first->GetDepthInMainChain()+1);
+                    dPriorityInputs += (double)nCredit * (pcoin.first->GetDepthInMainChain()+1);
                 }
 
                 int64_t nChange = nValueIn - nValue - nFeeRet;
@@ -1351,18 +1353,19 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                     strFailReason = _("Transaction too large");
                     return false;
                 }
-                dPriority = wtxNew.ComputePriority(dPriority, nBytes);
+                double dPriority = wtxNew.ComputePriority(dPriorityInputs, nBytes);
 
                 // Check that enough fee is included
-                int64_t nPayFee = nTransactionFee * (1 + (int64_t)nBytes / 1000);
-                bool fAllowFree = AllowFree(dPriority);
-                int64_t nMinFee = GetMinFee(wtxNew, nBytes, fAllowFree, GMF_SEND);
-                if (nFeeRet < max(nPayFee, nMinFee))
-                {
-                    nFeeRet = max(nPayFee, nMinFee);
-                    continue;
-                }
+                int64_t nFeeNeeded = 0;
+                if (!AllowFree(wtxNew, dPriority, nBytes, GMF_SEND))
+                    nFeeNeeded = GetMinFee(nBytes, GMF_SEND);
 
+                if (nFeeRet < nFeeNeeded)
+                {
+                    nFeeRet = nFeeNeeded;
+                    continue; // loop again with higher fee
+                }
+                
                 // Fill vtxPrev by copying from previous transactions vtxPrev
                 wtxNew.AddSupportingTransactions();
                 wtxNew.fTimeReceivedIsTxTime = true;
