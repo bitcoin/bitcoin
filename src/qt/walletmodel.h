@@ -18,6 +18,7 @@
 class AddressTableModel;
 class OptionsModel;
 class TransactionTableModel;
+class RecentRequestsTableModel;
 class WalletModelTransaction;
 
 class CCoinControl;
@@ -88,6 +89,7 @@ public:
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
     TransactionTableModel *getTransactionTableModel();
+    RecentRequestsTableModel *getRecentRequestsTableModel();
 
     qint64 getBalance(const CCoinControl *coinControl = NULL) const;
     qint64 getUnconfirmedBalance() const;
@@ -160,6 +162,7 @@ private:
 
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;
+    RecentRequestsTableModel *recentRequestsTableModel;
 
     // Cache some values to be able to detect changes
     qint64 cachedBalance;
