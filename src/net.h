@@ -57,13 +57,18 @@ void StartNode(boost::thread_group& threadGroup);
 bool StopNode();
 void SocketSendData(CNode *pnode);
 
+typedef int NodeId;
+
 // Signals for message handling
 struct CNodeSignals
 {
     boost::signals2::signal<int ()> GetHeight;
     boost::signals2::signal<bool (CNode*)> ProcessMessages;
     boost::signals2::signal<bool (CNode*, bool)> SendMessages;
+    boost::signals2::signal<void (NodeId, const CNode*)> InitializeNode;
+    boost::signals2::signal<void (NodeId)> FinalizeNode;
 };
+
 
 CNodeSignals& GetNodeSignals();
 
@@ -109,12 +114,14 @@ extern limitedmap<CInv, int64_t> mapAlreadyAskedFor;
 extern std::vector<std::string> vAddedNodes;
 extern CCriticalSection cs_vAddedNodes;
 
-
+extern NodeId nLastNodeId;
+extern CCriticalSection cs_nLastNodeId;
 
 
 class CNodeStats
 {
 public:
+    NodeId nodeid;
     uint64_t nServices;
     int64_t nLastSend;
     int64_t nLastRecv;
@@ -124,7 +131,6 @@ public:
     std::string cleanSubVer;
     bool fInbound;
     int nStartingHeight;
-    int nMisbehavior;
     uint64_t nSendBytes;
     uint64_t nRecvBytes;
     bool fSyncNode;
@@ -223,13 +229,13 @@ public:
     CCriticalSection cs_filter;
     CBloomFilter* pfilter;
     int nRefCount;
+    NodeId id;
 protected:
 
     // Denial-of-service detection/prevention
     // Key is IP address, value is banned-until-time
     static std::map<CNetAddr, int64_t> setBanned;
     static CCriticalSection cs_setBanned;
-    int nMisbehavior;
 
     // Basic fuzz-testing
     void Fuzz(int nChance); // modifies ssSend
@@ -289,7 +295,6 @@ public:
         nStartingHeight = -1;
         fStartSync = false;
         fGetAddr = false;
-        nMisbehavior = 0;
         fRelayTxes = false;
         setInventoryKnown.max_size(SendBufferSize() / 1000);
         pfilter = new CBloomFilter();
@@ -298,9 +303,16 @@ public:
         nPingUsecTime = 0;
         fPingQueued = false;
 
+        {
+            LOCK(cs_nLastNodeId);
+            id = nLastNodeId++;
+        }
+
         // Be shy and don't send version until we hear
         if (hSocket != INVALID_SOCKET && !fInbound)
             PushVersion();
+
+        GetNodeSignals().InitializeNode(GetId(), this);
     }
 
     ~CNode()
@@ -312,6 +324,7 @@ public:
         }
         if (pfilter)
             delete pfilter;
+        GetNodeSignals().FinalizeNode(GetId());
     }
 
 private:
@@ -326,6 +339,9 @@ private:
 
 public:
 
+    NodeId GetId() const {
+      return id;
+    }
 
     int GetRefCount()
     {
@@ -673,7 +689,7 @@ public:
     // new code.
     static void ClearBanned(); // needed for unit testing
     static bool IsBanned(CNetAddr ip);
-    bool Misbehaving(int howmuch); // 1 == a little, 100 == a lot
+    static bool Ban(const CNetAddr &ip);
     void copyStats(CNodeStats &stats);
 
     // Network stats
