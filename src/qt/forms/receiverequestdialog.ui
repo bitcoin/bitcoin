@@ -84,13 +84,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btnCopyImage">
-       <property name="text">
-        <string>&amp;Copy Image</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="btnSaveAs">
        <property name="text">
         <string>&amp;Save Image...</string>
