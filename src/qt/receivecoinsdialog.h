@@ -13,6 +13,9 @@ namespace Ui {
 }
 class WalletModel;
 class OptionsModel;
+QT_BEGIN_NAMESPACE
+class QModelIndex;
+QT_END_NAMESPACE
 
 /** Dialog for requesting payment of bitcoins */
 class ReceiveCoinsDialog : public QDialog
@@ -36,6 +39,9 @@ private:
 
 private slots:
     void on_receiveButton_clicked();
+    void on_showRequestButton_clicked();
+    void on_removeRequestButton_clicked();
+    void on_recentRequestsView_doubleClicked(const QModelIndex &index);
     void updateDisplayUnit();
 };
 
