@@ -2,6 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "rpcserver.h"
+
+
+#include "main.h"
 #include "net.h"
 #include "netbase.h"
 #include "protocol.h"
@@ -114,7 +117,8 @@ Value getpeerinfo(const Array& params, bool fHelp)
 
     BOOST_FOREACH(const CNodeStats& stats, vstats) {
         Object obj;
-
+        CNodeStateStats statestats;
+        bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
         obj.push_back(Pair("addr", stats.addrName));
         if (!(stats.addrLocal.empty()))
             obj.push_back(Pair("addrlocal", stats.addrLocal));
@@ -134,7 +138,9 @@ Value getpeerinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("subver", stats.cleanSubVer));
         obj.push_back(Pair("inbound", stats.fInbound));
         obj.push_back(Pair("startingheight", stats.nStartingHeight));
-        obj.push_back(Pair("banscore", stats.nMisbehavior));
+        if (fStateStats) {
+            obj.push_back(Pair("banscore", statestats.nMisbehavior));
+        }
         if (stats.fSyncNode)
             obj.push_back(Pair("syncnode", true));
 
