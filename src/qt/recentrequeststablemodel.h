@@ -5,11 +5,11 @@
 #ifndef RECENTREQUESTSTABLEMODEL_H
 #define RECENTREQUESTSTABLEMODEL_H
 
+#include "walletmodel.h"
+
 #include <QAbstractTableModel>
 #include <QStringList>
 #include <QDateTime>
-
-#include "walletmodel.h"
 
 class CWallet;
 
@@ -27,7 +27,7 @@ class RecentRequestsTableModel: public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit RecentRequestsTableModel(CWallet *wallet, WalletModel *parent = 0);
+    explicit RecentRequestsTableModel(CWallet *wallet, WalletModel *parent);
     ~RecentRequestsTableModel();
 
     enum ColumnIndex {
