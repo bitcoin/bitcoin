@@ -60,7 +60,8 @@ qint64 WalletModel::getBalance(const CCoinControl *coinControl) const
         std::vector<COutput> vCoins;
         wallet->AvailableCoins(vCoins, true, coinControl);
         BOOST_FOREACH(const COutput& out, vCoins)
-            nBalance += out.tx->vout[out.i].nValue;
+            if(out.fSpendable)
+                nBalance += out.tx->vout[out.i].nValue;
 
         return nBalance;
     }
@@ -585,7 +586,8 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
         }
 
         CTxDestination address;
-        if(!ExtractDestination(cout.tx->vout[cout.i].scriptPubKey, address)) continue;
+        if(!out.fSpendable || !ExtractDestination(cout.tx->vout[cout.i].scriptPubKey, address))
+            continue;
         mapCoins[CBitcoinAddress(address).ToString().c_str()].push_back(out);
     }
 }
