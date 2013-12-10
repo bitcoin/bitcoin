@@ -10,9 +10,6 @@
 #include "net.h"
 #include "wallet.h"
 
-double dHashesPerSec = 0.0;
-int64_t nHPSTimerStart = 0;
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // BitcoinMiner
@@ -52,41 +49,6 @@ void SHA256Transform(void* pstate, void* pinput, const void* pinit)
     SHA256_Update(&ctx, data, sizeof(data));
     for (int i = 0; i < 8; i++)
         ((uint32_t*)pstate)[i] = ctx.h[i];
-}
-
-//
-// ScanHash scans nonces looking for a hash with at least some zero bits.
-// It operates on big endian data.  Caller does the byte reversing.
-// All input buffers are 16-byte aligned.  nNonce is usually preserved
-// between calls, but periodically or if nNonce is 0xffff0000 or above,
-// the block is rebuilt and nNonce starts over at zero.
-//
-unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1, char* phash, unsigned int& nHashesDone)
-{
-    unsigned int& nNonce = *(unsigned int*)(pdata + 12);
-    for (;;)
-    {
-        // Crypto++ SHA256
-        // Hash pdata using pmidstate as the starting state into
-        // pre-formatted buffer phash1, then hash phash1 into phash
-        nNonce++;
-        SHA256Transform(phash1, pdata, pmidstate);
-        SHA256Transform(phash, phash1, pSHA256InitState);
-
-        // Return the nonce if the hash has at least some zero bits,
-        // caller will check if it has enough to reach the target
-        if (((unsigned short*)phash)[14] == 0)
-            return nNonce;
-
-        // If nothing found after trying for a while, return -1
-        if ((nNonce & 0xffff) == 0)
-        {
-            nHashesDone = 0xffff+1;
-            return (unsigned int) -1;
-        }
-        if ((nNonce & 0xfff) == 0)
-            boost::this_thread::interruption_point();
-    }
 }
 
 // Some explaining would be appreciated
@@ -381,16 +343,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     return pblocktemplate.release();
 }
 
-CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
-{
-    CPubKey pubkey;
-    if (!reservekey.GetReservedKey(pubkey))
-        return NULL;
-
-    CScript scriptPubKey = CScript() << pubkey << OP_CHECKSIG;
-    return CreateNewBlock(scriptPubKey);
-}
-
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
     // Update nExtraNonce
@@ -454,6 +406,58 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
     memcpy(phash1, &tmp.hash1, 64);
 }
 
+#ifdef ENABLE_WALLET
+//////////////////////////////////////////////////////////////////////////////
+//
+// Internal miner
+//
+double dHashesPerSec = 0.0;
+int64_t nHPSTimerStart = 0;
+
+//
+// ScanHash scans nonces looking for a hash with at least some zero bits.
+// It operates on big endian data.  Caller does the byte reversing.
+// All input buffers are 16-byte aligned.  nNonce is usually preserved
+// between calls, but periodically or if nNonce is 0xffff0000 or above,
+// the block is rebuilt and nNonce starts over at zero.
+//
+unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1, char* phash, unsigned int& nHashesDone)
+{
+    unsigned int& nNonce = *(unsigned int*)(pdata + 12);
+    for (;;)
+    {
+        // Crypto++ SHA256
+        // Hash pdata using pmidstate as the starting state into
+        // pre-formatted buffer phash1, then hash phash1 into phash
+        nNonce++;
+        SHA256Transform(phash1, pdata, pmidstate);
+        SHA256Transform(phash, phash1, pSHA256InitState);
+
+        // Return the nonce if the hash has at least some zero bits,
+        // caller will check if it has enough to reach the target
+        if (((unsigned short*)phash)[14] == 0)
+            return nNonce;
+
+        // If nothing found after trying for a while, return -1
+        if ((nNonce & 0xffff) == 0)
+        {
+            nHashesDone = 0xffff+1;
+            return (unsigned int) -1;
+        }
+        if ((nNonce & 0xfff) == 0)
+            boost::this_thread::interruption_point();
+    }
+}
+
+CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
+{
+    CPubKey pubkey;
+    if (!reservekey.GetReservedKey(pubkey))
+        return NULL;
+
+    CScript scriptPubKey = CScript() << pubkey << OP_CHECKSIG;
+    return CreateNewBlock(scriptPubKey);
+}
 
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
@@ -665,5 +669,5 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
         minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
 }
 
-
+#endif
 
