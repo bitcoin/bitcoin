@@ -242,17 +242,23 @@ int LogPrint(const char* category, const char* pszFormat, ...)
         if (!fDebug)
             return 0;
 
-        const vector<string>& categories = mapMultiArgs["-debug"];
-        bool allCategories = count(categories.begin(), categories.end(), string(""));
-
-        // Only look for categories, if not -debug/-debug=1 was passed,
-        // as that implies every category should be logged.
-        if (!allCategories)
+        // Give each thread quick access to -debug settings.
+        // This helps prevent issues debugging global destructors,
+        // where mapMultiArgs might be deleted before another
+        // global destructor calls LogPrint()
+        static boost::thread_specific_ptr<set<string> > ptrCategory;
+        if (ptrCategory.get() == NULL)
         {
-            // Category was not found (not supplied via -debug=<category>)
-            if (find(categories.begin(), categories.end(), string(category)) == categories.end())
-                return 0;
+            const vector<string>& categories = mapMultiArgs["-debug"];
+            ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
+            // thread_specific_ptr automatically deletes the set when the thread ends.
         }
+        const set<string>& setCategories = *ptrCategory.get();
+
+        // if not debugging everything and not debugging specific category, LogPrint does nothing.
+        if (setCategories.count(string("")) == 0 &&
+            setCategories.count(string(category)) == 0)
+            return 0;
     }
 
     int ret = 0; // Returns total number of characters written
