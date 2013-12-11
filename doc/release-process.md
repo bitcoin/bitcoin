@@ -172,4 +172,15 @@ From a directory containing bitcoin source, gitian.sigs and gitian zips
 	popd
 
 - Upload gitian zips to SourceForge
+
+- Announce the release:
+
+  - Add the release to bitcoin.org: https://github.com/bitcoin/bitcoin.org/tree/master/_releases
+
+  - Release sticky on bitcointalk: https://bitcointalk.org/index.php?board=1.0
+
+  - Bitcoin-development mailing list
+
+  - Optionally reddit /r/Bitcoin, ...
+
 - Celebrate 
