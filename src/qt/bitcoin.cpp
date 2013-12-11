@@ -10,9 +10,11 @@
 #include "guiutil.h"
 #include "intro.h"
 #include "optionsmodel.h"
-#include "paymentserver.h"
 #include "splashscreen.h"
+#ifdef ENABLE_WALLET
+#include "paymentserver.h"
 #include "walletmodel.h"
+#endif
 
 #include "init.h"
 #include "main.h"
@@ -157,8 +159,10 @@ public:
     explicit BitcoinApplication(int &argc, char **argv);
     ~BitcoinApplication();
 
+#ifdef ENABLE_WALLET
     /// Create payment server
     void createPaymentServer();
+#endif
     /// Create options model
     void createOptionsModel();
     /// Create main window
@@ -188,12 +192,14 @@ signals:
 
 private:
     QThread *coreThread;
-    PaymentServer* paymentServer;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
     BitcoinGUI *window;
-    WalletModel *walletModel;
     QTimer *pollShutdownTimer;
+#ifdef ENABLE_WALLET
+    PaymentServer* paymentServer;
+    WalletModel *walletModel;
+#endif
     int returnValue;
 
     void startThread();
@@ -246,12 +252,14 @@ void BitcoinCore::shutdown()
 BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     QApplication(argc, argv),
     coreThread(0),
-    paymentServer(0),
     optionsModel(0),
     clientModel(0),
     window(0),
-    walletModel(0),
     pollShutdownTimer(0),
+#ifdef ENABLE_WALLET
+    paymentServer(0),
+    walletModel(0),
+#endif
     returnValue(0)
 {
     setQuitOnLastWindowClosed(false);
@@ -266,14 +274,21 @@ BitcoinApplication::~BitcoinApplication()
     LogPrintf("Stopped thread\n");
 
     delete window;
+    window = 0;
+#ifdef ENABLE_WALLET
     delete paymentServer;
+    paymentServer = 0;
+#endif
     delete optionsModel;
+    optionsModel = 0;
 }
 
+#ifdef ENABLE_WALLET
 void BitcoinApplication::createPaymentServer()
 {
     paymentServer = new PaymentServer(this);
 }
+#endif
 
 void BitcoinApplication::createOptionsModel()
 {
@@ -327,11 +342,13 @@ void BitcoinApplication::requestShutdown()
     LogPrintf("Requesting shutdown\n");
     window->hide();
     window->setClientModel(0);
-    window->removeAllWallets();
     pollShutdownTimer->stop();
 
+#ifdef ENABLE_WALLET
+    window->removeAllWallets();
     delete walletModel;
     walletModel = 0;
+#endif
     delete clientModel;
     clientModel = 0;
 
@@ -362,14 +379,17 @@ void BitcoinApplication::initializeResult(int retval)
         // Miscellaneous initialization after core is initialized
         optionsModel->Upgrade(); // Must be done after AppInit2
 
+#ifdef ENABLE_WALLET
         PaymentServer::LoadRootCAs();
         paymentServer->setOptionsModel(optionsModel);
+#endif
 
         emit splashFinished(window);
 
         clientModel = new ClientModel(optionsModel);
         window->setClientModel(clientModel);
 
+#ifdef ENABLE_WALLET
         if(pwalletMain)
         {
             walletModel = new WalletModel(pwalletMain, optionsModel);
@@ -380,6 +400,7 @@ void BitcoinApplication::initializeResult(int retval)
             connect(walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
                              paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
         }
+#endif
 
         // If -min option passed, start window minimized.
         if(GetBoolArg("-min", false))
@@ -390,7 +411,7 @@ void BitcoinApplication::initializeResult(int retval)
         {
             window->show();
         }
-
+#ifdef ENABLE_WALLET
         // Now that initialization/startup is done, process any command-line
         // bitcoin: URIs or payment requests:
         connect(paymentServer, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
@@ -400,7 +421,7 @@ void BitcoinApplication::initializeResult(int retval)
         connect(paymentServer, SIGNAL(message(QString,QString,unsigned int)),
                          window, SLOT(message(QString,QString,unsigned int)));
         QTimer::singleShot(100, paymentServer, SLOT(uiReady()));
-
+#endif
     } else {
         quit(); // Exit main loop
     }
@@ -429,9 +450,11 @@ int main(int argc, char *argv[])
     if (!SelectParamsFromCommandLine()) {
         fSelParFromCLFailed = true;
     }
+#ifdef ENABLE_WALLET
     // Parse URIs on command line -- this can affect TestNet() / RegTest() mode
     if (!PaymentServer::ipcParseCommandLine(argc, argv))
         exit(0);
+#endif
 
     bool isaTestNet = TestNet() || RegTest();
 
@@ -500,6 +523,7 @@ int main(int argc, char *argv[])
     }
     ReadConfigFile(mapArgs, mapMultiArgs);
 
+#ifdef ENABLE_WALLET
     /// 7. URI IPC sending
     // - Do this early as we don't want to bother initializing if we are just calling IPC
     // - Do this *after* setting up the data directory, as the data directory hash is used in the name
@@ -512,6 +536,7 @@ int main(int argc, char *argv[])
     // Start up the payment server early, too, so impatient users that click on
     // bitcoin: links repeatedly have their payment requests routed to this process:
     app.createPaymentServer();
+#endif
 
     /// 8. Main GUI initialization
     // Install global event filter that makes sure that long tooltips can be word-wrapped
