@@ -50,6 +50,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="showAll">
+     <property name="text">
+      <string>Show all</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="newAddress">
