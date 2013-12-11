@@ -381,10 +381,13 @@ class PosixWriteableFile : public WritableFile {
  private:
   std::string filename_;
   int fd_;
+  char buf_[1048576];
+  unsigned int buf_used_;
  public:
   PosixWriteableFile(const std::string& fname, int fd)
   : filename_(fname),
-  fd_(fd)
+  fd_(fd),
+  buf_used_(0)
   { }
 
 
@@ -397,11 +400,27 @@ class PosixWriteableFile : public WritableFile {
   virtual Status Append(const Slice& data) {
     Status s;
     int ret;
-    ret = write(fd_, data.data(), data.size());
-    if (ret < 0) {
-      s = IOError(filename_, errno);
-    } else if (ret < data.size()) {
-      s = Status::IOError(filename_, "short write");
+    
+    if (buf_used_ + data.size() < sizeof(buf_)) {
+      memcpy(buf_+buf_used_, data.data(), data.size());
+      buf_used_ += data.size();
+    } else {
+      s = PosixWriteableFile::Flush();
+      
+      if (!s.ok())
+        return s;
+      
+      if (data.size() < sizeof(buf_)) {
+        memcpy(buf_, data.data(), data.size());
+        buf_used_ += data.size();
+      } else {
+        ret = write(fd_, data.data(), data.size());
+        if (ret < 0) {
+          s = IOError(filename_, errno);
+        } else if (ret < data.size()) {
+          s = Status::IOError(filename_, "short write");
+        }
+      }
     }
     
     return s;
@@ -409,6 +428,11 @@ class PosixWriteableFile : public WritableFile {
 
   virtual Status Close() {
     Status s;
+    s = PosixWriteableFile::Sync();
+    
+    if (!s.ok())
+      return s;
+        
     if (close(fd_) < 0) {
       s = IOError(filename_, errno);
     }
@@ -417,7 +441,19 @@ class PosixWriteableFile : public WritableFile {
   }
 
   virtual Status Flush() {
-    return Status::OK();
+    Status s;
+    int ret;
+    
+    if (buf_used_ > 0) {
+      ret = write(fd_, buf_, buf_used_);
+      if (ret < 0) {
+        s = IOError(filename_, errno);
+      } else if (ret < buf_used_) {
+        s = Status::IOError(filename_, "short write");
+      }
+      buf_used_ = 0;
+    }
+    return s;
   }
   
   Status SyncDirIfManifest() {
@@ -453,6 +489,10 @@ class PosixWriteableFile : public WritableFile {
     if (!s.ok()) {
       return s;
     }
+    
+    s = PosixWriteableFile::Flush();
+    if (!s.ok())
+      return s;
     
     if (fdatasync(fd_) < 0) {
       s = IOError(filename_, errno);
