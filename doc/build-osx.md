@@ -62,7 +62,7 @@ Installing the dependencies using MacPorts is very straightforward.
 
 3.  It is a good idea to build and run the unit tests, too:
 
-        make test
+        make check
 
 Instructions: HomeBrew
 ----------------------
@@ -98,7 +98,7 @@ Rerunning "openssl version" should now return the correct version.
 
 3.  It is a good idea to build and run the unit tests, too:
 
-        make test
+        make check
 
 Creating a release build
 ------------------------
