@@ -30,9 +30,7 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
     else
     {
         int nDepth = wtx.GetDepthInMainChain();
-        if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-            return tr("%1/offline").arg(nDepth);
-        else if (nDepth < 6)
+        if (nDepth < 6)
             return tr("%1/unconfirmed").arg(nDepth);
         else
             return tr("%1 confirmations").arg(nDepth);
@@ -52,17 +50,6 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, int vout, int u
         int64_t nCredit = wtx.GetCredit();
         int64_t nDebit = wtx.GetDebit();
         int64_t nNet = nCredit - nDebit;
-
-        strHTML += "<b>" + tr("Status") + ":</b> " + FormatTxStatus(wtx);
-        int nRequests = wtx.GetRequestCount();
-        if (nRequests != -1)
-        {
-            if (nRequests == 0)
-                strHTML += tr(", has not been successfully broadcast yet");
-            else if (nRequests > 0)
-                strHTML += tr(", broadcast through %n node(s)", "", nRequests);
-        }
-        strHTML += "<br>";
 
         strHTML += "<b>" + tr("Date") + ":</b> " + (nTime ? GUIUtil::dateTimeStr(nTime) : "") + "<br>";
 
