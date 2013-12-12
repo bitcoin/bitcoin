@@ -100,6 +100,7 @@ baseline_filtered.info: baseline.info
 	$(LCOV) -r $< "/usr/include/*" -o $@
 
 leveldb_baseline.info: baseline_filtered.info
+	-rm -f $(abs_builddir)/src/leveldb/-.gcno	
 	$(LCOV) -c -i -d $(abs_builddir)/src/leveldb -b $(abs_builddir)/src/leveldb -o $@
 
 leveldb_baseline_filtered.info: leveldb_baseline.info
