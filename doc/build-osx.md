@@ -1,6 +1,6 @@
 Mac OS X Build Instructions and Notes
 ====================================
-This guide will show you how to build bitcoind(headless client) for OSX.
+This guide will show you how to build bitcoin-core-daemon (headless client) for OSX.
 
 Notes
 -----
@@ -47,14 +47,14 @@ Installing the dependencies using MacPorts is very straightforward.
 
     sudo port install boost db48@+no_java openssl miniupnpc
 
-### Building `bitcoind`
+### Building `bitcoin-core-daemon`
 
 1. Clone the github tree to get the source code and go into the directory.
 
         git clone git@github.com:bitcoin/bitcoin.git bitcoin
         cd bitcoin
 
-2.  Build bitcoind:
+2.  Build bitcoin-core-daemon:
 
         ./autogen.sh
         ./configure
@@ -83,14 +83,14 @@ If not, you can ensure that the Brew OpenSSL is correctly linked by running
 
 Rerunning "openssl version" should now return the correct version.
 
-### Building `bitcoind`
+### Building `bitcoin-core-daemon`
 
 1. Clone the github tree to get the source code and go into the directory.
 
         git clone https://github.com/bitcoin/bitcoin.git
         cd bitcoin
 
-2.  Build bitcoind:
+2.  Build bitcoin-core-daemon:
 
         ./autogen.sh
         ./configure
@@ -103,11 +103,12 @@ Rerunning "openssl version" should now return the correct version.
 Creating a release build
 ------------------------
 
-A bitcoind binary is not included in the Bitcoin-Qt.app bundle. You can ignore
-this section if you are building `bitcoind` for your own use.
+A bitcoin-core-daemon binary is not included in the Bitcoin Core GUI.app bundle.
+You can ignore this section if you are building `bitcoin-core-daemon` for your
+own use.
 
-If you are building `bitcoind` for others, your build machine should be set up
-as follows for maximum compatibility:
+If you are building `bitcoin-core-daemon` for others, your build machine should
+be set up as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
 
@@ -125,21 +126,21 @@ As of December 2012, the `boost` port does not obey `macosx_deployment_target`.
 Download `http://gavinandresen-bitcoin.s3.amazonaws.com/boost_macports_fix.zip`
 for a fix. Some ports also seem to obey either `build_arch` or
 `macosx_deployment_target`, but not both at the same time. For example, building
-on an OS X 10.6 64-bit machine fails. Official release builds of Bitcoin-Qt are
-compiled on an OS X 10.6 32-bit machine to workaround that problem.
+on an OS X 10.6 64-bit machine fails. Official release builds of Bitcoin Core
+GUI are compiled on an OS X 10.6 32-bit machine to workaround that problem.
 
-Once dependencies are compiled, creating `Bitcoin-Qt.app` is easy:
+Once dependencies are compiled, creating `Bitcoin Core GUI.app` is easy:
 
     make -f Makefile.osx RELEASE=1
 
 Running
 -------
 
-It's now available at `./bitcoind`, provided that you are still in the `src`
-directory. We have to first create the RPC configuration file, though.
+It's now available at `./bitcoin-core-daemon`, provided that you are still in
+the `src` directory. We have to first create the RPC configuration file, though.
 
-Run `./bitcoind` to get the filename where it should be put, or just try these
-commands:
+Run `./bitcoin-core-daemon` to get the filename where it should be put, or just
+try these commands:
 
     echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
     chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
@@ -149,6 +150,6 @@ output anything while it's doing this. This process may take several hours.
 
 Other commands:
 
-    ./bitcoind --help  # for a list of command-line options.
-    ./bitcoind -daemon # to start the bitcoin daemon.
-    ./bitcoind help    # When the daemon is running, to get a list of RPC commands
+    ./bitcoin-core-daemon --help  # for a list of command-line options.
+    ./bitcoin-core-daemon -daemon # to start the bitcoin daemon.
+    ./bitcoin-core-daemon help    # When the daemon is running, to get a list of RPC commands

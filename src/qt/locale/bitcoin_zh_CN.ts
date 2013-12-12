@@ -34,7 +34,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+0"/>
         <source>The Bitcoin developers</source>
-        <translation>Bitcoin-qt 客户端开发团队</translation>
+        <translation>Bitcoin Core 客户端开发团队</translation>
     </message>
 </context>
 <context>
@@ -797,8 +797,8 @@ Address: %4
     <message>
         <location filename="../guiutil.cpp" line="+558"/>
         <location line="+13"/>
-        <source>Bitcoin-Qt</source>
-        <translation>Bitcoin-Qt</translation>
+        <source>Bitcoin Core GUI</source>
+        <translation>Bitcoin Core GUI</translation>
     </message>
     <message>
         <location line="-13"/>
@@ -851,18 +851,18 @@ Address: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Welcome to Bitcoin-Qt.</source>
-        <translation>欢迎使用 Bitcoin-Qt。</translation>
+        <source>Welcome to Bitcoin Core GUI.</source>
+        <translation>欢迎使用 Bitcoin Core GUI。</translation>
     </message>
     <message>
         <location line="+26"/>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
-        <translation>因为这是第一次启动本程序，您可以选择在哪里存储 Bitcoin-Qt 的数据。</translation>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core GUI will store its data.</source>
+        <translation>因为这是第一次启动本程序，您可以选择在哪里存储 Bitcoin Core GUI 的数据。</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin-Qt 将下载和存储比特币的区块链。至少 %1GB 的数据将被存储在这个目录中，并将时间推移增加。您的钱包也将存储在这个目录中。</translation>
+        <source>Bitcoin Core GUI will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin Core GUI 将下载和存储比特币的区块链。至少 %1GB 的数据将被存储在这个目录中，并将时间推移增加。您的钱包也将存储在这个目录中。</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1362,7 +1362,7 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
+        <source>Show the Bitcoin Core GUI help message to get a list with possible Bitcoin command-line options.</source>
         <translation>显示 Bitcoin 命令行选项帮助信息</translation>
     </message>
     <message>
@@ -2007,7 +2007,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="+23"/>
         <source>The Bitcoin developers</source>
-        <translation>Bitcoin-qt 客户端开发团队</translation>
+        <translation>Bitcoin Core 客户端开发团队</translation>
     </message>
     <message>
         <location line="+1"/>

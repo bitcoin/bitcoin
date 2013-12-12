@@ -2,10 +2,10 @@
 
 *.exe
 src/bitcoin
-src/bitcoind
-src/bitcoin-cli
+src/bitcoin-core-daemon
+src/bitcoin-core-cli
 src/test/test_bitcoin
-src/qt/test/test_bitcoin-qt
+src/qt/test/test_bitcoin-core-gui
 
 Makefile.in
 aclocal.m4
@@ -50,12 +50,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+bitcoin-core-gui
+Bitcoin Core GUI.app
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+bitcoin-core-gui_test
 
 # Resources cpp
 qrc_*.cpp

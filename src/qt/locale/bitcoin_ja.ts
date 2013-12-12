@@ -798,8 +798,8 @@ Address: %4
     <message>
         <location filename="../guiutil.cpp" line="+558"/>
         <location line="+13"/>
-        <source>Bitcoin-Qt</source>
-        <translation>Bitcoin-Qt</translation>
+        <source>Bitcoin Core GUI</source>
+        <translation>Bitcoin Core GUI</translation>
     </message>
     <message>
         <location line="-13"/>
@@ -851,18 +851,18 @@ Address: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Welcome to Bitcoin-Qt.</source>
-        <translation>Bitcoin-Qt へようこそ。</translation>
+        <source>Welcome to Bitcoin Core GUI.</source>
+        <translation>Bitcoin Core GUI へようこそ。</translation>
     </message>
     <message>
         <location line="+26"/>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
-        <translation>プログラムが初めて起動されるので Bitcoin-Qt がデータを保存する場所を選ぶことができます。</translation>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core GUI will store its data.</source>
+        <translation>プログラムが初めて起動されるので Bitcoin Core GUI がデータを保存する場所を選ぶことができます。</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin-Qt はブロック チェーンのコピーをダウンロードして保存します。少なくとも %1GB のデータがこのディレクトリに保存され、時間とともに増えていきます。ウォレットもこのディレクトリに保存されます。</translation>
+        <source>Bitcoin Core GUI will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin Core GUI はブロック チェーンのコピーをダウンロードして保存します。少なくとも %1GB のデータがこのディレクトリに保存され、時間とともに増えていきます。ウォレットもこのディレクトリに保存されます。</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1363,8 +1363,8 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
-        <translation>有効な Bitcoin のコマンドライン オプションを見るために Bitcoin-Qt のヘルプメッセージを表示します。</translation>
+        <source>Show the Bitcoin Core GUI help message to get a list with possible Bitcoin command-line options.</source>
+        <translation>有効な Bitcoin のコマンドライン オプションを見るために Bitcoin Core GUI のヘルプメッセージを表示します。</translation>
     </message>
     <message>
         <location line="+3"/>

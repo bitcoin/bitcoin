@@ -797,7 +797,7 @@ Adreso: %4
     <message>
         <location filename="../guiutil.cpp" line="+558"/>
         <location line="+13"/>
-        <source>Bitcoin-Qt</source>
+        <source>Bitcoin Core GUI</source>
         <translation>Bitmono-Qt</translation>
     </message>
     <message>
@@ -850,17 +850,17 @@ Adreso: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Welcome to Bitcoin-Qt.</source>
+        <source>Welcome to Bitcoin Core GUI.</source>
         <translation>Bonvenon al Bitmono-Qt.</translation>
     </message>
     <message>
         <location line="+26"/>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core GUI will store its data.</source>
         <translation>Dum tiu ĉi unua lanĉo, vi povas elekti kie la aplikaĵo metos siajn datumojn.</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <source>Bitcoin Core GUI will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
         <translation>Bitmono-Qt elŝutos kaj konservos kopion de la bitmona blokĉeno. Almenaŭ %1Gb de datumoj konserviĝos en tiu dosierujo, kaj tio poiome kreskos. La monujo ankaŭ troviĝos en tiu dosierujo.</translation>
     </message>
     <message>
@@ -1361,7 +1361,7 @@ Adreso: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
+        <source>Show the Bitcoin Core GUI help message to get a list with possible Bitcoin command-line options.</source>
         <translation>Montri la helpmesaĝon de Bitmono-Qt por vidi liston de eblaj komandliniaj agordaĵoj.</translation>
     </message>
     <message>

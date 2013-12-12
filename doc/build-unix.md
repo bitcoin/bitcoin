@@ -1,6 +1,6 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build Bitcoin in Unix. 
+Some notes on how to build Bitcoin Core in Unix.
 
 To Build
 ---------------------
@@ -9,7 +9,7 @@ To Build
 	./configure
 	make
 
-This will build bitcoin-qt as well if the dependencies are met.
+This will build bitcoin-core-gui as well if the dependencies are met.
 
 **Note:** on Ubuntu 13.10 (Saucy Salamander) the boost configuration script doesn't look in the
 correct directory and an error about boost-system will appear. For now you need to do
@@ -88,7 +88,7 @@ Optional:
 Dependencies for the GUI: Ubuntu & Debian
 -----------------------------------------
 
-If you want to build Bitcoin-Qt, make sure that the required packages for Qt development
+If you want to build Bitcoin Core GUI, make sure that the required packages for Qt development
 are installed. Qt 4 is currently necessary to build the GUI.
 
 To build with Qt 4 you need the following:
@@ -99,13 +99,13 @@ libqrencode (optional) can be installed with:
 
     apt-get install libqrencode-dev
 
-Once these are installed, they will be found by configure and a bitcoin-qt executable will be
+Once these are installed, they will be found by configure and a bitcoin-core-gui executable will be
 built by default.
 
 Notes
 -----
-The release is built with GCC and then "strip bitcoind" to strip the debug
-symbols, which reduces the executable size by about 90%.
+The release is built with GCC and then "strip bitcoin-core-daemon" to strip the
+debug symbols, which reduces the executable size by about 90%.
 
 
 miniupnpc
@@ -157,7 +157,7 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-    	scanelf -e ./bitcoin
+    	scanelf -e src/qt/bitcoin-core-gui
 
     The output should contain:
      TYPE
@@ -171,7 +171,7 @@ Hardening enables the following features:
     executable without the non-executable stack protection.
 
     To verify that the stack is non-executable after compiling use:
-    `scanelf -e ./bitcoin`
+    `scanelf -e src/qt/bitcoin-core-gui`
 
     the output should contain:
 	STK/REL/PTL
@@ -181,7 +181,7 @@ Hardening enables the following features:
 
 Disable-wallet mode
 --------------------
-When the intention is to run only a P2P node without a wallet, bitcoin may be compiled in
+When the intention is to run only a P2P node without a wallet, Bitcoin Core may be compiled in
 disable-wallet mode with:
 
     ./configure --disable-wallet

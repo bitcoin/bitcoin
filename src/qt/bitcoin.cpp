@@ -33,8 +33,8 @@
 #include <QTextCodec>
 #endif
 
-#if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
-#define _BITCOIN_QT_PLUGINS_INCLUDED
+#if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_CORE_GUI_PLUGINS_INCLUDED)
+#define _BITCOIN_CORE_GUI_PLUGINS_INCLUDED
 #define __INSURE__
 #include <QtPlugin>
 Q_IMPORT_PLUGIN(qcncodecs)
@@ -162,18 +162,18 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
 void DebugMessageHandler(QtMsgType type, const char *msg)
 {
     Q_UNUSED(type);
-    LogPrint("qt", "Bitcoin-Qt: %s\n", msg);
+    LogPrint("qt", "Bitcoin Core GUI: %s\n", msg);
 }
 #else
 void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString &msg)
 {
     Q_UNUSED(type);
     Q_UNUSED(context);
-    LogPrint("qt", "Bitcoin-Qt: %s\n", qPrintable(msg));
+    LogPrint("qt", "Bitcoin Core GUI: %s\n", qPrintable(msg));
 }
 #endif
 
-#ifndef BITCOIN_QT_TEST
+#ifndef BITCOIN_CORE_GUI_TEST
 int main(int argc, char *argv[])
 {
     bool fMissingDatadir = false;
@@ -216,9 +216,9 @@ int main(int argc, char *argv[])
     QApplication::setOrganizationName("Bitcoin");
     QApplication::setOrganizationDomain("bitcoin.org");
     if (TestNet()) // Separate UI settings for testnet
-        QApplication::setApplicationName("Bitcoin-Qt-testnet");
+        QApplication::setApplicationName("Bitcoin Core GUI-testnet");
     else
-        QApplication::setApplicationName("Bitcoin-Qt");
+        QApplication::setApplicationName("Bitcoin Core GUI");
 
     // Now that QSettings are accessible, initialize translations
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
                 guiref = 0;
                 delete walletModel;
             }
-            // Shutdown the core and its threads, but don't exit Bitcoin-Qt here
+            // Shutdown the core and its threads, but don't exit Bitcoin Core GUI here
             threadGroup.interrupt_all();
             threadGroup.join_all();
             Shutdown();
@@ -383,4 +383,4 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-#endif // BITCOIN_QT_TEST
+#endif // BITCOIN_CORE_GUI_TEST

@@ -54,13 +54,13 @@ make -j$JOBS
 if [ -d "$OUT_DIR" -a -w "$OUT_DIR" ]; then
   set +e
   # Windows:
-  cp @abs_top_srcdir@/win32-build/src/bitcoind.exe $OUT_DIR/bitcoind.exe
+  cp @abs_top_srcdir@/win32-build/src/bitcoin-core-daemon.exe $OUT_DIR/bitcoin-core-daemon.exe
   cp @abs_top_srcdir@/win32-build/src/test/test_bitcoin.exe $OUT_DIR/test_bitcoin.exe
-  cp @abs_top_srcdir@/win32-build/src/qt/bitcoind-qt.exe $OUT_DIR/bitcoin-qt.exe
+  cp @abs_top_srcdir@/win32-build/src/qt/bitcoin-core-gui.exe $OUT_DIR/bitcoin-core-gui.exe
   # Linux:
-  cp @abs_top_srcdir@/linux-build/src/bitcoind $OUT_DIR/bitcoind
+  cp @abs_top_srcdir@/linux-build/src/bitcoin-core-daemon $OUT_DIR/bitcoin-core-daemon
   cp @abs_top_srcdir@/linux-build/src/test/test_bitcoin $OUT_DIR/test_bitcoin
-  cp @abs_top_srcdir@/linux-build/src/qt/bitcoind-qt $OUT_DIR/bitcoin-qt
+  cp @abs_top_srcdir@/linux-build/src/qt/bitcoin-core-gui $OUT_DIR/bitcoin-core-gui
   set -e
 fi
 

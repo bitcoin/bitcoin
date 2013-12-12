@@ -231,7 +231,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage +=                               _("If <category> is not supplied, output all debugging information.") + "\n";
     strUsage +=                               _("<category> can be:");
     strUsage +=                                 " addrman, alert, coindb, db, lock, rand, rpc, selectcoins, mempool, net"; // Don't translate these and qt below
-    if (hmm == HMM_BITCOIN_QT)
+    if (hmm == HMM_GUI)
     {
         strUsage += ", qt.\n";
     }
@@ -248,12 +248,12 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n";
 #endif
 
-    if (hmm == HMM_BITCOIN_QT)
+    if (hmm == HMM_GUI)
     {
         strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
     }
 
-    if (hmm == HMM_BITCOIND)
+    if (hmm == HMM_DAEMON)
     {
 #if !defined(WIN32)
         strUsage += "  -daemon                " + _("Run in the background as a daemon and accept commands") + "\n";
@@ -858,7 +858,7 @@ bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
     }
 
     // as LoadBlockIndex can take several minutes, it's possible the user
-    // requested to kill bitcoin-qt during the last operation. If so, exit.
+    // requested to kill bitcoin-core-gui during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
     if (fRequestShutdown)
     {

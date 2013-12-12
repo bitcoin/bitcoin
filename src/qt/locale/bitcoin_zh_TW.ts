@@ -797,7 +797,7 @@ Address: %4
     <message>
         <location filename="../guiutil.cpp" line="+558"/>
         <location line="+13"/>
-        <source>Bitcoin-Qt</source>
+        <source>Bitcoin Core GUI</source>
         <translation>位元幣-Qt</translation>
     </message>
     <message>
@@ -851,17 +851,17 @@ Address: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Welcome to Bitcoin-Qt.</source>
+        <source>Welcome to Bitcoin Core GUI.</source>
         <translation>歡迎使用&quot;位元幣-Qt&quot;</translation>
     </message>
     <message>
         <location line="+26"/>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core GUI will store its data.</source>
         <translation>由於這是程式第一次啓動, 你可以選擇&quot;位元幣-Qt&quot;儲存資料的地方.</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <source>Bitcoin Core GUI will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
         <translation>位元幣-Qt 會下載並儲存一份位元幣區塊鏈結的拷貝. 至少有 %1GB 的資料會儲存到這個目錄中, 並且還會持續增長. 另外錢包資料也會儲存在這個目錄.</translation>
     </message>
     <message>
@@ -1362,7 +1362,7 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
+        <source>Show the Bitcoin Core GUI help message to get a list with possible Bitcoin command-line options.</source>
         <translation>顯示&quot;位元幣-Qt&quot;的求助訊息, 來取得可用的命令列選項列表.</translation>
     </message>
     <message>

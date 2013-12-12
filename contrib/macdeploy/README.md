@@ -15,5 +15,5 @@ This script should not be run manually, instead, after building as usual:
 During the process, the disk image window will pop up briefly where the fancy
 settings are applied. This is normal, please do not interfere.
 
-When finished, it will produce `Bitcoin-Qt.dmg`.
+When finished, it will produce `Bitcoin Core GUI.dmg`.
 

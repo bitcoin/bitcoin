@@ -797,8 +797,8 @@ Dirección: %4
     <message>
         <location filename="../guiutil.cpp" line="+558"/>
         <location line="+13"/>
-        <source>Bitcoin-Qt</source>
-        <translation>Bitcoin-Qt</translation>
+        <source>Bitcoin Core GUI</source>
+        <translation>Bitcoin Core GUI</translation>
     </message>
     <message>
         <location line="-13"/>
@@ -850,18 +850,18 @@ Dirección: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Welcome to Bitcoin-Qt.</source>
-        <translation>Benvido a Bitcoin-Qt</translation>
+        <source>Welcome to Bitcoin Core GUI.</source>
+        <translation>Benvido a Bitcoin Core GUI</translation>
     </message>
     <message>
         <location line="+26"/>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core GUI will store its data.</source>
         <translation>Como é a primeira vez que se lanza este programa, podes escroller onde almacenará Bitcoin os seus datos.</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin-Qt descargará e almacenará unha copia da cadea de bloque. Alomenos %1 GB de datos van ser almacenados neste directorio, e crecerá co tempo. O moedeiro tamén se almacenará neste directorio.</translation>
+        <source>Bitcoin Core GUI will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin Core GUI descargará e almacenará unha copia da cadea de bloque. Alomenos %1 GB de datos van ser almacenados neste directorio, e crecerá co tempo. O moedeiro tamén se almacenará neste directorio.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1361,8 +1361,8 @@ Dirección: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
-        <translation>Amosar a mensaxe de axuda de Bitcoin-Qt para obter unha lista coas posibles opcións da liña de comandos de Bitcoin.</translation>
+        <source>Show the Bitcoin Core GUI help message to get a list with possible Bitcoin command-line options.</source>
+        <translation>Amosar a mensaxe de axuda de Bitcoin Core GUI para obter unha lista coas posibles opcións da liña de comandos de Bitcoin.</translation>
     </message>
     <message>
         <location line="+3"/>
