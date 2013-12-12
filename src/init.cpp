@@ -585,6 +585,9 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif
+
+    LoadWhitelist();
+
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
     std::string strDataDir = GetDataDir().string();

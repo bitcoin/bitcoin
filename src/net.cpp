@@ -51,6 +51,8 @@ bool fDiscover = true;
 uint64_t nLocalServices = NODE_NETWORK;
 CCriticalSection cs_mapLocalHost;
 map<CNetAddr, LocalServiceInfo> mapLocalHost;
+static CCriticalSection cs_mapWhitelist;
+static map<CNetAddr, LocalServiceInfo> mapWhitelist;
 static bool vfReachable[NET_MAX] = {};
 static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
@@ -295,6 +297,57 @@ bool IsReachable(const CNetAddr& addr)
     LOCK(cs_mapLocalHost);
     enum Network net = addr.GetNetwork();
     return vfReachable[net] && !vfLimited[net];
+}
+
+/** learn a new whitelisted address */
+bool AddWhitelist(const CService& addr, int nScore)
+{
+    LogPrintf("AddWhitelist(%s,%i)\n", addr.ToString().c_str(), nScore);
+
+    {
+        LOCK(cs_mapWhitelist);
+        bool fAlready = mapWhitelist.count(addr) > 0;
+        LocalServiceInfo &info = mapWhitelist[addr];
+        if (!fAlready || nScore >= info.nScore) {
+            info.nScore = nScore + (fAlready ? 1 : 0);
+            info.nPort = addr.GetPort();
+        }
+    }
+
+    return true;
+}
+
+/** check if node is whitelisted */
+bool IsWhitelisted(const CService& addr)
+{
+    LOCK(cs_mapWhitelist);
+    return mapWhitelist.count(addr) > 0;
+}
+
+/** load configuration into whitelist */
+void LoadWhitelist()
+{
+    // Connect to specific addresses
+    if (mapArgs.count("-whitelist") && mapMultiArgs["-whitelist"].size() > 0)
+    {
+        BOOST_FOREACH(string strAddr, mapMultiArgs["-whitelist"])
+        {
+            CService serv(strAddr.c_str(), Params().GetDefaultPort(), true);
+            if (serv.IsValid())
+                AddWhitelist(serv, 0);
+        }
+    }
+}
+
+/** return all whitelisted nodes */
+void GetWhitelist(std::vector<CService>& wl)
+{
+    LOCK(cs_mapWhitelist);
+    for (map<CNetAddr, LocalServiceInfo>::iterator it = mapWhitelist.begin();
+         it != mapWhitelist.end(); ++it) {
+        CService serv((*it).first, (*it).second.nPort);
+        wl.push_back(serv);
+    }
 }
 
 bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const char* pszKeyword, CNetAddr& ipRet)

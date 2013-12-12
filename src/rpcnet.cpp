@@ -142,6 +142,48 @@ Value getpeerinfo(const Array& params, bool fHelp)
     return ret;
 }
 
+Value addwhite(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "addwhite \"node\"\n"
+            "\nAttempts add a node to the whitelist.\n"
+            "\nArguments:\n"
+            "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
+            "\nExamples:\n"
+            + HelpExampleCli("addwhite", "\"192.168.0.6:8333\" ")
+            + HelpExampleRpc("addwhite", "\"192.168.0.6:8333\" ")
+        );
+
+    string strNode = params[0].get_str();
+
+    CService serv(strNode.c_str(), Params().GetDefaultPort(), true);
+
+    return AddWhitelist(serv, 0);
+}
+
+Value listwhite(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "listwhite\n"
+            "\nList whitelisted nodes\n"
+        );
+
+    std::vector<CService> wl;
+    GetWhitelist(wl);
+
+    Array res;
+
+    for (unsigned int i = 0; i < wl.size(); i++) {
+        Object obj;
+        obj.push_back(Pair("address", wl[i].ToStringIPPort()));
+        res.push_back(obj);
+    }
+
+    return res;
+}
+
 Value addnode(const Array& params, bool fHelp)
 {
     string strCommand;

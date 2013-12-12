@@ -4369,6 +4369,8 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (state.fShouldBan) {
             if (pto->addr.IsLocal())
                 LogPrintf("Warning: not banning local node %s!\n", pto->addr.ToString());
+            else if (IsWhitelisted(pto->addr))
+                LogPrintf("Warning: not banning whitelisted node %s!\n", pto->addr.ToString());
             else {
                 pto->fDisconnect = true;
                 CNode::Ban(pto->addr);
