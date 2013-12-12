@@ -531,10 +531,9 @@ else
       CPPFLAGS="$CPPFLAGS $QT_INCLUDES"
     fi
   ])
-
-    BITCOIN_QT_CHECK(AC_CHECK_HEADER([QtPlugin],,BITCOIN_QT_FAIL(QtCore headers missing),))
-    BITCOIN_QT_CHECK(AC_CHECK_HEADER([QApplication],, BITCOIN_QT_FAIL(QtGui headers missing),))
-    BITCOIN_QT_CHECK(AC_CHECK_HEADER([QLocalSocket],, BITCOIN_QT_FAIL(QtNetwork headers missing),))
+    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QtPlugin],,BITCOIN_QT_FAIL(QtCore headers missing))])
+    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QApplication],, BITCOIN_QT_FAIL(QtGui headers missing))])
+    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QLocalSocket],, BITCOIN_QT_FAIL(QtNetwork headers missing))])
 
   BITCOIN_QT_CHECK([
     if test x$use_tests = xyes; then
