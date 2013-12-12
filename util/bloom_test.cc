@@ -126,7 +126,8 @@ TEST(BloomTest, VaryingLengths) {
     }
     Build();
 
-    ASSERT_LE(FilterSize(), (length * 10 / 8) + 40) << length;
+    ASSERT_LE(FilterSize(), static_cast<size_t>((length * 10 / 8) + 40))
+        << length;
 
     // All added keys must match
     for (int i = 0; i < length; i++) {
