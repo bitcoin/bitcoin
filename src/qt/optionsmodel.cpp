@@ -14,6 +14,7 @@
 #include "init.h"
 #include "main.h"
 #include "net.h"
+#include "wallet.h"
 #include "walletdb.h"
 
 #include <QSettings>

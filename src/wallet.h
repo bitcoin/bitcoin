@@ -23,6 +23,9 @@
 #include <utility>
 #include <vector>
 
+// Settings
+extern int64_t nTransactionFee;
+
 class CAccountingEntry;
 class CCoinControl;
 class COutput;
