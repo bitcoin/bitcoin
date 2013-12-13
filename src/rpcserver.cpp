@@ -252,6 +252,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getmininginfo",          &getmininginfo,          true,      false,      false },
     { "getblocktemplate",       &getblocktemplate,       true,      false,      false },
     { "submitblock",            &submitblock,            false,     false,      false },
+    { "validateaddress",        &validateaddress,        true,      false,      false },
 
 #ifdef ENABLE_WALLET
     /* Wallet */
@@ -272,7 +273,6 @@ static const CRPCCommand vRPCCommands[] =
     { "walletpassphrasechange", &walletpassphrasechange, false,     false,      true },
     { "walletlock",             &walletlock,             true,      false,      true },
     { "encryptwallet",          &encryptwallet,          false,     false,      true },
-    { "validateaddress",        &validateaddress,        true,      false,      false },
     { "getbalance",             &getbalance,             false,     false,      true },
     { "move",                   &movecmd,                false,     false,      true },
     { "sendfrom",               &sendfrom,               false,     false,      true },
