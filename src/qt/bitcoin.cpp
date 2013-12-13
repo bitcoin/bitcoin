@@ -162,14 +162,14 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
 void DebugMessageHandler(QtMsgType type, const char *msg)
 {
     Q_UNUSED(type);
-    LogPrint("qt", "Bitcoin-Qt: %s\n", msg);
+    LogPrint("qt", "GUI: %s\n", msg);
 }
 #else
 void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString &msg)
 {
     Q_UNUSED(type);
     Q_UNUSED(context);
-    LogPrint("qt", "Bitcoin-Qt: %s\n", qPrintable(msg));
+    LogPrint("qt", "GUI: %s\n", qPrintable(msg));
 }
 #endif
 
@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
                 guiref = 0;
                 delete walletModel;
             }
-            // Shutdown the core and its threads, but don't exit Bitcoin-Qt here
+            // Shutdown the core and its threads, but don't exit the GUI here
             threadGroup.interrupt_all();
             threadGroup.join_all();
             Shutdown();
