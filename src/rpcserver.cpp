@@ -253,6 +253,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getblocktemplate",       &getblocktemplate,       true,      false,      false },
     { "submitblock",            &submitblock,            false,     false,      false },
     { "validateaddress",        &validateaddress,        true,      false,      false },
+    { "createmultisig",         &createmultisig,         true,      true ,      false },
 
 #ifdef ENABLE_WALLET
     /* Wallet */
@@ -278,7 +279,6 @@ static const CRPCCommand vRPCCommands[] =
     { "sendfrom",               &sendfrom,               false,     false,      true },
     { "sendmany",               &sendmany,               false,     false,      true },
     { "addmultisigaddress",     &addmultisigaddress,     false,     false,      true },
-    { "createmultisig",         &createmultisig,         true,      true ,      false },
     { "gettransaction",         &gettransaction,         false,     false,      true },
     { "listtransactions",       &listtransactions,       false,     false,      true },
     { "listaddressgroupings",   &listaddressgroupings,   false,     false,      true },
