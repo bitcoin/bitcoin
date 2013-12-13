@@ -237,7 +237,6 @@ static const CRPCCommand vRPCCommands[] =
     { "getrawmempool",          &getrawmempool,          true,      false,      false },
     { "getblock",               &getblock,               false,     false,      false },
     { "getblockhash",           &getblockhash,           false,     false,      false },
-    { "settxfee",               &settxfee,               false,     false,      true },
     { "getrawtransaction",      &getrawtransaction,      false,     false,      false },
     { "createrawtransaction",   &createrawtransaction,   false,     false,      false },
     { "decoderawtransaction",   &decoderawtransaction,   false,     false,      false },
@@ -294,6 +293,7 @@ static const CRPCCommand vRPCCommands[] =
     { "listunspent",            &listunspent,            false,     false,      true },
     { "lockunspent",            &lockunspent,            false,     false,      true },
     { "listlockunspent",        &listlockunspent,        false,     false,      true },
+    { "settxfee",               &settxfee,               false,     false,      true },
 
     /* Wallet-enabled mining */
     { "getgenerate",            &getgenerate,            true,      false,      false },
