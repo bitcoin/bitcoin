@@ -11,11 +11,6 @@ To Build
 
 This will build bitcoin-qt as well if the dependencies are met.
 
-**Note:** on Ubuntu 13.10 (Saucy Salamander) the boost configuration script doesn't look in the
-correct directory and an error about boost-system will appear. For now you need to do
-
-        ./configure --with-boost-libdir=/usr/lib/x86_64-linux-gnu
-
 Dependencies
 ---------------------
 
