@@ -20,7 +20,7 @@
       <string notr="true">QLabel { font-style:italic; }</string>
      </property>
      <property name="text">
-      <string>Welcome to Bitcoin-Qt.</string>
+      <string>Welcome to Bitcoin Core.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -46,7 +46,7 @@
    <item>
     <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</string>
+      <string>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -56,7 +56,7 @@
    <item>
     <widget class="QLabel" name="sizeWarningLabel">
      <property name="text">
-      <string>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</string>
+      <string>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
