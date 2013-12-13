@@ -272,4 +272,55 @@ Value createmultisig(const Array& params, bool fHelp)
     return result;
 }
 
+Value verifymessage(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 3)
+        throw runtime_error(
+            "verifymessage \"bitcoinaddress\" \"signature\" \"message\"\n"
+            "\nVerify a signed message\n"
+            "\nArguments:\n"
+            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to use for the signature.\n"
+            "2. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
+            "3. \"message\"         (string, required) The message that was signed.\n"
+            "\nResult:\n"
+            "true|false   (boolean) If the signature is verified or not.\n"
+            "\nExamples:\n"
+            "\nUnlock the wallet for 30 seconds\n"
+            + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
+            "\nCreate the signature\n"
+            + HelpExampleCli("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"my message\"") +
+            "\nVerify the signature\n"
+            + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"signature\" \"my message\"") +
+            "\nAs json rpc\n"
+            + HelpExampleRpc("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"signature\", \"my message\"")
+        );
+
+    string strAddress  = params[0].get_str();
+    string strSign     = params[1].get_str();
+    string strMessage  = params[2].get_str();
+
+    CBitcoinAddress addr(strAddress);
+    if (!addr.IsValid())
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+
+    CKeyID keyID;
+    if (!addr.GetKeyID(keyID))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+
+    bool fInvalid = false;
+    vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
+
+    if (fInvalid)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic;
+    ss << strMessage;
+
+    CPubKey pubkey;
+    if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
+        return false;
+
+    return (pubkey.GetID() == keyID);
+}
 
