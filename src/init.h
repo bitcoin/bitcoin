@@ -25,8 +25,8 @@ bool AppInit2(boost::thread_group& threadGroup, bool fForceServer);
 /* The help message mode determines what help message to show */
 enum HelpMessageMode
 {
-    HMM_BITCOIND,
-    HMM_BITCOIN_QT
+    HMM_DAEMON,
+    HMM_GUI,
 };
 
 std::string HelpMessage(HelpMessageMode mode);

@@ -9,7 +9,7 @@ Release Process
 ###update (commit) version in sources
 
 
-	bitcoin-qt.pro
+	bitcoin-core-gui.pro
 	contrib/verifysfbinaries/verify.sh
 	doc/README*
 	share/setup.nsi
@@ -60,7 +60,7 @@ Release Process
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/protobuf-win32.yml
 	mv build/out/protobuf-win32-*.zip inputs/
 
- Build bitcoind and bitcoin-qt on Linux32, Linux64, and Win32:
+ Build bitcoin-core-daemon and bitcoin-core-gui on Linux32, Linux64, and Win32:
   
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian.yml
@@ -101,19 +101,19 @@ repackage gitian builds for release as stand-alone zip/tar/installer exe
 
   OSX binaries are created by Gavin Andresen on a 32-bit, OSX 10.6 machine.
 
-	qmake RELEASE=1 USE_UPNP=1 USE_QRCODE=1 bitcoin-qt.pro
+	qmake RELEASE=1 USE_UPNP=1 USE_QRCODE=1 bitcoin-core-gui.pro
 	make
 	export QTDIR=/opt/local/share/qt4  # needed to find translations/qt_*.qm files
 	T=$(contrib/qt_translations.py $QTDIR/translations src/qt/locale)
 	python2.7 share/qt/clean_mac_info_plist.py
-	python2.7 contrib/macdeploy/macdeployqtplus Bitcoin-Qt.app -add-qt-tr $T -dmg -fancy contrib/macdeploy/fancy.plist
+	python2.7 contrib/macdeploy/macdeployqtplus 'Bitcoin Core GUI.app' -add-qt-tr $T -dmg -fancy contrib/macdeploy/fancy.plist
 
- Build output expected: Bitcoin-Qt.dmg
+ Build output expected: Bitcoin Core GUI.dmg
 
 ###Next steps:
 
 * Code-sign Windows -setup.exe (in a Windows virtual machine) and
-  OSX Bitcoin-Qt.app (Note: only Gavin has the code-signing keys currently)
+  OSX Bitcoin Core GUI.app (Note: only Gavin has the code-signing keys currently)
 
 * upload builds to SourceForge
 

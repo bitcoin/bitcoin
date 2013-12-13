@@ -69,15 +69,15 @@ AC_ARG_WITH([qt],
   [enable qt (default is yes)])],
   [use_qt=$withval],
   [use_qt=auto])
-AC_DEFUN([BITCOIN_QT_FAIL],[
+AC_DEFUN([BITCOIN_CORE_GUI_FAIL],[
   if test "x$use_qt" = "xauto"; then
-    AC_MSG_WARN([$1; bitcoin-qt frontend will not be built])
+    AC_MSG_WARN([$1; bitcoin-core-gui frontend will not be built])
     use_qt=no
   else
     AC_MSG_ERROR([$1])
   fi
 ])
-AC_DEFUN([BITCOIN_QT_CHECK],[
+AC_DEFUN([BITCOIN_CORE_GUI_CHECK],[
   if test "x$use_qt" != "xno"; then
     true
     $1
@@ -86,11 +86,11 @@ AC_DEFUN([BITCOIN_QT_CHECK],[
     $2
   fi
 ])
-AC_DEFUN([BITCOIN_QT_PATH_PROGS],[
-  BITCOIN_QT_CHECK([
+AC_DEFUN([BITCOIN_CORE_GUI_PATH_PROGS],[
+  BITCOIN_CORE_GUI_CHECK([
     AC_PATH_PROGS($1,$2,$3,$4)
     if test "x$$1" = "x"; then
-      BITCOIN_QT_FAIL([$1 not found])
+      BITCOIN_CORE_GUI_FAIL([$1 not found])
     fi
   ])
 ])
@@ -168,11 +168,11 @@ AC_PATH_PROG(LCOV, lcov)
 AC_PATH_PROG(JAVA, java)
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
-BITCOIN_QT_PATH_PROGS([MOC], [moc-qt4 moc4 moc],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([UIC], [uic-qt4 uic4 uic],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([RCC], [rcc-qt4 rcc4 rcc],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([LRELEASE], [lrelease-qt4 lrelease4 lrelease],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],, $protoc_bin_path:$PATH)
+BITCOIN_CORE_GUI_PATH_PROGS([MOC], [moc-qt4 moc4 moc],, $qt_bin_path:$PATH)
+BITCOIN_CORE_GUI_PATH_PROGS([UIC], [uic-qt4 uic4 uic],, $qt_bin_path:$PATH)
+BITCOIN_CORE_GUI_PATH_PROGS([RCC], [rcc-qt4 rcc4 rcc],, $qt_bin_path:$PATH)
+BITCOIN_CORE_GUI_PATH_PROGS([LRELEASE], [lrelease-qt4 lrelease4 lrelease],, $qt_bin_path:$PATH)
+BITCOIN_CORE_GUI_PATH_PROGS([PROTOC], [protoc],, $protoc_bin_path:$PATH)
 AC_PATH_PROG(CCACHE,ccache)
 AC_PATH_PROGS([LUPDATE], [lupdate-qt4 lupdate4 lupdate],, $qt_bin_path:$PATH)
 AC_PATH_PROG(XGETTEXT,xgettext)
@@ -254,7 +254,7 @@ case $host in
        fi
      fi
 
-     BITCOIN_QT_CHECK([
+     BITCOIN_CORE_GUI_CHECK([
        MOC_DEFS="-DQ_OS_MAC"
        base_frameworks="-framework Foundation -framework ApplicationServices -framework AppKit"
        AX_CHECK_LINK_FLAG([[$base_frameworks]],[LIBS="$LIBS $base_frameworks"],[AC_MSG_ERROR(could not find base frameworks)])
@@ -465,10 +465,10 @@ if test x$use_pkgconfig = xyes; then
       PKG_CHECK_MODULES([SSL], [libssl], [INCLUDES="$INCLUDES $SSL_CFLAGS"; LIBS="$LIBS $SSL_LIBS"], [AC_MSG_ERROR(openssl  not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto], [INCLUDES="$INCLUDES $CRYPTO_CFLAGS"; LIBS="$LIBS $CRYPTO_LIBS"], [AC_MSG_ERROR(libcrypto  not found.)])
 
-      BITCOIN_QT_CHECK([
+      BITCOIN_CORE_GUI_CHECK([
         PKG_CHECK_MODULES([QT], [QtCore QtGui QtNetwork], [QT_INCLUDES="$QT_CFLAGS"; have_qt=yes],[
           have_qt=no
-          BITCOIN_QT_FAIL([Qt dependencies not found])
+          BITCOIN_CORE_GUI_FAIL([Qt dependencies not found])
         ])
         if test x$use_tests = xyes; then
           PKG_CHECK_MODULES([QT_TEST], [QtTest], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
@@ -490,7 +490,7 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],, AC_MSG_ERROR(libssl missing))
 
-  BITCOIN_QT_CHECK([
+  BITCOIN_CORE_GUI_CHECK([
     TEMP_LIBS="$LIBS"
     LIBS=
     if test x$qt_lib_path != x; then
@@ -503,25 +503,25 @@ else
     fi
 
     if test x$TARGET_OS == xwindows; then
-      AC_CHECK_LIB([imm32],      [main],, BITCOIN_QT_FAIL(libimm32 not found))
+      AC_CHECK_LIB([imm32],      [main],, BITCOIN_CORE_GUI_FAIL(libimm32 not found))
     fi
   ])
 
     #TODO: These are only needed when they're linked directly to parent libs. It really has nothing to do with windows.
     #Instead, check for missing functions in parent libs and assume static if they're absent.
     if test x$TARGET_OS == xwindows; then
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qcncodecs],[main],,BITCOIN_QT_FAIL(libqcncodecs not found)))
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qjpcodecs],[main],,BITCOIN_QT_FAIL(libqjpcodecs not found)))
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qkrcodecs],[main],,BITCOIN_QT_FAIL(libqkrcodecs not found)))
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qtwcodecs],[main],,BITCOIN_QT_FAIL(libqtwcodecs not found)))
+      BITCOIN_CORE_GUI_CHECK(AC_CHECK_LIB([qcncodecs],[main],,BITCOIN_CORE_GUI_FAIL(libqcncodecs not found)))
+      BITCOIN_CORE_GUI_CHECK(AC_CHECK_LIB([qjpcodecs],[main],,BITCOIN_CORE_GUI_FAIL(libqjpcodecs not found)))
+      BITCOIN_CORE_GUI_CHECK(AC_CHECK_LIB([qkrcodecs],[main],,BITCOIN_CORE_GUI_FAIL(libqkrcodecs not found)))
+      BITCOIN_CORE_GUI_CHECK(AC_CHECK_LIB([qtwcodecs],[main],,BITCOIN_CORE_GUI_FAIL(libqtwcodecs not found)))
     fi
 
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtCore]   ,[main],,BITCOIN_QT_FAIL(libQtCore not found)))
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtGui]    ,[main],,BITCOIN_QT_FAIL(libQtGui not found)))
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtNetwork],[main],,BITCOIN_QT_FAIL(libQtNetwork not found)))
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],,BITCOIN_QT_FAIL(libprotobuf not found)))
+    BITCOIN_CORE_GUI_CHECK(AC_CHECK_LIB([QtCore]   ,[main],,BITCOIN_CORE_GUI_FAIL(libQtCore not found)))
+    BITCOIN_CORE_GUI_CHECK(AC_CHECK_LIB([QtGui]    ,[main],,BITCOIN_CORE_GUI_FAIL(libQtGui not found)))
+    BITCOIN_CORE_GUI_CHECK(AC_CHECK_LIB([QtNetwork],[main],,BITCOIN_CORE_GUI_FAIL(libQtNetwork not found)))
+    BITCOIN_CORE_GUI_CHECK(AC_CHECK_LIB([protobuf] ,[main],,BITCOIN_CORE_GUI_FAIL(libprotobuf not found)))
 
-  BITCOIN_QT_CHECK([
+  BITCOIN_CORE_GUI_CHECK([
     QT_LIBS="$LIBS"
     LIBS="$TEMP_LIBS"
 
@@ -531,11 +531,11 @@ else
       CPPFLAGS="$CPPFLAGS $QT_INCLUDES"
     fi
   ])
-    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QtPlugin],,BITCOIN_QT_FAIL(QtCore headers missing))])
-    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QApplication],, BITCOIN_QT_FAIL(QtGui headers missing))])
-    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QLocalSocket],, BITCOIN_QT_FAIL(QtNetwork headers missing))])
+    BITCOIN_CORE_GUI_CHECK([AC_CHECK_HEADER([QtPlugin],,BITCOIN_CORE_GUI_FAIL(QtCore headers missing))])
+    BITCOIN_CORE_GUI_CHECK([AC_CHECK_HEADER([QApplication],, BITCOIN_CORE_GUI_FAIL(QtGui headers missing))])
+    BITCOIN_CORE_GUI_CHECK([AC_CHECK_HEADER([QLocalSocket],, BITCOIN_CORE_GUI_FAIL(QtNetwork headers missing))])
 
-  BITCOIN_QT_CHECK([
+  BITCOIN_CORE_GUI_CHECK([
     if test x$use_tests = xyes; then
       TEMP_LIBS="$LIBS"
       LIBS=
@@ -664,7 +664,7 @@ fi
 
 dnl enable qt support
 AC_MSG_CHECKING([if qt should be enabled])
-BITCOIN_QT_CHECK([
+BITCOIN_CORE_GUI_CHECK([
   use_qt=yes
   BUILD_QT=qt
   if test x$use_tests = xyes; then

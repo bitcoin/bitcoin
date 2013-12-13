@@ -2,32 +2,32 @@
 # -*- mode: makefile; coding: utf-8 -*-
 
 #DEB_MAKE_CHECK_TARGET = test_bitcoin
-#build/bitcoind::
+#build/bitcoin-core-daemon::
 #	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_bitcoin)
 
-DEB_INSTALL_EXAMPLES_bitcoind += debian/examples/*
-DEB_INSTALL_MANPAGES_bitcoind += debian/manpages/*
+DEB_INSTALL_EXAMPLES_bitcoin_core_daemon += debian/examples/*
+DEB_INSTALL_MANPAGES_bitcoin_core_daemon += debian/manpages/*
 
 %:
 	dh --with bash-completion $@
 
 override_dh_auto_build:
-	cd src; $(MAKE) -f makefile.unix bitcoind
+	cd src; $(MAKE) -f makefile.unix bitcoin-core-daemon
 	$(MAKE)
 
 override_dh_auto_clean:
-	if [ -f Makefile ]; then $(MAKE) clean; else rm -rf build/; rm -f bitcoin-qt; fi
+	if [ -f Makefile ]; then $(MAKE) clean; else rm -rf build/; rm -f bitcoin-core-gui; fi
 	cd src; $(MAKE) -f makefile.unix clean
 
 override_dh_auto_configure:
-	qmake bitcoin-qt.pro USE_QRCODE=1
+	qmake bitcoin-core-gui.pro USE_QRCODE=1
 
 override_dh_auto_test:
 	cd src; $(MAKE) -f makefile.unix test_bitcoin
 	src/test_bitcoin
 
 # Ensure wrapper is set executable
-binary-post-install/bitcoind:
-	chmod +x $(cdbs_curdestdir)usr/bin/bitcoind
-binary-post-install/bitcoin-qt:
-	chmod +x $(cdbs_curdestdir)usr/bin/bitcoin-qt
+binary-post-install/bitcoin-core-daemon:
+	chmod +x $(cdbs_curdestdir)usr/bin/bitcoin-core-daemon
+binary-post-install/bitcoin-core-gui:
+	chmod +x $(cdbs_curdestdir)usr/bin/bitcoin-core-gui

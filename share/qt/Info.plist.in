@@ -21,10 +21,10 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>Bitcoin-Qt</string>
+  <string>Bitcoin Core GUI</string>
 
   <key>CFBundleIdentifier</key>
-  <string>org.bitcoinfoundation.Bitcoin-Qt</string>
+  <string>org.bitcoinfoundation.Bitcoin Core GUI</string>
 
   <key>CFBundleURLTypes</key>
   <array>

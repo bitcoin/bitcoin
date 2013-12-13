@@ -800,8 +800,8 @@ Dirección: %4
     <message>
         <location filename="../guiutil.cpp" line="+558"/>
         <location line="+13"/>
-        <source>Bitcoin-Qt</source>
-        <translation>Bitcoin-Qt</translation>
+        <source>Bitcoin Core GUI</source>
+        <translation>Bitcoin Core GUI</translation>
     </message>
     <message>
         <location line="-13"/>
@@ -853,18 +853,18 @@ Dirección: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Welcome to Bitcoin-Qt.</source>
-        <translation>Bienvenido a Bitcoin-Qt.</translation>
+        <source>Welcome to Bitcoin Core GUI.</source>
+        <translation>Bienvenido a Bitcoin Core GUI.</translation>
     </message>
     <message>
         <location line="+26"/>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
-        <translation>Al ser la primera vez que se ejecuta el programa, puede elegir dónde almacenará sus datos Bitcoin-Qt.</translation>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core GUI will store its data.</source>
+        <translation>Al ser la primera vez que se ejecuta el programa, puede elegir dónde almacenará sus datos Bitcoin Core GUI.</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin-Qt va a descargar y guardar una copia de la cadena de bloques de Bitcoin. Se almacenará al menos %1GB de datos en este directorio, que irá creciendo con el tiempo. El monedero se guardará también en este directorio.</translation>
+        <source>Bitcoin Core GUI will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin Core GUI va a descargar y guardar una copia de la cadena de bloques de Bitcoin. Se almacenará al menos %1GB de datos en este directorio, que irá creciendo con el tiempo. El monedero se guardará también en este directorio.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1364,8 +1364,8 @@ Dirección: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
-        <translation>Mostrar el mensaje de ayuda de Bitcoin-Qt que enumera las opciones disponibles de línea de órdenes para Bitcoin.</translation>
+        <source>Show the Bitcoin Core GUI help message to get a list with possible Bitcoin command-line options.</source>
+        <translation>Mostrar el mensaje de ayuda de Bitcoin Core GUI que enumera las opciones disponibles de línea de órdenes para Bitcoin.</translation>
     </message>
     <message>
         <location line="+3"/>

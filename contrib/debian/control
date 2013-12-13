@@ -23,7 +23,7 @@ Homepage: http://www.bitcoin.org/
 Vcs-Git: git://github.com/bitcoin/bitcoin.git
 Vcs-Browser: http://github.com/bitcoin/bitcoin
 
-Package: bitcoind
+Package: bitcoin-core-daemon
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
@@ -36,10 +36,10 @@ Description: peer-to-peer network based digital currency - daemon
  Full transaction history is stored locally at each client.  This
  requires 2+ GB of space, slowly growing.
  .
- This package provides bitcoind, a combined daemon and CLI tool to
- interact with the daemon.
+ This package provides bitcoin-core-daemon, a combined daemon and CLI
+ tool to interact with the daemon.
 
-Package: bitcoin-qt
+Package: bitcoin-core-gui
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
@@ -52,4 +52,4 @@ Description: peer-to-peer network based digital currency - Qt GUI
  Full transaction history is stored locally at each client.  This
  requires 2+ GB of space, slowly growing.
  .
- This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
+ This package provides Bitcoin Core GUI, a GUI for Bitcoin based on Qt.

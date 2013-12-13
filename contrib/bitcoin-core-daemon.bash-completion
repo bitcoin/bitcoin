@@ -1,9 +1,9 @@
-# bash programmable completion for bitcoind(1)
+# bash programmable completion for bitcoin-core-daemon(1)
 # Copyright (c) 2012 Christian von Roques <roques@mti.ag>
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-have bitcoind && {
+have bitcoin-core-daemon && {
 
 # call $bitcoind for RPC
 _bitcoin_rpc() {
@@ -30,8 +30,8 @@ _bitcoind() {
     local cur prev words=() cword
     local bitcoind
 
-    # save and use original argument to invoke bitcoind
-    # bitcoind might not be in $PATH
+    # save and use original argument to invoke bitcoin-core-daemon
+    # bitcoin-core-daemon might not be in $PATH
     bitcoind="$1"
 
     COMPREPLY=()
@@ -103,7 +103,7 @@ _bitcoind() {
     esac
 }
 
-complete -F _bitcoind bitcoind
+complete -F _bitcoind bitcoin-core-daemon
 }
 
 # Local variables:

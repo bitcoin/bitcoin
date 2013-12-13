@@ -797,8 +797,8 @@ Adresa: %4
     <message>
         <location filename="../guiutil.cpp" line="+558"/>
         <location line="+13"/>
-        <source>Bitcoin-Qt</source>
-        <translation>Bitcoin-Qt</translation>
+        <source>Bitcoin Core GUI</source>
+        <translation>Bitcoin Core GUI</translation>
     </message>
     <message>
         <location line="-13"/>
@@ -850,18 +850,18 @@ Adresa: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Welcome to Bitcoin-Qt.</source>
-        <translation>Bun venit la Bitcoin-Qt.</translation>
+        <source>Welcome to Bitcoin Core GUI.</source>
+        <translation>Bun venit la Bitcoin Core GUI.</translation>
     </message>
     <message>
         <location line="+26"/>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
-        <translation>Deoarece este prima lansare a programului poți alege unde Bitcoin-Qt va stoca datele sale.</translation>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core GUI will store its data.</source>
+        <translation>Deoarece este prima lansare a programului poți alege unde Bitcoin Core GUI va stoca datele sale.</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin-Qt va descărca și stoca o copie a lanțului de blocuri Bicoin. Cel puțin %1GB de date vor fi stocate în acest dosar și necesarul va crește în timp. De asemenea și portofelul va fi ținut în acest dosar.</translation>
+        <source>Bitcoin Core GUI will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin Core GUI va descărca și stoca o copie a lanțului de blocuri Bicoin. Cel puțin %1GB de date vor fi stocate în acest dosar și necesarul va crește în timp. De asemenea și portofelul va fi ținut în acest dosar.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1361,8 +1361,8 @@ Adresa: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
-        <translation>Arata mesajul de ajutor Bitcoin-QT pentru a obtine o lista cu posibilele optiuni ale comenzilor Bitcoin</translation>
+        <source>Show the Bitcoin Core GUI help message to get a list with possible Bitcoin command-line options.</source>
+        <translation>Arata mesajul de ajutor Bitcoin Core GUI pentru a obtine o lista cu posibilele optiuni ale comenzilor Bitcoin</translation>
     </message>
     <message>
         <location line="+3"/>

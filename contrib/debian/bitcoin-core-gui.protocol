@@ -1,5 +1,5 @@
 [Protocol]
-exec=bitcoin-qt '%u'
+exec=bitcoin-core-gui '%u'
 protocol=bitcoin
 input=none
 output=none

@@ -797,8 +797,8 @@ Address: %4
     <message>
         <location filename="../guiutil.cpp" line="+558"/>
         <location line="+13"/>
-        <source>Bitcoin-Qt</source>
-        <translation>Bitcoin-Qt</translation>
+        <source>Bitcoin Core GUI</source>
+        <translation>Bitcoin Core GUI</translation>
     </message>
     <message>
         <location line="-13"/>
@@ -850,18 +850,18 @@ Address: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Welcome to Bitcoin-Qt.</source>
-        <translation>Добро пожаловать в Bitcoin-Qt</translation>
+        <source>Welcome to Bitcoin Core GUI.</source>
+        <translation>Добро пожаловать в Bitcoin Core GUI</translation>
     </message>
     <message>
         <location line="+26"/>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
-        <translation>Так как вы впервые запустили программу, вы можете выбрать, где Bitcoin-Qt будет хранить данные.</translation>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core GUI will store its data.</source>
+        <translation>Так как вы впервые запустили программу, вы можете выбрать, где Bitcoin Core GUI будет хранить данные.</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin-Qt скачает и сохранит копию цепи блоков. Как минимум, %1GB данных будет сохранено в этом каталоге, и со временем он будет расти. Бумажник будет также сохранён в этом каталоге.</translation>
+        <source>Bitcoin Core GUI will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin Core GUI скачает и сохранит копию цепи блоков. Как минимум, %1GB данных будет сохранено в этом каталоге, и со временем он будет расти. Бумажник будет также сохранён в этом каталоге.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1361,8 +1361,8 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
-        <translation>Показать помощь по Bitcoin-Qt, чтобы получить список доступных параметров командной строки.</translation>
+        <source>Show the Bitcoin Core GUI help message to get a list with possible Bitcoin command-line options.</source>
+        <translation>Показать помощь по Bitcoin Core GUI, чтобы получить список доступных параметров командной строки.</translation>
     </message>
     <message>
         <location line="+3"/>

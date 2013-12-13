@@ -20,7 +20,7 @@ SetCompressor /SOLID lzma
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
 !define MUI_STARTMENUPAGE_DEFAULTFOLDER @PACKAGE_NAME@
-!define MUI_FINISHPAGE_RUN $INSTDIR\bitcoin-qt.exe
+!define MUI_FINISHPAGE_RUN $INSTDIR\bitcoin-core-gui.exe
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "@abs_top_srcdir@/share/pixmaps/nsis-wizard.bmp"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
@@ -66,11 +66,11 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    File @abs_top_srcdir@/release/bitcoin-qt.exe
+    File @abs_top_srcdir@/release/bitcoin-core-gui.exe
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
-    File @abs_top_srcdir@/release/bitcoind.exe
+    File @abs_top_srcdir@/release/bitcoin-core-daemon.exe
     SetOutPath $INSTDIR\src
     File /r @abs_top_srcdir@/@PACKAGE@-@VERSION@/src\*.*
     SetOutPath $INSTDIR
@@ -87,7 +87,7 @@ Section -post SEC0001
     WriteUninstaller $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     CreateDirectory $SMPROGRAMS\$StartMenuGroup
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Bitcoin.lnk" $INSTDIR\bitcoin-qt.exe
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Bitcoin.lnk" $INSTDIR\bitcoin-core-gui.exe
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall Bitcoin.lnk" $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_END
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayName "$(^Name)"
@@ -100,8 +100,8 @@ Section -post SEC0001
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
     WriteRegStr HKCR "bitcoin" "URL Protocol" ""
     WriteRegStr HKCR "bitcoin" "" "URL:Bitcoin"
-    WriteRegStr HKCR "bitcoin\DefaultIcon" "" $INSTDIR\bitcoin-qt.exe
-    WriteRegStr HKCR "bitcoin\shell\open\command" "" '"$INSTDIR\bitcoin-qt.exe" "%1"'
+    WriteRegStr HKCR "bitcoin\DefaultIcon" "" $INSTDIR\bitcoin-core-gui.exe
+    WriteRegStr HKCR "bitcoin\shell\open\command" "" '"$INSTDIR\bitcoin-core-gui.exe" "%1"'
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -119,7 +119,7 @@ done${UNSECTION_ID}:
 
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
-    Delete /REBOOTOK $INSTDIR\bitcoin-qt.exe
+    Delete /REBOOTOK $INSTDIR\bitcoin-core-gui.exe
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon

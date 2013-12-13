@@ -798,8 +798,8 @@ Adress: %4
     <message>
         <location filename="../guiutil.cpp" line="+558"/>
         <location line="+13"/>
-        <source>Bitcoin-Qt</source>
-        <translation>Bitcoin-Qt</translation>
+        <source>Bitcoin Core GUI</source>
+        <translation>Bitcoin Core GUI</translation>
     </message>
     <message>
         <location line="-13"/>
@@ -851,18 +851,18 @@ Adress: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Welcome to Bitcoin-Qt.</source>
-        <translation>Välkommen till Bitcoin-Qt.</translation>
+        <source>Welcome to Bitcoin Core GUI.</source>
+        <translation>Välkommen till Bitcoin Core GUI.</translation>
     </message>
     <message>
         <location line="+26"/>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
-        <translation>Eftersom detta är första gången programmet startas, kan du välja var Bitcoin-Qt ska lagra sina data.</translation>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core GUI will store its data.</source>
+        <translation>Eftersom detta är första gången programmet startas, kan du välja var Bitcoin Core GUI ska lagra sina data.</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin-QT kommer att ladda ner och spara en kopia av Bitcoin blockkedjan. Åtminstone %1GB av data kommer att sparas i denna katalog, och den kommer att växa övertiden. Plånboken kommer också att sparas i denna katalog.</translation>
+        <source>Bitcoin Core GUI will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin Core GUI kommer att ladda ner och spara en kopia av Bitcoin blockkedjan. Åtminstone %1GB av data kommer att sparas i denna katalog, och den kommer att växa övertiden. Plånboken kommer också att sparas i denna katalog.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1362,8 +1362,8 @@ Adress: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
-        <translation>Visa Bitcoin-Qt hjälpmeddelande för att få en lista med möjliga Bitcoin kommandoradsalternativ.</translation>
+        <source>Show the Bitcoin Core GUI help message to get a list with possible Bitcoin command-line options.</source>
+        <translation>Visa Bitcoin Core GUI hjälpmeddelande för att få en lista med möjliga Bitcoin kommandoradsalternativ.</translation>
     </message>
     <message>
         <location line="+3"/>

@@ -77,16 +77,16 @@ bool AppInit(int argc, char* argv[])
 
         if (mapArgs.count("-?") || mapArgs.count("--help"))
         {
-            // First part of help message is specific to bitcoind / RPC client
+            // First part of help message is specific to bitcoin-core-daemon / RPC client
             std::string strUsage = _("Bitcoin version") + " " + FormatFullVersion() + "\n\n" +
                 _("Usage:") + "\n" +
-                  "  bitcoind [options]                     " + _("Start Bitcoin server") + "\n" +
+                  "  bitcoin-core-daemon [options]                     " + _("Start Bitcoin server") + "\n" +
                 _("Usage (deprecated, use bitcoin-cli):") + "\n" +
-                  "  bitcoind [options] <command> [params]  " + _("Send command to Bitcoin server") + "\n" +
-                  "  bitcoind [options] help                " + _("List commands") + "\n" +
-                  "  bitcoind [options] help <command>      " + _("Get help for a command") + "\n";
+                  "  bitcoin-core-daemon [options] <command> [params]  " + _("Send command to Bitcoin server") + "\n" +
+                  "  bitcoin-core-daemon [options] help                " + _("List commands") + "\n" +
+                  "  bitcoin-core-daemon [options] help <command>      " + _("Get help for a command") + "\n";
 
-            strUsage += "\n" + HelpMessage(HMM_BITCOIND);
+            strUsage += "\n" + HelpMessage(HMM_DAEMON);
             strUsage += "\n" + HelpMessageCli(false);
 
             fprintf(stdout, "%s", strUsage.c_str());
@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
 {
     bool fRet = false;
 
-    // Connect bitcoind signal handlers
+    // Connect bitcoin-core-daemon signal handlers
     noui_connect();
 
     fRet = AppInit(argc, argv);

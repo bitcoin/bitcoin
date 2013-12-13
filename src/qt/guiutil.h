@@ -123,7 +123,7 @@ namespace GUIUtil
     /** Restore window size and position */
     void restoreWindowGeometry(const QString& strSetting, const QSize &defaultSizeIn, QWidget *parent);
 
-    /** Help message for Bitcoin-Qt, shown with --help. */
+    /** Help message for Bitcoin Core GUI, shown with --help. */
     class HelpMessageBox : public QMessageBox
     {
         Q_OBJECT
