@@ -242,17 +242,23 @@ int LogPrint(const char* category, const char* pszFormat, ...)
         if (!fDebug)
             return 0;
 
-        const vector<string>& categories = mapMultiArgs["-debug"];
-        bool allCategories = count(categories.begin(), categories.end(), string(""));
-
-        // Only look for categories, if not -debug/-debug=1 was passed,
-        // as that implies every category should be logged.
-        if (!allCategories)
+        // Give each thread quick access to -debug settings.
+        // This helps prevent issues debugging global destructors,
+        // where mapMultiArgs might be deleted before another
+        // global destructor calls LogPrint()
+        static boost::thread_specific_ptr<set<string> > ptrCategory;
+        if (ptrCategory.get() == NULL)
         {
-            // Category was not found (not supplied via -debug=<category>)
-            if (find(categories.begin(), categories.end(), string(category)) == categories.end())
-                return 0;
+            const vector<string>& categories = mapMultiArgs["-debug"];
+            ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
+            // thread_specific_ptr automatically deletes the set when the thread ends.
         }
+        const set<string>& setCategories = *ptrCategory.get();
+
+        // if not debugging everything and not debugging specific category, LogPrint does nothing.
+        if (setCategories.count(string("")) == 0 &&
+            setCategories.count(string(category)) == 0)
+            return 0;
     }
 
     int ret = 0; // Returns total number of characters written
@@ -299,27 +305,24 @@ int LogPrint(const char* category, const char* pszFormat, ...)
 #ifdef WIN32
     if (fPrintToDebugger)
     {
-        static CCriticalSection cs_OutputDebugStringF;
-
         // accumulate and output a line at a time
+        static std::string buffer;
+
+        boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
+
+        va_list arg_ptr;
+        va_start(arg_ptr, pszFormat);
+        buffer += vstrprintf(pszFormat, arg_ptr);
+        va_end(arg_ptr);
+
+        int line_start = 0, line_end;
+        while((line_end = buffer.find('\n', line_start)) != -1)
         {
-            LOCK(cs_OutputDebugStringF);
-            static std::string buffer;
-
-            va_list arg_ptr;
-            va_start(arg_ptr, pszFormat);
-            buffer += vstrprintf(pszFormat, arg_ptr);
-            va_end(arg_ptr);
-
-            int line_start = 0, line_end;
-            while((line_end = buffer.find('\n', line_start)) != -1)
-            {
-                OutputDebugStringA(buffer.substr(line_start, line_end - line_start).c_str());
-                line_start = line_end + 1;
-                ret += line_end-line_start;
-            }
-            buffer.erase(0, line_start);
+            OutputDebugStringA(buffer.substr(line_start, line_end - line_start).c_str());
+            line_start = line_end + 1;
+            ret += line_end-line_start;
         }
+        buffer.erase(0, line_start);
     }
 #endif
     return ret;
