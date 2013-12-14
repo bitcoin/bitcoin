@@ -26,7 +26,7 @@ struct TestingSetup {
     boost::thread_group threadGroup;
 
     TestingSetup() {
-        fPrintToDebugger = true; // don't want to write to debug.log file
+        fPrintToDebugLog = false; // don't want to write to debug.log file
         noui_connect();
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
