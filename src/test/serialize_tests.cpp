@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(compactsize)
 
 static bool isCanonicalException(const std::ios_base::failure& ex)
 {
-    return std::string("non-canonical ReadCompactSize()") == ex.what();
+    return std::string("non-canonical ReadCompactSize(): unspecified iostream_category error") == ex.what();
 }
 
 BOOST_AUTO_TEST_CASE(noncanonical)
