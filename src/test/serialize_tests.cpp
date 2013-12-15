@@ -61,8 +61,13 @@ BOOST_AUTO_TEST_CASE(compactsize)
 
 static bool isCanonicalException(const std::ios_base::failure& ex)
 {
-    return std::string("non-canonical ReadCompactSize()") == ex.what();
+    std::string strExplanatoryString("non-canonical ReadCompactSize()");
+
+    return strExplanatoryString == ex.what() ||
+           // OSX Apple LLVM version 5.0 (OSX 10.9) 
+           strExplanatoryString + ": unspecified iostream_category error" == ex.what();
 }
+
 
 BOOST_AUTO_TEST_CASE(noncanonical)
 {
