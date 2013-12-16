@@ -36,7 +36,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Bitcoin Core</string>
+          <string>General</string>
          </property>
         </widget>
        </item>
