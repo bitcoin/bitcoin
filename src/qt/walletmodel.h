@@ -17,8 +17,8 @@
 
 class AddressTableModel;
 class OptionsModel;
-class TransactionTableModel;
 class RecentRequestsTableModel;
+class TransactionTableModel;
 class WalletModelTransaction;
 
 class CCoinControl;
