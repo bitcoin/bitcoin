@@ -1,9 +1,13 @@
+// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "macdockiconhandler.h"
 
-#include <QMenu>
-#include <QWidget>
-#include <QTemporaryFile>
 #include <QImageWriter>
+#include <QMenu>
+#include <QTemporaryFile>
+#include <QWidget>
 
 #undef slots
 #include <Cocoa/Cocoa.h>
