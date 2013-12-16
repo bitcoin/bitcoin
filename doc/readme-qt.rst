@@ -18,7 +18,7 @@ for Debian and Ubuntu  <= 11.10 :
 
     apt-get install qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev \
         libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev \
-        libssl-dev libdb4.8++-dev
+        libssl-dev libdb4.8++-dev libminiupnpc-dev
 
 for Ubuntu >= 12.04 (please read the 'Berkely DB version warning' below):
 
