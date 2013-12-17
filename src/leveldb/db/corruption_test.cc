@@ -75,7 +75,13 @@ class CorruptionTest {
       Slice key = Key(i, &key_space);
       batch.Clear();
       batch.Put(key, Value(i, &value_space));
-      ASSERT_OK(db_->Write(WriteOptions(), &batch));
+      WriteOptions options;
+      // Corrupt() doesn't work without this sync on windows; stat reports 0 for
+      // the file size.
+      if (i == n - 1) {
+        options.sync = true;
+      }
+      ASSERT_OK(db_->Write(options, &batch));
     }
   }
 
@@ -125,7 +131,7 @@ class CorruptionTest {
     FileType type;
     std::string fname;
     int picked_number = -1;
-    for (int i = 0; i < filenames.size(); i++) {
+    for (size_t i = 0; i < filenames.size(); i++) {
       if (ParseFileName(filenames[i], &number, &type) &&
           type == filetype &&
           int(number) > picked_number) {  // Pick latest file
@@ -236,6 +242,22 @@ TEST(CorruptionTest, TableFile) {
 
   Corrupt(kTableFile, 100, 1);
   Check(90, 99);
+}
+
+TEST(CorruptionTest, TableFileRepair) {
+  options_.block_size = 2 * kValueSize;  // Limit scope of corruption
+  options_.paranoid_checks = true;
+  Reopen();
+  Build(100);
+  DBImpl* dbi = reinterpret_cast<DBImpl*>(db_);
+  dbi->TEST_CompactMemTable();
+  dbi->TEST_CompactRange(0, NULL, NULL);
+  dbi->TEST_CompactRange(1, NULL, NULL);
+
+  Corrupt(kTableFile, 100, 1);
+  RepairDB();
+  Reopen();
+  Check(95, 99);
 }
 
 TEST(CorruptionTest, TableFileIndexData) {
