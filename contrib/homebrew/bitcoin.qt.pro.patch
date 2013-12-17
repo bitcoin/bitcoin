@@ -11,7 +11,7 @@ index d938c07..e1dd4ec 100644
  }
  
  isEmpty(BDB_LIB_SUFFIX) {
-@@ -361,15 +361,15 @@
+@@ -361,15 +361,23 @@
  }
  
  isEmpty(BDB_INCLUDE_PATH) {
@@ -27,6 +27,14 @@ index d938c07..e1dd4ec 100644
  isEmpty(BOOST_INCLUDE_PATH) {
 -    macx:BOOST_INCLUDE_PATH = /opt/local/include
 +    macx:BOOST_INCLUDE_PATH = /usr/local/opt/boost/include
++}
++
++isEmpty(OPENSSL_LIB_PATH) {
++    macx:OPENSSL_LIB_PATH = /usr/local/opt/openssl/lib
++}
++
++isEmpty(OPENSSL_INCLUDE_PATH) {
++    macx:OPENSSL_INCLUDE_PATH = /usr/local/opt/openssl/include
  }
  
  win32:DEFINES += WIN32
