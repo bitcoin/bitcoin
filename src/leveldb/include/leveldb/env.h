@@ -13,9 +13,9 @@
 #ifndef STORAGE_LEVELDB_INCLUDE_ENV_H_
 #define STORAGE_LEVELDB_INCLUDE_ENV_H_
 
-#include <cstdarg>
 #include <string>
 #include <vector>
+#include <stdarg.h>
 #include <stdint.h>
 #include "leveldb/status.h"
 
