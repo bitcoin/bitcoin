@@ -24,6 +24,10 @@
 
 #if defined(__i386__)
 
+#if defined(__linux__) && defined(__ELF__)
+.section .note.GNU-stack,"",%progbits
+#endif
+
 #define gen_salsa8_core_quadround() \
 	movl	52(%esp), %ecx; \
 	movl	4(%esp), %edx; \
