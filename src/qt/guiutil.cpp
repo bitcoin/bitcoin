@@ -594,7 +594,7 @@ void restoreWindowGeometry(const QString& strSetting, const QSize& defaultSize, 
 HelpMessageBox::HelpMessageBox(QWidget *parent) :
     QMessageBox(parent)
 {
-    header = tr("Bitcoin Core") + tr("version") + " " +
+    header = tr("Bitcoin Core") + " " + tr("version") + " " +
         QString::fromStdString(FormatFullVersion()) + "\n\n" +
         tr("Usage:") + "\n" +
         "  bitcoin-qt [" + tr("command-line options") + "]                     " + "\n";
