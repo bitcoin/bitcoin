@@ -1,5 +1,5 @@
 Bitcoin Core integration/staging tree
-================================
+=====================================
 
 http://www.bitcoin.org
 
