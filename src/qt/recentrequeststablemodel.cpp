@@ -3,13 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "recentrequeststablemodel.h"
-#include "guiutil.h"
+
 #include "bitcoinunits.h"
+#include "guiutil.h"
 #include "optionsmodel.h"
 
-RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel *parent):
+RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel *parent) :
     walletModel(parent)
 {
+    Q_UNUSED(wallet);
+
     /* These columns must match the indices in the ColumnIndex enumeration */
     columns << tr("Date") << tr("Label") << tr("Message") << tr("Amount");
 }
@@ -22,12 +25,14 @@ RecentRequestsTableModel::~RecentRequestsTableModel()
 int RecentRequestsTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
+
     return list.length();
 }
 
 int RecentRequestsTableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
+
     return columns.length();
 }
 
@@ -88,12 +93,15 @@ QVariant RecentRequestsTableModel::headerData(int section, Qt::Orientation orien
 
 QModelIndex RecentRequestsTableModel::index(int row, int column, const QModelIndex &parent) const
 {
-    return createIndex(row, column, 0);
+    Q_UNUSED(parent);
+
+    return createIndex(row, column);
 }
 
 bool RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     Q_UNUSED(parent);
+
     if(count > 0 && row >= 0 && (row+count) <= list.size())
     {
         beginRemoveRows(parent, row, row + count - 1);
