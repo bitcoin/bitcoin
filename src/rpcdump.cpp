@@ -248,6 +248,34 @@ Value dumpprivkey(const Array& params, bool fHelp)
     return CBitcoinSecret(vchSecret).ToString();
 }
 
+Value dumppubkey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "dumppubkey \"bitcoinaddress\"\n"
+            "\nReveals the public key corresponding to 'bitcoinaddress'.\n"
+            "\nArguments:\n"
+            "1. \"bitcoinaddress\"   (string, required) The bitcoin address for the public key\n"
+            "\nResult:\n"
+            "\"key\"                (string) The public key\n"
+            "\nExamples:\n"
+            + HelpExampleCli("dumppubkey", "\"myaddress\"")
+            + HelpExampleRpc("dumppubkey", "\"myaddress\"")
+        );
+
+    string strAddress = params[0].get_str();
+    CBitcoinAddress address;
+    if (!address.SetString(strAddress))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+    CKeyID keyID;
+    if (!address.GetKeyID(keyID))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+    CPubKey vchPubKey;
+    if (!pwalletMain->GetPubKey(keyID, vchPubKey))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Public key for address " + strAddress + " is not known");
+    return HexStr(vchPubKey);
+}
+
 
 Value dumpwallet(const Array& params, bool fHelp)
 {
