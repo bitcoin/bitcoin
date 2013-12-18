@@ -13,6 +13,7 @@ namespace Ui {
 }
 class WalletModel;
 class OptionsModel;
+
 QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
