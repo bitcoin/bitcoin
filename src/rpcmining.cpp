@@ -5,13 +5,14 @@
 
 #include "rpcserver.h"
 #include "chainparams.h"
-#include "db.h"
 #include "init.h"
 #include "net.h"
 #include "main.h"
 #include "miner.h"
+#ifdef ENABLE_WALLET
+#include "db.h"
 #include "wallet.h"
-
+#endif
 #include <stdint.h>
 
 #include "json/json_spirit_utils.h"
