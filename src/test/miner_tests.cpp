@@ -4,7 +4,6 @@
 #include "miner.h"
 #include "uint256.h"
 #include "util.h"
-#include "wallet.h"
 
 #include <boost/test/unit_test.hpp>
 
