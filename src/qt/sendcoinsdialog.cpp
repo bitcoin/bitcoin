@@ -452,9 +452,8 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         msgParams.first = tr("The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
-    // OK and Aborted are included to prevent a compiler warning.
+    // included to prevent a compiler warning.
     case WalletModel::OK:
-    case WalletModel::Aborted:
     default:
         return;
     }
