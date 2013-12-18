@@ -12,9 +12,6 @@
 #include "addrman.h"
 #include "chainparams.h"
 #include "core.h"
-#ifdef ENABLE_WALLET
-#include "db.h"
-#endif
 #include "ui_interface.h"
 
 #ifdef WIN32
