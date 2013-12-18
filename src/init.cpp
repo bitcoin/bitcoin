@@ -10,7 +10,6 @@
 #include "init.h"
 
 #include "addrman.h"
-#include "db.h"
 #include "checkpoints.h"
 #include "main.h"
 #include "miner.h"
@@ -20,6 +19,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
+#include "db.h"
 #include "wallet.h"
 #include "walletdb.h"
 #endif
