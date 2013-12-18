@@ -287,6 +287,7 @@ static const CRPCCommand vRPCCommands[] =
     { "verifymessage",          &verifymessage,          false,     false,      false },
     { "listaccounts",           &listaccounts,           false,     false,      true },
     { "listsinceblock",         &listsinceblock,         false,     false,      true },
+    { "dumppubkey",             &dumppubkey,             true,      false,      true },
     { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
     { "dumpwallet",             &dumpwallet,             true,      false,      true },
     { "importprivkey",          &importprivkey,          false,     false,      true },
