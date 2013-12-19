@@ -67,9 +67,6 @@ CScript COINBASE_FLAGS;
 
 const string strMessageMagic = "Bitcoin Signed Message:\n";
 
-// Settings
-int64_t nTransactionFee = 0;
-
 // Internal stuff
 namespace {
 struct CBlockIndexWorkComparator
