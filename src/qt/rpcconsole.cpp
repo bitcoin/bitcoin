@@ -284,7 +284,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->buildDate->setText(model->formatBuildDate());
         ui->startupTime->setText(model->formatClientStartupTime());
 
-        ui->isTestNet->setChecked(model->isTestNet());
+        ui->networkName->setText(model->getNetworkName());
     }
 }
 
