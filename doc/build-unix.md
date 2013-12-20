@@ -68,6 +68,16 @@ for Ubuntu 12.04 and later:
 
  Ubuntu 12.04 and later have packages for libdb5.1-dev and libdb5.1++-dev,
  but using these will break binary wallet compatibility, and is not recommended.
+ 
+ Ubuntu 13.10 cannot use libboost1.54-all-dev! If you have libboost1.54-all-dev 
+ installed on Ubuntu 13.10: 
+ 	
+ 	sudo apt-get remove libboost1.54-all-dev 
+ 	sudo apt-get install libboost1.53-all-dev
+ 
+ With new Ubuntu 13.10 install only need to do:
+ 
+ 	sudo apt-get install libboost1.53-all-dev
 
 for other Ubuntu & Debian:
 
