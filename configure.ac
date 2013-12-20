@@ -420,6 +420,7 @@ AC_TRY_LINK([
   #if BOOST_VERSION >= 105000 && (!defined(BOOST_HAS_NANOSLEEP) || BOOST_VERSION >= 105200)
       boost::this_thread::sleep_for(boost::chrono::milliseconds(0));
   #else
+   AC_MSG_ERROR("Could not link against boost::chrono! Ubuntu 13.10 cannot use libboost1.54-all-dev! If libboost1.54-all-dev on Ubuntu 13.10, remove libboost1.54-all-dev and then: sudo apt-get install libboost1.53-all-dev")
    choke me
   #endif
   ],
@@ -440,6 +441,7 @@ AC_TRY_LINK([
   #if BOOST_VERSION <= 105600
       boost::this_thread::sleep(boost::posix_time::milliseconds(0));
   #else
+   AC_MSG_ERROR("Could not link against boost::chrono! Ubuntu 13.10 cannot use libboost1.54-all-dev! If libboost1.54-all-dev on Ubuntu 13.10, remove libboost1.54-all-dev and then: sudo apt-get install libboost1.53-all-dev")
    choke me
   #endif
   ],
