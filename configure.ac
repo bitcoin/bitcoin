@@ -71,10 +71,10 @@ AC_ARG_WITH([qt],
   [use_qt=auto])
 AC_DEFUN([BITCOIN_QT_FAIL],[
   if test "x$use_qt" = "xauto"; then
-    AC_MSG_WARN([bitcoin-qt frontend will not be built])
+    AC_MSG_WARN([$1; bitcoin-qt frontend will not be built])
     use_qt=no
   else
-    AC_MSG_ERROR([bitcoin-qt frontend will not be built with no other target to build, [ exit-status = ‘ $?/1 ’])
+    AC_MSG_ERROR([$1])
   fi
 ])
 AC_DEFUN([BITCOIN_QT_CHECK],[
@@ -425,7 +425,7 @@ AC_TRY_LINK([
   ],
   [boost_sleep=yes; BOOST_LIBS="$BOOST_LIBS $BOOST_CHRONO_LIB";
      AC_DEFINE(HAVE_WORKING_BOOST_SLEEP_FOR, 1, [Define this symbol if boost sleep_for works])],
-  [boost_sleep=no; boost_chrono=no])
+  [boost_sleep=no])
 LIBS="$TEMP_LIBS"
 fi
 
@@ -449,12 +449,14 @@ LIBS="$TEMP_LIBS"
 fi
 
 if test x$boost_sleep != xyes; then
-<<<<<<< HEAD
-  AC_MSG_ERROR([No working boost sleep implementation found ("Ubuntu 13.10 cannot use libboost1.54-all-dev! If libboost1.54-all-dev is installed on Ubuntu 13.10 remove libboost1.54-all-dev and install libboost1.53-all-dev")])
-=======
-  AC_MSG_ERROR ( no working boost sleep implementation found Ubuntu 13.10 cannot use libboost1.54-all-dev If libboost1.54-all-dev is installed on Ubuntu 13.10 remove libboost1.54-all-dev and install libboost1.53-all-dev, [ exit-status = ‘ $?/1 ’])
-  AC_MSG_FAILURE ( no working boost sleep implementation found Ubuntu 13.10 cannot use libboost1.54-all-dev If libboost1.54-all-dev is installed on Ubuntu 13.10 remove libboost1.54-all-dev and install libboost1.53-all-dev , [ exit-status ])
->>>>>>> fc48f9857eee71bc07b765c0c7efe806aa3051b6
+  AC_MSG_ERROR(no working boost sleep implementation found, [exit-status = ‘$?/1’])
+AC_TRY_LINK([
+  #if BOOST_VERSION >= 105300 && BOOST_VERSION <= 105400
+  AC_MSG_FAILURE(incompatiblity issue with ubuntu 13.10 cannot use libboost1.54-all-dev if libboost1.54-all-dev is installed remove libboost1.54-all-dev and install libboost1.53-all-dev, [exit-status]);
+  #else
+   choke me
+  #endif
+  ]
 fi
 
 if test x$use_pkgconfig = xyes; then
