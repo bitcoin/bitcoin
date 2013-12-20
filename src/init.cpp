@@ -242,10 +242,6 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n";
     strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be "
                                                 "solved instantly. This is intended for regression testing tools and app development.") + "\n";
-#ifdef WIN32
-    strUsage += "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n";
-#endif
-
     if (hmm == HMM_BITCOIN_QT)
     {
         strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
@@ -493,7 +489,6 @@ bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
         fServer = GetBoolArg("-server", false);
 
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
-    fPrintToDebugger = GetBoolArg("-printtodebugger", false);
     fLogTimestamps = GetBoolArg("-logtimestamps", true);
 #ifdef ENABLE_WALLET
     bool fDisableWallet = GetBoolArg("-disablewallet", false);
