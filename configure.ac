@@ -420,13 +420,12 @@ AC_TRY_LINK([
   #if BOOST_VERSION >= 105000 && (!defined(BOOST_HAS_NANOSLEEP) || BOOST_VERSION >= 105200)
       boost::this_thread::sleep_for(boost::chrono::milliseconds(0));
   #else
-   AC_MSG_ERROR(Could not link against boost chrono! Ubuntu 13.10 cannot use libboost1.54-all-dev! If libboost1.54-all-dev is installed on Ubuntu 13.10 remove libboost1.54-all-dev and install libboost1.53-all-dev);
    choke me
   #endif
   ],
   [boost_sleep=yes; BOOST_LIBS="$BOOST_LIBS $BOOST_CHRONO_LIB";
      AC_DEFINE(HAVE_WORKING_BOOST_SLEEP_FOR, 1, [Define this symbol if boost sleep_for works])],
-  [boost_sleep=no])
+  [boost_sleep=no; boost_chrono=no])
 LIBS="$TEMP_LIBS"
 fi
 
@@ -441,7 +440,6 @@ AC_TRY_LINK([
   #if BOOST_VERSION <= 105600
       boost::this_thread::sleep(boost::posix_time::milliseconds(0));
   #else
-   AC_MSG_ERROR(Could not link against boost chrono! Ubuntu 13.10 cannot use libboost1.54-all-dev! If libboost1.54-all-dev is installed on Ubuntu 13.10 remove libboost1.54-all-dev and install libboost1.53-all-dev);
    choke me
   #endif
   ],
@@ -451,7 +449,7 @@ LIBS="$TEMP_LIBS"
 fi
 
 if test x$boost_sleep != xyes; then
-  AC_MSG_ERROR(No working boost sleep implementation found)
+  AC_MSG_ERROR([No working boost sleep implementation found ("Ubuntu 13.10 cannot use libboost1.54-all-dev! If libboost1.54-all-dev is installed on Ubuntu 13.10 remove libboost1.54-all-dev and install libboost1.53-all-dev")])
 fi
 
 if test x$use_pkgconfig = xyes; then
