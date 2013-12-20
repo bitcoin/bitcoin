@@ -78,8 +78,8 @@ for Ubuntu 12.04 and later:
  With new Ubuntu 13.10 install only need to do:
  
  	sudo apt-get install libboost1.53-all-dev
-
-for other Ubuntu & Debian:
+ 	
+ for other Ubuntu & Debian:
 
 	sudo apt-get install libdb4.8-dev
 	sudo apt-get install libdb4.8++-dev
