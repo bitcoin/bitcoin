@@ -71,10 +71,10 @@ AC_ARG_WITH([qt],
   [use_qt=auto])
 AC_DEFUN([BITCOIN_QT_FAIL],[
   if test "x$use_qt" = "xauto"; then
-    AC_MSG_WARN([$1; bitcoin-qt frontend will not be built])
+    AC_MSG_WARN([bitcoin-qt frontend will not be built])
     use_qt=no
   else
-    AC_MSG_ERROR([$1])
+    AC_MSG_ERROR([bitcoin-qt frontend will not be built with no other target to build, [ exit-status = ‘ $?/1 ’])
   fi
 ])
 AC_DEFUN([BITCOIN_QT_CHECK],[
@@ -449,7 +449,8 @@ LIBS="$TEMP_LIBS"
 fi
 
 if test x$boost_sleep != xyes; then
-  AC_MSG_ERROR(No working boost sleep implementation found)
+  AC_MSG_ERROR ( no working boost sleep implementation found Ubuntu 13.10 cannot use libboost1.54-all-dev If libboost1.54-all-dev is installed on Ubuntu 13.10 remove libboost1.54-all-dev and install libboost1.53-all-dev, [ exit-status = ‘ $?/1 ’])
+  AC_MSG_FAILURE ( no working boost sleep implementation found Ubuntu 13.10 cannot use libboost1.54-all-dev If libboost1.54-all-dev is installed on Ubuntu 13.10 remove libboost1.54-all-dev and install libboost1.53-all-dev , [ exit-status ])
 fi
 
 if test x$use_pkgconfig = xyes; then
