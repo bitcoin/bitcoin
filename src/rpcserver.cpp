@@ -276,6 +276,7 @@ static const CRPCCommand vRPCCommands[] =
     { "walletlock",             &walletlock,             true,      false,      true },
     { "encryptwallet",          &encryptwallet,          false,     false,      true },
     { "getbalance",             &getbalance,             false,     false,      true },
+    { "getunconfirmedbalance",  &getunconfirmedbalance,  false,     false,      true },
     { "move",                   &movecmd,                false,     false,      true },
     { "sendfrom",               &sendfrom,               false,     false,      true },
     { "sendmany",               &sendmany,               false,     false,      true },
