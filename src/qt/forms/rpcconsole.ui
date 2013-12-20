@@ -172,14 +172,14 @@
         </widget>
        </item>
        <item row="7" column="0">
-        <widget class="QLabel" name="label_7">
+        <widget class="QLabel" name="label_8">
          <property name="text">
-          <string>Number of connections</string>
+          <string>Name</string>
          </property>
         </widget>
        </item>
        <item row="7" column="1">
-        <widget class="QLabel" name="numberOfConnections">
+        <widget class="QLabel" name="networkName">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -195,19 +195,25 @@
         </widget>
        </item>
        <item row="8" column="0">
-        <widget class="QLabel" name="label_8">
+        <widget class="QLabel" name="label_7">
          <property name="text">
-          <string>On testnet</string>
+          <string>Number of connections</string>
          </property>
         </widget>
        </item>
        <item row="8" column="1">
-        <widget class="QCheckBox" name="isTestNet">
-         <property name="enabled">
-          <bool>false</bool>
+        <widget class="QLabel" name="numberOfConnections">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
          </property>
          <property name="text">
-          <string/>
+          <string>N/A</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
