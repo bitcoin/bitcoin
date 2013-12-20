@@ -108,7 +108,7 @@ AC_DEFUN([AX_BOOST_CHRONO],
                 AC_MSG_ERROR(Could not find a version of the library!)
             fi
 			if test "x$link_chrono" = "xno"; then
-				AC_MSG_ERROR(Could not link against $ax_lib !)
+				AC_MSG_ERROR(Could not link against $ax_lib ! Ubuntu 13.10 cannot use libboost1.54-all-dev! If libboost1.54-all-dev on Ubuntu 13.10 remove libboost1.54-all-dev then: sudo apt-get install libboost1.53-all-dev)
 			fi
 		fi
 
