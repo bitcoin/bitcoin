@@ -19,6 +19,7 @@
 #include "walletdb.h"
 #endif
 
+#include <QNetworkProxy>
 #include <QSettings>
 #include <QStringList>
 
@@ -375,14 +376,25 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
     return successful;
 }
 
-bool OptionsModel::getProxySettings(QString& proxyIP, quint16 &proxyPort) const
+bool OptionsModel::getProxySettings(QNetworkProxy& proxy) const
 {
-    std::string proxy = GetArg("-proxy", "");
-    if (proxy.empty()) return false;
+    // Directly query current base proxy, because
+    // GUI settings can be overridden with -proxy.
+    proxyType curProxy;
+    if (GetProxy(NET_IPV4, curProxy)) {
+        if (curProxy.second == 5) {
+            proxy.setType(QNetworkProxy::Socks5Proxy);
+            proxy.setHostName(QString::fromStdString(curProxy.first.ToStringIP()));
+            proxy.setPort(curProxy.first.GetPort());
 
-    CService addrProxy(proxy);
-    proxyIP = QString(addrProxy.ToStringIP().c_str());
-    proxyPort = addrProxy.GetPort();
+            return true;
+        }
+        else
+            return false;
+    }
+    else
+        proxy.setType(QNetworkProxy::NoProxy);
+
     return true;
 }
 
