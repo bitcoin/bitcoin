@@ -9,6 +9,7 @@
 
 class AddressTableModel;
 class OptionsModel;
+class AddressFilterProxyModel;
 
 namespace Ui {
     class AddressBookPage;
@@ -18,7 +19,6 @@ QT_BEGIN_NAMESPACE
 class QItemSelection;
 class QMenu;
 class QModelIndex;
-class QSortFilterProxyModel;
 class QTableView;
 QT_END_NAMESPACE
 
@@ -54,10 +54,11 @@ private:
     Mode mode;
     Tabs tab;
     QString returnValue;
-    QSortFilterProxyModel *proxyModel;
+    AddressFilterProxyModel *proxyModel;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
     QString newAddressToSelect;
+    QAction *editAction;
 
 private slots:
     /** Delete currently selected address entry */
@@ -79,6 +80,8 @@ private slots:
     void contextualMenu(const QPoint &point);
     /** New entry/entries were added to address table */
     void selectNewAddress(const QModelIndex &parent, int begin, int /*end*/);
+    /** Set whether to show all addresses */
+    void setShowAll(bool enabled);
 
 signals:
     void sendCoins(QString addr);

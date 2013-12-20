@@ -20,6 +20,50 @@
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
 
+class AddressFilterProxyModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+
+public:
+    AddressFilterProxyModel(QObject *parent):
+        QSortFilterProxyModel(parent),
+        filterPurposeEnable(false)
+    {
+    }
+
+    /* Filter by type (receiving or sending) */
+    void setType(const QString &type)
+    {
+        filterType = type;
+        invalidateFilter();
+    }
+    /* Filter by address purpose */
+    void setPurposes(bool enable, const QSet<QString> &purposes)
+    {
+        filterPurposeEnable = enable;
+        filterPurposes = purposes;
+        invalidateFilter();
+    }
+protected:
+    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
+    {
+        QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
+        QString type = index.data(AddressTableModel::TypeRole).toString();
+        QString purpose = index.data(AddressTableModel::PurposeRole).toString();
+        if(type != filterType)
+            return false;
+        if(filterPurposeEnable && !filterPurposes.contains(purpose))
+            return false;
+        return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
+    }
+
+private:
+    QString filterType;
+    bool filterPurposeEnable;
+    QSet<QString> filterPurposes;
+};
+#include "addressbookpage.moc"
+
 AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddressBookPage),
@@ -49,6 +93,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
         ui->tableView->setFocus();
         ui->closeButton->setText(tr("C&hoose"));
         ui->exportButton->hide();
+        ui->showAll->hide();
         break;
     case ForEditing:
         switch(tab)
@@ -63,6 +108,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     case SendingTab:
         ui->labelExplanation->setText(tr("These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins."));
         ui->deleteAddress->setVisible(true);
+        ui->showAll->hide();
         break;
     case ReceivingTab:
         ui->labelExplanation->setText(tr("These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction."));
@@ -73,7 +119,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     // Context menu actions
     QAction *copyAddressAction = new QAction(tr("&Copy Address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy &Label"), this);
-    QAction *editAction = new QAction(tr("&Edit"), this);
+    editAction = new QAction(tr("&Edit"), this);
     deleteAction = new QAction(ui->deleteAddress->text(), this);
 
     // Build context menu
@@ -94,6 +140,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(accept()));
+    connect(ui->showAll, SIGNAL(toggled(bool)), this, SLOT(setShowAll(bool)));
 }
 
 AddressBookPage::~AddressBookPage()
@@ -107,24 +154,17 @@ void AddressBookPage::setModel(AddressTableModel *model)
     if(!model)
         return;
 
-    proxyModel = new QSortFilterProxyModel(this);
+    proxyModel = new AddressFilterProxyModel(this);
     proxyModel->setSourceModel(model);
     proxyModel->setDynamicSortFilter(true);
     proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     switch(tab)
     {
-    case ReceivingTab:
-        // Receive filter
-        proxyModel->setFilterRole(AddressTableModel::TypeRole);
-        proxyModel->setFilterFixedString(AddressTableModel::Receive);
-        break;
-    case SendingTab:
-        // Send filter
-        proxyModel->setFilterRole(AddressTableModel::TypeRole);
-        proxyModel->setFilterFixedString(AddressTableModel::Send);
-        break;
+    case ReceivingTab: proxyModel->setType(AddressTableModel::Receive); break;
+    case SendingTab: proxyModel->setType(AddressTableModel::Send); break;
     }
+    setShowAll(false);
     ui->tableView->setModel(proxyModel);
     ui->tableView->sortByColumn(0, Qt::AscendingOrder);
 
@@ -291,6 +331,8 @@ void AddressBookPage::contextualMenu(const QPoint &point)
     QModelIndex index = ui->tableView->indexAt(point);
     if(index.isValid())
     {
+        /* Base availability of edit option on editability of label */
+        editAction->setEnabled(index.sibling(index.row(), AddressTableModel::Label).flags() & Qt::ItemIsEditable);
         contextMenu->exec(QCursor::pos());
     }
 }
@@ -306,3 +348,13 @@ void AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int
         newAddressToSelect.clear();
     }
 }
+
+void AddressBookPage::setShowAll(bool enabled)
+{
+    QSet<QString> purposes;
+    /* Only show send and receive by default, not others such as refund, change, keypool, ... */
+    purposes.insert("receive");
+    purposes.insert("send");
+    proxyModel->setPurposes(!enabled, purposes);
+}
+

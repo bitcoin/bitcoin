@@ -105,7 +105,7 @@ QT_MOC_CPP = moc_aboutdialog.cpp moc_addressbookpage.cpp \
 
 BITCOIN_MM = macdockiconhandler.mm macnotificationhandler.mm
 
-QT_MOC = intro.moc overviewpage.moc rpcconsole.moc
+QT_MOC = intro.moc overviewpage.moc rpcconsole.moc addressbookpage.moc
 
 QT_QRC_CPP = qrc_bitcoin.cpp
 QT_QRC = bitcoin.qrc
