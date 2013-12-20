@@ -53,7 +53,6 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->proxyIp, SLOT(setEnabled(bool)));
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->proxyPort, SLOT(setEnabled(bool)));
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->socksVersion, SLOT(setEnabled(bool)));
-    connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning_Proxy()));
 
     ui->proxyIp->installEventFilter(this);
 
@@ -204,7 +203,7 @@ void OptionsDialog::on_resetButton_clicked()
         if(btnRetVal == QMessageBox::Cancel)
             return;
 
-        /* reset all options and close Bitcoin-Qt */
+        /* reset all options and close GUI */
         model->Reset();
         QApplication::quit();
     }
