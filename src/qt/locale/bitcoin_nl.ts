@@ -3346,7 +3346,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
 If the file does not exist, create it with owner-readable-only file permissions.</source>
         <translation>U dient rpcpassword=&lt;wachtwoord&gt; in te stellen in het configuratiebestand:
 %s
-Als het bestand niet bestaat, maak het dan aan, met een alleen-lezen-permissie.</translation>
+Als het bestand niet bestaat, maak het dan aan, met een alleen-lezen permissie.</translation>
     </message>
 </context>
 </TS>
