@@ -203,7 +203,7 @@ public:
     {
         // prefix operator
         int i = 0;
-        while (--pn[i] == -1 && i < WIDTH-1)
+        while (--pn[i] == (uint32_t)-1 && i < WIDTH-1)
             i++;
         return *this;
     }
@@ -370,9 +370,10 @@ public:
         return sizeof(pn);
     }
 
-    uint64_t Get64(int n=0) const
+    uint64_t GetLow64() const
     {
-        return pn[2*n] | (uint64_t)pn[2*n+1] << 32;
+        assert(WIDTH >= 2);
+        return pn[0] | (uint64_t)pn[1] << 32;
     }
 
 //    unsigned int GetSerializeSize(int nType=0, int nVersion=PROTOCOL_VERSION) const
