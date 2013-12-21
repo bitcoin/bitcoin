@@ -82,3 +82,9 @@ function CreateTxn1 {
 function SendRawTxn {
   $CLI $1 sendrawtransaction $2
 }
+
+# Use: GetBlocks <datadir>
+# returns number of blocks from getinfo
+function GetBlocks {
+    ExtractKey blocks "$( $CLI $1 getinfo )"
+}
