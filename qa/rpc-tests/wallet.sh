@@ -37,12 +37,27 @@ B3PID=$!
 
 trap "kill -9 $B1PID $B2PID $B3PID; rm -rf $D" EXIT
 
+# Wait until all three nodes are at the same block number
+function WaitBlocks {
+    while :
+    do
+        sleep 1
+        BLOCKS1=$( GetBlocks $B1ARGS )
+        BLOCKS2=$( GetBlocks $B2ARGS )
+        BLOCKS3=$( GetBlocks $B3ARGS )
+        if (( $BLOCKS1 == $BLOCKS2 && $BLOCKS2 == $BLOCKS3 ))
+        then
+            break
+        fi
+    done
+}
+
 # 1 block, 50 XBT each == 50 XBT
 $CLI $B1ARGS setgenerate true 1
-sleep 1  # sleep is necessary to let block broadcast
+WaitBlocks
 # 101 blocks, 1 mature == 50 XBT
 $CLI $B2ARGS setgenerate true 101
-sleep 1
+WaitBlocks
 
 CheckBalance $B1ARGS 50
 CheckBalance $B2ARGS 50
@@ -56,11 +71,11 @@ Send $B1ARGS $B3ARGS 10
 # Have B1 mine a new block, and mature it
 # to recover transaction fees
 $CLI $B1ARGS setgenerate true 1
-sleep 1
+WaitBlocks
 
 # Have B2 mine 100 blocks so B1's block is mature:
 $CLI $B2ARGS setgenerate true 100
-sleep 1
+WaitBlocks
 
 # B1 should end up with 100 XBT in block rewards plus fees,
 # minus the 21 XBT sent to B3:
@@ -77,7 +92,7 @@ RAWTXID2=$(SendRawTxn $B2ARGS $RAW2)
 
 # Have B2 mine a block to confirm transactions:
 $CLI $B2ARGS setgenerate true 1
-sleep 1 # allow time for block to be relayed
+WaitBlocks
 
 # Check balances after confirmation
 CheckBalance $B1ARGS 0
