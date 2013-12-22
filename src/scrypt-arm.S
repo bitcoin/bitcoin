@@ -7,6 +7,10 @@
  * any later version.  See COPYING for more details.
  */
 
+#if defined(__linux__) && defined(__ELF__)
+.section .note.GNU-stack,"",%progbits
+#endif
+
 #if defined(__arm__) && defined(__APCS_32__)
 
 #if defined(__ARM_ARCH_5E__) || defined(__ARM_ARCH_5TE__) || \
