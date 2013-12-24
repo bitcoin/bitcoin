@@ -68,6 +68,9 @@ for Ubuntu 12.04 and later:
 
  Ubuntu 12.04 and later have packages for libdb5.1-dev and libdb5.1++-dev,
  but using these will break binary wallet compatibility, and is not recommended.
+ To continue build with libdb5.1-dev and libdb5.1++-dev or above use:
+ 
+	 --with-incompatible-dbd
  
  Ubuntu 13.10 cannot use libboost1.54-all-dev! If you have libboost1.54-all-dev 
  installed on Ubuntu 13.10: 
