@@ -86,6 +86,8 @@ Value importprivkey(const Array& params, bool fHelp)
             + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
         );
 
+    EnsureWalletIsUnlocked();
+
     string strSecret = params[0].get_str();
     string strLabel = "";
     if (params.size() > 1)
