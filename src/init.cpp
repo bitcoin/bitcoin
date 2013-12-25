@@ -22,18 +22,6 @@
 #include <signal.h>
 #endif
 
-#if defined(USE_SSE2)
-#if !defined(MAC_OSX) && (defined(_M_IX86) || defined(__i386__) || defined(__i386))
-#ifdef _MSC_VER
-// MSVC 64bit is unable to use inline asm
-#include <intrin.h>
-#else
-// GCC Linux or i686-w64-mingw32
-#include <cpuid.h>
-#endif
-#endif
-#endif
-
 using namespace std;
 using namespace boost;
 
@@ -512,23 +500,6 @@ bool AppInit2(boost::thread_group& threadGroup)
     sigaction(SIGHUP, &sa_hup, NULL);
 #endif
 
-#if defined(USE_SSE2)
-    unsigned int cpuid_edx=0;
-#if !defined(MAC_OSX) && (defined(_M_IX86) || defined(__i386__) || defined(__i386))
-    // 32bit x86 Linux or Windows, detect cpuid features
-#if defined(_MSC_VER)
-    // MSVC
-    int x86cpuid[4];
-    __cpuid(x86cpuid, 1);
-    cpuid_edx = (unsigned int)buffer[3];
-#else
-    // Linux or i686-w64-mingw32 (gcc-4.6.3)
-    unsigned int eax, ebx, ecx;
-    __get_cpuid(1, &eax, &ebx, &ecx, &cpuid_edx);
-#endif
-#endif
-#endif
-
     // ********************************************************* Step 2: parameter interactions
 
     fTestNet = GetBoolArg("-testnet");
@@ -698,6 +669,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     int64 nStart;
 
+#if defined(USE_SSE2)
+    scrypt_detect_sse2();
+#endif
+
     // ********************************************************* Step 5: verify wallet database integrity
 
     if (!fDisableWallet) {
@@ -845,10 +820,6 @@ bool AppInit2(boost::thread_group& threadGroup)
         AddOneShot(strDest);
 
     // ********************************************************* Step 7: load block chain
-
-#if defined(USE_SSE2)
-    scrypt_detect_sse2(cpuid_edx);
-#endif
 
     fReindex = GetBoolArg("-reindex");
 
