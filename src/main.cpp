@@ -1799,11 +1799,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
             LogPrintf("- Connect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
         // Accepted into block, means remove from memory pool
-        BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        {
-            mempool.remove(tx, false, pindex->nHeight-1);
-            mempool.removeConflicts(tx);
-        }
+        mempool.removeForBlock(block.vtx, pindex->nHeight-1);
     }
 
     // Flush changes to global coin state

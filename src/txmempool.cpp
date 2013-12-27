@@ -12,6 +12,7 @@
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/member.hpp>
+#include <boost/circular_buffer.hpp>
 
 using namespace std;
 using namespace boost;
@@ -104,7 +105,8 @@ private:
     }
 
 public:
-    CMinerPolicyEstimator(size_t _nMin, size_t _nMax) : nMin(_nMin), nMax(_nMax)
+    CMinerPolicyEstimator(size_t _nMin, size_t _nMax) 
+        : nMin(_nMin), nMax(_nMax)
     {
     }
 
@@ -114,7 +116,7 @@ public:
             what.erase(what.begin());
     }
 
-    void add(const CTxMemPoolEntry& entry, unsigned int nBlockHeight)
+    void seenTxAtHeight(const CTxMemPoolEntry& entry, unsigned int nBlockHeight)
     {
         if (nBlockHeight == 0 || entry.GetTxSize() == 0) return;
         double dFeePerByte = entry.GetFee() / (double)entry.GetTxSize();
@@ -150,6 +152,7 @@ public:
     {
         return estimate(byFee, fraction, byFeeCache);
     }
+
     bool Write(CAutoFile& fileout)
     {
         return Write(fileout, byPriority) && Write(fileout, byFee);
@@ -159,6 +162,208 @@ public:
         return Read(filein, byPriority) && Read(filein, byFee);
     }
 };
+
+//
+// Another one, this time that measures the median fee/priority for transactions being
+// confirmed within N blocks.
+//
+
+class CBlockAverage
+{
+private:
+    boost::circular_buffer<double> feePerKilobyteSamples;
+    boost::circular_buffer<double> prioritySamples;
+
+    // Modifies the caller!
+    double percentile(std::vector<double>& buf, double p) const {
+        if (buf.size() == 0)
+            return -1;
+        int index = buf.size() * p;
+        // Technically, the median for a list of even numbers is the mean of the two
+        // middle elements. However we don't bother with that here.
+        std::nth_element(buf.begin(), buf.begin() + index, buf.end());
+        return buf[index];
+    }
+
+    std::vector<double> buf2vec(boost::circular_buffer<double> buf) const
+    {
+        std::vector<double> vec(buf.begin(), buf.end());
+        return vec;
+    }
+
+public:
+    CBlockAverage() : feePerKilobyteSamples(1000), prioritySamples(1000) {}
+
+    void RecordFee(double feePerKilobyte) {
+        feePerKilobyteSamples.push_back(feePerKilobyte);
+    }
+
+    void RecordPriority(double priority) {
+        prioritySamples.push_back(priority);
+    }
+
+    int FeeSamples() const { return feePerKilobyteSamples.size(); }
+    int PrioSamples() const { return prioritySamples.size(); }
+
+    double MedianFee() const
+    {
+        return PercentileFee(0.5);
+    }
+
+    double PercentileFee(double p) const 
+    { 
+        std::vector<double> vec = buf2vec(feePerKilobyteSamples);
+        if (false)
+        {
+            // Print out the raw samples with the median marked.
+            std::sort(vec.begin(), vec.end());
+            std::string tmp = "fee samples: ";
+            for (size_t i = 0; i < vec.size(); i++) {
+                if (i == vec.size() * p)
+                    tmp += "*";
+                tmp += boost::to_string(vec[i]);
+                tmp += " ";
+            }
+            tmp += "\n";
+            LogPrint("estimatefee2", tmp.c_str());
+        }
+        return percentile(vec, p);
+    }
+
+    double MedianPriority() const 
+    { 
+        std::vector<double> vec = buf2vec(prioritySamples);
+        return percentile(vec, 0.5);
+    }
+
+    void Write(CAutoFile& fileout) const
+    {
+        std::vector<double> vec = buf2vec(feePerKilobyteSamples);
+        fileout << vec;
+        vec = buf2vec(prioritySamples);
+        fileout << vec;
+    }
+
+    void Read(CAutoFile& filein) {
+        std::vector<double> vec;
+        filein >> vec;
+        feePerKilobyteSamples.assign(vec.begin(), vec.end());
+        vec.clear();
+        filein >> vec;
+        prioritySamples.assign(vec.begin(), vec.end());
+        if (feePerKilobyteSamples.size() + prioritySamples.size() > 0)
+            LogPrint("estimatefee2", "Read %d fee samples and %d priority samples\n", feePerKilobyteSamples.size(), prioritySamples.size());
+    }
+};
+
+class CMinerPolicyEstimator2
+{
+private:
+    // Records observed averages transactions that confirmed within one block, two blocks, 
+    // three blocks etc.
+    std::vector<CBlockAverage> history;
+
+    int nBestSeenHeight;
+
+    // nBlocksAgo is 0 based, i.e. transactions that confirmed in the highest seen block are
+    // nBlocksAgo == 0, transactions in the block before that are nBlocksAgo == 1 etc.
+    void seenTxConfirm(double dFeePerKilobyte, double dPriority, int nBlocksAgo)
+    {
+        // Last entry records "everything else".
+        nBlocksAgo = min(nBlocksAgo, (int) history.size() - 1);
+        assert(nBlocksAgo >= 0);
+        CBlockAverage& avg = history.at(nBlocksAgo);
+        // We assume that if there was a fee, that was responsible for the confirmation. We
+        // only bother tracking priority for free transactions, as otherwise it's hard to know
+        // what caused the tx to be confirmed.
+        LogPrint("estimatefee2", "Seen TX confirm: %g fee per kilobyte/%g priority, took %d blocks\n", dFeePerKilobyte, dPriority, nBlocksAgo);
+        if (dFeePerKilobyte > 0)
+            avg.RecordFee(dFeePerKilobyte);
+        else
+            avg.RecordPriority(dPriority);
+    }
+
+public:
+    CMinerPolicyEstimator2(int nEntries) : history(nEntries), nBestSeenHeight(0) {}
+
+    void seenBlock(const std::vector<CTxMemPoolEntry>& entries, int nBlockHeight)
+    {
+        if (nBlockHeight <= nBestSeenHeight)
+        {
+            // Ignore side chains and re-orgs for now, in the hope that they won't
+            // affect the estimate much.
+            return;   
+        }
+        nBestSeenHeight = nBlockHeight;
+        BOOST_FOREACH(const CTxMemPoolEntry& entry, entries)
+        {
+            // How many blocks did it take for miners to include this transaction?
+            int delta = nBlockHeight - entry.GetHeight();
+            if (delta <= 0)
+            {
+                // Re-org made us lose height, this should only happen if we happen
+                // to re-org on a difficulty transition point: very rare!
+                continue;
+            }
+            // Re-adjust to be fee-per-1000-bytes which is what the mining code uses. If we don't do
+            // this we can end up calculating median fees below the 0.8.x min fee.
+            double dFeePerKilobyte = entry.GetFee() / ((double)entry.GetTxSize()/1000.0);
+            double dPriority = entry.GetPriority(nBlockHeight);
+            seenTxConfirm(dFeePerKilobyte, dPriority, delta - 1);
+        }
+        for (size_t i = 0; i < history.size(); i++) {
+            if (history[i].FeeSamples() + history[i].PrioSamples() > 0)
+                LogPrint("estimatefee2", "estimates: for confirming within %d blocks based on %d/%d samples, fee=%g/%g (10%%) per kilobyte, prio=%g\n", 
+                    i, 
+                    history[i].FeeSamples(), history[i].PrioSamples(),
+                    history[i].MedianFee(), history[i].PercentileFee(0.1), history[i].MedianPriority());
+        }
+    }    
+
+    // Can return -1 if we don't have any data for that many blocks back. nBlocksToConfirm is 1 based.
+    double estimateFee(int nBlocksToConfirm) 
+    {
+        assert(nBlocksToConfirm >= 1);
+        nBlocksToConfirm--;
+        nBlocksToConfirm = min(nBlocksToConfirm, (int) history.size() - 1);
+        return history.at(nBlocksToConfirm).MedianFee();
+    }
+
+    // Can return -1 if we don't have any data for that many blocks back. nBlocksToConfirm is 1 based.
+    double estimatePriority(int nBlocksToConfirm) 
+    {
+        assert(nBlocksToConfirm >= 1);
+        nBlocksToConfirm--;
+        nBlocksToConfirm = min(nBlocksToConfirm, (int) history.size() - 1);
+        return history.at(nBlocksToConfirm).MedianPriority();
+    }
+
+    void Write(CAutoFile& fileout) const
+    {
+        fileout << nBestSeenHeight;
+        fileout << history.size();
+        BOOST_FOREACH(const CBlockAverage& entry, history)
+        {
+            entry.Write(fileout);
+        }
+    }
+
+    void Read(CAutoFile& filein)
+    {
+        filein >> nBestSeenHeight;
+        size_t numEntries;
+        filein >> numEntries;
+        history.clear();
+        for (size_t i = 0; i < numEntries; i++)
+        {
+            CBlockAverage entry;
+            entry.Read(filein);
+            history.push_back(entry);
+        }
+    }
+};
+
+
 
 CTxMemPoolEntry::CTxMemPoolEntry()
 {
@@ -197,11 +402,15 @@ CTxMemPool::CTxMemPool()
     // well in practice, giving reasonable estimates within a few
     // blocks and stable estimates over time.
     minerPolicyEstimator = new CMinerPolicyEstimator(100, 10000);
+    // We don't care about calculating the right fee to get confirmed in >1000 blocks,
+    // we just assume a free transaction will always confirm within that window.
+    minerPolicyEstimator2 = new CMinerPolicyEstimator2(1000);
 }
 
 CTxMemPool::~CTxMemPool()
 {
     delete minerPolicyEstimator;
+    delete minerPolicyEstimator2;
 }
 
 void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
@@ -262,7 +471,7 @@ bool CTxMemPool::remove(const CTransaction &tx, bool fRecursive, unsigned int nB
         }
         if (mapTx.count(hash))
         {
-            minerPolicyEstimator->add(mapTx[hash], nBlockHeight);
+            minerPolicyEstimator->seenTxAtHeight(mapTx[hash], nBlockHeight);
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
                 mapNextTx.erase(txin.prevout);
             mapTx.erase(hash);
@@ -285,6 +494,25 @@ bool CTxMemPool::removeConflicts(const CTransaction &tx)
         }
     }
     return true;
+}
+
+// Called when a block is connected. Removes from mempool and updates the miner fee estimator.
+void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight)
+{
+    LOCK(cs);
+    std::vector<CTxMemPoolEntry> entries;
+    BOOST_FOREACH(const CTransaction& tx, vtx)
+    {
+        uint256 hash = tx.GetHash();
+        if (mapTx.count(hash))
+            entries.push_back(mapTx[hash]);
+    }
+    minerPolicyEstimator2->seenBlock(entries, nBlockHeight);
+    BOOST_FOREACH(const CTransaction& tx, vtx)
+    {
+        remove(tx, false, nBlockHeight);
+        removeConflicts(tx);
+    }
 }
 
 void CTxMemPool::clear()
@@ -371,6 +599,18 @@ double CTxMemPool::estimateFee(double dFeeMedian, bool fUseHardCoded)
     return dFee;
 }
 
+double CTxMemPool::estimateFeeToConfirmWithin(int nBlocksToConfirm)
+{
+    LOCK(cs);
+    return minerPolicyEstimator2->estimateFee(nBlocksToConfirm);
+}
+
+double CTxMemPool::estimatePriorityToConfirmWithin(int nBlocksToConfirm)
+{
+    LOCK(cs);
+    return minerPolicyEstimator2->estimatePriority(nBlocksToConfirm);
+}
+
 void CTxMemPool::writeEntry(CAutoFile& file, const uint256& txid, std::set<uint256>& alreadyWritten) const
 {
     if (alreadyWritten.count(txid)) return;
@@ -420,6 +660,7 @@ bool CTxMemPool::Write() const
             writeEntry(fileout, it->first, alreadyWritten);
         }
         minerPolicyEstimator->Write(fileout);
+        minerPolicyEstimator2->Write(fileout);
     }
     catch (std::exception &e) {
         // We don't care much about errors; saving
@@ -464,6 +705,7 @@ bool CTxMemPool::Read(std::list<CTxMemPoolEntry>& vecEntries) const
             vecEntries.push_back(e);
         }
         minerPolicyEstimator->Read(filein);
+        minerPolicyEstimator2->Read(filein);
     }
     catch (std::exception &e) {
         // Not a big deal if mempool.dat gets corrupted:
