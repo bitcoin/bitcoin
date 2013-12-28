@@ -860,7 +860,7 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
         nBits = 4;
     }
     // for he.net, use /36 groups
-    else if (GetByte(15) == 0x20 && GetByte(14) == 0x11 && GetByte(13) == 0x04 && GetByte(12) == 0x70)
+    else if (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x04 && GetByte(12) == 0x70)
         nBits = 36;
     // for the rest of the IPv6 network, use /32 groups
     else

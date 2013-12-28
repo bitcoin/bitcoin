@@ -1,5 +1,5 @@
 diff --git a/src/makefile.osx b/src/makefile.osx
-index 8b7c559..8a0560c 100644
+index bef0ef3..07ef8d3 100644
 --- a/src/makefile.osx
 +++ b/src/makefile.osx
 @@ -7,17 +7,21 @@
@@ -28,7 +28,7 @@ index 8b7c559..8a0560c 100644
  
  USE_UPNP:=1
  USE_IPV6:=1
-@@ -31,13 +35,13 @@ ifdef STATIC
+@@ -31,14 +35,14 @@ ifdef STATIC
  TESTLIBS += \
   $(DEPSDIR)/lib/libboost_unit_test_framework-mt.a
  LIBS += \
@@ -38,6 +38,7 @@ index 8b7c559..8a0560c 100644
   $(DEPSDIR)/lib/libboost_filesystem-mt.a \
   $(DEPSDIR)/lib/libboost_program_options-mt.a \
   $(DEPSDIR)/lib/libboost_thread-mt.a \
+  $(DEPSDIR)/lib/libboost_chrono-mt.a \
 - $(DEPSDIR)/lib/libssl.a \
 - $(DEPSDIR)/lib/libcrypto.a \
 + $(OPENSSLDIR)/lib/libssl.a \

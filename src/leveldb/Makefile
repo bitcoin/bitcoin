@@ -31,6 +31,7 @@ TESTHARNESS = ./util/testharness.o $(TESTUTIL)
 
 TESTS = \
 	arena_test \
+	autocompact_test \
 	bloom_test \
 	c_test \
 	cache_test \
@@ -70,7 +71,7 @@ SHARED = $(SHARED1)
 else
 # Update db.h if you change these.
 SHARED_MAJOR = 1
-SHARED_MINOR = 12
+SHARED_MINOR = 13
 SHARED1 = libleveldb.$(PLATFORM_SHARED_EXT)
 SHARED2 = $(SHARED1).$(SHARED_MAJOR)
 SHARED3 = $(SHARED1).$(SHARED_MAJOR).$(SHARED_MINOR)
@@ -113,6 +114,9 @@ leveldbutil: db/leveldb_main.o $(LIBOBJECTS)
 
 arena_test: util/arena_test.o $(LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) util/arena_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
+
+autocompact_test: db/autocompact_test.o $(LIBOBJECTS) $(TESTHARNESS)
+	$(CXX) $(LDFLAGS) db/autocompact_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
 
 bloom_test: util/bloom_test.o $(LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) util/bloom_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)

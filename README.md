@@ -46,7 +46,7 @@ ppcoin/primecoin forum (http://ppcointalk.org).
 
 The patch will be accepted if there is broad consensus that it is a good thing.
 Developers should expect to rework and resubmit patches if the code doesn't
-match the project's coding conventions (see `doc/coding.txt`) or are
+match the project's coding conventions (see `doc/coding.md`) or are
 controversial.
 
 The `master` branch is regularly built and tested, but is not guaranteed to be

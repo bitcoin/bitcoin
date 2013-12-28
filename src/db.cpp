@@ -6,7 +6,6 @@
 #include "db.h"
 #include "util.h"
 #include "main.h"
-#include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -541,6 +540,8 @@ bool CAddrDB::Read(CAddrMan& addr)
     // use file size to size memory buffer
     int fileSize = GetFilesize(filein);
     int dataSize = fileSize - sizeof(uint256);
+    //Don't try to resize to a negative number if file is small
+    if ( dataSize < 0 ) dataSize = 0;
     vector<unsigned char> vchData;
     vchData.resize(dataSize);
     uint256 hashIn;

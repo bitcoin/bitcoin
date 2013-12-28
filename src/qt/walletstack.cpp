@@ -13,6 +13,7 @@
 
 WalletStack::WalletStack(QWidget *parent) :
     QStackedWidget(parent),
+    gui(0),
     clientModel(0),
     bOutOfSync(true)
 {
@@ -35,6 +36,10 @@ bool WalletStack::addWallet(const QString& name, WalletModel *walletModel)
     walletView->showOutOfSyncWarning(bOutOfSync);
     addWidget(walletView);
     mapWalletViews[name] = walletView;
+
+    // Ensure a walletView is able to show the main window
+	connect(walletView, SIGNAL(showNormalIfMinimized()), gui, SLOT(showNormalIfMinimized()));
+
     return true;
 }
 

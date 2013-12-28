@@ -92,6 +92,7 @@ static CCoinsViewDB *pcoinsdbview;
 
 void Shutdown()
 {
+    printf("Shutdown : In progress...\n");
     static CCriticalSection cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown) return;
@@ -117,6 +118,7 @@ void Shutdown()
     boost::filesystem::remove(GetPidFile());
     UnregisterWallet(pwalletMain);
     delete pwalletMain;
+    printf("Shutdown : done\n");
 }
 
 //
@@ -339,7 +341,7 @@ std::string HelpMessage()
         "  -testnet               " + _("Use the test network") + "\n" +
         "  -debug                 " + _("Output extra debugging information. Implies all other -debug* options") + "\n" +
         "  -debugnet              " + _("Output extra network debugging information") + "\n" +
-        "  -logtimestamps         " + _("Prepend debug output with timestamp") + "\n" +
+        "  -logtimestamps         " + _("Prepend debug output with timestamp (default: 1)") + "\n" +
         "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n" +
         "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n" +
 #ifdef WIN32
@@ -537,7 +539,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // Make sure enough file descriptors are available
     int nBind = std::max((int)mapArgs.count("-bind"), 1);
     nMaxConnections = GetArg("-maxconnections", 125);
-    nMaxConnections = std::max(std::min(nMaxConnections, FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS), 0);
+    nMaxConnections = std::max(std::min(nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS)), 0);
     int nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS);
     if (nFD < MIN_CORE_FILEDESCRIPTORS)
         return InitError(_("Not enough file descriptors available."));
@@ -575,7 +577,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
-    fLogTimestamps = GetBoolArg("-logtimestamps");
+    fLogTimestamps = GetBoolArg("-logtimestamps", true);
 
     if (mapArgs.count("-timeout"))
     {

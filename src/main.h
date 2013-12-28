@@ -28,10 +28,14 @@ struct CBlockIndexWorkComparator;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
-/** The maximum size for mined blocks */
+/** Obsolete: maximum size for mined blocks */
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
+/** Default for -blockmaxsize, maximum size for mined blocks **/
+static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 350000;
+/** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
+static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 30000;
 /** The maximum size for transactions we're willing to relay/mine */
-static const unsigned int MAX_STANDARD_TX_SIZE = MAX_BLOCK_SIZE_GEN/5;
+static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
 /** The maximum allowed number of signature check operations in a block (network rule) */
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 /** The maximum number of orphan transactions kept in memory */
@@ -568,7 +572,12 @@ public:
     /** Check for standard transaction types
         @return True if all outputs (scriptPubKeys) use only standard transaction forms
     */
-    bool IsStandard() const;
+    bool IsStandard(std::string& strReason) const;
+    bool IsStandard() const
+    {
+        std::string strReason;
+        return IsStandard(strReason);
+    }
 
     /** Check for standard transaction types
         @param[in] mapInputs	Map of previous transactions that have outputs we're spending
@@ -1919,13 +1928,15 @@ private:
         MODE_ERROR,   // run-time error
     } mode;
     int nDoS;
+    bool corruptionPossible;
 public:
-    CValidationState() : mode(MODE_VALID), nDoS(0) {}
-    bool DoS(int level, bool ret = false) {
+    CValidationState() : mode(MODE_VALID), nDoS(0), corruptionPossible(false) {}
+    bool DoS(int level, bool ret = false, bool corruptionIn = false) {
         if (mode == MODE_ERROR)
             return ret;
         nDoS += level;
         mode = MODE_INVALID;
+        corruptionPossible = corruptionIn;
         return ret;
     }
     bool Invalid(bool ret = false) {
@@ -1954,6 +1965,9 @@ public:
             return true;
         }
         return false;
+    }
+    bool CorruptionPossible() {
+        return corruptionPossible;
     }
 };
 

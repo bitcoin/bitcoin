@@ -188,6 +188,7 @@ void ParseString(const std::string& str, char c, std::vector<std::string>& v);
 std::string FormatMoney(int64 n, bool fPlus=false);
 bool ParseMoney(const std::string& str, int64& nRet);
 bool ParseMoney(const char* pszIn, int64& nRet);
+std::string SanitizeString(const std::string& str);
 std::vector<unsigned char> ParseHex(const char* psz);
 std::vector<unsigned char> ParseHex(const std::string& str);
 bool IsHex(const std::string& str);
@@ -212,7 +213,9 @@ boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 boost::filesystem::path GetConfigFile();
 boost::filesystem::path GetPidFile();
+#ifndef WIN32
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
+#endif
 void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
