@@ -552,23 +552,23 @@ void ParseEnvironment()
     while (environ[i] != NULL && strlen(environ[i]) > 0) {
 
         string str(environ[i]);
-	string strName;
+        string strName;
         string strValue;
 
         if (boost::algorithm::starts_with(str, "BITCOIN_")) {
 
-	    size_t und_index = str.find('_');
-	    size_t is_index = str.find('=');
+            size_t und_index = str.find('_');
+            size_t is_index = str.find('=');
 
-	    strName = "-" + str.substr(und_index+1, is_index-und_index-1);
-	    boost::to_lower(strName);
-	    strValue = str.substr(is_index+1);
+            strName = "-" + str.substr(und_index+1, is_index-und_index-1);
+            boost::to_lower(strName);
+            strValue = str.substr(is_index+1);
 
-	    if (envWhitelist.find(strName) != envWhitelist.end()) {
+            if (envWhitelist.find(strName) != envWhitelist.end()) {
                 mapArgs[strName] = strValue;
                 mapMultiArgs[strName].push_back(strValue);
-		//cout << "Setting '" << strName << "' to '" << strValue << "'" << endl;
-	    }
+                //cout << "Setting '" << strName << "' to '" << strValue << "'" << endl;
+            }
         }
 
         i++;
