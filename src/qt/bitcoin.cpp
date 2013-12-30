@@ -165,6 +165,8 @@ int main(int argc, char *argv[])
     bool fSelParFromCLFailed = false;
 
     // Command-line options take precedence:
+    ClearArgs();
+    ParseEnvironment();
     ParseParameters(argc, argv);
     // ... then bitcoin.conf:
     if (!boost::filesystem::is_directory(GetDataDir(false))) {

@@ -24,6 +24,7 @@ static void ResetArgs(const std::string& strArg)
     BOOST_FOREACH(std::string& s, vecArg)
         vecChar.push_back(s.c_str());
 
+    ClearArgs();
     ParseParameters(vecChar.size(), &vecChar[0]);
 }
 

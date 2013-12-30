@@ -533,10 +533,50 @@ static void InterpretNegativeSetting(string name, map<string, string>& mapSettin
     }
 }
 
-void ParseParameters(int argc, const char* const argv[])
+void ClearArgs()
 {
     mapArgs.clear();
     mapMultiArgs.clear();
+}
+
+// Can combine these into one with C++0x
+static const string envNames[] = {
+    "-datadir",
+    "-conf"
+};
+static const set<string> envWhitelist(envNames, envNames+sizeof(envNames)/sizeof(envNames[0]));
+
+void ParseEnvironment()
+{
+    int i = 0;
+    while (environ[i] != NULL && strlen(environ[i]) > 0) {
+
+        string str(environ[i]);
+	string strName;
+        string strValue;
+
+        if (boost::algorithm::starts_with(str, "BITCOIN_")) {
+
+	    size_t und_index = str.find('_');
+	    size_t is_index = str.find('=');
+
+	    strName = "-" + str.substr(und_index+1, is_index-und_index-1);
+	    boost::to_lower(strName);
+	    strValue = str.substr(is_index+1);
+
+	    if (envWhitelist.find(strName) != envWhitelist.end()) {
+                mapArgs[strName] = strValue;
+                mapMultiArgs[strName].push_back(strValue);
+		//cout << "Setting '" << strName << "' to '" << strValue << "'" << endl;
+	    }
+        }
+
+        i++;
+    }
+}
+
+void ParseParameters(int argc, const char* const argv[])
+{
     for (int i = 1; i < argc; i++)
     {
         std::string str(argv[i]);
