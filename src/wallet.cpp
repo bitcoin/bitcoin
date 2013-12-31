@@ -1627,19 +1627,6 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         // Set output amount
         if (txNew.vout.size() == 3)
         {
-            // Should we use keys from pool for the last coinstake output?
-            if (fStakeUsePooledKeys)
-            {
-                CReserveKey reservekey((CWallet*) &keystore);
-
-                // Replace current key with the new one
-                txNew.vout[2].SetNull();
-                txNew.vout[2].scriptPubKey << reservekey.GetReservedKey() << OP_CHECKSIG;
-
-                // Remove key from pool
-                reservekey.KeepKey();
-            }
-
             txNew.vout[1].nValue = ((nCredit - nMinFee) / 2 / CENT) * CENT;
             txNew.vout[2].nValue = nCredit - nMinFee - txNew.vout[1].nValue;
         }

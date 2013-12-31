@@ -2787,14 +2787,6 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation type="obsolete">Sync checkpoints policy (default: strict)</translation>
     </message>
     <message>
-        <source>Use pooled pubkeys for the last coinstake output (default: 0)</source>
-        <translation type="obsolete">Use pooled pubkeys for the last coinstake output (default: 0)</translation>
-    </message>
-    <message>
-        <source>Which key derivation method to use by default (default: sha512)</source>
-        <translation type="obsolete">Which key derivation method to use by default (default: sha512)</translation>
-    </message>
-    <message>
         <location line="+12"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Invalid -tor address: &apos;%s&apos;</translation>
