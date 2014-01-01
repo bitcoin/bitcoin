@@ -1451,16 +1451,8 @@ uint64 CWallet::GetStakeWeight(const CKeyStore& keystore, enum StakeWeightMode m
         // this change increases active coins participating the hash and helps
         // to secure the network when proof-of-stake difficulty is low
         //
-        if(fTestNet || (STAKEWEIGHT_SWITCH_TIME < nTime))
-        {
-            // New rule since 01 Jan 2014: Maximum TimeWeight is 90 days.
-            nTimeWeight = min((int64)GetTime() - nTime - nStakeMinAge, (int64)nStakeMaxAge);
-        }
-        else
-        {
-            // Current rule: Maximum TimeWeight is 60 days.
-            nTimeWeight = min((int64)GetTime() - nTime, (int64)nStakeMaxAge) - nStakeMinAge;
-        }
+        // Maximum TimeWeight is 90 days.
+        nTimeWeight = min((int64)GetTime() - nTime - nStakeMinAge, (int64)nStakeMaxAge);
 
         CBigNum bnCoinDayWeight = CBigNum(pcoin.first->vout[pcoin.second].nValue) * nTimeWeight / COIN / (24 * 60 * 60);
 

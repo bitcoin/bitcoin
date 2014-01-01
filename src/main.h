@@ -43,7 +43,7 @@ static const unsigned int STAKE_SWITCH_TIME = 1371686400; // Thu, 20 Jun 2013 00
 static const unsigned int TARGETS_SWITCH_TIME = 1374278400; // Sat, 20 Jul 2013 00:00:00 GMT
 static const unsigned int CHAINCHECKS_SWITCH_TIME = 1379635200; // Fri, 20 Sep 2013 00:00:00 GMT
 static const unsigned int STAKECURVE_SWITCH_TIME = 1382227200; // Sun, 20 Oct 2013 00:00:00 GMT
-static const unsigned int STAKEWEIGHT_SWITCH_TIME = 1388534400; // Wed, 01 Jan 2014 00:00:00 GMT
+static const unsigned int OUTPUT_SWITCH_TIME = 1398916800; // Thu, 01 May 2014 04:00:00 GMT
 
 
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }

@@ -476,8 +476,8 @@ bool CTransaction::CheckTransaction() const
         if (txout.IsEmpty() && !IsCoinBase() && !IsCoinStake())
             return DoS(100, error("CTransaction::CheckTransaction() : txout empty for user transaction"));
 
-        // NovaCoin: enforce minimum output amount for user transactions
-        if (!IsCoinBase() && !txout.IsEmpty() && txout.nValue < MIN_TXOUT_AMOUNT)
+        // NovaCoin: enforce minimum output amount for user transactions until 1 May 2014 04:00:00 GMT
+        if (!fTestNet && !IsCoinBase() && !txout.IsEmpty() && nTime < OUTPUT_SWITCH_TIME && txout.nValue < MIN_TXOUT_AMOUNT)
             return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));
 
         if (txout.nValue > MAX_MONEY)
@@ -1399,9 +1399,8 @@ unsigned int CTransaction::GetP2SHSigOpCount(const MapPrevTx& inputs) const
     return nSigOps;
 }
 
-bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
-                                 map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
-                                 const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, bool fStrictPayToScriptHash)
+bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
+    const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, bool fStrictPayToScriptHash)
 {
     // Take over previous transactions' spent pointers
     // fBlock is true when this is called from AcceptBlock when a new best-block is added to the blockchain
@@ -1502,8 +1501,9 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
             int64 nTxFee = nValueIn - GetValueOut();
             if (nTxFee < 0)
                 return DoS(100, error("ConnectInputs() : %s nTxFee < 0", GetHash().ToString().substr(0,10).c_str()));
-            // ppcoin: enforce transaction fees for every block
-            if (nTxFee < GetMinFee())
+
+            // enforce transaction fees for every block until 1 May 2014 04:00:00 GMT
+            if (!fTestNet && nTxFee < GetMinFee() && nTime < OUTPUT_SWITCH_TIME)
                 return fBlock? DoS(100, error("ConnectInputs() : %s not paying required fee=%s, paid=%s", GetHash().ToString().substr(0,10).c_str(), FormatMoney(GetMinFee()).c_str(), FormatMoney(nTxFee).c_str())) : false;
 
             nFees += nTxFee;
