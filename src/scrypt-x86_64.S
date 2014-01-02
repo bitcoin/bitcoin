@@ -22,11 +22,12 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
+
+#if defined(__x86_64__)
+
 #if defined(__linux__) && defined(__ELF__)
 	.section .note.GNU-stack,"",%progbits
 #endif
-
-#if defined(__x86_64__)
 
 #define scrypt_shuffle(src, so, dest, do) \
 	movl	so+60(src), %r8d; \
