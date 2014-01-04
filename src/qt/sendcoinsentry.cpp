@@ -155,11 +155,12 @@ SendCoinsRecipient SendCoinsEntry::getValue()
 QWidget *SendCoinsEntry::setupTabChain(QWidget *prev)
 {
     QWidget::setTabOrder(prev, ui->payTo);
-    QWidget::setTabOrder(ui->payTo, ui->addressBookButton);
+    QWidget::setTabOrder(ui->payTo, ui->addAsLabel);
+    QWidget *w = ui->payAmount->setupTabChain(ui->addAsLabel);
+    QWidget::setTabOrder(w, ui->addressBookButton);
     QWidget::setTabOrder(ui->addressBookButton, ui->pasteButton);
     QWidget::setTabOrder(ui->pasteButton, ui->deleteButton);
-    QWidget::setTabOrder(ui->deleteButton, ui->addAsLabel);
-    return ui->payAmount->setupTabChain(ui->addAsLabel);
+    return ui->deleteButton;
 }
 
 void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
