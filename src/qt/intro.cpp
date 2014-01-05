@@ -148,7 +148,7 @@ QString Intro::getDefaultDataDirectory()
 
 void Intro::pickDataDirectory(bool fIsTestnet)
 {
-    namespace fs = boost::filesystem;;
+    namespace fs = boost::filesystem;
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings
        or show a picking dialog */
