@@ -161,22 +161,23 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
-    bool fMissingDatadir = false;
     bool fSelParFromCLFailed = false;
-
+    /// 1. Parse command-line options. These take precedence over anything else.
     // Command-line options take precedence:
     ParseParameters(argc, argv);
-    // ... then bitcoin.conf:
-    if (!boost::filesystem::is_directory(GetDataDir(false))) {
-        fMissingDatadir = true;
-    } else {
-        ReadConfigFile(mapArgs, mapMultiArgs);
-    }
     // Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
     if (!SelectParamsFromCommandLine()) {
         fSelParFromCLFailed = true;
     }
+    // Parse URIs on command line -- this can affect TestNet() / RegTest() mode
+    if (!PaymentServer::ipcParseCommandLine(argc, argv))
+        exit(0);
 
+    bool isaTestNet = TestNet() || RegTest();
+
+    // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
+
+    /// 2. Basic Qt initialization (not dependent on parameters or configuration)
 #if QT_VERSION < 0x050000
     // Internal string conversion is all UTF-8
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
@@ -196,9 +197,9 @@ int main(int argc, char *argv[])
     // Register meta types used for QMetaObject::invokeMethod
     qRegisterMetaType< bool* >();
 
-    // Application identification (must be set before OptionsModel is initialized,
-    // as it is used to locate QSettings)
-    bool isaTestNet = TestNet() || RegTest();
+    /// 3. Application identification
+    // must be set before OptionsModel is initialized or translations are loaded,
+    // as it is used to locate QSettings
     QApplication::setOrganizationName("Bitcoin");
     QApplication::setOrganizationDomain("bitcoin.org");
     if (isaTestNet) // Separate UI settings for testnets
@@ -206,50 +207,10 @@ int main(int argc, char *argv[])
     else
         QApplication::setApplicationName("Bitcoin-Qt");
 
+    /// 4. Initialization of translations, so that intro dialog is in user's language
     // Now that QSettings are accessible, initialize translations
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
-
-    // Do this early as we don't want to bother initializing if we are just calling IPC
-    // ... but do it after creating app and setting up translations, so errors are
-    // translated properly.
-    if (PaymentServer::ipcSendCommandLine(argc, argv))
-        exit(0);
-
-    // Now that translations are initialized check for errors and allow a translatable error message
-    if (fMissingDatadir) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin"),
-                              QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
-        return 1;
-    }
-    else if (fSelParFromCLFailed) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
-        return 1;
-    }
-
-    // Start up the payment server early, too, so impatient users that click on
-    // bitcoin: links repeatedly have their payment requests routed to this process:
-    PaymentServer* paymentServer = new PaymentServer(&app);
-
-    // User language is set up: pick a data directory
-    Intro::pickDataDirectory(isaTestNet);
-
-    // Install global event filter that makes sure that long tooltips can be word-wrapped
-    app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
-    // Install qDebug() message handler to route to debug.log
-#if QT_VERSION < 0x050000
-    qInstallMsgHandler(DebugMessageHandler);
-#else
-    qInstallMessageHandler(DebugMessageHandler);
-#endif
-
-    // ... now GUI settings:
-    OptionsModel optionsModel;
-
-    // Subscribe to global signals from core
-    uiInterface.ThreadSafeMessageBox.connect(ThreadSafeMessageBox);
-    uiInterface.InitMessage.connect(InitMessage);
-    uiInterface.Translate.connect(Translate);
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
@@ -259,7 +220,56 @@ int main(int argc, char *argv[])
         help.showOrPrint();
         return 1;
     }
+    // Now that translations are initialized, check for earlier errors and show a translatable error message
+    if (fSelParFromCLFailed) {
+        QMessageBox::critical(0, QObject::tr("Bitcoin"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
+        return 1;
+    }
 
+    /// 5. Now that settings and translations are available, ask user for data directory
+    // User language is set up: pick a data directory
+    Intro::pickDataDirectory(isaTestNet);
+
+    /// 6. Determine availability of data directory and parse bitcoin.conf
+    if (!boost::filesystem::is_directory(GetDataDir(false)))
+    {
+        QMessageBox::critical(0, QObject::tr("Bitcoin"),
+                              QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
+        return 1;
+    }
+    ReadConfigFile(mapArgs, mapMultiArgs);
+
+    /// 7. URI IPC sending
+    // - Do this early as we don't want to bother initializing if we are just calling IPC
+    // - Do this *after* setting up the data directory, as the data directory hash is used in the name
+    // of the server.
+    // - Do this after creating app and setting up translations, so errors are
+    // translated properly.
+    if (PaymentServer::ipcSendCommandLine())
+        exit(0);
+
+    // Start up the payment server early, too, so impatient users that click on
+    // bitcoin: links repeatedly have their payment requests routed to this process:
+    PaymentServer* paymentServer = new PaymentServer(&app);
+
+    /// 8. Main GUI initialization
+    // Install global event filter that makes sure that long tooltips can be word-wrapped
+    app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
+    // Install qDebug() message handler to route to debug.log
+#if QT_VERSION < 0x050000
+    qInstallMsgHandler(DebugMessageHandler);
+#else
+    qInstallMessageHandler(DebugMessageHandler);
+#endif
+    // Load GUI settings from QSettings
+    OptionsModel optionsModel;
+
+    // Subscribe to global signals from core
+    uiInterface.ThreadSafeMessageBox.connect(ThreadSafeMessageBox);
+    uiInterface.InitMessage.connect(InitMessage);
+    uiInterface.Translate.connect(Translate);
+
+    // Show splash screen if appropriate
     SplashScreen splash(QPixmap(), 0, isaTestNet);
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
     {
