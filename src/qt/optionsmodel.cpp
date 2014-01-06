@@ -307,11 +307,6 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
     return successful;
 }
 
-qint64 OptionsModel::getTransactionFee()
-{
-    return (qint64) nTransactionFee;
-}
-
 bool OptionsModel::getProxySettings(QString& proxyIP, quint16 &proxyPort) const
 {
     std::string proxy = GetArg("-proxy", "");
