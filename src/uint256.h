@@ -19,9 +19,6 @@ inline signed char HexDigit(char c)
     return p_util_hexdigit[(unsigned char)c];
 }
 
-inline int Testuint256AdHoc(std::vector<std::string> vArg);
-
-
 /** Base class without constructors for uint256 and uint160.
  * This makes the compiler let you use it in a union.
  */
@@ -203,7 +200,7 @@ public:
     {
         // prefix operator
         int i = 0;
-        while (--pn[i] == -1 && i < WIDTH-1)
+        while (--pn[i] == (uint32_t)-1 && i < WIDTH-1)
             i++;
         return *this;
     }
@@ -370,9 +367,10 @@ public:
         return sizeof(pn);
     }
 
-    uint64_t Get64(int n=0) const
+    uint64_t GetLow64() const
     {
-        return pn[2*n] | (uint64_t)pn[2*n+1] << 32;
+        assert(WIDTH >= 2);
+        return pn[0] | (uint64_t)pn[1] << 32;
     }
 
 //    unsigned int GetSerializeSize(int nType=0, int nVersion=PROTOCOL_VERSION) const
@@ -398,7 +396,6 @@ public:
 
     friend class uint160;
     friend class uint256;
-    friend inline int Testuint256AdHoc(std::vector<std::string> vArg);
 };
 
 typedef base_uint<160> base_uint160;
@@ -525,9 +522,6 @@ inline const uint160 operator-(const uint160& a, const uint160& b)           { r
 
 
 
-
-
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // uint256
@@ -637,148 +631,5 @@ inline const uint256 operator&(const uint256& a, const uint256& b)      { return
 inline const uint256 operator|(const uint256& a, const uint256& b)      { return (base_uint256)a |  (base_uint256)b; }
 inline const uint256 operator+(const uint256& a, const uint256& b)      { return (base_uint256)a +  (base_uint256)b; }
 inline const uint256 operator-(const uint256& a, const uint256& b)      { return (base_uint256)a -  (base_uint256)b; }
-
-
-
-
-
-
-
-
-
-
-#ifdef TEST_UINT256
-
-inline int Testuint256AdHoc(std::vector<std::string> vArg)
-{
-    uint256 g(0);
-
-
-    LogPrintf("%s\n", g.ToString().c_str());
-    g--;  LogPrintf("g--\n");
-    LogPrintf("%s\n", g.ToString().c_str());
-    g--;  LogPrintf("g--\n");
-    LogPrintf("%s\n", g.ToString().c_str());
-    g++;  LogPrintf("g++\n");
-    LogPrintf("%s\n", g.ToString().c_str());
-    g++;  LogPrintf("g++\n");
-    LogPrintf("%s\n", g.ToString().c_str());
-    g++;  LogPrintf("g++\n");
-    LogPrintf("%s\n", g.ToString().c_str());
-    g++;  LogPrintf("g++\n");
-    LogPrintf("%s\n", g.ToString().c_str());
-
-
-
-    uint256 a(7);
-    LogPrintf("a=7\n");
-    LogPrintf("%s\n", a.ToString().c_str());
-
-    uint256 b;
-    LogPrintf("b undefined\n");
-    LogPrintf("%s\n", b.ToString().c_str());
-    int c = 3;
-
-    a = c;
-    a.pn[3] = 15;
-    LogPrintf("%s\n", a.ToString().c_str());
-    uint256 k(c);
-
-    a = 5;
-    a.pn[3] = 15;
-    LogPrintf("%s\n", a.ToString().c_str());
-    b = 1;
-    b <<= 52;
-
-    a |= b;
-
-    a ^= 0x500;
-
-    LogPrintf("a %s\n", a.ToString().c_str());
-
-    a = a | b | (uint256)0x1000;
-
-
-    LogPrintf("a %s\n", a.ToString().c_str());
-    LogPrintf("b %s\n", b.ToString().c_str());
-
-    a = 0xfffffffe;
-    a.pn[4] = 9;
-
-    LogPrintf("%s\n", a.ToString().c_str());
-    a++;
-    LogPrintf("%s\n", a.ToString().c_str());
-    a++;
-    LogPrintf("%s\n", a.ToString().c_str());
-    a++;
-    LogPrintf("%s\n", a.ToString().c_str());
-    a++;
-    LogPrintf("%s\n", a.ToString().c_str());
-
-    a--;
-    LogPrintf("%s\n", a.ToString().c_str());
-    a--;
-    LogPrintf("%s\n", a.ToString().c_str());
-    a--;
-    LogPrintf("%s\n", a.ToString().c_str());
-    uint256 d = a--;
-    LogPrintf("%s\n", d.ToString().c_str());
-    LogPrintf("%s\n", a.ToString().c_str());
-    a--;
-    LogPrintf("%s\n", a.ToString().c_str());
-    a--;
-    LogPrintf("%s\n", a.ToString().c_str());
-
-    d = a;
-
-    LogPrintf("%s\n", d.ToString().c_str());
-    for (int i = uint256::WIDTH-1; i >= 0; i--) LogPrintf("%08x", d.pn[i]); LogPrintf("\n");
-
-    uint256 neg = d;
-    neg = ~neg;
-    LogPrintf("%s\n", neg.ToString().c_str());
-
-
-    uint256 e = uint256("0xABCDEF123abcdef12345678909832180000011111111");
-    LogPrintf("\n");
-    LogPrintf("%s\n", e.ToString().c_str());
-
-
-    LogPrintf("\n");
-    uint256 x1 = uint256("0xABCDEF123abcdef12345678909832180000011111111");
-    uint256 x2;
-    LogPrintf("%s\n", x1.ToString().c_str());
-    for (int i = 0; i < 270; i += 4)
-    {
-        x2 = x1 << i;
-        LogPrintf("%s\n", x2.ToString().c_str());
-    }
-
-    LogPrintf("\n");
-    LogPrintf("%s\n", x1.ToString().c_str());
-    for (int i = 0; i < 270; i += 4)
-    {
-        x2 = x1;
-        x2 >>= i;
-        LogPrintf("%s\n", x2.ToString().c_str());
-    }
-
-
-    for (int i = 0; i < 100; i++)
-    {
-        uint256 k = (~uint256(0) >> i);
-        LogPrintf("%s\n", k.ToString().c_str());
-    }
-
-    for (int i = 0; i < 100; i++)
-    {
-        uint256 k = (~uint256(0) << i);
-        LogPrintf("%s\n", k.ToString().c_str());
-    }
-
-    return (0);
-}
-
-#endif
 
 #endif
