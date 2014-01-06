@@ -136,11 +136,11 @@ std::string LocksHeld()
     return result;
 }
 
-void AssertLockHeld(std::string strName)
+void AssertLockHeldInternal(const char *pszName, const char* pszFile, int nLine, void *cs)
 {
     BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)&i, *lockstack)
-        if (i.second.MutexName() == strName) return;
-    LogPrintf("Lock %s not held; locks held:\n%s", strName.c_str(), LocksHeld().c_str());
+        if (i.first == cs) return;
+    LogPrintf("Lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
     assert(0);
 }
 
