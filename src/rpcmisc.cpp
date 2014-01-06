@@ -324,3 +324,44 @@ Value verifymessage(const Array& params, bool fHelp)
     return (pubkey.GetID() == keyID);
 }
 
+Value extractpubkey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "extractpubkey \"signature\" \"message\"\n"
+            "\nExtracts the public key from a signature and message\n"
+            "\nArguments:\n"
+            "1. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
+            "2. \"message\"         (string, required) The message that was signed.\n"
+            "\nResult:\n"
+            "\"key\"                (string) The public key\n"
+            "\nExamples:\n"
+            "\nUnlock the wallet for 30 seconds\n"
+            + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
+            "\nCreate the signature\n"
+            + HelpExampleCli("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"my message\"") +
+            "\nVerify the signature\n"
+            + HelpExampleCli("extractpubkey", "\"signature\" \"my message\"") +
+            "\nAs json rpc\n"
+            + HelpExampleRpc("extractpubkey", "\"signature\", \"my message\"")
+        );
+
+    string strSign     = params[0].get_str();
+    string strMessage  = params[1].get_str();
+
+    bool fInvalid = false;
+    vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
+
+    if (fInvalid)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic;
+    ss << strMessage;
+
+    CPubKey pubkey;
+    if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
+        return false;
+
+    return HexStr(pubkey.begin(), pubkey.end());
+}
