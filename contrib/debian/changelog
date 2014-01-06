@@ -1,3 +1,10 @@
+bitcoin (0.8.6-precise1) precise; urgency=medium
+
+  * New upstream release.
+  * Make .desktop paths non-fixed (suggested by prusnak@github)
+
+ -- Matt Corallo <matt@bluematt.me>  Fri, 13 Dec 2013 13:31:00 -0400
+
 bitcoin (0.8.5-precise1) precise; urgency=medium
 
   * New upstream release.
