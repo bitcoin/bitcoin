@@ -229,6 +229,11 @@ public:
     // Compute priority, given priority of inputs and (optionally) tx size
     double ComputePriority(double dPriorityInputs, unsigned int nTxSize=0) const;
 
+    bool IsExpired(unsigned int nBlockTime) const
+    {
+        return (!vin.empty() && nBlockTime > 129600 && vin[0].nSequence < nBlockTime - 129600); // txs expire after 36h
+    }
+
     bool IsCoinBase() const
     {
         return (vin.size() == 1 && vin[0].prevout.IsNull());
@@ -345,7 +350,7 @@ class CBlockHeader
 {
 public:
     // header
-    static const int CURRENT_VERSION=2;
+    static const int CURRENT_VERSION=3;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;

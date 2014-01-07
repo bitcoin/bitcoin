@@ -30,7 +30,9 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
     else
     {
         int nDepth = wtx.GetDepthInMainChain();
-        if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+        if (wtx.fExpired)
+            return tr("%1/expired").arg(nDepth);
+        else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
             return tr("%1/offline").arg(nDepth);
         else if (nDepth < 6)
             return tr("%1/unconfirmed").arg(nDepth);
@@ -61,6 +63,18 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, int vout, int u
                 strHTML += tr(", has not been successfully broadcast yet");
             else if (nRequests > 0)
                 strHTML += tr(", broadcast through %n node(s)", "", nRequests);
+        }
+        if (!wtx.fExpired && wtx.GetDepthInMainChain() == 0 && !wtx.vin.empty())
+        {
+            int nExpiresInHours = (int)(((int64_t)wtx.vin[0].nSequence - GetTime() + 129600 + 3599) / 3600);
+
+            nExpiresInHours += 2; // the wallets shows expired about 2 hours late on purpose
+
+            if (nExpiresInHours < 1)
+                nExpiresInHours = 1;
+
+            if (nExpiresInHours <= 38)
+                strHTML += tr(", expires in about %n hour(s) if still unconfirmed by the network", "", nExpiresInHours);
         }
         strHTML += "<br>";
 

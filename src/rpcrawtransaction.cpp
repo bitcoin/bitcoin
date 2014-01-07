@@ -365,6 +365,17 @@ Value createrawtransaction(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
 
         CTxIn in(COutPoint(txid, nOutput));
+
+        // timestamp for transaction expiration
+        if (fTimestampTransactions && rawTx.vin.empty())
+        {
+            // check if system clock is more than 12 hours in the past
+            if ((unsigned int)GetAdjustedTime() + 43200 < ((chainActive.Tip()) ? chainActive.Tip()->nTime : 0))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Your computers date and time seem to be wrong. Please fix your system clock!");
+
+            in.nSequence = (unsigned int)GetAdjustedTime();
+        }
+
         rawTx.vin.push_back(in);
     }
 

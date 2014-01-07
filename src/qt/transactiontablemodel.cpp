@@ -320,6 +320,9 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
         case TransactionStatus::HaveConfirmations:
             status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
             break;
+        case TransactionStatus::Expired:
+            status = tr("Expired");
+            break;
         }
     }
 
@@ -486,6 +489,8 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
             };
         case TransactionStatus::HaveConfirmations:
             return QIcon(":/icons/transaction_confirmed");
+        case TransactionStatus::Expired:
+            return QIcon(":/icons/quit");
         }
     }
     return QColor(0,0,0);
@@ -585,6 +590,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         // Return True if transaction counts for balance
         return rec->status.confirmed && !(rec->type == TransactionRecord::Generated &&
                                           rec->status.maturity != TransactionStatus::Mature);
+    case ExpiredRole:
+        return (rec->status.status == TransactionStatus::Expired);
     case FormattedAmountRole:
         return formatTxAmount(rec, false);
     }

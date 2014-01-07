@@ -265,6 +265,8 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -loadblock=<file>      " + _("Imports blocks from external blk000??.dat file") + "\n";
     strUsage += "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + "\n";
     strUsage += "  -par=<n>               " + _("Set the number of script verification threads (up to 16, 0 = auto, <0 = leave that many cores free, default: 0)") + "\n";
+    strUsage += "  -txtimestamp           " + _("Timestamp transactions on creation. This lets created unconfirmed transactions expire after 36 hours, if they have not been confirmed by the network (default: 1)") + "\n";
+    strUsage += "  -expirenotify=<cmd>    " + _("Execute command when a wallet transaction expires (%s in cmd is replaced by TxID)") + "\n";
 #ifdef ENABLE_WALLET
     strUsage += "\n" + _("Wallet options:") + "\n";
     strUsage += "  -disablewallet         " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
@@ -531,6 +533,8 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (nTransactionFee > 0.25 * COIN)
             InitWarning(_("Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
     }
+
+    fTimestampTransactions = GetBoolArg("-txtimestamp", true);
 
     strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif
