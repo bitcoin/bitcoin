@@ -29,6 +29,7 @@
 #include <QSettings>
 #include <QTimer>
 #include <QTranslator>
+#include <QWeakPointer>
 
 #if QT_VERSION < 0x050000
 #include <QTextCodec>
@@ -50,7 +51,7 @@ Q_DECLARE_METATYPE(bool*)
 
 // Need a global reference for the notifications to find the GUI
 static BitcoinGUI *guiref;
-static SplashScreen *splashref;
+static QWeakPointer<SplashScreen> splashref;
 
 static bool ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
@@ -77,9 +78,9 @@ static bool ThreadSafeMessageBox(const std::string& message, const std::string& 
 
 static void InitMessage(const std::string &message)
 {
-    if(splashref)
+    if(!splashref.isNull())
     {
-        splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(55,55,55));
+        splashref.data()->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(55,55,55));
         qApp->processEvents();
     }
     LogPrintf("init message: %s\n", message.c_str());
@@ -260,12 +261,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    SplashScreen splash(QPixmap(), 0, isaTestNet);
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
     {
-        splash.show();
-        splash.setAutoFillBackground(true);
-        splashref = &splash;
+        SplashScreen *splash = new SplashScreen(QPixmap(), 0, isaTestNet);
+        splash->setAttribute(Qt::WA_DeleteOnClose);
+        splash->show();
+        splashref = splash;
     }
 
     app.processEvents();
@@ -300,8 +301,8 @@ int main(int argc, char *argv[])
                 PaymentServer::LoadRootCAs();
                 paymentServer->setOptionsModel(&optionsModel);
 
-                if (splashref)
-                    splash.finish(&window);
+                if (!splashref.isNull())
+                    splashref.data()->finish(&window);
 
                 ClientModel clientModel(&optionsModel);
                 window.setClientModel(&clientModel);
