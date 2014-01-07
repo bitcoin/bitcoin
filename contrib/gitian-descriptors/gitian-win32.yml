@@ -17,7 +17,7 @@ remotes:
   "dir": "litecoin"
 files:
 - "qt-win32-4.8.3-gitian-r4.zip"
-- "boost-win32-1.54.0-gitian-r6.zip"
+- "boost-win32-1.55.0-gitian-r6.zip"
 - "bitcoin-deps-win32-gitian-r9.zip"
 script: |
   #
@@ -27,7 +27,7 @@ script: |
   mkdir -p $STAGING
   cd $STAGING
   unzip ../build/qt-win32-4.8.3-gitian-r4.zip
-  unzip ../build/boost-win32-1.54.0-gitian-r6.zip
+  unzip ../build/boost-win32-1.55.0-gitian-r6.zip
   unzip ../build/bitcoin-deps-win32-gitian-r9.zip
   cd $HOME/build/
   #
