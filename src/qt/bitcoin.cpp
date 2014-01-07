@@ -32,6 +32,8 @@
 #include <QTranslator>
 #include <QWeakPointer>
 #include <QThread>
+#include <QVBoxLayout>
+#include <QLabel>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -347,17 +349,34 @@ void BitcoinApplication::requestShutdown()
     window->setClientModel(0);
     window->removeAllWallets();
     guiref.clear();
+
     delete walletModel;
+
+    // Show a simple window indicating shutdown status
+    QWidget *shutdownWindow = new QWidget();
+    QVBoxLayout *layout = new QVBoxLayout();
+    layout->addWidget(new QLabel(
+        tr("Bitcoin Core is shutting down...\n") +
+        tr("Do not shut down the computer until this window disappears.")));
+    shutdownWindow->setLayout(layout);
+
+    // Center shutdown window at where main window was
+    const QPoint global = window->mapToGlobal(window->rect().center());
+    shutdownWindow->move(global.x() - shutdownWindow->width() / 2, global.y() - shutdownWindow->height() / 2);
+    shutdownWindow->show();
+
+    // Request shutdown from core thread
     emit requestedShutdown();
 }
 
 void BitcoinApplication::initializeResult(int retval)
 {
     LogPrintf("Initialization result: %i\n", retval);
-    /// Set exit result: 0 if successful, 1 if failure
+    // Set exit result: 0 if successful, 1 if failure
     returnValue = retval ? 0 : 1;
     if(retval)
     {
+        // Miscellaneous initialization after core is initialized
         optionsModel->Upgrade(); // Must be done after AppInit2
 
         PaymentServer::LoadRootCAs();
