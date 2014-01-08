@@ -30,7 +30,6 @@
 #include <QSettings>
 #include <QTimer>
 #include <QTranslator>
-#include <QWeakPointer>
 #include <QThread>
 #include <QVBoxLayout>
 #include <QLabel>
@@ -56,43 +55,8 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 // Declare meta types used for QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(bool*)
 
-// Need a global reference for the notifications to find the GUI and splash screen
-static QWeakPointer<BitcoinGUI> guiref;
-static QWeakPointer<SplashScreen> splashref;
-
-static bool ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
-{
-    if(!guiref.isNull())
-    {
-        bool modal = (style & CClientUIInterface::MODAL);
-        bool ret = false;
-        // In case of modal message, use blocking connection to wait for user to click a button
-        QMetaObject::invokeMethod(guiref.data(), "message",
-                                   modal ? GUIUtil::blockingGUIThreadConnection() : Qt::QueuedConnection,
-                                   Q_ARG(QString, QString::fromStdString(caption)),
-                                   Q_ARG(QString, QString::fromStdString(message)),
-                                   Q_ARG(unsigned int, style),
-                                   Q_ARG(bool*, &ret));
-        return ret;
-    }
-    else
-    {
-        LogPrintf("%s: %s\n", caption.c_str(), message.c_str());
-        fprintf(stderr, "%s: %s\n", caption.c_str(), message.c_str());
-        return false;
-    }
-}
-
 static void InitMessage(const std::string &message)
 {
-    if(!splashref.isNull())
-    {
-        QMetaObject::invokeMethod(splashref.data(), "showMessage",
-            Qt::QueuedConnection,
-            Q_ARG(QString, QString::fromStdString(message)),
-            Q_ARG(int, Qt::AlignBottom|Qt::AlignHCenter),
-            Q_ARG(QColor, QColor(55,55,55)));
-    }
     LogPrintf("init message: %s\n", message.c_str());
 }
 
@@ -199,6 +163,8 @@ public:
     void createOptionsModel();
     /// Create main window
     void createWindow(bool isaTestNet);
+    /// Create splash screen
+    void createSplashScreen(bool isaTestNet);
 
     /// Request core initialization
     void requestInitialize();
@@ -218,6 +184,7 @@ signals:
     void requestedInitialize();
     void requestedShutdown();
     void stopThread();
+    void splashFinished(QWidget *window);
 
 private:
     QThread *coreThread;
@@ -295,6 +262,10 @@ BitcoinApplication::~BitcoinApplication()
     emit stopThread();
     coreThread->wait();
     LogPrintf("Stopped thread\n");
+
+    delete window;
+    delete paymentServer;
+    delete optionsModel;
 }
 
 void BitcoinApplication::createPaymentServer()
@@ -310,11 +281,18 @@ void BitcoinApplication::createOptionsModel()
 void BitcoinApplication::createWindow(bool isaTestNet)
 {
     window = new BitcoinGUI(isaTestNet, 0);
-    guiref = window;
 
     QTimer* pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
     pollShutdownTimer->start(200);
+}
+
+void BitcoinApplication::createSplashScreen(bool isaTestNet)
+{
+    SplashScreen *splash = new SplashScreen(QPixmap(), 0, isaTestNet);
+    splash->setAttribute(Qt::WA_DeleteOnClose);
+    splash->show();
+    connect(this, SIGNAL(splashFinished(QWidget*)), splash, SLOT(slotFinish(QWidget*)));
 }
 
 void BitcoinApplication::startThread()
@@ -348,9 +326,11 @@ void BitcoinApplication::requestShutdown()
     window->hide();
     window->setClientModel(0);
     window->removeAllWallets();
-    guiref.clear();
 
     delete walletModel;
+    walletModel = 0;
+    delete clientModel;
+    clientModel = 0;
 
     // Show a simple window indicating shutdown status
     QWidget *shutdownWindow = new QWidget();
@@ -382,8 +362,7 @@ void BitcoinApplication::initializeResult(int retval)
         PaymentServer::LoadRootCAs();
         paymentServer->setOptionsModel(optionsModel);
 
-        if (!splashref.isNull())
-            splashref.data()->finish(window);
+        emit splashFinished(window);
 
         clientModel = new ClientModel(optionsModel);
         window->setClientModel(clientModel);
@@ -489,6 +468,7 @@ int main(int argc, char *argv[])
     // Now that QSettings are accessible, initialize translations
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
+    uiInterface.Translate.connect(Translate);
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
@@ -543,9 +523,7 @@ int main(int argc, char *argv[])
     app.createOptionsModel();
 
     // Subscribe to global signals from core
-    uiInterface.ThreadSafeMessageBox.connect(ThreadSafeMessageBox);
     uiInterface.InitMessage.connect(InitMessage);
-    uiInterface.Translate.connect(Translate);
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
@@ -557,12 +535,7 @@ int main(int argc, char *argv[])
     }
 
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
-    {
-        SplashScreen *splash = new SplashScreen(QPixmap(), 0, isaTestNet);
-        splash->setAttribute(Qt::WA_DeleteOnClose);
-        splash->show();
-        splashref = splash;
-    }
+        app.createSplashScreen(isaTestNet);
 
     try
     {
