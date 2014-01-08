@@ -11,7 +11,8 @@ SUBDIRS = $(BUILD_TEST_QT)
 DIST_SUBDIRS = test
 
 # bitcoin qt core #
-QT_TS = locale/bitcoin_ach.ts \
+QT_TS = \
+  locale/bitcoin_ach.ts \
   locale/bitcoin_af_ZA.ts \
   locale/bitcoin_ar.ts \
   locale/bitcoin_be_BY.ts \
@@ -22,12 +23,13 @@ QT_TS = locale/bitcoin_ach.ts \
   locale/bitcoin_cs.ts \
   locale/bitcoin_cy.ts \
   locale/bitcoin_da.ts \
-  locale/bitcoin_de.ts \
   locale/bitcoin_de_AT.ts \
+  locale/bitcoin_de.ts \
   locale/bitcoin_el_GR.ts \
   locale/bitcoin_en.ts \
   locale/bitcoin_eo.ts \
   locale/bitcoin_es_CL.ts \
+  locale/bitcoin_es_MX.ts \
   locale/bitcoin_es.ts \
   locale/bitcoin_et.ts \
   locale/bitcoin_eu_ES.ts \
@@ -53,6 +55,7 @@ QT_TS = locale/bitcoin_ach.ts \
   locale/bitcoin_ms_MY.ts \
   locale/bitcoin_nb.ts \
   locale/bitcoin_nl.ts \
+  locale/bitcoin_pam.ts \
   locale/bitcoin_pl.ts \
   locale/bitcoin_pt_BR.ts \
   locale/bitcoin_pt_PT.ts \
