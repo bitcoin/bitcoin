@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="he" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="pam" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -20,21 +20,19 @@ Distributed under the MIT/X11 software license, see the accompanying file COPYIN
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>
-זוהי תוכנה ניסיונית.
-
-מופצת תחת רישיון התוכנה MIT/X11, ראה את הקובץ המצורף COPYING או http://www.opensource.org/licenses/mit-license.php.
-
-המוצר הזה כולל תוכנה שפותחה ע&quot;י פרויקט OpenSSL לשימוש בתיבת הכלים OpenSSL (http://www.openssl.org/) ותוכנה קריפטוגרפית שנכתבה ע&quot;י אריק יאנג (eay@cryptsoft.com) ותוכנת UPnP שנכתבה ע&quot;י תומס ברנרד.</translation>
+Metung ya ining experimental software.
+Me-distribute ya lalam na ning lisensya na ning MIT/X11 software, lawan ye ing makayabeng file COPYING o http://www.opensource.org/licenses/mit-license.php.
+Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project para gamit king OpenSSL Toolkit(http://www.openssl.org/) at cryptographic software a sinulat ng Eric Young (eay@cryptsoft.com) at UPnp software a sinulat ng Thomas Bernard.</translation>
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="+19"/>
         <source>Copyright</source>
-        <translation>זכויות יוצרים</translation>
+        <translation>Karapatan ning Pamangopya</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The Bitcoin developers</source>
-        <translation>מפתחי ביטקוין</translation>
+        <translation>Reng ginawa keng Bitcoins</translation>
     </message>
 </context>
 <context>
@@ -42,22 +40,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="+30"/>
         <source>Double-click to edit address or label</source>
-        <translation>לחץ לחיצה כפולה לערוך כתובת או תוית</translation>
+        <translation>Pindutan meng makatidduang besis ban ayalilan me ing address o label</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Create a new address</source>
-        <translation>יצירת כתובת חדשה</translation>
+        <translation>Maglalang kang bayung address</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;New</source>
-        <translation>&amp;חדש</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+11"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>העתק את הכתובת המסומנת ללוח העריכה</translation>
+        <translation>Kopyan me ing salukuyan at makipiling address keng system clipboard</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -72,32 +70,32 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="+74"/>
         <source>&amp;Copy Address</source>
-        <translation>העתק כתובת</translation>
+        <translation>&amp;Kopyan ing address</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="-41"/>
         <source>Delete the currently selected address from the list</source>
-        <translation>מחק את הכתובת שנבחרה מהרשימה</translation>
+        <translation>Ilako ya ing kasalungsungan makapiling address keng listahan</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>יצוא הנתונים בטאב הנוכחי לקובץ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation>&amp;ייצא</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-27"/>
         <source>&amp;Delete</source>
-        <translation>&amp;מחק</translation>
+        <translation>&amp;Ilako</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="-30"/>
         <source>Choose the address to send coins to</source>
-        <translation>בחר את הכתובת אליה תרצה לשלוח את המטבעות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -112,17 +110,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+6"/>
         <source>Sending addresses</source>
-        <translation>כתובת לשליחה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Receiving addresses</source>
-        <translation>קבל כתובות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+7"/>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>אלה כתובת הביטקוין שלך עבור שליחת תשלומים. תמיד בדוק את מספר ואת כתובות מקבלי התשלומים לפני שליחת מטבעות.</translation>
+        <translation>Reni reng kekang Bitcoin address king pamagpadalang kabayaran. Lawan mulang masalese reng alaga ampo ing address na ning tumanggap bayu ka magpadalang barya.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -132,12 +130,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+7"/>
         <source>Copy &amp;Label</source>
-        <translation>העתק תוית</translation>
+        <translation>Kopyan ing &amp;Label</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>&amp;Edit</source>
-        <translation>עריכה</translation>
+        <translation>&amp;Alilan</translation>
     </message>
     <message>
         <location line="+194"/>
@@ -147,17 +145,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>קובץ מופרד בפסיקים (*.csv)</translation>
+        <translation>Comma separated file (*.csv)</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Error exporting</source>
-        <translation>שגיאה ביצוא</translation>
+        <translation>Atin mali king pamaglipat</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>לא מסוגל לכתוב לקובץ %1.</translation>
+        <translation>E ya misulat king file %1.</translation>
     </message>
 </context>
 <context>
@@ -165,17 +163,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="+168"/>
         <source>Label</source>
-        <translation>תוית</translation>
+        <translation>Label</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation>כתובת</translation>
+        <translation>Address</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>(no label)</source>
-        <translation>(ללא תוית)</translation>
+        <translation>(alang label)</translation>
     </message>
 </context>
 <context>
@@ -183,99 +181,99 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="+26"/>
         <source>Passphrase Dialog</source>
-        <translation>שיח סיסמא</translation>
+        <translation>Dialogo ning Passphrase</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Enter passphrase</source>
-        <translation>הכנס סיסמא</translation>
+        <translation>Mamalub kang passphrase</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>New passphrase</source>
-        <translation>סיסמה חדשה</translation>
+        <translation>Panibayung passphrase</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation>חזור על הסיסמה החדשה</translation>
+        <translation>Pasibayuan ya ing bayung passphrase</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="+40"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>הכנס את הסיסמה החדשה לארנק. &lt;br/&gt;אנא השתמש בסיסמה המכילה &lt;b&gt;10 תוים אקראיים או יותר&lt;/b&gt;, או &lt;b&gt;שמונה מילים או יותר&lt;/b&gt;.</translation>
+        <translation>Palub ye ing bayung passphrase king wallet.&lt;br/&gt;Maliari pu sanang gumamit kayung passphrase a maki&lt;/b&gt; 10 or dakal pang miyayaliuang characters&lt;/b&gt;, o ualu o dakal pang salita&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Encrypt wallet</source>
-        <translation>הצפן ארנק</translation>
+        <translation>I-encrypt ye ing wallet</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>הפעולה הזו דורשת את סיסמת הארנק שלך בשביל לפתוח את הארנק.</translation>
+        <translation>Ing operasyun a ini kailangan ne ing kekayung wallet passphrase, ban a-unlock ya ing wallet</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Unlock wallet</source>
-        <translation>פתיחת ארנק</translation>
+        <translation>Unlock ya ing wallet</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>הפעולה הזו דורשת את סיסמת הארנק שלך בשביל לפענח את הארנק.</translation>
+        <translation>Ing operasyun a ini kailangan ne ing kekang wallet passphrase ban a-decrypt ne ing wallet.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Decrypt wallet</source>
-        <translation>פענוח ארנק</translation>
+        <translation>I-decrypt ya ing wallet</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Change passphrase</source>
-        <translation>שינוי סיסמה</translation>
+        <translation>Alilan ya ing passphrase</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>הכנס את הסיסמות הישנה והחדשה לארנק.</translation>
+        <translation>Palub ye ing luma ampo ing bayung passphrase king wallet.</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation>אשר הצפנת ארנק</translation>
+        <translation>Kumpirman ya ing wallet encryption</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>אזהרה: אם אתה מצפין את הארנק ומאבד את הסיסמא, אתה &lt;b&gt;תאבד את כל הביטקוינים שלך&lt;/b&gt;!</translation>
+        <translation>Kapabaluan: Istung in-encrypt me ing kekang wallet at meala ya ing passphrase na, ma-&lt;b&gt;ALA NO NGAN RING KEKANG BITCOINS&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>האם אתה בטוח שברצונך להצפין את הארנק?</translation>
+        <translation>Siguradu na kang buri meng i-encrypt ing kekang wallet?</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>חשוב! כל גיבוי קודם שעשית לארנק שלך יש להחליף עם קובץ הארנק המוצפן שזה עתה נוצר. מסיבות אבטחה, גיבויים קודמים של קובץ הארנק הלא-מוצפן יהפכו לחסרי שימוש ברגע שתתחיל להשתמש בארנק החדש המוצפן.</translation>
+        <translation>Mayalaga: Reng milabas a backups a gewa mu gamit ing wallet file mu dapat lamung mialilan bayung gawang encrypted wallet file. Para keng seguridad , reng milabas a backups dareng ali maka encrypt a wallet file ma-ala nala istung inumpisan mu nalang gamitan reng bayu, at me encrypt a wallet. </translation>
     </message>
     <message>
         <location line="+100"/>
         <location line="+24"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>זהירות: מקש Caps Lock מופעל!</translation>
+        <translation>Kapabaluan: Makabuklat ya ing Caps Lock key!</translation>
     </message>
     <message>
         <location line="-130"/>
         <location line="+58"/>
         <source>Wallet encrypted</source>
-        <translation>הארנק הוצפן</translation>
+        <translation>Me-encrypt ne ing wallet</translation>
     </message>
     <message>
         <location line="-56"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>ביטקוין ייסגר עכשיו כדי להשלים את תהליך ההצפנה. זכור שהצפנת הארנק שלך אינו יכול להגן באופן מלא על הביטקוינים שלך מתוכנות זדוניות המושתלות על המחשב.</translation>
+        <translation>Ing Bitcoin ngeni magsara ya ban ayari ing proseso ning pamag-encrypt. Tandanan yu king pamag-encrypt wallet, ali nala aprotektan king kabuuan reng bitcoins yu kareng malware a kasalunsungan atiu kareng computer yu.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -283,40 +281,40 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+42"/>
         <location line="+6"/>
         <source>Wallet encryption failed</source>
-        <translation>הצפנת הארנק נכשלה</translation>
+        <translation>Memali ya ing pamag-encrypt king wallet </translation>
     </message>
     <message>
         <location line="-54"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>הצפנת הארנק נכשלה עקב שגיאה פנימית. הארנק שלך לא הוצפן.</translation>
+        <translation>Memali ya ing encryption uli na ning ausan dang internal error. E ya me-encrypt ing wallet yu.</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+48"/>
         <source>The supplied passphrases do not match.</source>
-        <translation>הסיסמות שניתנו אינן תואמות.</translation>
+        <translation>E la mitutugma ring mibieng passphrase</translation>
     </message>
     <message>
         <location line="-37"/>
         <source>Wallet unlock failed</source>
-        <translation>פתיחת הארנק נכשלה</translation>
+        <translation>Memali ya ing pamag-unlock king wallet </translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+11"/>
         <location line="+19"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>הסיסמה שהוכנסה לפענוח הארנק שגויה.</translation>
+        <translation>E ya istu ing passphrase a pepalub da para king wallet decryption</translation>
     </message>
     <message>
         <location line="-20"/>
         <source>Wallet decryption failed</source>
-        <translation>פענוח הארנק נכשל</translation>
+        <translation>Me-mali ya ing pamag-decrypt king wallet</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>סיסמת הארנק שונתה בהצלחה.</translation>
+        <translation>Mi-alilan ne ing passphrase na ning wallet.</translation>
     </message>
 </context>
 <context>
@@ -324,202 +322,202 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="+260"/>
         <source>Sign &amp;message...</source>
-        <translation>חתום על הודעה</translation>
+        <translation>I-sign ing &amp;mensayi</translation>
     </message>
     <message>
         <location line="+290"/>
         <source>Synchronizing with network...</source>
-        <translation>מסתנכרן עם הרשת...</translation>
+        <translation>Mag-sychronize ne king network...</translation>
     </message>
     <message>
         <location line="-360"/>
         <source>&amp;Overview</source>
-        <translation>&amp;סקירה</translation>
+        <translation>&amp;Overview</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show general overview of wallet</source>
-        <translation>הצג סקירה כללית של הארנק</translation>
+        <translation>Ipakit ing kabuuang lawe ning wallet</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;פעולות</translation>
+        <translation>&amp;Transaksion</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation>דפדף בהיסטוריית הפעולות</translation>
+        <translation>Lawan ing kasalesayan ning transaksion</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>E&amp;xit</source>
-        <translation>י&amp;ציאה</translation>
+        <translation>L&amp;umwal</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Quit application</source>
-        <translation>סגור תוכנה</translation>
+        <translation>Tuknangan ing aplikasyon</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Show information about Bitcoin</source>
-        <translation>הצג מידע על ביטקוין</translation>
+        <translation>Ipakit ing impormasyun tungkul king Bitcoin</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+2"/>
         <source>About &amp;Qt</source>
-        <translation>אודות Qt</translation>
+        <translation>Tungkul &amp;Qt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Show information about Qt</source>
-        <translation>הצג מידע על Qt</translation>
+        <translation>Magpakit impormasion tungkul king Qt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation>&amp;אפשרויות</translation>
+        <translation>&amp;Pipamilian...</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>הצפן ארנק</translation>
+        <translation>I-&amp;Encrypt in Wallet...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Backup Wallet...</source>
-        <translation>גיבוי ארנק</translation>
+        <translation>I-&amp;Backup ing Wallet...</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation>שנה סיסמא</translation>
+        <translation>&amp;Alilan ing Passphrase...</translation>
     </message>
     <message>
         <location line="+295"/>
         <source>Importing blocks from disk...</source>
-        <translation>מייבא בלוקים מהדיסק...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Reindexing blocks on disk...</source>
-        <translation>מחדש את אינדקס הבלוקים בדיסק...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-358"/>
         <source>Send coins to a Bitcoin address</source>
-        <translation>שלח מטבעות לכתובת ביטקוין</translation>
+        <translation>Magpadalang barya king Bitcoin address</translation>
     </message>
     <message>
         <location line="+47"/>
         <source>Modify configuration options for Bitcoin</source>
-        <translation>שנה אפשרויות תצורה עבור ביטקוין</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+12"/>
         <source>Backup wallet to another location</source>
-        <translation>גיבוי הארנק למקום אחר</translation>
+        <translation>I-backup ing wallet king aliwang lugal</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>שנה את הסיסמה להצפנת הארנק</translation>
+        <translation>Alilan ya ing passphrase a gagamitan para king wallet encryption</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&amp;Debug window</source>
-        <translation>חלון ניפוי</translation>
+        <translation>I-&amp;Debug ing awang</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Open debugging and diagnostic console</source>
-        <translation>פתח את לוח הבקרה לאבחון וניפוי</translation>
+        <translation>Ibuklat ing debugging at diagnostic console</translation>
     </message>
     <message>
         <location line="-4"/>
         <source>&amp;Verify message...</source>
-        <translation>אמת הודעה...</translation>
+        <translation>&amp;Beripikan ing message...</translation>
     </message>
     <message>
         <location line="+375"/>
         <source>Bitcoin</source>
-        <translation>ביטקוין</translation>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <location line="-563"/>
         <location line="+10"/>
         <source>Wallet</source>
-        <translation>ארנק</translation>
+        <translation>Wallet</translation>
     </message>
     <message>
         <location line="+113"/>
         <source>&amp;Send</source>
-        <translation>&amp;שלח</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Receive</source>
-        <translation>וקבל</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+44"/>
         <location line="+2"/>
         <source>&amp;Show / Hide</source>
-        <translation>הצג / הסתר</translation>
+        <translation>&amp;Ipalto / Isalikut</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show or hide the main Window</source>
-        <translation>הצג או הסתר את החלון הראשי</translation>
+        <translation>Ipalto o isalikut ing pun a awang</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>הצפן את המפתחות הפרטיים ששייכים לארנק שלך</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+7"/>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>חתום על הודעות עם כתובות הביטקוין שלך כדי להוכיח שהן בבעלותך</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>אמת הודעות כדי להבטיח שהן נחתמו עם כתובת ביטקוין מסוימות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+39"/>
         <source>&amp;File</source>
-        <translation>&amp;קובץ</translation>
+        <translation>&amp;File</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Settings</source>
-        <translation>ה&amp;גדרות</translation>
+        <translation>&amp;Pamag-ayus</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&amp;Help</source>
-        <translation>&amp;עזרה</translation>
+        <translation>&amp;Saup</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Tabs toolbar</source>
-        <translation>סרגל כלים טאבים</translation>
+        <translation>Gamit para king Tabs</translation>
     </message>
     <message>
         <location line="-244"/>
         <location line="+321"/>
         <source>[testnet]</source>
-        <translation>[רשת-בדיקה]</translation>
+        <translation>[testnet]</translation>
     </message>
     <message>
         <location line="-331"/>
         <location line="+10"/>
         <source>Bitcoin Core</source>
-        <translation>ליבת ביטקוין</translation>
+        <translation>Kapilubluban ning Bitcoin</translation>
     </message>
     <message>
         <location line="+121"/>
@@ -535,12 +533,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+34"/>
         <source>&amp;Used sending addresses...</source>
-        <translation>כתובת לשליחה שהיו &amp;בשימוש...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation>הצג את רשימת הכתובות לשליחה שהיו בשימוש לרבות התוויות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -566,102 +564,102 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+126"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
-        <translation>תוכנת ביטקוין</translation>
+        <translation>Bitcoin client</translation>
     </message>
     <message numerus="yes">
         <location line="+133"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>חיבור פעיל אחד לרשת הביטקוין</numerusform><numerusform>%n חיבורים פעילים לרשת הביטקוין</numerusform></translation>
+        <translation><numerusform>%n ya ing aktibong koneksion keng Bitcoin network</numerusform><numerusform>%n lareng aktibong koneksion keng Bitcoin network</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
         <source>No block source available...</source>
-        <translation>אין קוד נתון</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+12"/>
         <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
-        <translation>%1 מתוך %2 (משוער) בלוקים של הסטוריית פעולות עובדו.</translation>
+        <translation>Me-prosesu %1 kareng %2 (me-estima) blocks ning kasalesayan ning transaksion.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation>הושלם עיבוד של %1 בלוקים של היסטוריית פעולות.</translation>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
         <location line="+20"/>
         <source>%n hour(s)</source>
-        <translation><numerusform>%n שעה</numerusform><numerusform>%n שעות</numerusform></translation>
+        <translation><numerusform>%n oras</numerusform><numerusform>%n oras</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n day(s)</source>
-        <translation><numerusform>%n יום</numerusform><numerusform>%n ימים</numerusform></translation>
+        <translation><numerusform>%n aldo</numerusform><numerusform>%n aldo</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n week(s)</source>
-        <translation><numerusform>%n שבוע</numerusform><numerusform>%n שבועות</numerusform></translation>
+        <translation><numerusform>%n dominggu</numerusform><numerusform>%n dominggu</numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>%1 behind</source>
-        <translation>1% מאחור</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+14"/>
         <source>Last received block was generated %1 ago.</source>
-        <translation>הבלוק האחרון שהתקבל נוצר לפני %1</translation>
+        <translation>Ing tatauling block a metanggap,  me-generate ya %1 ing milabas</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>לאחר זאת פעולות נספות טרם יהיו גלויות</translation>
+        <translation>Ing transaksion kaibat na nini ali yapa magsilbing ipakit.</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Error</source>
-        <translation>שגיאה</translation>
+        <translation>Mali</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning</source>
-        <translation>אזהרה</translation>
+        <translation>Kapabaluan</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Information</source>
-        <translation>מידע</translation>
+        <translation>Impormasion</translation>
     </message>
     <message>
         <location line="+77"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
-        <translation>פעולה זו חורגת מגבולות הגודל. עדיין באפשרותך לשלוח אותה תמורת עמלה של %1, המיועדת לצמתים שמעבדים את הפעולה שלך ועוזרת לתמוך ברשת. האם ברצונך לשלם את העמלה?</translation>
+        <translation>Ing transaksion a ini lampas ya king limitasion naning dagul. Maliari me pa naman ipadala ini,oneng atin bayad a %1, a miras king nodes a magprosesu king transaksion at miras ya naman keng pamaniaup at suporta king network. Buri meng bayaran ing bayad para king transaksion?</translation>
     </message>
     <message>
         <location line="-152"/>
         <source>Up to date</source>
-        <translation>עדכני</translation>
+        <translation>Makatuki ya king aldo</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Catching up...</source>
-        <translation>מתעדכן...</translation>
+        <translation>Catching up...</translation>
     </message>
     <message>
         <location line="+124"/>
         <source>Confirm transaction fee</source>
-        <translation>אשר עמלת פעולה</translation>
+        <translation>Kumpirman ing bayad king transaksion</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Sent transaction</source>
-        <translation>פעולה שנשלחה</translation>
+        <translation>Mipadalang transaksion</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Incoming transaction</source>
-        <translation>פעולה שהתקבלה</translation>
+        <translation>Paparatang a transaksion</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -670,25 +668,26 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation>תאריך: %1
-כמות: %2
-סוג: %3
-כתובת: %4</translation>
+        <translation>Aldo: %1
+Alaga: %2
+Type: %3
+Address: %4
+</translation>
     </message>
     <message>
         <location line="+67"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt; וכרגע &lt;b&gt;פתוח&lt;/b&gt;</translation>
+        <translation>Maka-&lt;b&gt;encrypt&lt;/b&gt; ya ing wallet at kasalukuyan yang maka-&lt;b&gt;unlocked&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt; וכרגע &lt;b&gt;נעול&lt;/b&gt;</translation>
+        <translation>Maka-&lt;b&gt;encrypt&lt;/b&gt; ya ing wallet at kasalukuyan yang maka-&lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="+116"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>שגיאה סופנית אירעה. ביטקוין אינו יכול להמשיך לפעול בבטחה ולכן ייסגר.</translation>
+        <translation>Atin kamalian a milyari. Ali ne magsilbing sumulung pa ing Bitcoin at kailangan na ng tuknang.</translation>
     </message>
 </context>
 <context>
@@ -696,7 +695,7 @@ Address: %4
     <message>
         <location filename="../clientmodel.cpp" line="+119"/>
         <source>Network Alert</source>
-        <translation>אזעקת רשת</translation>
+        <translation>Alertu ning Network</translation>
     </message>
 </context>
 <context>
@@ -709,7 +708,7 @@ Address: %4
     <message>
         <location line="+34"/>
         <source>Quantity:</source>
-        <translation>כמות:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+29"/>
@@ -719,17 +718,17 @@ Address: %4
     <message>
         <location line="+45"/>
         <source>Amount:</source>
-        <translation>כמות:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+29"/>
         <source>Priority:</source>
-        <translation>קדימות:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+45"/>
         <source>Fee:</source>
-        <translation>תשלום:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+32"/>
@@ -744,73 +743,73 @@ Address: %4
     <message>
         <location line="+32"/>
         <source>Change:</source>
-        <translation>שינוי:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+63"/>
         <source>(un)select all</source>
-        <translation>(מחק)(בחר) הכל</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+13"/>
         <source>Tree mode</source>
-        <translation>מצב עץ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+16"/>
         <source>List mode</source>
-        <translation>מצר רשימה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+52"/>
         <source>Amount</source>
-        <translation>כמות</translation>
+        <translation>Alaga</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Address</source>
-        <translation>כתובת</translation>
+        <translation>Address</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Date</source>
-        <translation>תאריך</translation>
+        <translation>Kaaldauan</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Confirmations</source>
-        <translation>אישורים</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirmed</source>
-        <translation>מאושר</translation>
+        <translation>Me-kumpirma</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Priority</source>
-        <translation>קדימות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="+42"/>
         <source>Copy address</source>
-        <translation>העתק כתובת</translation>
+        <translation>Kopyan ing address</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy label</source>
-        <translation>העתק תוית</translation>
+        <translation>Kopyan ing label</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+26"/>
         <source>Copy amount</source>
-        <translation>העתק כמות</translation>
+        <translation>Kopyan ing alaga</translation>
     </message>
     <message>
         <location line="-25"/>
         <source>Copy transaction ID</source>
-        <translation>העתק מזהה פעולה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -825,12 +824,12 @@ Address: %4
     <message>
         <location line="+22"/>
         <source>Copy quantity</source>
-        <translation>העתק כמות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
         <source>Copy fee</source>
-        <translation>העתק מחיר</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -845,7 +844,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Copy priority</source>
-        <translation>העתק קדימות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -860,47 +859,47 @@ Address: %4
     <message>
         <location line="+323"/>
         <source>highest</source>
-        <translation>הכי גבוה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>higher</source>
-        <translation>גבוהה יותר</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>high</source>
-        <translation>גבוה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>medium-high</source>
-        <translation>בנוני גבוה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>medium</source>
-        <translation>בינוני</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+4"/>
         <source>low-medium</source>
-        <translation>בינוני - נמוך</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>low</source>
-        <translation>נמוך</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>lower</source>
-        <translation>נמוך יותר</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>lowest</source>
-        <translation>הכי נמוך</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+11"/>
@@ -915,12 +914,12 @@ Address: %4
     <message>
         <location line="+0"/>
         <source>yes</source>
-        <translation>כן</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+0"/>
         <source>no</source>
-        <translation>לא</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+10"/>
@@ -973,7 +972,7 @@ Address: %4
         <location line="+43"/>
         <location line="+66"/>
         <source>(no label)</source>
-        <translation>(ללא תוית)</translation>
+        <translation>(alang label)</translation>
     </message>
     <message>
         <location line="-9"/>
@@ -991,12 +990,12 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
         <source>Edit Address</source>
-        <translation>ערוך כתובת</translation>
+        <translation>Alilan ing Address</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Label</source>
-        <translation>ת&amp;וית</translation>
+        <translation>&amp;Label</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1006,52 +1005,52 @@ Address: %4
     <message>
         <location line="+17"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>הכתובת המשויכת עם רשומה זו ברשימת הכתובות. ניתן לשנות זאת רק עבור כתובות לשליחה.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-10"/>
         <source>&amp;Address</source>
-        <translation>&amp;כתובת</translation>
+        <translation>&amp;Address</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="+25"/>
         <source>New receiving address</source>
-        <translation>כתובת חדשה לקבלה</translation>
+        <translation>Bayung address king pamagtanggap</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>New sending address</source>
-        <translation>כתובת חדשה לשליחה</translation>
+        <translation>Bayung address king pamagpadala</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Edit receiving address</source>
-        <translation>ערוך כתובת לקבלה</translation>
+        <translation>Alilan ya ing address king pamagpadala</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Edit sending address</source>
-        <translation>ערוך כתובת לשליחה</translation>
+        <translation>Alilan ya ing address king pamagpadala</translation>
     </message>
     <message>
         <location line="+76"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>הכתובת שהכנסת &quot;%1&quot; כבר נמצאת בפנקס הכתובות.</translation>
+        <translation>Ing pepalub yung address &quot;%1&quot; ati na yu king aklat dareng address</translation>
     </message>
     <message>
         <location line="-5"/>
         <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation>הכתובת שהוכנסה &quot;%1&quot; אינה כתובת ביטקוין תקינה.</translation>
+        <translation>Ing pepalub yung address &quot;%1&quot; ali ya katanggap-tanggap a Bitcoin address.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Could not unlock wallet.</source>
-        <translation>פתיחת הארנק נכשלה.</translation>
+        <translation>Ali ya bisang mag-unlock ing wallet</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>New key generation failed.</source>
-        <translation>יצירת מפתח חדש נכשלה.</translation>
+        <translation>Memali ya ing pamangaua king key</translation>
     </message>
 </context>
 <context>
@@ -1064,7 +1063,7 @@ Address: %4
     <message>
         <location line="+22"/>
         <source>name</source>
-        <translation>שם</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -1087,43 +1086,43 @@ Address: %4
     <message>
         <location filename="../guiutil.cpp" line="+597"/>
         <source>version</source>
-        <translation>גרסה</translation>
+        <translation>bersion</translation>
     </message>
     <message>
         <location line="+0"/>
         <location line="+13"/>
         <source>Bitcoin Core</source>
-        <translation>ליבת ביטקוין</translation>
+        <translation>Kapilubluban ning Bitcoin</translation>
     </message>
     <message>
         <location line="-11"/>
         <source>Usage:</source>
-        <translation>שימוש:</translation>
+        <translation>Pamanggamit:</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>command-line options</source>
-        <translation>אפשרויות שורת פקודה</translation>
+        <translation>pipamilian command-line</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>UI options</source>
-        <translation>אפשרויות ממשק</translation>
+        <translation>Pipamilian ning UI</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>קבע שפה, למשל &quot;he_il&quot; (ברירת מחדל: שפת המערכת)</translation>
+        <translation>Mamiling Amanu, alimbawa &quot;de_DE&quot;(default: system locale)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Start minimized</source>
-        <translation>התחל ממוזער</translation>
+        <translation>Umpisan ing pamaglati</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation>הצג מסך פתיחה בעת הפעלה (ברירת מחדל: 1)</translation>
+        <translation>Ipalto ing splash screen keng umpisa (default: 1)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1136,7 +1135,7 @@ Address: %4
     <message>
         <location filename="../forms/intro.ui" line="+14"/>
         <source>Welcome</source>
-        <translation>ברוך בואך</translation>
+        <translation>Malaus ka</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -1146,7 +1145,7 @@ Address: %4
     <message>
         <location line="+26"/>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation>מכיוון שזאת הפעם הראשונה שהתוכנה הופעלה תוכל לבחור איפה ביטקויין קור תאכסן את </translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+10"/>
@@ -1166,7 +1165,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="+85"/>
         <source>Bitcoin</source>
-        <translation>ביטקוין</translation>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1176,7 +1175,7 @@ Address: %4
     <message>
         <location line="+19"/>
         <source>Error</source>
-        <translation>שגיאה</translation>
+        <translation>Mali</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -1222,157 +1221,157 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="+14"/>
         <source>Options</source>
-        <translation>אפשרויות</translation>
+        <translation>Pipamilian</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>&amp;Main</source>
-        <translation>ראשי</translation>
+        <translation>&amp;Pun</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>עמלת פעולה אופציונלית לכל kB תבטיח שהפעולה שלך תעובד בזריזות. רוב הפעולות הן 1 kB. מומלצת עמלה בסך 0.01.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+15"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>שלם &amp;עמלת פעולה</translation>
+        <translation>Mamayad &amp;bayad para king transaksion </translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>הפעל את ביטקוין באופן עצמאי לאחר התחברות למערכת.</translation>
+        <translation>Umpisan yang antimu ing Bitcoin kaibat mekapag-log in king sistema.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Start Bitcoin on system login</source>
-        <translation>התחל את ביטקוין בעת התחברות למערכת</translation>
+        <translation>&amp;Umpisan ya ing Bitcoin king pamag-log-in na ning sistema.</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
-        <translation>אפס כל אפשרויות התוכנה לברירת המחדל.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Reset Options</source>
-        <translation>איפוס אפשרויות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+13"/>
         <source>&amp;Network</source>
-        <translation>רשת</translation>
+        <translation>&amp;Network</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>פתח את פורט ביטקוין בנתב באופן אוטומטי. עובד רק אם UPnP מאופשר ונתמך ע&quot;י הנתב.</translation>
+        <translation>Ibuklat yang antimanu ing Bitcoin client port king router. Gagana yamu ini istung ing router mu susuporta yang UPnP at magsilbi ya.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>מיפוי פורט באמצעות UPnP</translation>
+        <translation>Mapa ng ning port gamit ing &amp;UPnP</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation>התחבר לרשת הביטקוין דרך פרוקסי SOCKS (למשל בעת התחברות דרך Tor).</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Connect through SOCKS proxy:</source>
-        <translation>התחבר דרך פרוקסי SOCKS</translation>
+        <translation>&amp;Kumunekta gamit ing SOCKS proxy:</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Proxy &amp;IP:</source>
-        <translation>כתובת IP של פרוקסי:</translation>
+        <translation>Proxy &amp;IP:</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>IP address of the proxy (e.g. 127.0.0.1)</source>
-        <translation>כתובת האינטרנט של הפרוקסי (למשל 127.0.0.1)</translation>
+        <translation>IP address na ning proxy(e.g. 127.0.0.1)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Port:</source>
-        <translation>פורט:</translation>
+        <translation>&amp;Port:</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>הפורט של הפרוקסי (למשל 9050)</translation>
+        <translation>Port na ning proxy(e.g. 9050)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>SOCKS &amp;Version:</source>
-        <translation>גרסת SOCKS:</translation>
+        <translation>&amp;Bersion na ning SOCKS</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>גרסת SOCKS של הפרוקסי (למשל 5)</translation>
+        <translation>Bersion a SOCKS ning proxy (e.g 5)</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>&amp;Window</source>
-        <translation>חלון</translation>
+        <translation>&amp;Awang</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>הצג סמל מגש בלבד לאחר מזעור החלון.</translation>
+        <translation>Ipakit mu ing tray icon kaibat meng pelatian ing awang.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>מ&amp;זער למגש במקום לשורת המשימות</translation>
+        <translation>&amp;Latian ya ing tray kesa king taskbar</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>מזער את התוכנה במקום לצאת ממנה כשהחלון נסגר. כשאפשרות זו פעילה, התוכנה תיסגר רק לאחר בחירת יציאה מהתפריט.</translation>
+        <translation>Palatian namu kesa king iluwal ya ing aplikasion istung makasara ya ing awang. Istung ing pipamilian a ini atiu king &quot;magsilbi&quot;, ing aplikasion misara yamu kaibat meng pinili ing &quot;Tuknangan&quot; king menu.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>M&amp;inimize on close</source>
-        <translation>מזער בעת סגירה</translation>
+        <translation>P&amp;alatian istung isara</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>&amp;Display</source>
-        <translation>תצוגה</translation>
+        <translation>&amp;Ipalto</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>User Interface &amp;language:</source>
-        <translation>שפת ממשק המשתמש:</translation>
+        <translation>Amanu na ning user interface:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>ניתן לקבוע כאן את שפת ממשק המשתמש. הגדרה זו תחול לאחר הפעלה מחדש של ביטקוין.</translation>
+        <translation>Ing amanu na ning user interface maliari yang i-ayus o ilage keni. Ing ayus a ini magsilbi yamu istung pesibayuan meng pasibayu ing Bitcoin.</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>יחידת מדידה להצגת כמויות:</translation>
+        <translation>Ing &amp;Unit a ipakit king alaga ning:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>בחר את ברירת המחדל ליחידת החלוקה אשר תוצג בממשק ובעת שליחת מטבעות.</translation>
+        <translation>Pilinan ing default subdivision unit a ipalto o ipakit king interface at istung magpadala kang barya.</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Whether to show Bitcoin addresses in the transaction list or not.</source>
-        <translation>האם להציג כתובות ביטקוין ברשימת הפעולות או לא.</translation>
+        <translation>Ipakit man ing Bitcoin address king listahan naning transaksion o ali.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>הצג כתובות ברשימת הפעולות</translation>
+        <translation>&amp;Ipakit ing address king listahan naning transaksion</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1387,54 +1386,54 @@ Address: %4
     <message>
         <location line="+71"/>
         <source>&amp;OK</source>
-        <translation>אישור</translation>
+        <translation>&amp;OK</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Cancel</source>
-        <translation>ביטול</translation>
+        <translation>I-&amp;Cancel</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>&amp;Apply</source>
-        <translation>יישום</translation>
+        <translation>&amp;Ilage</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="+63"/>
         <source>default</source>
-        <translation>ברירת מחדל</translation>
+        <translation>default</translation>
     </message>
     <message>
         <location line="+131"/>
         <source>Confirm options reset</source>
-        <translation>אשר את איפוס האפשרויות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Some settings may require a client restart to take effect.</source>
-        <translation>כמה מההגדרות עשויות לדרוש אתחול התוכנה כדי להיכנס לפועל.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+0"/>
         <source>Do you want to proceed?</source>
-        <translation>האם ברצונך להמשיך?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+42"/>
         <location line="+9"/>
         <source>Warning</source>
-        <translation>אזהרה</translation>
+        <translation>Kapabaluan</translation>
     </message>
     <message>
         <location line="-9"/>
         <location line="+9"/>
         <source>This setting will take effect after restarting Bitcoin.</source>
-        <translation>הגדרה זו תחול לאחר הפעלה מחדש של ביטקוין.</translation>
+        <translation>Ing ayus a ini magsilbi yamu kaibat meng pesibayuan umpisan ing Bitcoin.</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation>כתובת הפרוקסי שסופקה אינה תקינה.</translation>
+        <translation>Ing milageng proxy address eya katanggap-tanggap.</translation>
     </message>
 </context>
 <context>
@@ -1442,69 +1441,69 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="+14"/>
         <source>Form</source>
-        <translation>טופס</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location line="+50"/>
         <location line="+214"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>המידע המוצג עשוי להיות מיושן. הארנק שלך מסתנכרן באופן אוטומטי עם רשת הביטקוין לאחר כינון חיבור, אך התהליך טרם הסתיים.</translation>
+        <translation>Ing makaltong impormasion mapalyaring luma ne. Ing kekang wallet otomatiku yang mag-synchronize keng Bitcoin network istung mekakonekta ne king network, oneng ing prosesung ini ali ya pa kumpletu.</translation>
     </message>
     <message>
         <location line="-140"/>
         <source>Unconfirmed:</source>
-        <translation>ממתין לאישור:</translation>
+        <translation>Ali pa me-kumpirma:</translation>
     </message>
     <message>
         <location line="-81"/>
         <source>Wallet</source>
-        <translation>ארנק</translation>
+        <translation>Wallet</translation>
     </message>
     <message>
         <location line="+49"/>
         <source>Confirmed:</source>
-        <translation>מאושר:</translation>
+        <translation>Me-kumpirma:</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Your current spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Ing kekang kasalungsungan balanse a malyari mung gastusan</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Ing kabuuan dareng transaksion a kasalungsungan ali pa me-kumpirma, at kasalungsungan ali pa mebilang kareng kekang balanseng malyari mung gastusan</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Immature:</source>
-        <translation>לא בשל:</translation>
+        <translation>Immature:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Mined balance that has not yet matured</source>
-        <translation>מאזן שנכרה וטרם הבשיל</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+16"/>
         <source>Total:</source>
-        <translation>סך הכול:</translation>
+        <translation>Kabuuan:</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Your current total balance</source>
-        <translation>סך כל היתרה הנוכחית שלך</translation>
+        <translation>Ing kekang kasalungsungan kabuuang balanse</translation>
     </message>
     <message>
         <location line="+56"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;פעולות אחרונות&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Reng kapilan pamung transaksion&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="+120"/>
         <location line="+1"/>
         <source>out of sync</source>
-        <translation>לא מסונכרן</translation>
+        <translation>ali ya maka-sync</translation>
     </message>
 </context>
 <context>
@@ -1512,12 +1511,12 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="+397"/>
         <source>URI handling</source>
-        <translation>תפעול URI</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>לא ניתן לנתח URI! זה יכול להיגרם כתוצאה מכתובת ביטקוין לא תקינה או פרמטרי URI חסרי צורה תקינה.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+91"/>
@@ -1529,12 +1528,12 @@ Address: %4
         <location line="+195"/>
         <location line="+13"/>
         <source>Payment request error</source>
-        <translation>שגיאה בבקשת תשלום</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-207"/>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>לא ניתן להתחיל את ביטקוין: מפעיל לחץ-לתשלום </translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+195"/>
@@ -1559,14 +1558,14 @@ Address: %4
     <message>
         <location line="+32"/>
         <source>Payment acknowledged</source>
-        <translation>התשלום התקבל</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-55"/>
         <location line="+27"/>
         <location line="+17"/>
         <source>Network request error</source>
-        <translation>שגיאת בקשת שרת</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -1575,7 +1574,7 @@ Address: %4
         <location filename="../bitcoin.cpp" line="+119"/>
         <location line="+5"/>
         <source>Bitcoin</source>
-        <translation>ביטקוין</translation>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <location line="-4"/>
@@ -1603,7 +1602,7 @@ Address: %4
     <message>
         <location line="+28"/>
         <source>Save QR Code</source>
-        <translation>שמור קוד QR</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+0"/>
@@ -1616,7 +1615,7 @@ Address: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="+46"/>
         <source>Client name</source>
-        <translation>שם ממשק</translation>
+        <translation>Lagyu ning kliente</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1635,12 +1634,12 @@ Address: %4
     <message>
         <location line="-217"/>
         <source>Client version</source>
-        <translation>גרסת ממשק</translation>
+        <translation>Bersion ning Cliente</translation>
     </message>
     <message>
         <location line="-45"/>
         <source>&amp;Information</source>
-        <translation>מידע</translation>
+        <translation>&amp;Impormasion</translation>
     </message>
     <message>
         <location line="-10"/>
@@ -1650,67 +1649,67 @@ Address: %4
     <message>
         <location line="+78"/>
         <source>Using OpenSSL version</source>
-        <translation>משתמש ב-OpenSSL גרסה</translation>
+        <translation>Gagamit bersion na ning OpenSSL</translation>
     </message>
     <message>
         <location line="+49"/>
         <source>Startup time</source>
-        <translation>זמן אתחול</translation>
+        <translation>Oras ning umpisa</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Network</source>
-        <translation>רשת</translation>
+        <translation>Network</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Number of connections</source>
-        <translation>מספר חיבורים</translation>
+        <translation>Bilang dareng koneksion</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>On testnet</source>
-        <translation>ברשת הבדיקה</translation>
+        <translation>King testnet</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Block chain</source>
-        <translation>שרשרת הבלוקים</translation>
+        <translation>Block chain</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Current number of blocks</source>
-        <translation>מספר הבלוקים הנוכחי</translation>
+        <translation>Kasalungsungan bilang dareng blocks</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Estimated total blocks</source>
-        <translation>מספר כולל משוער של בלוקים</translation>
+        <translation>Estima kareng kabuuan dareng blocks</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Last block time</source>
-        <translation>זמן הבלוק האחרון</translation>
+        <translation>Tatauling oras na ning block</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>&amp;Open</source>
-        <translation>פתח</translation>
+        <translation>&amp;Ibuklat</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Command-line options</source>
-        <translation>אפשרויות שורת פקודה</translation>
+        <translation>Pipamilian command-line</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>&amp;Show</source>
-        <translation>הצג</translation>
+        <translation>&amp;Ipakit</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>&amp;Console</source>
-        <translation>לוח בקרה</translation>
+        <translation>&amp;Console</translation>
     </message>
     <message>
         <location line="+72"/>
@@ -1740,22 +1739,22 @@ Address: %4
     <message>
         <location line="-541"/>
         <source>Build date</source>
-        <translation>תאריך בניה</translation>
+        <translation>Kaaldauan ning pamaglalang</translation>
     </message>
     <message>
         <location line="-79"/>
         <source>Bitcoin Core</source>
-        <translation>ליבת ביטקוין</translation>
+        <translation>Kapilubluban ning Bitcoin</translation>
     </message>
     <message>
         <location line="+279"/>
         <source>Debug log file</source>
-        <translation>קובץ יומן ניפוי</translation>
+        <translation>Debug log file</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>פתח את קובץ יומן הניפוי מתיקיית הנתונים הנוכחית. זה עשוי לקחת מספר שניות עבור קובצי יומן גדולים.</translation>
+        <translation>Ibuklat ing Bitcoin debug log file menibat king kasalungsungan data directory. Magluat ya ining pilan segundu para kareng mamaragul a log files.</translation>
     </message>
     <message>
         <location line="+26"/>
@@ -1765,22 +1764,22 @@ Address: %4
     <message>
         <location line="+76"/>
         <source>Clear console</source>
-        <translation>נקה לוח בקרה</translation>
+        <translation>I-Clear ing console</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="-30"/>
         <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>ברוכים הבאים ללוח בקרת RPC של ביטקוין</translation>
+        <translation>Malaus kayu king Bitcoin RPC console.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>השתמש בחיצים למעלה ולמטה כדי לנווט בהיסטוריה, ו- &lt;b&gt;Ctrl-L&lt;/b&gt; כדי לנקות את המסך.</translation>
+        <translation>Gamitan me ing patas at pababang arrow para alibut me ing kasalesayan, at &lt;b&gt;Ctrl-L&lt;/b&gt; ban I-clear ya ing screen.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>הקלד &lt;b&gt;help&lt;/b&gt; בשביל סקירה של הפקודות הזמינות.</translation>
+        <translation>I-type ing &lt;b&gt;help&lt;/b&gt; ban akit la reng ati at magsilbing commands.</translation>
     </message>
     <message>
         <location line="+128"/>
@@ -1805,12 +1804,12 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>%1 m</source>
-        <translation>1% דקות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+5"/>
         <source>%1 h</source>
-        <translation>%1 שעות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
@@ -1828,12 +1827,12 @@ Address: %4
     <message>
         <location line="+19"/>
         <source>The amount to request</source>
-        <translation>כמות הבקשה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-32"/>
         <source>&amp;Label:</source>
-        <translation>ת&amp;וית:</translation>
+        <translation>&amp;Label:</translation>
     </message>
     <message>
         <location line="-34"/>
@@ -1868,12 +1867,12 @@ Address: %4
     <message>
         <location line="+56"/>
         <source>Clear all fields of the form.</source>
-        <translation>נקה את כל השדות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Clear</source>
-        <translation>נקה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+36"/>
@@ -1883,7 +1882,7 @@ Address: %4
     <message>
         <location line="+47"/>
         <source>Previously requested payments</source>
-        <translation>בקשות תשלום ישנות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+12"/>
@@ -1893,7 +1892,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Show</source>
-        <translation>הצג</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+11"/>
@@ -1903,7 +1902,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Remove</source>
-        <translation>הסר</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -1911,7 +1910,7 @@ Address: %4
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="+29"/>
         <source>QR Code</source>
-        <translation>קוד QR</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+46"/>
@@ -1936,7 +1935,7 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>Payment information</source>
-        <translation>אנפרומצייה על התשלום</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -1946,32 +1945,32 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Address</source>
-        <translation>כתובת</translation>
+        <translation>Address</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount</source>
-        <translation>כמות</translation>
+        <translation>Alaga</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Label</source>
-        <translation>תוית</translation>
+        <translation>Label</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Message</source>
-        <translation>הודעה</translation>
+        <translation>Mensayi</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>המזהה המתקבל ארוך מדי, נסה להפחית את הטקסט בתוית / הודעה.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+5"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation>שגיאה בקידוד URI לקוד QR</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -1979,32 +1978,32 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="+14"/>
         <source>Date</source>
-        <translation>תאריך</translation>
+        <translation>Kaaldauan</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Label</source>
-        <translation>תוית</translation>
+        <translation>Label</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Message</source>
-        <translation>הודעה</translation>
+        <translation>Mensayi</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Amount</source>
-        <translation>כמות</translation>
+        <translation>Alaga</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>(no label)</source>
-        <translation>(ללא תוית)</translation>
+        <translation>(alang label)</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>(no message)</source>
-        <translation>(אין הודעות)</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -2014,12 +2013,12 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="+381"/>
         <location line="+81"/>
         <source>Send Coins</source>
-        <translation>שלח מטבעות</translation>
+        <translation>Magpadalang Barya</translation>
     </message>
     <message>
         <location line="+76"/>
         <source>Coin Control Features</source>
-        <translation>ה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+20"/>
@@ -2029,7 +2028,7 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>automatically selected</source>
-        <translation>נבחר אוטומאטית</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+19"/>
@@ -2039,7 +2038,7 @@ Address: %4
     <message>
         <location line="+89"/>
         <source>Quantity:</source>
-        <translation>כמות:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+35"/>
@@ -2049,17 +2048,17 @@ Address: %4
     <message>
         <location line="+48"/>
         <source>Amount:</source>
-        <translation>כמות:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+32"/>
         <source>Priority:</source>
-        <translation>קדימות:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+48"/>
         <source>Fee:</source>
-        <translation>תשלום:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+32"/>
@@ -2074,7 +2073,7 @@ Address: %4
     <message>
         <location line="+32"/>
         <source>Change:</source>
-        <translation>שינוי:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+44"/>
@@ -2089,42 +2088,42 @@ Address: %4
     <message>
         <location line="+115"/>
         <source>Send to multiple recipients at once</source>
-        <translation>שלח למספר מקבלים בו-זמנית</translation>
+        <translation>Misanang magpadala kareng alialiuang tumanggap</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Add &amp;Recipient</source>
-        <translation>הוסף מקבל</translation>
+        <translation>Maglage &amp;Tumanggap</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Clear all fields of the form.</source>
-        <translation>נקה את כל השדות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation>נקה הכל</translation>
+        <translation>I-Clear &amp;Eganagana</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Balance:</source>
-        <translation>יתרה:</translation>
+        <translation>Balanse:</translation>
     </message>
     <message>
         <location line="+41"/>
         <source>Confirm the send action</source>
-        <translation>אשר את פעולת השליחה</translation>
+        <translation>Kumpirman ing aksion king pamagpadala</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>S&amp;end</source>
-        <translation>שלח</translation>
+        <translation>Ipadala</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-229"/>
         <source>Confirm send coins</source>
-        <translation>אשר שליחת מטבעות</translation>
+        <translation>Kumpirman ing pamagpadalang barya</translation>
     </message>
     <message>
         <location line="-74"/>
@@ -2137,22 +2136,22 @@ Address: %4
     <message>
         <location line="-136"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>הכנס כתובת ביטקוין (למשל 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Magpalub kang Bitcoin address(e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Copy quantity</source>
-        <translation>העתק כמות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation>העתק כמות</translation>
+        <translation>Kopyan ing alaga</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy fee</source>
-        <translation>העתק מחיר</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -2167,7 +2166,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Copy priority</source>
-        <translation>העתק קדימות</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -2192,27 +2191,27 @@ Address: %4
     <message>
         <location line="+202"/>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation>כתובת המקבל אינה תקינה, אנא בדוק שנית.</translation>
+        <translation>Ing address na ning tumanggap ali ya katanggap-tanggap, maliari pung pakilaue pasibayu.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>הכמות לשלם חייבת להיות גדולה מ-0.</translation>
+        <translation>Ing alaga na ning bayaran dapat mung mas matas ya king 0.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>The amount exceeds your balance.</source>
-        <translation>הכמות עולה על המאזן שלך.</translation>
+        <translation>Ing alaga mipasobra ya king kekang balanse.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>הכמות הכוללת, ובכללה עמלת פעולה בסך %1, עולה על המאזן שלך.</translation>
+        <translation>Ing kabuuan mipasobra ya king kekang balanse istung inabe ya ing %1 a bayad king transaksion </translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>כתובת כפולה נמצאה, ניתן לשלוח לכל כתובת רק פעם אחת בכל פעולת שליחה.</translation>
+        <translation>Atin meakit a milupang address, maliari kamung magpadalang misan king metung a address king misan a pamagpadalang transaksion.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2232,7 +2231,7 @@ Address: %4
     <message>
         <location line="+13"/>
         <source>(no label)</source>
-        <translation>(ללא תוית)</translation>
+        <translation>(alang label)</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2242,12 +2241,12 @@ Address: %4
     <message>
         <location line="-378"/>
         <source>Are you sure you want to send?</source>
-        <translation>האם אכן לשלוח?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+9"/>
         <source>added as transaction fee</source>
-        <translation>הוסף מחיר טיפול</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+170"/>
@@ -2267,32 +2266,32 @@ Address: %4
         <location line="+501"/>
         <location line="+536"/>
         <source>A&amp;mount:</source>
-        <translation>כ&amp;מות:</translation>
+        <translation>A&amp;laga:</translation>
     </message>
     <message>
         <location line="-1132"/>
         <source>Pay &amp;To:</source>
-        <translation>שלם &amp;ל:</translation>
+        <translation>Ibayad &amp;kang:</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>הכתובת שאליה ישלח התשלום (למשל 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Ing address nung nokarin ipadala ya ing kabayaran (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+30"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>הכנס תוית לכתובת הזאת כדי להכניס לפנקס הכתובות</translation>
+        <translation>Magpalub kang label para king address a ini ban a-iabe me king aklat dareng address</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="+57"/>
         <source>&amp;Label:</source>
-        <translation>ת&amp;וית:</translation>
+        <translation>&amp;Label:</translation>
     </message>
     <message>
         <location line="-50"/>
         <source>Choose previously used address</source>
-        <translation>בחר כתובת שהייתה בשימוש</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-40"/>
@@ -2307,7 +2306,7 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Paste address from clipboard</source>
-        <translation>הדבר כתובת מהלוח</translation>
+        <translation>Idikit ing address menibat king clipboard</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -2340,18 +2339,18 @@ Address: %4
         <location line="+18"/>
         <location line="+532"/>
         <source>Pay To:</source>
-        <translation>תשלום ל:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-498"/>
         <location line="+536"/>
         <source>Memo:</source>
-        <translation>תזכורת:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>הכנס כתובת ביטקוין (למשל 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Magpalub kang Bitcoin address(e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -2359,28 +2358,28 @@ Address: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="+14"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>חתימות - חתום או אמת הודעה</translation>
+        <translation>Pirma - Pirman / I-beripika ing mensayi</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>&amp;Sign Message</source>
-        <translation>חתום על הו&amp;דעה</translation>
+        <translation>&amp;Pirman ing Mensayi</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>אתה יכול לחתום על הודעות עם הכתובות שלך כדי להוכיח שהן בבעלותך. היזהר לא לחתום על משהו מעורפל, שכן התקפות פישינג עשויות לגרום לך בעורמה למסור את זהותך. חתום רק על אמרות מפורטות לחלוטין שאתה מסכים עימן.</translation>
+        <translation>Maliari kang mamirmang mensayi king kekang address bilang patune na keka ya ini. Mimingat mu king pamag-pirmang  e malino uling mapalyari kang mabiktimang phishing attack a manloku keka na pirman me ing sarili mu para king karela. Only sign fully-detailed statements you agree to.</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>The address to sign the message with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>הכתובת איתה לחתום על ההודעה (למשל 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Ing address ban a -pirman ya ing mensayi kayabe ning (e.g.1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+10"/>
         <location line="+213"/>
         <source>Choose previously used address</source>
-        <translation>בחר כתובת שהייתה בשימוש</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-203"/>
@@ -2391,7 +2390,7 @@ Address: %4
     <message>
         <location line="-203"/>
         <source>Paste address from clipboard</source>
-        <translation>הדבק כתובת מהלוח</translation>
+        <translation>Idikit ing address menibat clipboard</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -2401,90 +2400,90 @@ Address: %4
     <message>
         <location line="+12"/>
         <source>Enter the message you want to sign here</source>
-        <translation>הכנס כאן את ההודעה שעליך ברצונך לחתום</translation>
+        <translation>Ipalub ing mensayi a buri mung pirman keni</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Signature</source>
-        <translation>חתימה</translation>
+        <translation>Pirma</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>העתק את החתימה הנוכחית ללוח המערכת</translation>
+        <translation>Kopyan ing kasalungsungan pirma king system clipboard</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>חתום על ההודעה כדי להוכיח שכתובת הביטקוין הזו בבעלותך.</translation>
+        <translation>Pirman ing mensayi ban patune na keka ya ining Bitcoin address</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Sign &amp;Message</source>
-        <translation>חתום על הודעה</translation>
+        <translation>Pirman ing &amp;Mensayi</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Reset all sign message fields</source>
-        <translation>אפס את כל שדות החתימה על הודעה</translation>
+        <translation>Ibalik keng dati reng ngan fields keng pamamirmang mensayi</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+146"/>
         <source>Clear &amp;All</source>
-        <translation>נקה הכל</translation>
+        <translation>I-Clear &amp;Eganagana</translation>
     </message>
     <message>
         <location line="-87"/>
         <source>&amp;Verify Message</source>
-        <translation>אמת הודעה</translation>
+        <translation>&amp;Beripikan ing Mensayi</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>הכנס למטה את הכתובת החותמת, ההודעה (ודא שאתה מעתיק מעברי שורה, רווחים, טאבים וכו&apos; באופן מדויק) והחתימה כדי לאמת את ההודעה. היזהר לא לפרש את החתימה כיותר ממה שמופיע בהודעה החתומה בעצמה, כדי להימנע מליפול קורבן למתקפת איש-באמצע.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+21"/>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>הכתובת איתה ההודעה נחתמה (למשל 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Ing address na ning mensayi nung nokarin me pirma ya ini (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+40"/>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>אמת את ההודעה כדי להבטיח שהיא נחתמה עם כתובת הביטקוין הנתונה</translation>
+        <translation>Beripikan ing mensayi ban asiguradu a me pirma ya ini gamit ing mepiling Bitcoin address</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Verify &amp;Message</source>
-        <translation>אימות הודעה</translation>
+        <translation>Beripikan ing &amp;Mensayi</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Reset all verify message fields</source>
-        <translation>אפס את כל שדות אימות הודעה</translation>
+        <translation>Ibalik king dati reng ngan fields na ning pamag beripikang mensayi</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+29"/>
         <location line="+3"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>הכנס כתובת ביטקוין (למשל 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Magpalub kang Bitcoin address(e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="-2"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation>לחץ &quot;חתום על ההודעה&quot; כדי לחולל חתימה</translation>
+        <translation>I-click ing &quot;Pirman ing Mensayi&quot; ban agawa ya ing metung a pirma</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Enter Bitcoin signature</source>
-        <translation>הכנס חתימת ביטקוין</translation>
+        <translation>Ipalub ing pirma na ning Bitcoin</translation>
     </message>
     <message>
         <location line="+84"/>
         <location line="+81"/>
         <source>The entered address is invalid.</source>
-        <translation>הכתובת שהוכנסה אינה תקינה.</translation>
+        <translation>Ing milub a address e ya katanggap-tanggap.</translation>
     </message>
     <message>
         <location line="-81"/>
@@ -2492,59 +2491,59 @@ Address: %4
         <location line="+73"/>
         <location line="+8"/>
         <source>Please check the address and try again.</source>
-        <translation>אנא בדוק את הכתובת ונסה שנית.</translation>
+        <translation>Maliaring pakilawe pasibayu ing address at pasibayuan ya iti.</translation>
     </message>
     <message>
         <location line="-81"/>
         <location line="+81"/>
         <source>The entered address does not refer to a key.</source>
-        <translation>הכתובת שהוכנסה אינה מתייחסת למפתח.</translation>
+        <translation>Ing milub a address ali ya mag-refer king metung a key.</translation>
     </message>
     <message>
         <location line="-73"/>
         <source>Wallet unlock was cancelled.</source>
-        <translation>פתיחת הארנק בוטלה.</translation>
+        <translation>Me-kansela ya ing pamag-unlock king wallet.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Private key for the entered address is not available.</source>
-        <translation>המפתח הפרטי עבור הכתובת שהוכנסה אינו זמין.</translation>
+        <translation>Ing private key para king milub a address, ala ya.</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Message signing failed.</source>
-        <translation>החתימה על ההודעה נכשלה.</translation>
+        <translation>Me-mali ya ing pamag-pirma king mensayi .</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Message signed.</source>
-        <translation>ההודעה נחתמה.</translation>
+        <translation>Me-pirman ne ing mensayi.</translation>
     </message>
     <message>
         <location line="+59"/>
         <source>The signature could not be decoded.</source>
-        <translation>לא ניתן לפענח את החתימה.</translation>
+        <translation>Ing pirma ali ya bisang ma-decode.</translation>
     </message>
     <message>
         <location line="+0"/>
         <location line="+13"/>
         <source>Please check the signature and try again.</source>
-        <translation>אנא בדוק את החתימה ונסה שנית.</translation>
+        <translation>Maliaring pakilawe pasibayu ing pirma kaibat pasibayuan ya iti.</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The signature did not match the message digest.</source>
-        <translation>החתימה לא תואמת את תקציר ההודעה.</translation>
+        <translation>Ing pirma ali ya makatugma king message digest.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Message verification failed.</source>
-        <translation>אימות ההודעה נכשל.</translation>
+        <translation>Me-mali ya ing pamag-beripika king mensayi.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Message verified.</source>
-        <translation>ההודעה אומתה.</translation>
+        <translation>Me-beripika ne ing mensayi.</translation>
     </message>
 </context>
 <context>
@@ -2552,7 +2551,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="+26"/>
         <source>Bitcoin Core</source>
-        <translation>ליבת ביטקוין</translation>
+        <translation>Kapilubluban ning Bitcoin</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2562,7 +2561,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>[testnet]</source>
-        <translation>[רשת-בדיקה]</translation>
+        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -2578,71 +2577,71 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="+28"/>
         <source>Open until %1</source>
-        <translation>פתוח עד %1</translation>
+        <translation>Makabuklat anggang %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>%1/offline</source>
-        <translation>%1/מנותק</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
         <source>%1/unconfirmed</source>
-        <translation>%1/ממתין לאישור</translation>
+        <translation>%1/ali me-kumpirma</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 confirmations</source>
-        <translation>%1 אישורים</translation>
+        <translation>%1 kumpirmasion</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>Status</source>
-        <translation>מצב</translation>
+        <translation>Kabilian</translation>
     </message>
     <message numerus="yes">
         <location line="+7"/>
         <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, הופץ דרך צומת אחד</numerusform><numerusform>, הופץ דרך %n צמתים</numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Date</source>
-        <translation>תאריך</translation>
+        <translation>Kaaldauan</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Source</source>
-        <translation>מקור</translation>
+        <translation>Pikuanan</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Generated</source>
-        <translation>נוצר</translation>
+        <translation>Megawa</translation>
     </message>
     <message>
         <location line="+5"/>
         <location line="+17"/>
         <source>From</source>
-        <translation>מאת</translation>
+        <translation>Menibat</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+22"/>
         <location line="+58"/>
         <source>To</source>
-        <translation>אל</translation>
+        <translation>Para kang</translation>
     </message>
     <message>
         <location line="-77"/>
         <location line="+2"/>
         <source>own address</source>
-        <translation>כתובת עצמית</translation>
+        <translation>sariling address</translation>
     </message>
     <message>
         <location line="-2"/>
         <source>label</source>
-        <translation>תוית</translation>
+        <translation>label</translation>
     </message>
     <message>
         <location line="+37"/>
@@ -2651,17 +2650,17 @@ Address: %4
         <location line="+17"/>
         <location line="+48"/>
         <source>Credit</source>
-        <translation>זיכוי</translation>
+        <translation>Credit</translation>
     </message>
     <message numerus="yes">
         <location line="-120"/>
         <source>matures in %n more block(s)</source>
-        <translation><numerusform>מבשיל בעוד בלוק אחד</numerusform><numerusform>מבשיל בעוד %n בלוקים</numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+2"/>
         <source>not accepted</source>
-        <translation>לא התקבל</translation>
+        <translation>ali metanggap</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2669,32 +2668,32 @@ Address: %4
         <location line="+15"/>
         <location line="+48"/>
         <source>Debit</source>
-        <translation>חיוב</translation>
+        <translation>Debit</translation>
     </message>
     <message>
         <location line="-57"/>
         <source>Transaction fee</source>
-        <translation>עמלת פעולה</translation>
+        <translation>Bayad king Transaksion</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Net amount</source>
-        <translation>כמות נקיה</translation>
+        <translation>Alaga dareng eganagana</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Message</source>
-        <translation>הודעה</translation>
+        <translation>Mensayi</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Comment</source>
-        <translation>הערה</translation>
+        <translation>Komentu</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Transaction ID</source>
-        <translation>זיהוי פעולה</translation>
+        <translation>ID ning Transaksion</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -2709,47 +2708,47 @@ Address: %4
     <message>
         <location line="+8"/>
         <source>Debug information</source>
-        <translation>מידע ניפוי</translation>
+        <translation>Impormasion ning Debug</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Transaction</source>
-        <translation>פעולה</translation>
+        <translation>Transaksion</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Inputs</source>
-        <translation>קלטים</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+23"/>
         <source>Amount</source>
-        <translation>כמות</translation>
+        <translation>Alaga</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>true</source>
-        <translation>אמת</translation>
+        <translation>tutu</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>false</source>
-        <translation>שקר</translation>
+        <translation>e tutu</translation>
     </message>
     <message>
         <location line="-227"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation>, טרם שודר בהצלחה</translation>
+        <translation>, eya matagumpeng mibalita</translation>
     </message>
     <message numerus="yes">
         <location line="-35"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>פתח למשך בלוק %n יותר</numerusform><numerusform>פתח למשך %n בלוקים נוספים</numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+70"/>
         <source>unknown</source>
-        <translation>לא ידוע</translation>
+        <translation>e miya balu</translation>
     </message>
 </context>
 <context>
@@ -2757,12 +2756,12 @@ Address: %4
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="+14"/>
         <source>Transaction details</source>
-        <translation>פרטי הפעולה</translation>
+        <translation>Detalye ning Transaksion</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>חלונית זו מציגה תיאור מפורט של הפעולה</translation>
+        <translation>Ining pane a ini magpakit yang detalyadung description ning transaksion</translation>
     </message>
 </context>
 <context>
@@ -2770,87 +2769,87 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="+234"/>
         <source>Date</source>
-        <translation>תאריך</translation>
+        <translation>Kaaldauan</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Type</source>
-        <translation>סוג</translation>
+        <translation>Klase</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation>כתובת</translation>
+        <translation>Address</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Amount</source>
-        <translation>כמות</translation>
+        <translation>Alaga</translation>
     </message>
     <message numerus="yes">
         <location line="+57"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>פתח למשך בלוק %n יותר</numerusform><numerusform>פתח למשך %n בלוקים נוספים</numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open until %1</source>
-        <translation>פתוח עד %1</translation>
+        <translation>Makabuklat anggang %1</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Offline (%1 confirmations)</source>
-        <translation>לא מחובר (%1 אישורים)</translation>
+        <translation>Offline(%1 kumpirmasion)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation>ממתין לאישור (%1 מתוך %2 אישורים)</translation>
+        <translation>Ali pa me-kumpirma(%1 kareng %2 kumpirmasion)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>מאושר (%1 אישורים)</translation>
+        <translation>Me-kumpirma(%1 kumpirmasion)</translation>
     </message>
     <message numerus="yes">
         <location line="+8"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation><numerusform>המאזן שנכרה יהיה זמין כשהוא מבשיל בעוד בלוק אחד</numerusform><numerusform>המאזן שנכרה יהיה זמין כשהוא מבשיל בעוד %n בלוקים</numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+5"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>הבלוק הזה לא נקלט על ידי אף צומת אחר, וכנראה לא יתקבל!</translation>
+        <translation>Ing block a ini ali de atanggap deng aliwa pang nodes ania ali ya magsilbing tanggapan</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Generated but not accepted</source>
-        <translation>נוצר אך לא התקבל</translation>
+        <translation>Me-generate ya oneng ali ya metanggap</translation>
     </message>
     <message>
         <location line="+43"/>
         <source>Received with</source>
-        <translation>התקבל עם</translation>
+        <translation>Atanggap kayabe ning</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Received from</source>
-        <translation>התקבל מאת</translation>
+        <translation>Atanggap menibat kang</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Sent to</source>
-        <translation>נשלח ל</translation>
+        <translation>Mipadala kang</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Payment to yourself</source>
-        <translation>תשלום לעצמך</translation>
+        <translation>Kabayaran keka</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Mined</source>
-        <translation>נכרה</translation>
+        <translation>Me-mina</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -2860,27 +2859,27 @@ Address: %4
     <message>
         <location line="+199"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>מצב הפעולה. השהה את הסמן מעל שדה זה כדי לראות את מספר האישורים.</translation>
+        <translation>Status ning Transaksion: Itapat me babo na ning field a ini ban ipakit dala reng bilang dareng me-kumpirma na</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>התאריך והשעה בה הפעולה הזאת התקבלה.</translation>
+        <translation>Aldo at oras nung kapilan me tanggap ya ing transaksion</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation>סוג הפעולה.</translation>
+        <translation>Klase ning transaksion</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Destination address of transaction.</source>
-        <translation>כתובת היעד של הפעולה.</translation>
+        <translation>Kepuntalan a address ning transaksion</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>הכמות שהתווספה או הוסרה מהיתרה.</translation>
+        <translation>Alagang milako o miragdag king balanse.</translation>
     </message>
 </context>
 <context>
@@ -2889,102 +2888,102 @@ Address: %4
         <location filename="../transactionview.cpp" line="+57"/>
         <location line="+16"/>
         <source>All</source>
-        <translation>הכל</translation>
+        <translation>Eganagana</translation>
     </message>
     <message>
         <location line="-15"/>
         <source>Today</source>
-        <translation>היום</translation>
+        <translation>Aldo iti</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This week</source>
-        <translation>השבוע</translation>
+        <translation>Paruminggung iti</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This month</source>
-        <translation>החודש</translation>
+        <translation>Bulan a iti</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Last month</source>
-        <translation>החודש שעבר</translation>
+        <translation>Milabas a bulan</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This year</source>
-        <translation>השנה</translation>
+        <translation>Banuang iti</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Range...</source>
-        <translation>טווח...</translation>
+        <translation>Angganan...</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Received with</source>
-        <translation>התקבל עם</translation>
+        <translation>Atanggap kayabe ning</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Sent to</source>
-        <translation>נשלח ל</translation>
+        <translation>Mipadala kang</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>To yourself</source>
-        <translation>לעצמך</translation>
+        <translation>Keng sarili mu</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Mined</source>
-        <translation>נכרה</translation>
+        <translation>Me-mina</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Other</source>
-        <translation>אחר</translation>
+        <translation>Aliwa</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Enter address or label to search</source>
-        <translation>הכנס כתובת או תוית לחפש</translation>
+        <translation>Magpalub kang address o label para pantunan</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Min amount</source>
-        <translation>כמות מזערית</translation>
+        <translation>Pekaditak a alaga</translation>
     </message>
     <message>
         <location line="+34"/>
         <source>Copy address</source>
-        <translation>העתק כתובת</translation>
+        <translation>Kopyan ing address</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy label</source>
-        <translation>העתק תוית</translation>
+        <translation>Kopyan ing label</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation>העתק כמות</translation>
+        <translation>Kopyan ing alaga</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy transaction ID</source>
-        <translation>העתק מזהה פעולה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Edit label</source>
-        <translation>ערוך תוית</translation>
+        <translation>Alilan ing label</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show transaction details</source>
-        <translation>הצג פרטי פעולה</translation>
+        <translation>Ipakit ing detalye ning transaksion</translation>
     </message>
     <message>
         <location line="+142"/>
@@ -3014,52 +3013,52 @@ Address: %4
     <message>
         <location line="-22"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>קובץ מופרד בפסיקים (*.csv)</translation>
+        <translation>Comma separated file (*.csv)</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Confirmed</source>
-        <translation>מאושר</translation>
+        <translation>Me-kumpirma</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Date</source>
-        <translation>תאריך</translation>
+        <translation>Kaaldauan</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type</source>
-        <translation>סוג</translation>
+        <translation>Klase</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Label</source>
-        <translation>תוית</translation>
+        <translation>Label</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Address</source>
-        <translation>כתובת</translation>
+        <translation>Address</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Amount</source>
-        <translation>כמות</translation>
+        <translation>Alaga</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>ID</source>
-        <translation>מזהה</translation>
+        <translation>ID</translation>
     </message>
     <message>
         <location line="+107"/>
         <source>Range:</source>
-        <translation>טווח:</translation>
+        <translation>Angga:</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>to</source>
-        <translation>אל</translation>
+        <translation>para kang</translation>
     </message>
 </context>
 <context>
@@ -3067,7 +3066,7 @@ Address: %4
     <message>
         <location filename="../walletframe.cpp" line="+26"/>
         <source>No wallet has been loaded.</source>
-        <translation>לא נטען ארנק</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3075,7 +3074,7 @@ Address: %4
     <message>
         <location filename="../walletmodel.cpp" line="+245"/>
         <source>Send Coins</source>
-        <translation>שלח מטבעות</translation>
+        <translation>Magpadalang Barya</translation>
     </message>
 </context>
 <context>
@@ -3083,27 +3082,27 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="+43"/>
         <source>&amp;Export</source>
-        <translation>&amp;ייצא</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>יצוא הנתונים בטאב הנוכחי לקובץ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+181"/>
         <source>Backup Wallet</source>
-        <translation>גבה ארנק</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Wallet Data (*.dat)</source>
-        <translation>נתוני ארנק (*.dat)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+6"/>
         <source>Backup Failed</source>
-        <translation>גיבוי נכשל</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+0"/>
@@ -3118,7 +3117,7 @@ Address: %4
     <message>
         <location line="+0"/>
         <source>Backup Successful</source>
-        <translation>גיבוי הושלם בהצלחה</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3126,102 +3125,102 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="+217"/>
         <source>Usage:</source>
-        <translation>שימוש:</translation>
+        <translation>Pamanggamit:</translation>
     </message>
     <message>
         <location line="-54"/>
         <source>List commands</source>
-        <translation>רשימת פקודות</translation>
+        <translation>Listahan dareng commands</translation>
     </message>
     <message>
         <location line="-14"/>
         <source>Get help for a command</source>
-        <translation>קבל עזרה עבור פקודה</translation>
+        <translation>Maniauad saup para kareng command</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Options:</source>
-        <translation>אפשרויות:</translation>
+        <translation>Pipamilian:</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>ציין קובץ הגדרות (ברירת מחדל: bitcoin.conf)</translation>
+        <translation>Pilinan ing configuration file(default: bitcoin.conf)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>ציין קובץ pid (ברירת מחדל: bitcoind.pid)</translation>
+        <translation>Pilinan ing pid file(default: bitcoind.pid)</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>Specify data directory</source>
-        <translation>ציין תיקיית נתונים</translation>
+        <translation>Pilinan ing data directory</translation>
     </message>
     <message>
         <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>קבע את גודל המטמון של מסד הנתונים במגהבייט (ברירת מחדל: 25)</translation>
+        <translation>Ilage ya ing dagul o lati na ing database cache king megabytes (default: 25)</translation>
     </message>
     <message>
         <location line="-27"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>האזן לחיבורים ב&lt;פורט&gt; (ברירת מחדל: 8333 או ברשת הבדיקה: 18333)</translation>
+        <translation>Makiramdam king koneksion king &lt;port&gt;(default: 8333 o testnet: 18333)</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>החזק לכל היותר &lt;n&gt; חיבורים לעמיתים (ברירת מחדל: 125)</translation>
+        <translation>Mag-maintain peka &lt;n&gt; koneksion keng peers (default: 125)</translation>
     </message>
     <message>
         <location line="-50"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>התחבר לצומת כדי לדלות כתובות עמיתים, ואז התנתק</translation>
+        <translation>Kumunekta king note ban ayakua mula reng peer address, at mako king panga konekta</translation>
     </message>
     <message>
         <location line="+84"/>
         <source>Specify your own public address</source>
-        <translation>ציין את הכתובת הפומבית שלך</translation>
+        <translation>Sabyan me ing kekang pampublikong address</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>סף להתנתקות מעמיתים הנוהגים שלא כהלכה (ברירת מחדל: 100)</translation>
+        <translation>Threshold for disconnecting misbehaving peers (default: 100)</translation>
     </message>
     <message>
         <location line="-147"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>מספר שניות למנוע מעמיתים הנוהגים שלא כהלכה מלהתחבר מחדש (ברירת מחדל: 86400)</translation>
+        <translation>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</translation>
     </message>
     <message>
         <location line="-33"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation>אירעה שגיאה בעת הגדרת פורט RPC %u להאזנה ב-IPv4: %s</translation>
+        <translation>Atin kamalian a milyari kabang ayusan ya ing RPC port %u para keng pamakiramdam king IPv4: %s</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>האזן לחיבורי JSON-RPC ב- &lt;port&gt; (ברירת מחדל: 8332 או רשת בדיקה: 18332)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+45"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation>קבל פקודות משורת הפקודה ו- JSON-RPC</translation>
+        <translation>Tumanggap command line at JSON-RPC commands</translation>
     </message>
     <message>
         <location line="+79"/>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation>רוץ ברקע כדימון וקבל פקודות</translation>
+        <translation>Gumana king gulut bilang daemon at tumanggap commands</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>Use the test network</source>
-        <translation>השתמש ברשת הבדיקה</translation>
+        <translation>Gamitan ing test network</translation>
     </message>
     <message>
         <location line="-117"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>קבל חיבורים מבחוץ (ברירת מחדל: 1 ללא -proxy או -connect)</translation>
+        <translation>Tumanggap koneksion menibat king kilwal (default: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
         <location line="-92"/>
@@ -3236,17 +3235,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
 </source>
-        <translation>%s, עליך לקבוע סיסמת RPC בקובץ הקונפיגורציה:
- %s
-מומלץ להשתמש בסיסמא האקראית הבאה:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(אין צורך לזכור את הסיסמה)
-אסור ששם המשתמש והסיסמא יהיו זהים.
-אם הקובץ אינו קיים, צור אותו עם הרשאות קריאה לבעלים בלבד.
-זה מומלץ לסמן alertnotify כדי לקבל דיווח על תקלות;
-למשל: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com 
-</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+12"/>
@@ -3256,17 +3245,17 @@ rpcpassword=%s
     <message>
         <location line="+5"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation>אירעה שגיאה בעת הגדרת פורט RPC %u להאזנה ב-IPv6, נסוג ל-IPv4: %s</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>קשור עם כתובת נתונה והאזן לה תמיד. השתמש בסימון [host]:port עבוד IPv6.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
-        <translation>לא מסוגל להשיג נעילה על תיקיית הנתונים %s. כנראה שביטקוין כבר רץ.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
@@ -3276,22 +3265,22 @@ rpcpassword=%s
     <message>
         <location line="+4"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>שגיאה: הפעולה נדחתה! זה עלול לקרות אם כמה מהמטבעות בארנק שלך כבר נוצלו, למשל אם השתמשת בעותק של wallet.dat ומטבעות נשלחו בעותק אך לא סומנו כמנוצלות כאן.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+4"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>שגיאה: הפעולה הזאת דורשת עמלת פעולה של לפחות %s עקב הכמות, המורכבות, או השימוש בכספים שהתקבלו לאחרונה!</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+6"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>בצע פקודה כאשר פעולת ארנק משתנה (%s ב cmd יוחלף ב TxID)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+18"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>זוהי בניית ניסיון טרום-שחרור - השימוש בה על אחריותך - אין להשתמש לצורך כריה או יישומי מסחר</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+5"/>
@@ -3301,12 +3290,12 @@ rpcpassword=%s
     <message>
         <location line="+3"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>אזהרה: -paytxfee נקבע לערך מאד גבוה! זוהי עמלת הפעולה שתשלם אם אתה שולח פעולה.</translation>
+        <translation>Kapabaluan: Sobra ya katas ing makalage king -paytxfee. Ini ing maging bayad mu para king bayad na ning transaksion istung pepadala me ing transaksion a ini.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
-        <translation>אזהרה: אנא בדוק שהתאריך והשעה של המחשב שלך נכונים! אם השעון שלך אינו נכון ביטקוין לא יעבוד כראוי.</translation>
+        <translation>Kapabaluan: Maliaring pakilawe ing oras at aldo a makalage king kekayung kompyuter nung istu la! Istung ing oras yu mali ya ali ya gumanang masalese ing Bitcoin.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3321,12 +3310,12 @@ rpcpassword=%s
     <message>
         <location line="+3"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>אזהרה: שגיאה בקריאת wallet.dat! כל המתפחות נקראו באופן תקין, אך נתוני הפעולות או ספר הכתובות עלולים להיות חסרים או שגויים.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>אזהרה: קובץ wallet.dat מושחת, המידע חולץ! קובץ wallet.dat המקורח נשמר כ - wallet.{timestamp}.bak ב - %s; אם המאזן או הפעולות שגויים עליך לשחזר גיבוי.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+9"/>
@@ -3336,7 +3325,7 @@ rpcpassword=%s
     <message>
         <location line="+6"/>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>נסה לשחזר מפתחות פרטיים מקובץ wallet.dat מושחת.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -3351,12 +3340,12 @@ rpcpassword=%s
     <message>
         <location line="+1"/>
         <source>Block creation options:</source>
-        <translation>אפשרויות יצירת בלוק:</translation>
+        <translation>Pipamilian king pamag-gawang block:</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Connect only to the specified node(s)</source>
-        <translation>התחבר רק לצמתים המצוינים</translation>
+        <translation>Kumunekta mu king mepiling node(s)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3371,132 +3360,132 @@ rpcpassword=%s
     <message>
         <location line="+2"/>
         <source>Corrupted block database detected</source>
-        <translation>התגלה מסד נתוני בלוקים לא תקין</translation>
+        <translation>Mekapansin lang me-corrupt a block database</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>גלה את כתובת ה-IP העצמית (ברירת מחדל: 1 כשמאזינים וללא -externalip)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Do you want to rebuild the block database now?</source>
-        <translation>האם תרצה כעט לבנות מחדש את מסד נתוני הבלוקים?</translation>
+        <translation>Buri meng buuan pasibayu ing block database ngene?</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Error initializing block database</source>
-        <translation>שגיאה באתחול מסד נתוני הבלוקים</translation>
+        <translation>Kamalian king pamag-initialize king block na ning database</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error initializing wallet database environment %s!</source>
-        <translation>שגיאה באתחול סביבת מסד נתוני הארנקים %s!</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading block database</source>
-        <translation>שגיאה בטעינת מסד נתוני הבלוקים</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+4"/>
         <source>Error opening block database</source>
-        <translation>שגיאה בטעינת מסד נתוני הבלוקים</translation>
+        <translation>Kamalian king pamag buklat king block database</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Error: Disk space is low!</source>
-        <translation>שגיאה: מעט מקום פנוי בדיסק!</translation>
+        <translation>Kamalian: Mababa ne ing espasyu king disk!</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>שגיאה: הארנק נעול, אין אפשרות ליצור פעולה!</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: system error: </source>
-        <translation>שגיאה: שגיאת מערכת:</translation>
+        <translation>Kamalian: kamalian na ning sistema:</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>האזנה נכשלה בכל פורט. השתמש ב- -listen=0 אם ברצונך בכך.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to read block info</source>
-        <translation>קריאת מידע הבלוקים נכשלה</translation>
+        <translation>Me-mali king pamagbasa king impormasion ning block</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to read block</source>
-        <translation>קריאת הבלוק נכשלה</translation>
+        <translation>Me-mali king pamagbasa keng block</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to sync block index</source>
-        <translation>סנכרון אינדקס הבלוקים נכשל</translation>
+        <translation>Me-mali para i-sync ing block index</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write block index</source>
-        <translation>כתיבת אינדקס הבלוקים נכשל</translation>
+        <translation>Me-mali king pamanyulat king block index</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write block info</source>
-        <translation>כתיבת מידע הבלוקים נכשל</translation>
+        <translation>Me-mali king pamanyulat king block info</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write block</source>
-        <translation>כתיבת הבלוק נכשלה</translation>
+        <translation>Me-mali king pamanyulat block</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write file info</source>
-        <translation>כתיבת מידע הקבצים נכשלה</translation>
+        <translation>Me-mali king pamanyulat king file info</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write to coin database</source>
-        <translation>כתיבת מסד נתוני המטבעות נכשלה</translation>
+        <translation>Me-mali king pamanyulat king coin database</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write transaction index</source>
-        <translation>כתיבת אינדקס הפעולות נכשלה</translation>
+        <translation>Me-mali king pamanyulat king index ning transaksion</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write undo data</source>
-        <translation>כתיבת נתוני ביטול נכשלה</translation>
+        <translation>Me-mali king pamanyulat king undo data</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Fee per kB to add to transactions you send</source>
-        <translation>עמלה לכל kB להוסיף לפעולות שאתה שולח</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
-        <translation>מצא עמיתים ע&quot;י חיפוש DNS (ברירת מחדל: 1 ללא -connect)</translation>
+        <translation>Mantun peers gamit ing pamamantun DNS (default: 1 unless -connect)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Generate coins (default: 0)</source>
-        <translation>ייצר מטבעות (ברגיל: 0)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>מספר הבלוקים לבדוק בעת אתחול (ברירת מחדל: 288, 0 = כולם)</translation>
+        <translation>Pilan la reng block a lawan keng umpisa (default: 288, 0 = all)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>How thorough the block verification is (0-4, default: 3)</source>
-        <translation>מידת היסודיות של אימות הבלוקים (0-4, ברירת מחדל: 3)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -3516,7 +3505,7 @@ rpcpassword=%s
     <message>
         <location line="+15"/>
         <source>Not enough file descriptors available.</source>
-        <translation>אין מספיק מידע על הקובץ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+5"/>
@@ -3531,7 +3520,7 @@ rpcpassword=%s
     <message>
         <location line="+1"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>בנה מחדש את אינדק שרשרת הבלוקים מקבצי ה-blk000??.dat הנוכחיים.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+5"/>
@@ -3541,7 +3530,7 @@ rpcpassword=%s
     <message>
         <location line="+1"/>
         <source>Send command to Bitcoin server</source>
-        <translation>שליחת פקודה לשרת הביטקוין</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+8"/>
@@ -3551,7 +3540,7 @@ rpcpassword=%s
     <message>
         <location line="+2"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>קבע את מספר תהליכוני לשירות קריאות RPC (ברירת מחדל: 4)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+7"/>
@@ -3561,7 +3550,7 @@ rpcpassword=%s
     <message>
         <location line="+2"/>
         <source>Start Bitcoin server</source>
-        <translation>הפעל ביטקוין סרוור</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+12"/>
@@ -3571,12 +3560,12 @@ rpcpassword=%s
     <message>
         <location line="+7"/>
         <source>Verifying blocks...</source>
-        <translation>מאמת את שלמות מסד הנתונים...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Verifying wallet...</source>
-        <translation>מאמת את יושרת הארנק...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -3601,7 +3590,7 @@ rpcpassword=%s
     <message>
         <location line="-78"/>
         <source>Imports blocks from external blk000??.dat file</source>
-        <translation>מייבא בלוקים מקובצי blk000??.dat חיצוניים</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-104"/>
@@ -3621,326 +3610,326 @@ rpcpassword=%s
     <message>
         <location line="+2"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
-        <translation>קבע את מספר תהליכוני אימות הסקריפטים (1-16, 0 = אוטומטי, ברירת מחדל: 0)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+88"/>
         <source>Information</source>
-        <translation>מידע</translation>
+        <translation>&amp;Impormasion</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>כמות לא תקינה עבור -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>כמות לא תקינה עבור -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+8"/>
         <source>Maintain a full transaction index (default: 0)</source>
-        <translation>תחזק אינדקס פעולות מלא (ברירת מחדל: 0)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>חוצץ קבלה מירבי לכל חיבור, &lt;n&gt;*1000 בתים (ברירת מחדל: 5000)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>חוצץ שליחה מירבי לכל חיבור, &lt;n&gt;*1000 בתים (ברירת מחדל: 1000)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>קבל רק שרשרת בלוקים התואמת נקודות ביקורת מובנות (ברירת מחדל: 1)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>התחבר רק לצמתים ברשת &lt;net&gt; (IPv4, IPv6 או Tor)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+9"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>אפשרויות SSL: (ראה את הויקי של ביטקוין עבור הוראות הגדרת SSL)</translation>
+        <translation>Pipamilian ning SSL: (lawen ye ing Bitcoin Wiki para king SSL setup instructions)</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>שלח מידע דיבאג ועקבה לקונסולה במקום לקובץ debug.log</translation>
+        <translation>Magpadalang trace/debug info okeng console kesa keng debug.log file</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send trace/debug info to debugger</source>
-        <translation>שלח מידע דיבאג ועקבה לכלי דיבאג</translation>
+        <translation>Ipadala ing impormasion dareng trace/debug king debugger</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>קבע את גודל הבלוק המינימלי בבתים (ברירת מחדל: 0)</translation>
+        <translation>Ilage ing pekaditak a dagul na ning block king bytes (default: 0)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>כווץ את קובץ debug.log בהפעלת הקליינט (ברירת מחדל: 1 ללא -debug)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Signing transaction failed</source>
-        <translation>פעולה העברה נכשלה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>ציין הגבלת זמן לחיבור במילישניות (ברירת מחדל: 5000)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+6"/>
         <source>System error: </source>
-        <translation>שגיאת מערכת:</translation>
+        <translation>Kamalian ning sistema:</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Transaction amount too small</source>
-        <translation>סכום העברה קטן מדי</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction amounts must be positive</source>
-        <translation>סכום ההעברה חייב להיות חיובי</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction too large</source>
-        <translation>סכום העברה גדול מדי</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+8"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>השתמש ב-UPnP כדי למפות את הפורט להאזנה (ברירת מחדל: 0)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>השתמש ב-UPnP כדי למפות את הפורט להאזנה (ברירת מחדל: 1 בעת האזנה)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+2"/>
         <source>Username for JSON-RPC connections</source>
-        <translation>שם משתמש לחיבורי JSON-RPC</translation>
+        <translation>Username para king JSON-RPC koneksion</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Warning</source>
-        <translation>אזהרה</translation>
+        <translation>Kapabaluan</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>אזהרה: הגרסה הזאת מיושנת, יש צורך בשדרוג!</translation>
+        <translation>Kapabaluan: Ing bersioin a ini laus ne, kailangan nang mag-upgrade!</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>version</source>
-        <translation>גרסה</translation>
+        <translation>bersion</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation>קובץ wallet.dat מושחת, החילוץ נכשל</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-57"/>
         <source>Password for JSON-RPC connections</source>
-        <translation>סיסמה לחיבורי JSON-RPC</translation>
+        <translation>Password para king JSON-RPC koneksion</translation>
     </message>
     <message>
         <location line="-69"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation>אפשר חיבורי JSON-RPC מכתובת האינטרנט המצוינת</translation>
+        <translation>Payagan ya i JSON-RPC koneksion para king metung a IP address</translation>
     </message>
     <message>
         <location line="+79"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation>שלח פקודות לצומת ב-&lt;ip&gt; (ברירת מחדל: 127.0.0.1)</translation>
+        <translation>Magpadalang command king node a gagana king &lt;ip&gt;(default: 127.0.0.1)</translation>
     </message>
     <message>
         <location line="-131"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>בצע פקודה זו כשהבלוק הטוב ביותר משתנה (%s בפקודה יוחלף בגיבוב הבלוק)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+160"/>
         <source>Upgrade wallet to latest format</source>
-        <translation>שדרג את הארנק לפורמט העדכני</translation>
+        <translation>I-upgrade ing wallet king pekabayung porma</translation>
     </message>
     <message>
         <location line="-23"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>קבע את גודל המאגר ל -&lt;n&gt; (ברירת מחדל: 100)</translation>
+        <translation>I-set ing key pool size king &lt;n&gt;(default: 100)</translation>
     </message>
     <message>
         <location line="-12"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>סרוק מחדש את שרשרת הבלוקים למציאת פעולות חסרות בארנק</translation>
+        <translation>I-scan pasibayu ing block chain para kareng mauaualang transaksion</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>השתמש ב-OpenSSL (https( עבור חיבורי JSON-RPC</translation>
+        <translation>Gumamit OpenSSL(https) para king JSON-RPC koneksion</translation>
     </message>
     <message>
         <location line="-29"/>
         <source>Server certificate file (default: server.cert)</source>
-        <translation>קובץ תעודת שרת (ברירת מחדל: server.cert)</translation>
+        <translation>Server certificate file (default: server.cert)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Server private key (default: server.pem)</source>
-        <translation>מפתח פרטי של השרת (ברירת מחדל: server.pem)</translation>
+        <translation>Server private key (default: server.pem)</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>This help message</source>
-        <translation>הודעת העזרה הזו</translation>
+        <translation>Ining saup a mensayi</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
-        <translation>לא מסוגל לקשור ל-%s במחשב זה (הקשירה החזירה שגיאה %d, %s)</translation>
+        <translation>Ali ya magsilbing mag-bind keng %s kening kompyuter a ini (bind returned error %d, %s)</translation>
     </message>
     <message>
         <location line="-106"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>אפשר בדיקת DNS עבור -addnode, -seednode ו- -connect</translation>
+        <translation>Payagan ing pamaglawe DNS para king -addnode, -seednode and -connect</translation>
     </message>
     <message>
         <location line="+59"/>
         <source>Loading addresses...</source>
-        <translation>טוען כתובות...</translation>
+        <translation>Lo-load da ne ing address...</translation>
     </message>
     <message>
         <location line="-37"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>שגיאה בטעינת הקובץ wallet.dat: הארנק מושחת</translation>
+        <translation>Me-mali ya ing pamag-load king wallet.dat: Me-corrupt ya ing wallet</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation>שגיאה בטעינת הקובץ wallet.dat: הארנק דורש גרסה חדשה יותר של ביטקוין</translation>
+        <translation>Me-mali ya ing pamag-load na ning wallet.dat: Ing wallet mangailangan yang bayung bersion na ning Bitcoin</translation>
     </message>
     <message>
         <location line="+98"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation>יש לכתוב מחדש את הארנק: אתחל את ביטקוין לסיום</translation>
+        <translation>Ing wallet mangailangan yang misulat pasibayu: Umpisan yang pasibayu ing Bitcoin ban ma-kumpleto ya</translation>
     </message>
     <message>
         <location line="-100"/>
         <source>Error loading wallet.dat</source>
-        <translation>שגיאה בטעינת הקובץ wallet.dat</translation>
+        <translation>Me-mali ya ing pamag-load king wallet.dat</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>כתובת -proxy לא תקינה: &apos;%s&apos;</translation>
+        <translation>Ali katanggap-tanggap a -proxy addresss: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>רשת לא ידועה צוינה ב- -onlynet: &apos;%s&apos;</translation>
+        <translation>E kilalang network ing mepili king -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>Unknown -socks proxy version requested: %i</source>
-        <translation>התבקשה גרסת פרוקסי -socks לא ידועה: %i</translation>
+        <translation>E kilalang -socks proxy version requested: %i</translation>
     </message>
     <message>
         <location line="-100"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation>לא מסוגל לפתור כתובת -bind: &apos;%s&apos;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation>לא מסוגל לפתור כתובת -externalip: &apos;%s&apos;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+47"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>כמות לא תקינה עבור -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount</source>
-        <translation>כמות לא תקינה</translation>
+        <translation>Ing alaga e ya katanggap-tanggap</translation>
     </message>
     <message>
         <location line="-6"/>
         <source>Insufficient funds</source>
-        <translation>אין מספיק כספים</translation>
+        <translation>Kulang a pondo</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Loading block index...</source>
-        <translation>טוען את אינדקס הבלוקים...</translation>
+        <translation>Lo-load dane ing block index...</translation>
     </message>
     <message>
         <location line="-61"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>הוסף צומת להתחברות ונסה לשמור את החיבור פתוח</translation>
+        <translation>Magdagdag a node ban kumunekta at subuknan apanatili yang makabuklat ing koneksion</translation>
     </message>
     <message>
         <location line="-32"/>
         <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
-        <translation>לא ניתן לקשור ל-%s במחשב זה. ביטקוין כנראה עדיין רץ.</translation>
+        <translation>Eya megsilbing idikit king %s na ning kompyuter a ini. Mapaliaring mamandar ne ing Bitcoin.</translation>
     </message>
     <message>
         <location line="+94"/>
         <source>Loading wallet...</source>
-        <translation>טוען ארנק...</translation>
+        <translation>Lo-load dane ing wallet...</translation>
     </message>
     <message>
         <location line="-55"/>
         <source>Cannot downgrade wallet</source>
-        <translation>לא יכול להוריד דרגת הארנק</translation>
+        <translation>Ali ya magsilbing i-downgrade ing wallet</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Cannot write default address</source>
-        <translation>לא יכול לכתוב את כתובת ברירת המחדל</translation>
+        <translation>Eya misulat ing default address</translation>
     </message>
     <message>
         <location line="+66"/>
         <source>Rescanning...</source>
-        <translation>סורק מחדש...</translation>
+        <translation>I-scan deng pasibayu...</translation>
     </message>
     <message>
         <location line="-58"/>
         <source>Done loading</source>
-        <translation>טעינה הושלמה</translation>
+        <translation>Yari ne ing pamag-load</translation>
     </message>
     <message>
         <location line="+85"/>
         <source>To use the %s option</source>
-        <translation>להשתמש באפשרות %s</translation>
+        <translation>Para agamit ing %s a pimamilian</translation>
     </message>
     <message>
         <location line="-77"/>
         <source>Error</source>
-        <translation>שגיאה</translation>
+        <translation>Mali</translation>
     </message>
     <message>
         <location line="-34"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
-        <translation>עליך לקבוע rpcpassword=yourpassword בקובץ ההגדרות:
+        <translation>Dapat meng ilage ing rpcpassword=&lt;password&gt; king configuration file:
 %s
-אם הקובץ אינו קיים, צור אותו עם הרשאות קריאה לבעלים בלבד.</translation>
+Nung ing file ala ya, gawa ka gamit ing owner-readable-only file permissions.</translation>
     </message>
 </context>
 </TS>
