@@ -6,6 +6,7 @@
 
 #include "clientversion.h"
 #include "util.h"
+#include "ui_interface.h"
 
 #include <QApplication>
 #include <QPainter>
@@ -85,4 +86,37 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f, bool isTest
     pixPaint.end();
 
     this->setPixmap(newPixmap);
+
+    subscribeToCoreSignals();
+}
+
+SplashScreen::~SplashScreen()
+{
+    unsubscribeFromCoreSignals();
+}
+
+void SplashScreen::slotFinish(QWidget *mainWin)
+{
+    finish(mainWin);
+}
+
+static void InitMessage(SplashScreen *splash, const std::string &message)
+{
+    QMetaObject::invokeMethod(splash, "showMessage",
+        Qt::QueuedConnection,
+        Q_ARG(QString, QString::fromStdString(message)),
+        Q_ARG(int, Qt::AlignBottom|Qt::AlignHCenter),
+        Q_ARG(QColor, QColor(55,55,55)));
+}
+
+void SplashScreen::subscribeToCoreSignals()
+{
+    // Connect signals to client
+    uiInterface.InitMessage.connect(boost::bind(InitMessage, this, _1));
+}
+
+void SplashScreen::unsubscribeFromCoreSignals()
+{
+    // Disconnect signals from client
+    uiInterface.InitMessage.disconnect(boost::bind(InitMessage, this, _1));
 }
