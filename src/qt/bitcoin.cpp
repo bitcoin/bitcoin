@@ -193,6 +193,7 @@ private:
     ClientModel *clientModel;
     BitcoinGUI *window;
     WalletModel *walletModel;
+    QTimer *pollShutdownTimer;
     int returnValue;
 
     void startThread();
@@ -250,6 +251,7 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     clientModel(0),
     window(0),
     walletModel(0),
+    pollShutdownTimer(0),
     returnValue(0)
 {
     setQuitOnLastWindowClosed(false);
@@ -282,7 +284,7 @@ void BitcoinApplication::createWindow(bool isaTestNet)
 {
     window = new BitcoinGUI(isaTestNet, 0);
 
-    QTimer* pollShutdownTimer = new QTimer(window);
+    pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
     pollShutdownTimer->start(200);
 }
@@ -326,6 +328,7 @@ void BitcoinApplication::requestShutdown()
     window->hide();
     window->setClientModel(0);
     window->removeAllWallets();
+    pollShutdownTimer->stop();
 
     delete walletModel;
     walletModel = 0;
