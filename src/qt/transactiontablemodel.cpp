@@ -285,38 +285,40 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
 {
     QString status;
 
-    switch(wtx->status.status)
-    {
-    case TransactionStatus::OpenUntilBlock:
-        status = tr("Open for %n more block(s)","",wtx->status.open_for);
-        break;
-    case TransactionStatus::OpenUntilDate:
-        status = tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx->status.open_for));
-        break;
-    case TransactionStatus::Offline:
-        status = tr("Offline (%1 confirmations)").arg(wtx->status.depth);
-        break;
-    case TransactionStatus::Unconfirmed:
-        status = tr("Unconfirmed (%1 of %2 confirmations)").arg(wtx->status.depth).arg(TransactionRecord::NumConfirmations);
-        break;
-    case TransactionStatus::HaveConfirmations:
-        status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
-        break;
-    }
     if(wtx->type == TransactionRecord::Generated)
     {
         switch(wtx->status.maturity)
         {
         case TransactionStatus::Immature:
-            status += "\n" + tr("Mined balance will be available when it matures in %n more block(s)", "", wtx->status.matures_in);
+            status = tr("Immature (%1 confirmations, will be available after %2)").arg(wtx->status.depth).arg(wtx->status.depth + wtx->status.matures_in);
             break;
         case TransactionStatus::Mature:
+            status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
             break;
         case TransactionStatus::MaturesWarning:
-            status += "\n" + tr("This block was not received by any other nodes and will probably not be accepted!");
+            status = tr("This block was not received by any other nodes and will probably not be accepted!");
             break;
         case TransactionStatus::NotAccepted:
-            status += "\n" + tr("Generated but not accepted");
+            status = tr("Generated but not accepted");
+            break;
+        }
+    } else {
+        switch(wtx->status.status)
+        {
+        case TransactionStatus::OpenUntilBlock:
+            status = tr("Open for %n more block(s)","",wtx->status.open_for);
+            break;
+        case TransactionStatus::OpenUntilDate:
+            status = tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx->status.open_for));
+            break;
+        case TransactionStatus::Offline:
+            status = tr("Offline (%1 confirmations)").arg(wtx->status.depth);
+            break;
+        case TransactionStatus::Unconfirmed:
+            status = tr("Unconfirmed (%1 of %2 confirmations)").arg(wtx->status.depth).arg(TransactionRecord::NumConfirmations);
+            break;
+        case TransactionStatus::HaveConfirmations:
+            status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
             break;
         }
     }
