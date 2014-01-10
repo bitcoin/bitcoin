@@ -36,6 +36,13 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
 
 ClientModel::~ClientModel()
 {
+    if (pollTimer)
+    {
+        pollTimer->stop();
+        delete pollTimer;
+        pollTimer = NULL;
+    }
+
     unsubscribeFromCoreSignals();
 }
 
