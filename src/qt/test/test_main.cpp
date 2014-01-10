@@ -1,9 +1,18 @@
+#include "bitcoin-config.h"
 #include "paymentservertests.h"
 #include "uritests.h"
 
 #include <QCoreApplication>
 #include <QObject>
 #include <QTest>
+
+#if defined(QT_STATICPLUGIN) && QT_VERSION < 0x050000
+#include <QtPlugin>
+Q_IMPORT_PLUGIN(qcncodecs)
+Q_IMPORT_PLUGIN(qjpcodecs)
+Q_IMPORT_PLUGIN(qtwcodecs)
+Q_IMPORT_PLUGIN(qkrcodecs)
+#endif
 
 // This is all you need to run all the tests
 int main(int argc, char *argv[])

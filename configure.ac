@@ -63,38 +63,6 @@ AC_ARG_ENABLE([ipv6],
   [use_ipv6=$enableval],
   [use_ipv6=yes])
 
-dnl enable qt support
-AC_ARG_WITH([qt],
-  [AS_HELP_STRING([--with-qt],
-  [enable qt (default is yes)])],
-  [use_qt=$withval],
-  [use_qt=auto])
-AC_DEFUN([BITCOIN_QT_FAIL],[
-  if test "x$use_qt" = "xauto"; then
-    AC_MSG_WARN([$1; bitcoin-qt frontend will not be built])
-    use_qt=no
-  else
-    AC_MSG_ERROR([$1])
-  fi
-])
-AC_DEFUN([BITCOIN_QT_CHECK],[
-  if test "x$use_qt" != "xno"; then
-    true
-    $1
-  else
-    true
-    $2
-  fi
-])
-AC_DEFUN([BITCOIN_QT_PATH_PROGS],[
-  BITCOIN_QT_CHECK([
-    AC_PATH_PROGS($1,$2,$3,$4)
-    if test "x$$1" = "x"; then
-      BITCOIN_QT_FAIL([$1 not found])
-    fi
-  ])
-])
-
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
     [use_tests=$enableval],
@@ -116,12 +84,6 @@ AC_ARG_WITH([qrencode],
   [use_qr=$withval],
   [use_qr=auto])
 
-AC_ARG_WITH([qtdbus],
-  [AS_HELP_STRING([--with-qtdbus],
-  [enable DBus support (default is yes if qt is enabled and QtDBus is found)])],
-  [use_dbus=$withval],
-  [use_dbus=auto])
-
 AC_ARG_ENABLE([hardening],
   [AS_HELP_STRING([--enable-hardening],
   [attempt to harden the resulting executables (default is yes)])],
@@ -140,10 +102,6 @@ AC_ARG_ENABLE([lcov],
   [use_lcov=yes],
   [use_lcov=no])
 
-AC_ARG_WITH([qt-incdir],[AS_HELP_STRING([--with-qt-incdir=INC_DIR],[specify qt include path (overridden by pkgconfig)])], [qt_include_path=$withval], [])
-AC_ARG_WITH([qt-libdir],[AS_HELP_STRING([--with-qt-libdir=LIB_DIR],[specify qt lib path (overridden by pkgconfig)])], [qt_lib_path=$withval], [])
-AC_ARG_WITH([qt-bindir],[AS_HELP_STRING([--with-qt-bindir=BIN_DIR],[specify qt bin path])], [qt_bin_path=$withval], [])
-AC_ARG_WITH([qt-plugindir],[AS_HELP_STRING([--with-qt-plugindir=PLUGIN_DIR],[specify qt plugin path (overridden by pkgconfig)])], [qt_plugin_path=$withval], [])
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
 
@@ -168,13 +126,7 @@ AC_PATH_PROG(LCOV, lcov)
 AC_PATH_PROG(JAVA, java)
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
-BITCOIN_QT_PATH_PROGS([MOC], [moc-qt4 moc4 moc],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([UIC], [uic-qt4 uic4 uic],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([RCC], [rcc-qt4 rcc4 rcc],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([LRELEASE], [lrelease-qt4 lrelease4 lrelease],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],, $protoc_bin_path:$PATH)
 AC_PATH_PROG(CCACHE,ccache)
-AC_PATH_PROGS([LUPDATE], [lupdate-qt4 lupdate4 lupdate],, $qt_bin_path:$PATH)
 AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
 PKG_PROG_PKG_CONFIG
@@ -239,7 +191,7 @@ case $host in
        AC_CHECK_PROG([PORT],port, port)
        if test x$PORT = xport; then
          dnl add default macports paths
-         CPPFLAGS="$CPPFLAGS -I/opt/local/include -I/opt/local/include/db48"
+         CPPFLAGS="$CPPFLAGS -isystem /opt/local/include -I/opt/local/include/db48"
          LIBS="$LIBS -L/opt/local/lib -L/opt/local/lib/db48"
        fi
 
@@ -253,12 +205,6 @@ case $host in
          LIBS="$LIBS -L$bdb_prefix/lib"
        fi
      fi
-
-     BITCOIN_QT_CHECK([
-       MOC_DEFS="-DQ_OS_MAC"
-       base_frameworks="-framework Foundation -framework ApplicationServices -framework AppKit"
-       AX_CHECK_LINK_FLAG([[$base_frameworks]],[LIBS="$LIBS $base_frameworks"],[AC_MSG_ERROR(could not find base frameworks)])
-     ])
 
      CPPFLAGS="$CPPFLAGS -DMAC_OSX"
      TESTDEFS="-DBOOST_TEST_DYN_LINK"
@@ -452,6 +398,8 @@ if test x$boost_sleep != xyes; then
   AC_MSG_ERROR(No working boost sleep implementation found)
 fi
 
+BITCOIN_QT_INIT
+
 if test x$use_pkgconfig = xyes; then
 
   if test x$PKG_CONFIG == x; then
@@ -464,23 +412,10 @@ if test x$use_pkgconfig = xyes; then
     [
       PKG_CHECK_MODULES([SSL], [libssl], [INCLUDES="$INCLUDES $SSL_CFLAGS"; LIBS="$LIBS $SSL_LIBS"], [AC_MSG_ERROR(openssl  not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto], [INCLUDES="$INCLUDES $CRYPTO_CFLAGS"; LIBS="$LIBS $CRYPTO_LIBS"], [AC_MSG_ERROR(libcrypto  not found.)])
-
-      BITCOIN_QT_CHECK([
-        PKG_CHECK_MODULES([QT], [QtCore QtGui QtNetwork], [QT_INCLUDES="$QT_CFLAGS"; have_qt=yes],[
-          have_qt=no
-          BITCOIN_QT_FAIL([Qt dependencies not found])
-        ])
-        if test x$use_tests = xyes; then
-          PKG_CHECK_MODULES([QT_TEST], [QtTest], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
-        fi
-        if test x$use_dbus != xno; then
-          PKG_CHECK_MODULES([QT_DBUS], [QtDBus], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
-        fi
-        if test x$use_qr != xno; then
-          PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])
-        fi
-        PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [AC_MSG_ERROR(libprotobuf not found.)])
-      ])
+      BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [BITCOIN_QT_FAIL(libprotobuf not found)])])
+      if test x$use_qr != xno; then
+        BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
+      fi
     ]
   )
 else
@@ -490,81 +425,18 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],, AC_MSG_ERROR(libssl missing))
 
-  BITCOIN_QT_CHECK([
-    TEMP_LIBS="$LIBS"
-    LIBS=
-    if test x$qt_lib_path != x; then
-      QT_LIBS="$QT_LIBS -L$qt_lib_path"
-      LIBS="$QT_LIBS"
-    fi
-    if test x$qt_plugin_path != x; then
-      QT_LIBS="$QT_LIBS -L$qt_plugin_path/codecs"
-      LIBS="$QT_LIBS"
-    fi
-
-    if test x$TARGET_OS == xwindows; then
-      AC_CHECK_LIB([imm32],      [main],, BITCOIN_QT_FAIL(libimm32 not found))
-    fi
-  ])
-
-    #TODO: These are only needed when they're linked directly to parent libs. It really has nothing to do with windows.
-    #Instead, check for missing functions in parent libs and assume static if they're absent.
-    if test x$TARGET_OS == xwindows; then
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qcncodecs],[main],,BITCOIN_QT_FAIL(libqcncodecs not found)))
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qjpcodecs],[main],,BITCOIN_QT_FAIL(libqjpcodecs not found)))
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qkrcodecs],[main],,BITCOIN_QT_FAIL(libqkrcodecs not found)))
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qtwcodecs],[main],,BITCOIN_QT_FAIL(libqtwcodecs not found)))
-    fi
-
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtCore]   ,[main],,BITCOIN_QT_FAIL(libQtCore not found)))
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtGui]    ,[main],,BITCOIN_QT_FAIL(libQtGui not found)))
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtNetwork],[main],,BITCOIN_QT_FAIL(libQtNetwork not found)))
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],,BITCOIN_QT_FAIL(libprotobuf not found)))
-
-  BITCOIN_QT_CHECK([
-    QT_LIBS="$LIBS"
-    LIBS="$TEMP_LIBS"
-
-    TEMP_CPPFLAGS="$CPPFLAGS"
-    if test x$qt_include_path != x; then
-      QT_INCLUDES="-I$qt_include_path -I$qt_include_path/QtCore -I$qt_include_path/QtGui -I$qt_include_path/QtNetwork -I$qt_include_path/QtTest -I$qt_include_path/QtDBus"
-      CPPFLAGS="$CPPFLAGS $QT_INCLUDES"
-    fi
-  ])
-    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QtPlugin],,BITCOIN_QT_FAIL(QtCore headers missing))])
-    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QApplication],, BITCOIN_QT_FAIL(QtGui headers missing))])
-    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QLocalSocket],, BITCOIN_QT_FAIL(QtNetwork headers missing))])
-
-  BITCOIN_QT_CHECK([
-    if test x$use_tests = xyes; then
-      TEMP_LIBS="$LIBS"
-      LIBS=
-      if test x$qt_lib_path != x; then
-        LIBS="-L$qt_lib_path"
-      fi
-      AC_CHECK_LIB([QtTest],      [main],, have_qt_test=no)
-      AC_CHECK_HEADER([QTest],, have_qt_test=no)
-      QT_TEST_LIBS="$LIBS"
-      LIBS="$TEMP_LIBS"
-    fi
-    if test x$use_dbus != xno; then
-      TEMP_LIBS="$LIBS"
-      LIBS=
-      if test x$qt_lib_path != x; then
-        LIBS="-L$qt_lib_path"
-      fi
-      AC_CHECK_LIB([QtDBus],      [main],, have_qt_dbus=no)
-      AC_CHECK_HEADER([QtDBus],, have_qt_dbus=no)
-      QT_DBUS_LIBS="$LIBS"
-      LIBS="$TEMP_LIBS"
-    fi
-    CPPFLAGS="$TEMP_CPPFLAGS"
-    if test x$use_qr != xno; then
-      AC_CHECK_LIB([qrencode], [main],, [have_qrencode=no])
-      AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)
-    fi
-  ])
+  BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],,BITCOIN_QT_FAIL(libprotobuf not found)))
+  if test x$use_qr != xno; then
+    BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],, [have_qrencode=no])])
+    BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
+  fi
 fi
+
+BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
+
+dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
+BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
+
 
 if test x$use_ipv6 = xyes; then
   dnl Check for ipv6 build requirements
@@ -613,10 +485,6 @@ if test x$enable_wallet != xno; then
 
 else
   AC_MSG_RESULT(no)
-
-  if test "x$use_qt" != "xno"; then
-    AC_MSG_ERROR([Cannot currently build Qt GUI with wallet disabled. Use --without-qt.])
-  fi
 fi
 
 dnl enable ipv6 support
@@ -662,46 +530,15 @@ else
   fi
 fi
 
-dnl enable qt support
-AC_MSG_CHECKING([if qt should be enabled])
-BITCOIN_QT_CHECK([
-  use_qt=yes
-  BUILD_QT=qt
-  if test x$use_tests = xyes; then
-    if test x$have_qt_test = xno; then
-      AC_MSG_ERROR("libQtTest not found. Use --disable-tests or --without-qt.")
-    fi
-  fi
-  if test x$have_qt_dbus = xno;  then
-    if test x$use_dbus = xyes; then
-      AC_MSG_ERROR("libQtDBus not found. Install libQtDBus or remove --with-qtdbus.")
-    fi
-    use_dbus=no
-  fi
-  if test x$XGETTEXT == x; then
-    AC_MSG_WARN("xgettext is required to update qt translations")
-  fi
-  if test x$LUPDATE == x; then
-    AC_MSG_WARN("lupdate is required to update qt translations")
-  fi
-],[
-  use_qt=no
-])
-
-AC_MSG_RESULT($use_qt)
-
 dnl these are only used when qt is enabled
-if test x$use_qt = xyes; then
-
+if test x$bitcoin_enable_qt != xno; then
+  BUILD_QT=qt
   dnl enable dbus support
   AC_MSG_CHECKING([if dbus should be enabled])
-  if test x$use_dbus != xno; then
-    use_dbus=yes
+  if test x$bitcoin_enable_qt_dbus != xno; then
     AC_DEFINE([USE_DBUS],[1],[Define if dbus support should be compiled in])
-  else
-    use_dbus=no
   fi
-  AC_MSG_RESULT($use_dbus)
+  AC_MSG_RESULT($bitcoin_enable_qt_dbus)
 
   dnl enable qr support
   AC_MSG_CHECKING([if qr should be enabled])
@@ -720,8 +557,18 @@ if test x$use_qt = xyes; then
     fi
   fi
 
-  if test x$use_tests$have_qt_test = xyesyes; then
+  if test x$XGETTEXT == x; then
+    AC_MSG_WARN("xgettext is required to update qt translations")
+  fi
+
+  if test x$use_tests = xyes; then
     BUILD_TEST_QT="test"
+    if test x$bitcoin_enable_qt_test != xyes; then
+      AC_MSG_ERROR("QT Test lib not found. Use --disable-tests or --without-qt.")
+    fi
+  fi
+  if test x$enable_wallet == xno; then
+    AC_MSG_ERROR([Cannot currently build Qt GUI with wallet disabled. Use --without-qt.])
   fi
 fi
 
@@ -756,17 +603,10 @@ AC_SUBST(USE_QRCODE)
 AC_SUBST(USE_IPV6)
 AC_SUBST(INCLUDES)
 AC_SUBST(BOOST_LIBS)
-AC_SUBST(MOC_DEFS)
-AC_SUBST(QT_INCLUDES)
-AC_SUBST(QT_TEST_LIBS)
-AC_SUBST(QT_LIBS)
-AC_SUBST(QT_DBUS_LIBS)
-AC_SUBST(QT_DBUS_INCLUDES)
-AC_SUBST(QT_TEST_INCLUDES)
 AC_SUBST(TESTDEFS)
 AC_SUBST(LEVELDB_TARGET_FLAGS)
-AC_SUBST(BUILD_QT)
 AC_SUBST(BUILD_TEST)
+AC_SUBST(BUILD_QT)
 AC_SUBST(BUILD_TEST_QT)
 AC_CONFIG_FILES([Makefile src/Makefile src/test/Makefile src/qt/Makefile src/qt/test/Makefile share/setup.nsi share/qt/Info.plist])
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
