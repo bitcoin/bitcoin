@@ -34,6 +34,8 @@ public:
         DisplayAddresses,       // bool
         Language,               // QString
         CoinControlFeatures,    // bool
+        ThreadsScriptVerif,     // int
+        DatabaseCache,          // int
         OptionIDRowCount,
     };
 
@@ -41,7 +43,7 @@ public:
     void Reset();
 
     /* Migrate settings from wallet.dat after app initialization */
-    bool Upgrade(); /* returns true if settings upgraded */
+    void Upgrade();
 
     int rowCount(const QModelIndex & parent = QModelIndex()) const;
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
@@ -52,17 +54,24 @@ public:
     bool getMinimizeOnClose() { return fMinimizeOnClose; }
     int getDisplayUnit() { return nDisplayUnit; }
     bool getDisplayAddresses() { return bDisplayAddresses; }
-    QString getLanguage() { return language; }
     bool getProxySettings(QString& proxyIP, quint16 &proxyPort) const;
     bool getCoinControlFeatures() { return fCoinControlFeatures; }
+    const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
+
+    /* Restart flag helper */
+    void setRestartRequired(bool fRequired);
+    bool isRestartRequired();
 
 private:
-    int nDisplayUnit;
-    bool bDisplayAddresses;
+    /* Qt-only settings */
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
     QString language;
+    int nDisplayUnit;
+    bool bDisplayAddresses;
     bool fCoinControlFeatures;
+    /* settings that were overriden by command-line */
+    QString strOverriddenByCommandLine;
 
 signals:
     void displayUnitChanged(int unit);

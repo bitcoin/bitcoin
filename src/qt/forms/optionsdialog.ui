@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>540</width>
-    <height>380</height>
+    <width>560</width>
+    <height>400</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,9 +19,6 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTabWidget" name="tabWidget">
-     <property name="tabPosition">
-      <enum>QTabWidget::North</enum>
-     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
@@ -87,20 +84,43 @@
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer_Main">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2_Main">
+         <item>
+          <widget class="QLabel" name="databaseCacheLabel">
+           <property name="text">
+            <string>Size of &amp;database cache</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>databaseCache</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="databaseCache">
+           <property name="toolTip">
+            <string>Set database cache size in megabytes (default: 25)</string>
+           </property>
+           <property name="maximum">
+            <number>1024</number>
+           </property>
+           <property name="value">
+            <number>25</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="databaseCacheUnitLabel">
+           <property name="text">
+            <string>MB</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+          </widget>
+         </item>
          <item>
           <spacer name="horizontalSpacer_2_Main">
            <property name="orientation">
@@ -114,20 +134,63 @@
            </property>
           </spacer>
          </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3_Main">
          <item>
-          <widget class="QPushButton" name="resetButton">
-           <property name="toolTip">
-            <string>Reset all client options to default.</string>
-           </property>
+          <widget class="QLabel" name="threadsScriptVerifLabel">
            <property name="text">
-            <string>&amp;Reset Options</string>
+            <string>Number of script &amp;verification threads</string>
            </property>
-           <property name="autoDefault">
-            <bool>false</bool>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>threadsScriptVerif</cstring>
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QSpinBox" name="threadsScriptVerif">
+           <property name="toolTip">
+            <string>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</string>
+           </property>
+           <property name="minimum">
+            <number>-16</number>
+           </property>
+           <property name="maximum">
+            <number>16</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3_Main">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
         </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_Main">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -149,15 +212,15 @@
        <item>
         <widget class="QCheckBox" name="connectSocks">
          <property name="toolTip">
-          <string>Connect to the Bitcoin network through a SOCKS proxy (e.g. when connecting through Tor).</string>
+          <string>Connect to the Bitcoin network through a SOCKS proxy.</string>
          </property>
          <property name="text">
-          <string>&amp;Connect through SOCKS proxy:</string>
+          <string>&amp;Connect through SOCKS proxy (default proxy):</string>
          </property>
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_Network">
+        <layout class="QHBoxLayout" name="horizontalLayout_1_Network">
          <item>
           <widget class="QLabel" name="proxyIpLabel">
            <property name="text">
@@ -173,6 +236,12 @@
          </item>
          <item>
           <widget class="QValidatedLineEdit" name="proxyIp">
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>140</width>
@@ -180,7 +249,7 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>IP address of the proxy (e.g. 127.0.0.1)</string>
+            <string>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</string>
            </property>
           </widget>
          </item>
@@ -199,6 +268,12 @@
          </item>
          <item>
           <widget class="QLineEdit" name="proxyPort">
+           <property name="minimumSize">
+            <size>
+             <width>55</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>55</width>
@@ -231,7 +306,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_Network">
+          <spacer name="horizontalSpacer_1_Network">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -391,7 +466,66 @@
     </widget>
    </item>
    <item>
+    <widget class="QFrame" name="frame">
+     <layout class="QVBoxLayout" name="verticalLayout_Bottom">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_Bottom">
+        <item>
+         <widget class="QLabel" name="overriddenByCommandLineInfoLabel">
+          <property name="text">
+           <string>Active command-line options that override above options: </string>
+          </property>
+          <property name="textFormat">
+           <enum>Qt::PlainText</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_Bottom">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="overriddenByCommandLineLabel">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::PlainText</enum>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_Buttons">
+     <item>
+      <widget class="QPushButton" name="resetButton">
+       <property name="toolTip">
+        <string>Reset all client options to default.</string>
+       </property>
+       <property name="text">
+        <string>&amp;Reset Options</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
      <item>
       <spacer name="horizontalSpacer_1">
        <property name="orientation">
@@ -407,6 +541,12 @@
      </item>
      <item>
       <widget class="QLabel" name="statusLabel">
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="font">
         <font>
          <weight>75</weight>
@@ -454,16 +594,6 @@
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QPushButton" name="applyButton">
-       <property name="text">
-        <string>&amp;Apply</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
     </layout>
    </item>
   </layout>
@@ -473,16 +603,17 @@
    <class>BitcoinAmountField</class>
    <extends>QLineEdit</extends>
    <header>bitcoinamountfield.h</header>
-  </customwidget>
-  <customwidget>
-   <class>QValueComboBox</class>
-   <extends>QComboBox</extends>
-   <header>qvaluecombobox.h</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
    <header>qvalidatedlineedit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QValueComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qvaluecombobox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
