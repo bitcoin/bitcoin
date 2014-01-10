@@ -1,7 +1,7 @@
 dnl Helper for cases where a qt dependency is not met.
 dnl Output: If qt version is auto, set bitcoin_enable_qt to false. Else, exit.
 AC_DEFUN([BITCOIN_QT_FAIL],[
-  if test "x$bitcoin_qt_want_version" = "xauto"; then
+  if test "x$bitcoin_qt_want_version" = "xauto" && test x$bitcoin_qt_force != xyes; then
     if test x$bitcoin_enable_qt != xno; then
       AC_MSG_WARN([$1; bitcoin-qt frontend will not be built])
     fi
@@ -50,7 +50,13 @@ AC_DEFUN([BITCOIN_QT_INIT],[
   AC_ARG_WITH([qt],
     [AS_HELP_STRING([--with-qt],
     [with qt (no|qt4|qt5|auto. default is auto, qt4 tried first.)])],
-    [bitcoin_qt_want_version=$withval],
+    [
+     bitcoin_qt_want_version=$withval
+     if test x$bitcoin_qt_want_version = xyes; then
+       bitcoin_qt_force=yes
+       bitcoin_qt_want_version=auto
+     fi
+    ],
     [bitcoin_qt_want_version=auto])
 
   AC_ARG_WITH([qt-incdir],[AS_HELP_STRING([--with-qt-incdir=INC_DIR],[specify qt include path (overridden by pkgconfig)])], [qt_include_path=$withval], [])

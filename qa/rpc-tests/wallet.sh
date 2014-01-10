@@ -12,6 +12,7 @@ BITCOIND=${1}/bitcoind
 CLI=${1}/bitcoin-cli
 
 DIR="${BASH_SOURCE%/*}"
+SENDANDWAIT="${DIR}/send.sh"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/util.sh"
 
