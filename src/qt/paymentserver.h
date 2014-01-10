@@ -56,12 +56,16 @@ class PaymentServer : public QObject
     Q_OBJECT
 
 public:
+    // Parse URIs on command line
+    // Returns false on error
+    static bool ipcParseCommandLine(int argc, char *argv[]);
+
     // Returns true if there were URIs on the command line
     // which were successfully sent to an already-running
     // process.
     // Note: if a payment request is given, SelectParams(MAIN/TESTNET)
     // will be called so we startup in the right mode.
-    static bool ipcSendCommandLine(int argc, char *argv[]);
+    static bool ipcSendCommandLine();
 
     // parent should be QApplication object
     PaymentServer(QObject* parent, bool startLocalServer = true);
