@@ -15,6 +15,17 @@ class SplashScreen : public QSplashScreen
 
 public:
     explicit SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f, bool isTestNet);
+    ~SplashScreen();
+
+public slots:
+    /** Slot to call finish() method as it's not defined as slot */
+    void slotFinish(QWidget *mainWin);
+
+private:
+    /** Connect core signals to splash screen */
+    void subscribeToCoreSignals();
+    /** Disconnect core signals to splash screen */
+    void unsubscribeFromCoreSignals();
 };
 
 #endif // SPLASHSCREEN_H
