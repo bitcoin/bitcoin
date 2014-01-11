@@ -23,6 +23,7 @@ function CreateDataDir {
   echo "rpcuser=rt" >> $CONF
   echo "rpcpassword=rt" >> $CONF
   echo "rpcwait=1" >> $CONF
+  echo "walletnotify=killall -HUP `basename ${SENDANDWAIT}`" >> $CONF
   shift
   while (( "$#" )); do
       echo $1 >> $CONF
@@ -59,7 +60,7 @@ function Send {
   to=$2
   amount=$3
   address=$(Address $to)
-  txid=$( $CLI $from sendtoaddress $address $amount )
+  txid=$( ${SENDANDWAIT} $CLI $from sendtoaddress $address $amount )
 }
 
 # Use: Unspent <datadir> <n'th-last-unspent> <var>
@@ -80,7 +81,7 @@ function CreateTxn1 {
 
 # Use: SendRawTxn <datadir> <hex_txn_data>
 function SendRawTxn {
-  $CLI $1 sendrawtransaction $2
+  ${SENDANDWAIT} $CLI $1 sendrawtransaction $2
 }
 
 # Use: GetBlocks <datadir>
