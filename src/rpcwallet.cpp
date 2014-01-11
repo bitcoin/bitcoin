@@ -54,6 +54,7 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
     entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
     entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
     entry.push_back(Pair("timereceived", (boost::int64_t)wtx.nTimeReceived));
+    entry.push_back(Pair("expired", wtx.fExpired));
     BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
 }
@@ -482,7 +483,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !IsFinalTx(wtx))
+        if (wtx.IsCoinBase() || !IsFinalTx(wtx) || wtx.fExpired)
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
@@ -531,7 +532,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !IsFinalTx(wtx))
+        if (wtx.IsCoinBase() || !IsFinalTx(wtx) || wtx.fExpired)
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
@@ -555,7 +556,7 @@ int64_t GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMi
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (!IsFinalTx(wtx))
+        if (!IsFinalTx(wtx) || wtx.fExpired)
             continue;
 
         int64_t nReceived, nSent, nFee;
@@ -940,7 +941,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
     {
         const CWalletTx& wtx = (*it).second;
 
-        if (wtx.IsCoinBase() || !IsFinalTx(wtx))
+        if (wtx.IsCoinBase() || !IsFinalTx(wtx) || wtx.fExpired)
             continue;
 
         int nDepth = wtx.GetDepthInMainChain();
@@ -1168,15 +1169,16 @@ void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Ar
 
 Value listtransactions(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 3)
+    if (fHelp || params.size() > 4)
         throw runtime_error(
             "listtransactions ( \"account\" count from )\n"
             "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
             "\nArguments:\n"
-            "1. \"account\"    (string, optional) The account name. If not included, it will list all transactions for all accounts.\n"
+            "1. \"account\"    (string, optional) The account name. If not included or \"*\", it will list all transactions for all accounts.\n"
             "                                     If \"\" is set, it will list transactions for the default account.\n"
             "2. count          (numeric, optional, default=10) The number of transactions to return\n"
             "3. from           (numeric, optional, default=0) The number of transactions to skip\n"
+            "4. filter         (string, optional, default=all) all = list all (default), expired = list only expired transactions\n"
 
             "\nResult:\n"
             "[\n"
@@ -1205,6 +1207,7 @@ Value listtransactions(const Array& params, bool fHelp)
             "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (midnight Jan 1 1970 GMT).\n"
             "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (midnight Jan 1 1970 GMT). Available \n"
             "                                          for 'send' and 'receive' category of transactions.\n"
+            "    \"expired\" : true|false,   (boolean) Whether or not the transaction has been expired, true is only possible if confirmations == 0\n"
             "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
             "    \"otheraccount\": \"accountname\",  (string) For the 'move' category of transactions, the account the funds came \n"
             "                                          from (for receiving funds, positive amounts), or went to (for sending funds,\n"
@@ -1215,6 +1218,8 @@ Value listtransactions(const Array& params, bool fHelp)
             "\nExamples:\n"
             "\nList the most recent 10 transactions in the systems\n"
             + HelpExampleCli("listtransactions", "") +
+            "\nList the most recent 10 expired transactions\n"
+            + HelpExampleCli("listtransactions", "\"*\" 10 0 \"expired\"") +
             "\nList the most recent 10 transactions for the tabby account\n"
             + HelpExampleCli("listtransactions", "\"tabby\"") +
             "\nList transactions 100 to 120 from the tabby account\n"
@@ -1232,11 +1237,16 @@ Value listtransactions(const Array& params, bool fHelp)
     int nFrom = 0;
     if (params.size() > 2)
         nFrom = params[2].get_int();
+    string strFilter = "all";
+    if (params.size() > 3)
+        strFilter = params[3].get_str();
 
     if (nCount < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     if (nFrom < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
+    if (strFilter != "all" && strFilter != "expired")
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Wrong filter, allowed values are all|expired");
 
     Array ret;
 
@@ -1247,6 +1257,10 @@ Value listtransactions(const Array& params, bool fHelp)
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
         CWalletTx *const pwtx = (*it).second.first;
+
+        if (strFilter == "expired" && (pwtx == 0 || !pwtx->fExpired))
+            continue;
+
         if (pwtx != 0)
             ListTransactions(*pwtx, strAccount, 0, true, ret);
         CAccountingEntry *const pacentry = (*it).second.second;
@@ -1311,6 +1325,10 @@ Value listaccounts(const Array& params, bool fHelp)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
+
+        if (wtx.fExpired)
+            continue;
+
         int64_t nFee;
         string strSentAccount;
         list<pair<CTxDestination, int64_t> > listReceived;
@@ -1366,6 +1384,7 @@ Value listsinceblock(const Array& params, bool fHelp)
             "    \"txid\": \"transactionid\",  (string) The transaction id (see https://blockchain.info/tx/[transactionid]. Available for 'send' and 'receive' category of transactions.\n"
             "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT).\n"
             "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (Jan 1 1970 GMT). Available for 'send' and 'receive' category of transactions.\n"
+            "    \"expired\" : false,        (boolean) Whether or not the transaction has been expired, can only be false here.\n"
             "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
             "    \"to\": \"...\",            (string) If a comment to is associated with the transaction.\n"
              "  ],\n"
@@ -1438,6 +1457,7 @@ Value gettransaction(const Array& params, bool fHelp)
             "  \"txid\" : \"transactionid\",   (string) The transaction id, see also https://blockchain.info/tx/[transactionid]\n"
             "  \"time\" : ttt,            (numeric) The transaction time in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
+            "  \"expired\" : true|false,  (boolean) Whether or not the transaction has been expired, true is only possible if confirmations == 0\n"
             "  \"details\" : [\n"
             "    {\n"
             "      \"account\" : \"accountname\",  (string) The account name involved in the transaction, can be \"\" for the default account.\n"

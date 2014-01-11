@@ -125,6 +125,23 @@ bool CTxMemPool::removeConflicts(const CTransaction &tx)
     return true;
 }
 
+void CTxMemPool::removeExpired(unsigned int nBlockTime)
+{
+    vector<CTransaction> vDelete;
+    {
+        LOCK(cs);
+        for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); ++it) {
+            const CTransaction& tx = it->second.GetTx();
+            if (tx.IsExpired(nBlockTime))
+                vDelete.push_back(tx);
+        }
+    }
+    BOOST_FOREACH(CTransaction& tx, vDelete) {
+        remove(tx);
+        removeConflicts(tx);
+    }
+}
+
 void CTxMemPool::clear()
 {
     LOCK(cs);

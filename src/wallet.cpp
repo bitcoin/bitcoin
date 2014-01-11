@@ -18,6 +18,7 @@ using namespace std;
 
 // Settings
 int64_t nTransactionFee = 0;
+bool fTimestampTransactions = true;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -183,6 +184,47 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
     }
 
     return false;
+}
+
+void CWallet::SetBestChain(CBlockIndex* pindexNew, bool fIsInitialDownload)
+{
+    if ((pindexNew->nHeight % 20160) == 0 || (!fIsInitialDownload && (pindexNew->nHeight % 144) == 0))
+        SetBestChain(chainActive.GetLocator(pindexNew));
+
+    // check for expired transactions
+    if (!fIsInitialDownload)
+    {
+        LOCK(cs_wallet);
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
+        {
+            CWalletTx& wtx = item.second;
+
+            // the wallet waits about 2 hours longer before marking txs as expired, to really ensure the tx is expired and cannot appear in blocks anymore (unless big chainforks)
+            if (wtx.GetDepthInMainChain() == 0 && !wtx.IsCoinBase() && !wtx.fExpired && wtx.IsExpired((unsigned int)pindexNew->GetMedianTimePast() - 3600))
+            {
+                // make inputs spendable again
+                BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+                {
+                    if (!mapWallet.count(txin.prevout.hash)) continue;
+                    CWalletTx &coin = mapWallet[txin.prevout.hash];
+                    coin.MarkUnspent(txin.prevout.n);
+                    coin.WriteToDisk();
+                }
+
+                // mark tx as expired
+                wtx.fExpired = true;
+                wtx.WriteToDisk();
+
+                // notify an external script when a wallet transaction expires
+                std::string strCmd = GetArg("-expirenotify", "");
+                if ( !strCmd.empty())
+                {
+                    boost::replace_all(strCmd, "%s", wtx.GetHash().GetHex());
+                    boost::thread t(runCommand, strCmd); // thread runs free
+                }
+            }
+        }
+    }
 }
 
 void CWallet::SetBestChain(const CBlockLocator& loc)
@@ -468,6 +510,22 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         bool fUpdated = false;
         if (!fInsertedNew)
         {
+            // Very unlikely, a tx already marked as expired suddenly appears in a block => "unexpire"
+            if (wtx.fExpired && wtxIn.hashBlock != 0)
+            {
+                wtx.fExpired = false;
+                fUpdated = true;
+
+                // Mark old coins as spent
+                BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+                {
+                    if (!mapWallet.count(txin.prevout.hash)) continue;
+                    CWalletTx &coin = mapWallet[txin.prevout.hash];
+                    coin.MarkSpent(txin.prevout.n);
+                    coin.WriteToDisk();
+                }
+            }
+
             // Merge
             if (wtxIn.hashBlock != 0 && wtxIn.hashBlock != wtx.hashBlock)
             {
@@ -869,6 +927,22 @@ void CWallet::ReacceptWalletTransactions()
             bool fFound = pcoinsTip->GetCoins(wtx.GetHash(), coins);
             if (fFound || wtx.GetDepthInMainChain() > 0)
             {
+                // Very unlikely, a tx already marked as expired suddenly appears in a block => "unexpire"
+                if (wtx.fExpired)
+                {
+                    wtx.fExpired = false;
+                    fUpdated = true;
+
+                    // Mark old coins as spent
+                    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+                    {
+                        if (!mapWallet.count(txin.prevout.hash)) continue;
+                        CWalletTx &coin = mapWallet[txin.prevout.hash];
+                        coin.MarkSpent(txin.prevout.n);
+                        coin.WriteToDisk();
+                    }
+                }
+
                 // Update fSpent if a tx got spent somewhere else by a copy of wallet.dat
                 for (unsigned int i = 0; i < wtx.vout.size(); i++)
                 {
@@ -891,7 +965,7 @@ void CWallet::ReacceptWalletTransactions()
             else
             {
                 // Re-accept any txes of ours that aren't already in a block
-                if (!wtx.IsCoinBase())
+                if (!wtx.IsCoinBase() && !wtx.fExpired)
                     wtx.AcceptWalletTransaction();
             }
         }
@@ -913,11 +987,12 @@ void CWalletTx::RelayWalletTransaction()
         // banned when retransmitted, hence the check for !tx.vin.empty()
         if (!tx.IsCoinBase() && !tx.vin.empty())
             if (tx.GetDepthInMainChain() == 0)
-                RelayTransaction((CTransaction)tx, tx.GetHash());
+                if (!tx.IsExpired((unsigned int)GetAdjustedTime() + 86400))
+                    RelayTransaction((CTransaction)tx, tx.GetHash());
     }
     if (!IsCoinBase())
     {
-        if (GetDepthInMainChain() == 0) {
+        if (GetDepthInMainChain() == 0 && !fExpired && !IsExpired((unsigned int)GetAdjustedTime() + 86400)) {
             uint256 hash = GetHash();
             LogPrintf("Relaying wtx %s\n", hash.ToString().c_str());
             RelayTransaction((CTransaction)*this, hash);
@@ -999,7 +1074,8 @@ int64_t CWallet::GetUnconfirmedBalance() const
         {
             const CWalletTx* pcoin = &(*it).second;
             if (!IsFinalTx(*pcoin) || !pcoin->IsConfirmed())
-                nTotal += pcoin->GetAvailableCredit();
+                if (!pcoin->fExpired)
+                    nTotal += pcoin->GetAvailableCredit();
         }
     }
     return nTotal;
@@ -1030,7 +1106,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
         {
             const CWalletTx* pcoin = &(*it).second;
 
-            if (!IsFinalTx(*pcoin))
+            if (!IsFinalTx(*pcoin) || pcoin->fExpired)
                 continue;
 
             if (fOnlyConfirmed && !pcoin->IsConfirmed())
@@ -1343,6 +1419,19 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                 // Fill vin
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
                     wtxNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second));
+
+                // Timestamp for transaction expiration
+                if (fTimestampTransactions && !wtxNew.vin.empty())
+                {
+                    // check if system clock is more than 12 hours in the past
+                    if ((unsigned int)GetAdjustedTime() + 43200 < ((chainActive.Tip()) ? chainActive.Tip()->nTime : 0))
+                    {
+                        strFailReason = _("Your computers date and time seem to be wrong. Please fix your system clock!");
+                        return false;
+                    }
+
+                    wtxNew.vin[0].nSequence = (unsigned int)GetAdjustedTime();
+                }
 
                 // Sign
                 int nIn = 0;

@@ -106,7 +106,7 @@ struct CMainSignals {
     // Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible).
     boost::signals2::signal<void (const uint256 &)> UpdatedTransaction;
     // Notifies listeners of a new active block chain.
-    boost::signals2::signal<void (const CBlockLocator &)> SetBestChain;
+    boost::signals2::signal<void (CBlockIndex* pindexNew, const bool fIsInitialDownload)> SetBestChain;
     // Notifies listeners about an inventory item being seen on the network.
     boost::signals2::signal<void (const uint256 &)> Inventory;
     // Tells listeners to broadcast their data.
@@ -118,7 +118,7 @@ void RegisterWallet(CWalletInterface* pwalletIn) {
     g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
     g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
     g_signals.UpdatedTransaction.connect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
-    g_signals.SetBestChain.connect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
+    g_signals.SetBestChain.connect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1, _2));
     g_signals.Inventory.connect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
     g_signals.Broadcast.connect(boost::bind(&CWalletInterface::ResendWalletTransactions, pwalletIn));
 }
@@ -126,7 +126,7 @@ void RegisterWallet(CWalletInterface* pwalletIn) {
 void UnregisterWallet(CWalletInterface* pwalletIn) {
     g_signals.Broadcast.disconnect(boost::bind(&CWalletInterface::ResendWalletTransactions, pwalletIn));
     g_signals.Inventory.disconnect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
-    g_signals.SetBestChain.disconnect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
+    g_signals.SetBestChain.disconnect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1, _2));
     g_signals.UpdatedTransaction.disconnect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.EraseTransaction.disconnect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
     g_signals.SyncTransaction.disconnect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
@@ -671,7 +671,7 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, 
 
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs, bool fRejectInsaneFee)
+                        bool* pfMissingInputs, bool fRejectInsaneFee, bool fCheckExpired)
 {
     if (pfMissingInputs)
         *pfMissingInputs = false;
@@ -690,6 +690,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         return state.DoS(0,
                          error("AcceptToMemoryPool : nonstandard transaction: %s", reason.c_str()),
                          REJECT_NONSTANDARD, reason);
+
+    // Transaction expiration, reject transactions expiring in 24 hours or less
+    if (fCheckExpired && tx.IsExpired((unsigned int)GetAdjustedTime() + 86400))
+        return false;
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
@@ -1836,7 +1840,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     BOOST_FOREACH(CTransaction& tx, vResurrect) {
         // ignore validation errors in resurrected transactions
         CValidationState stateDummy;
-        if (!AcceptToMemoryPool(mempool,stateDummy, tx, false, NULL))
+        if (!AcceptToMemoryPool(mempool,stateDummy, tx, false, NULL, false, false))
             mempool.remove(tx, true);
     }
 
@@ -1846,11 +1850,13 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
         mempool.removeConflicts(tx);
     }
 
+    // Remove expired transactions
+    mempool.removeExpired(pindexNew->nTime);
+
     mempool.check(pcoinsTip);
 
     // Update best block in wallet (so we can detect restored wallets)
-    if ((pindexNew->nHeight % 20160) == 0 || (!fIsInitialDownload && (pindexNew->nHeight % 144) == 0))
-        g_signals.SetBestChain(chainActive.GetLocator(pindexNew));
+    g_signals.SetBestChain(pindexNew, fIsInitialDownload);
 
     // New best block
     nTimeBestReceived = GetTime();
@@ -2164,6 +2170,30 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
                     !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin()))
                     return state.DoS(100, error("AcceptBlock() : block height mismatch in coinbase"),
                                      REJECT_INVALID, "height incorrect in coinbase");
+            }
+        }
+
+        // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
+        if (block.nVersion < 3)
+        {
+            if ((!TestNet() && CBlockIndex::IsSuperMajority(3, pindexPrev, 950, 1000)) ||
+                (TestNet() && CBlockIndex::IsSuperMajority(3, pindexPrev, 75, 100)))
+            {
+                return state.Invalid(error("AcceptBlock() : rejected nVersion=2 block"),
+                                     REJECT_OBSOLETE, "version 2 blocks obsolete");
+            }
+        }
+        // Enforce block.nVersion=3 rule that expired transactions are not allowed
+        if (block.nVersion >= 3)
+        {
+            // if 750 of the last 1,000 blocks are version 3 or greater (51/100 if testnet):
+            if ((!TestNet() && CBlockIndex::IsSuperMajority(3, pindexPrev, 750, 1000)) ||
+                (TestNet() && CBlockIndex::IsSuperMajority(3, pindexPrev, 51, 100)))
+            {
+                BOOST_FOREACH(const CTransaction& tx, block.vtx)
+                    if (tx.IsExpired(block.nTime))
+                        return state.DoS(100, error("AcceptBlock() : expired transaction found"),
+                                     REJECT_INVALID, "expired transaction in block");
             }
         }
     }

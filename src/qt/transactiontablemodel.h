@@ -52,6 +52,8 @@ public:
         TxIDRole,
         /** Is transaction confirmed? */
         ConfirmedRole,
+        /** Is transaction expired? */
+        ExpiredRole,
         /** Formatted amount, without brackets when unconfirmed */
         FormattedAmountRole
     };

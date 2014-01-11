@@ -185,7 +185,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs, bool fRejectInsaneFee=false);
+                        bool* pfMissingInputs, bool fRejectInsaneFee=false, bool fCheckExpired=true);
 
 
 
@@ -1092,7 +1092,7 @@ class CWalletInterface {
 protected:
     virtual void SyncTransaction(const uint256 &hash, const CTransaction &tx, const CBlock *pblock) =0;
     virtual void EraseFromWallet(const uint256 &hash) =0;
-    virtual void SetBestChain(const CBlockLocator &locator) =0;
+    virtual void SetBestChain(CBlockIndex* pindexNew, bool fIsInitialDownload) =0;
     virtual void UpdatedTransaction(const uint256 &hash) =0;
     virtual void Inventory(const uint256 &hash) =0;
     virtual void ResendWalletTransactions() =0;

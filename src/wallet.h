@@ -25,6 +25,7 @@
 
 // Settings
 extern int64_t nTransactionFee;
+extern bool fTimestampTransactions;
 
 class CAccountingEntry;
 class CCoinControl;
@@ -307,6 +308,7 @@ public:
         }
         return nChange;
     }
+    void SetBestChain(CBlockIndex* pindexNew, bool fIsInitialDownload);
     void SetBestChain(const CBlockLocator& loc);
 
     DBErrors LoadWallet(bool& fFirstRunRet);
@@ -425,6 +427,7 @@ public:
     std::string strFromAccount;
     std::vector<char> vfSpent; // which outputs are already spent
     int64_t nOrderPos;  // position in ordered transaction list
+    bool fExpired;
 
     // memory only
     mutable bool fDebitCached;
@@ -481,6 +484,7 @@ public:
         nAvailableCreditCached = 0;
         nChangeCached = 0;
         nOrderPos = -1;
+        fExpired = false;
     }
 
     IMPLEMENT_SERIALIZE
@@ -507,6 +511,8 @@ public:
 
             if (nTimeSmart)
                 pthis->mapValue["timesmart"] = strprintf("%u", nTimeSmart);
+
+            pthis->mapValue["expired"] = (fExpired ? '1' : '0');
         }
 
         nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion,ser_action);
@@ -531,6 +537,8 @@ public:
             ReadOrderPos(pthis->nOrderPos, pthis->mapValue);
 
             pthis->nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(pthis->mapValue["timesmart"]) : 0;
+
+            pthis->fExpired = (mapValue.count("expired") && pthis->mapValue["expired"] == "1");
         }
 
         pthis->mapValue.erase("fromaccount");
@@ -538,6 +546,7 @@ public:
         pthis->mapValue.erase("spent");
         pthis->mapValue.erase("n");
         pthis->mapValue.erase("timesmart");
+        pthis->mapValue.erase("expired");
     )
 
     // marks certain txout's as spent
@@ -583,6 +592,18 @@ public:
         if (!vfSpent[nOut])
         {
             vfSpent[nOut] = true;
+            fAvailableCreditCached = false;
+        }
+    }
+
+    void MarkUnspent(unsigned int nOut)
+    {
+        if (nOut >= vout.size())
+            throw std::runtime_error("CWalletTx::MarkUnspent() : nOut out of range");
+        vfSpent.resize(vout.size());
+        if (vfSpent[nOut])
+        {
+            vfSpent[nOut] = false;
             fAvailableCreditCached = false;
         }
     }
@@ -691,6 +712,8 @@ public:
             return true;
         if (!IsFromMe()) // using wtx's cached debit
             return false;
+        if (fExpired)
+            return false;
 
         // If no confirmations but it's from us, we can still
         // consider it confirmed if all dependencies are confirmed
@@ -708,6 +731,13 @@ public:
                 continue;
             if (!pwallet->IsFromMe(*ptx))
                 return false;
+            map<uint256, CWalletTx>::const_iterator mi = pwallet->mapWallet.find(ptx->GetHash());
+            if (mi != pwallet->mapWallet.end())
+            {
+                const CWalletTx& wtx = (*mi).second;
+                if (wtx.fExpired)
+                    return false;
+            }
 
             if (mapPrev.empty())
             {
