@@ -12,6 +12,7 @@ LIBBITCOIN_CLI=$(top_builddir)/src/libbitcoin_cli.a
 LIBLEVELDB=$(top_builddir)/src/leveldb/libleveldb.a
 LIBMEMENV=$(top_builddir)/src/leveldb/libmemenv.a
 LIBBITCOINQT=$(top_builddir)/src/qt/libbitcoinqt.a
+MOC_DEFS=$(DEFS) -I$(top_srcdir)/src
 
 $(LIBBITCOIN):
 	$(MAKE) -C $(top_builddir)/src $(@F)
