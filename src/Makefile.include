@@ -32,23 +32,23 @@ $(LIBBITCOINQT):
 
 ui_%.h: %.ui
 	@test -d $(abs_builddir)/$(@D) || $(MKDIR_P) $(abs_builddir)/$(@D)
-	@test -f $(UIC) && $(UIC) -o $(abs_builddir)/$@ $(abs_srcdir)/$< || echo error: could not build $(abs_builddir)/$@
+	@test -f $(UIC) && QT_SELECT=$(QT_SELECT) $(UIC) -o $(abs_builddir)/$@ $(abs_srcdir)/$< || echo error: could not build $(abs_builddir)/$@
 	$(SED) -i.bak -e '/^\*\*.*Created:/d' $(abs_builddir)/$@ && rm $(abs_builddir)/$@.bak
 	$(SED) -i.bak -e '/^\*\*.*by:/d' $(abs_builddir)/$@ && rm $(abs_builddir)/$@.bak
 
 %.moc: %.cpp
-	$(MOC) $(QT_INCLUDES) $(MOC_DEFS) -o $@ $<
+	QT_SELECT=$(QT_SELECT) $(MOC) $(QT_INCLUDES) $(MOC_DEFS) -o $@ $<
 	$(SED) -i.bak -e '/^\*\*.*Created:/d' $@ && rm $@.bak
 	$(SED) -i.bak -e '/^\*\*.*by:/d' $@ && rm $@.bak
 
 moc_%.cpp: %.h
-	$(MOC) $(QT_INCLUDES) $(MOC_DEFS) -o $@ $<
+	QT_SELECT=$(QT_SELECT) $(MOC) $(QT_INCLUDES) $(MOC_DEFS) -o $@ $<
 	$(SED) -i.bak -e '/^\*\*.*Created:/d' $@ && rm $@.bak
 	$(SED) -i.bak -e '/^\*\*.*by:/d' $@ && rm $@.bak
 
 %.qm: %.ts
 	@test -d $(abs_builddir)/$(@D) || $(MKDIR_P) $(abs_builddir)/$(@D)
-	@test -f $(LRELEASE) && $(LRELEASE) $(abs_srcdir)/$< -qm $(abs_builddir)/$@ || \
+	@test -f $(LRELEASE) && QT_SELECT=$(QT_SELECT) $(LRELEASE) $(abs_srcdir)/$< -qm $(abs_builddir)/$@ || \
 	 echo error: could not build $(abs_builddir)/$@
 
 %.pb.cc %.pb.h: %.proto
