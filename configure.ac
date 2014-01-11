@@ -567,9 +567,6 @@ if test x$bitcoin_enable_qt != xno; then
       AC_MSG_ERROR("QT Test lib not found. Use --disable-tests or --without-qt.")
     fi
   fi
-  if test x$enable_wallet == xno; then
-    AC_MSG_ERROR([Cannot currently build Qt GUI with wallet disabled. Use --without-qt.])
-  fi
 fi
 
 if test x$use_tests = xyes; then
