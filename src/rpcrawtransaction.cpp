@@ -4,13 +4,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
-#include "rpcserver.h"
-#include "init.h"
-#include "net.h"
-#include "uint256.h"
 #include "core.h"
-#include "main.h"
+#include "init.h"
 #include "keystore.h"
+#include "main.h"
+#include "net.h"
+#include "rpcserver.h"
+#include "uint256.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
