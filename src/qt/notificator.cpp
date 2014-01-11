@@ -14,17 +14,17 @@
 #include <QSystemTrayIcon>
 #include <QTemporaryFile>
 #include <QVariant>
-
-#ifdef Q_OS_MAC
-#include "macnotificationhandler.h"
-
-#include <ApplicationServices/ApplicationServices.h>
-#endif
-
 #ifdef USE_DBUS
 #include <stdint.h>
-
 #include <QtDBus>
+#endif
+// Include ApplicationServices.h after QtDbus to avoid redefinition of check().
+// This affects at least OSX 10.6. See /usr/include/AssertMacros.h for details.
+// Note: This could also be worked around using:
+// #define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
+#ifdef Q_OS_MAC
+#include <ApplicationServices/ApplicationServices.h>
+#include "macnotificationhandler.h"
 #endif
 
 
