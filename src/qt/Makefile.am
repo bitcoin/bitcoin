@@ -150,24 +150,56 @@ RES_ICONS = res/icons/bitcoin.png res/icons/address-book.png \
   res/icons/qrcode.png res/icons/debugwindow.png res/icons/bitcoin.ico \
   res/icons/bitcoin_testnet.ico
 
-BITCOIN_QT_CPP = aboutdialog.cpp addressbookpage.cpp \
-  addresstablemodel.cpp askpassphrasedialog.cpp bitcoinaddressvalidator.cpp \
-  bitcoinamountfield.cpp bitcoin.cpp bitcoingui.cpp \
-  bitcoinunits.cpp clientmodel.cpp \
+BITCOIN_QT_CPP = \
+  aboutdialog.cpp \
+  bitcoinaddressvalidator.cpp \
+  bitcoinamountfield.cpp \
+  bitcoin.cpp \
+  bitcoingui.cpp \
+  bitcoinunits.cpp \
+  clientmodel.cpp \
+  csvmodelwriter.cpp \
+  guiutil.cpp \
+  intro.cpp \
+  monitoreddatamapper.cpp \
+  notificator.cpp \
+  optionsdialog.cpp \
+  optionsmodel.cpp \
+  qvalidatedlineedit.cpp \
+  qvaluecombobox.cpp \
+  rpcconsole.cpp \
+  signverifymessagedialog.cpp \
+  splashscreen.cpp \
+  trafficgraphwidget.cpp
+
+if ENABLE_WALLET
+BITCOIN_QT_CPP += \
+  addressbookpage.cpp \
+  addresstablemodel.cpp \
+  askpassphrasedialog.cpp \
   coincontroldialog.cpp \
   coincontroltreewidget.cpp \
-  csvmodelwriter.cpp editaddressdialog.cpp \
-  guiutil.cpp intro.cpp monitoreddatamapper.cpp notificator.cpp \
+  editaddressdialog.cpp \
   openuridialog.cpp \
-  optionsdialog.cpp optionsmodel.cpp overviewpage.cpp paymentrequestplus.cpp \
-  paymentserver.cpp qvalidatedlineedit.cpp qvaluecombobox.cpp \
-  receivecoinsdialog.cpp receiverequestdialog.cpp \
+  overviewpage.cpp \
+  paymentrequestplus.cpp \
+  paymentserver.cpp \
+  receivecoinsdialog.cpp \
+  receiverequestdialog.cpp \
   recentrequeststablemodel.cpp \
-  rpcconsole.cpp sendcoinsdialog.cpp sendcoinsentry.cpp \
-  signverifymessagedialog.cpp splashscreen.cpp trafficgraphwidget.cpp transactiondesc.cpp \
-  transactiondescdialog.cpp transactionfilterproxy.cpp transactionrecord.cpp \
-  transactiontablemodel.cpp transactionview.cpp walletframe.cpp \
-  walletmodel.cpp walletmodeltransaction.cpp walletview.cpp
+  sendcoinsdialog.cpp \
+  sendcoinsentry.cpp \
+  transactiondesc.cpp \
+  transactiondescdialog.cpp \
+  transactionfilterproxy.cpp \
+  transactionrecord.cpp \
+  transactiontablemodel.cpp \
+  transactionview.cpp \
+  walletframe.cpp \
+  walletmodel.cpp \
+  walletmodeltransaction.cpp \
+  walletview.cpp
+endif
 
 RES_IMAGES = res/images/about.png res/images/splash.png \
   res/images/splash_testnet.png
@@ -203,7 +235,11 @@ endif
 bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms
 bitcoin_qt_SOURCES = bitcoin.cpp
-bitcoin_qt_LDADD = libbitcoinqt.a $(LIBBITCOIN_SERVER) $(LIBBITCOIN_WALLET) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
+bitcoin_qt_LDADD = libbitcoinqt.a $(LIBBITCOIN_SERVER)
+if ENABLE_WALLET
+bitcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
+endif
+bitcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS)
 
 # forms/foo.h -> forms/ui_foo.h
