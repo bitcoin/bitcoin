@@ -1,3 +1,4 @@
+#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 #include <stdint.h>
 #include <sstream>
@@ -6,6 +7,7 @@
 #include <cmath>
 #include "uint256.h"
 #include <string>
+#include "bignum.h"
 #include "version.h"
 
 BOOST_AUTO_TEST_SUITE(uint256_tests)
@@ -627,6 +629,18 @@ BOOST_AUTO_TEST_CASE( getmaxcoverage ) // some more tests just to get 100% cover
     CHECKBITWISEOPERATOR(R1,~R2,|)
     CHECKBITWISEOPERATOR(R1,~R2,^)
     CHECKBITWISEOPERATOR(R1,~R2,&)
+}
+
+BOOST_AUTO_TEST_CASE(multiply) {
+    uint32_t factors[] = {0, 1, 16, 256, 257, 1000, 1000000, 16777216, 0xFFFFFFFFUL};
+    BOOST_FOREACH(uint32_t f, factors) {
+        BOOST_CHECK(R1L * f == (CBigNum(R1L) * f).getuint256());
+        BOOST_CHECK(R2L * f == (CBigNum(R2L) * f).getuint256());
+        BOOST_CHECK(ZeroL * f == (CBigNum(ZeroL) * f).getuint256());
+        BOOST_CHECK(MaxL * f == (CBigNum(MaxL) * f).getuint256());
+        BOOST_CHECK(OneL * f == (CBigNum(OneL) * f).getuint256());
+        BOOST_CHECK(HalfL * f == (CBigNum(HalfL) * f).getuint256());
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

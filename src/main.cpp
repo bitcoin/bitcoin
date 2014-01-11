@@ -1148,7 +1148,7 @@ void CheckForkWarningConditions()
     if (pindexBestForkTip && chainActive.Height() - pindexBestForkTip->nHeight >= 72)
         pindexBestForkTip = NULL;
 
-    if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + (chainActive.Tip()->GetBlockWork() * 6).getuint256()))
+    if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + chainActive.Tip()->GetBlockWork() * 6))
     {
         if (!fLargeWorkForkFound)
         {
@@ -1203,7 +1203,7 @@ void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
     // We define it this way because it allows us to only store the highest fork tip (+ base) which meets
     // the 7-block condition and from this always have the most-likely-to-cause-warning fork
     if (pfork && (!pindexBestForkTip || (pindexBestForkTip && pindexNewForkTip->nHeight > pindexBestForkTip->nHeight)) &&
-            pindexNewForkTip->nChainWork - pfork->nChainWork > (pfork->GetBlockWork() * 7).getuint256() &&
+            pindexNewForkTip->nChainWork - pfork->nChainWork > pfork->GetBlockWork() * 7 &&
             chainActive.Height() - pindexNewForkTip->nHeight < 72)
     {
         pindexBestForkTip = pindexNewForkTip;
@@ -1909,7 +1909,7 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
     }
     pindexNew->nTx = block.vtx.size();
-    pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + pindexNew->GetBlockWork().getuint256();
+    pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + pindexNew->GetBlockWork();
     pindexNew->nChainTx = (pindexNew->pprev ? pindexNew->pprev->nChainTx : 0) + pindexNew->nTx;
     pindexNew->nFile = pos.nFile;
     pindexNew->nDataPos = pos.nPos;
@@ -2565,7 +2565,7 @@ bool static LoadBlockIndexDB()
     BOOST_FOREACH(const PAIRTYPE(int, CBlockIndex*)& item, vSortedByHeight)
     {
         CBlockIndex* pindex = item.second;
-        pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + pindex->GetBlockWork().getuint256();
+        pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + pindex->GetBlockWork();
         pindex->nChainTx = (pindex->pprev ? pindex->pprev->nChainTx : 0) + pindex->nTx;
         if ((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS && !(pindex->nStatus & BLOCK_FAILED_MASK))
             setBlockIndexValid.insert(pindex);
