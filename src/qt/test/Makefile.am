@@ -16,12 +16,13 @@ endif
 
 TEST_QT_H = \
   uritests.h \
-  paymentservertests.h \
-  paymentrequestdata.h
+  paymentrequestdata.h \
+  paymentservertests.h
 
 BUILT_SOURCES = $(TEST_QT_MOC_CPP)
 
 test_bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) $(QT_TEST_INCLUDES)
+
 test_bitcoin_qt_SOURCES = \
   test_main.cpp \
   uritests.cpp \
@@ -30,7 +31,9 @@ if ENABLE_WALLET
 test_bitcoin_qt_SOURCES += \
   paymentservertests.cpp
 endif
+
 nodist_test_bitcoin_qt_SOURCES = $(TEST_QT_MOC_CPP)
+
 test_bitcoin_qt_LDADD = $(LIBBITCOINQT) $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
 test_bitcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
@@ -40,4 +43,3 @@ test_bitcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) \
   $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS)
 
 CLEANFILES = $(BUILT_SOURCES) *.gcda *.gcno
-
