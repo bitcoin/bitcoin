@@ -23,7 +23,7 @@
 # SUCH DAMAGE.
 
 
-#if defined(__x86_64__)
+#if defined(OPTIMIZED_SALSA) && defined(__x86_64__)
 
 #if defined(__linux__) && defined(__ELF__)
 	.section .note.GNU-stack,"",%progbits
