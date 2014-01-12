@@ -73,9 +73,9 @@ def get_blocks(settings):
 	rpc = BitcoinRPC(settings['host'], settings['port'],
 			 settings['rpcuser'], settings['rpcpass'])
 
-	outf = open(settings['output'], 'wb')
+	outf = open(settings['output'], 'ab')
 
-	for height in xrange(settings['max_height']+1):
+	for height in xrange(settings['min_height'], settings['max_height']+1):
 		data = getblock(rpc, settings, height)
 
 		outhdr = settings['netmagic']
@@ -114,6 +114,8 @@ if __name__ == '__main__':
 		settings['host'] = '127.0.0.1'
 	if 'port' not in settings:
 		settings['port'] = 8332
+	if 'min_height' not in settings:
+		settings['min_height'] = 0
 	if 'max_height' not in settings:
 		settings['max_height'] = 250000
 	if 'rpcuser' not in settings or 'rpcpass' not in settings:
@@ -122,6 +124,7 @@ if __name__ == '__main__':
 
 	settings['netmagic'] = settings['netmagic'].decode('hex')
 	settings['port'] = int(settings['port'])
+	settings['min_height'] = int(settings['min_height'])
 	settings['max_height'] = int(settings['max_height'])
 
 	get_blocks(settings)
