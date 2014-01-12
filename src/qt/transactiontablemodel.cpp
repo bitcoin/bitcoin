@@ -295,7 +295,8 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
         status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
         break;
     }
-    if(wtx->type == TransactionRecord::Generated  || wtx->type == TransactionRecord::StakeMint)
+
+    if(wtx->type == TransactionRecord::Generated)
     {
         switch(wtx->status.maturity)
         {
@@ -359,7 +360,6 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Sent to");
     case TransactionRecord::SendToSelf:
         return tr("Payment to yourself");
-    case TransactionRecord::StakeMint:
     case TransactionRecord::Generated:
         return tr("Mined");
     default:
@@ -372,7 +372,6 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     switch(wtx->type)
     {
     case TransactionRecord::Generated:
-    case TransactionRecord::StakeMint:
         return QIcon(":/icons/tx_mined");
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::RecvFromOther:
@@ -440,7 +439,7 @@ QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool
 
 QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx) const
 {
-    if(wtx->type == TransactionRecord::Generated || wtx->type == TransactionRecord::StakeMint)
+    if(wtx->type == TransactionRecord::Generated)
     {
         switch(wtx->status.maturity)
         {
@@ -575,8 +574,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return QString::fromStdString(rec->getTxID());
     case ConfirmedRole:
         // Return True if transaction counts for balance
-        return rec->status.confirmed && !((rec->type == TransactionRecord::Generated || rec->type == TransactionRecord::StakeMint) &&
-                                          rec->status.maturity != TransactionStatus::Mature);
+        return rec->status.confirmed && !(rec->type == TransactionRecord::Generated && rec->status.maturity != TransactionStatus::Mature);
     case FormattedAmountRole:
         return formatTxAmount(rec, false);
     }

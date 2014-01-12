@@ -58,7 +58,9 @@ static const int fHaveUPnP = false;
 
 static const uint256 hashGenesisBlock("0x00000a060336cbb72fe969666d337b87198b1add2abaa59cca226820b32933a4");
 static const uint256 hashGenesisBlockTestNet("0x000c763e402f2436da9ed36c7286f62c3f6e5dbafce9ff289bd43d7459327eb");
-static const int64 nMaxClockDrift = 2 * 60 * 60;        // two hours
+
+inline int64 PastDrift(int64 nTime)   { return nTime - 2 * 60 * 60; } // up to 2 hours from the past
+inline int64 FutureDrift(int64 nTime) { return nTime + 2 * 60 * 60; } // up to 2 hours from the future
 
 extern libzerocoin::Params* ZCParams;
 extern CScript COINBASE_FLAGS;
@@ -1099,7 +1101,7 @@ public:
     bool CheckBlock(bool fCheckPOW=true, bool fCheckMerkleRoot=true, bool fCheckSig=true) const;
     bool AcceptBlock();
     bool GetCoinAge(uint64& nCoinAge) const; // ppcoin: calculate total coin age spent in block
-    bool SignBlock(const CKeyStore& keystore);
+    bool SignBlock(CWallet& keystore);
     bool CheckBlockSignature(bool fProofOfStake) const;
 
 private:
@@ -1407,7 +1409,7 @@ public:
 
     uint256 GetBlockHash() const
     {
-        if (fUseFastIndex && (nTime < GetAdjustedTime() - 12 * nMaxClockDrift) && blockHash != 0)
+        if (fUseFastIndex && (nTime < GetAdjustedTime() - 24 * 60 * 60) && blockHash != 0)
             return blockHash;
 
         CBlock block;

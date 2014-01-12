@@ -20,6 +20,9 @@ Value getmininginfo(const Array& params, bool fHelp)
             "getmininginfo\n"
             "Returns an object containing mining-related information.");
 
+    uint64 nMinWeight = 0, nMaxWeight = 0, nWeight = 0;
+    pwalletMain->GetStakeWeight(*pwalletMain, nMinWeight, nMaxWeight, nWeight);
+
     Object obj;
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("currentblocksize",(uint64_t)nLastBlockSize));
@@ -30,9 +33,11 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("netstakeweight", GetPoSKernelPS()));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     obj.push_back(Pair("pooledtx",      (uint64_t)mempool.size()));
-    obj.push_back(Pair("stakeweight",    (uint64_t)pwalletMain->GetStakeWeight(*pwalletMain, STAKE_NORMAL)));
-    obj.push_back(Pair("minweight",    (uint64_t)pwalletMain->GetStakeWeight(*pwalletMain, STAKE_MINWEIGHT)));
-    obj.push_back(Pair("maxweight",    (uint64_t)pwalletMain->GetStakeWeight(*pwalletMain, STAKE_MAXWEIGHT)));
+
+    obj.push_back(Pair("stakeweight",  (uint64_t)nWeight));
+    obj.push_back(Pair("minweight",    (uint64_t)nMinWeight));
+    obj.push_back(Pair("maxweight",    (uint64_t)nMaxWeight));
+
     obj.push_back(Pair("stakeinterest",    (uint64_t)GetProofOfStakeReward(0, GetLastBlockIndex(pindexBest, true)->nBits, GetLastBlockIndex(pindexBest, true)->nTime, true)));
     obj.push_back(Pair("testnet",       fTestNet));
     return obj;
