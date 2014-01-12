@@ -2106,7 +2106,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+0"/>
         <source>Generated</source>
-        <translation>Сгенерированно</translation>
+        <translation>Сгенерировано</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2319,7 +2319,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+3"/>
         <source>Generated but not accepted</source>
-        <translation>Сгенерированно, но не подтверждено</translation>
+        <translation>Сгенерировано, но не подтверждено</translation>
     </message>
     <message>
         <location line="+43"/>
