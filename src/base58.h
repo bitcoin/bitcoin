@@ -403,14 +403,30 @@ public:
         SetData(Params().Base58Prefix(Type), vch, vch+Size);
     }
 
+    void SetString(const std::string &str) {
+        CBase58Data::SetString(str.c_str(), 4);
+    }
+
+    bool IsValid() const {
+        if (vchVersion != Params().Base58Prefix(Type))
+            return false;
+        if (vchData.size() != Size)
+            return false;
+        return true;
+    }
+
     K GetKey() {
         K ret;
-        ret.Decode(&vchData[0], &vchData[Size]);
+        ret.Decode(&vchData[0]);
         return ret;
     }
 
     CBitcoinExtKeyBase(const K &key) {
         SetKey(key);
+    }
+
+    CBitcoinExtKeyBase(const std::string &str) {
+        SetString(str);
     }
 
     CBitcoinExtKeyBase() {}

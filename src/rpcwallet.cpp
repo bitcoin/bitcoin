@@ -1869,4 +1869,130 @@ Value settxfee(const Array& params, bool fHelp)
     return true;
 }
 
+bool ParseExtPubKey(const string &str, CExtPubKey &key) {
+    CBitcoinExtPubKey skey;
+    skey.SetString(str);
+    if (skey.IsValid()) {
+        key = skey.GetKey();
+        return true;
+    }
+    return false;
+}
 
+bool ParseExtKey(const string &str, CExtKey &key) {
+    CBitcoinExtKey skey;
+    skey.SetString(str);
+    if (skey.IsValid()) {
+        key = skey.GetKey();
+        return true;
+    }
+    if (IsHex(str)) {
+        std::vector<unsigned char> seed = ParseHex(str);
+        if (seed.size() >= 16) {
+            key.SetMaster(&seed[0], seed.size());
+            return true;
+        }
+    }
+    return false;
+}
+
+Object ExtPubKeyToJSON(const CExtPubKey &key) {
+    Object o;
+    o.push_back(Pair("depth", (int)key.nDepth));
+    if (key.nDepth > 0) {
+        o.push_back(Pair("index", (int64_t)(key.nChild & 0x7FFFFFFFUL)));
+        o.push_back(Pair("isprime", !!(key.nChild & 0x80000000UL)));
+        o.push_back(Pair("parentfpr", HexStr(&key.vchFingerprint[0], &key.vchFingerprint[4])));
+    }
+    CKeyID keyid = key.pubkey.GetID();
+    uint32_t fpr = keyid.GetLow64() & 0xFFFFFFFFUL;
+    unsigned char cfpr[4]; cfpr[0] = fpr & 0xFF; cfpr[1] = (fpr >> 8) & 0xFF; cfpr[2] = (fpr >> 16) & 0xFF; cfpr[3] = (fpr >> 24);
+    o.push_back(Pair("fpr", HexStr(&cfpr[0], &cfpr[4])));
+    o.push_back(Pair("address", CBitcoinAddress(keyid).ToString()));
+    o.push_back(Pair("chaincode", HexStr(&key.vchChainCode[0], &key.vchChainCode[32])));
+    o.push_back(Pair("pubkey", HexStr(key.pubkey.begin(), key.pubkey.end())));
+    o.push_back(Pair("extpubkey", CBitcoinExtPubKey(key).ToString()));
+    return o;
+}
+
+Object ExtKeyToJSON(const CExtKey &key) {
+    Object o = ExtPubKeyToJSON(key.Neuter());
+    o.push_back(Pair("privkey", CBitcoinSecret(key.key).ToString()));
+    o.push_back(Pair("extprivkey", CBitcoinExtKey(key).ToString()));
+    return o;
+}
+
+Value hdderive(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "hdderive path\n"
+            "\nDerive a HD wallet extended key.\n"
+            "1. path           (string, required) A HD wallet path specification\n"
+            "   Of the form: extpriv[/derivations], extpub[/derivations], seed[/derivations]\n"
+            "   Extpriv and extpub are base58-encoded extended public or private keys.\n"
+            "   A seed is a hexadecimal string representing at least 16 bytes of data.\n"
+            "   Derivations are decimal integers, optionally suffixed with a ' character,\n"
+            "   separated by slashes.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"depth\" : n,            (numeric) The derivation depth (0 means master)\n"
+            "  \"index\" : n,            (numeric) The derivation index, without the high bit\n"
+            "  \"isprime\" : true|false, (bool) Whether private derivation was used\n"
+            "  \"parentfpr\" : \"hex\",    (string) The fingerprint of the parent key\n"
+            "                          (index, isprime and parentfpr are only present for depth>0)\n"
+            "  \"fpr\" : \"hex\",          (string) The fingerprint of this key\n"
+            "  \"address\" : \"addr\",     (string) The address for pay-to-pubkeyhash to this key\n"
+            "  \"chaincode\" : \"hex\",    (string) The chaincode for this key\n"
+            "  \"pubkey\" : \"hex\",       (string) The public key for this entry\n"
+            "  \"extpubkey\" : \"b58\",    (string) The extended public key for this entry\n"
+            "  \"privkey\" : \"b58\",      (string) The private key for this entry\n"
+            "  \"extprivkey\" : \"b58\"    (string) The extended private key for this entry\n"
+            "                          (privkey and extprivkey are only present when starting from\n"
+            "                          a seed or an extended private key)\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("hdderive", "\"000102030405060708090a0b0c0d0e0f/1'/0/3\"")
+            + HelpExampleRpc("hdderive", "\"xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ/2\"")
+        );
+
+    string path = params[0].get_str();
+    string root = path;
+    std::vector<uint32_t> derives;
+    size_t pos = path.find('/');
+    if (pos != string::npos) {
+        root = path.substr(0, pos);
+        do {
+            if (path[pos] != '/')
+                JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected derivations of the form \"/[num]\" or \"/[num]'\"");
+            pos++;
+            size_t pos2 = path.find_first_not_of("0123456789", pos);
+            uint32_t num = strtoul(path.substr(pos, pos2 == string::npos ? pos2 : pos2 - pos).c_str(), NULL, 0);
+            if (pos2 != string::npos && path[pos2] == '\'') {
+                pos2++;
+                num |= 0x80000000UL;
+            }
+            pos = pos2;
+            derives.push_back(num);
+        } while(pos != string::npos && pos != path.size());
+    }
+
+    CExtPubKey pubkey;
+    CExtKey key;
+
+    if (ParseExtPubKey(root, pubkey)) {
+        BOOST_FOREACH(uint32_t derive, derives) {
+            if (derive & 0x80000000UL)
+                JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, prime derivation is not possible from public key");
+            pubkey.Derive(pubkey, derive);
+        }
+        return ExtPubKeyToJSON(pubkey);
+    } else if (ParseExtKey(root, key)) {
+        BOOST_FOREACH(uint32_t derive, derives)
+            key.Derive(key, derive);
+        return ExtKeyToJSON(key);
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected extended public or private key, or hex seed");
+    }
+    return Value::null;
+}

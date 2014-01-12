@@ -65,6 +65,7 @@ test_bitcoin_SOURCES = \
 if ENABLE_WALLET
 test_bitcoin_SOURCES += \
    accounting_tests.cpp \
+   bip32_tests.cpp \
    wallet_tests.cpp \
    rpc_wallet_tests.cpp
 endif
