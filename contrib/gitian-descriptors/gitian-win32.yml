@@ -22,7 +22,7 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "qt-win32-4.8.3-gitian-r4.zip"
+- "qt-win32-5.2.0-gitian-r1.zip"
 - "boost-win32-1.55.0-gitian-r6.zip"
 - "bitcoin-deps-win32-gitian-r10.zip"
 - "protobuf-win32-2.5.0-gitian-r3.zip"
@@ -34,7 +34,7 @@ script: |
   #
   mkdir -p $STAGING
   cd $STAGING
-  unzip ../build/qt-win32-4.8.3-gitian-r4.zip
+  unzip ../build/qt-win32-5.2.0-gitian-r1.zip
   unzip ../build/boost-win32-1.55.0-gitian-r6.zip
   unzip ../build/bitcoin-deps-win32-gitian-r10.zip
   unzip ../build/protobuf-win32-2.5.0-gitian-r3.zip
