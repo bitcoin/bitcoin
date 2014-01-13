@@ -382,40 +382,52 @@ void PaymentServer::handleURIOrFile(const QString& s)
 #else
         QUrlQuery uri((QUrl(s)));
 #endif
-        if (uri.hasQueryItem("r"))
+        if (uri.hasQueryItem("r")) // payment request URI
         {
             QByteArray temp;
             temp.append(uri.queryItemValue("r"));
             QString decoded = QUrl::fromPercentEncoding(temp);
             QUrl fetchUrl(decoded, QUrl::StrictMode);
 
-            qDebug() << "PaymentServer::handleURIOrFile : fetchRequest(" << fetchUrl << ")";
-
             if (fetchUrl.isValid())
+            {
+                qDebug() << "PaymentServer::handleURIOrFile : fetchRequest(" << fetchUrl << ")";
                 fetchRequest(fetchUrl);
+            }
             else
+            {
                 qDebug() << "PaymentServer::handleURIOrFile : Invalid URL: " << fetchUrl;
+                emit message(tr("URI handling"),
+                    tr("Payment request fetch URL is invalid: %1").arg(fetchUrl.toString()),
+                    CClientUIInterface::ICON_WARNING);
+            }
 
             return;
         }
+        else // normal URI
+        {
+            SendCoinsRecipient recipient;
+            if (GUIUtil::parseBitcoinURI(s, &recipient))
+                emit receivedPaymentRequest(recipient);
+            else
+                emit message(tr("URI handling"),
+                    tr("URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters."),
+                    CClientUIInterface::ICON_WARNING);
 
-        SendCoinsRecipient recipient;
-        if (GUIUtil::parseBitcoinURI(s, &recipient))
-            emit receivedPaymentRequest(recipient);
-        else
-            emit message(tr("URI handling"),
-                tr("URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters."),
-                CClientUIInterface::ICON_WARNING);
-
-        return;
+            return;
+        }
     }
 
-    if (QFile::exists(s))
+    if (QFile::exists(s)) // payment request file
     {
         PaymentRequestPlus request;
         SendCoinsRecipient recipient;
         if (readPaymentRequest(s, request) && processPaymentRequest(request, recipient))
             emit receivedPaymentRequest(recipient);
+        else
+            emit message(tr("Payment request file handling"),
+                tr("Payment request file can not be read or processed! This can be caused by an invalid payment request file."),
+                CClientUIInterface::ICON_WARNING);
 
         return;
     }
@@ -594,7 +606,7 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
             .arg(reply->errorString());
 
         qDebug() << "PaymentServer::netRequestFinished : " << msg;
-        emit message(tr("Network request error"), msg, CClientUIInterface::MSG_ERROR);
+        emit message(tr("Payment request error"), msg, CClientUIInterface::MSG_ERROR);
         return;
     }
 
@@ -606,9 +618,16 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
         PaymentRequestPlus request;
         SendCoinsRecipient recipient;
         if (request.parse(data) && processPaymentRequest(request, recipient))
+        {
             emit receivedPaymentRequest(recipient);
+        }
         else
+        {
             qDebug() << "PaymentServer::netRequestFinished : Error processing payment request";
+            emit message(tr("Payment request error"),
+                tr("Payment request can not be parsed or processed!"),
+                CClientUIInterface::MSG_ERROR);
+        }
 
         return;
     }
@@ -621,9 +640,10 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
                 .arg(reply->request().url().toString());
 
             qDebug() << "PaymentServer::netRequestFinished : " << msg;
-            emit message(tr("Network request error"), msg, CClientUIInterface::MSG_ERROR);
+            emit message(tr("Payment request error"), msg, CClientUIInterface::MSG_ERROR);
         }
-        else {
+        else
+        {
             emit receivedPaymentACK(GUIUtil::HtmlEscape(paymentACK.memo()));
         }
     }
