@@ -395,7 +395,14 @@ LIBS="$TEMP_LIBS"
 fi
 
 if test x$boost_sleep != xyes; then
-  AC_MSG_ERROR(No working boost sleep implementation found)
+  AC_MSG_ERROR(no working boost sleep implementation found, [exit-status = ‘$?/1’])
+AC_TRY_LINK([
+  #if BOOST_VERSION >= 105300 && BOOST_VERSION <= 105400
+  AC_MSG_FAILURE(incompatiblity issue with ubuntu 13.10 cannot use libboost1.54-all-dev if libboost1.54-all-dev is installed remove libboost1.54-all-dev and install libboost1.53-all-dev, [exit-status]);
+  #else
+   choke me
+  #endif
+  ]
 fi
 
 BITCOIN_QT_INIT
