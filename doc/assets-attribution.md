@@ -76,7 +76,7 @@ Everaldo (Everaldo Coelho)
 * Site: [http://findicons.com/icon/17102/reload?id=17102](http://findicons.com/icon/17102/reload?id=17102)
 
 ### Assets Used
-	scripts/img/reload.xcf (modified), src/qt/res/movies/update_spinner.mng
+	scripts/img/reload.xcf (modified), src/qt/res/movies/*.png
 
 [Vignoni David](http://www.oxygen-icons.org)
 -----------------------
