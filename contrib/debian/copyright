@@ -71,7 +71,7 @@ Copyright: Bitboy (optimized for 16x16 by Wladimir van der Laan)
 License: PUB-DOM
 Comment: Site: https://bitcointalk.org/?topic=1756.0
 
-Files:  scripts/img/reload.xcf, src/qt/res/movies/update_spinner.mng
+Files:  scripts/img/reload.xcf, src/qt/res/movies/*.png
 Copyright: Everaldo (Everaldo Coelho)
 License: GPL-3+
 Comment: Icon Pack: Kids
