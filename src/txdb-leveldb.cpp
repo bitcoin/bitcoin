@@ -23,41 +23,28 @@
 using namespace std;
 using namespace boost;
 
-leveldb::DB *txdb;
+leveldb::DB *txdb; // global pointer for LevelDB object instance
 
 static leveldb::Options GetOptions() {
     leveldb::Options options;
     int nCacheSizeMB = GetArg("-dbcache", 25);
     options.block_cache = leveldb::NewLRUCache(nCacheSizeMB * 1048576);
-    options.filter_policy = leveldb::NewBloomFilterPolicy(10); 
+    options.filter_policy = leveldb::NewBloomFilterPolicy(10);
     return options;
 }
 
-void MakeMockTXDB() {
-    leveldb::Options options = GetOptions();
-    options.create_if_missing = true;
-    // This will leak but don't care here.
-    options.env = leveldb::NewMemEnv(leveldb::Env::Default());
-    leveldb::Status status = leveldb::DB::Open(options, "txdb", &txdb);
-    if (!status.ok()) 
-        throw runtime_error(strprintf("Could not create mock LevelDB: %s", status.ToString().c_str()));
-    CTxDB txdb("w");
-    txdb.WriteVersion(CLIENT_VERSION);
-}
-
-// NOTE: CDB subclasses are created and destroyed VERY OFTEN. Therefore we have
-// to keep databases in global variables to avoid constantly creating and
-// destroying them, which sucks. In future the code should be changed to not
-// treat the instantiation of a database as a free operation.
+// CDB subclasses are created and destroyed VERY OFTEN. That's why
+// we shouldn't treat this it a free operations.
 CTxDB::CTxDB(const char* pszMode)
 {
     assert(pszMode);
-    pdb = txdb;
     activeBatch = NULL;
     fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
 
-    if (txdb)
+    if (txdb) {
+        pdb = txdb;
         return;
+    }
 
     // First time init.
     filesystem::path directory = GetDataDir() / "txleveldb";
@@ -74,13 +61,19 @@ CTxDB::CTxDB(const char* pszMode)
     }
     pdb = txdb;
 
-    if (fCreate && !Exists(string("version")))
+    if (Exists(string("version")))
+    {
+        ReadVersion(nVersion);
+        printf("Transaction index version is %d\n", nVersion);
+    }
+    else if(fCreate)
     {
         bool fTmp = fReadOnly;
         fReadOnly = false;
-        WriteVersion(CLIENT_VERSION);
+        WriteVersion(DATABASE_VERSION);
         fReadOnly = fTmp;
     }
+
     printf("Opened LevelDB successfully\n");
 }
 

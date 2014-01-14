@@ -15,8 +15,10 @@ using namespace std;
 // BitcoinMiner
 //
 
-string strMintMessage = "Info: Minting suspended due to locked wallet.";
+string strMintMessage = "Info: Mining suspended due to locked wallet.";
 string strMintWarning;
+
+extern unsigned int nMinerSleep;
 
 int static FormatHashBlocks(void* pbuffer, unsigned int len)
 {
@@ -558,9 +560,11 @@ void StakeMiner(CWallet *pwallet)
             SetThreadPriority(THREAD_PRIORITY_NORMAL);
             CheckStake(pblock.get(), *pwallet);
             SetThreadPriority(THREAD_PRIORITY_LOWEST);
+            Sleep(500);
         }
+        else
+            Sleep(nMinerSleep);
 
-        Sleep(500);
         continue;
     }
 }

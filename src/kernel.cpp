@@ -31,6 +31,18 @@ static std::map<int, unsigned int> mapStakeModifierCheckpointsTestNet =
         ( 0, 0x0e00670bu )
     ;
 
+// Get time weight
+int64 GetWeight(int64 nIntervalBeginning, int64 nIntervalEnd)
+{
+    // Kernel hash weight starts from 0 at the 30-day min age
+    // this change increases active coins participating the hash and helps
+    // to secure the network when proof-of-stake difficulty is low
+    //
+    // Maximum TimeWeight is 90 days.
+
+    return min(nIntervalEnd - nIntervalBeginning - nStakeMinAge, (int64)nStakeMaxAge);
+}
+
 // Get the last stake modifier and its generation time from a given block
 static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64& nStakeModifier, int64& nModifierTime)
 {
@@ -275,17 +287,9 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned 
     bnTargetPerCoinDay.SetCompact(nBits);
     int64 nValueIn = txPrev.vout[prevout.n].nValue;
 
-    int64 nTimeWeight;
     uint256 hashBlockFrom = blockFrom.GetHash();
 
-    // Kernel hash weight starts from 0 at the 30-day min age
-    // this change increases active coins participating the hash and helps
-    // to secure the network when proof-of-stake difficulty is low
-    //
-    // Maximum TimeWeight is 90 days.
-    nTimeWeight = min((int64)nTimeTx - txPrev.nTime - nStakeMinAge, (int64)nStakeMaxAge);
-
-    CBigNum bnCoinDayWeight = CBigNum(nValueIn) * nTimeWeight / COIN / (24 * 60 * 60);
+    CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64)txPrev.nTime, (int64)nTimeTx) / COIN / (24 * 60 * 60);
     targetProofOfStake = (bnCoinDayWeight * bnTargetPerCoinDay).getuint256();
 
     // Calculate hash
@@ -346,10 +350,6 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     CTxIndex txindex;
     if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
         return tx.DoS(1, error("CheckProofOfStake() : INFO: read txPrev failed"));  // previous transaction not in main chain, may occur during initial download
-
-#ifndef USE_LEVELDB
-    txdb.Close();
-#endif
 
     // Verify signature
     if (!VerifySignature(txPrev, tx, 0, true, 0))

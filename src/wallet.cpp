@@ -1513,28 +1513,25 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint
                 continue;
         }
 
-        unsigned int nTime = pcoin.first->nTime;
-
-        // Kernel hash weight starts from 0 at the 30-day min age
-        // this change increases active coins participating the hash and helps
-        // to secure the network when proof-of-stake difficulty is low
-        //
-        // Maximum TimeWeight is 90 days.
-        int64 nTimeWeight = min((int64)GetTime() - nTime - nStakeMinAge, (int64)nStakeMaxAge);
+        int64 nTimeWeight = GetWeight((int64)pcoin.first->nTime, (int64)GetTime());
         CBigNum bnCoinDayWeight = CBigNum(pcoin.first->vout[pcoin.second].nValue) * nTimeWeight / COIN / (24 * 60 * 60);
 
-        // Count input that is more than 90 days old
-        if (nTime + nStakeMaxAge < GetTime())
+        // Weight is greater than zero
+        if (nTimeWeight > 0)
         {
-            nMaxWeight += bnCoinDayWeight.getuint64();
             nWeight += bnCoinDayWeight.getuint64();
         }
 
-        // Count input that is more than 30 days old and less than 90 days old
-        if (nTime + nStakeMinAge < GetTime() && nTime + nStakeMaxAge > GetTime())
+        // Weight is greater than zero, but the maximum value isn't reached yet
+        if (nTimeWeight > 0 && nTimeWeight < nStakeMaxAge)
         {
             nMinWeight += bnCoinDayWeight.getuint64();
-            nWeight += bnCoinDayWeight.getuint64();
+        }
+
+        // Maximum weight was reached
+        if (nTimeWeight == nStakeMaxAge)
+        {
+            nMaxWeight += bnCoinDayWeight.getuint64();
         }
     }
 
@@ -1543,9 +1540,8 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint
 
 bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64 nSearchInterval, CTransaction& txNew, CKey& key)
 {
-    // The following split & combine thresholds are important to security
+    // The following combine threshold is important to security
     // Should not be adjusted if you don't understand the consequences
-    static unsigned int nStakeSplitAge = (60 * 60 * 24 * 90);
     int64 nCombineThreshold = GetProofOfWorkReward(GetLastBlockIndex(pindexBest, false)->nBits) / 3;
 
     CBigNum bnTargetPerCoinDay;
@@ -1691,7 +1687,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                 nCredit += pcoin.first->vout[pcoin.second].nValue;
                 vwtxPrev.push_back(pcoin.first);
                 txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
-                if (block.GetBlockTime() + nStakeSplitAge > txNew.nTime)
+
+                if (GetWeight(block.GetBlockTime(), (int64)txNew.nTime) < nStakeMaxAge)
                     txNew.vout.push_back(CTxOut(0, scriptPubKeyOut)); //split stake
                 if (fDebug && GetBoolArg("-printcoinstake"))
                     printf("CreateCoinStake : added kernel type=%d\n", whichType);
@@ -1714,6 +1711,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         if (txNew.vout.size() == 2 && ((pcoin.first->vout[pcoin.second].scriptPubKey == scriptPubKeyKernel || pcoin.first->vout[pcoin.second].scriptPubKey == txNew.vout[1].scriptPubKey))
             && pcoin.first->GetHash() != txNew.vin[0].prevout.hash)
         {
+            int64 nTimeWeight = GetWeight((int64)pcoin.first->nTime, (int64)txNew.nTime);
+
             // Stop adding more inputs if already too many inputs
             if (txNew.vin.size() >= 100)
                 break;
@@ -1727,8 +1726,9 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             if (pcoin.first->vout[pcoin.second].nValue > nCombineThreshold)
                 continue;
             // Do not add input that is still too young
-            if (pcoin.first->nTime + nStakeMaxAge > txNew.nTime)
+            if (nTimeWeight < nStakeMaxAge)
                 continue;
+
             txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
             nCredit += pcoin.first->vout[pcoin.second].nValue;
             vwtxPrev.push_back(pcoin.first);
