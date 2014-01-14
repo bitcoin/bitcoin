@@ -33,6 +33,36 @@ static leveldb::Options GetOptions() {
     return options;
 }
 
+void init_blockindex(leveldb::Options& options, bool fRemoveOld = false) {
+    // First time init.
+    filesystem::path directory = GetDataDir() / "txleveldb";
+
+    if (fRemoveOld) {
+        filesystem::remove_all(directory); // remove directory
+        unsigned int nFile = 1;
+
+        while (true)
+        {
+            filesystem::path strBlockFile = GetDataDir() / strprintf("blk%04u.dat", nFile);
+
+            // Break if no such file
+            if( !filesystem::exists( strBlockFile ) )
+                break;
+
+            filesystem::remove(strBlockFile);
+
+            nFile++;
+        }
+    }
+
+    filesystem::create_directory(directory);
+    printf("Opening LevelDB in %s\n", directory.string().c_str());
+    leveldb::Status status = leveldb::DB::Open(options, directory.string(), &txdb);
+    if (!status.ok()) {
+        throw runtime_error(strprintf("init_blockindex(): error opening database environment %s", status.ToString().c_str()));
+    }
+}
+
 // CDB subclasses are created and destroyed VERY OFTEN. That's why
 // we shouldn't treat this as a free operations.
 CTxDB::CTxDB(const char* pszMode)
@@ -46,27 +76,40 @@ CTxDB::CTxDB(const char* pszMode)
         return;
     }
 
-    // First time init.
-    filesystem::path directory = GetDataDir() / "txleveldb";
     bool fCreate = strchr(pszMode, 'c');
 
     options = GetOptions();
     options.create_if_missing = fCreate;
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
-    filesystem::create_directory(directory);
-    printf("Opening LevelDB in %s\n", directory.string().c_str());
-    leveldb::Status status = leveldb::DB::Open(options, directory.string(), &txdb);
-    if (!status.ok()) {
-        throw runtime_error(strprintf("CDB(): error opening database environment %s", status.ToString().c_str()));
-    }
+
+    init_blockindex(options); // Init directory
     pdb = txdb;
 
     if (Exists(string("version")))
     {
         ReadVersion(nVersion);
         printf("Transaction index version is %d\n", nVersion);
+
+        if (nVersion < DATABASE_VERSION)
+        {
+            printf("Required index version is %d, removing old database\n", DATABASE_VERSION);
+
+            // Leveldb instance destruction
+            delete txdb;
+            txdb = pdb = NULL;
+            delete activeBatch;
+            activeBatch = NULL;
+
+            init_blockindex(options, true); // Remove directory and create new database
+            pdb = txdb;
+
+            bool fTmp = fReadOnly;
+            fReadOnly = false;
+            WriteVersion(DATABASE_VERSION); // Save transaction index version
+            fReadOnly = fTmp;
+        }
     }
-    else if(fCreate)
+    else if (fCreate)
     {
         bool fTmp = fReadOnly;
         fReadOnly = false;
