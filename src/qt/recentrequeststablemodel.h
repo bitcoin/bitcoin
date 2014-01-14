@@ -13,10 +13,32 @@
 
 class CWallet;
 
-struct RecentRequestEntry
+class RecentRequestEntry
 {
+public:
+    RecentRequestEntry() : nVersion(RecentRequestEntry::CURRENT_VERSION), id(0) { }
+
+    static const int CURRENT_VERSION=1;
+    int nVersion;
+    int64_t id;
     QDateTime date;
     SendCoinsRecipient recipient;
+
+    IMPLEMENT_SERIALIZE
+    (
+        RecentRequestEntry* pthis = const_cast<RecentRequestEntry*>(this);
+
+        unsigned int nDate = date.toTime_t();
+
+        READWRITE(pthis->nVersion);
+        nVersion = pthis->nVersion;
+        READWRITE(id);
+        READWRITE(nDate);
+        READWRITE(recipient);
+
+        if (fRead)
+            pthis->date = QDateTime::fromTime_t(nDate);
+    )
 };
 
 /** Model for list of recently generated payment requests / bitcoin URIs.
@@ -51,11 +73,14 @@ public:
 
     const RecentRequestEntry &entry(int row) const { return list[row]; }
     void addNewRequest(const SendCoinsRecipient &recipient);
+    void addNewRequest(const std::string &recipient);
+    void addNewRequest(RecentRequestEntry &recipient);
 
 private:
     WalletModel *walletModel;
     QStringList columns;
     QList<RecentRequestEntry> list;
+    int64_t nReceiveRequestsMaxId;
 };
 
 #endif
