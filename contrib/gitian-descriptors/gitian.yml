@@ -1,12 +1,11 @@
 ---
 name: "bitcoin"
 suites:
-- "lucid"
+- "precise"
 architectures:
 - "i386"
 - "amd64"
 packages: 
-- "libdb4.8++-dev"
 - "qt4-qmake"
 - "libqt4-dev"
 - "libboost-system-dev"
@@ -29,45 +28,56 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "miniupnpc-1.6.tar.gz"
-- "qrencode-3.2.0.tar.bz2"
+- "miniupnpc-1.8.tar.gz"
+- "qrencode-3.4.3.tar.bz2"
 - "protobuf-2.5.0.tar.bz2"
+- "db-4.8.30.NC.tar.gz"
 script: |
   STAGING="$HOME/install"
+  OPTFLAGS='-O2'
   export LIBRARY_PATH="$STAGING/lib"
   # Integrity Check
-  echo "bbd6b756e6af44b5a5b0f9b93eada3fb8922ed1d6451b7d6f184d0ae0c813994  miniupnpc-1.6.tar.gz"   | sha256sum -c
-  echo "03c4bc7cd9a75747c3815d509bbe061907d615764f2357923f0db948c567068f  qrencode-3.2.0.tar.bz2" | sha256sum -c
+  echo "bc5f73c7b0056252c1888a80e6075787a1e1e9112b808f863a245483ff79859c  miniupnpc-1.8.tar.gz"   | sha256sum -c
+  echo "dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98  qrencode-3.4.3.tar.bz2" | sha256sum -c
   echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
+  echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"    | sha256sum -c
 
-  tar xzfm miniupnpc-1.6.tar.gz
-  cd miniupnpc-1.6
+  tar xzfm miniupnpc-1.8.tar.gz
+  cd miniupnpc-1.8
   INSTALLPREFIX=$STAGING make $MAKEOPTS install
   cd ..
   #
-  tar xjfm qrencode-3.2.0.tar.bz2
-  cd qrencode-3.2.0
+  tar xjfm qrencode-3.4.3.tar.bz2
+  cd qrencode-3.4.3
   sed -i 's/@LIBPTHREAD@//' libqrencode.pc.in
-  ./configure --prefix=$STAGING --enable-static --disable-shared
+  #   need --with-pic to avoid relocation error in 64 bit builds
+  ./configure --prefix=$STAGING --enable-static --disable-shared --with-pic
   make $MAKEOPTS install
   cd ..
   #
   tar xjfm protobuf-2.5.0.tar.bz2
   cd protobuf-2.5.0
   mkdir -p $STAGING/host/bin
-  ./configure --prefix=$STAGING --bindir=$STAGING/host/bin --enable-static --disable-shared
+  ./configure --prefix=$STAGING --bindir=$STAGING/host/bin --enable-static --disable-shared --with-pic
   make $MAKEOPTS install
   cd ..
+  #
+  tar xzf db-4.8.30.NC.tar.gz
+  cd db-4.8.30.NC/build_unix
+  ../dist/configure --prefix=$STAGING --enable-cxx --disable-shared --with-pic
+  make $MAKEOPTS library_build
+  make install_lib install_include
+  cd ../..
   #
   cd bitcoin
   export TAR_OPTIONS=--mtime=`echo $REFERENCE_DATETIME | awk '{ print $1 }'`
   ./autogen.sh
-  ./configure --prefix=$STAGING --bindir=$OUTDIR --with-protoc-bindir=$STAGING/host/bin --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" CXXFLAGS="-frandom-seed=bitcoin"
+  ./configure --prefix=$STAGING --bindir=$OUTDIR --with-protoc-bindir=$STAGING/host/bin --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}"
   make dist
   mkdir -p distsrc
   cd distsrc
   tar --strip-components=1 -xf ../bitcoin-*.tar.*
-  ./configure --prefix=$STAGING --bindir=$OUTDIR --with-protoc-bindir=$STAGING/host/bin --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include" LDFLAGS="-L$STAGING/lib" CXXFLAGS="-frandom-seed=bitcoin"
+  ./configure --prefix=$STAGING --bindir=$OUTDIR --with-protoc-bindir=$STAGING/host/bin --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}"
   make $MAKEOPTS
   make $MAKEOPTS install-strip
   mkdir -p $OUTDIR/src
