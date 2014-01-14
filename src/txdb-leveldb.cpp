@@ -34,7 +34,7 @@ static leveldb::Options GetOptions() {
 }
 
 // CDB subclasses are created and destroyed VERY OFTEN. That's why
-// we shouldn't treat this it a free operations.
+// we shouldn't treat this as a free operations.
 CTxDB::CTxDB(const char* pszMode)
 {
     assert(pszMode);
