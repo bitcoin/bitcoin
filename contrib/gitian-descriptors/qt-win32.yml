@@ -15,7 +15,7 @@ reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
 - "qt-everywhere-opensource-src-4.8.3.tar.gz"
-- "bitcoin-deps-win32-gitian-r9.zip"
+- "bitcoin-deps-win32-gitian-r10.zip"
 script: |
   #
   HOST=i686-w64-mingw32
@@ -27,7 +27,7 @@ script: |
   mkdir -p $INSTDIR/host/bin
   #
   # Need mingw-compiled openssl from bitcoin-deps:
-  unzip bitcoin-deps-win32-gitian-r9.zip
+  unzip bitcoin-deps-win32-gitian-r10.zip
   DEPSDIR=`pwd`
   #
   tar xzf qt-everywhere-opensource-src-4.8.3.tar.gz
