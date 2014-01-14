@@ -473,7 +473,7 @@
         <item>
          <widget class="QLabel" name="overriddenByCommandLineInfoLabel">
           <property name="text">
-           <string>Active command-line options that override above options: </string>
+           <string>Active command-line options that override above options:</string>
           </property>
           <property name="textFormat">
            <enum>Qt::PlainText</enum>
