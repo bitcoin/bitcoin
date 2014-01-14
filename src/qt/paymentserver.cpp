@@ -8,8 +8,6 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
-#include "paymentserver.h"
-#include "walletmodel.h"
 
 #include "base58.h"
 #include "ui_interface.h"
