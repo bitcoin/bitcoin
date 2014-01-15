@@ -39,7 +39,7 @@ Once you've got the right hardware and software:
     git pull
     cd ../gitian-builder
     git pull
-    ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/gitian.yml
+    ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 
     # Build Win32 dependencies: (only needs to be done once, or when dependency versions change)
     ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/boost-win32.yml

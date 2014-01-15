@@ -52,7 +52,7 @@ Release Process
 	wget 'https://protobuf.googlecode.com/files/protobuf-2.5.0.tar.bz2'
 	cd ..
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-linux.yml
-	mv build/out/*.tar.gz inputs/
+	mv build/out/bitcoin-deps-*.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-win32.yml
 	mv build/out/boost-win32-*.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-win32.yml
@@ -64,8 +64,8 @@ Release Process
 
  Build bitcoind and bitcoin-qt on Linux32, Linux64, and Win32:
   
-	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian.yml
+	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 	pushd build/out
 	zip -r bitcoin-${VERSION}-linux-gitian.zip *
 	mv bitcoin-${VERSION}-linux-gitian.zip ../../../
