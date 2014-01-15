@@ -378,6 +378,8 @@ BOOST_CHRONO_LIB="$BOOST_CHRONO_LIB $BOOST_CHRONO_EXTRALIBS"
 
 TEMP_LIBS="$LIBS"
 LIBS="$LIBS $BOOST_LIBS $BOOST_CHRONO_LIB"
+TEMP_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
 AC_TRY_LINK([
   #include <boost/thread/thread.hpp>
   #include <boost/version.hpp>
@@ -392,11 +394,14 @@ AC_TRY_LINK([
      AC_DEFINE(HAVE_WORKING_BOOST_SLEEP_FOR, 1, [Define this symbol if boost sleep_for works])],
   [boost_sleep=no])
 LIBS="$TEMP_LIBS"
+CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
 if test x$boost_sleep != xyes; then
 TEMP_LIBS="$LIBS"
 LIBS="$LIBS $BOOST_LIBS"
+TEMP_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
 AC_TRY_LINK([
   #include <boost/version.hpp>
   #include <boost/thread.hpp>
@@ -411,6 +416,7 @@ AC_TRY_LINK([
   [boost_sleep=yes; AC_DEFINE(HAVE_WORKING_BOOST_SLEEP, 1, [Define this symbol if boost sleep works])],
   [boost_sleep=no])
 LIBS="$TEMP_LIBS"
+CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
 if test x$boost_sleep != xyes; then
