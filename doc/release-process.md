@@ -51,6 +51,8 @@ Release Process
 	wget 'https://download.qt-project.org/official_releases/qt/5.2/5.2.0/single/qt-everywhere-opensource-src-5.2.0.tar.gz'
 	wget 'https://protobuf.googlecode.com/files/protobuf-2.5.0.tar.bz2'
 	cd ..
+	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-linux.yml
+	mv build/out/*.tar.gz inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-win32.yml
 	mv build/out/boost-win32-*.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-win32.yml
