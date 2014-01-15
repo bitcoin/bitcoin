@@ -14,12 +14,12 @@ packages:
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
-- "openssl-1.0.1c.tar.gz"
+- "openssl-1.0.1e.tar.gz"
 - "db-4.8.30.NC.tar.gz"
-- "miniupnpc-1.6.tar.gz"
-- "zlib-1.2.6.tar.gz"
-- "libpng-1.5.9.tar.gz"
-- "qrencode-3.2.0.tar.bz2"
+- "miniupnpc-1.8.tar.gz"
+- "zlib-1.2.8.tar.gz"
+- "libpng-1.6.8.tar.gz"
+- "qrencode-3.4.3.tar.bz2"
 script: |
   #
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
@@ -28,17 +28,17 @@ script: |
   export INSTALLPREFIX=$OUTDIR/staging/deps
   export HOST=i686-w64-mingw32
   # Input Integrity Check
-  echo "2a9eb3cd4e8b114eb9179c0d3884d61658e7d8e8bf4984798a5f5bd48e325ebe  openssl-1.0.1c.tar.gz"  | sha256sum -c
+  echo "f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3  openssl-1.0.1e.tar.gz"  | sha256sum -c
   echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"    | sha256sum -c
-  echo "bbd6b756e6af44b5a5b0f9b93eada3fb8922ed1d6451b7d6f184d0ae0c813994  miniupnpc-1.6.tar.gz"   | sha256sum -c
-  echo "21235e08552e6feba09ea5e8d750805b3391c62fb81c71a235c0044dc7a8a61b  zlib-1.2.6.tar.gz"      | sha256sum -c
-  echo "b75dae26151f9b031062c8d2f577a094b08da0ae44fe8c11175d0b9ff434cc02  libpng-1.5.9.tar.gz"    | sha256sum -c
-  echo "03c4bc7cd9a75747c3815d509bbe061907d615764f2357923f0db948c567068f  qrencode-3.2.0.tar.bz2" | sha256sum -c
+  echo "bc5f73c7b0056252c1888a80e6075787a1e1e9112b808f863a245483ff79859c  miniupnpc-1.8.tar.gz"   | sha256sum -c
+  echo "36658cb768a54c1d4dec43c3116c27ed893e88b02ecfcb44f2166f9c0b7f2a0d  zlib-1.2.8.tar.gz"      | sha256sum -c
+  echo "32c7acf1608b9c8b71b743b9780adb7a7b347563dbfb4a5263761056da44cc96  libpng-1.6.8.tar.gz"    | sha256sum -c
+  echo "dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98  qrencode-3.4.3.tar.bz2" | sha256sum -c
 
   mkdir -p $INSTALLPREFIX
 
-  tar xzf openssl-1.0.1c.tar.gz
-  cd openssl-1.0.1c
+  tar xzf openssl-1.0.1e.tar.gz
+  cd openssl-1.0.1e
   ./Configure --cross-compile-prefix=$HOST- mingw --openssldir=$INSTALLPREFIX
   make
   make install_sw
@@ -51,11 +51,11 @@ script: |
   make install_lib install_include
   cd ../..
   #
-  tar xzf miniupnpc-1.6.tar.gz
-  cd miniupnpc-1.6
+  tar xzf miniupnpc-1.8.tar.gz
+  cd miniupnpc-1.8
   echo "
-  --- miniupnpc-1.6/Makefile.mingw.orig   2013-09-29 18:52:51.014087958 -1000
-  +++ miniupnpc-1.6/Makefile.mingw        2013-09-29 19:09:29.663318691 -1000
+  --- miniupnpc-1.8/Makefile.mingw.orig   2013-09-29 18:52:51.014087958 -1000
+  +++ miniupnpc-1.8/Makefile.mingw        2013-09-29 19:09:29.663318691 -1000
   @@ -67,8 +67,8 @@
    
    wingenminiupnpcstrings.o:	wingenminiupnpcstrings.c
@@ -75,26 +75,27 @@ script: |
   install libminiupnpc.a  $INSTALLPREFIX/lib
   cd ..
   #
-  tar xzf zlib-1.2.6.tar.gz
-  cd zlib-1.2.6
+  tar xzf zlib-1.2.8.tar.gz
+  cd zlib-1.2.8
   CROSS_PREFIX=$HOST- ./configure --prefix=$INSTALLPREFIX --static
   make
   make install
   cd ..
   #
-  tar xzf libpng-1.5.9.tar.gz
-  cd libpng-1.5.9
-  CFLAGS="-I$INSTALLPREFIX/include" LDFLAGS="-L$INSTALLPREFIX/lib" ./configure --disable-shared --prefix=$INSTALLPREFIX --host=$HOST
+  tar xzf libpng-1.6.8.tar.gz
+  cd libpng-1.6.8
+  OPT="-O2"
+  CPPFLAGS="${OPT} -I$INSTALLPREFIX/include" CFLAGS="${OPT} -I$INSTALLPREFIX/include" LDFLAGS="${OPT} -L$INSTALLPREFIX/lib" ./configure --disable-shared --prefix=$INSTALLPREFIX --host=$HOST
   make $MAKEOPTS
   make install
   cd ..
   #
-  tar xjf qrencode-3.2.0.tar.bz2
-  cd qrencode-3.2.0
+  tar xjf qrencode-3.4.3.tar.bz2
+  cd qrencode-3.4.3
   png_CFLAGS="-I$INSTALLPREFIX/include" png_LIBS="-L$INSTALLPREFIX/lib -lpng" ./configure --prefix=$INSTALLPREFIX --host=$HOST
   make
   make install
   cd ..
   #
   cd $INSTALLPREFIX
-  zip -r $OUTDIR/bitcoin-deps-win32-gitian-r9.zip include lib
+  zip -r $OUTDIR/bitcoin-deps-win32-gitian-r10.zip include lib

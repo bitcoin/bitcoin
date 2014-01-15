@@ -10,41 +10,38 @@ packages:
 - "zip"
 - "unzip"
 - "faketime"
-- "unzip"
+- "libz-dev"
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
-- "qt-everywhere-opensource-src-4.8.3.tar.gz"
-- "bitcoin-deps-win32-gitian-r9.zip"
+- "qt-everywhere-opensource-src-5.2.0.tar.gz"
+- "bitcoin-deps-win32-gitian-r10.zip"
 script: |
   #
   HOST=i686-w64-mingw32
   INSTDIR="$HOME/qt/"
   # Integrity Check
-  echo "f1f72974f924861be04019f49f07cd43ab3c95056db2ba8f34b283487cccc728  qt-everywhere-opensource-src-4.8.3.tar.gz" | sha256sum -c
+  echo "395ec72277c5786c65b8163ef5817fd03d0a1f524a6d47f53624baf8056f1081  qt-everywhere-opensource-src-5.2.0.tar.gz" | sha256sum -c
 
   mkdir $INSTDIR
   mkdir -p $INSTDIR/host/bin
   #
   # Need mingw-compiled openssl from bitcoin-deps:
-  unzip bitcoin-deps-win32-gitian-r9.zip
+  unzip bitcoin-deps-win32-gitian-r10.zip
   DEPSDIR=`pwd`
   #
-  tar xzf qt-everywhere-opensource-src-4.8.3.tar.gz
-  cd qt-everywhere-opensource-src-4.8.3
+  tar xzf qt-everywhere-opensource-src-5.2.0.tar.gz
+  cd qt-everywhere-opensource-src-5.2.0
+  SPECNAME="win32-g++"
+  SPECFILE="qtbase/mkspecs/${SPECNAME}/qmake.conf"
   sed 's/$TODAY/2011-01-30/' -i configure
-  sed "s/i686-pc-mingw32-/$HOST-/" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
-  sed --posix "s|QMAKE_CFLAGS\t\t= -pipe|QMAKE_CFLAGS\t\t= -pipe -isystem /usr/$HOST/include/ -frandom-seed=qtbuild|" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
-  sed 's/QMAKE_CXXFLAGS_EXCEPTIONS_ON = -fexceptions -mthreads/QMAKE_CXXFLAGS_EXCEPTIONS_ON = -fexceptions/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
-  sed 's/QMAKE_LFLAGS_EXCEPTIONS_ON = -mthreads/QMAKE_LFLAGS_EXCEPTIONS_ON = -lmingwthrd/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
-  sed --posix "s/QMAKE_MOC\t\t= $HOST-moc/QMAKE_MOC\t\t= moc/" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
-  sed --posix "s/QMAKE_RCC\t\t= $HOST-rcc/QMAKE_RCC\t\t= rcc/" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
-  sed --posix "s/QMAKE_UIC\t\t= $HOST-uic/QMAKE_UIC\t\t= uic/" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+  sed --posix "s|QMAKE_CFLAGS            = -pipe -fno-keep-inline-dllexport|QMAKE_CFLAGS\t\t= -pipe -fno-keep-inline-dllexport -isystem /usr/$HOST/include/ -frandom-seed=qtbuild -I$DEPSDIR/include|" -i ${SPECFILE}
+  sed --posix "s|QMAKE_LFLAGS            =|QMAKE_LFLAGS\t\t= -L$DEPSDIR/lib|" -i ${SPECFILE}
   # ar adds timestamps to every object file included in the static library
   # providing -D as ar argument is supposed to solve it, but doesn't work as qmake strips off the arguments and adds -M to pass a script...
   # which somehow cannot be combined with other flags.
   # use faketime only for ar, as it confuses make/qmake into hanging sometimes
-  sed --posix "s|QMAKE_LIB\t\t= $HOST-ar -ru|QMAKE_LIB\t\t= $HOME/ar -Dr|" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+  sed --posix "s|QMAKE_LIB               = \\\$\\\${CROSS_COMPILE}ar -ru|QMAKE_LIB\t\t= $HOME/ar -Dr|" -i ${SPECFILE}
   echo '#!/bin/bash' > $HOME/ar
   echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> $HOME/ar
   echo "$HOST-ar \"\$@\"" >> $HOME/ar
@@ -52,14 +49,12 @@ script: |
   #export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
+  #
   # Compile static libraries, and use statically linked openssl (-openssl-linked):
-  OPENSSL_LIBS="-L$DEPSDIR/lib -lssl -lcrypto -lgdi32" ./configure -prefix $INSTDIR -bindir $INSTDIR/host/bin -I $DEPSDIR/include  -confirm-license -release -opensource -static -no-qt3support -xplatform unsupported/win32-g++-cross -no-multimedia -no-audio-backend -no-phonon -no-phonon-backend -no-declarative -no-script -no-scripttools -no-javascript-jit -no-webkit -no-svg -no-xmlpatterns -no-sql-sqlite -no-nis -no-cups -no-iconv -no-dbus -no-gif -no-libtiff -no-opengl -nomake examples -nomake demos -nomake docs -no-feature-style-plastique -no-feature-style-cleanlooks -no-feature-style-motif -no-feature-style-cde -no-feature-style-windowsce -no-feature-style-windowsmobile -no-feature-style-s60 -openssl-linked
-  find . -name *.prl | xargs -l sed 's|/\.||' -i
-  find . -name *.prl | xargs -l sed 's|/$||' -i
+  OPENSSL_LIBS="-L$DEPSDIR/lib -lssl -lcrypto -lgdi32" ./configure -prefix $INSTDIR -bindir $INSTDIR/host/bin -confirm-license -release -opensource -static -xplatform $SPECNAME -device-option CROSS_COMPILE="$HOST-" -no-audio-backend -no-javascript-jit -no-sql-sqlite -no-sql-odbc -no-nis -no-cups -no-iconv -no-dbus -no-gif -no-opengl -no-compile-examples -no-feature-style-windowsce -no-feature-style-windowsmobile -no-qml-debug -openssl-linked -skip qtsvg -skip qtwebkit -skip qtwebkit-examples -skip qtserialport -skip qtdeclarative -skip qtmultimedia -skip qtimageformats -skip qtlocation -skip qtsensors -skip qtquick1 -skip qtquickcontrols -skip qtactiveqt -skip qtconnectivity -skip qtwinextras -skip qtxmlpatterns -skip qtscript -skip qtdoc -system-libpng -system-zlib
   make $MAKEOPTS install
   cd $INSTDIR
-  find . -name *.prl | xargs -l sed 's|/$||' -i
 
   # as zip stores file timestamps, use faketime to intercept stat calls to set dates for all files to reference date
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-  zip -r $OUTDIR/qt-win32-4.8.3-gitian-r4.zip *
+  zip -r $OUTDIR/qt-win32-5.2.0-gitian-r1.zip *
