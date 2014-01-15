@@ -15,6 +15,7 @@ packages:
 reference_datetime: "2013-06-01 00:00:00"
 remotes: []
 files:
+- "openssl-1.0.1e.tar.gz"
 - "miniupnpc-1.8.tar.gz"
 - "qrencode-3.4.3.tar.bz2"
 - "protobuf-2.5.0.tar.bz2"
@@ -24,11 +25,21 @@ script: |
   OPTFLAGS='-O2'
   export LIBRARY_PATH="$STAGING/lib"
   # Integrity Check
+  echo "f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3  openssl-1.0.1e.tar.gz"  | sha256sum -c
   echo "bc5f73c7b0056252c1888a80e6075787a1e1e9112b808f863a245483ff79859c  miniupnpc-1.8.tar.gz"   | sha256sum -c
   echo "dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98  qrencode-3.4.3.tar.bz2" | sha256sum -c
   echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
   echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"    | sha256sum -c
 
+  #
+  tar xzf openssl-1.0.1e.tar.gz
+  cd openssl-1.0.1e
+  #   need -fPIC to avoid relocation error in 64 bit builds
+  ./config no-shared no-zlib no-dso no-krb5 --openssldir=$STAGING -fPIC
+  make
+  make install_sw
+  cd ..
+  #
   tar xzfm miniupnpc-1.8.tar.gz
   cd miniupnpc-1.8
   #   miniupnpc is always built with -fPIC
@@ -60,4 +71,4 @@ script: |
   cd ../..
   #
   cd $STAGING
-  zip -r $OUTDIR/bitcoin-deps-linux${GBUILD_BITS}-gitian-r1.zip include lib bin host
+  zip -r $OUTDIR/bitcoin-deps-linux${GBUILD_BITS}-gitian-r2.zip include lib bin host
