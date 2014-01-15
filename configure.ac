@@ -373,6 +373,9 @@ dnl after 1.56.
 dnl If neither is available, abort.
 dnl If sleep_for is used, boost_chrono becomes a requirement.
 if test x$ax_cv_boost_chrono = xyes; then
+dnl Allow passing extra needed dependency libraries for boost-chrono from static gitian build
+BOOST_CHRONO_LIB="$BOOST_CHRONO_LIB $BOOST_CHRONO_EXTRALIBS"
+
 TEMP_LIBS="$LIBS"
 LIBS="$LIBS $BOOST_LIBS $BOOST_CHRONO_LIB"
 AC_TRY_LINK([
