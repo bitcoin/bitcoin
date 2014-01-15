@@ -25,18 +25,8 @@ Once you've got the right hardware and software:
     mkdir gitian-builder/inputs
     cd gitian-builder/inputs
 
-    # Inputs for Linux and Win32:
-    wget -O miniupnpc-1.6.tar.gz 'http://miniupnp.tuxfamily.org/files/download.php?file=miniupnpc-1.6.tar.gz'
-    wget 'http://fukuchi.org/works/qrencode/qrencode-3.2.0.tar.bz2'
-    
-	# Inputs for Win32: (Linux has packages for these)
-    wget 'https://downloads.sourceforge.net/project/boost/boost/1.50.0/boost_1_50_0.tar.bz2'
-    wget 'http://www.openssl.org/source/openssl-1.0.1c.tar.gz'
-    wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
-    wget 'https://downloads.sourceforge.net/project/libpng/zlib/1.2.6/zlib-1.2.6.tar.gz'
-    wget 'https://downloads.sourceforge.net/project/libpng/libpng15/older-releases/1.5.9/libpng-1.5.9.tar.gz'
-    wget 'https://download.qt-project.org/archive/qt/4.8/4.8.3/qt-everywhere-opensource-src-4.8.3.tar.gz'
-    wget 'http://protobuf.googlecode.com/files/protobuf-2.5.0.tar.bz2'
+    # Get inputs (see doc/release-process.md for exact inputs needed and where to get them)
+    ...
     cd ../..
 
     cd gitian-builder
