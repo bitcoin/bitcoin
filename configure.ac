@@ -207,10 +207,8 @@ case $host in
      fi
 
      CPPFLAGS="$CPPFLAGS -DMAC_OSX"
-     TESTDEFS="-DBOOST_TEST_DYN_LINK"
      ;;
    *)
-     TESTDEFS="-DBOOST_TEST_DYN_LINK"
      ;;
 esac
 
@@ -345,6 +343,24 @@ if test x$use_tests = xyes; then
 
 
   AX_BOOST_UNIT_TEST_FRAMEWORK
+
+  dnl Determine if -DBOOST_TEST_DYN_LINK is needed
+  AC_MSG_CHECKING([for dynamic linked boost test])
+  TEMP_LIBS="$LIBS"
+  LIBS="$LIBS $BOOST_UNIT_TEST_FRAMEWORK_LIB"
+  TEMP_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+  AC_LINK_IFELSE([AC_LANG_SOURCE([
+       #define BOOST_TEST_DYN_LINK
+       #define BOOST_TEST_MAIN
+        #include <boost/test/unit_test.hpp>
+
+       ])],
+    [AC_MSG_RESULT(yes)]
+    [TESTDEFS="$TESTDEFS -DBOOST_TEST_DYN_LINK"],
+    [AC_MSG_RESULT(no)])
+  LIBS="$TEMP_LIBS"
+  CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
 BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB"
