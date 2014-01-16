@@ -4,7 +4,6 @@
 
 #include "bitcoingui.h"
 
-#include "aboutdialog.h"
 #include "bitcoinunits.h"
 #include "clientmodel.h"
 #include "guiconstants.h"
@@ -14,6 +13,7 @@
 #include "optionsdialog.h"
 #include "optionsmodel.h"
 #include "rpcconsole.h"
+#include "utilitydialog.h"
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
 #include "walletmodel.h"
