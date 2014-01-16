@@ -81,7 +81,7 @@ string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
             "<META HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=ISO-8859-1'>\r\n"
             "</HEAD>\r\n"
             "<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
-            "</HTML>\r\n", rfc1123Time().c_str(), FormatFullVersion().c_str());
+            "</HTML>\r\n", rfc1123Time(), FormatFullVersion());
     const char *cStatus;
          if (nStatus == HTTP_OK) cStatus = "OK";
     else if (nStatus == HTTP_BAD_REQUEST) cStatus = "Bad Request";
@@ -100,11 +100,11 @@ string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
             "%s",
         nStatus,
         cStatus,
-        rfc1123Time().c_str(),
+        rfc1123Time(),
         keepalive ? "keep-alive" : "close",
         strMsg.size(),
-        FormatFullVersion().c_str(),
-        strMsg.c_str());
+        FormatFullVersion(),
+        strMsg);
 }
 
 bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
