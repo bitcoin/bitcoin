@@ -7,6 +7,7 @@ architectures:
 - "amd64"
 packages:
 - "unzip"
+- "zip"
 - "pkg-config"
 - "libtool"
 - "faketime"
@@ -59,4 +60,4 @@ script: |
   cd ../..
   #
   cd $STAGING
-  tar -czf $OUTDIR/bitcoin-deps-linux${GBUILD_BITS}-gitian-r1.tar.gz include lib bin host
+  zip -r $OUTDIR/bitcoin-deps-linux${GBUILD_BITS}-gitian-r1.zip include lib bin host

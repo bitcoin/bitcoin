@@ -27,8 +27,8 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "bitcoin-deps-linux32-gitian-r1.tar.gz"
-- "bitcoin-deps-linux64-gitian-r1.tar.gz"
+- "bitcoin-deps-linux32-gitian-r1.zip"
+- "bitcoin-deps-linux64-gitian-r1.zip"
 script: |
   STAGING="$HOME/install"
   OPTFLAGS='-O2'
@@ -38,7 +38,7 @@ script: |
   #
   mkdir -p $STAGING
   cd $STAGING
-  tar xzfm ../build/bitcoin-deps-linux${GBUILD_BITS}-gitian-r1.tar.gz
+  unzip ../build/bitcoin-deps-linux${GBUILD_BITS}-gitian-r1.zip
   cd ../build
   #
   cd bitcoin
