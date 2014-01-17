@@ -1562,8 +1562,6 @@ Value walletpassphrase(const Array& params, bool fHelp)
 
     if (fHelp)
         return true;
-    if (!fServer)
-        throw JSONRPCError(RPC_SERVER_NOT_STARTED, "Error: RPC server was not started, use server=1 to change this.");
     if (!pwalletMain->IsCrypted())
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrase was called.");
 
