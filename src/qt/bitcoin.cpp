@@ -561,12 +561,6 @@ int main(int argc, char *argv[])
 
     try
     {
-#ifndef Q_OS_MAC
-        // Regenerate startup link, to fix links to old versions
-        // OSX: makes no sense on mac and might also scan/mount external (and sleeping) volumes (can take up some secs)
-        if (GUIUtil::GetStartOnSystemStartup())
-            GUIUtil::SetStartOnSystemStartup(true);
-#endif
         app.createWindow(isaTestNet);
         app.requestInitialize();
         app.exec();
