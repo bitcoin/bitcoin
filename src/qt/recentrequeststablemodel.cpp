@@ -175,3 +175,31 @@ void RecentRequestsTableModel::addNewRequest(RecentRequestEntry &recipient)
     list.prepend(recipient);
     endInsertRows();
 }
+
+void RecentRequestsTableModel::sort(int column, Qt::SortOrder order)
+{
+    qSort(list.begin(), list.end(), RecentRequestEntryLessThan(column, order));
+    emit dataChanged(index(0, 0, QModelIndex()), index(list.size() - 1, NUMBER_OF_COLUMNS - 1, QModelIndex()));
+}
+
+bool RecentRequestEntryLessThan::operator()(RecentRequestEntry &left, RecentRequestEntry &right) const
+{
+    RecentRequestEntry *pLeft = &left;
+    RecentRequestEntry *pRight = &right;
+    if (order == Qt::DescendingOrder)
+        std::swap(pLeft, pRight);
+
+    switch(column)
+    {
+    case RecentRequestsTableModel::Date:
+        return pLeft->date.toTime_t() < pRight->date.toTime_t();
+    case RecentRequestsTableModel::Label:
+        return pLeft->recipient.label < pRight->recipient.label;
+    case RecentRequestsTableModel::Message:
+        return pLeft->recipient.message < pRight->recipient.message;
+    case RecentRequestsTableModel::Amount:
+        return pLeft->recipient.amount < pRight->recipient.amount;
+    default:
+        return pLeft->id < pRight->id;
+    }
+}
