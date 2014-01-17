@@ -41,6 +41,18 @@ public:
     )
 };
 
+class RecentRequestEntryLessThan
+{
+public:
+    RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder):
+        column(nColumn), order(fOrder) {}
+    bool operator()(RecentRequestEntry &left, RecentRequestEntry &right ) const;
+
+private:
+    int column;
+    Qt::SortOrder order;
+};
+
 /** Model for list of recently generated payment requests / bitcoin URIs.
  * Part of wallet model.
  */
@@ -56,7 +68,8 @@ public:
         Date = 0,
         Label = 1,
         Message = 2,
-        Amount = 3
+        Amount = 3,
+        NUMBER_OF_COLUMNS
     };
 
     /** @name Methods overridden from QAbstractTableModel
@@ -75,6 +88,9 @@ public:
     void addNewRequest(const SendCoinsRecipient &recipient);
     void addNewRequest(const std::string &recipient);
     void addNewRequest(RecentRequestEntry &recipient);
+
+public slots:
+    void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
 
 private:
     WalletModel *walletModel;
