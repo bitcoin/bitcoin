@@ -622,7 +622,7 @@ if test x$bitcoin_enable_qt != xno; then
   if test x$use_tests = xyes; then
     BUILD_TEST_QT="test"
     if test x$bitcoin_enable_qt_test != xyes; then
-      AC_MSG_ERROR("QT Test lib not found. Use --disable-tests or --without-qt.")
+      AC_MSG_ERROR("Qt Test lib not found. Use --disable-tests or --without-qt.")
     fi
   fi
 fi
