@@ -883,11 +883,11 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
                     fseek(file, postx.nTxOffset, SEEK_CUR);
                     file >> txOut;
                 } catch (std::exception &e) {
-                    return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+                    return error("%s : Deserialize or I/O error - %s", __PRETTY_FUNCTION__, e.what());
                 }
                 hashBlock = header.GetHash();
                 if (txOut.GetHash() != hash)
-                    return error("%s() : txid mismatch", __PRETTY_FUNCTION__);
+                    return error("%s : txid mismatch", __PRETTY_FUNCTION__);
                 return true;
             }
         }
@@ -936,7 +936,7 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
     // Open history file to append
     CAutoFile fileout = CAutoFile(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
     if (!fileout)
-        return error("WriteBlockToDisk() : OpenBlockFile failed");
+        return error("WriteBlockToDisk : OpenBlockFile failed");
 
     // Write index header
     unsigned int nSize = fileout.GetSerializeSize(block);
@@ -945,7 +945,7 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
     // Write block
     long fileOutPos = ftell(fileout);
     if (fileOutPos < 0)
-        return error("WriteBlockToDisk() : ftell failed");
+        return error("WriteBlockToDisk : ftell failed");
     pos.nPos = (unsigned int)fileOutPos;
     fileout << block;
 
@@ -964,19 +964,19 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
     // Open history file to read
     CAutoFile filein = CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
     if (!filein)
-        return error("ReadBlockFromDisk(CBlock&, CDiskBlockPos&) : OpenBlockFile failed");
+        return error("ReadBlockFromDisk : OpenBlockFile failed");
 
     // Read block
     try {
         filein >> block;
     }
     catch (std::exception &e) {
-        return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+        return error("%s : Deserialize or I/O error - %s", __PRETTY_FUNCTION__, e.what());
     }
 
     // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits))
-        return error("ReadBlockFromDisk(CBlock&, CDiskBlockPos&) : errors in block header");
+        return error("ReadBlockFromDisk : Errors in block header");
 
     return true;
 }
@@ -2876,7 +2876,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
                         break;
                 }
             } catch (std::exception &e) {
-                LogPrintf("%s() : Deserialize or I/O error caught during load\n", __PRETTY_FUNCTION__);
+                LogPrintf("%s : Deserialize or I/O error - %s", __PRETTY_FUNCTION__, e.what());
             }
         }
         fclose(fileIn);
