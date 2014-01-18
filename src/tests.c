@@ -7,6 +7,7 @@
 #endif
 
 #include <assert.h>
+#include <stdio.h>
 
 #include "impl/num.h"
 #include "impl/field.h"
