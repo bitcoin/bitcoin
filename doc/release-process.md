@@ -53,6 +53,8 @@ Release Process
 	cd ..
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-linux.yml
 	mv build/out/bitcoin-deps-*.zip inputs/
+	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-linux.yml
+	mv build/out/boost-linux-*.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-win32.yml
 	mv build/out/boost-win32-*.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-win32.yml
