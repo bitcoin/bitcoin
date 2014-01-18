@@ -18,6 +18,7 @@ script: |
   export TZ=UTC
   export INSTALLPREFIX=$OUTDIR/staging/deps
   export HOST=i686-w64-mingw32
+  OPTFLAGS="-O2"
   # Integrity Check
   echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
 
@@ -33,12 +34,12 @@ script: |
   cp src/protoc $INSTALLPREFIX/host/bin
   # Now recompile with the mingw cross-compiler:
   make distclean
-  ./configure --prefix=$INSTALLPREFIX --enable-shared=no --disable-dependency-tracking --with-protoc=$INSTALLPREFIX/host/bin/protoc --host=$HOST CXXFLAGS=-frandom-seed=11
+  ./configure --prefix=$INSTALLPREFIX --enable-shared=no --disable-dependency-tracking --with-protoc=$INSTALLPREFIX/host/bin/protoc --host=$HOST CXXFLAGS="-frandom-seed=11 ${OPTFLAGS}"
   make
   make install
   cd $INSTALLPREFIX
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
-  zip -r $OUTDIR/protobuf-win32-2.5.0-gitian-r3.zip include lib host
+  zip -r $OUTDIR/protobuf-win32-2.5.0-gitian-r4.zip include lib host
   unset LD_PRELOAD
   unset FAKETIME
