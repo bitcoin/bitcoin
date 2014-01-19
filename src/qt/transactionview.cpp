@@ -166,7 +166,8 @@ void TransactionView::setModel(WalletModel *model)
         transactionProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
         transactionProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
-        transactionProxyModel->setSortRole(Qt::EditRole);
+//        transactionProxyModel->setSortRole(Qt::EditRole);
+        transactionProxyModel->setSortRole(TransactionTableModel::DateRole);
 
         transactionView->setModel(transactionProxyModel);
         transactionView->setAlternatingRowColors(true);
