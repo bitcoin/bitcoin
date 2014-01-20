@@ -1273,6 +1273,11 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             entry.push_back(Pair("category", wtx.GetDepthInMainChain() ? "immature" : "orphan"));
             entry.push_back(Pair("amount", ValueFromAmount(nGeneratedImmature)));
         }
+        else if (wtx.IsCoinStake())
+        {
+            entry.push_back(Pair("category", "stake"));
+            entry.push_back(Pair("amount", ValueFromAmount(nGeneratedMature)));
+        }
         else
         {
             entry.push_back(Pair("category", "generate"));
