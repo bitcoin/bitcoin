@@ -13,6 +13,7 @@ class AddressBookPage;
 class SendCoinsDialog;
 class MessagePage;
 class Notificator;
+class RPCConsole;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -87,10 +88,12 @@ private:
     QAction *backupWalletAction;
     QAction *changePassphraseAction;
     QAction *aboutQtAction;
+    QAction *openRPCConsoleAction;
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
     TransactionView *transactionView;
+    RPCConsole *rpcConsole;
 
     QMovie *syncIconMovie;
 

@@ -38,6 +38,7 @@ public:
 
     QString formatFullVersion() const;
     QString formatBuildDate() const;
+    QString clientName() const;
 
 private:
     OptionsModel *optionsModel;
