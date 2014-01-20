@@ -1,0 +1,84 @@
+---
+name: "bitcoin"
+suites:
+- "precise"
+architectures:
+- "amd64"
+packages:
+- "mingw-w64"
+- "g++-mingw-w64"
+- "git-core"
+- "unzip"
+- "nsis"
+- "faketime"
+- "autoconf2.13"
+- "libtool"
+- "automake"
+- "pkg-config"
+- "bsdmainutils"
+
+reference_datetime: "2013-06-01 00:00:00"
+remotes:
+- "url": "https://github.com/bitcoin/bitcoin.git"
+  "dir": "bitcoin"
+files:
+- "qt-win32-5.2.0-gitian-r1.zip"
+- "qt-win64-5.2.0-gitian-r1.zip"
+- "boost-win32-1.55.0-gitian-r6.zip"
+- "boost-win64-1.55.0-gitian-r6.zip"
+- "bitcoin-deps-win32-gitian-r10.zip"
+- "bitcoin-deps-win64-gitian-r10.zip"
+- "protobuf-win32-2.5.0-gitian-r4.zip"
+- "protobuf-win64-2.5.0-gitian-r4.zip"
+script: |
+  # Defines
+  export TZ=UTC
+  INDIR=$HOME/build
+  OPTFLAGS='-O2'
+  NEEDDIST=1
+  for BITS in 32 64; do # for architectures
+    #
+    STAGING=$HOME/staging${BITS}
+    BUILDDIR=$HOME/build${BITS}
+    BINDIR=$OUTDIR/$BITS
+    if [ "$BITS" == "32" ]; then
+      HOST=i686-w64-mingw32
+    else
+      HOST=x86_64-w64-mingw32
+    fi
+    mkdir -p $STAGING $BUILDDIR $BINDIR
+    #
+    cd $STAGING
+    unzip $INDIR/qt-win${BITS}-5.2.0-gitian-r1.zip
+    unzip $INDIR/boost-win${BITS}-1.55.0-gitian-r6.zip
+    unzip $INDIR/bitcoin-deps-win${BITS}-gitian-r10.zip
+    unzip $INDIR/protobuf-win${BITS}-2.5.0-gitian-r4.zip
+    if [ "$NEEDDIST" == "1" ]; then
+      # Make source code archive which is architecture independent so it only needs to be done once
+      cd $HOME/build/
+      cd bitcoin
+      export PATH=$STAGING/host/bin:$PATH
+      export TAR_OPTIONS=--mtime=`echo $REFERENCE_DATETIME | awk '{ print $1 }'`
+      ./autogen.sh
+      ./configure --bindir=$OUTDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}"
+      make dist
+      mkdir -p $OUTDIR/src
+      cp -f bitcoin-*.tar.* $OUTDIR/src
+      NEEDDIST=0
+    fi
+    # Build platform-dependent executables from source archive
+    cd $BUILDDIR
+    mkdir -p distsrc
+    cd distsrc
+    tar --strip-components=1 -xf $HOME/build/bitcoin/bitcoin-*.tar.*
+    ./configure --bindir=$BINDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}"
+    export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+    export FAKETIME=$REFERENCE_DATETIME
+    make $MAKEOPTS
+    make deploy
+    make install-strip
+    cp -f bitcoin-*setup*.exe $BINDIR/
+    unset LD_PRELOAD
+    unset FAKETIME
+  done # for BITS in
+
