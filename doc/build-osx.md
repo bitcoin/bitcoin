@@ -5,7 +5,7 @@ This guide will show you how to build bitcoind(headless client) for OSX.
 Notes
 -----
 
-* Tested on OS X 10.5 through 10.8 on Intel processors only. PPC is not
+* Tested on OS X 10.5 through 10.9 on Intel processors only. PPC is not
 supported because it is big-endian.
 * All of the commands should be executed in a Terminal application. The
 built-in one is located in `/Applications/Utilities`.
@@ -27,7 +27,7 @@ not, it's the path of least resistance to install [Github for Mac](https://mac.g
 [Git for OS X](https://code.google.com/p/git-osx-installer/). It is also
 available via Homebrew or MacPorts.
 
-You will also need to install [Homebrew](http://mxcl.github.io/homebrew/)
+You will also need to install [Homebrew](http://brew.sh)
 or [MacPorts](https://www.macports.org/) in order to install library
 dependencies. It's largely a religious decision which to choose, but, as of
 December 2012, MacPorts is a little easier because you can just install the
@@ -64,20 +64,20 @@ Installing the dependencies using MacPorts is very straightforward.
 
         make check
 
-Instructions: HomeBrew
+Instructions: Homebrew
 ----------------------
 
 #### Install dependencies using Homebrew
 
-        brew install boost miniupnpc openssl berkeley-db4
+        brew install autoconf automake berkeley-db4 boost miniupnpc openssl pkg-config protobuf
 
-Note: After you have installed the dependencies, you should check that the Brew installed version of OpenSSL is the one available for compilation. You can check this by typing
+Note: After you have installed the dependencies, you should check that the Homebrew installed version of OpenSSL is the one available for compilation. You can check this by typing
 
         openssl version
 
-into Terminal. You should see OpenSSL 1.0.1e 11 Feb 2013.
+into Terminal. You should see OpenSSL 1.0.1f 6 Jan 2014.
 
-If not, you can ensure that the Brew OpenSSL is correctly linked by running
+If not, you can ensure that the Homebrew OpenSSL is correctly linked by running
 
         brew link openssl --force
 
