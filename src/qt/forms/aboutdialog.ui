@@ -160,12 +160,12 @@ This product includes software developed by the OpenSSL Project for use in the O
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>360</x>
-     <y>308</y>
+     <x>20</x>
+     <y>20</y>
     </hint>
     <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
+     <x>20</x>
+     <y>20</y>
     </hint>
    </hints>
   </connection>
@@ -176,12 +176,12 @@ This product includes software developed by the OpenSSL Project for use in the O
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>428</x>
-     <y>308</y>
+     <x>20</x>
+     <y>20</y>
     </hint>
     <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
+     <x>20</x>
+     <y>20</y>
     </hint>
    </hints>
   </connection>
