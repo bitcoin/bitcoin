@@ -3567,10 +3567,8 @@ int64 nLastCoinStakeSearchInterval = 0;
 
 // CreateNewBlock:
 //   fProofOfStake: try (best effort) to make a proof-of-stake block
-CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
+CBlock* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool fProofOfStake)
 {
-    CReserveKey reservekey(pwallet);
-
     // Create new block
     auto_ptr<CBlock> pblock(new CBlock());
     if (!pblock.get())
@@ -3916,7 +3914,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
         unsigned int nTransactionsUpdatedLast = nTransactionsUpdated;
         CBlockIndex* pindexPrev = pindexBest;
 
-        auto_ptr<CBlock> pblock(CreateNewBlock(pwallet, fProofOfStake));
+        auto_ptr<CBlock> pblock(CreateNewBlock(reservekey, pwallet, fProofOfStake));
         if (!pblock.get())
             return;
 

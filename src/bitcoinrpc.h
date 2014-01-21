@@ -9,6 +9,8 @@
 #include <string>
 #include <map>
 
+class CReserveKey;
+
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_utils.h"
@@ -52,5 +54,6 @@ public:
 };
 
 extern const CRPCTable tableRPC;
+extern CReserveKey* pMiningKey;
 
 #endif
