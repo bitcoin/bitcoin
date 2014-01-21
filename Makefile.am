@@ -6,7 +6,7 @@ GZIP_ENV="-9n"
 
 BITCOIND_BIN=$(top_builddir)/src/bitcoind$(EXEEXT)
 BITCOIN_QT_BIN=$(top_builddir)/src/qt/bitcoin-qt$(EXEEXT)
-BITCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win32-setup$(EXEEXT)
+BITCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EXEEXT)
 
 OSX_APP=Bitcoin-Qt.app
 OSX_DMG=Bitcoin-Qt.dmg

@@ -193,6 +193,12 @@ case $host in
      if test "x$CXXFLAGS_overridden" = "xno"; then
        CXXFLAGS="$CXXFLAGS -w"
      fi
+     case $host in
+       i?86-*) WINDOWS_BITS=32 ;;
+       x86_64-*) WINDOWS_BITS=64 ;;
+       *) AC_MSG_ERROR("Could not determine win32/win64 for installer") ;;
+     esac
+     AC_SUBST(WINDOWS_BITS)
      ;;
   *darwin*)
      TARGET_OS=darwin
