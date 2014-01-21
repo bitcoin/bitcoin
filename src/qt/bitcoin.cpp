@@ -14,6 +14,7 @@
 #include "intro.h"
 #include "optionsmodel.h"
 #include "splashscreen.h"
+#include "utilitydialog.h"
 #ifdef ENABLE_WALLET
 #include "paymentserver.h"
 #include "walletmodel.h"
@@ -36,8 +37,6 @@
 #include <QTimer>
 #include <QTranslator>
 #include <QThread>
-#include <QVBoxLayout>
-#include <QLabel>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -356,17 +355,7 @@ void BitcoinApplication::requestShutdown()
     clientModel = 0;
 
     // Show a simple window indicating shutdown status
-    QWidget *shutdownWindow = new QWidget();
-    QVBoxLayout *layout = new QVBoxLayout();
-    layout->addWidget(new QLabel(
-        tr("Bitcoin Core is shutting down...") + "<br /><br />" +
-        tr("Do not shut down the computer until this window disappears.")));
-    shutdownWindow->setLayout(layout);
-
-    // Center shutdown window at where main window was
-    const QPoint global = window->mapToGlobal(window->rect().center());
-    shutdownWindow->move(global.x() - shutdownWindow->width() / 2, global.y() - shutdownWindow->height() / 2);
-    shutdownWindow->show();
+    ShutdownWindow::showShutdownWindow(window);
 
     // Request shutdown from core thread
     emit requestedShutdown();
@@ -503,7 +492,7 @@ int main(int argc, char *argv[])
     // but before showing splash screen.
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
-        GUIUtil::HelpMessageBox help;
+        HelpMessageDialog help(NULL);
         help.showOrPrint();
         return 1;
     }
