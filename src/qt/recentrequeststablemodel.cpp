@@ -12,6 +12,13 @@ RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel 
     walletModel(parent)
 {
     Q_UNUSED(wallet);
+    nReceiveRequestsMaxId = 0;
+
+    // Load entries from wallet
+    std::vector<std::string> vReceiveRequests;
+    parent->loadReceiveRequests(vReceiveRequests);
+    BOOST_FOREACH(const std::string& request, vReceiveRequests)
+        addNewRequest(request);
 
     /* These columns must match the indices in the ColumnIndex enumeration */
     columns << tr("Date") << tr("Label") << tr("Message") << tr("Amount");
@@ -104,6 +111,14 @@ bool RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex 
 
     if(count > 0 && row >= 0 && (row+count) <= list.size())
     {
+        const RecentRequestEntry *rec;
+        for (int i = 0; i < count; ++i)
+        {
+            rec = &list[row+i];
+            if (!walletModel->saveReceiveRequest(rec->recipient.address.toStdString(), rec->id, ""))
+                return false;
+        }
+
         beginRemoveRows(parent, row, row + count - 1);
         list.erase(list.begin() + row, list.begin() + row + count);
         endRemoveRows();
@@ -118,12 +133,73 @@ Qt::ItemFlags RecentRequestsTableModel::flags(const QModelIndex &index) const
     return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
 
+// called when adding a request from the GUI
 void RecentRequestsTableModel::addNewRequest(const SendCoinsRecipient &recipient)
 {
     RecentRequestEntry newEntry;
+    newEntry.id = ++nReceiveRequestsMaxId;
     newEntry.date = QDateTime::currentDateTime();
     newEntry.recipient = recipient;
+
+    CDataStream ss(SER_DISK, CLIENT_VERSION);
+    ss << newEntry;
+
+    if (!walletModel->saveReceiveRequest(recipient.address.toStdString(), newEntry.id, ss.str()))
+        return;
+
+    addNewRequest(newEntry);
+}
+
+// called from ctor when loading from wallet
+void RecentRequestsTableModel::addNewRequest(const std::string &recipient)
+{
+    std::vector<char> data(recipient.begin(), recipient.end());
+    CDataStream ss(data, SER_DISK, CLIENT_VERSION);
+
+    RecentRequestEntry entry;
+    ss >> entry;
+
+    if (entry.id == 0) // should not happen
+        return;
+
+    if (entry.id > nReceiveRequestsMaxId)
+        nReceiveRequestsMaxId = entry.id;
+
+    addNewRequest(entry);
+}
+
+// actually add to table in GUI
+void RecentRequestsTableModel::addNewRequest(RecentRequestEntry &recipient)
+{
     beginInsertRows(QModelIndex(), 0, 0);
-    list.prepend(newEntry);
+    list.prepend(recipient);
     endInsertRows();
+}
+
+void RecentRequestsTableModel::sort(int column, Qt::SortOrder order)
+{
+    qSort(list.begin(), list.end(), RecentRequestEntryLessThan(column, order));
+    emit dataChanged(index(0, 0, QModelIndex()), index(list.size() - 1, NUMBER_OF_COLUMNS - 1, QModelIndex()));
+}
+
+bool RecentRequestEntryLessThan::operator()(RecentRequestEntry &left, RecentRequestEntry &right) const
+{
+    RecentRequestEntry *pLeft = &left;
+    RecentRequestEntry *pRight = &right;
+    if (order == Qt::DescendingOrder)
+        std::swap(pLeft, pRight);
+
+    switch(column)
+    {
+    case RecentRequestsTableModel::Date:
+        return pLeft->date.toTime_t() < pRight->date.toTime_t();
+    case RecentRequestsTableModel::Label:
+        return pLeft->recipient.label < pRight->recipient.label;
+    case RecentRequestsTableModel::Message:
+        return pLeft->recipient.message < pRight->recipient.message;
+    case RecentRequestsTableModel::Amount:
+        return pLeft->recipient.amount < pRight->recipient.amount;
+    default:
+        return pLeft->id < pRight->id;
+    }
 }
