@@ -33,6 +33,12 @@ extern const std::string CLIENT_DATE;
 #define PPCOIN_VERSION_REVISION    0
 #define PPCOIN_VERSION_BUILD       0
 
+static const int PPCOIN_VERSION =
+                           1000000 * PPCOIN_VERSION_MAJOR
+                         +   10000 * PPCOIN_VERSION_MINOR
+                         +     100 * PPCOIN_VERSION_REVISION
+                         +       1 * PPCOIN_VERSION_BUILD;
+
 //
 // network protocol versioning
 //
