@@ -46,21 +46,21 @@
      <item row="4" column="2">
       <widget class="QLineEdit" name="reqLabel">
        <property name="toolTip">
-        <string>The label to associate with the new receiving address</string>
+        <string>An optional label to associate with the new receiving address</string>
        </property>
       </widget>
      </item>
      <item row="6" column="2">
       <widget class="QLineEdit" name="reqMessage">
        <property name="toolTip">
-        <string>The message to attach to payment request</string>
+        <string>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</string>
        </property>
       </widget>
      </item>
      <item row="2" column="2">
       <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>Use this form to request payments. All fields are optional.</string>
+        <string>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</string>
        </property>
       </widget>
      </item>
@@ -99,7 +99,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>The amount to request</string>
+        <string>An optional amount to request. Leave this empty or zero to not request a specific amount.</string>
        </property>
       </widget>
      </item>
