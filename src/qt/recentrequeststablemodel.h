@@ -18,7 +18,7 @@ class RecentRequestEntry
 public:
     RecentRequestEntry() : nVersion(RecentRequestEntry::CURRENT_VERSION), id(0) { }
 
-    static const int CURRENT_VERSION=1;
+    static const int CURRENT_VERSION = 1;
     int nVersion;
     int64_t id;
     QDateTime date;
@@ -46,7 +46,7 @@ class RecentRequestEntryLessThan
 public:
     RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder):
         column(nColumn), order(fOrder) {}
-    bool operator()(RecentRequestEntry &left, RecentRequestEntry &right ) const;
+    bool operator()(RecentRequestEntry &left, RecentRequestEntry &right) const;
 
 private:
     int column;
