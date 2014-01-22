@@ -7,7 +7,6 @@
 
 #include "clientmodel.h"
 #include "guiutil.h"
-#include "utilitydialog.h"
 
 #include "rpcserver.h"
 #include "rpcclient.h"
@@ -201,7 +200,6 @@ RPCConsole::RPCConsole(QWidget *parent) :
 
 #ifndef Q_OS_MAC
     ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
-    ui->showCLOptionsButton->setIcon(QIcon(":/icons/options"));
 #endif
 
     // Install event filter for up and down arrow
@@ -440,12 +438,6 @@ void RPCConsole::scrollToEnd()
 {
     QScrollBar *scrollbar = ui->messagesWidget->verticalScrollBar();
     scrollbar->setValue(scrollbar->maximum());
-}
-
-void RPCConsole::on_showCLOptionsButton_clicked()
-{
-    HelpMessageDialog *help = new HelpMessageDialog(this);
-    help->show();
 }
 
 void RPCConsole::on_sldGraphRange_valueChanged(int value)
