@@ -207,7 +207,11 @@
        </widget>
       </item>
       <item>
-       <widget class="QTableView" name="recentRequestsView"/>
+       <widget class="QTableView" name="recentRequestsView">
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
