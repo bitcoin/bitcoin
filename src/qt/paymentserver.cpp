@@ -335,17 +335,22 @@ void PaymentServer::initNetManager()
     // netManager is used to fetch paymentrequests given in bitcoin: URIs
     netManager = new QNetworkAccessManager(this);
 
-    // Use proxy settings from optionsModel
-    QString proxyIP;
-    quint16 proxyPort;
-    if (optionsModel->getProxySettings(proxyIP, proxyPort))
-    {
-        QNetworkProxy proxy;
-        proxy.setType(QNetworkProxy::Socks5Proxy);
-        proxy.setHostName(proxyIP);
-        proxy.setPort(proxyPort);
-        netManager->setProxy(proxy);
+    QNetworkProxy proxy;
+
+    // Query active proxy (fails if no SOCKS5 proxy)
+    if (optionsModel->getProxySettings(proxy)) {
+        if (proxy.type() == QNetworkProxy::Socks5Proxy) {
+            netManager->setProxy(proxy);
+
+            qDebug() << "PaymentServer::initNetManager : Using SOCKS5 proxy" << proxy.hostName() << ":" << proxy.port();
+        }
+        else
+            qDebug() << "PaymentServer::initNetManager : No active proxy server found.";
     }
+    else
+        emit message(tr("Net manager warning"),
+            tr("Your active proxy doesn't support SOCKS5, which is required for payment requests via proxy."),
+            CClientUIInterface::MSG_WARNING);
 
     connect(netManager, SIGNAL(finished(QNetworkReply*)),
             this, SLOT(netRequestFinished(QNetworkReply*)));
