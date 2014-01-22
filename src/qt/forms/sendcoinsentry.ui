@@ -141,6 +141,23 @@
     <item row="2" column="1">
      <widget class="BitcoinAmountField" name="payAmount"/>
     </item>
+    <item row="3" column="0">
+     <widget class="QLabel" name="messageLabel">
+      <property name="text">
+       <string>Message:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QLabel" name="messageTextLabel">
+      <property name="textFormat">
+       <enum>Qt::PlainText</enum>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QFrame" name="SendCoins_InsecurePaymentRequest">
