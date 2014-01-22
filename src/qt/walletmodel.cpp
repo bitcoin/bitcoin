@@ -554,3 +554,27 @@ void WalletModel::listLockedCoins(std::vector<COutPoint>& vOutpts)
     LOCK(wallet->cs_wallet);
     wallet->ListLockedCoins(vOutpts);
 }
+
+void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests)
+{
+    LOCK(wallet->cs_wallet);
+    BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& item, wallet->mapAddressBook)
+        BOOST_FOREACH(const PAIRTYPE(std::string, std::string)& item2, item.second.destdata)
+            if (item2.first.size() > 2 && item2.first.substr(0,2) == "rr") // receive request
+                vReceiveRequests.push_back(item2.second);
+}
+
+bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest)
+{
+    CTxDestination dest = CBitcoinAddress(sAddress).Get();
+
+    std::stringstream ss;
+    ss << nId;
+    std::string key = "rr" + ss.str(); // "rr" prefix = "receive request" in destdata
+
+    LOCK(wallet->cs_wallet);
+    if (sRequest.empty())
+        return wallet->EraseDestData(dest, key);
+    else
+        return wallet->AddDestData(dest, key, sRequest);
+}
