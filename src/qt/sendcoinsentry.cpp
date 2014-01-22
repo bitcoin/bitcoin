@@ -88,6 +88,9 @@ void SendCoinsEntry::clear()
     ui->payTo->clear();
     ui->addAsLabel->clear();
     ui->payAmount->clear();
+    ui->messageTextLabel->clear();
+    ui->messageTextLabel->hide();
+    ui->messageLabel->hide();
     // clear UI elements for insecure payment request
     ui->payTo_is->clear();
     ui->memoTextLabel_is->clear();
@@ -148,6 +151,7 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
     recipient.amount = ui->payAmount->value();
+    recipient.message = ui->messageTextLabel->text();
 
     return recipient;
 }
@@ -188,6 +192,11 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
     }
     else // normal payment
     {
+        // message
+        ui->messageTextLabel->setText(recipient.message);
+        ui->messageTextLabel->setVisible(!recipient.message.isEmpty());
+        ui->messageLabel->setVisible(!recipient.message.isEmpty());
+
         ui->payTo->setText(recipient.address);
         ui->addAsLabel->setText(recipient.label);
         ui->payAmount->setValue(recipient.amount);
