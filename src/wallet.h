@@ -95,6 +95,7 @@ class CWallet : public CCryptoKeyStore, public CWalletInterface
 {
 private:
     bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl *coinControl = NULL) const;
+    bool IsAvailableCoin(const CWalletTx& coin, uint256 hash, unsigned int n, const CCoinControl *coinControl) const;
 
     CWalletDB *pwalletdbEncryption;
 
@@ -167,6 +168,7 @@ public:
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL) const;
     bool SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
 
+    bool IsAvailableCoin(const COutPoint& output, bool fCheckConfirmed=false) const;
     bool IsLockedCoin(uint256 hash, unsigned int n) const;
     void LockCoin(COutPoint& output);
     void UnlockCoin(COutPoint& output);
@@ -745,6 +747,8 @@ public:
     void AddSupportingTransactions();
     bool AcceptWalletTransaction();
     void RelayWalletTransaction();
+
+    bool IsAvailable(bool fCheckConfirmed) const;
 };
 
 

@@ -1774,6 +1774,8 @@ Value lockunspent(const Array& params, bool fHelp)
     }
 
     Array outputs = params[1].get_array();
+
+    // Validate all of the outputs first.
     BOOST_FOREACH(Value& output, outputs)
     {
         if (output.type() != obj_type)
@@ -1791,7 +1793,26 @@ Value lockunspent(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
 
         COutPoint outpt(uint256(txid), nOutput);
+        
+        if (fUnlock)
+        {
+            if (!pwalletMain->IsLockedCoin(outpt.hash, outpt.n))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected locked output");
+        }
+        else if (!pwalletMain->IsAvailableCoin(outpt))
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected available output");
+        }
+    }
 
+    // Atomically set (un)locked status for the outputs.
+    BOOST_FOREACH(Value& output, outputs)
+    {
+        const Object& o = output.get_obj();
+        string txid = find_value(o, "txid").get_str();
+        int nOutput = find_value(o, "vout").get_int();
+        COutPoint outpt(uint256(txid), nOutput);
+		
         if (fUnlock)
             pwalletMain->UnlockCoin(outpt);
         else

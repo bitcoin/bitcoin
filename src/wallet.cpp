@@ -925,6 +925,20 @@ void CWalletTx::RelayWalletTransaction()
     }
 }
 
+bool CWalletTx::IsAvailable(bool fCheckConfirmed) const
+{
+    if (!IsFinalTx(*this))
+        return false;
+    
+    if (fCheckConfirmed && !IsConfirmed())
+        return false;
+    
+    if (IsCoinBase() && GetBlocksToMaturity() > 0)
+        return false;
+    
+    return true;
+}
+
 void CWallet::ResendWalletTransactions()
 {
     // Do this infrequently and randomly to avoid giving away
@@ -1029,24 +1043,43 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-
-            if (!IsFinalTx(*pcoin))
+            if (!pcoin->IsAvailable(fOnlyConfirmed))
                 continue;
-
-            if (fOnlyConfirmed && !pcoin->IsConfirmed())
-                continue;
-
-            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
-                continue;
-
-            for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
-                if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) &&
-                    !IsLockedCoin((*it).first, i) && pcoin->vout[i].nValue > 0 &&
-                    (!coinControl || !coinControl->HasSelected() || coinControl->IsSelected((*it).first, i)))
-                        vCoins.push_back(COutput(pcoin, i, pcoin->GetDepthInMainChain()));
+            
+            for (unsigned int i = 0; i < pcoin->vout.size(); i++)
+            {
+                if (IsAvailableCoin(*pcoin, (*it).first, i, coinControl))
+                    vCoins.push_back(COutput(pcoin, i, pcoin->GetDepthInMainChain()));
             }
         }
     }
+}
+
+bool CWallet::IsAvailableCoin(const COutPoint& output, bool fCheckConfirmed) const
+{
+    AssertLockHeld(cs_wallet); // mapWallet
+    
+    map<uint256, CWalletTx>::const_iterator it = mapWallet.find(output.hash);
+    if (it == mapWallet.end())
+        return false;
+    
+    const CWalletTx& coin = (*it).second;
+    if (!coin.IsAvailable(fCheckConfirmed))
+        return false;
+    
+    return IsAvailableCoin(coin, output.hash, output.n, NULL);
+}
+
+bool CWallet::IsAvailableCoin(const CWalletTx& coin, uint256 hash, unsigned int n, const CCoinControl *coinControl) const
+{
+    // It's assumed the caller has tested coin.IsAvailable().
+    // It can be costly so we don't want to call it unnecessarily.
+    if (n >= coin.vout.size())
+        return false;
+    
+    return (!(coin.IsSpent(n)) && IsMine(coin.vout[n]) &&
+            !IsLockedCoin(hash, n) && coin.vout[n].nValue > 0 &&
+            (!coinControl || !coinControl->HasSelected() || coinControl->IsSelected(hash, n)));
 }
 
 static void ApproximateBestSubset(vector<pair<int64_t, pair<const CWalletTx*,unsigned int> > >vValue, int64_t nTotalLower, int64_t nTargetValue,
