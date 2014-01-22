@@ -170,65 +170,6 @@ Value getaccountaddress(const Array& params, bool fHelp)
     return ret;
 }
 
-Value getsendingaddressesbylabel(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "getsendingaddressesbylabel \"label\"\n"
-            "\nReturns the current Bitcoin sending addresses for specified label.\n"
-            "\nResult:\n"
-            "\"addresses\"    (array) The addresses\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getsendingaddressesbylabel", "\"noodles\"")
-            + HelpExampleRpc("getsendingaddressesbylabel", "\"noodles\"")
-        );
-
-    string strAccount = AccountFromValue(params[0]);
-
-    // Find all addresses that have the given account
-    Array ret;
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
-    {
-        const CBitcoinAddress& address = item.first;
-        const string& strName = item.second.name;
-        if (!IsMine(*pwalletMain, address.Get()) && strName == strAccount)
-            ret.push_back(address.ToString());
-    }
-
-    return ret;
-}
-
-Value getsendingaddress(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "getsendingaddress \"label\"\n"
-            "\nReturns the current Bitcoin sending address for specified label.\n"
-            "\nResult:\n"
-            "\"address\"    (string) The address\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getsendingaddress", "\"noodles\"")
-            + HelpExampleRpc("getsendingaddress", "\"noodles\"")
-        );
-
-    string strAccount = AccountFromValue(params[0]);
-
-    // Find the first address that has the given account
-    string ret;
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
-    {
-        const CBitcoinAddress& address = item.first;
-        const string& strName = item.second.name;
-        if (!IsMine(*pwalletMain, address.Get()) && strName == strAccount)
-        {
-            ret = address.ToString();
-            break;
-        }
-    }
-
-    return ret;
-}
-
 Value listsendingaddresses(const Array& params, bool fHelp)
 {
     if (fHelp)
