@@ -34,6 +34,8 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     CAccountingEntry ae;
     std::map<int64_t, CAccountingEntry> results;
 
+    LOCK(pwalletMain->cs_wallet);
+
     ae.strAccount = "";
     ae.nCreditDebit = 1;
     ae.nTime = 1333333333;
