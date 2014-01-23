@@ -22,6 +22,7 @@
 
 #include "init.h"
 #include "main.h"
+#include "rpcserver.h"
 #include "ui_interface.h"
 #include "util.h"
 #include "wallet.h"
@@ -226,6 +227,13 @@ void BitcoinCore::initialize()
     {
         LogPrintf("Running AppInit2 in thread\n");
         int rv = AppInit2(threadGroup);
+        if(rv)
+        {
+            /* Start a dummy RPC thread if no RPC thread is active yet
+             * to handle timeouts.
+             */
+            StartDummyRPCThread();
+        }
         emit initializeResult(rv);
     } catch (std::exception& e) {
         handleRunawayException(&e);
