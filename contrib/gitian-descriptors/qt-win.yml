@@ -1,0 +1,77 @@
+---
+name: "qt"
+suites:
+- "precise"
+architectures:
+- "amd64"
+packages: 
+- "mingw-w64"
+- "g++-mingw-w64"
+- "zip"
+- "unzip"
+- "faketime"
+- "libz-dev"
+reference_datetime: "2011-01-30 00:00:00"
+remotes: []
+files:
+- "qt-everywhere-opensource-src-5.2.0.tar.gz"
+- "bitcoin-deps-win32-gitian-r10.zip"
+- "bitcoin-deps-win64-gitian-r10.zip"
+script: |
+  # Defines
+  export TZ=UTC
+  INDIR=$HOME/build
+  # Integrity Check
+  echo "395ec72277c5786c65b8163ef5817fd03d0a1f524a6d47f53624baf8056f1081  qt-everywhere-opensource-src-5.2.0.tar.gz" | sha256sum -c
+
+  for BITS in 32 64; do # for architectures
+    #
+    INSTALLPREFIX=$HOME/staging${BITS}
+    BUILDDIR=$HOME/build${BITS}
+    DEPSDIR=$HOME/deps${BITS}
+    if [ "$BITS" == "32" ]; then
+      HOST=i686-w64-mingw32
+    else
+      HOST=x86_64-w64-mingw32
+    fi
+    #
+    mkdir -p $INSTALLPREFIX $INSTALLPREFIX/host/bin $DEPSDIR $BUILDDIR
+    #
+    # Need mingw-compiled openssl from bitcoin-deps:
+    cd $DEPSDIR
+    unzip $INDIR/bitcoin-deps-win${BITS}-gitian-r10.zip
+    #
+    cd $BUILDDIR
+    #
+    tar xzf $INDIR/qt-everywhere-opensource-src-5.2.0.tar.gz
+    cd qt-everywhere-opensource-src-5.2.0
+    SPECNAME="win32-g++"
+    SPECFILE="qtbase/mkspecs/${SPECNAME}/qmake.conf"
+    sed 's/$TODAY/2011-01-30/' -i configure
+    sed --posix "s|QMAKE_CFLAGS            = -pipe -fno-keep-inline-dllexport|QMAKE_CFLAGS\t\t= -pipe -fno-keep-inline-dllexport -isystem /usr/$HOST/include/ -frandom-seed=qtbuild -I$DEPSDIR/include|" -i ${SPECFILE}
+    sed --posix "s|QMAKE_LFLAGS            =|QMAKE_LFLAGS\t\t= -L$DEPSDIR/lib|" -i ${SPECFILE}
+    # ar adds timestamps to every object file included in the static library
+    # providing -D as ar argument is supposed to solve it, but doesn't work as qmake strips off the arguments and adds -M to pass a script...
+    # which somehow cannot be combined with other flags.
+    # use faketime only for ar, as it confuses make/qmake into hanging sometimes
+    sed --posix "s|QMAKE_LIB               = \\\$\\\${CROSS_COMPILE}ar -ru|QMAKE_LIB\t\t= $HOME/ar -Dr|" -i ${SPECFILE}
+    echo '#!/bin/bash' > $HOME/ar
+    echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> $HOME/ar
+    echo "$HOST-ar \"\$@\"" >> $HOME/ar
+    chmod +x $HOME/ar
+    # Don't load faketime while compiling Qt, qmake will get stuck in nearly infinite loops
+    #export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+    export FAKETIME=$REFERENCE_DATETIME
+    #
+    # Compile static libraries, and use statically linked openssl (-openssl-linked):
+    OPENSSL_LIBS="-L$DEPSDIR/lib -lssl -lcrypto -lgdi32" ./configure -prefix $INSTALLPREFIX -bindir $INSTALLPREFIX/host/bin -confirm-license -release -opensource -static -xplatform $SPECNAME -device-option CROSS_COMPILE="$HOST-" -no-audio-backend -no-javascript-jit -no-sql-sqlite -no-sql-odbc -no-nis -no-cups -no-iconv -no-dbus -no-gif -no-opengl -no-compile-examples -no-feature-style-windowsce -no-feature-style-windowsmobile -no-qml-debug -openssl-linked -skip qtsvg -skip qtwebkit -skip qtwebkit-examples -skip qtserialport -skip qtdeclarative -skip qtmultimedia -skip qtimageformats -skip qtlocation -skip qtsensors -skip qtquick1 -skip qtquickcontrols -skip qtactiveqt -skip qtconnectivity -skip qtwinextras -skip qtxmlpatterns -skip qtscript -skip qtdoc -system-libpng -system-zlib
+    make $MAKEOPTS install
+    #
+    cd $INSTALLPREFIX
+
+    # as zip stores file timestamps, use faketime to intercept stat calls to set dates for all files to reference date
+    export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+    zip -r $OUTDIR/qt-win${BITS}-5.2.0-gitian-r1.zip *
+    unset LD_PRELOAD
+    unset FAKETIME
+  done # for BITS in
