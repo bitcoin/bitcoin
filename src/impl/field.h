@@ -5,6 +5,10 @@
 #ifndef _SECP256K1_FIELD_IMPL_H_
 #define _SECP256K1_FIELD_IMPL_H_
 
+#if defined HAVE_CONFIG_H
+#include "libsecp256k1-config.h"
+#endif
+
 #if defined(USE_FIELD_GMP)
 #include "field_gmp.h"
 #elif defined(USE_FIELD_10X26)
