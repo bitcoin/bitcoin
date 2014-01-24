@@ -28,7 +28,7 @@ using namespace std;
 using namespace boost;
 
 #if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
+# error "Bitcoin must be compiled with assertions enabled."
 #endif
 
 //
@@ -2323,9 +2323,23 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         return true;
     }
 
-    // Store to disk
-    if (!AcceptBlock(*pblock, state, dbp))
+    // Use a dummy CValidationState so an invalid transaction in a block with
+    // valid proof-of-work does not result in the relaying node getting banned.
+    // We do this so that nodes can, in the future, relay blocks as soon
+    // as the basic, fast checks in CheckBlock are done and not risk being
+    // DoS-banned if the more expensive AcceptBlock checks find an invalid
+    // transaction.
+    // This is safe because it would be insanely expensive for an attacker
+    // to try to flood the network with invalid blocks that have valid
+    // proof-of-work.
+    CValidationState stateDummy;
+
+    // Fully validate and store to disk
+    if (!AcceptBlock(*pblock, stateDummy, dbp))
+    {
+        state.Invalid(false, stateDummy.GetRejectCode(), stateDummy.GetRejectReason());
         return error("ProcessBlock() : AcceptBlock FAILED");
+    }
 
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
@@ -2343,8 +2357,6 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
                 ss >> block;
             }
             block.BuildMerkleTree();
-            // Use a dummy CValidationState so someone can't setup nodes to counter-DoS based on orphan resolution (that is, feeding people an invalid block based on LegitBlockX in order to get anyone relaying LegitBlockX banned)
-            CValidationState stateDummy;
             if (AcceptBlock(block, stateDummy))
                 vWorkQueue.push_back(mi->second->hashBlock);
             mapOrphanBlocks.erase(mi->second->hashBlock);
