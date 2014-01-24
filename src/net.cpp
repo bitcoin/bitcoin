@@ -54,6 +54,8 @@ bool fDiscover = true;
 uint64_t nLocalServices = NODE_NETWORK;
 static CCriticalSection cs_mapLocalHost;
 static map<CNetAddr, LocalServiceInfo> mapLocalHost;
+static CCriticalSection cs_mapWhitelist;
+static map<CNetAddr, set<int> > mapWhitelist;
 static bool vfReachable[NET_MAX] = {};
 static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
@@ -298,6 +300,64 @@ bool IsReachable(const CNetAddr& addr)
     LOCK(cs_mapLocalHost);
     enum Network net = addr.GetNetwork();
     return vfReachable[net] && !vfLimited[net];
+}
+
+/** learn a new whitelisted address */
+bool AddWhitelist(const CService& addr)
+{
+    LogPrintf("AddWhitelist(%s)\n", addr.ToString().c_str());
+
+    {
+        LOCK(cs_mapWhitelist);
+        set<int>& ports = mapWhitelist[addr];
+        if (addr.GetPort() != 0 && !ports.count(0)) {
+            ports.insert(addr.GetPort());
+        } else {
+            ports.clear();
+            ports.insert(0);
+        }
+    }
+
+    return true;
+}
+
+/** check if node is whitelisted */
+bool IsWhitelisted(const CService& addr)
+{
+    LOCK(cs_mapWhitelist);
+    if (!mapWhitelist.count(addr))
+        return false;
+
+    set<int>& ports = mapWhitelist[addr];
+    return ports.count(addr.GetPort()) || ports.count(0);
+}
+
+/** load configuration into whitelist */
+void LoadWhitelist()
+{
+    // Connect to specific addresses
+    if (mapArgs.count("-whitelist") && mapMultiArgs["-whitelist"].size() > 0)
+    {
+        BOOST_FOREACH(string strAddr, mapMultiArgs["-whitelist"])
+        {
+            CService serv(strAddr.c_str(), 0, true);
+            if (serv.IsValid())
+                AddWhitelist(serv);
+        }
+    }
+}
+
+/** return all whitelisted nodes */
+void GetWhitelist(std::vector<CService>& wl)
+{
+    LOCK(cs_mapWhitelist);
+    for (map<CNetAddr, set<int> >::iterator it = mapWhitelist.begin();
+         it != mapWhitelist.end(); ++it) {
+        BOOST_FOREACH(int port, it->second) {
+            CService serv(it->first, port);
+            wl.push_back(serv);
+        }
+    }
 }
 
 bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const char* pszKeyword, CNetAddr& ipRet)
@@ -950,7 +1010,7 @@ void ThreadSocketHandler()
                         closesocket(hSocket);
                 }
             }
-            else if (CNode::IsBanned(addr))
+            else if (!IsWhitelisted(addr) && CNode::IsBanned(addr))
             {
                 LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
                 closesocket(hSocket);
