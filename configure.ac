@@ -40,12 +40,12 @@ AC_ARG_ENABLE(tests,
     [use_tests=yes])
 
 AC_ARG_ENABLE(endomorphism,
-    AS_HELP_STRING([--enable-endomorphism],[enable endomorphism (default is yes)]),
+    AS_HELP_STRING([--enable-endomorphism],[enable endomorphism (default is no)]),
     [use_endomorphism=$enableval],
-    [use_endomorphism=yes])
+    [use_endomorphism=no])
 
-AC_ARG_WITH([fields], [AS_HELP_STRING([--with-fields=gmp|int128|x86_64_asm|fallback|auto],
-[Specify Fields Implementation. Default is auto])],[req_field=$withval], [req_field=auto])
+AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=gmp|64bit|64bit_asm|32bit|auto],
+[Specify Field Implementation. Default is auto])],[req_field=$withval], [req_field=auto])
 
 AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|openssl|auto],
 [Specify Bignum Implementation. Default is auto])],[req_bignum=$withval], [req_bignum=auto])
@@ -54,26 +54,26 @@ AC_CHECK_TYPES([__int128])
 
 AC_DEFUN([SECP_INT128_CHECK],[
 has_int128=$ac_cv_type___int128
-if test x"$has_int128" != x"yes" && test x"$set_field" = x"int128"; then
+if test x"$has_int128" != x"yes" && test x"$set_field" = x"64bit"; then
   AC_MSG_ERROR([$set_field field support explicitly requested but is not compatible with this host])
 fi
 ])
 
-AC_DEFUN([SECP_X86_64_ASM_CHECK],[
+AC_DEFUN([SECP_64BIT_ASM_CHECK],[
 if test x"$host_cpu" == x"x86_64"; then
   AC_CHECK_PROG(YASM, yasm, yasm)
 else
-  if test x"$set_field" = x"x86_64_asm"; then
+  if test x"$set_field" = x"64bit_asm"; then
     AC_MSG_ERROR([$set_field field support explicitly requested but is not compatible with this host])
   fi
 fi
 if test x$YASM = x; then
-  if test x"$set_field" = x"x86_64_asm"; then
+  if test x"$set_field" = x"64bit_asm"; then
     AC_MSG_ERROR([$set_field field support explicitly requested but yasm was not found])
   fi
-  has_x86_64_asm=no
+  has_64bit_asm=no
 else
-  has_x86_64_asm=yes
+  has_64bit_asm=yes
 fi
 ])
 
@@ -97,7 +97,7 @@ if test x"$has_libssl" == x"yes" && test x"$has_openssl_ec" = x; then
     #include <openssl/ec.h>
     #include <openssl/ecdsa.h>
     #include <openssl/obj_mac.h>],[
-    EC_KEY *eckey = EC_KEY_new_by_curve_name(714);
+    EC_KEY *eckey = EC_KEY_new_by_curve_name(NID_secp256k1);
     ECDSA_sign(0, NULL, 0, NULL, NULL, eckey);
     ECDSA_verify(0, NULL, 0, NULL, 0, eckey);
     EC_KEY_free(eckey);
@@ -127,15 +127,15 @@ fi
 ])
 
 if test x"$req_field" = x"auto"; then
-  SECP_X86_64_ASM_CHECK
-  if test x"$has_x86_64_asm" = x"yes"; then
-    set_field=x86_64_asm
+  SECP_64BIT_ASM_CHECK
+  if test x"$has_64bit_asm" = x"yes"; then
+    set_field=64bit_asm
   fi
 
   if test x"$set_field" = x; then
     SECP_INT128_CHECK
     if test x"$has_int128" = x"yes"; then
-      set_field=int128
+      set_field=64bit
     fi
   fi
 
@@ -147,21 +147,21 @@ if test x"$req_field" = x"auto"; then
   fi
 
   if test x"$set_field" = x; then
-    set_field=fallback
+    set_field=32bit
   fi
 else
   set_field=$req_field
   case $set_field in
-  x86_64_asm)
-    SECP_X86_64_ASM_CHECK
+  64bit_asm)
+    SECP_64BIT_ASM_CHECK
     ;;
-  int128)
+  64bit)
     SECP_INT128_CHECK
     ;;
   gmp)
     SECP_GMP_CHECK
     ;;
-  fallback)
+  32bit)
     ;;
   *)
     AC_MSG_ERROR([invalid field implementation selection])
@@ -202,19 +202,19 @@ fi
 
 # select field implementation
 case $set_field in
-x86_64_asm)
-  AC_DEFINE(USE_FIELD_5X52_ASM, 1, [Define this symbol to use the FIELD_5X52_ASM implementation])
+64bit_asm)
+  AC_DEFINE(USE_FIELD_5X52_ASM, 1, [Define this symbol to use the assembly version for the 5x52 field implementation])
   AC_DEFINE(USE_FIELD_5X52, 1, [Define this symbol to use the FIELD_5X52 implementation])
   ;;
-int128)
-  AC_DEFINE(USE_FIELD_5X52_INT128, 1, [Define this symbol to use the FIELD_5X52_INT128 implementation])
+64bit)
+  AC_DEFINE(USE_FIELD_5X52_INT128, 1, [Define this symbol to use the __int128 version for the 5x52 field implementation])
   AC_DEFINE(USE_FIELD_5X52, 1, [Define this symbol to use the FIELD_5X52 implementation])
   ;;
 gmp)
   AC_DEFINE(HAVE_LIBGMP,1,[Define this symbol if libgmp is installed])
   AC_DEFINE(USE_FIELD_GMP, 1, [Define this symbol to use the FIELD_GMP implementation])
   ;;
-fallback)
+32bit)
   AC_DEFINE(USE_FIELD_10X26, 1, [Define this symbol to use the FIELD_10X26 implementation])
   ;;
 *)
@@ -273,7 +273,7 @@ AC_SUBST(SECP_INCLUDES)
 AC_SUBST(SECP_LIBS)
 AC_SUBST(SECP_TEST_LIBS)
 AC_SUBST(SECP_TEST_INCLUDES)
-AM_CONDITIONAL([USE_ASM], [test x"$set_field" == x"x86_64_asm"])
+AM_CONDITIONAL([USE_ASM], [test x"$set_field" == x"64bit_asm"])
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" != x"no"])
 AC_OUTPUT
