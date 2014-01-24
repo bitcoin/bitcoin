@@ -86,7 +86,7 @@ if test x"$use_pkgconfig" = x"yes"; then
     : #NOP
   ])
 else
-  AC_CHECK_HEADER(openssl/ssl.h,[AC_CHECK_LIB(ssl, main,[has_libssl=yes; SSL_LIBS=-lssl; AC_DEFINE(HAVE_LIBSSL,1,[Define this symbol if libssl is installed])])])
+  AC_CHECK_HEADER(openssl/ssl.h,[has_libssl=yes; AC_DEFINE(HAVE_LIBSSL,1,[Define this symbol if libssl is installed])])
   AC_CHECK_HEADER(openssl/crypto.h,[AC_CHECK_LIB(crypto, main,[has_libcrypto=yes; CRYPTO_LIBS=-lcrypto; AC_DEFINE(HAVE_LIBCRYPTO,1,[Define this symbol if libcrypto is installed])]
 )])
   LIBS=
