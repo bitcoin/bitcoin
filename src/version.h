@@ -22,6 +22,12 @@ extern const std::string CLIENT_NAME;
 extern const std::string CLIENT_BUILD;
 extern const std::string CLIENT_DATE;
 
+static const int PRIMECOIN_VERSION =
+                           1000000 * PRIMECOIN_VERSION_MAJOR
+                         +   10000 * PRIMECOIN_VERSION_MINOR
+                         +     100 * PRIMECOIN_VERSION_REVISION
+                         +       1 * PRIMECOIN_VERSION_BUILD;
+
 //
 // network protocol versioning
 //
