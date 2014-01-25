@@ -31,6 +31,36 @@ public:
     CKeyID(const uint160& in) : uint160(in) {}
 };
 
+struct CChainCode
+{
+    unsigned char data[32];
+    
+    void SetNull()
+    {
+        memset(data, 0, sizeof(data));
+    }
+    
+    CChainCode()
+    {
+        SetNull();
+    }
+    
+    bool IsNull() const
+    {
+        for (int i=0; i<32; i++)
+            if (data[i])
+                return false;
+        return true;
+    }
+    
+    ADD_SERIALIZE_METHODS;
+    
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(FLATDATA(data));
+    }
+};
+
 /** An encapsulated public key. */
 class CPubKey
 {
@@ -189,13 +219,13 @@ struct CExtPubKey {
     unsigned char nDepth;
     unsigned char vchFingerprint[4];
     unsigned int nChild;
-    unsigned char vchChainCode[32];
+    CChainCode chaincode;
     CPubKey pubkey;
 
-    friend bool operator==(const CExtPubKey& a, const CExtPubKey& b)
+    friend bool operator==(const CExtPubKey &a, const CExtPubKey &b)
     {
         return a.nDepth == b.nDepth && memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], 4) == 0 && a.nChild == b.nChild &&
-               memcmp(&a.vchChainCode[0], &b.vchChainCode[0], 32) == 0 && a.pubkey == b.pubkey;
+               memcmp(&a.chaincode.data[0], &b.chaincode.data[0], 32) == 0 && a.pubkey == b.pubkey;
     }
 
     void Encode(unsigned char code[74]) const;
