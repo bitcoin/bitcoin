@@ -6,6 +6,9 @@
 #define RECEIVECOINSDIALOG_H
 
 #include <QDialog>
+#include <QKeyEvent>
+#include <QMenu>
+#include <QPoint>
 #include <QVariant>
 
 namespace Ui {
@@ -34,9 +37,14 @@ public slots:
     void reject();
     void accept();
 
+protected:
+    virtual void keyPressEvent(QKeyEvent *event);
+
 private:
     Ui::ReceiveCoinsDialog *ui;
     WalletModel *model;
+    QMenu *contextMenu;
+    void copyColumnToClipboard(int column);
 
 private slots:
     void on_receiveButton_clicked();
@@ -44,6 +52,10 @@ private slots:
     void on_removeRequestButton_clicked();
     void on_recentRequestsView_doubleClicked(const QModelIndex &index);
     void updateDisplayUnit();
+    void showMenu(const QPoint &);
+    void copyLabel();
+    void copyMessage();
+    void copyAmount();
 };
 
 #endif // RECEIVECOINSDIALOG_H
