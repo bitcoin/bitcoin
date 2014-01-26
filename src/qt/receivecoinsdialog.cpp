@@ -14,6 +14,8 @@
 #include "addresstablemodel.h"
 #include "recentrequeststablemodel.h"
 
+#include <QAction>
+#include <QCursor>
 #include <QMessageBox>
 #include <QTextDocument>
 #include <QScrollBar>
@@ -31,6 +33,24 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
     ui->showRequestButton->setIcon(QIcon());
     ui->removeRequestButton->setIcon(QIcon());
 #endif
+
+    // context menu actions
+    QAction *copyLabelAction = new QAction(tr("Copy label"), this);
+    QAction *copyMessageAction = new QAction(tr("Copy message"), this);
+    QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
+
+    // context menu
+    contextMenu = new QMenu();
+    contextMenu->addAction(copyLabelAction);
+    contextMenu->addAction(copyMessageAction);
+    contextMenu->addAction(copyAmountAction);
+
+    // context menu signals
+    connect(ui->recentRequestsView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showMenu(QPoint)));
+    connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
+    connect(copyMessageAction, SIGNAL(triggered()), this, SLOT(copyMessage()));
+    connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
+
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 }
 
@@ -163,4 +183,62 @@ void ReceiveCoinsDialog::on_removeRequestButton_clicked()
     // correct for selection mode ContiguousSelection
     QModelIndex firstIndex = selection.at(0);
     model->getRecentRequestsTableModel()->removeRows(firstIndex.row(), selection.length(), firstIndex.parent());
+}
+
+void ReceiveCoinsDialog::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Return)
+    {
+        // press return -> submit form
+        if (ui->reqLabel->hasFocus() || ui->reqAmount->hasFocus() || ui->reqMessage->hasFocus())
+        {
+            event->ignore();
+            on_receiveButton_clicked();
+            return;
+        }
+    }
+
+    this->QDialog::keyPressEvent(event);
+}
+
+// copy column of selected row to clipboard
+void ReceiveCoinsDialog::copyColumnToClipboard(int column)
+{
+    if(!model || !model->getRecentRequestsTableModel() || !ui->recentRequestsView->selectionModel())
+        return;
+    QModelIndexList selection = ui->recentRequestsView->selectionModel()->selectedRows();
+    if(selection.empty())
+        return;
+    // correct for selection mode ContiguousSelection
+    QModelIndex firstIndex = selection.at(0);
+    GUIUtil::setClipboard(model->getRecentRequestsTableModel()->data(firstIndex.child(firstIndex.row(), column), Qt::EditRole).toString());
+}
+
+// context menu
+void ReceiveCoinsDialog::showMenu(const QPoint &point)
+{
+    if(!model || !model->getRecentRequestsTableModel() || !ui->recentRequestsView->selectionModel())
+        return;
+    QModelIndexList selection = ui->recentRequestsView->selectionModel()->selectedRows();
+    if(selection.empty())
+        return;
+    contextMenu->exec(QCursor::pos());
+}
+
+// context menu action: copy label
+void ReceiveCoinsDialog::copyLabel()
+{
+    copyColumnToClipboard(RecentRequestsTableModel::Label);
+}
+
+// context menu action: copy message
+void ReceiveCoinsDialog::copyMessage()
+{
+    copyColumnToClipboard(RecentRequestsTableModel::Message);
+}
+
+// context menu action: copy amount
+void ReceiveCoinsDialog::copyAmount()
+{
+    copyColumnToClipboard(RecentRequestsTableModel::Amount);
 }
