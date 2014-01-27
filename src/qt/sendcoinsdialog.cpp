@@ -516,6 +516,9 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 
     if (!checked && model) // coin control features disabled
         CoinControlDialog::coinControl->SetNull();
+
+    if (checked)
+        coinControlUpdateLabels();
 }
 
 // Coin Control: button inputs -> show actual coin control dialog
