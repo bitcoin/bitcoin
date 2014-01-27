@@ -109,6 +109,10 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
        AX_CHECK_LINK_FLAG([[$base_frameworks]],[QT_LIBS="$QT_LIBS $base_frameworks"],[AC_MSG_ERROR(could not find base frameworks)])
      ])
     ;;
+    *mingw*)
+       BITCOIN_QT_CHECK([
+         AX_CHECK_LINK_FLAG([[-mwindows]],[QT_LDFLAGS="$QT_LDFLAGS -mwindows"],[AC_MSG_WARN(-mwindows linker support not detected)])
+       ])
   esac
 
 
@@ -137,6 +141,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
 
   AC_SUBST(QT_INCLUDES)
   AC_SUBST(QT_LIBS)
+  AC_SUBST(QT_LDFLAGS)
   AC_SUBST(QT_DBUS_INCLUDES)
   AC_SUBST(QT_DBUS_LIBS)
   AC_SUBST(QT_TEST_INCLUDES)
