@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
     CScript scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     CBlockTemplate *pblocktemplate;
-    CTransaction tx;
+    CTransaction tx,tx2;
     CScript script;
     uint256 hash;
 
@@ -204,8 +204,57 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     delete pblocktemplate;
     chainActive.Tip()->nHeight = nHeight;
 
+    // non-final txs in mempool
+    SetMockTime(chainActive.Tip()->GetMedianTimePast()+1);
+
+    // height locked
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vin[0].nSequence = 0;
+    tx.vout[0].nValue = 4900000000LL;
+    tx.vout[0].scriptPubKey = CScript() << OP_1;
+    tx.nLockTime = chainActive.Tip()->nHeight+1;
+    hash = tx.GetHash();
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(!IsFinalTx(tx, chainActive.Tip()->nHeight + 1));
+
+    // time locked
+    tx2.vin.resize(1);
+    tx2.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx2.vin[0].prevout.n = 0;
+    tx2.vin[0].scriptSig = CScript() << OP_1;
+    tx2.vin[0].nSequence = 0;
+    tx2.vout.resize(1);
+    tx2.vout[0].nValue = 4900000000LL;
+    tx2.vout[0].scriptPubKey = CScript() << OP_1;
+    tx2.nLockTime = chainActive.Tip()->GetMedianTimePast()+1;
+    hash = tx2.GetHash();
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(!IsFinalTx(tx2));
+
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
+
+    // Neither tx should have make it into the template.
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 1);
+    delete pblocktemplate;
+
+    // However if we advance height and time by one, both will.
+    chainActive.Tip()->nHeight++;
+    SetMockTime(chainActive.Tip()->GetMedianTimePast()+2);
+
+    BOOST_CHECK(IsFinalTx(tx, chainActive.Tip()->nHeight + 1));
+    BOOST_CHECK(IsFinalTx(tx2));
+
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
+    delete pblocktemplate;
+
+    chainActive.Tip()->nHeight--;
+    SetMockTime(0);
+
     BOOST_FOREACH(CTransaction *tx, txFirst)
         delete tx;
+
 }
 
 BOOST_AUTO_TEST_CASE(sha256transform_equality)
