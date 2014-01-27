@@ -147,15 +147,17 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
             throw JSONRPCError(-24, "Error: Node has not been added.");
     }
 
+    Array ret;
     if (!fDns)
     {
-        Object ret;
         BOOST_FOREACH(string& strAddNode, laddedNodes)
-            ret.push_back(Pair("addednode", strAddNode));
+        {
+            Object obj;
+            obj.push_back(Pair("addednode", strAddNode));
+            ret.push_back(obj);
+        }
         return ret;
     }
-
-    Array ret;
 
     list<pair<string, vector<CService> > > laddedAddreses(0);
     BOOST_FOREACH(string& strAddNode, laddedNodes)
