@@ -429,7 +429,7 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
 
     // only one OP_RETURN txout is permitted
     if (nDataOut > 1) {
-        reason = "mucho-data";
+        reason = "multi-op-return";
         return false;
     }
 
