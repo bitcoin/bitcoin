@@ -14,6 +14,7 @@
 #include "monitoreddatamapper.h"
 #include "optionsmodel.h"
 
+#include "defaultvalues.h"
 #include "netbase.h"
 
 #include <QDir>
@@ -33,7 +34,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     GUIUtil::restoreWindowGeometry("nOptionsDialogWindow", this->size(), this);
 
     /* Main elements init */
-    ui->databaseCache->setMaximum(sizeof(void*) > 4 ? 4096 : 1024);
+    ui->databaseCache->setMaximum(nMaxDbCache);
 
     /* Network elements init */
 #ifndef USE_UPNP
