@@ -589,13 +589,15 @@ Value getbalance(const Array& params, bool fHelp)
             "Note that the account \"\" is not the same as leaving the parameter out.\n"
             "The server total may be different to the balance in the default \"\" account.\n"
             "\nArguments:\n"
-            "1. \"account\"      (string, optional) The selected account. It may be the default account using \"\".\n"
+            "1. \"account\"      (string, optional) The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
             "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in btc received for this account.\n"
             "\nExamples:\n"
             "\nThe total amount in the server across all accounts\n"
             + HelpExampleCli("getbalance", "") +
+            "\nThe total amount in the server across all accounts, with at least 5 confirmations\n"
+            + HelpExampleCli("getbalance", "\"*\" 6") +
             "\nThe total amount in the default account with at least 1 confirmation\n"
             + HelpExampleCli("getbalance", "\"\"") +
             "\nThe total amount in the account named tabby with at least 6 confirmations\n"
