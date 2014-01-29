@@ -139,7 +139,7 @@ int LogPrintStr(const std::string &str);
     template<TINYFORMAT_ARGTYPES(n)>                                          \
     static inline bool error(const char* format, TINYFORMAT_VARARGS(n))                     \
     {                                                                         \
-        LogPrintStr("ERROR: " + tfm::format(format, TINYFORMAT_PASSARGS(n))); \
+        LogPrintStr("ERROR: " + tfm::format(format, TINYFORMAT_PASSARGS(n)) + "\n"); \
         return false;                                                         \
     }
 
@@ -155,7 +155,7 @@ static inline int LogPrint(const char* category, const char* format)
 }
 static inline bool error(const char* format)
 {
-    LogPrintStr(std::string("ERROR: ") + format);
+    LogPrintStr(std::string("ERROR: ") + format + "\n");
     return false;
 }
 
