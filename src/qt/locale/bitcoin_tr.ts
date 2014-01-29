@@ -3,13 +3,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About Bitcoin</source>
-        <translation>Bitcoin Hakkında</translation>
+        <source>About Bitcoin Core</source>
+        <translation>Bitcoin Çekirdeği hakkında</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; sürüm</translation>
+        <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Bitcoin Çekirdek&lt;/b&gt; sürümü</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -27,14 +27,14 @@ This product includes software developed by the OpenSSL Project for use in the O
  Bu ürün OpenSSL projesi tarafından OpenSSL araç takımı (http://www.openssl.org/) için geliştirilen yazılımlar, Eric Young (eay@cryptsoft.com) tarafından hazırlanmış şifreleme yazılımları ve Thomas Bernard tarafından programlanmış UPnP yazılımı içerir.</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="+14"/>
+        <location filename="../utilitydialog.cpp" line="+29"/>
         <source>Copyright</source>
         <translation>Telif hakkı</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>The Bitcoin developers</source>
-        <translation>Bitcoin geliştiricileri</translation>
+        <source>The Bitcoin Core developers</source>
+        <translation>Bitcoin Çekirdeği geliştiricileri</translation>
     </message>
 </context>
 <context>
@@ -70,7 +70,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>K&amp;apat</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+72"/>
+        <location filename="../addressbookpage.cpp" line="+74"/>
         <source>&amp;Copy Address</source>
         <translation>Adresi &amp;kopyala</translation>
     </message>
@@ -140,7 +140,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Düzenle</translation>
     </message>
     <message>
-        <location line="+197"/>
+        <location line="+194"/>
         <source>Export Address List</source>
         <translation>Adres listesini dışa aktar</translation>
     </message>
@@ -151,19 +151,19 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+13"/>
-        <source>Error exporting</source>
-        <translation>Dışa aktarımda hata oluştu</translation>
+        <source>Exporting Failed</source>
+        <translation>Dışa aktarım başarısız oldu</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>Could not write to file %1.</source>
-        <translation>%1 dosyasına yazılamadı.</translation>
+        <location line="+1"/>
+        <source>There was an error trying to save the address list to %1.</source>
+        <translation>Adres listesinin %1 konumuna kaydedilmesi sırasında bir hata meydana geldi.</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="+164"/>
+        <location filename="../addresstablemodel.cpp" line="+168"/>
         <source>Label</source>
         <translation>Etiket</translation>
     </message>
@@ -201,7 +201,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Yeni parolayı tekrarlayınız</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="+34"/>
+        <location filename="../askpassphrasedialog.cpp" line="+40"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Cüzdanınız için yeni parolayı giriniz.&lt;br/&gt;Lütfen &lt;b&gt;10 ya da daha fazla rastgele karakter&lt;/b&gt; veya &lt;b&gt;sekiz ya da daha fazla kelime&lt;/b&gt; içeren bir parola seçiniz.</translation>
     </message>
@@ -322,22 +322,27 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+250"/>
+        <location filename="../bitcoingui.cpp" line="+295"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Mesaj imzala...</translation>
     </message>
     <message>
-        <location line="+254"/>
+        <location line="+335"/>
         <source>Synchronizing with network...</source>
         <translation>Şebeke ile senkronizasyon...</translation>
     </message>
     <message>
-        <location line="-324"/>
+        <location line="-407"/>
         <source>&amp;Overview</source>
         <translation>&amp;Genel bakış</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-137"/>
+        <source>Node</source>
+        <translation>Düğüm</translation>
+    </message>
+    <message>
+        <location line="+138"/>
         <source>Show general overview of wallet</source>
         <translation>Cüzdana genel bakışı göster</translation>
     </message>
@@ -352,7 +357,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Muamele tarihçesini tara</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>E&amp;xit</source>
         <translation>&amp;Çık</translation>
     </message>
@@ -398,7 +403,22 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Parolayı &amp;değiştir...</translation>
     </message>
     <message>
-        <location line="+259"/>
+        <location line="+10"/>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Gönderme adresleri...</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;Alma adresleri...</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open &amp;URI...</source>
+        <translation>&amp;URI aç...</translation>
+    </message>
+    <message>
+        <location line="+325"/>
         <source>Importing blocks from disk...</source>
         <translation>Bloklar diskten içe aktarılıyor...</translation>
     </message>
@@ -408,12 +428,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Diskteki bloklar yeniden endeksleniyor...</translation>
     </message>
     <message>
-        <location line="-322"/>
+        <location line="-405"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Bir Bitcoin adresine Bitcoin yolla</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+49"/>
         <source>Modify configuration options for Bitcoin</source>
         <translation>Bitcoin seçeneklerinin yapılandırmasını değiştir</translation>
     </message>
@@ -443,20 +463,17 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Mesaj &amp;kontrol et...</translation>
     </message>
     <message>
-        <location line="-180"/>
-        <location line="+6"/>
-        <location line="+513"/>
+        <location line="+430"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-519"/>
-        <location line="+6"/>
+        <location line="-643"/>
         <source>Wallet</source>
         <translation>Cüzdan</translation>
     </message>
     <message>
-        <location line="+109"/>
+        <location line="+146"/>
         <source>&amp;Send</source>
         <translation>&amp;Gönder</translation>
     </message>
@@ -466,13 +483,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Al</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location line="+2"/>
-        <source>&amp;About Bitcoin</source>
-        <translation>Bitcoin &amp;Hakkında</translation>
-    </message>
-    <message>
-        <location line="+14"/>
+        <location line="+46"/>
         <location line="+2"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Göster / Sakla</translation>
@@ -498,64 +509,80 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Belirtilen Bitcoin adresleri ile imzalandıklarından emin olmak için mesajları kontrol et</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+48"/>
         <source>&amp;File</source>
         <translation>&amp;Dosya</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+14"/>
         <source>&amp;Settings</source>
         <translation>&amp;Ayarlar</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+9"/>
         <source>&amp;Help</source>
         <translation>&amp;Yardım</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+15"/>
         <source>Tabs toolbar</source>
         <translation>Sekme araç çubuğu</translation>
     </message>
     <message>
-        <location line="-235"/>
-        <location line="+294"/>
+        <location line="-284"/>
+        <location line="+376"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-401"/>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Çekirdeği</translation>
+    </message>
+    <message>
+        <location line="+163"/>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation>Ödeme talep et (QR kodu ve bitcoin URI&apos;si oluşturur)</translation>
     </message>
     <message>
-        <location line="+63"/>
-        <source>&amp;Used sending addresses...</source>
-        <translation>K&amp;ullanıılmış gönderi adresleri...</translation>
+        <location line="+29"/>
+        <location line="+2"/>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>Bitcoin Çekirdeği &amp;hakkında</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+35"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Kullanılmış gönderme adresleri ve etiketlerin listesini göster</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Used &amp;receiving addresses...</source>
-        <translation>Kullanılmış &amp;alım adresleri...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Kullanılmış alım adresleri ve etiketlerin listesini göster</translation>
     </message>
     <message>
-        <location line="+106"/>
+        <location line="+3"/>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>Bir bitcoin: bağlantısı ya da ödeme talebi aç</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Komut satırı seçenekleri</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Bitcoin komut satırı seçeneklerinin listesini elde etmek için Bitcoin Çekirdeği yardım mesajını göster</translation>
+    </message>
+    <message>
+        <location line="+159"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
         <translation>Bitcoin istemcisi</translation>
     </message>
     <message numerus="yes">
-        <location line="+120"/>
+        <location line="+142"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>Bitcoin şebekesine %n faal bağlantı</numerusform><numerusform>Bitcoin şebekesine %n faal bağlantı</numerusform></translation>
     </message>
@@ -575,7 +602,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Muamele tarihçesinde %1 blok işlendi.</translation>
     </message>
     <message numerus="yes">
-        <location line="+20"/>
+        <location line="+23"/>
         <source>%n hour(s)</source>
         <translation><numerusform>%n saat</numerusform><numerusform>%n saat</numerusform></translation>
     </message>
@@ -595,7 +622,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>%1 geride</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+21"/>
         <source>Last received block was generated %1 ago.</source>
         <translation>Son alınan blok %1 evvel oluşturulmuştu.</translation>
     </message>
@@ -620,27 +647,17 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Bilgi</translation>
     </message>
     <message>
-        <location line="+77"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
-        <translation>Bu muamele boyut sınırlarını aşmıştır. Gene de %1 ücret ödeyerek gönderebilirsiniz, ki bu ücret muamelenizi işleyen ve şebekeye yardım eden düğümlere ödenecektir. Ücreti ödemek istiyor musunuz?</translation>
-    </message>
-    <message>
-        <location line="-152"/>
+        <location line="-85"/>
         <source>Up to date</source>
         <translation>Güncel</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+34"/>
         <source>Catching up...</source>
         <translation>Aralık kapatılıyor...</translation>
     </message>
     <message>
-        <location line="+124"/>
-        <source>Confirm transaction fee</source>
-        <translation>Muamele ücretini teyit et</translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+130"/>
         <source>Sent transaction</source>
         <translation>Muamele yollandı</translation>
     </message>
@@ -657,23 +674,13 @@ Type: %3
 Address: %4
 </source>
         <translation>Tarih: %1
-Miktar: %2
+Meblağ: %2
 Tür: %3
 Adres: %4
 </translation>
     </message>
     <message>
-        <location line="+34"/>
-        <source>URI handling</source>
-        <translation>URI yönetimi</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>URI okunamadı! Sebebi geçersiz bir Bitcoin adresi veya hatalı URI parametreleri olabilir.</translation>
-    </message>
-    <message>
-        <location line="+45"/>
+        <location line="+69"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Cüzdan &lt;b&gt;şifrelenmiştir&lt;/b&gt; ve şu anda &lt;b&gt;kilidi açıktır&lt;/b&gt;</translation>
     </message>
@@ -683,7 +690,7 @@ Adres: %4
         <translation>Cüzdan &lt;b&gt;şifrelenmiştir&lt;/b&gt; ve şu anda &lt;b&gt;kilitlidir&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+110"/>
+        <location filename="../bitcoin.cpp" line="+438"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Ciddi bir hata oluştu. Bitcoin artık güvenli bir şekilde işlemeye devam edemez ve kapanacaktır.</translation>
     </message>
@@ -691,9 +698,301 @@ Adres: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+115"/>
+        <location filename="../clientmodel.cpp" line="+119"/>
         <source>Network Alert</source>
         <translation>Şebeke hakkında uyarı</translation>
+    </message>
+</context>
+<context>
+    <name>CoinControlDialog</name>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="+14"/>
+        <source>Coin Control Address Selection</source>
+        <translation>Para kontrolü adres seçimi</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Quantity:</source>
+        <translation>Miktar:</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Bytes:</source>
+        <translation>Bayt:</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Amount:</source>
+        <translation>Meblağ:</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Priority:</source>
+        <translation>Öncelik:</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Fee:</source>
+        <translation>Ücret:</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Low Output:</source>
+        <translation>Düşük çıktı:</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>After Fee:</source>
+        <translation>Ücretten sonra:</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Change:</source>
+        <translation>Para üstü:</translation>
+    </message>
+    <message>
+        <location line="+63"/>
+        <source>(un)select all</source>
+        <translation>tümünü seç(me)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Tree mode</source>
+        <translation>Ağaç kipi</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>List mode</source>
+        <translation>Liste kipi</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>Amount</source>
+        <translation>Meblağ</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Address</source>
+        <translation>Adres</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Date</source>
+        <translation>Tarih</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Confirmations</source>
+        <translation>Doğrulamalar</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed</source>
+        <translation>Doğrulandı</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Priority</source>
+        <translation>Öncelik</translation>
+    </message>
+    <message>
+        <location filename="../coincontroldialog.cpp" line="+42"/>
+        <source>Copy address</source>
+        <translation>Adresi kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy label</source>
+        <translation>Etiketi kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+26"/>
+        <source>Copy amount</source>
+        <translation>Meblağı kopyala</translation>
+    </message>
+    <message>
+        <location line="-25"/>
+        <source>Copy transaction ID</source>
+        <translation>Muamele kimliğini kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock unspent</source>
+        <translation>Harcanmamışı kilitle</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unlock unspent</source>
+        <translation>Harcanmamışın kilidini aç</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Copy quantity</source>
+        <translation>Miktarı kopyala</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Copy fee</source>
+        <translation>Ücreti kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy after fee</source>
+        <translation>Ücretten sonrakini kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy bytes</source>
+        <translation>Baytları kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy priority</source>
+        <translation>Önceliği kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy low output</source>
+        <translation>Düşük çıktıyı kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy change</source>
+        <translation>Para üstünü kopyala</translation>
+    </message>
+    <message>
+        <location line="+323"/>
+        <source>highest</source>
+        <translation>azami</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>higher</source>
+        <translation>daha yüksek</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>high</source>
+        <translation>yüksek</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>medium-high</source>
+        <translation>orta-yüksek</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>medium</source>
+        <translation>orta</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>low-medium</source>
+        <translation>düşük-orta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>low</source>
+        <translation>düşük</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lower</source>
+        <translation>daha düşük</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lowest</source>
+        <translation>asgari</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>(%1 locked)</source>
+        <translation>(%1 kilitlendi)</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>none</source>
+        <translation>boş</translation>
+    </message>
+    <message>
+        <location line="+140"/>
+        <source>Dust</source>
+        <translation>Toz</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>yes</source>
+        <translation>evet</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>no</source>
+        <translation>hayır</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
+        <translation>Eğer muamele boyutu 1000 bayttan büyükse bu etkiket kırmızı olur.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+5"/>
+        <source>This means a fee of at least %1 per kB is required.</source>
+        <translation>Bu, kB başına en az %1 ücret gerektiği anlamnına gelir.</translation>
+    </message>
+    <message>
+        <location line="-4"/>
+        <source>Can vary +/- 1 byte per input.</source>
+        <translation>Girdi başına +/- 1 bayt değişebilir.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Transactions with higher priority are more likely to get included into a block.</source>
+        <translation>Yüksek öncelikli muamelelerin bir bloğa dahil olmaları daha olasıdır.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
+        <translation>Eğer öncelik &quot;ortadan&quot; düşükse bu etiket kırmızı olur.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
+        <translation>Eğer herhangi bir alıcı %1&apos;den düşük bir meblağ alırsa bu etiket kırmızı olur.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+4"/>
+        <source>This means a fee of at least %1 is required.</source>
+        <translation>Bu, en az %1 tutarında bir ücret gerektiği anlamına gelir.</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
+        <translation>Asgari yönlendirme ücretinin 0.546 oranının altındaki meblağlar toz olarak gösterilir.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>This label turns red, if the change is smaller than %1.</source>
+        <translation>Eğer para üstü %1&apos;den düşükse bu etiket kırmızı olur.</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <location line="+66"/>
+        <source>(no label)</source>
+        <translation>(boş etiket)</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <source>change from %1 (%2)</source>
+        <translation>%1 unsurundan para üstü (%2)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>(change)</source>
+        <translation>(para üstü)</translation>
     </message>
 </context>
 <context>
@@ -724,7 +1023,7 @@ Adres: %4
         <translation>&amp;Adres</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="+21"/>
+        <location filename="../editaddressdialog.cpp" line="+28"/>
         <source>New receiving address</source>
         <translation>Yeni alım adresi</translation>
     </message>
@@ -767,7 +1066,7 @@ Adres: %4
 <context>
     <name>FreespaceChecker</name>
     <message>
-        <location filename="../intro.cpp" line="+61"/>
+        <location filename="../intro.cpp" line="+65"/>
         <source>A new data directory will be created.</source>
         <translation>Yeni bir veri klasörü oluşturulacaktır.</translation>
     </message>
@@ -793,15 +1092,19 @@ Adres: %4
     </message>
 </context>
 <context>
-    <name>GUIUtil::HelpMessageBox</name>
+    <name>HelpMessageDialog</name>
     <message>
-        <location filename="../guiutil.cpp" line="+558"/>
-        <location line="+13"/>
-        <source>Bitcoin-Qt</source>
-        <translation>Bitcoin-Qt</translation>
+        <location filename="../forms/helpmessagedialog.ui" line="+19"/>
+        <source>Bitcoin Core - Command-line options</source>
+        <translation>Bitcoin Çekirdeği - Komut satırı seçenekleri</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location filename="../utilitydialog.cpp" line="+38"/>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Çekirdeği</translation>
+    </message>
+    <message>
+        <location line="+0"/>
         <source>version</source>
         <translation>sürüm</translation>
     </message>
@@ -850,18 +1153,18 @@ Adres: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Welcome to Bitcoin-Qt.</source>
-        <translation>Bitcoin-Qt&apos;a hoş geldiniz.</translation>
+        <source>Welcome to Bitcoin Core.</source>
+        <translation>Bitcoin Çekirdeğine hoş geldiniz.</translation>
     </message>
     <message>
         <location line="+26"/>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
-        <translation>Bu programın ilk kez başlatılmasından dolayı Bitcoin-Qt&apos;un verilerini nerede saklayacağını seçebilirsiniz.</translation>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
+        <translation>Bu programı ilk kez başlattığınızdan dolayı Bitcoin Çekirdeğinin verilerini nereye saklayacağını seçebilirsiniz.</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin-Qt, blok zincirinin bir kopyasını indirecek ve saklayacaktır. Bu klasörde en az %1GB veri saklanacak ve bu zamanla artacaktır. Cüzdan da bu klasörde saklanacaktır.</translation>
+        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin çekirdeği Bitcoin blok zincirinin bir kopyasını indirip saklayacaktır. Asgari %1GB bouyutunda veri bu klasörde saklanacak ve zamanla bu boyut artacaktır. Cüzdan da bu klasörde saklanacaktır. </translation>
     </message>
     <message>
         <location line="+10"/>
@@ -874,7 +1177,17 @@ Adres: %4
         <translation>Özel bir veri klasörü kullan:</translation>
     </message>
     <message>
-        <location filename="../intro.cpp" line="+105"/>
+        <location filename="../intro.cpp" line="+85"/>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
+        <translation>Hata: belirtilen &quot;%1&quot; veri klasörü oluşturulamaz.</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>Error</source>
         <translation>Hata</translation>
     </message>
@@ -890,6 +1203,34 @@ Adres: %4
     </message>
 </context>
 <context>
+    <name>OpenURIDialog</name>
+    <message>
+        <location filename="../forms/openuridialog.ui" line="+14"/>
+        <source>Open URI</source>
+        <translation>URI aç</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Open payment request from URI or file</source>
+        <translation>Dosyadan veya URI&apos;den ödeme talebi aç</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>URI:</source>
+        <translation>URI:</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Select payment request file</source>
+        <translation>Ödeme talebi dosyasını seç</translation>
+    </message>
+    <message>
+        <location filename="../openuridialog.cpp" line="+47"/>
+        <source>Select payment request file to open</source>
+        <translation>Açılacak ödeme talebi dosyasını seç</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <location filename="../forms/optionsdialog.ui" line="+14"/>
@@ -897,7 +1238,7 @@ Adres: %4
         <translation>Seçenekler</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+13"/>
         <source>&amp;Main</source>
         <translation>&amp;Esas ayarlar</translation>
     </message>
@@ -922,7 +1263,52 @@ Adres: %4
         <translation>Bitcoin&apos;i sistem oturumuyla &amp;başlat</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+9"/>
+        <source>Size of &amp;database cache</source>
+        <translation>&amp;Veritabanı tamponunun boyutu</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation>Veritabanı önbellek boyutunu megabayt olarak belirt (varsayılan: 25)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>MB</source>
+        <translation>MB</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Number of script &amp;verification threads</source>
+        <translation>İş parçacıklarını &amp;denetleme betiği sayısı</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
+        <translation>Betik kontrolü iş parçacığı sayısını belirt (azami 16, 0 = otomatik, &lt;0 = bu sayıda çekirdeği boş bırak, varsayılan: 0)</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
+        <translation>Bitcoin şebekesine bir SOCKS vekil sunucusu vasıtasıyla bağlan.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
+        <translation>SOCKS vekil sunucusuyla &amp;bağlan (varsayılan vekil):</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation>Vekil sunucusunun IP adresi (mesela IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+    </message>
+    <message>
+        <location line="+224"/>
+        <source>Active command-line options that override above options:</source>
+        <translation>Yukarıdaki seçeneklerin yerine geçen faal komut satırı seçenekleri:</translation>
+    </message>
+    <message>
+        <location line="+43"/>
         <source>Reset all client options to default.</source>
         <translation>İstemcinin tüm seçeneklerini varsayılan değerlere geri al.</translation>
     </message>
@@ -932,7 +1318,7 @@ Adres: %4
         <translation>Seçenekleri Sıfı&amp;rla</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="-323"/>
         <source>&amp;Network</source>
         <translation>&amp;Şebeke</translation>
     </message>
@@ -947,32 +1333,17 @@ Adres: %4
         <translation>Portları &amp;UPnP kullanarak haritala</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Connect to the Bitcoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation>Bitcoin şebekesine SOCKS vekil sunucusu vasıtasıyla bağlan (mesela Tor ile bağlanıldığında).</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>&amp;Connect through SOCKS proxy:</source>
-        <translation>SOCKS vekil sunucusu vasıtasıyla ba&amp;ğlan:</translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+19"/>
         <source>Proxy &amp;IP:</source>
         <translation>Vekil &amp;İP:</translation>
     </message>
     <message>
-        <location line="+19"/>
-        <source>IP address of the proxy (e.g. 127.0.0.1)</source>
-        <translation>Vekil sunucunun İP adresi (mesela 127.0.0.1)</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+32"/>
         <source>&amp;Port:</source>
         <translation>&amp;Port:</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+25"/>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Vekil sunucunun portu (mesela 9050)</translation>
     </message>
@@ -1029,7 +1400,7 @@ Adres: %4
     <message>
         <location line="+11"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>Miktarı göstermek için &amp;birim:</translation>
+        <translation>Meblağları göstermek için &amp;birim:</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1047,7 +1418,17 @@ Adres: %4
         <translation>Muamele listesinde adresleri &amp;göster</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+7"/>
+        <source>Whether to show coin control features or not.</source>
+        <translation>Para kontrol özelliklerinin gösterilip gösterilmeyeceğini ayarlar.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Display coin &amp;control features (experts only)</source>
+        <translation>Para &amp;kontrol özelliklerini görüntüle (sadece uzman kullanıcılar için)</translation>
+    </message>
+    <message>
+        <location line="+136"/>
         <source>&amp;OK</source>
         <translation>&amp;Tamam</translation>
     </message>
@@ -1057,44 +1438,38 @@ Adres: %4
         <translation>&amp;İptal</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>&amp;Apply</source>
-        <translation>&amp;Uygula</translation>
-    </message>
-    <message>
-        <location filename="../optionsdialog.cpp" line="+58"/>
+        <location filename="../optionsdialog.cpp" line="+67"/>
         <source>default</source>
         <translation>varsayılan</translation>
     </message>
     <message>
-        <location line="+130"/>
+        <location line="+57"/>
+        <source>none</source>
+        <translation>boş</translation>
+    </message>
+    <message>
+        <location line="+75"/>
         <source>Confirm options reset</source>
         <translation>Seçeneklerin sıfırlanmasını teyit et</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Some settings may require a client restart to take effect.</source>
-        <translation>Bazı ayarların dikkate alınması istemcinin tekrar başlatılmasını gerektirebilir.</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Do you want to proceed?</source>
-        <translation>Devam etmek istiyor musunuz?</translation>
-    </message>
-    <message>
-        <location line="+42"/>
-        <location line="+9"/>
-        <source>Warning</source>
-        <translation>Uyarı</translation>
-    </message>
-    <message>
-        <location line="-9"/>
-        <location line="+9"/>
-        <source>This setting will take effect after restarting Bitcoin.</source>
-        <translation>Bu ayarlar Bitcoin tekrar başlatıldığında etkinleşecektir.</translation>
-    </message>
-    <message>
         <location line="+29"/>
+        <source>Client restart required to activate changes.</source>
+        <translation>Değişikliklerin uygulanması için istemcinin yeniden başlatılması lazımdır.</translation>
+    </message>
+    <message>
+        <location line="-29"/>
+        <source>Client will be shutdown, do you want to proceed?</source>
+        <translation>İstemci kapanacaktır, devam etmek istiyor musunuz?</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>This change would require a client restart.</source>
+        <translation>Bu değişiklik istemcinin tekrar başlatılmasını gerektirir.</translation>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>Girilen vekil sunucu adresi geçersizdir.</translation>
     </message>
@@ -1108,22 +1483,22 @@ Adres: %4
     </message>
     <message>
         <location line="+50"/>
-        <location line="+202"/>
+        <location line="+231"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Görüntülenen veriler zaman aşımına uğramış olabilir. Bağlantı kurulduğunda cüzdanınız otomatik olarak şebeke ile eşleşir ancak bu işlem henüz tamamlanmamıştır.</translation>
     </message>
     <message>
-        <location line="-131"/>
+        <location line="-155"/>
         <source>Unconfirmed:</source>
         <translation>Doğrulanmamış:</translation>
     </message>
     <message>
-        <location line="-78"/>
+        <location line="-83"/>
         <source>Wallet</source>
         <translation>Cüzdan</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+51"/>
         <source>Confirmed:</source>
         <translation>Teyit edilmiş:</translation>
     </message>
@@ -1133,12 +1508,12 @@ Adres: %4
         <translation>Güncel harcanabilir bakiyeniz</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+32"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>Henüz teyit edilmemiş ve harcanabilir bakiyeye eklenmemiş muamelelerin toplamı</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>Immature:</source>
         <translation>Olgunlaşmamış:</translation>
     </message>
@@ -1148,7 +1523,7 @@ Adres: %4
         <translation>Oluşturulan bakiye henüz olgunlaşmamıştır</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>Total:</source>
         <translation>Toplam:</translation>
     </message>
@@ -1158,12 +1533,12 @@ Adres: %4
         <translation>Güncel toplam bakiyeniz</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+71"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Son muameleler&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="+116"/>
+        <location filename="../overviewpage.cpp" line="+120"/>
         <location line="+1"/>
         <source>out of sync</source>
         <translation>eşleşme dışı</translation>
@@ -1172,7 +1547,8 @@ Adres: %4
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+392"/>
+        <location filename="../paymentserver.cpp" line="+403"/>
+        <location line="+13"/>
         <source>URI handling</source>
         <translation>URI yönetimi</translation>
     </message>
@@ -1182,45 +1558,82 @@ Adres: %4
         <translation>URI okunamadı! Sebebi geçersiz bir Bitcoin adresi veya hatalı URI parametreleri olabilir.</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+96"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
         <translation>Talep edilen %1 meblağında ödeme çok düşüktür (toz olarak kabul edilir).</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <location line="+37"/>
+        <location line="-221"/>
+        <location line="+212"/>
+        <location line="+13"/>
+        <location line="+95"/>
+        <location line="+18"/>
+        <location line="+16"/>
         <source>Payment request error</source>
         <translation>Ödeme talebi hatası</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Insecure requests to custom payment scripts unsupported</source>
-        <translation>Özel ödeme betiklerine güvensiz talepler desteklenmez</translation>
+        <location line="-353"/>
+        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <translation>Bitcoin başlatılamadı: tıkla-ve-öde yöneticisi</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+58"/>
+        <source>Net manager warning</source>
+        <translation>Şebeke yöneticisi uyarısı</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
+        <translation>Faal vekil sunucunuz, vekil vasıtasıyla ödeme talepleri için gereken SOCKS5&apos;i desteklememektedir.</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>Payment request fetch URL is invalid: %1</source>
+        <translation>Ödeme talebini alma URL&apos;i geçersiz: %1</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Payment request file handling</source>
+        <translation>Ödeme talebi dosyası yönetimi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
+        <translation>Ödeme talebi okunamaz ya da işlenemez! Bunun sebebi geçersiz bir ödeme talebi dosyası olabilir.</translation>
+    </message>
+    <message>
+        <location line="+73"/>
+        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
+        <translation>Özel ödeme betiklerine teyit edilmemiş ödeme talepleri desteklenmez.</translation>
+    </message>
+    <message>
+        <location line="+59"/>
         <source>Refund from %1</source>
         <translation>%1 öğesinden iade</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+43"/>
         <source>Error communicating with %1: %2</source>
         <translation>%1 ile iletişimde hata: %2</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+24"/>
+        <source>Payment request can not be parsed or processed!</source>
+        <translation>Ödeme talebi ayrıştırılamaz ya da işlenemez!</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Bad response from server %1</source>
         <translation>%1 sunucusundan hatalı cevap</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+33"/>
         <source>Payment acknowledged</source>
         <translation>Ödeme teyit edildi</translation>
     </message>
     <message>
-        <location line="-58"/>
-        <location line="+30"/>
-        <location line="+17"/>
+        <location line="-11"/>
         <source>Network request error</source>
         <translation>Şebeke talebi hatası</translation>
     </message>
@@ -1228,32 +1641,26 @@ Adres: %4
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoin.cpp" line="+114"/>
-        <location line="+5"/>
-        <location filename="../intro.cpp" line="-32"/>
+        <location filename="../bitcoin.cpp" line="+71"/>
+        <location line="+11"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="+1"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation>Hata: belirtilen &quot;%1&quot; veri klasörü yoktur.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-12"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>Hata: -regtest ve -testnet&apos;in geçersiz kombinasyonu.</translation>
-    </message>
-    <message>
-        <location filename="../intro.cpp" line="+1"/>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation>Hata: belirtilen &quot;%1&quot; veri klasörü oluşturulamaz.</translation>
     </message>
 </context>
 <context>
     <name>QRImageWidget</name>
     <message>
-        <location filename="../receiverequestdialog.cpp" line="+32"/>
+        <location filename="../receiverequestdialog.cpp" line="+36"/>
         <source>&amp;Save Image...</source>
         <translation>Resmi k&amp;aydet...</translation>
     </message>
@@ -1269,8 +1676,8 @@ Adres: %4
     </message>
     <message>
         <location line="+0"/>
-        <source>PNG Images (*.png)</source>
-        <translation>PNG resimleri (*.png)</translation>
+        <source>PNG Image (*.png)</source>
+        <translation>PNG resim (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1287,15 +1694,16 @@ Adres: %4
         <location line="+23"/>
         <location line="+23"/>
         <location line="+36"/>
-        <location line="+53"/>
+        <location line="+23"/>
+        <location line="+36"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+352"/>
+        <location filename="../rpcconsole.cpp" line="+359"/>
         <source>N/A</source>
         <translation>Mevcut değil</translation>
     </message>
     <message>
-        <location line="-217"/>
+        <location line="-223"/>
         <source>Client version</source>
         <translation>İstemci sürümü</translation>
     </message>
@@ -1305,7 +1713,17 @@ Adres: %4
         <translation>&amp;Malumat</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="-10"/>
+        <source>Debug window</source>
+        <translation>Hata ayıklama penceresi</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>General</source>
+        <translation>Genel</translation>
+    </message>
+    <message>
+        <location line="+53"/>
         <source>Using OpenSSL version</source>
         <translation>Kullanılan OpenSSL sürümü</translation>
     </message>
@@ -1321,16 +1739,16 @@ Adres: %4
     </message>
     <message>
         <location line="+7"/>
+        <source>Name</source>
+        <translation>İsim</translation>
+    </message>
+    <message>
+        <location line="+23"/>
         <source>Number of connections</source>
         <translation>Bağlantı sayısı</translation>
     </message>
     <message>
-        <location line="+23"/>
-        <source>On testnet</source>
-        <translation>Testnet üzerinde</translation>
-    </message>
-    <message>
-        <location line="+23"/>
+        <location line="+29"/>
         <source>Block chain</source>
         <translation>Blok zinciri</translation>
     </message>
@@ -1353,21 +1771,6 @@ Adres: %4
         <location line="+52"/>
         <source>&amp;Open</source>
         <translation>&amp;Aç</translation>
-    </message>
-    <message>
-        <location line="+16"/>
-        <source>Command-line options</source>
-        <translation>Komut satırı seçenekleri</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
-        <translation>Mevcut Bitcoin komut satırı seçeneklerinin listesini içeren Bitcoin-Qt yardımını göster.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>&amp;Show</source>
-        <translation>&amp;Göster</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -1400,22 +1803,12 @@ Adres: %4
         <translation>Dışarı:</translation>
     </message>
     <message>
-        <location line="-541"/>
+        <location line="-521"/>
         <source>Build date</source>
         <translation>Derleme tarihi</translation>
     </message>
     <message>
-        <location line="-104"/>
-        <source>Bitcoin - Debug window</source>
-        <translation>Bitcoin - Hata ayıklama penceresi</translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Çekirdeği</translation>
-    </message>
-    <message>
-        <location line="+279"/>
+        <location line="+206"/>
         <source>Debug log file</source>
         <translation>Hata ayıklama kütük dosyası</translation>
     </message>
@@ -1425,7 +1818,7 @@ Adres: %4
         <translation>Güncel veri klasöründen Bitcoin hata ayıklama kütük dosyasını açar. Büyük kütük dosyaları için bu birkaç saniye alabilir.</translation>
     </message>
     <message>
-        <location line="+102"/>
+        <location line="+76"/>
         <source>Clear console</source>
         <translation>Konsolu temizle</translation>
     </message>
@@ -1445,7 +1838,7 @@ Adres: %4
         <translation>Mevcut komutların listesi için &lt;b&gt;help&lt;/b&gt; yazınız.</translation>
     </message>
     <message>
-        <location line="+128"/>
+        <location line="+122"/>
         <source>%1 B</source>
         <translation>%1 B</translation>
     </message>
@@ -1483,37 +1876,22 @@ Adres: %4
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+22"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+83"/>
         <source>&amp;Amount:</source>
         <translation>&amp;Meblağ:</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>The amount to request</source>
-        <translation>Talep edilecek meblağ</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="-13"/>
         <source>&amp;Label:</source>
         <translation>&amp;Etiket:</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>The label to associate with the receiving address</source>
-        <translation>Alım adresi ile ilişkilendirilecek etiket</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="-34"/>
         <source>&amp;Message:</source>
         <translation>Me&amp;saj:</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>The message to attach to payment request</source>
-        <translation>Ödeme talebine ilâve edilecek mesaj</translation>
-    </message>
-    <message>
-        <location line="+14"/>
+        <location line="-17"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>Daha önce kullanılmış bir alım adresini kullan. Adresleri tekrar kullanmak güvenlik ve gizlilik sorunları doğurur. Bunu, daha önce yaptığınız bir talebi tekrar oluşturmak durumu dışında kullanmayınız.</translation>
     </message>
@@ -1523,9 +1901,24 @@ Adres: %4
         <translation>&amp;Hâlihazırda bulunan bir alım adresini kullan (önerilmez)</translation>
     </message>
     <message>
+        <location line="+27"/>
+        <source>An optional label to associate with the new receiving address</source>
+        <translation>Yeni alım adresi ile ilişkili, seçiminize dayalı etiket</translation>
+    </message>
+    <message>
         <location line="+7"/>
-        <source>Use this form to request payments. All fields are optional.</source>
-        <translation>Ödeme istemek için bu formu kullanın. Tüm alanlar seçime dayalıdır.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <translation>Talep açıldığında gösterilecek, isteğinize dayalı, ödeme talebi ile ilişkilendirilecek bir mesaj. Not: Bu mesaj ödeme ile birlikte Bitcoin şebekesi üzerinden gönderilmeyecektir.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation>Ödeme talep etmek için bu formu kullanın. Tüm alanlar &lt;b&gt;seçime dayalıdır&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
+        <translation>Seçiminize dayalı talep edilecek meblağ. Belli bir meblağ talep etmemek için bunu boş bırakın veya sıfır değerini kullanın.</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -1541,6 +1934,31 @@ Adres: %4
         <location line="+36"/>
         <source>&amp;Request payment</source>
         <translation>Ödeme &amp;talep et</translation>
+    </message>
+    <message>
+        <location line="+47"/>
+        <source>Requested payments</source>
+        <translation>Talep edilen ödemeler</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Show the selected request (does the same as double clicking an entry)</source>
+        <translation>Seçilen talebi göster (bir unsura çift tıklamakla aynı anlama gelir)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Show</source>
+        <translation>Göster</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Remove the selected entries from the list</source>
+        <translation>Seçilen unsurları listeden kaldır</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove</source>
+        <translation>Kaldır</translation>
     </message>
 </context>
 <context>
@@ -1562,16 +1980,11 @@ Adres: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>&amp;Copy Image</source>
-        <translation>Resmi &amp;kopyala</translation>
-    </message>
-    <message>
-        <location line="+7"/>
         <source>&amp;Save Image...</source>
         <translation>Resmi ka&amp;ydet...</translation>
     </message>
     <message>
-        <location filename="../receiverequestdialog.cpp" line="+58"/>
+        <location filename="../receiverequestdialog.cpp" line="+56"/>
         <source>Request payment to %1</source>
         <translation>%1 unsuruna ödeme talep et</translation>
     </message>
@@ -1593,7 +2006,7 @@ Adres: %4
     <message>
         <location line="+2"/>
         <source>Amount</source>
-        <translation>Miktar</translation>
+        <translation>Meblağ</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1617,16 +2030,119 @@ Adres: %4
     </message>
 </context>
 <context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <location filename="../recentrequeststablemodel.cpp" line="+24"/>
+        <source>Date</source>
+        <translation>Tarih</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Label</source>
+        <translation>Etiket</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Message</source>
+        <translation>Mesaj</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Amount</source>
+        <translation>Meblağ</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>(no label)</source>
+        <translation>(boş etiket)</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>(no message)</source>
+        <translation>(boş mesaj)</translation>
+    </message>
+</context>
+<context>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+140"/>
-        <location line="+213"/>
+        <location filename="../sendcoinsdialog.cpp" line="+381"/>
+        <location line="+80"/>
         <source>Send Coins</source>
         <translation>Bitcoin yolla</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+76"/>
+        <source>Coin Control Features</source>
+        <translation>Para kontrolü özellikleri</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Inputs...</source>
+        <translation>Girdiler...</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>automatically selected</source>
+        <translation>otomatik seçilmiş</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Insufficient funds!</source>
+        <translation>Yetersiz fon!</translation>
+    </message>
+    <message>
+        <location line="+89"/>
+        <source>Quantity:</source>
+        <translation>Miktar:</translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Bytes:</source>
+        <translation>Bayt:</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Amount:</source>
+        <translation>Meblağ:</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Priority:</source>
+        <translation>Öncelik:</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Fee:</source>
+        <translation>Ücret:</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Low Output:</source>
+        <translation>Düşük çıktı:</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>After Fee:</source>
+        <translation>Ücretten sonra:</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Change:</source>
+        <translation>Para üstü:</translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
+        <translation>Bu etkinleştirildiyse fakat para üstü adresi boş ya da geçersizse para üstü yeni oluşturulan bir adrese gönderilecektir.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Custom change address</source>
+        <translation>Özel para üstü adresi</translation>
+    </message>
+    <message>
+        <location line="+115"/>
         <source>Send to multiple recipients at once</source>
         <translation>Birçok alıcıya aynı anda gönder</translation>
     </message>
@@ -1651,12 +2167,7 @@ Adres: %4
         <translation>Bakiye:</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>123.456 BTC</source>
-        <translation>123.456 BTC</translation>
-    </message>
-    <message>
-        <location line="+31"/>
+        <location line="+41"/>
         <source>Confirm the send action</source>
         <translation>Yollama etkinliğini teyit ediniz</translation>
     </message>
@@ -1666,49 +2177,125 @@ Adres: %4
         <translation>G&amp;önder</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-154"/>
+        <location filename="../sendcoinsdialog.cpp" line="-228"/>
         <source>Confirm send coins</source>
         <translation>Gönderiyi teyit ediniz</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-74"/>
         <location line="+5"/>
         <location line="+5"/>
+        <location line="+4"/>
         <source>%1 to %2</source>
         <translation>%1 öğesinden %2 unsuruna</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="-136"/>
+        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Bitcoin adresi giriniz (mesela 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Copy quantity</source>
+        <translation>Miktarı kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>Meblağı kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy fee</source>
+        <translation>Ücreti kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy after fee</source>
+        <translation>Ücretten sonrakini kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy bytes</source>
+        <translation>Baytları kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy priority</source>
+        <translation>Önceliği kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy low output</source>
+        <translation>Düşük çıktıyı kopyala</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy change</source>
+        <translation>Para üstünü kopyala</translation>
+    </message>
+    <message>
+        <location line="+170"/>
+        <source>Total Amount %1 (= %2)</source>
+        <translation>Toplam meblağ %1 (= %2)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>or</source>
+        <translation>veya</translation>
+    </message>
+    <message>
+        <location line="+202"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Alıcı adresi geçerli değildir, lütfen denetleyiniz.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Ödeyeceğiniz tutarın sıfırdan yüksek olması gerekir.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>The amount exceeds your balance.</source>
         <translation>Tutar bakiyenizden yüksektir.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Toplam, %1 muamele ücreti ilâve edildiğinde bakiyenizi geçmektedir.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+3"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Çift adres bulundu, belli bir gönderi sırasında her adrese sadece tek bir gönderide bulunulabilir.</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Error: Transaction creation failed!</source>
-        <translation>Hata: Muamele oluşturması başarısız oldu!</translation>
+        <location line="+3"/>
+        <source>Transaction creation failed!</source>
+        <translation>Muamelenin oluşturulması başarısız oldu!</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+4"/>
+        <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>Muamele reddedildi! Cüzdanınızdaki madenî paraların bazıları zaten harcanmış olduğunda bu meydana gelebilir. Örneğin wallet.dat dosyasının bir kopyasını kullandıysanız ve kopyada para harcandığında ancak burada harcandığı işaretlenmediğinde.</translation>
+    </message>
+    <message>
+        <location line="+112"/>
+        <source>Warning: Invalid Bitcoin address</source>
+        <translation>Uyarı: geçersiz Bitcoin adresi</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>(no label)</source>
+        <translation>(boş etiket)</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>Warning: Unknown change address</source>
+        <translation>Uyarı: geçersiz para üstü adresi</translation>
+    </message>
+    <message>
+        <location line="-366"/>
         <source>Are you sure you want to send?</source>
         <translation>Göndermek istediğinizden emin misiniz?</translation>
     </message>
@@ -1718,17 +2305,7 @@ Adres: %4
         <translation>muamele ücreti olarak eklendi</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Total Amount %1</source>
-        <translation>Toplam meblağ %1</translation>
-    </message>
-    <message>
-        <location line="+20"/>
-        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Hata: Muamele reddedildi. Cüzdanınızdaki madenî paraların bazıları zaten harcanmış olduğunda bu meydana gelebilir. Örneğin wallet.dat dosyasının bir kopyasını kullandıysanız ve kopyada para harcandığında ancak burada harcandığı işaretlenmediğinde.</translation>
-    </message>
-    <message>
-        <location line="+144"/>
+        <location line="+170"/>
         <source>Payment request expired</source>
         <translation>Ödeme talebinin ömrü doldu</translation>
     </message>
@@ -1741,39 +2318,44 @@ Adres: %4
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+33"/>
-        <location line="+585"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+131"/>
+        <location line="+521"/>
+        <location line="+536"/>
         <source>A&amp;mount:</source>
-        <translation>M&amp;iktar:</translation>
+        <translation>Mebla&amp;ğ:</translation>
     </message>
     <message>
-        <location line="-572"/>
-        <location line="+585"/>
+        <location line="-1152"/>
         <source>Pay &amp;To:</source>
-        <translation>&amp;Şu kişiye öde:</translation>
+        <translation>&amp;Şu adrese öde:</translation>
     </message>
     <message>
-        <location line="-551"/>
+        <location line="+18"/>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Ödemenin gönderileceği adres (mesela 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsentry.cpp" line="+28"/>
+        <location filename="../sendcoinsentry.cpp" line="+30"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>Adres defterinize eklemek için bu adrese ilişik bir etiket giriniz</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="-18"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+57"/>
         <source>&amp;Label:</source>
         <translation>&amp;Etiket:</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="-50"/>
         <source>Choose previously used address</source>
         <translation>Önceden kullanılmış adres seç</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-40"/>
+        <source>This is a normal payment.</source>
+        <translation>Bu, normal bir ödemedir.</translation>
+    </message>
+    <message>
+        <location line="+50"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -1789,16 +2371,45 @@ Adres: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Remove this recipient</source>
-        <translation>Bu alıcıyı kaldır</translation>
+        <location line="+524"/>
+        <location line="+536"/>
+        <source>Remove this entry</source>
+        <translation>Bu unsuru kaldır</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="-1008"/>
+        <source>Message:</source>
+        <translation>Mesaj:</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>Bitcoin URI&apos;siyle ilişkili ve bilginiz için muameleyle saklanacak bir mesaj. Not: Bu mesaj Bitcoin şebekesi üzerinden gönderilmeyecektir.</translation>
+    </message>
+    <message>
+        <location line="+958"/>
+        <source>This is a verified payment request.</source>
+        <translation>Bu, teyit edilmiş bir ödeme talebidir.</translation>
+    </message>
+    <message>
+        <location line="-991"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Kullanılmış adres listesine eklemek için bu adrese bir etiket girin</translation>
     </message>
     <message>
-        <location line="+465"/>
+        <location line="+459"/>
+        <source>This is an unverified payment request.</source>
+        <translation>Bu, teyit edilmemiş bir ödeme talebidir.</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <location line="+532"/>
+        <source>Pay To:</source>
+        <translation>Şu adrese öde:</translation>
+    </message>
+    <message>
+        <location line="-498"/>
+        <location line="+536"/>
         <source>Memo:</source>
         <translation>Not:</translation>
     </message>
@@ -1809,6 +2420,19 @@ Adres: %4
     </message>
 </context>
 <context>
+    <name>ShutdownWindow</name>
+    <message>
+        <location filename="../utilitydialog.cpp" line="+48"/>
+        <source>Bitcoin Core is shutting down...</source>
+        <translation>Bitcoin Çekirdeği kapanıyor...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation>Bu pencere kalkıncaya dek bilgisayarı kapatmayınız.</translation>
+    </message>
+</context>
+<context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="+14"/>
@@ -1816,7 +2440,7 @@ Adres: %4
         <translation>İmzalar - Mesaj İmzala / Kontrol et</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+10"/>
         <source>&amp;Sign Message</source>
         <translation>Mesaj &amp;imzala</translation>
     </message>
@@ -1919,7 +2543,7 @@ Adres: %4
         <translation>Tüm mesaj kontrolü alanlarını sıfırla</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+27"/>
+        <location filename="../signverifymessagedialog.cpp" line="+29"/>
         <location line="+3"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Bitcoin adresi giriniz (mesela 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
@@ -1935,7 +2559,7 @@ Adres: %4
         <translation>Bitcoin imzası gir</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+84"/>
         <location line="+81"/>
         <source>The entered address is invalid.</source>
         <translation>Girilen adres geçersizdir.</translation>
@@ -2004,9 +2628,14 @@ Adres: %4
 <context>
     <name>SplashScreen</name>
     <message>
-        <location filename="../splashscreen.cpp" line="+23"/>
-        <source>The Bitcoin developers</source>
-        <translation>Bitcoin geliştiricileri</translation>
+        <location filename="../splashscreen.cpp" line="+28"/>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Çekirdeği</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The Bitcoin Core developers</source>
+        <translation>Bitcoin Çekirdeği geliştiricileri</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2017,7 +2646,7 @@ Adres: %4
 <context>
     <name>TrafficGraphWidget</name>
     <message>
-        <location filename="../trafficgraphwidget.cpp" line="+75"/>
+        <location filename="../trafficgraphwidget.cpp" line="+79"/>
         <source>KB/s</source>
         <translation>KB/s</translation>
     </message>
@@ -2025,7 +2654,7 @@ Adres: %4
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+22"/>
+        <location filename="../transactiondesc.cpp" line="+28"/>
         <source>Open until %1</source>
         <translation>%1 değerine dek açık</translation>
     </message>
@@ -2098,12 +2727,12 @@ Adres: %4
         <location line="+12"/>
         <location line="+45"/>
         <location line="+17"/>
-        <location line="+48"/>
+        <location line="+53"/>
         <source>Credit</source>
         <translation>Gider</translation>
     </message>
     <message numerus="yes">
-        <location line="-120"/>
+        <location line="-125"/>
         <source>matures in %n more block(s)</source>
         <translation><numerusform>%n ek blok sonrasında olgunlaşacak</numerusform><numerusform>%n ek blok sonrasında olgunlaşacak</numerusform></translation>
     </message>
@@ -2116,27 +2745,28 @@ Adres: %4
         <location line="+44"/>
         <location line="+8"/>
         <location line="+15"/>
-        <location line="+48"/>
+        <location line="+53"/>
         <source>Debit</source>
         <translation>Gelir</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-62"/>
         <source>Transaction fee</source>
         <translation>Muamele ücreti</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Net amount</source>
-        <translation>Net miktar</translation>
+        <translation>Net meblağ</translation>
     </message>
     <message>
         <location line="+6"/>
+        <location line="+9"/>
         <source>Message</source>
         <translation>Mesaj</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-7"/>
         <source>Comment</source>
         <translation>Yorum</translation>
     </message>
@@ -2146,7 +2776,7 @@ Adres: %4
         <translation>Muamele tanımlayıcı</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+18"/>
         <source>Merchant</source>
         <translation>Tüccar</translation>
     </message>
@@ -2173,7 +2803,7 @@ Adres: %4
     <message>
         <location line="+23"/>
         <source>Amount</source>
-        <translation>Miktar</translation>
+        <translation>Meblağ</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2186,7 +2816,7 @@ Adres: %4
         <translation>yanlış</translation>
     </message>
     <message>
-        <location line="-227"/>
+        <location line="-232"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, henüz başarılı bir şekilde yayınlanmadı</translation>
     </message>
@@ -2217,7 +2847,7 @@ Adres: %4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+227"/>
+        <location filename="../transactiontablemodel.cpp" line="+234"/>
         <source>Date</source>
         <translation>Tarih</translation>
     </message>
@@ -2234,10 +2864,15 @@ Adres: %4
     <message>
         <location line="+0"/>
         <source>Amount</source>
-        <translation>Miktar</translation>
+        <translation>Meblağ</translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation>Olgunlaşmamış (%1 teyit, %2 teyit ardından kullanılabilir olacaktır)</translation>
     </message>
     <message numerus="yes">
-        <location line="+57"/>
+        <location line="+16"/>
         <source>Open for %n more block(s)</source>
         <translation><numerusform>%n ilâve blok için açık</numerusform><numerusform>%n ilâve blok için açık</numerusform></translation>
     </message>
@@ -2257,17 +2892,13 @@ Adres: %4
         <translation>Doğrulanmadı (%1 (toplam %2 üzerinden) teyit)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-22"/>
+        <location line="+25"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Doğrulandı (%1 teyit)</translation>
     </message>
-    <message numerus="yes">
-        <location line="+8"/>
-        <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation><numerusform>Madenden çıkarılan bakiye %n ek blok sonrasında olgunlaştığında kullanılabilecektir</numerusform><numerusform>Madenden çıkarılan bakiye %n ek blok sonrasında olgunlaştığında kullanılabilecektir</numerusform></translation>
-    </message>
     <message>
-        <location line="+5"/>
+        <location line="-22"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Bu blok başka hiçbir düğüm tarafından alınmamıştır ve muhtemelen kabul edilmeyecektir!</translation>
     </message>
@@ -2277,7 +2908,7 @@ Adres: %4
         <translation>Oluşturuldu ama kabul edilmedi</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+62"/>
         <source>Received with</source>
         <translation>Şununla alındı</translation>
     </message>
@@ -2329,13 +2960,13 @@ Adres: %4
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>Bakiyeden alınan ya da bakiyeye eklenen miktar.</translation>
+        <translation>Bakiyeden alınan ya da bakiyeye eklenen meblağ.</translation>
     </message>
 </context>
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+52"/>
+        <location filename="../transactionview.cpp" line="+57"/>
         <location line="+16"/>
         <source>All</source>
         <translation>Hepsi</translation>
@@ -2396,14 +3027,14 @@ Adres: %4
         <translation>Diğer</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>Enter address or label to search</source>
         <translation>Aranacak adres ya da etiket giriniz</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>Min amount</source>
-        <translation>Asgari miktar</translation>
+        <translation>Asgari meblağ</translation>
     </message>
     <message>
         <location line="+34"/>
@@ -2418,7 +3049,7 @@ Adres: %4
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation>Miktarı kopyala</translation>
+        <translation>Meblağı kopyala</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2436,17 +3067,37 @@ Adres: %4
         <translation>Muamele detaylarını göster</translation>
     </message>
     <message>
-        <location line="+143"/>
-        <source>Export Transaction Data</source>
-        <translation>Muamele verilerini dışa aktar</translation>
+        <location line="+142"/>
+        <source>Export Transaction History</source>
+        <translation>Muamele tarihçesini dışa aktar</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+19"/>
+        <source>Exporting Failed</source>
+        <translation>Dışa aktarım başarısız oldu</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>There was an error trying to save the transaction history to %1.</source>
+        <translation>Muamele tarihçesinin %1 konumuna kaydedilmesi sırasında bir hata meydana geldi.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Exporting Successful</source>
+        <translation>Dışa aktarım başarılı oldu</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Muamele tarihçesi başarılı bir şekilde %1 konumuna kaydedildi.</translation>
+    </message>
+    <message>
+        <location line="-22"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Virgülle ayrılmış değerler dosyası (*.csv)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Confirmed</source>
         <translation>Doğrulandı</translation>
     </message>
@@ -2473,7 +3124,7 @@ Adres: %4
     <message>
         <location line="+1"/>
         <source>Amount</source>
-        <translation>Miktar</translation>
+        <translation>Meblağ</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2481,17 +3132,7 @@ Adres: %4
         <translation>Tanımlayıcı</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Error exporting</source>
-        <translation>Dışa aktarımda hata oluştu</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Could not write to file %1.</source>
-        <translation>%1 dosyasına yazılamadı.</translation>
-    </message>
-    <message>
-        <location line="+100"/>
+        <location line="+107"/>
         <source>Range:</source>
         <translation>Aralık:</translation>
     </message>
@@ -2502,9 +3143,17 @@ Adres: %4
     </message>
 </context>
 <context>
+    <name>WalletFrame</name>
+    <message>
+        <location filename="../walletframe.cpp" line="+26"/>
+        <source>No wallet has been loaded.</source>
+        <translation>Hiçbir cüzdan yüklenmemiştir.</translation>
+    </message>
+</context>
+<context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+218"/>
+        <location filename="../walletmodel.cpp" line="+245"/>
         <source>Send Coins</source>
         <translation>Bitcoin yolla</translation>
     </message>
@@ -2512,7 +3161,7 @@ Adres: %4
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+46"/>
+        <location filename="../walletview.cpp" line="+43"/>
         <source>&amp;Export</source>
         <translation>&amp;Dışa aktar</translation>
     </message>
@@ -2522,65 +3171,60 @@ Adres: %4
         <translation>Güncel sekmedeki verileri bir dosyaya aktar</translation>
     </message>
     <message>
-        <location line="+183"/>
+        <location line="+181"/>
         <source>Backup Wallet</source>
         <translation>Cüzdanı Yedekle</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Cüzdan verileri (*.dat)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Backup Failed</source>
         <translation>Yedekleme başarısız oldu</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation>Cüzdanı değişik bir konuma kaydetmek denenirken bir hata meydana geldi.</translation>
+        <source>There was an error trying to save the wallet data to %1.</source>
+        <translation>Cüzdan verilerinin %1 konumuna kaydedilmesi sırasında bir hata meydana geldi.</translation>
     </message>
     <message>
         <location line="+4"/>
-        <source>Backup Successful</source>
-        <translation>Yedekleme başarılı</translation>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>Cüzdan verileri %1 konumuna başarıyla kaydedildi.</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>The wallet data was successfully saved to the new location.</source>
-        <translation>Cüzdan verileri başarılı bir şekilde yeni konuma kaydedildi.</translation>
+        <source>Backup Successful</source>
+        <translation>Yedekleme başarılı</translation>
     </message>
 </context>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+102"/>
-        <source>Bitcoin version</source>
-        <translation>Bitcoin sürümü</translation>
-    </message>
-    <message>
-        <location line="+107"/>
+        <location filename="../bitcoinstrings.cpp" line="+221"/>
         <source>Usage:</source>
         <translation>Kullanım:</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-54"/>
         <source>List commands</source>
         <translation>Komutları listele</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-14"/>
         <source>Get help for a command</source>
         <translation>Bir komut için yardım al</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+26"/>
         <source>Options:</source>
         <translation>Seçenekler:</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+22"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Yapılandırma dosyası belirt (varsayılan: bitcoin.conf)</translation>
     </message>
@@ -2600,7 +3244,7 @@ Adres: %4
         <translation>Veritabanı önbellek boyutunu megabayt olarak belirt (varsayılan: 25)</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-26"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Bağlantılar için dinlenecek &lt;port&gt; (varsayılan: 8333 ya da testnet: 18333)</translation>
     </message>
@@ -2610,7 +3254,7 @@ Adres: %4
         <translation>Eşler ile en çok &lt;n&gt; adet bağlantı kur (varsayılan: 125)</translation>
     </message>
     <message>
-        <location line="-49"/>
+        <location line="-51"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Eş adresleri elde etmek için bir düğüme bağlan ve ardından bağlantıyı kes</translation>
     </message>
@@ -2620,37 +3264,37 @@ Adres: %4
         <translation>Kendi genel adresinizi tanımlayın</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Aksaklık gösteren eşlerle bağlantıyı kesme sınırı (varsayılan: 100)</translation>
     </message>
     <message>
-        <location line="-142"/>
+        <location line="-148"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Aksaklık gösteren eşlerle yeni bağlantıları engelleme süresi, saniye olarak (varsayılan: 86400)</translation>
     </message>
     <message>
-        <location line="-33"/>
+        <location line="-36"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation>IPv4 üzerinde dinlemek için %u numaralı RPC portunun kurulumu sırasında hata meydana geldi: %s</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+34"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>JSON-RPC bağlantılarını &lt;port&gt; üzerinde dinle (varsayılan: 8332 veya tesnet: 18332)</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+45"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Konut satırı ve JSON-RPC komutlarını kabul et</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+80"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Arka planda daemon (servis) olarak çalış ve komutları kabul et</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+39"/>
         <source>Use the test network</source>
         <translation>Deneme şebekesini kullan</translation>
     </message>
@@ -2660,7 +3304,7 @@ Adres: %4
         <translation>Dışarıdan gelen bağlantıları kabul et (varsayılan: -proxy veya -connect yoksa 1)</translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-95"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -2711,13 +3355,18 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <location line="+4"/>
+        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
+        <translation>Blokların anında çözülebileceği özel bir zincir kullanan regresyon deneme kipine gir.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Hata: Muamele reddedildi! Cüzdanınızdaki madenî paraların bazıları zaten harcanmış olduğunda bu meydana gelebilir. Örneğin wallet.dat dosyasının bir kopyasını kullandıysanız ve kopyada para harcandığında ancak burada harcandığı işaretlenmediğinde.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Hata: Muamelenin miktarı, karmaşıklığı ya da yakın geçmişte alınan fonların kullanılması nedeniyle bu muamele en az %s tutarında ücret gerektirmektedir!</translation>
+        <translation>Hata: Muamelenin meblağı, karmaşıklığı ya da yakın geçmişte alınan fonların kullanılması nedeniyle bu muamele en az %s tutarında ücret gerektirmektedir!</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2725,17 +3374,17 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Bir cüzdan muamelesi değiştiğinde komutu çalıştır (komuttaki %s TxID ile değiştirilecektir)</translation>
     </message>
     <message>
-        <location line="+11"/>
-        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
-        <translation>Yüksek öncelikli/düşük ücretli muamelelerin boyutunu bayt olarak tanımla (varsayılan: 27000)</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+18"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Bu yayın öncesi bir deneme sürümüdür - tüm riski siz üstlenmiş olursunuz - bitcoin oluşturmak ya da ticari uygulamalar için kullanmayınız</translation>
     </message>
     <message>
         <location line="+5"/>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
+        <translation>Eşlere gizli Tor servisleri ile ulaşmak için ayrı SOCKS5 vekil sunucusu kullan (varsayılan: -proxy)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Uyarı: -paytxfee çok yüksek bir değere ayarlanmış! Bu, muamele gönderirseniz ödeyeceğiniz muamele ücretidir.</translation>
     </message>
@@ -2765,9 +3414,19 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Uyarı: wallet.dat bozuk, veriler geri kazanıldı! Özgün wallet.dat, wallet.{zamandamgası}.bak olarak %s klasörüne kaydedildi; bakiyeniz ya da muameleleriniz yanlışsa bir yedeklemeden tekrar yüklemeniz gerekir.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+9"/>
+        <source>&lt;category&gt; can be:</source>
+        <translation>&lt;kategori&gt; şunlar olabilir:</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
         <translation>Bozuk bir wallet.dat dosyasından özel anahtarları geri kazanmayı dene</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Bitcoin Core Daemon</source>
+        <translation>Bitcoin Çekirdek servisi</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2775,7 +3434,7 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Bitcoin RPC istemci sürümü</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Block creation options:</source>
         <translation>Blok oluşturma seçenekleri:</translation>
     </message>
@@ -2785,7 +3444,12 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Sadece belirtilen düğüme veya düğümlere bağlan</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
+        <source>Connect through SOCKS proxy</source>
+        <translation>SOCKS vekil sunucusuyla bağlan</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>&lt;port&gt; numarasında JSON-RPC&apos;ye bağlan (varsayılan: 8332 veya testnet: 18332)</translation>
     </message>
@@ -2798,6 +3462,11 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <location line="+1"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation>Kendi IP adresini keşfet (varsayılan: dinlenildiğinde ve -externalip yoksa 1)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Do not load the wallet and disable wallet RPC calls</source>
+        <translation>Cüzdanı yükleme ve cüzdan RPC çağrılarını devre dışı bırak</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2895,7 +3564,12 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Geri alma verilerinin yazılamadı</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
+        <source>Fee per kB to add to transactions you send</source>
+        <translation>Yolladığınız muameleler için eklenecek kB başı ücret</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
         <translation>Eşleri DNS araması vasıtasıyla bul (varsayılan: 1, eğer -connect kullanılmadıysa)</translation>
     </message>
@@ -2915,6 +3589,11 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Blok kontrolünün ne kadar derin olacağı (0 ilâ 4, varsayılan: 3)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
+        <translation>&lt;kategori&gt; sağlanmamışsa tüm hata ayıklama verilerini dök.</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation>Yanlış ya da bulunamamış doğuş bloku. Şebeke için yanlış veri klasörü mü?</translation>
@@ -2930,17 +3609,37 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Kafi derecede dosya tanımlayıcıları mevcut değil.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+5"/>
+        <source>Prepend debug output with timestamp (default: 1)</source>
+        <translation>Hata ayıklama verilerinin önüne zaman damgası ekle (varsayılan: 1)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>RPC client options:</source>
+        <translation>RPC istemci seçenekleri:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Blok zinciri indeksini güncel blk000??.dat dosyalarından tekrar inşa et</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
+        <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
+        <translation>-proxy için SOCKS sürümünü seç (4 veya 5, varsayılan: 5)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Send command to Bitcoin server</source>
         <translation>Bitcoin sunucusuna komut gönder</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+7"/>
+        <source>Set maximum block size in bytes (default: %d)</source>
+        <translation>Azami blok boyutunu bayt olarak ayarla (varsayılan: %d)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
         <translation>RPC aramaları için iş parçacığı sayısını belirle (varsayılan: 4)</translation>
     </message>
@@ -2955,12 +3654,17 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Bitcoin sunucusunu başlat</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+3"/>
+        <source>This is intended for regression testing tools and app development.</source>
+        <translation>Bu, regresyon deneme araçları ve uygulama geliştirmesi için tasarlanmıştır. </translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Usage (deprecated, use bitcoin-cli):</source>
         <translation>Kullanım (önerilmemektedir, bitcoin-cli kullanın):</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Verifying blocks...</source>
         <translation>Bloklar kontrol ediliyor...</translation>
     </message>
@@ -2971,31 +3675,56 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <location line="+1"/>
+        <source>Wait for RPC server to start</source>
+        <translation>RPC sunucusunun başlamasını bekle</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>%s cüzdan %s veri klasörünün dışında bulunuyor</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+2"/>
+        <source>Wallet options:</source>
+        <translation>Cüzdan seçenekleri:</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
+        <translation>Uyarı: eskimiş seçenek -debugnet görmezden gelinir, -debug=net kullanınız</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>-txindex&apos;i değiştirmek için veritabanını -reindex kullanarak tekrar inşa etmeniz gerekmektedir</translation>
     </message>
     <message>
-        <location line="-78"/>
+        <location line="-79"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Harici blk000??.dat dosyasından blokları içe aktarır</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-105"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>İlgili bir uyarı alındığında ya da gerçekten uzun bir çatallama gördüğümüzde komutu çalıştır (komuttaki %s mesaj ile değiştirilir)</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+14"/>
+        <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
+        <translation>Hata ayıklama bilgisi dök (varsayılan:0, &lt;kategori&gt; sağlanması seçime dayalıdır)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
+        <translation>Yüksek öncelikli/düşük ücretli muamelelerin azami boyutunu bayt olarak ayarla (varsayılan: %d)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
         <translation>Betik kontrolü iş parçacığı sayısını belirt (azami 16, 0 = otomatik, &lt;0 = bu sayıda çekirdeği boş bırak, varsayılan: 0)</translation>
     </message>
     <message>
-        <location line="+83"/>
+        <location line="+89"/>
         <source>Information</source>
         <translation>Bilgi</translation>
     </message>
@@ -3035,47 +3764,17 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Sadece &lt;net&gt; şebekesindeki düğümlere bağlan (IPv4, IPv6 ya da Tor)</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Output extra debugging information. Implies all other -debug* options</source>
-        <translation>İlâve hata ayıklama verileri çıkart. Diğer tüm -debug* seçeneklerini ima eder</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Output extra network debugging information</source>
-        <translation>İlâve şebeke hata ayıklama verileri çıkart</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Prepend debug output with timestamp</source>
-        <translation>Hata ayıklama çıktısına tarih ön ekleri ilâve et</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+9"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation> SSL seçenekleri: (SSL kurulum bilgisi için Bitcoin vikisine bakınız)</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Select the version of socks proxy to use (4-5, default: 5)</source>
-        <translation>Kullanılacak socks vekil sunucu sürümünü seç (4-5, varsayılan: 5)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Trace/hata ayıklama verilerini debug.log dosyası yerine konsola gönder</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Send trace/debug info to debugger</source>
-        <translation>Hata ayıklayıcıya -debugger- trace/hata ayıklama verileri gönder</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Set maximum block size in bytes (default: 250000)</source>
-        <translation>Bayt olarak azami blok boyutunu tanımla (varsayılan: 250000)</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+6"/>
         <source>Set minimum block size in bytes (default: 0)</source>
         <translation>Bayt olarak asgari blok boyutunu tanımla (varsayılan: 0)</translation>
     </message>
@@ -3100,7 +3799,7 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Sistem hatası:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Transaction amount too small</source>
         <translation>Muamele meblağı çok düşük</translation>
     </message>
@@ -3125,32 +3824,32 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Dinlenecek portu haritalamak için UPnP kullan (varsayılan: dinlenildiğinde 1)</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Use proxy to reach tor hidden services (default: same as -proxy)</source>
-        <translation>Gizli tor servislerine erişmek için vekil sunucu kullan (varsayılan: -proxy ile aynısı)</translation>
-    </message>
-    <message>
         <location line="+2"/>
         <source>Username for JSON-RPC connections</source>
         <translation>JSON-RPC bağlantıları için kullanıcı ismi</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>Warning</source>
         <translation>Uyarı</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Uyarı: Bu sürüm çok eskidir, güncellemeniz gerekir!</translation>
     </message>
     <message>
         <location line="+2"/>
+        <source>version</source>
+        <translation>sürüm</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat bozuk, geri kazanım başarısız oldu</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-58"/>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC bağlantıları için parola</translation>
     </message>
@@ -3160,27 +3859,27 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Belirtilen İP adresinden JSON-RPC bağlantılarını kabul et</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+80"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Şu &lt;ip&gt; adresinde (varsayılan: 127.0.0.1) çalışan düğüme komut yolla</translation>
     </message>
     <message>
-        <location line="-126"/>
+        <location line="-132"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>En iyi blok değiştiğinde komutu çalıştır (komut için %s parametresi blok hash değeri ile değiştirilecektir)</translation>
     </message>
     <message>
-        <location line="+155"/>
+        <location line="+161"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Cüzdanı en yeni biçime güncelle</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-24"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Anahtar alan boyutunu &lt;n&gt; değerine ayarla (varsayılan: 100)</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="-11"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Blok zincirini eksik cüzdan muameleleri için tekrar tara</translation>
     </message>
@@ -3190,7 +3889,7 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>JSON-RPC bağlantıları için OpenSSL (https) kullan</translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-30"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Sunucu sertifika dosyası (varsayılan: server.cert)</translation>
     </message>
@@ -3205,27 +3904,22 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Bu yardım mesajı</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Bu bilgisayarda %s unsuruna bağlanılamadı. (bind şu hatayı iletti: %d, %s)</translation>
     </message>
     <message>
-        <location line="-95"/>
-        <source>Connect through socks proxy</source>
-        <translation>Socks vekil sunucusu vasıtasıyla bağlan</translation>
-    </message>
-    <message>
-        <location line="-11"/>
+        <location line="-107"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>-addnode, -seednode ve -connect için DNS aramalarına izin ver</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+60"/>
         <source>Loading addresses...</source>
         <translation>Adresler yükleniyor...</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-37"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>wallet.dat dosyasının yüklenmesinde hata oluştu: bozuk cüzdan</translation>
     </message>
@@ -3245,12 +3939,12 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>wallet.dat dosyasının yüklenmesinde hata oluştu</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Geçersiz -proxy adresi: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>-onlynet için bilinmeyen bir şebeke belirtildi: &apos;%s&apos;</translation>
     </message>
@@ -3260,7 +3954,7 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Bilinmeyen bir -socks vekil sürümü talep edildi: %i</translation>
     </message>
     <message>
-        <location line="-100"/>
+        <location line="-101"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>-bind adresi çözümlenemedi: &apos;%s&apos;</translation>
     </message>
@@ -3270,14 +3964,14 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>-externalip adresi çözümlenemedi: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+48"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>-paytxfee=&lt;miktar&gt; için geçersiz miktar: &apos;%s&apos;</translation>
+        <translation>-paytxfee=&lt;meblağ&gt; için geçersiz meblağ: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount</source>
-        <translation>Geçersiz miktar</translation>
+        <translation>Geçersiz meblağ</translation>
     </message>
     <message>
         <location line="-6"/>
@@ -3290,27 +3984,22 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Blok indeksi yükleniyor...</translation>
     </message>
     <message>
-        <location line="-60"/>
+        <location line="-62"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Bağlanılacak düğüm ekle ve bağlantıyı zinde tutmaya çalış</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-32"/>
         <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
         <translation>Bu bilgisayarda %s unsuruna bağlanılamadı. Bitcoin muhtemelen hâlihazırda çalışmaktadır.</translation>
     </message>
     <message>
-        <location line="+69"/>
-        <source>Fee per KB to add to transactions you send</source>
-        <translation>Yolladığınız muameleler için eklenecek KB başı ücret</translation>
-    </message>
-    <message>
-        <location line="+20"/>
+        <location line="+95"/>
         <source>Loading wallet...</source>
         <translation>Cüzdan yükleniyor...</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-56"/>
         <source>Cannot downgrade wallet</source>
         <translation>Cüzdan eski biçime geri alınamaz</translation>
     </message>
@@ -3320,7 +4009,7 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Varsayılan adres yazılamadı</translation>
     </message>
     <message>
-        <location line="+66"/>
+        <location line="+67"/>
         <source>Rescanning...</source>
         <translation>Yeniden tarama...</translation>
     </message>
@@ -3340,7 +4029,7 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
         <translation>Hata</translation>
     </message>
     <message>
-        <location line="-33"/>
+        <location line="-35"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
