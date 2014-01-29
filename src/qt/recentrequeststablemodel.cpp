@@ -75,7 +75,10 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
                 return rec->recipient.message;
             }
         case Amount:
-            return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
+            if (rec->recipient.amount == 0 && role == Qt::DisplayRole)
+                return tr("(no amount)");
+            else
+                return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
         }
     }
     return QVariant();
