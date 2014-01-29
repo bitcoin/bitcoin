@@ -323,18 +323,16 @@ BUILT_SOURCES = $(nodist_libbitcoinqt_a_SOURCES)
 $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
-if TARGET_DARWIN
-  libbitcoinqt_a_SOURCES += $(BITCOIN_MM)
-endif
-if TARGET_WINDOWS
-  libbitcoinqt_a_SOURCES += $(BITCOIN_RC)
-endif
-#
-
 # bitcoin-qt binary #
 bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms
 bitcoin_qt_SOURCES = bitcoin.cpp
+if TARGET_DARWIN
+  bitcoin_qt_SOURCES += $(BITCOIN_MM)
+endif
+if TARGET_WINDOWS
+  bitcoin_qt_SOURCES += $(BITCOIN_RC)
+endif
 bitcoin_qt_LDADD = libbitcoinqt.a $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
 bitcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
