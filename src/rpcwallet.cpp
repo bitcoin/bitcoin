@@ -1850,9 +1850,9 @@ Value settxfee(const Array& params, bool fHelp)
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
             "settxfee amount\n"
-            "\nSet the transaction fee. 'amount' is a real and is rounded to the nearest 0.00000001\n"
+            "\nSet the transaction fee per KB.\n"
             "\nArguments:\n"
-            "1. amount         (numeric, required) The transaction fee in btc rounded to the nearest 0.00000001\n"
+            "1. amount         (numeric, required) The transaction fee in BTC/KB rounded to the nearest 0.00000001\n"
             "\nResult\n"
             "true|false        (boolean) Returns true if successful\n"
             "\nExamples:\n"
