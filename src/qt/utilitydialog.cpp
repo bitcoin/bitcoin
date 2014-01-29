@@ -92,7 +92,7 @@ HelpMessageDialog::~HelpMessageDialog()
 void HelpMessageDialog::printToConsole()
 {
     // On other operating systems, the expected action is to print the message to the console.
-    QString strUsage = header + "\n" + coreOptions + "\n" + uiOptions;
+    QString strUsage = header + "\n" + coreOptions + "\n" + uiOptions + "\n";
     fprintf(stdout, "%s", strUsage.toStdString().c_str());
 }
 
