@@ -27,14 +27,14 @@ Eldonita laŭ la permesilo MIT/X11. Vidu la kunan dosieron COPYING aŭ http://ww
 Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uzo en la &quot;OpenSSL Toolkit&quot; (http://www.openssl.org/) kaj ĉifrajn erojn kreitajn de Eric Young (eay@cryptsoft.com) kaj UPnP-erojn kreitajn de Thomas Bernard.</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="+19"/>
+        <location filename="../utilitydialog.cpp" line="+29"/>
         <source>Copyright</source>
         <translation>Kopirajto</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>The Bitcoin developers</source>
-        <translation>La programistoj de Bitmono</translation>
+        <source>The Bitcoin Core developers</source>
+        <translation>La programistoj de Bitmona Kerno</translation>
     </message>
 </context>
 <context>
@@ -151,13 +151,13 @@ Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uz
     </message>
     <message>
         <location line="+13"/>
-        <source>Error exporting</source>
-        <translation>Eraro dum eksportado</translation>
+        <source>Exporting Failed</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+0"/>
-        <source>Could not write to file %1.</source>
-        <translation>Ne eblis skribi al dosiero %1.</translation>
+        <location line="+1"/>
+        <source>There was an error trying to save the address list to %1.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -320,43 +320,29 @@ Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uz
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
-    <message>
-        <location filename="../bitcoin.cpp" line="+362"/>
-        <source>Bitcoin Core is shutting down...
-</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
-<context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+297"/>
+        <location filename="../bitcoingui.cpp" line="+295"/>
         <source>Sign &amp;message...</source>
         <translation>Subskribi &amp;mesaĝon...</translation>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+335"/>
         <source>Synchronizing with network...</source>
         <translation>Sinkronigante kun reto...</translation>
     </message>
     <message>
-        <location line="-395"/>
+        <location line="-407"/>
         <source>&amp;Overview</source>
         <translation>&amp;Superrigardo</translation>
     </message>
     <message>
-        <location line="-139"/>
+        <location line="-137"/>
         <source>Node</source>
         <translation>Nodo</translation>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+138"/>
         <source>Show general overview of wallet</source>
         <translation>Vidigi ĝeneralan superrigardon de la monujo</translation>
     </message>
@@ -419,20 +405,20 @@ Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uz
     <message>
         <location line="+10"/>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sendaj adresoj...</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ricevaj adresoj...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>Malfermi &amp;URI-on...</translation>
     </message>
     <message>
-        <location line="+313"/>
+        <location line="+325"/>
         <source>Importing blocks from disk...</source>
         <translation>Importado de blokoj el disko...</translation>
     </message>
@@ -442,7 +428,7 @@ Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uz
         <translation>Reindeksado de blokoj sur disko...</translation>
     </message>
     <message>
-        <location line="-393"/>
+        <location line="-405"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Sendi monon al Bitmon-adreso</translation>
     </message>
@@ -477,17 +463,17 @@ Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uz
         <translation>&amp;Kontroli mesaĝon...</translation>
     </message>
     <message>
-        <location line="+414"/>
+        <location line="+430"/>
         <source>Bitcoin</source>
         <translation>Bitmono</translation>
     </message>
     <message>
-        <location line="-629"/>
+        <location line="-643"/>
         <source>Wallet</source>
         <translation>Monujo</translation>
     </message>
     <message>
-        <location line="+148"/>
+        <location line="+146"/>
         <source>&amp;Send</source>
         <translation>&amp;Sendi</translation>
     </message>
@@ -523,7 +509,7 @@ Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uz
         <translation>Kontroli mesaĝojn por kontroli ĉu ili estas subskribitaj per specifaj Bitmon-adresoj</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+48"/>
         <source>&amp;File</source>
         <translation>&amp;Dosiero</translation>
     </message>
@@ -538,23 +524,23 @@ Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uz
         <translation>&amp;Helpo</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Tabs toolbar</source>
         <translation>Langeto-breto</translation>
     </message>
     <message>
-        <location line="-281"/>
-        <location line="+373"/>
+        <location line="-284"/>
+        <location line="+376"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location line="-398"/>
+        <location line="-401"/>
         <source>Bitcoin Core</source>
         <translation>Kerno de Bitmono</translation>
     </message>
     <message>
-        <location line="+165"/>
+        <location line="+163"/>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation>Peti pagon (kreas QR-kodojn kaj URI-ojn kun prefikso bitcoin:)</translation>
     </message>
@@ -580,13 +566,23 @@ Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uz
         <translation>Malfermi bitcoin:-URI-on aŭ pagpeton</translation>
     </message>
     <message>
-        <location line="+157"/>
+        <location line="+2"/>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Komandliniaj agordaĵoj</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+159"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
         <translation>Bitmon-kliento</translation>
     </message>
     <message numerus="yes">
-        <location line="+135"/>
+        <location line="+142"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n aktiva konekto al la bitmona reto</numerusform><numerusform>%n aktivaj konektoj al la bitmona reto</numerusform></translation>
     </message>
@@ -626,7 +622,7 @@ Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uz
         <translation>mankas %1</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+21"/>
         <source>Last received block was generated %1 ago.</source>
         <translation>Lasta ricevita bloko kreiĝis antaŭ %1.</translation>
     </message>
@@ -651,7 +647,7 @@ Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uz
         <translation>Informoj</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-85"/>
         <source>Up to date</source>
         <translation>Ĝisdata</translation>
     </message>
@@ -661,7 +657,7 @@ Tiu ĉi produkto enhavas erojn kreitajn de la &quot;OpenSSL Project&quot; por uz
         <translation>Ĝisdatigante...</translation>
     </message>
     <message>
-        <location line="+126"/>
+        <location line="+130"/>
         <source>Sent transaction</source>
         <translation>Sendita transakcio</translation>
     </message>
@@ -694,7 +690,7 @@ Adreso: %4
         <translation>Monujo estas &lt;b&gt;ĉifrita&lt;/b&gt; kaj aktuale &lt;b&gt;ŝlosita&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+78"/>
+        <location filename="../bitcoin.cpp" line="+438"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Okazis neriparebla eraro. Bitmono ne plu povas sekure daŭri, do ĝi sekure ĉesos.</translation>
     </message>
@@ -858,7 +854,7 @@ Adreso: %4
     <message>
         <location line="+1"/>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>Kopii malaltan eligon</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1096,20 +1092,24 @@ Adreso: %4
     </message>
 </context>
 <context>
-    <name>GUIUtil::HelpMessageBox</name>
+    <name>HelpMessageDialog</name>
     <message>
-        <location filename="../guiutil.cpp" line="+597"/>
-        <source>version</source>
-        <translation>versio</translation>
+        <location filename="../forms/helpmessagedialog.ui" line="+19"/>
+        <source>Bitcoin Core - Command-line options</source>
+        <translation>Bitmona Kerno - Komandliniaj agordaĵoj</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+13"/>
+        <location filename="../utilitydialog.cpp" line="+38"/>
         <source>Bitcoin Core</source>
         <translation>Kerno de Bitmono</translation>
     </message>
     <message>
-        <location line="-11"/>
+        <location line="+0"/>
+        <source>version</source>
+        <translation>versio</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Usage:</source>
         <translation>Uzado:</translation>
     </message>
@@ -1265,7 +1265,7 @@ Adreso: %4
     <message>
         <location line="+9"/>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished"/>
+        <translation>Dosiergrando de &amp;datumbasa kaŝmemoro</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1303,7 +1303,12 @@ Adreso: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+267"/>
+        <location line="+224"/>
+        <source>Active command-line options that override above options:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+43"/>
         <source>Reset all client options to default.</source>
         <translation>Reagordi ĉion al defaŭlataj valoroj.</translation>
     </message>
@@ -1423,12 +1428,7 @@ Adreso: %4
         <translation>Montri &amp;detalan adres-regilon (nur por spertuloj)</translation>
     </message>
     <message>
-        <location line="+29"/>
-        <source>Active command-line options that override above options: </source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+107"/>
+        <location line="+136"/>
         <source>&amp;OK</source>
         <translation>&amp;Bone</translation>
     </message>
@@ -1438,7 +1438,7 @@ Adreso: %4
         <translation>&amp;Nuligi</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+68"/>
+        <location filename="../optionsdialog.cpp" line="+67"/>
         <source>default</source>
         <translation>defaŭlta</translation>
     </message>
@@ -1547,7 +1547,7 @@ Adreso: %4
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+400"/>
+        <location filename="../paymentserver.cpp" line="+403"/>
         <location line="+13"/>
         <source>URI handling</source>
         <translation>Traktado de URI-oj</translation>
@@ -1563,8 +1563,8 @@ Adreso: %4
         <translation>La petita pagosumo de %1 estas tro malgranda (konsiderata kiel polvo).</translation>
     </message>
     <message>
-        <location line="-216"/>
-        <location line="+207"/>
+        <location line="-221"/>
+        <location line="+212"/>
         <location line="+13"/>
         <location line="+95"/>
         <location line="+18"/>
@@ -1573,12 +1573,22 @@ Adreso: %4
         <translation>Eraro dum pagopeto</translation>
     </message>
     <message>
-        <location line="-348"/>
+        <location line="-353"/>
         <source>Cannot start bitcoin: click-to-pay handler</source>
         <translation>Ne eblas lanĉi la ilon &apos;klaki-por-pagi&apos;</translation>
     </message>
     <message>
-        <location line="+106"/>
+        <location line="+58"/>
+        <source>Net manager warning</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+52"/>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation type="unfinished"/>
     </message>
@@ -1688,7 +1698,7 @@ Adreso: %4
         <location line="+36"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+360"/>
+        <location filename="../rpcconsole.cpp" line="+359"/>
         <source>N/A</source>
         <translation>neaplikebla</translation>
     </message>
@@ -1763,16 +1773,6 @@ Adreso: %4
         <translation>&amp;Malfermi</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Command-line options</source>
-        <translation>Komandliniaj agordaĵoj</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>&amp;Show</source>
-        <translation>&amp;Vidigi</translation>
-    </message>
-    <message>
         <location line="+24"/>
         <source>&amp;Console</source>
         <translation>&amp;Konzolo</translation>
@@ -1803,7 +1803,7 @@ Adreso: %4
         <translation>El:</translation>
     </message>
     <message>
-        <location line="-547"/>
+        <location line="-521"/>
         <source>Build date</source>
         <translation>Dato de kompilado</translation>
     </message>
@@ -1816,11 +1816,6 @@ Adreso: %4
         <location line="+7"/>
         <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Malfermi la sencimiga protokoldosiero de Bitmono el la aktuala dosierujo por datumoj. Tio eble daŭros plurajn sekundojn por granda protokoldosiero.</translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>Show the Bitcoin-Core help message to get a list with possible Bitcoin command-line options.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+76"/>
@@ -1843,7 +1838,7 @@ Adreso: %4
         <translation>Tajpu &lt;b&gt;help&lt;/b&gt; por superrigardo de la disponeblaj komandoj.</translation>
     </message>
     <message>
-        <location line="+128"/>
+        <location line="+122"/>
         <source>%1 B</source>
         <translation>%1 B</translation>
     </message>
@@ -1886,12 +1881,7 @@ Adreso: %4
         <translation>&amp;Kvanto:</translation>
     </message>
     <message>
-        <location line="+19"/>
-        <source>The amount to request</source>
-        <translation>La kvanto petota</translation>
-    </message>
-    <message>
-        <location line="-32"/>
+        <location line="-13"/>
         <source>&amp;Label:</source>
         <translation>&amp;Etikedo:</translation>
     </message>
@@ -1901,12 +1891,7 @@ Adreso: %4
         <translation>&amp;Mesaĝo:</translation>
     </message>
     <message>
-        <location line="+20"/>
-        <source>The message to attach to payment request</source>
-        <translation>La mesaĝo sendota kun la pagopeto</translation>
-    </message>
-    <message>
-        <location line="-37"/>
+        <location line="-17"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>Reuzi unu el la jam uzitaj ricevaj adresoj. Reuzo de adresoj povas krei problemojn pri sekureco kaj privateco. Ne uzu tiun ĉi funkcion krom por rekrei antaŭe faritan pagopeton.</translation>
     </message>
@@ -1917,16 +1902,26 @@ Adreso: %4
     </message>
     <message>
         <location line="+27"/>
-        <source>The label to associate with the new receiving address</source>
+        <source>An optional label to associate with the new receiving address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+14"/>
-        <source>Use this form to request payments. All fields are optional.</source>
-        <translation>Uzu tiun ĉi formularon por peti pagojn. Ĉiuj kampoaj estas nedevigaj.</translation>
+        <location line="+7"/>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+7"/>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>Clear all fields of the form.</source>
         <translation>Malplenigi ĉiujn kampojn de la formularo.</translation>
     </message>
@@ -1946,7 +1941,7 @@ Adreso: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+16"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation type="unfinished"/>
     </message>
@@ -1963,7 +1958,7 @@ Adreso: %4
     <message>
         <location line="+3"/>
         <source>Remove</source>
-        <translation type="unfinished"/>
+        <translation>Forigi</translation>
     </message>
 </context>
 <context>
@@ -2037,7 +2032,7 @@ Adreso: %4
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="+17"/>
+        <location filename="../recentrequeststablemodel.cpp" line="+24"/>
         <source>Date</source>
         <translation>Dato</translation>
     </message>
@@ -2232,7 +2227,7 @@ Adreso: %4
     <message>
         <location line="+1"/>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>Kopii malaltan eligon</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2242,7 +2237,7 @@ Adreso: %4
     <message>
         <location line="+170"/>
         <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
+        <translation>Totala Sumo %1 (= %2)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2277,7 +2272,7 @@ Adreso: %4
     <message>
         <location line="+3"/>
         <source>Transaction creation failed!</source>
-        <translation type="unfinished"/>
+        <translation>Kreo de transakcio fiaskis!</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -2324,13 +2319,13 @@ Adreso: %4
     <name>SendCoinsEntry</name>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="+131"/>
-        <location line="+501"/>
+        <location line="+521"/>
         <location line="+536"/>
         <source>A&amp;mount:</source>
         <translation>&amp;Sumo:</translation>
     </message>
     <message>
-        <location line="-1132"/>
+        <location line="-1152"/>
         <source>Pay &amp;To:</source>
         <translation>&amp;Ricevonto:</translation>
     </message>
@@ -2357,7 +2352,7 @@ Adreso: %4
     <message>
         <location line="-40"/>
         <source>This is a normal payment.</source>
-        <translation type="unfinished"/>
+        <translation>Tio estas normala pago.</translation>
     </message>
     <message>
         <location line="+50"/>
@@ -2376,23 +2371,33 @@ Adreso: %4
     </message>
     <message>
         <location line="+7"/>
-        <location line="+504"/>
+        <location line="+524"/>
         <location line="+536"/>
         <source>Remove this entry</source>
+        <translation>Forigu ĉi tiun enskribon</translation>
+    </message>
+    <message>
+        <location line="-1008"/>
+        <source>Message:</source>
+        <translation>Mesaĝo:</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="+958"/>
         <source>This is a verified payment request.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-971"/>
+        <location line="-991"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Tajpu etikedon por tiu ĉi adreso por aldoni ĝin al la listo de uzitaj adresoj</translation>
     </message>
     <message>
-        <location line="+439"/>
+        <location line="+459"/>
         <source>This is an unverified payment request.</source>
         <translation type="unfinished"/>
     </message>
@@ -2415,6 +2420,19 @@ Adreso: %4
     </message>
 </context>
 <context>
+    <name>ShutdownWindow</name>
+    <message>
+        <location filename="../utilitydialog.cpp" line="+48"/>
+        <source>Bitcoin Core is shutting down...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation>Ne sistemfermu ĝis ĉi tiu fenestro malaperas.</translation>
+    </message>
+</context>
+<context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="+14"/>
@@ -2422,7 +2440,7 @@ Adreso: %4
         <translation>Subskriboj - Subskribi / Kontroli mesaĝon</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+10"/>
         <source>&amp;Sign Message</source>
         <translation>&amp;Subskribi Mesaĝon</translation>
     </message>
@@ -2617,7 +2635,7 @@ Adreso: %4
     <message>
         <location line="+2"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>La programistoj de Bitmona Kerno</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2709,12 +2727,12 @@ Adreso: %4
         <location line="+12"/>
         <location line="+45"/>
         <location line="+17"/>
-        <location line="+48"/>
+        <location line="+53"/>
         <source>Credit</source>
         <translation>Kredito</translation>
     </message>
     <message numerus="yes">
-        <location line="-120"/>
+        <location line="-125"/>
         <source>matures in %n more block(s)</source>
         <translation><numerusform>maturiĝos post %n bloko</numerusform><numerusform>maturiĝos post %n blokoj</numerusform></translation>
     </message>
@@ -2727,12 +2745,12 @@ Adreso: %4
         <location line="+44"/>
         <location line="+8"/>
         <location line="+15"/>
-        <location line="+48"/>
+        <location line="+53"/>
         <source>Debit</source>
         <translation>Debeto</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-62"/>
         <source>Transaction fee</source>
         <translation>Krompago</translation>
     </message>
@@ -2743,11 +2761,12 @@ Adreso: %4
     </message>
     <message>
         <location line="+6"/>
+        <location line="+9"/>
         <source>Message</source>
         <translation>Mesaĝo</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-7"/>
         <source>Comment</source>
         <translation>Komento</translation>
     </message>
@@ -2757,7 +2776,7 @@ Adreso: %4
         <translation>Transakcia ID</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+18"/>
         <source>Merchant</source>
         <translation>Vendisto</translation>
     </message>
@@ -2797,7 +2816,7 @@ Adreso: %4
         <translation>malvera</translation>
     </message>
     <message>
-        <location line="-227"/>
+        <location line="-232"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, ankoraŭ ne elsendita sukcese</translation>
     </message>
@@ -3407,7 +3426,7 @@ ekzemple: alertnotify=echo %%s | mail -s &quot;Averto de Bitmono&quot; admin@foo
     <message>
         <location line="+1"/>
         <source>Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Bitmonakerna Demono</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3657,7 +3676,7 @@ ekzemple: alertnotify=echo %%s | mail -s &quot;Averto de Bitmono&quot; admin@foo
     <message>
         <location line="+1"/>
         <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
+        <translation>Atendu por RPC-an servilo komenci</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3667,7 +3686,7 @@ ekzemple: alertnotify=echo %%s | mail -s &quot;Averto de Bitmono&quot; admin@foo
     <message>
         <location line="+2"/>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>Monujaj opcioj:</translation>
     </message>
     <message>
         <location line="+2"/>

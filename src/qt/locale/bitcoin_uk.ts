@@ -27,14 +27,14 @@ This product includes software developed by the OpenSSL Project for use in the O
 Цей продукт включає в себе програмне забезпечення, розроблене в рамках проекту OpenSSL (http://www.openssl.org/), криптографічне програмне забезпечення, написане Еріком Янгом (eay@cryptsoft.com), та функції для роботи з UPnP, написані Томасом Бернардом.</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="+19"/>
+        <location filename="../utilitydialog.cpp" line="+29"/>
         <source>Copyright</source>
         <translation>Авторське право</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>The Bitcoin developers</source>
-        <translation>Розробники Bitcoin</translation>
+        <source>The Bitcoin Core developers</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -151,13 +151,13 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+13"/>
-        <source>Error exporting</source>
-        <translation>Помилка при експортуванні</translation>
+        <source>Exporting Failed</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+0"/>
-        <source>Could not write to file %1.</source>
-        <translation>Неможливо записати у файл %1.</translation>
+        <location line="+1"/>
+        <source>There was an error trying to save the address list to %1.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -322,22 +322,27 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+260"/>
+        <location filename="../bitcoingui.cpp" line="+295"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Підписати повідомлення...</translation>
     </message>
     <message>
-        <location line="+290"/>
+        <location line="+335"/>
         <source>Synchronizing with network...</source>
         <translation>Синхронізація з мережею...</translation>
     </message>
     <message>
-        <location line="-360"/>
+        <location line="-407"/>
         <source>&amp;Overview</source>
         <translation>&amp;Огляд</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-137"/>
+        <source>Node</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+138"/>
         <source>Show general overview of wallet</source>
         <translation>Показати загальний огляд гаманця</translation>
     </message>
@@ -352,7 +357,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Переглянути історію транзакцій</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>E&amp;xit</source>
         <translation>&amp;Вихід</translation>
     </message>
@@ -398,7 +403,22 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Змінити парол&amp;ь...</translation>
     </message>
     <message>
-        <location line="+295"/>
+        <location line="+10"/>
+        <source>&amp;Sending addresses...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&amp;Receiving addresses...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open &amp;URI...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+325"/>
         <source>Importing blocks from disk...</source>
         <translation>Імпорт блоків з диску...</translation>
     </message>
@@ -408,12 +428,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Переіндексація блоків на диску ...</translation>
     </message>
     <message>
-        <location line="-358"/>
+        <location line="-405"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Відправити монети на вказану адресу</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+49"/>
         <source>Modify configuration options for Bitcoin</source>
         <translation>Редагувати параметри</translation>
     </message>
@@ -443,18 +463,17 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Перевірити повідомлення...</translation>
     </message>
     <message>
-        <location line="+375"/>
+        <location line="+430"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-563"/>
-        <location line="+10"/>
+        <location line="-643"/>
         <source>Wallet</source>
         <translation>Гаманець</translation>
     </message>
     <message>
-        <location line="+113"/>
+        <location line="+146"/>
         <source>&amp;Send</source>
         <translation>&amp;Відправити</translation>
     </message>
@@ -464,7 +483,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Отримати</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+46"/>
         <location line="+2"/>
         <source>&amp;Show / Hide</source>
         <translation>Показати / Приховати</translation>
@@ -490,86 +509,80 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Перевірте повідомлення для впевненості, що воно підписано вказаною Bitcoin-адресою</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+48"/>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+14"/>
         <source>&amp;Settings</source>
         <translation>&amp;Налаштування</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+9"/>
         <source>&amp;Help</source>
         <translation>&amp;Довідка</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+15"/>
         <source>Tabs toolbar</source>
         <translation>Панель вкладок</translation>
     </message>
     <message>
-        <location line="-244"/>
-        <location line="+321"/>
+        <location line="-284"/>
+        <location line="+376"/>
         <source>[testnet]</source>
         <translation>[тестова мережа]</translation>
     </message>
     <message>
-        <location line="-331"/>
-        <location line="+10"/>
+        <location line="-401"/>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Ядро</translation>
     </message>
     <message>
-        <location line="+121"/>
+        <location line="+163"/>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+29"/>
         <location line="+2"/>
         <source>&amp;About Bitcoin Core</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+34"/>
-        <source>&amp;Used sending addresses...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+35"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Used &amp;receiving addresses...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Show the list of used receiving addresses and labels</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Open URI...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>Open a bitcoin: URI or payment request</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+126"/>
+        <location line="+2"/>
+        <source>&amp;Command-line options</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+159"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
         <translation>Bitcoin-клієнт</translation>
     </message>
     <message numerus="yes">
-        <location line="+133"/>
+        <location line="+142"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n активне з&apos;єднання з мережею</numerusform><numerusform>%n активні з&apos;єднання з мережею</numerusform><numerusform>%n активних з&apos;єднань з мережею</numerusform></translation>
     </message>
@@ -589,7 +602,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Оброблено %1 блоків історії транзакцій.</translation>
     </message>
     <message numerus="yes">
-        <location line="+20"/>
+        <location line="+23"/>
         <source>%n hour(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
@@ -609,7 +622,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+21"/>
         <source>Last received block was generated %1 ago.</source>
         <translation type="unfinished"/>
     </message>
@@ -634,27 +647,17 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Інформація</translation>
     </message>
     <message>
-        <location line="+77"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
-        <translation>Ця угода є понад ліміт розміру. Ви все ще можете відправити його за плату% +1, який йде у вузлах, які обробляють транзакції і допомагає підтримувати мережу. Ви хочете оплатити гонорар?</translation>
-    </message>
-    <message>
-        <location line="-152"/>
+        <location line="-85"/>
         <source>Up to date</source>
         <translation>Синхронізовано</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+34"/>
         <source>Catching up...</source>
         <translation>Синхронізується...</translation>
     </message>
     <message>
-        <location line="+124"/>
-        <source>Confirm transaction fee</source>
-        <translation>Підтвердити комісію</translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+130"/>
         <source>Sent transaction</source>
         <translation>Надіслані транзакції</translation>
     </message>
@@ -677,7 +680,7 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+69"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>&lt;b&gt;Зашифрований&lt;/b&gt; гаманець &lt;b&gt;розблоковано&lt;/b&gt;</translation>
     </message>
@@ -687,7 +690,7 @@ Address: %4
         <translation>&lt;b&gt;Зашифрований&lt;/b&gt; гаманець &lt;b&gt;заблоковано&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+116"/>
+        <location filename="../bitcoin.cpp" line="+438"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Сталася фатальна помилка. Bitcoin більше не може продовжувати безпечно і піде.</translation>
     </message>
@@ -909,7 +912,12 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+171"/>
+        <location line="+31"/>
+        <source>none</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+140"/>
         <source>Dust</source>
         <translation type="unfinished"/>
     </message>
@@ -946,7 +954,7 @@ Address: %4
     </message>
     <message>
         <location line="+1"/>
-        <source>This label turns red, if the priority is smaller than &quot;medium&quot;</source>
+        <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1015,7 +1023,7 @@ Address: %4
         <translation>&amp;Адреса</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="+25"/>
+        <location filename="../editaddressdialog.cpp" line="+28"/>
         <source>New receiving address</source>
         <translation>Нова адреса для отримання</translation>
     </message>
@@ -1084,20 +1092,24 @@ Address: %4
     </message>
 </context>
 <context>
-    <name>GUIUtil::HelpMessageBox</name>
+    <name>HelpMessageDialog</name>
     <message>
-        <location filename="../guiutil.cpp" line="+597"/>
-        <source>version</source>
-        <translation>версія</translation>
+        <location filename="../forms/helpmessagedialog.ui" line="+19"/>
+        <source>Bitcoin Core - Command-line options</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+13"/>
+        <location filename="../utilitydialog.cpp" line="+38"/>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Ядро</translation>
     </message>
     <message>
-        <location line="-11"/>
+        <location line="+0"/>
+        <source>version</source>
+        <translation>версія</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Usage:</source>
         <translation>Використання:</translation>
     </message>
@@ -1226,7 +1238,7 @@ Address: %4
         <translation>Параметри</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+13"/>
         <source>&amp;Main</source>
         <translation>&amp;Головні</translation>
     </message>
@@ -1251,7 +1263,52 @@ Address: %4
         <translation>&amp;Запускати гаманець при вході в систему</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+9"/>
+        <source>Size of &amp;database cache</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation>Встановити розмір кешу бази даних в мегабайтах (типово: 25)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>MB</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Number of script &amp;verification threads</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
+        <translation>Встановіть кількість перевірки скрипт потоків (до 16, 0 = авто, &lt;0 = залишити, що багато сердечники безкоштовно, за замовчуванням: 0)</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+224"/>
+        <source>Active command-line options that override above options:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+43"/>
         <source>Reset all client options to default.</source>
         <translation>Скинути всі параметри клієнта на типові.</translation>
     </message>
@@ -1261,7 +1318,7 @@ Address: %4
         <translation>Скинути параметри</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="-323"/>
         <source>&amp;Network</source>
         <translation>&amp;Мережа</translation>
     </message>
@@ -1276,32 +1333,17 @@ Address: %4
         <translation>Відображення порту через &amp;UPnP</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Connect to the Bitcoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation>Підключатись до мережі Bitcoin через SOCKS-проксі (наприклад при використанні Tor).</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>&amp;Connect through SOCKS proxy:</source>
-        <translation>Підключатись через &amp;SOCKS-проксі:</translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+19"/>
         <source>Proxy &amp;IP:</source>
         <translation>&amp;IP проксі:</translation>
     </message>
     <message>
-        <location line="+19"/>
-        <source>IP address of the proxy (e.g. 127.0.0.1)</source>
-        <translation>IP-адреса проксі-сервера (наприклад 127.0.0.1)</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+32"/>
         <source>&amp;Port:</source>
         <translation>&amp;Порт:</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+25"/>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Порт проксі-сервера (наприклад 9050)</translation>
     </message>
@@ -1386,7 +1428,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+136"/>
         <source>&amp;OK</source>
         <translation>&amp;Гаразд</translation>
     </message>
@@ -1396,44 +1438,38 @@ Address: %4
         <translation>&amp;Скасувати</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>&amp;Apply</source>
-        <translation>&amp;Застосувати</translation>
-    </message>
-    <message>
-        <location filename="../optionsdialog.cpp" line="+63"/>
+        <location filename="../optionsdialog.cpp" line="+67"/>
         <source>default</source>
         <translation>типово</translation>
     </message>
     <message>
-        <location line="+131"/>
+        <location line="+57"/>
+        <source>none</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+75"/>
         <source>Confirm options reset</source>
         <translation>Підтвердження скидання параметрів</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Some settings may require a client restart to take effect.</source>
-        <translation>Деякі параметри потребують перезапуск клієнта для набуття чинності.</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Do you want to proceed?</source>
-        <translation>Продовжувати?</translation>
-    </message>
-    <message>
-        <location line="+42"/>
-        <location line="+9"/>
-        <source>Warning</source>
-        <translation>Увага</translation>
-    </message>
-    <message>
-        <location line="-9"/>
-        <location line="+9"/>
-        <source>This setting will take effect after restarting Bitcoin.</source>
-        <translation>Цей параметр набуде чинності після перезапуску Bitcoin.</translation>
-    </message>
-    <message>
         <location line="+29"/>
+        <source>Client restart required to activate changes.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-29"/>
+        <source>Client will be shutdown, do you want to proceed?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>This change would require a client restart.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>Невірно вказано адресу проксі.</translation>
     </message>
@@ -1447,22 +1483,22 @@ Address: %4
     </message>
     <message>
         <location line="+50"/>
-        <location line="+214"/>
+        <location line="+231"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Показана інформація вже може бути застарілою. Ваш гаманець буде автоматично синхронізовано з мережею Bitcoin після встановлення підключення, але цей процес ще не завершено.</translation>
     </message>
     <message>
-        <location line="-140"/>
+        <location line="-155"/>
         <source>Unconfirmed:</source>
         <translation>Непідтверджені:</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-83"/>
         <source>Wallet</source>
         <translation>Гаманець</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+51"/>
         <source>Confirmed:</source>
         <translation>підтверджено:</translation>
     </message>
@@ -1497,7 +1533,7 @@ Address: %4
         <translation>Ваше поточне Сукупний баланс</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+71"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Недавні транзакції&lt;/b&gt;</translation>
     </message>
@@ -1511,7 +1547,8 @@ Address: %4
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+397"/>
+        <location filename="../paymentserver.cpp" line="+403"/>
+        <location line="+13"/>
         <source>URI handling</source>
         <translation>Обробка URI</translation>
     </message>
@@ -1521,24 +1558,52 @@ Address: %4
         <translation>Неможливо обробити URI! Це може бути викликано неправильною Bitcoin-адресою, чи невірними параметрами URI.</translation>
     </message>
     <message>
-        <location line="+91"/>
+        <location line="+96"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-204"/>
-        <location line="+195"/>
+        <location line="-221"/>
+        <location line="+212"/>
         <location line="+13"/>
+        <location line="+95"/>
+        <location line="+18"/>
+        <location line="+16"/>
         <source>Payment request error</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-207"/>
+        <location line="-353"/>
         <source>Cannot start bitcoin: click-to-pay handler</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+58"/>
+        <source>Net manager warning</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>Payment request fetch URL is invalid: %1</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Payment request file handling</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+73"/>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation type="unfinished"/>
     </message>
@@ -1548,24 +1613,27 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+43"/>
         <source>Error communicating with %1: %2</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+24"/>
+        <source>Payment request can not be parsed or processed!</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Bad response from server %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+33"/>
         <source>Payment acknowledged</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-55"/>
-        <location line="+27"/>
-        <location line="+17"/>
+        <location line="-11"/>
         <source>Network request error</source>
         <translation type="unfinished"/>
     </message>
@@ -1573,18 +1641,18 @@ Address: %4
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoin.cpp" line="+119"/>
-        <location line="+5"/>
+        <location filename="../bitcoin.cpp" line="+71"/>
+        <location line="+11"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="+1"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-12"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation type="unfinished"/>
     </message>
@@ -1626,15 +1694,16 @@ Address: %4
         <location line="+23"/>
         <location line="+23"/>
         <location line="+36"/>
-        <location line="+53"/>
+        <location line="+23"/>
+        <location line="+36"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+360"/>
+        <location filename="../rpcconsole.cpp" line="+359"/>
         <source>N/A</source>
         <translation>Н/Д</translation>
     </message>
     <message>
-        <location line="-217"/>
+        <location line="-223"/>
         <source>Client version</source>
         <translation>Версія клієнту</translation>
     </message>
@@ -1649,7 +1718,12 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+25"/>
+        <source>General</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+53"/>
         <source>Using OpenSSL version</source>
         <translation>Використовується OpenSSL версії</translation>
     </message>
@@ -1665,16 +1739,16 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
+        <source>Name</source>
+        <translation>Ім’я</translation>
+    </message>
+    <message>
+        <location line="+23"/>
         <source>Number of connections</source>
         <translation>Кількість підключень</translation>
     </message>
     <message>
-        <location line="+23"/>
-        <source>On testnet</source>
-        <translation>В тестовій мережі</translation>
-    </message>
-    <message>
-        <location line="+23"/>
+        <location line="+29"/>
         <source>Block chain</source>
         <translation>Ланцюг блоків</translation>
     </message>
@@ -1697,16 +1771,6 @@ Address: %4
         <location line="+52"/>
         <source>&amp;Open</source>
         <translation>Відкрити</translation>
-    </message>
-    <message>
-        <location line="+16"/>
-        <source>Command-line options</source>
-        <translation>Параметри командного рядка</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>&amp;Show</source>
-        <translation>Показати</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -1739,17 +1803,12 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-541"/>
+        <location line="-521"/>
         <source>Build date</source>
         <translation>Дата збирання</translation>
     </message>
     <message>
-        <location line="-79"/>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Ядро</translation>
-    </message>
-    <message>
-        <location line="+279"/>
+        <location line="+206"/>
         <source>Debug log file</source>
         <translation>Файл звіту зневадження</translation>
     </message>
@@ -1757,11 +1816,6 @@ Address: %4
         <location line="+7"/>
         <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Відкрийте налагодження файл журналу Bitcoin з поточного каталогу даних. Це може зайняти кілька секунд для великих файлів журналів.</translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>Show the Bitcoin-Core help message to get a list with possible Bitcoin command-line options.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+76"/>
@@ -1784,7 +1838,7 @@ Address: %4
         <translation>Наберіть &lt;b&gt;help&lt;/b&gt; для перегляду доступних команд.</translation>
     </message>
     <message>
-        <location line="+128"/>
+        <location line="+122"/>
         <source>%1 B</source>
         <translation type="unfinished"/>
     </message>
@@ -1827,12 +1881,7 @@ Address: %4
         <translation>&amp;Кількість:</translation>
     </message>
     <message>
-        <location line="+19"/>
-        <source>The amount to request</source>
-        <translation>Обов’язкова кількість</translation>
-    </message>
-    <message>
-        <location line="-32"/>
+        <location line="-13"/>
         <source>&amp;Label:</source>
         <translation>&amp;Мітка:</translation>
     </message>
@@ -1842,12 +1891,7 @@ Address: %4
         <translation>&amp;Повідомлення:</translation>
     </message>
     <message>
-        <location line="+20"/>
-        <source>The message to attach to payment request</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="-37"/>
+        <location line="-17"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation type="unfinished"/>
     </message>
@@ -1858,16 +1902,26 @@ Address: %4
     </message>
     <message>
         <location line="+27"/>
-        <source>The label to associate with the new receiving address</source>
+        <source>An optional label to associate with the new receiving address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+14"/>
-        <source>Use this form to request payments. All fields are optional.</source>
-        <translation>Використовуйте цю форму щоб отримати платежі. Всі поля є обов’язковими</translation>
+        <location line="+7"/>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+7"/>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>Clear all fields of the form.</source>
         <translation>Очистити всі поля в формі</translation>
     </message>
@@ -1883,11 +1937,11 @@ Address: %4
     </message>
     <message>
         <location line="+47"/>
-        <source>Previously requested payments</source>
+        <source>Requested payments</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+16"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation type="unfinished"/>
     </message>
@@ -1978,7 +2032,7 @@ Address: %4
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="+14"/>
+        <location filename="../recentrequeststablemodel.cpp" line="+24"/>
         <source>Date</source>
         <translation>Дата</translation>
     </message>
@@ -1998,7 +2052,7 @@ Address: %4
         <translation>Кількість</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+38"/>
         <source>(no label)</source>
         <translation>(немає назви)</translation>
     </message>
@@ -2013,7 +2067,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
         <location filename="../sendcoinsdialog.cpp" line="+381"/>
-        <location line="+81"/>
+        <location line="+80"/>
         <source>Send Coins</source>
         <translation>Відправити</translation>
     </message>
@@ -2123,7 +2177,7 @@ Address: %4
         <translation>&amp;Відправити</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-229"/>
+        <location filename="../sendcoinsdialog.cpp" line="-228"/>
         <source>Confirm send coins</source>
         <translation>Підтвердіть відправлення</translation>
     </message>
@@ -2226,22 +2280,22 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+113"/>
+        <location line="+112"/>
         <source>Warning: Invalid Bitcoin address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+21"/>
         <source>(no label)</source>
         <translation>(немає назви)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="-11"/>
         <source>Warning: Unknown change address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-378"/>
+        <location line="-366"/>
         <source>Are you sure you want to send?</source>
         <translation>Ви впевнені, що хочете відправити?</translation>
     </message>
@@ -2265,13 +2319,13 @@ Address: %4
     <name>SendCoinsEntry</name>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="+131"/>
-        <location line="+501"/>
+        <location line="+521"/>
         <location line="+536"/>
         <source>A&amp;mount:</source>
         <translation>&amp;Кількість:</translation>
     </message>
     <message>
-        <location line="-1132"/>
+        <location line="-1152"/>
         <source>Pay &amp;To:</source>
         <translation>&amp;Отримувач:</translation>
     </message>
@@ -2317,23 +2371,33 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
-        <location line="+504"/>
+        <location line="+524"/>
         <location line="+536"/>
         <source>Remove this entry</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-1008"/>
+        <source>Message:</source>
+        <translation>Повідомлення:</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+958"/>
         <source>This is a verified payment request.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-971"/>
+        <location line="-991"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+439"/>
+        <location line="+459"/>
         <source>This is an unverified payment request.</source>
         <translation type="unfinished"/>
     </message>
@@ -2356,6 +2420,19 @@ Address: %4
     </message>
 </context>
 <context>
+    <name>ShutdownWindow</name>
+    <message>
+        <location filename="../utilitydialog.cpp" line="+48"/>
+        <source>Bitcoin Core is shutting down...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="+14"/>
@@ -2363,7 +2440,7 @@ Address: %4
         <translation>Підписи - Підпис / Перевірка повідомлення</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+10"/>
         <source>&amp;Sign Message</source>
         <translation>&amp;Підписати повідомлення</translation>
     </message>
@@ -2551,7 +2628,7 @@ Address: %4
 <context>
     <name>SplashScreen</name>
     <message>
-        <location filename="../splashscreen.cpp" line="+26"/>
+        <location filename="../splashscreen.cpp" line="+28"/>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Ядро</translation>
     </message>
@@ -2650,12 +2727,12 @@ Address: %4
         <location line="+12"/>
         <location line="+45"/>
         <location line="+17"/>
-        <location line="+48"/>
+        <location line="+53"/>
         <source>Credit</source>
         <translation>Кредит</translation>
     </message>
     <message numerus="yes">
-        <location line="-120"/>
+        <location line="-125"/>
         <source>matures in %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
@@ -2668,12 +2745,12 @@ Address: %4
         <location line="+44"/>
         <location line="+8"/>
         <location line="+15"/>
-        <location line="+48"/>
+        <location line="+53"/>
         <source>Debit</source>
         <translation>Дебет</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-62"/>
         <source>Transaction fee</source>
         <translation>Комісія за транзакцію</translation>
     </message>
@@ -2684,11 +2761,12 @@ Address: %4
     </message>
     <message>
         <location line="+6"/>
+        <location line="+9"/>
         <source>Message</source>
         <translation>Повідомлення</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-7"/>
         <source>Comment</source>
         <translation>Коментар</translation>
     </message>
@@ -2698,7 +2776,7 @@ Address: %4
         <translation>ID транзакції</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+18"/>
         <source>Merchant</source>
         <translation type="unfinished"/>
     </message>
@@ -2738,7 +2816,7 @@ Address: %4
         <translation>false</translation>
     </message>
     <message>
-        <location line="-227"/>
+        <location line="-232"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, ще не було успішно розіслано</translation>
     </message>
@@ -2788,8 +2866,13 @@ Address: %4
         <source>Amount</source>
         <translation>Кількість</translation>
     </message>
+    <message>
+        <location line="+59"/>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation type="unfinished"/>
+    </message>
     <message numerus="yes">
-        <location line="+57"/>
+        <location line="+16"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
@@ -2809,17 +2892,13 @@ Address: %4
         <translation>Непідтверджено (%1 із %2 підтверджень)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-22"/>
+        <location line="+25"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Підтверджено (%1 підтверджень)</translation>
     </message>
-    <message numerus="yes">
-        <location line="+8"/>
-        <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
-    </message>
     <message>
-        <location line="+5"/>
+        <location line="-22"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Цей блок не був отриманий жодними іншими вузлами і, ймовірно, не буде прийнятий!</translation>
     </message>
@@ -2829,7 +2908,7 @@ Address: %4
         <translation>Згенеровано, але не підтверджено</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+62"/>
         <source>Received with</source>
         <translation>Отримано</translation>
     </message>
@@ -3125,7 +3204,7 @@ Address: %4
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+217"/>
+        <location filename="../bitcoinstrings.cpp" line="+221"/>
         <source>Usage:</source>
         <translation>Використання:</translation>
     </message>
@@ -3145,7 +3224,7 @@ Address: %4
         <translation>Параметри:</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+22"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Вкажіть файл конфігурації (типово: bitcoin.conf)</translation>
     </message>
@@ -3165,7 +3244,7 @@ Address: %4
         <translation>Встановити розмір кешу бази даних в мегабайтах (типово: 25)</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-26"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Чекати на з&apos;єднання на &lt;port&gt; (типово: 8333 або тестова мережа: 18333)</translation>
     </message>
@@ -3175,7 +3254,7 @@ Address: %4
         <translation>Підтримувати не більше &lt;n&gt; зв&apos;язків з колегами (типово: 125)</translation>
     </message>
     <message>
-        <location line="-50"/>
+        <location line="-51"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Підключитись до вузла, щоб отримати список адрес інших учасників та від&apos;єднатись</translation>
     </message>
@@ -3185,22 +3264,22 @@ Address: %4
         <translation>Вкажіть вашу власну публічну адресу</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Поріг відключення неправильно під&apos;єднаних пірів (типово: 100)</translation>
     </message>
     <message>
-        <location line="-147"/>
+        <location line="-148"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Максимальній розмір вхідного буферу на одне з&apos;єднання (типово: 86400)</translation>
     </message>
     <message>
-        <location line="-33"/>
+        <location line="-36"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+34"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Прослуховувати &lt;port&gt; для JSON-RPC-з&apos;єднань (типово: 8332 або тестова мережа: 18332)</translation>
     </message>
@@ -3210,7 +3289,7 @@ Address: %4
         <translation>Приймати команди із командного рядка та команди JSON-RPC</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+80"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Запустити в фоновому режимі (як демон) та приймати команди</translation>
     </message>
@@ -3220,12 +3299,12 @@ Address: %4
         <translation>Використовувати тестову мережу</translation>
     </message>
     <message>
-        <location line="-117"/>
+        <location line="-118"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Приймати з&apos;єднання ззовні (за замовчуванням: 1, якщо ні-проксі або-з&apos;єднання)</translation>
     </message>
     <message>
-        <location line="-92"/>
+        <location line="-95"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -3266,6 +3345,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+4"/>
+        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Помилка: транзакцію було відхилено. Це може статись, якщо декілька монет з вашого гаманця вже використані, наприклад, якщо ви використовуєте одну копію гаманця (wallet.dat), а монети були використані з іншої копії, але не позначені як використані в цій.</translation>
     </message>
@@ -3368,6 +3452,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <location line="+1"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation>Відкрийте власну IP-адресу (за замовчуванням: 1, коли не чує і-externalip)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Do not load the wallet and disable wallet RPC calls</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -3535,7 +3624,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Надіслати команду серверу Біткойну</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation type="unfinished"/>
     </message>
@@ -3555,7 +3644,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Запустити сервер Біткойну</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+3"/>
+        <source>This is intended for regression testing tools and app development.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Usage (deprecated, use bitcoin-cli):</source>
         <translation>Використання (застаріле, використовуйте bitcoin-cli):</translation>
     </message>
@@ -3580,7 +3674,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>Wallet options:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation type="unfinished"/>
     </message>
@@ -3590,12 +3689,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-78"/>
+        <location line="-79"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Імпорт блоків з зовнішнього файлу blk000??.dat</translation>
     </message>
     <message>
-        <location line="-104"/>
+        <location line="-105"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation type="unfinished"/>
     </message>
@@ -3615,7 +3714,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Встановіть кількість перевірки скрипт потоків (до 16, 0 = авто, &lt;0 = залишити, що багато сердечники безкоштовно, за замовчуванням: 0)</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+89"/>
         <source>Information</source>
         <translation>Інформація</translation>
     </message>
@@ -3665,11 +3764,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Відсилати налагоджувальну інформацію на консоль, а не у файл debug.log</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Send trace/debug info to debugger</source>
-        <translation>Відсилати налагоджувальну інформацію до налагоджувача</translation>
-    </message>
-    <message>
         <location line="+6"/>
         <source>Set minimum block size in bytes (default: 0)</source>
         <translation>Встановити мінімальний розмір блоку у байтах (типово: 0)</translation>
@@ -3695,7 +3789,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Системна помилка: </translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Transaction amount too small</source>
         <translation>Сума угоди занадто малий</translation>
     </message>
@@ -3725,7 +3819,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Ім&apos;я користувача для JSON-RPC-з&apos;єднань</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Warning</source>
         <translation>Попередження</translation>
     </message>
@@ -3745,37 +3839,37 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>wallet.dat пошкоджено, відновлення не вдалося</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-58"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Пароль для JSON-RPC-з&apos;єднань</translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-70"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Дозволити JSON-RPC-з&apos;єднання з вказаної IP-адреси</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+80"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Відправляти команди на вузол, запущений на &lt;ip&gt; (типово: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-131"/>
+        <location line="-132"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Виконати команду, коли з&apos;явиться новий блок (%s в команді змінюється на хеш блоку)</translation>
     </message>
     <message>
-        <location line="+160"/>
+        <location line="+161"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Модернізувати гаманець до останнього формату</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-24"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Встановити розмір пулу ключів &lt;n&gt; (типово: 100)</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="-11"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Пересканувати ланцюжок блоків, в пошуку втрачених транзакцій</translation>
     </message>
@@ -3785,7 +3879,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Використовувати OpenSSL (https) для JSON-RPC-з&apos;єднань</translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-30"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Файл сертифіката сервера (типово: server.cert)</translation>
     </message>
@@ -3800,17 +3894,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Дана довідка</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Неможливо прив&apos;язати до порту %s на цьому комп&apos;ютері (bind returned error %d, %s)</translation>
     </message>
     <message>
-        <location line="-106"/>
+        <location line="-107"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Дозволити пошук в DNS для команд -addnode, -seednode та -connect</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+60"/>
         <source>Loading addresses...</source>
         <translation>Завантаження адрес...</translation>
     </message>
@@ -3850,7 +3944,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>В параметрі -socks запитується невідома версія: %i</translation>
     </message>
     <message>
-        <location line="-100"/>
+        <location line="-101"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
@@ -3860,7 +3954,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+48"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Помилка у величині комісії -paytxfee=&lt;amount&gt;: «%s»</translation>
     </message>
@@ -3880,7 +3974,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Завантаження індексу блоків...</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-62"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Додати вузол до підключення і лишити його відкритим</translation>
     </message>
@@ -3890,12 +3984,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Неможливо прив&apos;язати до порту %s на цьому комп&apos;ютері. Можливо гаманець вже запущено.</translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+95"/>
         <source>Loading wallet...</source>
         <translation>Завантаження гаманця...</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-56"/>
         <source>Cannot downgrade wallet</source>
         <translation>Не вдається понизити версію гаманця</translation>
     </message>
@@ -3905,7 +3999,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Неможливо записати типову адресу</translation>
     </message>
     <message>
-        <location line="+66"/>
+        <location line="+67"/>
         <source>Rescanning...</source>
         <translation>Сканування...</translation>
     </message>
@@ -3925,7 +4019,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Помилка</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-35"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>

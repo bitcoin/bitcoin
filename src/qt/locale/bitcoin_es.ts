@@ -30,14 +30,14 @@ el OpenSSL Toolkit (http://www.openssl.org/) y software criptográfico escrito p
 Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="+19"/>
+        <location filename="../utilitydialog.cpp" line="+29"/>
         <source>Copyright</source>
         <translation>Copyright</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>The Bitcoin developers</source>
-        <translation>Los programadores Bitcoin</translation>
+        <source>The Bitcoin Core developers</source>
+        <translation>Los desarrolladores del Núcleo de Bitcoin</translation>
     </message>
 </context>
 <context>
@@ -154,13 +154,13 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     </message>
     <message>
         <location line="+13"/>
-        <source>Error exporting</source>
-        <translation>Error al exportar</translation>
+        <source>Exporting Failed</source>
+        <translation>Error exportando</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>Could not write to file %1.</source>
-        <translation>No se pudo escribir en el archivo %1.</translation>
+        <location line="+1"/>
+        <source>There was an error trying to save the address list to %1.</source>
+        <translation>Ha habido un error al intentar guardar los datos del monedero en %1.</translation>
     </message>
 </context>
 <context>
@@ -323,44 +323,29 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
-    <message>
-        <location filename="../bitcoin.cpp" line="+362"/>
-        <source>Bitcoin Core is shutting down...
-</source>
-        <translation>El núcleo de Bitcoin se está cerrando...
-</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation>No apague la máquina hasta que desaparezca esta ventana.</translation>
-    </message>
-</context>
-<context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+297"/>
+        <location filename="../bitcoingui.cpp" line="+295"/>
         <source>Sign &amp;message...</source>
         <translation>Firmar &amp;mensaje...</translation>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+335"/>
         <source>Synchronizing with network...</source>
         <translation>Sincronizando con la red…</translation>
     </message>
     <message>
-        <location line="-395"/>
+        <location line="-407"/>
         <source>&amp;Overview</source>
         <translation>&amp;Vista general</translation>
     </message>
     <message>
-        <location line="-139"/>
+        <location line="-137"/>
         <source>Node</source>
         <translation>Nodo</translation>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+138"/>
         <source>Show general overview of wallet</source>
         <translation>Mostrar vista general del monedero</translation>
     </message>
@@ -436,7 +421,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Abrir &amp;URI...</translation>
     </message>
     <message>
-        <location line="+313"/>
+        <location line="+325"/>
         <source>Importing blocks from disk...</source>
         <translation>Importando bloques de disco...</translation>
     </message>
@@ -446,7 +431,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Reindexando bloques en disco...</translation>
     </message>
     <message>
-        <location line="-393"/>
+        <location line="-405"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Enviar monedas a una dirección Bitcoin</translation>
     </message>
@@ -481,17 +466,17 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>&amp;Verificar mensaje...</translation>
     </message>
     <message>
-        <location line="+414"/>
+        <location line="+430"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-629"/>
+        <location line="-643"/>
         <source>Wallet</source>
         <translation>Monedero</translation>
     </message>
     <message>
-        <location line="+148"/>
+        <location line="+146"/>
         <source>&amp;Send</source>
         <translation>&amp;Enviar</translation>
     </message>
@@ -527,7 +512,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Verificar mensajes comprobando que están firmados con direcciones Bitcoin concretas</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+48"/>
         <source>&amp;File</source>
         <translation>&amp;Archivo</translation>
     </message>
@@ -542,23 +527,23 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>A&amp;yuda</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Tabs toolbar</source>
         <translation>Barra de pestañas</translation>
     </message>
     <message>
-        <location line="-281"/>
-        <location line="+373"/>
+        <location line="-284"/>
+        <location line="+376"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location line="-398"/>
+        <location line="-401"/>
         <source>Bitcoin Core</source>
         <translation>Núcleo de Bitcoin</translation>
     </message>
     <message>
-        <location line="+165"/>
+        <location line="+163"/>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation>Solicitar pagos (genera codigo QR y URL&apos;s de Bitcoin)</translation>
     </message>
@@ -584,13 +569,23 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Abrir un bitcoin: URI o petición de pago</translation>
     </message>
     <message>
-        <location line="+157"/>
+        <location line="+2"/>
+        <source>&amp;Command-line options</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+159"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
         <translation>Cliente Bitcoin</translation>
     </message>
     <message numerus="yes">
-        <location line="+135"/>
+        <location line="+142"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n conexión activa hacia la red Bitcoin</numerusform><numerusform>%n conexiones activas hacia la red Bitcoin</numerusform></translation>
     </message>
@@ -630,7 +625,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>%1 atrás</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+21"/>
         <source>Last received block was generated %1 ago.</source>
         <translation>El último bloque recibido fue generado hace %1.</translation>
     </message>
@@ -655,7 +650,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Información</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-85"/>
         <source>Up to date</source>
         <translation>Actualizado</translation>
     </message>
@@ -665,7 +660,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Actualizando...</translation>
     </message>
     <message>
-        <location line="+126"/>
+        <location line="+130"/>
         <source>Sent transaction</source>
         <translation>Transacción enviada</translation>
     </message>
@@ -698,7 +693,7 @@ Dirección: %4
         <translation>El monedero está &lt;b&gt;cifrado&lt;/b&gt; y actualmente &lt;b&gt;bloqueado&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+78"/>
+        <location filename="../bitcoin.cpp" line="+438"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Ha ocurrido un error crítico. Bitcoin ya no puede continuar con seguridad y se cerrará.</translation>
     </message>
@@ -1100,20 +1095,24 @@ Dirección: %4
     </message>
 </context>
 <context>
-    <name>GUIUtil::HelpMessageBox</name>
+    <name>HelpMessageDialog</name>
     <message>
-        <location filename="../guiutil.cpp" line="+597"/>
-        <source>version</source>
-        <translation>versión</translation>
+        <location filename="../forms/helpmessagedialog.ui" line="+19"/>
+        <source>Bitcoin Core - Command-line options</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+13"/>
+        <location filename="../utilitydialog.cpp" line="+38"/>
         <source>Bitcoin Core</source>
         <translation>Núcleo de Bitcoin</translation>
     </message>
     <message>
-        <location line="-11"/>
+        <location line="+0"/>
+        <source>version</source>
+        <translation>versión</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Usage:</source>
         <translation>Uso:</translation>
     </message>
@@ -1307,7 +1306,12 @@ Dirección: %4
         <translation>Dirección IP del proxy (p. ej. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
-        <location line="+267"/>
+        <location line="+224"/>
+        <source>Active command-line options that override above options:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+43"/>
         <source>Reset all client options to default.</source>
         <translation>Restablecer todas las opciones del cliente a las predeterminadas.</translation>
     </message>
@@ -1427,12 +1431,7 @@ Dirección: %4
         <translation>Mostrar moneda y características de control (Avanzado)</translation>
     </message>
     <message>
-        <location line="+29"/>
-        <source>Active command-line options that override above options: </source>
-        <translation>Opciones activas de línea de órdenes que tienen preferencia sobre las opciones anteriores:</translation>
-    </message>
-    <message>
-        <location line="+107"/>
+        <location line="+136"/>
         <source>&amp;OK</source>
         <translation>&amp;Aceptar</translation>
     </message>
@@ -1442,7 +1441,7 @@ Dirección: %4
         <translation>&amp;Cancelar</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+68"/>
+        <location filename="../optionsdialog.cpp" line="+67"/>
         <source>default</source>
         <translation>predeterminado</translation>
     </message>
@@ -1551,7 +1550,7 @@ Dirección: %4
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+400"/>
+        <location filename="../paymentserver.cpp" line="+403"/>
         <location line="+13"/>
         <source>URI handling</source>
         <translation>Gestión de URI</translation>
@@ -1567,8 +1566,8 @@ Dirección: %4
         <translation>La cantidad del pago solicitado (%1) es demasiado pequeña (considerada polvo).</translation>
     </message>
     <message>
-        <location line="-216"/>
-        <location line="+207"/>
+        <location line="-221"/>
+        <location line="+212"/>
         <location line="+13"/>
         <location line="+95"/>
         <location line="+18"/>
@@ -1577,12 +1576,22 @@ Dirección: %4
         <translation>Error en petición de pago</translation>
     </message>
     <message>
-        <location line="-348"/>
+        <location line="-353"/>
         <source>Cannot start bitcoin: click-to-pay handler</source>
         <translation>No se pudo iniciar bitcoin: manejador de pago-al-clic</translation>
     </message>
     <message>
-        <location line="+106"/>
+        <location line="+58"/>
+        <source>Net manager warning</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+52"/>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>La URL de obtención de la solicitud de pago es inválida: %1</translation>
     </message>
@@ -1692,7 +1701,7 @@ Dirección: %4
         <location line="+36"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+360"/>
+        <location filename="../rpcconsole.cpp" line="+359"/>
         <source>N/A</source>
         <translation>N/D</translation>
     </message>
@@ -1767,16 +1776,6 @@ Dirección: %4
         <translation>&amp;Abrir</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Command-line options</source>
-        <translation>Opciones de la línea de órdenes</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>&amp;Show</source>
-        <translation>&amp;Mostrar</translation>
-    </message>
-    <message>
         <location line="+24"/>
         <source>&amp;Console</source>
         <translation>&amp;Consola</translation>
@@ -1807,7 +1806,7 @@ Dirección: %4
         <translation>Fuera:</translation>
     </message>
     <message>
-        <location line="-547"/>
+        <location line="-521"/>
         <source>Build date</source>
         <translation>Fecha de compilación</translation>
     </message>
@@ -1820,11 +1819,6 @@ Dirección: %4
         <location line="+7"/>
         <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Abrir el archivo de registro de depuración en el directorio actual de datos. Esto puede llevar varios segundos para archivos de registro grandes.</translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>Show the Bitcoin-Core help message to get a list with possible Bitcoin command-line options.</source>
-        <translation>Mostrar el mensaje de ayuda de Bitcoin-Qt que enumera las opciones disponibles de línea de órdenes para Bitcoin.</translation>
     </message>
     <message>
         <location line="+76"/>
@@ -1847,7 +1841,7 @@ Dirección: %4
         <translation>Escriba &lt;b&gt;help&lt;/b&gt; para ver un resumen de los comandos disponibles.</translation>
     </message>
     <message>
-        <location line="+128"/>
+        <location line="+122"/>
         <source>%1 B</source>
         <translation>%1 B</translation>
     </message>
@@ -1890,12 +1884,7 @@ Dirección: %4
         <translation>Cantidad</translation>
     </message>
     <message>
-        <location line="+19"/>
-        <source>The amount to request</source>
-        <translation>La cantidad a solicitar</translation>
-    </message>
-    <message>
-        <location line="-32"/>
+        <location line="-13"/>
         <source>&amp;Label:</source>
         <translation>&amp;Etiqueta:</translation>
     </message>
@@ -1905,12 +1894,7 @@ Dirección: %4
         <translation>Mensaje:</translation>
     </message>
     <message>
-        <location line="+20"/>
-        <source>The message to attach to payment request</source>
-        <translation>El mensaje a adjuntar a la solicitud de pago</translation>
-    </message>
-    <message>
-        <location line="-37"/>
+        <location line="-17"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>Reutilizar una de las direcciones previamente usadas para recibir. Reutilizar direcciones tiene problemas de seguridad y privacidad. No lo uses a menos que antes regeneres una solicitud de pago.</translation>
     </message>
@@ -1921,16 +1905,26 @@ Dirección: %4
     </message>
     <message>
         <location line="+27"/>
-        <source>The label to associate with the new receiving address</source>
-        <translation>La etiqueta a asociar con la dirección para recibir</translation>
+        <source>An optional label to associate with the new receiving address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+14"/>
-        <source>Use this form to request payments. All fields are optional.</source>
-        <translation>Utiliza este formulario para solicitar pagos. Todos los campos son opcionales.</translation>
+        <location line="+7"/>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+7"/>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>Clear all fields of the form.</source>
         <translation>Limpiar todos los campos del formulario.</translation>
     </message>
@@ -1950,7 +1944,7 @@ Dirección: %4
         <translation>Pagos solicitados</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+16"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Muestra la petición seleccionada (También doble clic)</translation>
     </message>
@@ -2041,7 +2035,7 @@ Dirección: %4
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="+17"/>
+        <location filename="../recentrequeststablemodel.cpp" line="+24"/>
         <source>Date</source>
         <translation>Fecha</translation>
     </message>
@@ -2328,13 +2322,13 @@ Dirección: %4
     <name>SendCoinsEntry</name>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="+131"/>
-        <location line="+501"/>
+        <location line="+521"/>
         <location line="+536"/>
         <source>A&amp;mount:</source>
         <translation>Ca&amp;ntidad:</translation>
     </message>
     <message>
-        <location line="-1132"/>
+        <location line="-1152"/>
         <source>Pay &amp;To:</source>
         <translation>&amp;Pagar a:</translation>
     </message>
@@ -2380,23 +2374,33 @@ Dirección: %4
     </message>
     <message>
         <location line="+7"/>
-        <location line="+504"/>
+        <location line="+524"/>
         <location line="+536"/>
         <source>Remove this entry</source>
         <translation>Eliminar esta transacción</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-1008"/>
+        <source>Message:</source>
+        <translation>Mensaje:</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+958"/>
         <source>This is a verified payment request.</source>
         <translation>Esto es una petición de pago verificado.</translation>
     </message>
     <message>
-        <location line="-971"/>
+        <location line="-991"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Introduce una etiqueta para esta dirección para añadirla a la lista de direcciones utilizadas</translation>
     </message>
     <message>
-        <location line="+439"/>
+        <location line="+459"/>
         <source>This is an unverified payment request.</source>
         <translation>Esto es una petición de pago no verificado.</translation>
     </message>
@@ -2419,6 +2423,19 @@ Dirección: %4
     </message>
 </context>
 <context>
+    <name>ShutdownWindow</name>
+    <message>
+        <location filename="../utilitydialog.cpp" line="+48"/>
+        <source>Bitcoin Core is shutting down...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation>No apague la máquina hasta que desaparezca esta ventana.</translation>
+    </message>
+</context>
+<context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="+14"/>
@@ -2426,7 +2443,7 @@ Dirección: %4
         <translation>Firmas - Firmar / verificar un mensaje</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+10"/>
         <source>&amp;Sign Message</source>
         <translation>&amp;Firmar mensaje</translation>
     </message>
@@ -2713,12 +2730,12 @@ Dirección: %4
         <location line="+12"/>
         <location line="+45"/>
         <location line="+17"/>
-        <location line="+48"/>
+        <location line="+53"/>
         <source>Credit</source>
         <translation>Crédito</translation>
     </message>
     <message numerus="yes">
-        <location line="-120"/>
+        <location line="-125"/>
         <source>matures in %n more block(s)</source>
         <translation><numerusform>disponible en %n bloque más</numerusform><numerusform>disponible en %n bloques más</numerusform></translation>
     </message>
@@ -2731,12 +2748,12 @@ Dirección: %4
         <location line="+44"/>
         <location line="+8"/>
         <location line="+15"/>
-        <location line="+48"/>
+        <location line="+53"/>
         <source>Debit</source>
         <translation>Débito</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-62"/>
         <source>Transaction fee</source>
         <translation>Comisión de transacción</translation>
     </message>
@@ -2747,11 +2764,12 @@ Dirección: %4
     </message>
     <message>
         <location line="+6"/>
+        <location line="+9"/>
         <source>Message</source>
         <translation>Mensaje</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-7"/>
         <source>Comment</source>
         <translation>Comentario</translation>
     </message>
@@ -2761,7 +2779,7 @@ Dirección: %4
         <translation>Identificador de transacción</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+18"/>
         <source>Merchant</source>
         <translation>Vendedor</translation>
     </message>
@@ -2801,7 +2819,7 @@ Dirección: %4
         <translation>falso</translation>
     </message>
     <message>
-        <location line="-227"/>
+        <location line="-232"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, todavía no se ha sido difundido satisfactoriamente</translation>
     </message>
