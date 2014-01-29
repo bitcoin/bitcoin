@@ -10,8 +10,23 @@
     <height>364</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1">
    <item>
+   <widget class="QFrame" name="frame2">
+    <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+      </sizepolicy>
+    </property>
+    <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+      <enum>QFrame::Sunken</enum>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
     <layout class="QGridLayout" name="gridLayout">
      <item row="7" column="2">
       <widget class="QCheckBox" name="reuseAddress">
@@ -32,6 +47,9 @@
      </item>
      <item row="6" column="0">
       <widget class="QLabel" name="label_3">
+       <property name="toolTip">
+        <string>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</string>
+       </property>
        <property name="text">
         <string>&amp;Message:</string>
        </property>
@@ -46,7 +64,7 @@
      <item row="4" column="2">
       <widget class="QLineEdit" name="reqLabel">
        <property name="toolTip">
-        <string>An optional label to associate with the new receiving address</string>
+        <string>An optional label to associate with the new receiving address.</string>
        </property>
       </widget>
      </item>
@@ -66,6 +84,9 @@
      </item>
      <item row="4" column="0">
       <widget class="QLabel" name="label_2">
+       <property name="toolTip">
+        <string>An optional label to associate with the new receiving address.</string>
+       </property>
        <property name="text">
         <string>&amp;Label:</string>
        </property>
@@ -79,6 +100,9 @@
      </item>
      <item row="5" column="0">
       <widget class="QLabel" name="label">
+       <property name="toolTip">
+        <string>An optional amount to request. Leave this empty or zero to not request a specific amount.</string>
+       </property>
        <property name="text">
         <string>&amp;Amount:</string>
        </property>
@@ -103,10 +127,25 @@
        </property>
       </widget>
      </item>
-    </layout>
-   </item>
-   <item>
+    <item row="8" column="2">
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="receiveButton">
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>&amp;Request payment</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/receiving_addresses</normaloff>:/icons/receiving_addresses</iconset>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QPushButton" name="clearButton">
        <property name="sizePolicy">
@@ -146,24 +185,19 @@
        </property>
       </spacer>
      </item>
-     <item>
-      <widget class="QPushButton" name="receiveButton">
-       <property name="minimumSize">
-        <size>
-         <width>150</width>
-         <height>0</height>
-        </size>
-       </property>
+    </layout>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="label_7">
        <property name="text">
-        <string>&amp;Request payment</string>
-       </property>
-       <property name="icon">
-        <iconset resource="../bitcoin.qrc">
-         <normaloff>:/icons/receiving_addresses</normaloff>:/icons/receiving_addresses</iconset>
+        <string/>
        </property>
       </widget>
      </item>
     </layout>
+   </item>
+   </layout>
+   </widget>
    </item>
    <item>
     <spacer name="verticalSpacer_2">
@@ -173,7 +207,7 @@
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>40</height>
+       <height>10</height>
       </size>
      </property>
     </spacer>
@@ -202,12 +236,18 @@
          </font>
         </property>
         <property name="text">
-         <string>Requested payments</string>
+         <string>Requested payments history</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QTableView" name="recentRequestsView">
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
+        </property>
+        <property name="tabKeyNavigation">
+         <bool>false</bool>
+        </property>
         <property name="sortingEnabled">
          <bool>true</bool>
         </property>
@@ -275,8 +315,8 @@
   <tabstop>reqAmount</tabstop>
   <tabstop>reqMessage</tabstop>
   <tabstop>reuseAddress</tabstop>
-  <tabstop>clearButton</tabstop>
   <tabstop>receiveButton</tabstop>
+  <tabstop>clearButton</tabstop>
   <tabstop>recentRequestsView</tabstop>
   <tabstop>showRequestButton</tabstop>
   <tabstop>removeRequestButton</tabstop>
