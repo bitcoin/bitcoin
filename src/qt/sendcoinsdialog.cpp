@@ -325,9 +325,10 @@ QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
             prev = entry->setupTabChain(prev);
         }
     }
-    QWidget::setTabOrder(prev, ui->addButton);
-    QWidget::setTabOrder(ui->addButton, ui->sendButton);
-    return ui->sendButton;
+    QWidget::setTabOrder(prev, ui->sendButton);
+    QWidget::setTabOrder(ui->sendButton, ui->clearButton);
+    QWidget::setTabOrder(ui->clearButton, ui->addButton);
+    return ui->addButton;
 }
 
 void SendCoinsDialog::setAddress(const QString &address)

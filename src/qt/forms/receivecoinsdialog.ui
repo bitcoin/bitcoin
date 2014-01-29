@@ -245,6 +245,9 @@
         <property name="contextMenuPolicy">
          <enum>Qt::CustomContextMenu</enum>
         </property>
+        <property name="tabKeyNavigation">
+         <bool>false</bool>
+        </property>
         <property name="sortingEnabled">
          <bool>true</bool>
         </property>
@@ -312,8 +315,8 @@
   <tabstop>reqAmount</tabstop>
   <tabstop>reqMessage</tabstop>
   <tabstop>reuseAddress</tabstop>
-  <tabstop>clearButton</tabstop>
   <tabstop>receiveButton</tabstop>
+  <tabstop>clearButton</tabstop>
   <tabstop>recentRequestsView</tabstop>
   <tabstop>showRequestButton</tabstop>
   <tabstop>removeRequestButton</tabstop>
