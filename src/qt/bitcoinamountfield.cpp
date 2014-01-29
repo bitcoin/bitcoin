@@ -116,7 +116,8 @@ bool BitcoinAmountField::eventFilter(QObject *object, QEvent *event)
 QWidget *BitcoinAmountField::setupTabChain(QWidget *prev)
 {
     QWidget::setTabOrder(prev, amount);
-    return amount;
+    QWidget::setTabOrder(amount, unit);
+    return unit;
 }
 
 qint64 BitcoinAmountField::value(bool *valid_out) const
