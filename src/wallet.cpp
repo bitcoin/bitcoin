@@ -381,10 +381,10 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
             {
                 CWalletTx& wtx = (*mi).second;
                 if (txin.prevout.n >= wtx.vout.size())
-                    LogPrintf("WalletUpdateSpent: bad wtx %s\n", wtx.GetHash().ToString().c_str());
+                    LogPrintf("WalletUpdateSpent: bad wtx %s\n", wtx.GetHash().ToString());
                 else if (!wtx.IsSpent(txin.prevout.n) && IsMine(wtx.vout[txin.prevout.n]))
                 {
-                    LogPrintf("WalletUpdateSpent found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+                    LogPrintf("WalletUpdateSpent found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()), wtx.GetHash().ToString());
                     wtx.MarkSpent(txin.prevout.n);
                     wtx.WriteToDisk();
                     NotifyTransactionChanged(this, txin.prevout.hash, CT_UPDATED);
@@ -460,8 +460,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
                 }
                 else
                     LogPrintf("AddToWallet() : found %s in block %s not in index\n",
-                             wtxIn.GetHash().ToString().c_str(),
-                             wtxIn.hashBlock.ToString().c_str());
+                             wtxIn.GetHash().ToString(),
+                             wtxIn.hashBlock.ToString());
             }
         }
 
@@ -489,7 +489,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         }
 
         //// debug print
-        LogPrintf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString().c_str(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
+        LogPrintf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
         // Write to disk
         if (fInsertedNew || fUpdated)
@@ -690,7 +690,7 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64_t> >& listReceived,
         if (!ExtractDestination(txout.scriptPubKey, address))
         {
             LogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
-                     this->GetHash().ToString().c_str());
+                     this->GetHash().ToString());
             address = CNoDestination();
         }
 
@@ -883,7 +883,7 @@ void CWallet::ReacceptWalletTransactions()
                 }
                 if (fUpdated)
                 {
-                    LogPrintf("ReacceptWalletTransactions found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+                    LogPrintf("ReacceptWalletTransactions found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()), wtx.GetHash().ToString());
                     wtx.MarkDirty();
                     wtx.WriteToDisk();
                 }
@@ -919,7 +919,7 @@ void CWalletTx::RelayWalletTransaction()
     {
         if (GetDepthInMainChain() == 0) {
             uint256 hash = GetHash();
-            LogPrintf("Relaying wtx %s\n", hash.ToString().c_str());
+            LogPrintf("Relaying wtx %s\n", hash.ToString());
             RelayTransaction((CTransaction)*this, hash);
         }
     }
@@ -1186,8 +1186,8 @@ bool CWallet::SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfT
         LogPrint("selectcoins", "SelectCoins() best subset: ");
         for (unsigned int i = 0; i < vValue.size(); i++)
             if (vfBest[i])
-                LogPrint("selectcoins", "%s ", FormatMoney(vValue[i].first).c_str());
-        LogPrint("selectcoins", "total %s\n", FormatMoney(nBest).c_str());
+                LogPrint("selectcoins", "%s ", FormatMoney(vValue[i].first));
+        LogPrint("selectcoins", "total %s\n", FormatMoney(nBest));
     }
 
     return true;
@@ -1396,7 +1396,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 {
     {
         LOCK2(cs_main, cs_wallet);
-        LogPrintf("CommitTransaction:\n%s", wtxNew.ToString().c_str());
+        LogPrintf("CommitTransaction:\n%s", wtxNew.ToString());
         {
             // This is only to keep the database open to defeat the auto-flush for the
             // duration of this scope.  This is the only place where this optimization
@@ -1451,15 +1451,15 @@ string CWallet::SendMoney(CScript scriptPubKey, int64_t nValue, CWalletTx& wtxNe
     if (IsLocked())
     {
         string strError = _("Error: Wallet locked, unable to create transaction!");
-        LogPrintf("SendMoney() : %s", strError.c_str());
+        LogPrintf("SendMoney() : %s", strError);
         return strError;
     }
     string strError;
     if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, strError))
     {
         if (nValue + nFeeRequired > GetBalance())
-            strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!"), FormatMoney(nFeeRequired).c_str());
-        LogPrintf("SendMoney() : %s\n", strError.c_str());
+            strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!"), FormatMoney(nFeeRequired));
+        LogPrintf("SendMoney() : %s\n", strError);
         return strError;
     }
 

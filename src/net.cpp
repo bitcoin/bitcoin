@@ -227,7 +227,7 @@ bool AddLocal(const CService& addr, int nScore)
     if (IsLimited(addr))
         return false;
 
-    LogPrintf("AddLocal(%s,%i)\n", addr.ToString().c_str(), nScore);
+    LogPrintf("AddLocal(%s,%i)\n", addr.ToString(), nScore);
 
     {
         LOCK(cs_mapLocalHost);
@@ -304,7 +304,7 @@ bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const cha
 {
     SOCKET hSocket;
     if (!ConnectSocket(addrConnect, hSocket))
-        return error("GetMyExternalIP() : connection to %s failed", addrConnect.ToString().c_str());
+        return error("GetMyExternalIP() : connection to %s failed", addrConnect.ToString());
 
     send(hSocket, pszGet, strlen(pszGet), MSG_NOSIGNAL);
 
@@ -335,7 +335,7 @@ bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const cha
             while (strLine.size() > 0 && isspace(strLine[strLine.size()-1]))
                 strLine.resize(strLine.size()-1);
             CService addr(strLine,0,true);
-            LogPrintf("GetMyExternalIP() received [%s] %s\n", strLine.c_str(), addr.ToString().c_str());
+            LogPrintf("GetMyExternalIP() received [%s] %s\n", strLine, addr.ToString());
             if (!addr.IsValid() || !addr.IsRoutable())
                 return false;
             ipRet.SetIP(addr);
@@ -410,7 +410,7 @@ void ThreadGetMyExternalIP()
     CNetAddr addrLocalHost;
     if (GetMyExternalIP(addrLocalHost))
     {
-        LogPrintf("GetMyExternalIP() returned %s\n", addrLocalHost.ToStringIP().c_str());
+        LogPrintf("GetMyExternalIP() returned %s\n", addrLocalHost.ToStringIP());
         AddLocal(addrLocalHost, LOCAL_HTTP);
     }
 }
@@ -477,7 +477,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
 
     /// debug print
     LogPrint("net", "trying connection %s lastseen=%.1fhrs\n",
-        pszDest ? pszDest : addrConnect.ToString().c_str(),
+        pszDest ? pszDest : addrConnect.ToString(),
         pszDest ? 0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
 
     // Connect
@@ -486,7 +486,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
     {
         addrman.Attempt(addrConnect);
 
-        LogPrint("net", "connected %s\n", pszDest ? pszDest : addrConnect.ToString().c_str());
+        LogPrint("net", "connected %s\n", pszDest ? pszDest : addrConnect.ToString());
 
         // Set to non-blocking
 #ifdef WIN32
@@ -521,7 +521,7 @@ void CNode::CloseSocketDisconnect()
     fDisconnect = true;
     if (hSocket != INVALID_SOCKET)
     {
-        LogPrint("net", "disconnecting node %s\n", addrName.c_str());
+        LogPrint("net", "disconnecting node %s\n", addrName);
         closesocket(hSocket);
         hSocket = INVALID_SOCKET;
     }
@@ -550,7 +550,7 @@ void CNode::PushVersion()
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService("0.0.0.0",0)));
     CAddress addrMe = GetLocalAddress(&addr);
     RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-    LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString().c_str(), addrYou.ToString().c_str(), addr.ToString().c_str());
+    LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), addrYou.ToString(), addr.ToString());
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight, true);
 }
@@ -952,12 +952,12 @@ void ThreadSocketHandler()
             }
             else if (CNode::IsBanned(addr))
             {
-                LogPrintf("connection from %s dropped (banned)\n", addr.ToString().c_str());
+                LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
                 closesocket(hSocket);
             }
             else
             {
-                LogPrint("net", "accepted connection %s\n", addr.ToString().c_str());
+                LogPrint("net", "accepted connection %s\n", addr.ToString());
                 CNode* pnode = new CNode(hSocket, addr, "", true);
                 pnode->AddRef();
                 {
@@ -1138,7 +1138,7 @@ void ThreadMapPort()
 
                 if(r!=UPNPCOMMAND_SUCCESS)
                     LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
-                        port.c_str(), port.c_str(), lanaddr, r, strupnperror(r));
+                        port, port, lanaddr, r, strupnperror(r));
                 else
                     LogPrintf("UPnP Port Mapping successful.\n");;
 
@@ -1592,8 +1592,8 @@ bool BindListenPort(const CService &addrBind, string& strError)
     socklen_t len = sizeof(sockaddr);
     if (!addrBind.GetSockAddr((struct sockaddr*)&sockaddr, &len))
     {
-        strError = strprintf("Error: bind address family for %s not supported", addrBind.ToString().c_str());
-        LogPrintf("%s\n", strError.c_str());
+        strError = strprintf("Error: bind address family for %s not supported", addrBind.ToString());
+        LogPrintf("%s\n", strError);
         return false;
     }
 
@@ -1601,7 +1601,7 @@ bool BindListenPort(const CService &addrBind, string& strError)
     if (hListenSocket == INVALID_SOCKET)
     {
         strError = strprintf("Error: Couldn't open socket for incoming connections (socket returned error %d)", WSAGetLastError());
-        LogPrintf("%s\n", strError.c_str());
+        LogPrintf("%s\n", strError);
         return false;
     }
 
@@ -1625,7 +1625,7 @@ bool BindListenPort(const CService &addrBind, string& strError)
 #endif
     {
         strError = strprintf("Error: Couldn't set properties on socket for incoming connections (error %d)", WSAGetLastError());
-        LogPrintf("%s\n", strError.c_str());
+        LogPrintf("%s\n", strError);
         return false;
     }
 
@@ -1653,19 +1653,19 @@ bool BindListenPort(const CService &addrBind, string& strError)
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf(_("Unable to bind to %s on this computer. Bitcoin is probably already running."), addrBind.ToString().c_str());
+            strError = strprintf(_("Unable to bind to %s on this computer. Bitcoin is probably already running."), addrBind.ToString());
         else
-            strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %d, %s)"), addrBind.ToString().c_str(), nErr, strerror(nErr));
-        LogPrintf("%s\n", strError.c_str());
+            strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %d, %s)"), addrBind.ToString(), nErr, strerror(nErr));
+        LogPrintf("%s\n", strError);
         return false;
     }
-    LogPrintf("Bound to %s\n", addrBind.ToString().c_str());
+    LogPrintf("Bound to %s\n", addrBind.ToString());
 
     // Listen for incoming connections
     if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)
     {
         strError = strprintf("Error: Listening for incoming connections failed (listen returned error %d)", WSAGetLastError());
-        LogPrintf("%s\n", strError.c_str());
+        LogPrintf("%s\n", strError);
         return false;
     }
 
@@ -1712,7 +1712,7 @@ void static Discover(boost::thread_group& threadGroup)
                 struct sockaddr_in* s4 = (struct sockaddr_in*)(ifa->ifa_addr);
                 CNetAddr addr(s4->sin_addr);
                 if (AddLocal(addr, LOCAL_IF))
-                    LogPrintf("IPv4 %s: %s\n", ifa->ifa_name, addr.ToString().c_str());
+                    LogPrintf("IPv4 %s: %s\n", ifa->ifa_name, addr.ToString());
             }
 #ifdef USE_IPV6
             else if (ifa->ifa_addr->sa_family == AF_INET6)
@@ -1720,7 +1720,7 @@ void static Discover(boost::thread_group& threadGroup)
                 struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
                 CNetAddr addr(s6->sin6_addr);
                 if (AddLocal(addr, LOCAL_IF))
-                    LogPrintf("IPv6 %s: %s\n", ifa->ifa_name, addr.ToString().c_str());
+                    LogPrintf("IPv6 %s: %s\n", ifa->ifa_name, addr.ToString());
             }
 #endif
         }

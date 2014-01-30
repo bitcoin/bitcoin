@@ -62,7 +62,7 @@ Q_DECLARE_METATYPE(bool*)
 
 static void InitMessage(const std::string &message)
 {
-    LogPrintf("init message: %s\n", message.c_str());
+    LogPrintf("init message: %s\n", message);
 }
 
 /*

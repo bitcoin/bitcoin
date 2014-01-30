@@ -3,13 +3,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About Bitcoin</source>
-        <translation>Σχετικά με το Bitcoin</translation>
+        <source>About Bitcoin Core</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>Έκδοση &lt;b&gt;Bitcoin&lt;/b&gt;</translation>
+        <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+57"/>
@@ -27,14 +27,14 @@ Distributed under the MIT/X11 software license, see the accompanying file COPYIN
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="+14"/>
+        <location filename="../utilitydialog.cpp" line="+29"/>
         <source>Copyright</source>
         <translation>Πνευματική ιδιοκτησία </translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>The Bitcoin developers</source>
-        <translation>Οι Bitcoin προγραμματιστές </translation>
+        <source>The Bitcoin Core developers</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -70,7 +70,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Κ&amp;λείσιμο</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+72"/>
+        <location filename="../addressbookpage.cpp" line="+74"/>
         <source>&amp;Copy Address</source>
         <translation>&amp;Αντιγραφή διεύθυνσης</translation>
     </message>
@@ -97,12 +97,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="-30"/>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Επιλογή διεύθυνσης όπου θα σταλθούν νομίσματα</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Επιλογή διεύθυνσης απ&apos; όπου θα ληφθούν νομίσματα</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -112,12 +112,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+6"/>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>Διευθύνσεις αποστολής</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Διευθύνσεις λήψης</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -140,9 +140,9 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Επεξεργασία</translation>
     </message>
     <message>
-        <location line="+197"/>
+        <location line="+194"/>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Εξαγωγή της λίστας διευθύνσεων</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -151,19 +151,19 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+13"/>
-        <source>Error exporting</source>
-        <translation>Εξαγωγή λαθών</translation>
+        <source>Exporting Failed</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+0"/>
-        <source>Could not write to file %1.</source>
-        <translation>Αδυναμία εγγραφής στο αρχείο %1.</translation>
+        <location line="+1"/>
+        <source>There was an error trying to save the address list to %1.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="+164"/>
+        <location filename="../addresstablemodel.cpp" line="+168"/>
         <source>Label</source>
         <translation>Ετικέτα</translation>
     </message>
@@ -201,7 +201,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Επανέλαβε τον νέο κωδικό πρόσβασης</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="+34"/>
+        <location filename="../askpassphrasedialog.cpp" line="+40"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Εισάγετε τον νέο κωδικό πρόσβασης στον πορτοφόλι &lt;br/&gt; Παρακαλώ χρησιμοποιείστε ένα κωδικό με &lt;b&gt; 10 ή περισσότερους τυχαίους χαρακτήρες&lt;/b&gt; ή &lt;b&gt; οχτώ ή παραπάνω λέξεις&lt;/b&gt;.</translation>
     </message>
@@ -276,7 +276,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-56"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Το Bitcoin θα κλεισει τώρα για να τελειώσει την διαδικασία κρυπτογραφησης. Θυμησου ότι κρυπτογραφώντας το πορτοφολι σου δεν μπορείς να προστατέψεις πλήρως τα bitcoins σου από κλοπή στην περίπτωση όπου μολυνθεί ο υπολογιστής σου με κακόβουλο λογισμικο.</translation>
+        <translation>Το Bitcoin θα κλεισει τώρα για να τελειώσει την διαδικασία κρυπτογραφησης. Θυμησου ότι κρυπτογραφώντας το πορτοφολι σου δεν μπορείς να προστατέψεις πλήρως τα bitcoins σου από κλοπή στην περίπτωση όπου μολυνθεί ο υπολογιστής σου με κακόβουλο λογισμικό.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -323,22 +323,27 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+250"/>
+        <location filename="../bitcoingui.cpp" line="+295"/>
         <source>Sign &amp;message...</source>
         <translation>Υπογραφή &amp;Μηνύματος...</translation>
     </message>
     <message>
-        <location line="+254"/>
+        <location line="+335"/>
         <source>Synchronizing with network...</source>
         <translation>Συγχρονισμός με το δίκτυο...</translation>
     </message>
     <message>
-        <location line="-324"/>
+        <location line="-407"/>
         <source>&amp;Overview</source>
         <translation>&amp;Επισκόπηση</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-137"/>
+        <source>Node</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+138"/>
         <source>Show general overview of wallet</source>
         <translation>Εμφάνισε τη γενική εικόνα του πορτοφολιού</translation>
     </message>
@@ -353,7 +358,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Περιήγηση στο ιστορικό συναλλαγών</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>E&amp;xit</source>
         <translation>Έ&amp;ξοδος</translation>
     </message>
@@ -365,7 +370,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+7"/>
         <source>Show information about Bitcoin</source>
-        <translation>Εμφάνισε πληροφορίες σχετικά με το Bitcoin</translation>
+        <translation>Εμφάνιση πληροφοριών σχετικά με το Bitcoin</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -399,7 +404,22 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Άλλαξε κωδικο πρόσβασης</translation>
     </message>
     <message>
-        <location line="+259"/>
+        <location line="+10"/>
+        <source>&amp;Sending addresses...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&amp;Receiving addresses...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open &amp;URI...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+325"/>
         <source>Importing blocks from disk...</source>
         <translation>Εισαγωγή μπλοκ από τον σκληρο δίσκο ... </translation>
     </message>
@@ -409,12 +429,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Φόρτωση ευρετηρίου μπλοκ στον σκληρο δισκο...</translation>
     </message>
     <message>
-        <location line="-322"/>
+        <location line="-405"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Στείλε νομίσματα σε μια διεύθυνση bitcoin</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+49"/>
         <source>Modify configuration options for Bitcoin</source>
         <translation>Επεργασία  ρυθμισεων επιλογών για το Bitcoin</translation>
     </message>
@@ -444,20 +464,17 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Επιβεβαίωση μηνύματος</translation>
     </message>
     <message>
-        <location line="-180"/>
-        <location line="+6"/>
-        <location line="+513"/>
+        <location line="+430"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-519"/>
-        <location line="+6"/>
+        <location line="-643"/>
         <source>Wallet</source>
         <translation>Πορτοφόλι</translation>
     </message>
     <message>
-        <location line="+109"/>
+        <location line="+146"/>
         <source>&amp;Send</source>
         <translation>&amp;Αποστολή</translation>
     </message>
@@ -467,13 +484,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Παραλαβή </translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location line="+2"/>
-        <source>&amp;About Bitcoin</source>
-        <translation>&amp;Σχετικα:Bitcoin</translation>
-    </message>
-    <message>
-        <location line="+14"/>
+        <location line="+46"/>
         <location line="+2"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Εμφάνισε/Κρύψε</translation>
@@ -499,64 +510,80 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Υπογράψτε ένα μήνυμα για ν&apos; αποδείξετε πως ανήκει μια συγκεκριμένη διεύθυνση Bitcoin</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+48"/>
         <source>&amp;File</source>
         <translation>&amp;Αρχείο</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+14"/>
         <source>&amp;Settings</source>
         <translation>&amp;Ρυθμίσεις</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+9"/>
         <source>&amp;Help</source>
         <translation>&amp;Βοήθεια</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+15"/>
         <source>Tabs toolbar</source>
         <translation>Εργαλειοθήκη καρτελών</translation>
     </message>
     <message>
-        <location line="-235"/>
-        <location line="+294"/>
+        <location line="-284"/>
+        <location line="+376"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-401"/>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Core</translation>
+    </message>
+    <message>
+        <location line="+163"/>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>Αίτηση πληρωμών (δημιουργεί QR codes και διευθύνσεις bitcoin: )</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <location line="+2"/>
+        <source>&amp;About Bitcoin Core</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+63"/>
-        <source>&amp;Used sending addresses...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+35"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Προβολή της λίστας των χρησιμοποιημένων διευθύνσεων και ετικετών αποστολής</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Used &amp;receiving addresses...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Show the list of used receiving addresses and labels</source>
+        <translation>Προβολή της λίστας των χρησιμοποιημένων διευθύνσεων και ετικετών λήψεως</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open a bitcoin: URI or payment request</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+106"/>
+        <location line="+2"/>
+        <source>&amp;Command-line options</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+159"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
         <translation>Πελάτης Bitcoin</translation>
     </message>
     <message numerus="yes">
-        <location line="+120"/>
+        <location line="+142"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n ενεργή σύνδεση στο δίκτυο Bitcoin</numerusform><numerusform>%n ενεργές συνδέσεις στο δίκτυο Βitcoin</numerusform></translation>
     </message>
@@ -576,7 +603,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Έγινε λήψη %1 μπλοκ ιστορικού συναλλαγών</translation>
     </message>
     <message numerus="yes">
-        <location line="+20"/>
+        <location line="+23"/>
         <source>%n hour(s)</source>
         <translation><numerusform>%n ώρες </numerusform><numerusform>%n ώρες </numerusform></translation>
     </message>
@@ -596,7 +623,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>%1 πίσω</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+21"/>
         <source>Last received block was generated %1 ago.</source>
         <translation>Το τελευταίο μπλοκ που ελήφθη δημιουργήθηκε %1 πριν.</translation>
     </message>
@@ -621,29 +648,17 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Πληροφορία</translation>
     </message>
     <message>
-        <location line="+77"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
-        <translation>Η συναλλαγή ξεπερνάει το όριο.
-Μπορεί να ολοκληρωθεί με μια αμοιβή των %1, η οποία αποδίδεται στους κόμβους που επεξεργάζονται τις συναλλαγές και βοηθούν στην υποστήριξη του δικτύου.
-Θέλετε να συνεχίσετε;</translation>
-    </message>
-    <message>
-        <location line="-152"/>
+        <location line="-85"/>
         <source>Up to date</source>
         <translation>Ενημερωμένο</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+34"/>
         <source>Catching up...</source>
         <translation>Ενημέρωση...</translation>
     </message>
     <message>
-        <location line="+124"/>
-        <source>Confirm transaction fee</source>
-        <translation>Επιβεβαίωση αμοιβής συναλλαγής</translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+130"/>
         <source>Sent transaction</source>
         <translation>Η συναλλαγή απεστάλη</translation>
     </message>
@@ -666,17 +681,7 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="+34"/>
-        <source>URI handling</source>
-        <translation>Χειρισμός URI</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>Το URI δεν μπορεί να αναλυθεί! Αυτό μπορεί να προκληθεί από μια μη έγκυρη διεύθυνση Bitcoin ή ακατάλληλη παραμέτρο URI.</translation>
-    </message>
-    <message>
-        <location line="+45"/>
+        <location line="+69"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Το πορτοφόλι είναι &lt;b&gt;κρυπτογραφημένο&lt;/b&gt; και &lt;b&gt;ξεκλείδωτο&lt;/b&gt;</translation>
     </message>
@@ -686,7 +691,7 @@ Address: %4
         <translation>Το πορτοφόλι είναι &lt;b&gt;κρυπτογραφημένο&lt;/b&gt; και &lt;b&gt;κλειδωμένο&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+110"/>
+        <location filename="../bitcoin.cpp" line="+438"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Παρουσιάστηκε ανεπανόρθωτο σφάλμα. Το Bitcoin δεν μπορεί πλέον να συνεχίσει με ασφάλεια και θα τερματισθει.</translation>
     </message>
@@ -694,9 +699,301 @@ Address: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+115"/>
+        <location filename="../clientmodel.cpp" line="+119"/>
         <source>Network Alert</source>
         <translation>Ειδοποίηση Δικτύου</translation>
+    </message>
+</context>
+<context>
+    <name>CoinControlDialog</name>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="+14"/>
+        <source>Coin Control Address Selection</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Quantity:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Bytes:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Amount:</source>
+        <translation>Ποσό:</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Priority:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Fee:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Low Output:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>After Fee:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Change:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+63"/>
+        <source>(un)select all</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Tree mode</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>List mode</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>Amount</source>
+        <translation>Ποσό</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Address</source>
+        <translation>Διεύθυνση</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Date</source>
+        <translation>Ημερομηνία</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Confirmations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed</source>
+        <translation>Επικυρωμένες</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Priority</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../coincontroldialog.cpp" line="+42"/>
+        <source>Copy address</source>
+        <translation>Αντιγραφή διεύθυνσης</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy label</source>
+        <translation>Αντιγραφή επιγραφής</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+26"/>
+        <source>Copy amount</source>
+        <translation>Αντιγραφή ποσού</translation>
+    </message>
+    <message>
+        <location line="-25"/>
+        <source>Copy transaction ID</source>
+        <translation>Αντιγραφη του ID Συναλλαγής</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock unspent</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unlock unspent</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Copy quantity</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Copy fee</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy after fee</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy bytes</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy priority</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy low output</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy change</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+323"/>
+        <source>highest</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>higher</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>high</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>medium-high</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>medium</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>low-medium</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>low</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lower</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lowest</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>(%1 locked)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>none</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+140"/>
+        <source>Dust</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>yes</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>no</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+5"/>
+        <source>This means a fee of at least %1 per kB is required.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-4"/>
+        <source>Can vary +/- 1 byte per input.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Transactions with higher priority are more likely to get included into a block.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+4"/>
+        <source>This means a fee of at least %1 is required.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>This label turns red, if the change is smaller than %1.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+43"/>
+        <location line="+66"/>
+        <source>(no label)</source>
+        <translation>(χωρίς ετικέτα)</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <source>change from %1 (%2)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>(change)</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -727,7 +1024,7 @@ Address: %4
         <translation>&amp;Διεύθυνση</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="+21"/>
+        <location filename="../editaddressdialog.cpp" line="+28"/>
         <source>New receiving address</source>
         <translation>Νέα διεύθυνση λήψης</translation>
     </message>
@@ -770,9 +1067,9 @@ Address: %4
 <context>
     <name>FreespaceChecker</name>
     <message>
-        <location filename="../intro.cpp" line="+61"/>
+        <location filename="../intro.cpp" line="+65"/>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
+        <translation>Θα δημιουργηθεί ένας νέος φάκελος δεδομένων.</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -792,19 +1089,23 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Δεν μπορεί να δημιουργηθεί φάκελος δεδομένων εδώ.</translation>
     </message>
 </context>
 <context>
-    <name>GUIUtil::HelpMessageBox</name>
+    <name>HelpMessageDialog</name>
     <message>
-        <location filename="../guiutil.cpp" line="+558"/>
-        <location line="+13"/>
-        <source>Bitcoin-Qt</source>
-        <translation>bitcoin-qt</translation>
+        <location filename="../forms/helpmessagedialog.ui" line="+19"/>
+        <source>Bitcoin Core - Command-line options</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-13"/>
+        <location filename="../utilitydialog.cpp" line="+38"/>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Core</translation>
+    </message>
+    <message>
+        <location line="+0"/>
         <source>version</source>
         <translation>έκδοση</translation>
     </message>
@@ -853,31 +1154,41 @@ Address: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Welcome to Bitcoin-Qt.</source>
-        <translation>Καλώς ήρθατε στο Bitcoin-Qt.</translation>
+        <source>Welcome to Bitcoin Core.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+26"/>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin-Qt will store its data.</source>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin-Qt will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+10"/>
         <source>Use the default data directory</source>
-        <translation type="unfinished"/>
+        <translation>Χρήση του προεπιλεγμένου φακέλου δεδομένων</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Use a custom data directory:</source>
-        <translation type="unfinished"/>
+        <translation>Προσαρμογή του φακέλου δεδομένων: </translation>
     </message>
     <message>
-        <location filename="../intro.cpp" line="+105"/>
+        <location filename="../intro.cpp" line="+85"/>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
+        <translation>Σφάλμα: Ο καθορισμένος φάκελος δεδομένων &quot;%1&quot; δεν μπορεί να δημιουργηθεί.</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>Error</source>
         <translation>Σφάλμα</translation>
     </message>
@@ -889,6 +1200,34 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>(of %1GB needed)</source>
+        <translation>(από τα %1GB που χρειάζονται)</translation>
+    </message>
+</context>
+<context>
+    <name>OpenURIDialog</name>
+    <message>
+        <location filename="../forms/openuridialog.ui" line="+14"/>
+        <source>Open URI</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Open payment request from URI or file</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>URI:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Select payment request file</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../openuridialog.cpp" line="+47"/>
+        <source>Select payment request file to open</source>
         <translation type="unfinished"/>
     </message>
 </context>
@@ -900,7 +1239,7 @@ Address: %4
         <translation>Ρυθμίσεις</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+13"/>
         <source>&amp;Main</source>
         <translation>&amp;Κύριο</translation>
     </message>
@@ -925,7 +1264,52 @@ Address: %4
         <translation>&amp;Έναρξη του Βιtcoin κατά την εκκίνηση του συστήματος</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+9"/>
+        <source>Size of &amp;database cache</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation>Όρισε το μέγεθος της βάσης προσωρινής αποθήκευσης σε megabytes(προεπιλογή:25)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>MB</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Number of script &amp;verification threads</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
+        <translation>Ορίσμος του αριθμό των νημάτων ελέγχου σεναρίου (μέχρι 16, 0 = auto, &lt;0 = αφήνουν τους πολλους πυρήνες δωρεάν, default: 0)</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+224"/>
+        <source>Active command-line options that override above options:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+43"/>
         <source>Reset all client options to default.</source>
         <translation>Επαναφορα όλων των επιλογων του πελάτη σε default.</translation>
     </message>
@@ -935,7 +1319,7 @@ Address: %4
         <translation>Επαναφορα ρυθμίσεων</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="-323"/>
         <source>&amp;Network</source>
         <translation>&amp;Δίκτυο</translation>
     </message>
@@ -950,32 +1334,17 @@ Address: %4
         <translation>Απόδοση θυρών με χρήστη &amp;UPnP</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Connect to the Bitcoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation>Σύνδεση στο Bitcoin δίκτυο μέσω διαμεσολαβητή SOCKS4 (π.χ. για σύνδεση μέσω Tor)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>&amp;Connect through SOCKS proxy:</source>
-        <translation>&amp;Σύνδεση μέσω διαμεσολαβητή SOCKS</translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+19"/>
         <source>Proxy &amp;IP:</source>
         <translation>&amp;IP διαμεσολαβητή:</translation>
     </message>
     <message>
-        <location line="+19"/>
-        <source>IP address of the proxy (e.g. 127.0.0.1)</source>
-        <translation>Διεύθυνση IP του διαμεσολαβητή (π.χ. 127.0.0.1)</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+32"/>
         <source>&amp;Port:</source>
         <translation>&amp;Θύρα:</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+25"/>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Θύρα διαμεσολαβητή</translation>
     </message>
@@ -1050,7 +1419,17 @@ Address: %4
         <translation>Εμφάνιση διευθύνσεων στη λίστα συναλλαγών</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+7"/>
+        <source>Whether to show coin control features or not.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Display coin &amp;control features (experts only)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+136"/>
         <source>&amp;OK</source>
         <translation>&amp;ΟΚ</translation>
     </message>
@@ -1060,44 +1439,38 @@ Address: %4
         <translation>&amp;Ακύρωση</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>&amp;Apply</source>
-        <translation>&amp;Εφαρμογή</translation>
-    </message>
-    <message>
-        <location filename="../optionsdialog.cpp" line="+58"/>
+        <location filename="../optionsdialog.cpp" line="+67"/>
         <source>default</source>
         <translation>προεπιλογή</translation>
     </message>
     <message>
-        <location line="+130"/>
+        <location line="+57"/>
+        <source>none</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+75"/>
         <source>Confirm options reset</source>
         <translation>Επιβεβαιώση των επιλογων επαναφοράς </translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Some settings may require a client restart to take effect.</source>
-        <translation>Για ορισμένες ρυθμίσεις πρεπει η επανεκκίνηση να τεθεί σε ισχύ.</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Do you want to proceed?</source>
-        <translation>Θέλετε να προχωρήσετε;</translation>
-    </message>
-    <message>
-        <location line="+42"/>
-        <location line="+9"/>
-        <source>Warning</source>
-        <translation>Προειδοποίηση</translation>
-    </message>
-    <message>
-        <location line="-9"/>
-        <location line="+9"/>
-        <source>This setting will take effect after restarting Bitcoin.</source>
-        <translation>Αυτή η ρύθμιση θα ισχύσει μετά την επανεκκίνηση του Bitcoin.</translation>
-    </message>
-    <message>
         <location line="+29"/>
+        <source>Client restart required to activate changes.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-29"/>
+        <source>Client will be shutdown, do you want to proceed?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>This change would require a client restart.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>Δεν είναι έγκυρη η διεύθυνση διαμεσολαβητή</translation>
     </message>
@@ -1111,22 +1484,22 @@ Address: %4
     </message>
     <message>
         <location line="+50"/>
-        <location line="+202"/>
+        <location line="+231"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Οι πληροφορίες που εμφανίζονται μπορεί να είναι ξεπερασμένες. Το πορτοφόλι σας συγχρονίζεται αυτόματα με το δίκτυο Bitcoin μετά από μια σύνδεση, αλλά αυτή η διαδικασία δεν έχει ακόμη ολοκληρωθεί. </translation>
     </message>
     <message>
-        <location line="-131"/>
+        <location line="-155"/>
         <source>Unconfirmed:</source>
         <translation>Ανεπιβεβαίωτες</translation>
     </message>
     <message>
-        <location line="-78"/>
+        <location line="-83"/>
         <source>Wallet</source>
         <translation>Πορτοφόλι</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+51"/>
         <source>Confirmed:</source>
         <translation>Επικυρωμένες:</translation>
     </message>
@@ -1136,12 +1509,12 @@ Address: %4
         <translation>Το τρέχον διαθέσιμο υπόλοιπο</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+32"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>Το άθροισμα των συναλλαγών που δεν έχουν ακόμα επιβεβαιωθεί και δεν προσμετρώνται στο τρέχον διαθέσιμο υπόλοιπό σας</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>Immature:</source>
         <translation>Ανώριμος</translation>
     </message>
@@ -1151,7 +1524,7 @@ Address: %4
         <translation>Εξορυγμενο υπόλοιπο που δεν έχει ακόμα ωριμάσει </translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>Total:</source>
         <translation>Σύνολο:</translation>
     </message>
@@ -1161,12 +1534,12 @@ Address: %4
         <translation>Το τρέχον συνολικό υπόλοιπο</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+71"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Πρόσφατες συναλλαγές&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="+116"/>
+        <location filename="../overviewpage.cpp" line="+120"/>
         <location line="+1"/>
         <source>out of sync</source>
         <translation>εκτός συγχρονισμού</translation>
@@ -1175,7 +1548,8 @@ Address: %4
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+392"/>
+        <location filename="../paymentserver.cpp" line="+403"/>
+        <location line="+13"/>
         <source>URI handling</source>
         <translation>Χειρισμός URI</translation>
     </message>
@@ -1185,45 +1559,82 @@ Address: %4
         <translation>Το URI δεν μπορεί να αναλυθεί! Αυτό μπορεί να προκληθεί από μια μη έγκυρη διεύθυνση Bitcoin ή ακατάλληλη παραμέτρο URI.</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+96"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+4"/>
-        <location line="+37"/>
+        <location line="-221"/>
+        <location line="+212"/>
+        <location line="+13"/>
+        <location line="+95"/>
+        <location line="+18"/>
+        <location line="+16"/>
         <source>Payment request error</source>
         <translation>Σφάλμα αιτήματος πληρωμής</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Insecure requests to custom payment scripts unsupported</source>
+        <location line="-353"/>
+        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <translation>Δεν είναι δυνατή η εκκίνηση του Bitcoin: click-to-pay handler</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <source>Net manager warning</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+1"/>
+        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>Payment request fetch URL is invalid: %1</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Payment request file handling</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+73"/>
+        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+59"/>
         <source>Refund from %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+43"/>
         <source>Error communicating with %1: %2</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+24"/>
+        <source>Payment request can not be parsed or processed!</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Bad response from server %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+33"/>
         <source>Payment acknowledged</source>
         <translation>Πληρωμή αναγνωρίστηκε</translation>
     </message>
     <message>
-        <location line="-58"/>
-        <location line="+30"/>
-        <location line="+17"/>
+        <location line="-11"/>
         <source>Network request error</source>
         <translation>Σφάλμα αιτήματος δικτύου</translation>
     </message>
@@ -1231,32 +1642,26 @@ Address: %4
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoin.cpp" line="+114"/>
-        <location line="+5"/>
-        <location filename="../intro.cpp" line="-32"/>
+        <location filename="../bitcoin.cpp" line="+71"/>
+        <location line="+11"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="+1"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation type="unfinished"/>
+        <translation>Σφάλμα: Ο καθορισμένος φάκελος δεδομένων &quot;%1&quot; δεν υπάρχει.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-12"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../intro.cpp" line="+1"/>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation type="unfinished"/>
+        <translation>Σφάλμα: Άκυρος συνδυασμός των -regtest και -testnet</translation>
     </message>
 </context>
 <context>
     <name>QRImageWidget</name>
     <message>
-        <location filename="../receiverequestdialog.cpp" line="+32"/>
+        <location filename="../receiverequestdialog.cpp" line="+36"/>
         <source>&amp;Save Image...</source>
         <translation type="unfinished"/>
     </message>
@@ -1272,8 +1677,8 @@ Address: %4
     </message>
     <message>
         <location line="+0"/>
-        <source>PNG Images (*.png)</source>
-        <translation>Εικόνες PNG (*.png)</translation>
+        <source>PNG Image (*.png)</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -1290,15 +1695,16 @@ Address: %4
         <location line="+23"/>
         <location line="+23"/>
         <location line="+36"/>
-        <location line="+53"/>
+        <location line="+23"/>
+        <location line="+36"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+352"/>
+        <location filename="../rpcconsole.cpp" line="+359"/>
         <source>N/A</source>
         <translation>Μη διαθέσιμο</translation>
     </message>
     <message>
-        <location line="-217"/>
+        <location line="-223"/>
         <source>Client version</source>
         <translation>Έκδοση Πελάτη</translation>
     </message>
@@ -1308,7 +1714,17 @@ Address: %4
         <translation>&amp;Πληροφορία</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="-10"/>
+        <source>Debug window</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>General</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+53"/>
         <source>Using OpenSSL version</source>
         <translation>Χρησιμοποιηση της OpenSSL εκδοσης</translation>
     </message>
@@ -1324,18 +1740,18 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
+        <source>Name</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+23"/>
         <source>Number of connections</source>
         <translation>Αριθμός συνδέσεων</translation>
     </message>
     <message>
-        <location line="+23"/>
-        <source>On testnet</source>
-        <translation>Στο testnet</translation>
-    </message>
-    <message>
-        <location line="+23"/>
+        <location line="+29"/>
         <source>Block chain</source>
-        <translation>αλυσίδα εμποδισμού</translation>
+        <translation>Αλυσίδα μπλοκ</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1358,21 +1774,6 @@ Address: %4
         <translation>&amp;Άνοιγμα</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Command-line options</source>
-        <translation>επιλογής γραμμής εντολών</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</source>
-        <translation>Εμφανιση του Bitcoin-Qt μήνυματος βοήθειας για να πάρετε μια λίστα με τις πιθανές επιλογές Bitcoin γραμμής εντολών.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>&amp;Show</source>
-        <translation>&amp;Εμφάνιση</translation>
-    </message>
-    <message>
         <location line="+24"/>
         <source>&amp;Console</source>
         <translation>&amp;Κονσόλα</translation>
@@ -1390,35 +1791,25 @@ Address: %4
     <message>
         <location line="+13"/>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>Σύνολα</translation>
     </message>
     <message>
         <location line="+64"/>
         <source>In:</source>
-        <translation type="unfinished"/>
+        <translation>Εισερχόμενα:</translation>
     </message>
     <message>
         <location line="+80"/>
         <source>Out:</source>
-        <translation type="unfinished"/>
+        <translation>Εξερχόμενα:</translation>
     </message>
     <message>
-        <location line="-541"/>
+        <location line="-521"/>
         <source>Build date</source>
         <translation>Ημερομηνία κατασκευής</translation>
     </message>
     <message>
-        <location line="-104"/>
-        <source>Bitcoin - Debug window</source>
-        <translation>Bitcoin - Παράθυρο αποσφαλμάτωσης</translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <location line="+279"/>
+        <location line="+206"/>
         <source>Debug log file</source>
         <translation>Αρχείο καταγραφής εντοπισμού σφαλμάτων </translation>
     </message>
@@ -1428,7 +1819,7 @@ Address: %4
         <translation>Ανοίξτε το αρχείο καταγραφής εντοπισμού σφαλμάτων από τον τρέχοντα κατάλογο δεδομένων. Αυτό μπορεί να πάρει μερικά δευτερόλεπτα για τα μεγάλα αρχεία καταγραφής. </translation>
     </message>
     <message>
-        <location line="+102"/>
+        <location line="+76"/>
         <source>Clear console</source>
         <translation>Καθαρισμός κονσόλας</translation>
     </message>
@@ -1448,75 +1839,60 @@ Address: %4
         <translation>Γράψτε &lt;b&gt;help&lt;/b&gt; για μια επισκόπηση των διαθέσιμων εντολών</translation>
     </message>
     <message>
-        <location line="+128"/>
+        <location line="+122"/>
         <source>%1 B</source>
-        <translation type="unfinished"/>
+        <translation>%1 B</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 KB</source>
-        <translation type="unfinished"/>
+        <translation>%1 KB</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 MB</source>
-        <translation type="unfinished"/>
+        <translation>%1 MB</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 GB</source>
-        <translation type="unfinished"/>
+        <translation>%1 GB</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>%1 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 λ</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>%1 h</source>
-        <translation type="unfinished"/>
+        <translation>%1 ώ</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 h %2 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 ώ %2 λ</translation>
     </message>
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+22"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+83"/>
         <source>&amp;Amount:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+16"/>
-        <source>The amount to request</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="-13"/>
         <source>&amp;Label:</source>
         <translation>&amp;Επιγραφή</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>The label to associate with the receiving address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="-34"/>
         <source>&amp;Message:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+10"/>
-        <source>The message to attach to payment request</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+14"/>
+        <location line="-17"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation type="unfinished"/>
     </message>
@@ -1526,23 +1902,63 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+27"/>
+        <source>An optional label to associate with the new receiving address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+7"/>
-        <source>Use this form to request payments. All fields are optional.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+17"/>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>Καθαρισμός όλων των πεδίων της φόρμας.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Clear</source>
-        <translation type="unfinished"/>
+        <translation>Καθαρισμός</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>&amp;Request payment</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+47"/>
+        <source>Requested payments</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Show the selected request (does the same as double clicking an entry)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Show</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Remove the selected entries from the list</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove</source>
         <translation type="unfinished"/>
     </message>
 </context>
@@ -1565,23 +1981,18 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+7"/>
         <source>&amp;Save Image...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../receiverequestdialog.cpp" line="+58"/>
+        <location filename="../receiverequestdialog.cpp" line="+56"/>
         <source>Request payment to %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+6"/>
         <source>Payment information</source>
-        <translation type="unfinished"/>
+        <translation>Πληροφορίες πληρωμής</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1620,16 +2031,119 @@ Address: %4
     </message>
 </context>
 <context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <location filename="../recentrequeststablemodel.cpp" line="+24"/>
+        <source>Date</source>
+        <translation>Ημερομηνία</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Label</source>
+        <translation>Ετικέτα</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Message</source>
+        <translation>Μήνυμα</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Amount</source>
+        <translation>Ποσό</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>(no label)</source>
+        <translation>(χωρίς ετικέτα)</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>(no message)</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+140"/>
-        <location line="+213"/>
+        <location filename="../sendcoinsdialog.cpp" line="+381"/>
+        <location line="+80"/>
         <source>Send Coins</source>
         <translation>Αποστολή νομισμάτων</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+76"/>
+        <source>Coin Control Features</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Inputs...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>automatically selected</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Insufficient funds!</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+89"/>
+        <source>Quantity:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Bytes:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Amount:</source>
+        <translation>Ποσό:</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Priority:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Fee:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Low Output:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>After Fee:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Change:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Custom change address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+115"/>
         <source>Send to multiple recipients at once</source>
         <translation>Αποστολή σε πολλούς αποδέκτες ταυτόχρονα</translation>
     </message>
@@ -1641,7 +2155,7 @@ Address: %4
     <message>
         <location line="+20"/>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>Καθαρισμός όλων των πεδίων της φόρμας.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1654,12 +2168,7 @@ Address: %4
         <translation>Υπόλοιπο:</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>123.456 BTC</source>
-        <translation>123,456 BTC</translation>
-    </message>
-    <message>
-        <location line="+31"/>
+        <location line="+41"/>
         <source>Confirm the send action</source>
         <translation>Επιβεβαίωση αποστολής</translation>
     </message>
@@ -1669,49 +2178,125 @@ Address: %4
         <translation>Αποστολη</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-154"/>
+        <location filename="../sendcoinsdialog.cpp" line="-228"/>
         <source>Confirm send coins</source>
         <translation>Επιβεβαίωση αποστολής νομισμάτων</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-74"/>
         <location line="+5"/>
         <location line="+5"/>
+        <location line="+4"/>
         <source>%1 to %2</source>
+        <translation>%1 σε %2</translation>
+    </message>
+    <message>
+        <location line="-136"/>
+        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Εισάγετε μια διεύθυνση Bitcoin (π.χ. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Copy quantity</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>Αντιγραφή ποσού</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy fee</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy after fee</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy bytes</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy priority</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy low output</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy change</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+170"/>
+        <source>Total Amount %1 (= %2)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>or</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+202"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Η διεύθυνση του αποδέκτη δεν είναι σωστή. Παρακαλώ ελέγξτε ξανά.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Το ποσό πληρωμής πρέπει να είναι μεγαλύτερο από 0.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>The amount exceeds your balance.</source>
         <translation>Το ποσό ξεπερνάει το διαθέσιμο υπόλοιπο</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Το σύνολο υπερβαίνει το υπόλοιπό σας όταν συμπεριληφθεί και η αμοιβή %1</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+3"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Βρέθηκε η ίδια διεύθυνση δύο φορές. Επιτρέπεται μία μόνο εγγραφή για κάθε διεύθυνση, σε κάθε διαδικασία αποστολής.</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Error: Transaction creation failed!</source>
-        <translation>Σφάλμα: Η δημιουργία της συναλλαγής απέτυχε</translation>
+        <location line="+3"/>
+        <source>Transaction creation failed!</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+4"/>
+        <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+112"/>
+        <source>Warning: Invalid Bitcoin address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>(no label)</source>
+        <translation>(χωρίς ετικέτα)</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>Warning: Unknown change address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-366"/>
         <source>Are you sure you want to send?</source>
         <translation>Είστε βέβαιοι για την αποστολή;</translation>
     </message>
@@ -1721,17 +2306,7 @@ Address: %4
         <translation>προστέθηκαν ως αμοιβή συναλλαγής</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Total Amount %1</source>
-        <translation>Συνολικό Ποσό %1</translation>
-    </message>
-    <message>
-        <location line="+20"/>
-        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Σφάλμα: Η συναλλαγή απερρίφθη. Αυτό ενδέχεται να συμβαίνει αν κάποια από τα νομίσματα έχουν ήδη ξοδευθεί, όπως αν χρησιμοποιήσατε αντίγραφο του wallet.dat και τα νομίσματα ξοδεύθηκαν εκεί.</translation>
-    </message>
-    <message>
-        <location line="+144"/>
+        <location line="+170"/>
         <source>Payment request expired</source>
         <translation>Έληξε η αίτηση πληρωμής</translation>
     </message>
@@ -1744,39 +2319,44 @@ Address: %4
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+33"/>
-        <location line="+585"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+131"/>
+        <location line="+521"/>
+        <location line="+536"/>
         <source>A&amp;mount:</source>
         <translation>&amp;Ποσό:</translation>
     </message>
     <message>
-        <location line="-572"/>
-        <location line="+585"/>
+        <location line="-1152"/>
         <source>Pay &amp;To:</source>
         <translation>Πληρωμή &amp;σε:</translation>
     </message>
     <message>
-        <location line="-551"/>
+        <location line="+18"/>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Διεύθυνση αποστολής της πληρωμής  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsentry.cpp" line="+28"/>
+        <location filename="../sendcoinsentry.cpp" line="+30"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>Εισάγετε μια επιγραφή για αυτή τη διεύθυνση ώστε να καταχωρηθεί στο βιβλίο διευθύνσεων</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="-18"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+57"/>
         <source>&amp;Label:</source>
         <translation>&amp;Επιγραφή</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="-50"/>
         <source>Choose previously used address</source>
+        <translation>Επιλογή διεύθυνσης που έχει ήδη χρησιμοποιηθεί</translation>
+    </message>
+    <message>
+        <location line="-40"/>
+        <source>This is a normal payment.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+50"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -1792,16 +2372,45 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Remove this recipient</source>
-        <translation>Αφαίρεση αποδέκτη</translation>
+        <location line="+524"/>
+        <location line="+536"/>
+        <source>Remove this entry</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="-1008"/>
+        <source>Message:</source>
+        <translation>Μήνυμα:</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+958"/>
+        <source>This is a verified payment request.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-991"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+465"/>
+        <location line="+459"/>
+        <source>This is an unverified payment request.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+18"/>
+        <location line="+532"/>
+        <source>Pay To:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-498"/>
+        <location line="+536"/>
         <source>Memo:</source>
         <translation type="unfinished"/>
     </message>
@@ -1812,6 +2421,19 @@ Address: %4
     </message>
 </context>
 <context>
+    <name>ShutdownWindow</name>
+    <message>
+        <location filename="../utilitydialog.cpp" line="+48"/>
+        <source>Bitcoin Core is shutting down...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="+14"/>
@@ -1819,7 +2441,7 @@ Address: %4
         <translation>Υπογραφές - Είσοδος / Επαλήθευση μήνυματος </translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+10"/>
         <source>&amp;Sign Message</source>
         <translation>&amp;Υπογραφή Μηνύματος</translation>
     </message>
@@ -1837,7 +2459,7 @@ Address: %4
         <location line="+10"/>
         <location line="+213"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Επιλογή διεύθυνσης που έχει ήδη χρησιμοποιηθεί</translation>
     </message>
     <message>
         <location line="-203"/>
@@ -1922,7 +2544,7 @@ Address: %4
         <translation>Επαναφορά όλων επαλήθευμενων πεδίων μήνυματος </translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+27"/>
+        <location filename="../signverifymessagedialog.cpp" line="+29"/>
         <location line="+3"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Εισάγετε μια διεύθυνση Bitcoin (π.χ. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
@@ -1938,7 +2560,7 @@ Address: %4
         <translation>Εισαγωγή υπογραφής Bitcoin</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+84"/>
         <location line="+81"/>
         <source>The entered address is invalid.</source>
         <translation>Η διεύθυνση που εισήχθη είναι λάθος.</translation>
@@ -2007,9 +2629,14 @@ Address: %4
 <context>
     <name>SplashScreen</name>
     <message>
-        <location filename="../splashscreen.cpp" line="+23"/>
-        <source>The Bitcoin developers</source>
-        <translation>Οι Bitcoin προγραμματιστές </translation>
+        <location filename="../splashscreen.cpp" line="+28"/>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Core</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The Bitcoin Core developers</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -2020,15 +2647,15 @@ Address: %4
 <context>
     <name>TrafficGraphWidget</name>
     <message>
-        <location filename="../trafficgraphwidget.cpp" line="+75"/>
+        <location filename="../trafficgraphwidget.cpp" line="+79"/>
         <source>KB/s</source>
-        <translation type="unfinished"/>
+        <translation>KB/s</translation>
     </message>
 </context>
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+22"/>
+        <location filename="../transactiondesc.cpp" line="+28"/>
         <source>Open until %1</source>
         <translation>Ανοιχτό μέχρι %1</translation>
     </message>
@@ -2101,12 +2728,12 @@ Address: %4
         <location line="+12"/>
         <location line="+45"/>
         <location line="+17"/>
-        <location line="+48"/>
+        <location line="+53"/>
         <source>Credit</source>
         <translation>Πίστωση </translation>
     </message>
     <message numerus="yes">
-        <location line="-120"/>
+        <location line="-125"/>
         <source>matures in %n more block(s)</source>
         <translation><numerusform>ωρίμανση σε %n επιπλέον μπλοκ</numerusform><numerusform>ωρίμανση σε %n επιπλέον μπλοκ</numerusform></translation>
     </message>
@@ -2119,12 +2746,12 @@ Address: %4
         <location line="+44"/>
         <location line="+8"/>
         <location line="+15"/>
-        <location line="+48"/>
+        <location line="+53"/>
         <source>Debit</source>
         <translation>Debit</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-62"/>
         <source>Transaction fee</source>
         <translation>Τέλος συναλλαγής </translation>
     </message>
@@ -2135,11 +2762,12 @@ Address: %4
     </message>
     <message>
         <location line="+6"/>
+        <location line="+9"/>
         <source>Message</source>
         <translation>Μήνυμα</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-7"/>
         <source>Comment</source>
         <translation>Σχόλιο:</translation>
     </message>
@@ -2149,9 +2777,9 @@ Address: %4
         <translation>ID Συναλλαγής:</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+18"/>
         <source>Merchant</source>
-        <translation type="unfinished"/>
+        <translation>Έμπορος</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2189,7 +2817,7 @@ Address: %4
         <translation>αναληθής </translation>
     </message>
     <message>
-        <location line="-227"/>
+        <location line="-232"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, δεν έχει ακόμα μεταδοθεί μ&apos; επιτυχία</translation>
     </message>
@@ -2220,7 +2848,7 @@ Address: %4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+227"/>
+        <location filename="../transactiontablemodel.cpp" line="+234"/>
         <source>Date</source>
         <translation>Ημερομηνία</translation>
     </message>
@@ -2239,8 +2867,13 @@ Address: %4
         <source>Amount</source>
         <translation>Ποσό</translation>
     </message>
+    <message>
+        <location line="+59"/>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation type="unfinished"/>
+    </message>
     <message numerus="yes">
-        <location line="+57"/>
+        <location line="+16"/>
         <source>Open for %n more block(s)</source>
         <translation><numerusform>Ανοιχτό για %n μπλοκ</numerusform><numerusform>Ανοιχτό για %n μπλοκ</numerusform></translation>
     </message>
@@ -2260,17 +2893,13 @@ Address: %4
         <translation>Χωρίς επιβεβαίωση (%1 από %2 επικυρώσεις)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-22"/>
+        <location line="+25"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Επικυρωμένη (%1 επικυρώσεις)</translation>
     </message>
-    <message numerus="yes">
-        <location line="+8"/>
-        <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation><numerusform>Το υπόλοιπο από την εξόρυξη θα είναι διαθέσιμο μετά από %n μπλοκ</numerusform><numerusform>Το υπόλοιπο από την εξόρυξη θα είναι διαθέσιμο μετά από %n μπλοκ</numerusform></translation>
-    </message>
     <message>
-        <location line="+5"/>
+        <location line="-22"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Αυτό το μπλοκ δεν έχει παραληφθεί από κανέναν άλλο κόμβο και κατά πάσα πιθανότητα θα απορριφθεί!</translation>
     </message>
@@ -2280,7 +2909,7 @@ Address: %4
         <translation>Δημιουργήθηκε αλλά απορρίφθηκε</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+62"/>
         <source>Received with</source>
         <translation>Παραλαβή με</translation>
     </message>
@@ -2338,7 +2967,7 @@ Address: %4
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+52"/>
+        <location filename="../transactionview.cpp" line="+57"/>
         <location line="+16"/>
         <source>All</source>
         <translation>Όλα</translation>
@@ -2399,12 +3028,12 @@ Address: %4
         <translation>Άλλο</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>Enter address or label to search</source>
         <translation>Αναζήτηση με βάση τη διεύθυνση ή την επιγραφή</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>Min amount</source>
         <translation>Ελάχιστο ποσό</translation>
     </message>
@@ -2439,17 +3068,37 @@ Address: %4
         <translation>Εμφάνιση λεπτομερειών συναλλαγής</translation>
     </message>
     <message>
-        <location line="+143"/>
-        <source>Export Transaction Data</source>
-        <translation>Εξαγωγή Στοιχείων Συναλλαγών</translation>
+        <location line="+142"/>
+        <source>Export Transaction History</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+19"/>
+        <source>Exporting Failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>There was an error trying to save the transaction history to %1.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Exporting Successful</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-22"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Confirmed</source>
         <translation>Επικυρωμένες</translation>
     </message>
@@ -2484,17 +3133,7 @@ Address: %4
         <translation>ID</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Error exporting</source>
-        <translation>Σφάλμα εξαγωγής</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Could not write to file %1.</source>
-        <translation>Αδυναμία εγγραφής στο αρχείο %1.</translation>
-    </message>
-    <message>
-        <location line="+100"/>
+        <location line="+107"/>
         <source>Range:</source>
         <translation>Έκταση:</translation>
     </message>
@@ -2505,9 +3144,17 @@ Address: %4
     </message>
 </context>
 <context>
+    <name>WalletFrame</name>
+    <message>
+        <location filename="../walletframe.cpp" line="+26"/>
+        <source>No wallet has been loaded.</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+218"/>
+        <location filename="../walletmodel.cpp" line="+245"/>
         <source>Send Coins</source>
         <translation>Αποστολή νομισμάτων</translation>
     </message>
@@ -2515,7 +3162,7 @@ Address: %4
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+46"/>
+        <location filename="../walletview.cpp" line="+43"/>
         <source>&amp;Export</source>
         <translation>&amp;Εξαγωγή</translation>
     </message>
@@ -2525,65 +3172,60 @@ Address: %4
         <translation>Εξαγωγή δεδομένων καρτέλας σε αρχείο</translation>
     </message>
     <message>
-        <location line="+183"/>
+        <location line="+181"/>
         <source>Backup Wallet</source>
         <translation>Αντίγραφο ασφαλείας του πορτοφολιού</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Αρχεία δεδομένων πορτοφολιού (*.dat)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Backup Failed</source>
         <translation>Αποτυχία κατά τη δημιουργία αντιγράφου</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation>Παρουσιάστηκε σφάλμα κατά την αποθήκευση των δεδομένων πορτοφολιού στη νέα τοποθεσία.</translation>
+        <source>There was an error trying to save the wallet data to %1.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+4"/>
-        <source>Backup Successful</source>
-        <translation>Η δημιουργια αντιγραφου ασφαλειας πετυχε</translation>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+0"/>
-        <source>The wallet data was successfully saved to the new location.</source>
-        <translation>Τα δεδομένα πορτοφόλιου αποθηκεύτηκαν με επιτυχία στη νέα θέση. </translation>
+        <source>Backup Successful</source>
+        <translation>Η δημιουργια αντιγραφου ασφαλειας πετυχε</translation>
     </message>
 </context>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+102"/>
-        <source>Bitcoin version</source>
-        <translation>Έκδοση Bitcoin</translation>
-    </message>
-    <message>
-        <location line="+107"/>
+        <location filename="../bitcoinstrings.cpp" line="+221"/>
         <source>Usage:</source>
         <translation>Χρήση:</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-54"/>
         <source>List commands</source>
         <translation>Λίστα εντολών</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-14"/>
         <source>Get help for a command</source>
         <translation>Επεξήγηση εντολής</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+26"/>
         <source>Options:</source>
         <translation>Επιλογές:</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+22"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Ορίστε αρχείο ρυθμίσεων (προεπιλογή: bitcoin.conf)</translation>
     </message>
@@ -2603,7 +3245,7 @@ Address: %4
         <translation>Όρισε το μέγεθος της βάσης προσωρινής αποθήκευσης σε megabytes(προεπιλογή:25)</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-26"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Εισερχόμενες συνδέσεις στη θύρα &lt;port&gt; (προεπιλογή: 8333 ή στο testnet: 18333)</translation>
     </message>
@@ -2613,7 +3255,7 @@ Address: %4
         <translation>Μέγιστες αριθμός συνδέσεων με τους peers &lt;n&gt; (προεπιλογή: 125)</translation>
     </message>
     <message>
-        <location line="-49"/>
+        <location line="-51"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Σύνδεση σε έναν κόμβο για την ανάκτηση διευθύνσεων από ομοτίμους, και αποσυνδέσh</translation>
     </message>
@@ -2623,37 +3265,37 @@ Address: %4
         <translation>Διευκρινίστε τη δικιά σας δημόσια διεύθυνση.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Όριο αποσύνδεσης προβληματικών peers (προεπιλογή: 100)</translation>
     </message>
     <message>
-        <location line="-142"/>
+        <location line="-148"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Δευτερόλεπτα πριν επιτραπεί ξανά η σύνδεση των προβληματικών peers (προεπιλογή: 86400)</translation>
     </message>
     <message>
-        <location line="-33"/>
+        <location line="-36"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation>Ένα σφάλμα συνέβη καθώς προετοιμαζόταν η πόρτα RPC %u για αναμονή IPv4: %s</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+34"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Εισερχόμενες συνδέσεις JSON-RPC στη θύρα &lt;port&gt; (προεπιλογή: 8332 or testnet: 18332)</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+45"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Αποδοχή εντολών κονσόλας και JSON-RPC</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+80"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Εκτέλεση στο παρασκήνιο κι αποδοχή εντολών</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+39"/>
         <source>Use the test network</source>
         <translation>Χρήση του δοκιμαστικού δικτύου</translation>
     </message>
@@ -2663,7 +3305,7 @@ Address: %4
         <translation>Να δέχεσαι συνδέσεις από έξω(προεπιλογή:1)</translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-95"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -2714,6 +3356,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+4"/>
+        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Σφάλμα: Η συναλλαγή απορρίφθηκε.
 Αυτό ίσως οφείλεται στο ότι τα νομίσματά σας έχουν ήδη ξοδευτεί, π.χ. με την αντιγραφή του wallet.dat σε άλλο σύστημα και την χρήση τους εκεί, χωρίς η συναλλαγή να έχει καταγραφεί στο παρόν σύστημα.</translation>
@@ -2729,17 +3376,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Εκτέλεσε την εντολή όταν το καλύτερο μπλοκ αλλάξει(%s στην εντολή αντικαθίσταται από το hash του μπλοκ)</translation>
     </message>
     <message>
-        <location line="+11"/>
-        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
-        <translation>Ορίστε το μέγιστο μέγεθος των high-priority/low-fee συναλλαγων σε bytes (προεπιλογή: 27000)</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+18"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Αυτό είναι ένα προ-τεστ κυκλοφορίας - χρησιμοποιήστε το με δική σας ευθύνη - δεν χρησιμοποιείτε για εξόρυξη ή για αλλες εφαρμογές</translation>
     </message>
     <message>
         <location line="+5"/>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Προειδοποίηση: Η παράμετρος -paytxfee είναι πολύ υψηλή. Πρόκειται για την αμοιβή που θα πληρώνετε για κάθε συναλλαγή που θα στέλνετε.</translation>
     </message>
@@ -2769,9 +3416,19 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Προειδοποίηση : το αρχειο wallet.dat ειναι διεφθαρμένο, τα δεδομένα σώζονται ! Original wallet.dat αποθηκεύονται ως wallet.{timestamp}.bak στο %s . Αν το υπόλοιπο του ή τις συναλλαγές σας, είναι λάθος θα πρέπει να επαναφέρετε από ένα αντίγραφο ασφαλείας</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+9"/>
+        <source>&lt;category&gt; can be:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
         <translation>Προσπάθεια για ανακτησει ιδιωτικων κλειδιων από ενα διεφθαρμένο αρχειο wallet.dat </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Bitcoin Core Daemon</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -2779,7 +3436,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Block creation options:</source>
         <translation>Αποκλεισμός επιλογων δημιουργίας: </translation>
     </message>
@@ -2789,7 +3446,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Σύνδεση μόνο με ορισμένους κόμβους</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
+        <source>Connect through SOCKS proxy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation type="unfinished"/>
     </message>
@@ -2802,6 +3464,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <location line="+1"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation>Ανακαλύψτε την δικη σας IP διεύθυνση (προεπιλογή: 1 όταν ακούει και δεν - externalip) </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Do not load the wallet and disable wallet RPC calls</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
@@ -2899,7 +3566,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Αποτυχία εγγραφής αναίρεσης δεδομένων </translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
+        <source>Fee per kB to add to transactions you send</source>
+        <translation>Προσθήκη αμοιβής ανά kB στις συναλλαγές που στέλνετε</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
         <translation>Βρες ομότιμους υπολογιστές χρησιμοποιώντας αναζήτηση DNS(προεπιλογή:1)</translation>
     </message>
@@ -2919,6 +3591,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Πόσο εξονυχιστική να είναι η επιβεβαίωση του μπλοκ(0-4, προεπιλογή:3)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation type="unfinished"/>
@@ -2926,7 +3603,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+3"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Άκυρη διεύθυνση -onion : &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -2934,17 +3611,37 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Δεν ειναι αρκετες περιγραφες αρχείων διαθέσιμες.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+5"/>
+        <source>Prepend debug output with timestamp (default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>RPC client options:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Εισαγωγή μπλοκ από εξωτερικό αρχείο blk000?.dat</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
+        <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Send command to Bitcoin server</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+7"/>
+        <source>Set maximum block size in bytes (default: %d)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
         <translation>Ορίσμος του αριθμόυ θεματων στην υπηρεσία κλήσεων RPC (προεπιλογή: 4) </translation>
     </message>
@@ -2959,12 +3656,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+3"/>
+        <source>This is intended for regression testing tools and app development.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Usage (deprecated, use bitcoin-cli):</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Verifying blocks...</source>
         <translation>Επαλήθευση των μπλοκ... </translation>
     </message>
@@ -2975,31 +3677,56 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+1"/>
+        <source>Wait for RPC server to start</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+2"/>
+        <source>Wallet options:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-78"/>
+        <location line="-79"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Εισαγωγή μπλοκ από εξωτερικό αρχείο blk000?.dat</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-105"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+14"/>
+        <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
         <translation>Ορίσμος του αριθμό των νημάτων ελέγχου σεναρίου (μέχρι 16, 0 = auto, &lt;0 = αφήνουν τους πολλους πυρήνες δωρεάν, default: 0)</translation>
     </message>
     <message>
-        <location line="+83"/>
+        <location line="+89"/>
         <source>Information</source>
         <translation>Πληροφορία</translation>
     </message>
@@ -3039,49 +3766,19 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation> Συνδέση μόνο σε κόμβους του δικτύου &lt;net&gt; (IPv4, IPv6 ή Tor) </translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Output extra debugging information. Implies all other -debug* options</source>
-        <translation>Έξοδος επιπλέον πληροφοριών εντοπισμού σφαλμάτων</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Output extra network debugging information</source>
-        <translation>Έξοδος επιπλέον πληροφοριών εντοπισμού σφαλμάτων</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Prepend debug output with timestamp</source>
-        <translation>Χρονοσφραγίδα πληροφοριών εντοπισμού σφαλμάτων</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+9"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Ρυθμίσεις SSL: (ανατρέξτε στο Bitcoin Wiki για οδηγίες ρυθμίσεων SSL)</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Select the version of socks proxy to use (4-5, default: 5)</source>
-        <translation>Επιλέξτε την έκδοση του διαμεσολαβητη για να χρησιμοποιήσετε (4-5 , προεπιλογή: 5)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Αποστολή πληροφοριών εντοπισμού σφαλμάτων στην κονσόλα αντί του αρχείου debug.log</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Send trace/debug info to debugger</source>
-        <translation>Αποστολή πληροφοριών εντοπισμού σφαλμάτων στον debugger</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Set maximum block size in bytes (default: 250000)</source>
-        <translation>Ορίσμος του μέγιστου μέγεθος block σε bytes (προεπιλογή: 250000)</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+6"/>
         <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Ορίστε το μέγιστο μέγεθος block σε bytes (προεπιλογή: 0)</translation>
+        <translation>Ορίστε το μέγιστο μέγεθος μπλοκ σε bytes (προεπιλογή: 0)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3104,7 +3801,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Λάθος Συστήματος:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Transaction amount too small</source>
         <translation>Το ποσό της συναλλαγής είναι πολύ μικρο </translation>
     </message>
@@ -3129,32 +3826,32 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Χρησιμοποίηση του  UPnP για την χρήση της πόρτας αναμονής (προεπιλογή:1)</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Use proxy to reach tor hidden services (default: same as -proxy)</source>
-        <translation>Χρήση διακομιστή μεσολάβησης για την επίτευξη των Tor κρυμμένων υπηρεσιων (προεπιλογή: ίδιο με το-proxy) </translation>
-    </message>
-    <message>
         <location line="+2"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Όνομα χρήστη για τις συνδέσεις JSON-RPC</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>Warning</source>
         <translation>Προειδοποίηση</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Προειδοποίηση: Αυτή η έκδοση είναι ξεπερασμένη, απαιτείται αναβάθμιση </translation>
     </message>
     <message>
         <location line="+2"/>
+        <source>version</source>
+        <translation>έκδοση</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>Το αρχειο wallet.dat ειναι διεφθαρμένο, η διάσωση απέτυχε</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-58"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Κωδικός για τις συνδέσεις JSON-RPC</translation>
     </message>
@@ -3164,27 +3861,27 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Αποδοχή συνδέσεων JSON-RPC από συγκεκριμένη διεύθυνση IP</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+80"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Αποστολή εντολών στον κόμβο &lt;ip&gt; (προεπιλογή: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-126"/>
+        <location line="-132"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Εκτέλεσε την εντολή όταν το καλύτερο μπλοκ αλλάξει(%s στην εντολή αντικαθίσταται από το hash του μπλοκ)</translation>
     </message>
     <message>
-        <location line="+155"/>
+        <location line="+161"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Αναβάθμισε το πορτοφόλι στην τελευταία έκδοση</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-24"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Όριο πλήθους κλειδιών pool &lt;n&gt; (προεπιλογή: 100)</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="-11"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Επανέλεγχος της αλυσίδας μπλοκ για απούσες συναλλαγές</translation>
     </message>
@@ -3194,7 +3891,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Χρήση του OpenSSL (https) για συνδέσεις JSON-RPC</translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-30"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Αρχείο πιστοποιητικού του διακομιστή  (προεπιλογή: server.cert)</translation>
     </message>
@@ -3209,27 +3906,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Αυτό το κείμενο βοήθειας</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Αδύνατη η σύνδεση με τη θύρα %s αυτού του υπολογιστή (bind returned error %d, %s) </translation>
     </message>
     <message>
-        <location line="-95"/>
-        <source>Connect through socks proxy</source>
-        <translation>Σύνδεση μέσω διαμεσολαβητή socks</translation>
-    </message>
-    <message>
-        <location line="-11"/>
+        <location line="-107"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Να επιτρέπονται οι έλεγχοι DNS για προσθήκη και σύνδεση κόμβων</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+60"/>
         <source>Loading addresses...</source>
         <translation>Φόρτωση διευθύνσεων...</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-37"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Σφάλμα φόρτωσης wallet.dat: Κατεστραμμένο Πορτοφόλι</translation>
     </message>
@@ -3249,12 +3941,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Σφάλμα φόρτωσης αρχείου wallet.dat</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Δεν είναι έγκυρη η διεύθυνση διαμεσολαβητή: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+56"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Άγνωστo δίκτυο ορίζεται σε onlynet: &apos;%s&apos;</translation>
     </message>
@@ -3264,7 +3956,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Άγνωστo δίκτυο ορίζεται: %i</translation>
     </message>
     <message>
-        <location line="-100"/>
+        <location line="-101"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Δεν μπορώ να γράψω την προεπιλεγμένη διεύθυνση: &apos;%s&apos;</translation>
     </message>
@@ -3274,7 +3966,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Δεν μπορώ να γράψω την προεπιλεγμένη διεύθυνση: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+48"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Μη έγκυρο ποσό για την παράμετρο -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
@@ -3294,27 +3986,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Φόρτωση ευρετηρίου μπλοκ...</translation>
     </message>
     <message>
-        <location line="-60"/>
+        <location line="-62"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Προσέθεσε ένα κόμβο για σύνδεση και προσπάθησε να κρατήσεις την σύνδεση ανοιχτή</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-32"/>
         <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
         <translation>Αδύνατη η σύνδεση με τη θύρα %s αυτού του υπολογιστή. Το Bitcoin είναι πιθανώς ήδη ενεργό.</translation>
     </message>
     <message>
-        <location line="+69"/>
-        <source>Fee per KB to add to transactions you send</source>
-        <translation>Αμοιβή ανά KB που θα προστίθεται στις συναλλαγές που στέλνεις</translation>
-    </message>
-    <message>
-        <location line="+20"/>
+        <location line="+95"/>
         <source>Loading wallet...</source>
         <translation>Φόρτωση πορτοφολιού...</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-56"/>
         <source>Cannot downgrade wallet</source>
         <translation>Δεν μπορώ να υποβαθμίσω το πορτοφόλι</translation>
     </message>
@@ -3324,7 +4011,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Δεν μπορώ να γράψω την προεπιλεγμένη διεύθυνση</translation>
     </message>
     <message>
-        <location line="+66"/>
+        <location line="+67"/>
         <source>Rescanning...</source>
         <translation>Ανίχνευση...</translation>
     </message>
@@ -3344,7 +4031,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Σφάλμα</translation>
     </message>
     <message>
-        <location line="-33"/>
+        <location line="-35"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>

@@ -1,7 +1,7 @@
-Bitcoin 0.8.2 BETA 
-====================
+Bitcoin 0.9.0rc1 BETA
+=====================
 
-Copyright (c) 2009-2013 Bitcoin Developers
+Copyright (c) 2009-2014 Bitcoin Developers
 
 
 Setup

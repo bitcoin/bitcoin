@@ -219,7 +219,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nTx            = diskindex.nTx;
 
                 if (!pindexNew->CheckIndex())
-                    return error("LoadBlockIndex() : CheckIndex failed: %s", pindexNew->ToString().c_str());
+                    return error("LoadBlockIndex() : CheckIndex failed: %s", pindexNew->ToString());
 
                 pcursor->Next();
             } else {
