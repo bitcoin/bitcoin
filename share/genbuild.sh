@@ -13,8 +13,8 @@ else
     exit 1
 fi
 
-TIME=$(date '+%F %T %z')
-
+DESC=""
+LAST_COMMIT_DATE=""
 if [ -e "$(which git)" -a -d ".git" ]; then
     # clean 'dirty' status of touched files that haven't been modified
     git diff >/dev/null 2>/dev/null 
@@ -23,7 +23,7 @@ if [ -e "$(which git)" -a -d ".git" ]; then
     DESC="$(git describe --dirty 2>/dev/null)"
 
     # get a string like "2012-04-10 16:27:19 +0200"
-    TIME="$(git log -n 1 --format="%ci")"
+    LAST_COMMIT_DATE="$(git log -n 1 --format="%ci")"
 fi
 
 if [ -n "$DESC" ]; then
@@ -35,5 +35,7 @@ fi
 # only update build.h if necessary
 if [ "$INFO" != "$NEWINFO" ]; then
     echo "$NEWINFO" >"$FILE"
-    echo "#define BUILD_DATE \"$TIME\"" >>"$FILE"
+    if [ -n "$LAST_COMMIT_DATE" ]; then
+        echo "#define BUILD_DATE \"$LAST_COMMIT_DATE\"" >> "$FILE"
+    fi
 fi
