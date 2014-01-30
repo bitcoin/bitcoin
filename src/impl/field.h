@@ -63,69 +63,127 @@ void static secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
 }
 
 void static secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
-    // calculate a^p, with p={15,780,1022,1023}
-    secp256k1_fe_t a2; secp256k1_fe_sqr(&a2, a);
-    secp256k1_fe_t a3; secp256k1_fe_mul(&a3, &a2, a);
-    secp256k1_fe_t a6; secp256k1_fe_sqr(&a6, &a3);
-    secp256k1_fe_t a12; secp256k1_fe_sqr(&a12, &a6);
-    secp256k1_fe_t a15; secp256k1_fe_mul(&a15, &a12, &a3);
-    secp256k1_fe_t a30; secp256k1_fe_sqr(&a30, &a15);
-    secp256k1_fe_t a60; secp256k1_fe_sqr(&a60, &a30);
-    secp256k1_fe_t a120; secp256k1_fe_sqr(&a120, &a60);
-    secp256k1_fe_t a240; secp256k1_fe_sqr(&a240, &a120);
-    secp256k1_fe_t a255; secp256k1_fe_mul(&a255, &a240, &a15);
-    secp256k1_fe_t a510; secp256k1_fe_sqr(&a510, &a255);
-    secp256k1_fe_t a750; secp256k1_fe_mul(&a750, &a510, &a240);
-    secp256k1_fe_t a780; secp256k1_fe_mul(&a780, &a750, &a30);
-    secp256k1_fe_t a1020; secp256k1_fe_sqr(&a1020, &a510);
-    secp256k1_fe_t a1022; secp256k1_fe_mul(&a1022, &a1020, &a2);
-    secp256k1_fe_t a1023; secp256k1_fe_mul(&a1023, &a1022, a);
-    secp256k1_fe_t x = a15;
-    for (int i=0; i<21; i++) {
-        for (int j=0; j<10; j++) secp256k1_fe_sqr(&x, &x);
-        secp256k1_fe_mul(&x, &x, &a1023);
-    }
-    for (int j=0; j<10; j++) secp256k1_fe_sqr(&x, &x);
-    secp256k1_fe_mul(&x, &x, &a1022);
-    for (int i=0; i<2; i++) {
-        for (int j=0; j<10; j++) secp256k1_fe_sqr(&x, &x);
-        secp256k1_fe_mul(&x, &x, &a1023);
-    }
-    for (int j=0; j<10; j++) secp256k1_fe_sqr(&x, &x);
-    secp256k1_fe_mul(r, &x, &a780);
+
+    // The binary representation of (p + 1)/4 has 3 blocks of 1s, with lengths in
+    // { 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
+    // 1, [2], 3, 6, 9, 11, [22], 44, 88, 176, 222, [223]
+
+    secp256k1_fe_t x2;
+    secp256k1_fe_sqr(&x2, a);
+    secp256k1_fe_mul(&x2, &x2, a);
+
+    secp256k1_fe_t x3;
+    secp256k1_fe_sqr(&x3, &x2);
+    secp256k1_fe_mul(&x3, &x3, a);
+
+    secp256k1_fe_t x6 = x3;
+    for (int j=0; j<3; j++) secp256k1_fe_sqr(&x6, &x6);
+    secp256k1_fe_mul(&x6, &x6, &x3);
+
+    secp256k1_fe_t x9 = x6;
+    for (int j=0; j<3; j++) secp256k1_fe_sqr(&x9, &x9);
+    secp256k1_fe_mul(&x9, &x9, &x3);
+
+    secp256k1_fe_t x11 = x9;
+    for (int j=0; j<2; j++) secp256k1_fe_sqr(&x11, &x11);
+    secp256k1_fe_mul(&x11, &x11, &x2);
+
+    secp256k1_fe_t x22 = x11;
+    for (int j=0; j<11; j++) secp256k1_fe_sqr(&x22, &x22);
+    secp256k1_fe_mul(&x22, &x22, &x11);
+
+    secp256k1_fe_t x44 = x22;
+    for (int j=0; j<22; j++) secp256k1_fe_sqr(&x44, &x44);
+    secp256k1_fe_mul(&x44, &x44, &x22);
+
+    secp256k1_fe_t x88 = x44;
+    for (int j=0; j<44; j++) secp256k1_fe_sqr(&x88, &x88);
+    secp256k1_fe_mul(&x88, &x88, &x44);
+
+    secp256k1_fe_t x176 = x88;
+    for (int j=0; j<88; j++) secp256k1_fe_sqr(&x176, &x176);
+    secp256k1_fe_mul(&x176, &x176, &x88);
+
+    secp256k1_fe_t x220 = x176;
+    for (int j=0; j<44; j++) secp256k1_fe_sqr(&x220, &x220);
+    secp256k1_fe_mul(&x220, &x220, &x44);
+
+    secp256k1_fe_t x223 = x220;
+    for (int j=0; j<3; j++) secp256k1_fe_sqr(&x223, &x223);
+    secp256k1_fe_mul(&x223, &x223, &x3);
+
+    // The final result is then assembled using a sliding window over the blocks.
+
+    secp256k1_fe_t t1 = x223;
+    for (int j=0; j<23; j++) secp256k1_fe_sqr(&t1, &t1);
+    secp256k1_fe_mul(&t1, &t1, &x22);
+    for (int j=0; j<6; j++) secp256k1_fe_sqr(&t1, &t1);
+    secp256k1_fe_mul(&t1, &t1, &x2);
+    secp256k1_fe_sqr(&t1, &t1);
+    secp256k1_fe_sqr(r, &t1);
 }
 
 void static secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
-    // calculate a^p, with p={45,63,1019,1023}
-    secp256k1_fe_t a2; secp256k1_fe_sqr(&a2, a);
-    secp256k1_fe_t a3; secp256k1_fe_mul(&a3, &a2, a);
-    secp256k1_fe_t a4; secp256k1_fe_sqr(&a4, &a2);
-    secp256k1_fe_t a5; secp256k1_fe_mul(&a5, &a4, a);
-    secp256k1_fe_t a10; secp256k1_fe_sqr(&a10, &a5);
-    secp256k1_fe_t a11; secp256k1_fe_mul(&a11, &a10, a);
-    secp256k1_fe_t a21; secp256k1_fe_mul(&a21, &a11, &a10);
-    secp256k1_fe_t a42; secp256k1_fe_sqr(&a42, &a21);
-    secp256k1_fe_t a45; secp256k1_fe_mul(&a45, &a42, &a3);
-    secp256k1_fe_t a63; secp256k1_fe_mul(&a63, &a42, &a21);
-    secp256k1_fe_t a126; secp256k1_fe_sqr(&a126, &a63);
-    secp256k1_fe_t a252; secp256k1_fe_sqr(&a252, &a126);
-    secp256k1_fe_t a504; secp256k1_fe_sqr(&a504, &a252);
-    secp256k1_fe_t a1008; secp256k1_fe_sqr(&a1008, &a504);
-    secp256k1_fe_t a1019; secp256k1_fe_mul(&a1019, &a1008, &a11);
-    secp256k1_fe_t a1023; secp256k1_fe_mul(&a1023, &a1019, &a4);
-    secp256k1_fe_t x = a63;
-    for (int i=0; i<21; i++) {
-        for (int j=0; j<10; j++) secp256k1_fe_sqr(&x, &x);
-        secp256k1_fe_mul(&x, &x, &a1023);
-    }
-    for (int j=0; j<10; j++) secp256k1_fe_sqr(&x, &x);
-    secp256k1_fe_mul(&x, &x, &a1019);
-    for (int i=0; i<2; i++) {
-        for (int j=0; j<10; j++) secp256k1_fe_sqr(&x, &x);
-        secp256k1_fe_mul(&x, &x, &a1023);
-    }
-    for (int j=0; j<10; j++) secp256k1_fe_sqr(&x, &x);
-    secp256k1_fe_mul(r, &x, &a45);
+
+    // The binary representation of (p - 2) has 5 blocks of 1s, with lengths in
+    // { 1, 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
+    // [1], [2], 3, 6, 9, 11, [22], 44, 88, 176, 222, [223]
+
+    secp256k1_fe_t x2;
+    secp256k1_fe_sqr(&x2, a);
+    secp256k1_fe_mul(&x2, &x2, a);
+
+    secp256k1_fe_t x3;
+    secp256k1_fe_sqr(&x3, &x2);
+    secp256k1_fe_mul(&x3, &x3, a);
+
+    secp256k1_fe_t x6 = x3;
+    for (int j=0; j<3; j++) secp256k1_fe_sqr(&x6, &x6);
+    secp256k1_fe_mul(&x6, &x6, &x3);
+
+    secp256k1_fe_t x9 = x6;
+    for (int j=0; j<3; j++) secp256k1_fe_sqr(&x9, &x9);
+    secp256k1_fe_mul(&x9, &x9, &x3);
+
+    secp256k1_fe_t x11 = x9;
+    for (int j=0; j<2; j++) secp256k1_fe_sqr(&x11, &x11);
+    secp256k1_fe_mul(&x11, &x11, &x2);
+
+    secp256k1_fe_t x22 = x11;
+    for (int j=0; j<11; j++) secp256k1_fe_sqr(&x22, &x22);
+    secp256k1_fe_mul(&x22, &x22, &x11);
+
+    secp256k1_fe_t x44 = x22;
+    for (int j=0; j<22; j++) secp256k1_fe_sqr(&x44, &x44);
+    secp256k1_fe_mul(&x44, &x44, &x22);
+
+    secp256k1_fe_t x88 = x44;
+    for (int j=0; j<44; j++) secp256k1_fe_sqr(&x88, &x88);
+    secp256k1_fe_mul(&x88, &x88, &x44);
+
+    secp256k1_fe_t x176 = x88;
+    for (int j=0; j<88; j++) secp256k1_fe_sqr(&x176, &x176);
+    secp256k1_fe_mul(&x176, &x176, &x88);
+
+    secp256k1_fe_t x220 = x176;
+    for (int j=0; j<44; j++) secp256k1_fe_sqr(&x220, &x220);
+    secp256k1_fe_mul(&x220, &x220, &x44);
+
+    secp256k1_fe_t x223 = x220;
+    for (int j=0; j<3; j++) secp256k1_fe_sqr(&x223, &x223);
+    secp256k1_fe_mul(&x223, &x223, &x3);
+
+    // The final result is then assembled using a sliding window over the blocks.
+
+    secp256k1_fe_t t1 = x223;
+    for (int j=0; j<23; j++) secp256k1_fe_sqr(&t1, &t1);
+    secp256k1_fe_mul(&t1, &t1, &x22);
+    for (int j=0; j<5; j++) secp256k1_fe_sqr(&t1, &t1);
+    secp256k1_fe_mul(&t1, &t1, a);
+    for (int j=0; j<3; j++) secp256k1_fe_sqr(&t1, &t1);
+    secp256k1_fe_mul(&t1, &t1, &x2);
+    for (int j=0; j<2; j++) secp256k1_fe_sqr(&t1, &t1);
+    secp256k1_fe_mul(r, &t1, a);
 }
 
 void static secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
