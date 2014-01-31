@@ -22,8 +22,8 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "qt-win32-5.2.0-gitian-r1.zip"
-- "qt-win64-5.2.0-gitian-r1.zip"
+- "qt-win32-5.2.0-gitian-r2.zip"
+- "qt-win64-5.2.0-gitian-r2.zip"
 - "boost-win32-1.55.0-gitian-r6.zip"
 - "boost-win64-1.55.0-gitian-r6.zip"
 - "bitcoin-deps-win32-gitian-r10.zip"
@@ -36,6 +36,14 @@ script: |
   INDIR=$HOME/build
   OPTFLAGS='-O2'
   NEEDDIST=1
+  # Qt: workaround for determinism in resource ordering
+  #  Qt5's rcc uses a QHash to store the files for the resource.
+  #  A security fix in QHash makes the ordering of keys to be different on every run
+  #  (https://qt.gitorious.org/qt/qtbase/commit/c01eaa438200edc9a3bbcd8ae1e8ded058bea268).
+  #  This is good in general but qrc shouldn't be doing a traversal over a randomized container.
+  #  The thorough solution would be to use QMap instead of QHash, but this requires patching Qt.
+  #  For now luckily there is a test mode that forces a fixed seed.
+  export QT_RCC_TEST=1
   for BITS in 32 64; do # for architectures
     #
     STAGING=$HOME/staging${BITS}
@@ -49,7 +57,7 @@ script: |
     mkdir -p $STAGING $BUILDDIR $BINDIR
     #
     cd $STAGING
-    unzip $INDIR/qt-win${BITS}-5.2.0-gitian-r1.zip
+    unzip $INDIR/qt-win${BITS}-5.2.0-gitian-r2.zip
     unzip $INDIR/boost-win${BITS}-1.55.0-gitian-r6.zip
     unzip $INDIR/bitcoin-deps-win${BITS}-gitian-r10.zip
     unzip $INDIR/protobuf-win${BITS}-2.5.0-gitian-r4.zip
