@@ -7,6 +7,7 @@
 
 #include "base58.h"
 #include "coincontrol.h"
+#include "defaultvalues.h"
 #include "net.h"
 
 #include <inttypes.h>
@@ -17,7 +18,7 @@
 using namespace std;
 
 // Settings
-int64_t nTransactionFee = 0;
+int64_t nTransactionFee = nDefaultTransactionFee;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1534,7 +1535,6 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const string& strNam
 
 bool CWallet::DelAddressBook(const CTxDestination& address)
 {
-
     AssertLockHeld(cs_wallet); // mapAddressBook
 
     if(fFileBacked)

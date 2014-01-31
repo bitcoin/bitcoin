@@ -12,6 +12,7 @@
 #include "addrman.h"
 #include "chainparams.h"
 #include "core.h"
+#include "defaultvalues.h"
 #include "ui_interface.h"
 
 #ifdef WIN32
@@ -1755,10 +1756,8 @@ void StartNode(boost::thread_group& threadGroup)
     else
         threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "dnsseed", &ThreadDNSAddressSeed));
 
-#ifdef USE_UPNP
     // Map ports with UPnP
-    MapPort(GetBoolArg("-upnp", USE_UPNP));
-#endif
+    MapPort(GetBoolArg("-upnp", fDefaultUpnp));
 
     // Send and receive from sockets, accept connections
     threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "net", &ThreadSocketHandler));

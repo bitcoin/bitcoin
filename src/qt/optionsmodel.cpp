@@ -9,6 +9,7 @@
 #include "optionsmodel.h"
 
 #include "bitcoinunits.h"
+#include "defaultvalues.h"
 #include "guiutil.h"
 
 #include "init.h"
@@ -72,26 +73,22 @@ void OptionsModel::Init()
     // Main
 #ifdef ENABLE_WALLET
     if (!settings.contains("nTransactionFee"))
-        settings.setValue("nTransactionFee", 0);
+        settings.setValue("nTransactionFee", nDefaultTransactionFee);
 #endif
 
     if (!settings.contains("nDatabaseCache"))
-        settings.setValue("nDatabaseCache", 25);
+        settings.setValue("nDatabaseCache", nDefaultDbCache);
     if (!SoftSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
         strOverriddenByCommandLine += "-dbcache ";
 
     if (!settings.contains("nThreadsScriptVerif"))
-        settings.setValue("nThreadsScriptVerif", 0);
+        settings.setValue("nThreadsScriptVerif", nDefaultPar);
     if (!SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
         strOverriddenByCommandLine += "-par ";
 
     // Network
     if (!settings.contains("fUseUPnP"))
-#ifdef USE_UPNP
-        settings.setValue("fUseUPnP", true);
-#else
-        settings.setValue("fUseUPnP", false);
-#endif	
+        settings.setValue("fUseUPnP", fDefaultUpnp);
     if (!SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
         strOverriddenByCommandLine += "-upnp ";
 

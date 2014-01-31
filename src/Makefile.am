@@ -40,6 +40,7 @@ BITCOIN_CORE_H = \
   core.h \
   crypter.h \
   db.h \
+  defaultvalues.h \
   hash.h \
   init.h \
   key.h \
