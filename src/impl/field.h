@@ -66,7 +66,7 @@ void static secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 
     // The binary representation of (p + 1)/4 has 3 blocks of 1s, with lengths in
     // { 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
-    // 1, [2], 3, 6, 9, 11, [22], 44, 88, 176, 222, [223]
+    // 1, [2], 3, 6, 9, 11, [22], 44, 88, 176, 220, [223]
 
     secp256k1_fe_t x2;
     secp256k1_fe_sqr(&x2, a);
@@ -127,7 +127,7 @@ void static secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 
     // The binary representation of (p - 2) has 5 blocks of 1s, with lengths in
     // { 1, 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
-    // [1], [2], 3, 6, 9, 11, [22], 44, 88, 176, 222, [223]
+    // [1], [2], 3, 6, 9, 11, [22], 44, 88, 176, 220, [223]
 
     secp256k1_fe_t x2;
     secp256k1_fe_sqr(&x2, a);
