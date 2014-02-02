@@ -15,6 +15,7 @@
 #include "optionsmodel.h"
 
 #include "netbase.h"
+#include "main.h"
 
 #include <QDir>
 #include <QIntValidator>
@@ -93,6 +94,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     }
 
     ui->unit->setModel(new BitcoinUnits(this));
+    ui->transactionFee->setSingleStep(CTransaction::nMinTxFee);
 
     /* Widget-to-option mapper */
     mapper = new MonitoredDataMapper(this);
