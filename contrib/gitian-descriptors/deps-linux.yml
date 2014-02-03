@@ -6,6 +6,7 @@ architectures:
 - "i386"
 - "amd64"
 packages:
+- "g++"
 - "unzip"
 - "zip"
 - "pkg-config"
@@ -50,7 +51,7 @@ script: |
   tar xjfm qrencode-3.4.3.tar.bz2
   cd qrencode-3.4.3
   #   need --with-pic to avoid relocation error in 64 bit builds
-  ./configure --prefix=$STAGING --enable-static --disable-shared -with-pic --without-tools
+  ./configure --prefix=$STAGING --enable-static --disable-shared --with-pic --without-tools --disable-maintainer-mode --disable-dependency-tracking
   make $MAKEOPTS install
   cd ..
   #
