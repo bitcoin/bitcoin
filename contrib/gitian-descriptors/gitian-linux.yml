@@ -21,8 +21,8 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "bitcoin-deps-linux32-gitian-r2.zip"
-- "bitcoin-deps-linux64-gitian-r2.zip"
+- "bitcoin-deps-linux32-gitian-r3.zip"
+- "bitcoin-deps-linux64-gitian-r3.zip"
 - "boost-linux32-1.55.0-gitian-r1.zip"
 - "boost-linux64-1.55.0-gitian-r1.zip"
 script: |
@@ -34,7 +34,7 @@ script: |
   #
   mkdir -p $STAGING
   cd $STAGING
-  unzip ../build/bitcoin-deps-linux${GBUILD_BITS}-gitian-r2.zip
+  unzip ../build/bitcoin-deps-linux${GBUILD_BITS}-gitian-r3.zip
   unzip ../build/boost-linux${GBUILD_BITS}-1.55.0-gitian-r1.zip
   cd ../build
   #

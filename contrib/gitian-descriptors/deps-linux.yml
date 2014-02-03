@@ -24,6 +24,9 @@ files:
 script: |
   STAGING="$HOME/install"
   OPTFLAGS='-O2'
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
   export LIBRARY_PATH="$STAGING/lib"
   # Integrity Check
   echo "f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3  openssl-1.0.1e.tar.gz"  | sha256sum -c
@@ -37,6 +40,7 @@ script: |
   cd openssl-1.0.1e
   #   need -fPIC to avoid relocation error in 64 bit builds
   ./config no-shared no-zlib no-dso no-krb5 --openssldir=$STAGING -fPIC
+  #   need to build OpenSSL with faketime because a timestamp is embedded into cversion.o
   make
   make install_sw
   cd ..
@@ -48,18 +52,26 @@ script: |
   rm -f $STAGING/lib/libminiupnpc.so* # no way to skip shared lib build
   cd ..
   #
-  tar xjfm qrencode-3.4.3.tar.bz2
+  tar xjf qrencode-3.4.3.tar.bz2
   cd qrencode-3.4.3
+  unset FAKETIME # unset fake time during configure, as it does some clock sanity tests
   #   need --with-pic to avoid relocation error in 64 bit builds
-  ./configure --prefix=$STAGING --enable-static --disable-shared --with-pic --without-tools --disable-maintainer-mode --disable-dependency-tracking
+  ./configure --prefix=$STAGING --enable-static --disable-shared --with-pic --without-tools --disable-dependency-tracking --without-zlib
+  # Workaround to prevent re-configuring by make; make all files have a date in the past
+  find . -print0 | xargs -r0 touch -t 200001010000
+  export FAKETIME=$REFERENCE_DATETIME
   make $MAKEOPTS install
   cd ..
   #
-  tar xjfm protobuf-2.5.0.tar.bz2
+  tar xjf protobuf-2.5.0.tar.bz2
   cd protobuf-2.5.0
   mkdir -p $STAGING/host/bin
+  unset FAKETIME # unset fake time during configure, as it does some clock sanity tests
   #   need --with-pic to avoid relocation error in 64 bit builds
   ./configure --prefix=$STAGING --bindir=$STAGING/host/bin --enable-static --disable-shared --with-pic
+  # Workaround to prevent re-configuring by make; make all files have a date in the past
+  find . -print0 | xargs -r0 touch -t 200001010000
+  export FAKETIME=$REFERENCE_DATETIME
   make $MAKEOPTS install
   cd ..
   #
@@ -67,9 +79,11 @@ script: |
   cd db-4.8.30.NC/build_unix
   #   need --with-pic to avoid relocation error in 64 bit builds
   ../dist/configure --prefix=$STAGING --enable-cxx --disable-shared --with-pic
+  # Workaround to prevent re-configuring by make; make all files have a date in the past
+  find . -print0 | xargs -r0 touch -t 200001010000
   make $MAKEOPTS library_build
   make install_lib install_include
   cd ../..
   #
   cd $STAGING
-  zip -r $OUTDIR/bitcoin-deps-linux${GBUILD_BITS}-gitian-r2.zip include lib bin host
+  find include lib bin host -type f | sort | zip -X@ $OUTDIR/bitcoin-deps-linux${GBUILD_BITS}-gitian-r3.zip
