@@ -107,7 +107,7 @@ script: |
     #
     tar xjf $INDIR/qrencode-3.4.3.tar.bz2
     cd qrencode-3.4.3
-    png_CFLAGS="-I$INSTALLPREFIX/include" png_LIBS="-L$INSTALLPREFIX/lib -lpng" ./configure --prefix=$INSTALLPREFIX --host=$HOST
+    png_CFLAGS="-I$INSTALLPREFIX/include" png_LIBS="-L$INSTALLPREFIX/lib -lpng" ./configure --prefix=$INSTALLPREFIX --host=$HOST --enable-static --disable-shared --without-tools --disable-maintainer-mode --disable-dependency-tracking
     make
     make install
     cd ..
