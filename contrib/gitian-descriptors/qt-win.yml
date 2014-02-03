@@ -21,6 +21,14 @@ script: |
   # Defines
   export TZ=UTC
   INDIR=$HOME/build
+  # Qt: workaround for determinism in resource ordering
+  #  Qt5's rcc uses a QHash to store the files for the resource.
+  #  A security fix in QHash makes the ordering of keys to be different on every run
+  #  (https://qt.gitorious.org/qt/qtbase/commit/c01eaa438200edc9a3bbcd8ae1e8ded058bea268).
+  #  This is good in general but qrc shouldn't be doing a traversal over a randomized container.
+  #  The thorough solution would be to use QMap instead of QHash, but this requires patching Qt.
+  #  For now luckily there is a test mode that forces a fixed seed.
+  export QT_RCC_TEST=1
   # Integrity Check
   echo "395ec72277c5786c65b8163ef5817fd03d0a1f524a6d47f53624baf8056f1081  qt-everywhere-opensource-src-5.2.0.tar.gz" | sha256sum -c
 
@@ -71,7 +79,7 @@ script: |
 
     # as zip stores file timestamps, use faketime to intercept stat calls to set dates for all files to reference date
     export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-    zip -r $OUTDIR/qt-win${BITS}-5.2.0-gitian-r1.zip *
+    zip -r $OUTDIR/qt-win${BITS}-5.2.0-gitian-r2.zip *
     unset LD_PRELOAD
     unset FAKETIME
   done # for BITS in

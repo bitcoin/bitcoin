@@ -6,6 +6,7 @@ architectures:
 - "i386"
 - "amd64"
 packages: 
+- "g++"
 - "libqt4-dev"
 - "git-core"
 - "unzip"
