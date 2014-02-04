@@ -73,6 +73,9 @@ void OptionsModel::Init()
 #ifdef ENABLE_WALLET
     if (!settings.contains("nTransactionFee"))
         settings.setValue("nTransactionFee", 0);
+    nTransactionFee = settings.value("nTransactionFee").toLongLong(); // if -paytxfee is set, this will be overridden later in init.cpp
+    if (mapArgs.count("-paytxfee"))
+        strOverriddenByCommandLine += "-paytxfee ";
 #endif
 
     if (!settings.contains("nDatabaseCache"))
