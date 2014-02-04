@@ -54,6 +54,29 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 }
 
+//recent request table's header signals
+void ReceiveCoinsDialog::connectRecentRequestsViewHeadersSignals() 
+{
+    connect(ui->recentRequestsView->horizontalHeader(),SIGNAL(sectionResized(int,int,int)),this,SLOT(on_sectionResized()));
+    connect(ui->recentRequestsView->horizontalHeader(),SIGNAL(geometriesChanged()),this,SLOT(on_geometriesChanged()));
+}
+
+//we need to disconnect these while handling the resize events, otherwise we can enter an infinite loop
+void ReceiveCoinsDialog::disconnectRecentRequestsViewHeadersSignals() 
+{
+    disconnect(ui->recentRequestsView->horizontalHeader(),SIGNAL(sectionResized(int,int,int)),this,SLOT(on_sectionResized()));
+    disconnect(ui->recentRequestsView->horizontalHeader(),SIGNAL(geometriesChanged()),this,SLOT(on_geometriesChanged()));
+}
+
+//setup the resize mode, handles compatibility for QT5 and below as the method signatures changed. (refactored here for readability)
+void ReceiveCoinsDialog::setRecentRequestViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode) {
+#if QT_VERSION < 0x050000
+    ui->recentRequestsView->horizontalHeader()->setResizeMode(logicalIndex, resizeMode);
+#else
+    ui->recentRequestsView->horizontalHeader()->setSectionResizeMode(logicalIndex, resizeMode);
+#endif
+}
+
 void ReceiveCoinsDialog::setModel(WalletModel *model)
 {
     this->model = model;
@@ -63,20 +86,23 @@ void ReceiveCoinsDialog::setModel(WalletModel *model)
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
+        ui->recentRequestsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         ui->recentRequestsView->setModel(model->getRecentRequestsTableModel());
         ui->recentRequestsView->setAlternatingRowColors(true);
         ui->recentRequestsView->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->recentRequestsView->setSelectionMode(QAbstractItemView::ContiguousSelection);
-        ui->recentRequestsView->horizontalHeader()->resizeSection(RecentRequestsTableModel::Date, 130);
-        ui->recentRequestsView->horizontalHeader()->resizeSection(RecentRequestsTableModel::Label, 120);
-#if QT_VERSION < 0x050000
-        ui->recentRequestsView->horizontalHeader()->setResizeMode(RecentRequestsTableModel::Message, QHeaderView::Stretch);
-#else
-        ui->recentRequestsView->horizontalHeader()->setSectionResizeMode(RecentRequestsTableModel::Message, QHeaderView::Stretch);
-#endif
-        ui->recentRequestsView->horizontalHeader()->resizeSection(RecentRequestsTableModel::Amount, 100);
+        ui->recentRequestsView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
+        ui->recentRequestsView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
+	//(last 2 columns are set when the table geometry is ready)
+
+        setRecentRequestViewHeaderResizeMode(RecentRequestsTableModel::Message, QHeaderView::Interactive);
+        setRecentRequestViewHeaderResizeMode(RecentRequestsTableModel::Amount, QHeaderView::Fixed);
+
+        //this honors a minimum size while resizing for all columns. Wish they had a method for a single column.
+        ui->recentRequestsView->horizontalHeader()->setMinimumSectionSize(MINIMUM_COLUMN_WIDTH);
 
         model->getRecentRequestsTableModel()->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
+        connectRecentRequestsViewHeadersSignals(); //now we're ready to handle events on the table header.
     }
 }
 
@@ -183,6 +209,58 @@ void ReceiveCoinsDialog::on_removeRequestButton_clicked()
     // correct for selection mode ContiguousSelection
     QModelIndex firstIndex = selection.at(0);
     model->getRecentRequestsTableModel()->removeRows(firstIndex.row(), selection.length(), firstIndex.parent());
+}
+
+//given a column index, returns the maximum allowable width by substracting the other column's widths from the table's width
+//NOTE: works only for the two columns we care for: The last ("Amount"), and second to last ("Message").
+//      if given another column number, it will always return the remaining width for the last column ("Amount")
+int ReceiveCoinsDialog::getRemainingWidthForColumn(int column) 
+{
+    int nResult = AMOUNT_MINIMUM_COLUMN_WIDTH;
+
+    QTableView* recentRequestsTableView = ui->recentRequestsView;
+    QHeaderView* headerView = recentRequestsTableView->horizontalHeader();
+    int nTableWidth = recentRequestsTableView->width();
+
+    if (nTableWidth > 0) 
+    {
+        int nOtherColsWidth = headerView->sectionSize(RecentRequestsTableModel::Date);
+        nOtherColsWidth += headerView->sectionSize(RecentRequestsTableModel::Label);
+        nOtherColsWidth += headerView->sectionSize(column == RecentRequestsTableModel::Amount ? RecentRequestsTableModel::Message : RecentRequestsTableModel::Amount);
+        nResult = std::max(nResult, nTableWidth - nOtherColsWidth);
+    }
+
+    return nResult;
+}
+
+
+//make sure we don't make the columns wider than the table's viewport's width.
+void ReceiveCoinsDialog::adjustRecentRequestsColumnsWidth()
+{
+    disconnectRecentRequestsViewHeadersSignals(); 
+    ui->recentRequestsView->setColumnWidth(RecentRequestsTableModel::Amount, getRemainingWidthForColumn(RecentRequestsTableModel::Amount));
+    ui->recentRequestsView->setColumnWidth(RecentRequestsTableModel::Message, getRemainingWidthForColumn(RecentRequestsTableModel::Message));
+    connectRecentRequestsViewHeadersSignals(); 
+}
+
+//when a section is resized this is a slot-proxy for ajustAmountColumnWidth()
+void ReceiveCoinsDialog::on_sectionResized()
+{
+    adjustRecentRequestsColumnsWidth();
+}
+
+//when the table's geometry is ready, we manually perform the Stretch of the "Message" column
+//as the "Stretch" resize mode does not allow for interactive resizing.
+void ReceiveCoinsDialog::on_geometriesChanged()
+{
+    ui->recentRequestsView->setColumnWidth(RecentRequestsTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
+    ui->recentRequestsView->setColumnWidth(RecentRequestsTableModel::Message, getRemainingWidthForColumn(RecentRequestsTableModel::Message));
+}
+
+//We override the virtual resizeEvent of the QWidget to adjust tablet's column sizes as the table's width is proportional to the dialog's.
+void ReceiveCoinsDialog::resizeEvent(QResizeEvent* event) {
+  QWidget::resizeEvent(event);
+  adjustRecentRequestsColumnsWidth();
 }
 
 void ReceiveCoinsDialog::keyPressEvent(QKeyEvent *event)
