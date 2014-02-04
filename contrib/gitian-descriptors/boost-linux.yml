@@ -20,11 +20,14 @@ files:
 script: |
   STAGING="$HOME/install"
   export LIBRARY_PATH="$STAGING/lib"
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
   # Input Integrity Check
   echo "fff00023dd79486d444c8e29922f4072e1d451fc5a4d2b6075852ead7f2b7b52  boost_1_55_0.tar.bz2" | shasum -c
 
   mkdir -p "$STAGING"
-  tar xjf boost_1_55_0.tar.bz2
+  tar --warning=no-timestamp -xjf boost_1_55_0.tar.bz2
   cd boost_1_55_0
   GCCVERSION=$(g++ -E -dM $(mktemp --suffix=.h) | grep __VERSION__ | cut -d ' ' -f 3 | cut -d '"' -f 2)
   # note: bjam with -d+2 reveals that -O3 is implied by default, no need to provide it in cxxflags
@@ -38,6 +41,4 @@ script: |
   ./bjam toolset=gcc threadapi=pthread threading=multi variant=release link=static runtime-link=shared --user-config=user-config.jam --without-mpi --without-python -sNO_BZIP2=1 --layout=tagged --build-type=complete --prefix="$STAGING" $MAKEOPTS install
 
   cd "$STAGING"
-  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-  export FAKETIME=$REFERENCE_DATETIME
-  zip -r $OUTDIR/boost-linux${GBUILD_BITS}-1.55.0-gitian-r1.zip *
+  find -type f | sort | zip -X@ $OUTDIR/boost-linux${GBUILD_BITS}-1.55.0-gitian-r1.zip
