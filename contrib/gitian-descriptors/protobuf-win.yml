@@ -44,13 +44,13 @@ script: |
     # Now recompile with the mingw cross-compiler:
     make distclean
     ./configure --prefix=$INSTALLPREFIX --enable-shared=no --disable-dependency-tracking --with-protoc=$INSTALLPREFIX/host/bin/protoc --host=$HOST CXXFLAGS="-frandom-seed=11 ${OPTFLAGS}"
+    export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+    export FAKETIME=$REFERENCE_DATETIME
     make
     make install
     #
     cd $INSTALLPREFIX
-    export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-    export FAKETIME=$REFERENCE_DATETIME
-    zip -r $OUTDIR/protobuf-win$BITS-2.5.0-gitian-r4.zip include lib host
+    find include lib host | sort | zip -@ $OUTDIR/protobuf-win$BITS-2.5.0-gitian-r4.zip
     unset LD_PRELOAD
     unset FAKETIME
   done # for BITS in

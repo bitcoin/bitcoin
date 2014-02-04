@@ -55,18 +55,9 @@ script: |
     cd qt-everywhere-opensource-src-5.2.0
     SPECNAME="win32-g++"
     SPECFILE="qtbase/mkspecs/${SPECNAME}/qmake.conf"
-    sed 's/$TODAY/2011-01-30/' -i configure
+    sed 's/qt_instdate=`date +%Y-%m-%d`/qt_instdate=2011-01-30/' -i qtbase/configure
     sed --posix "s|QMAKE_CFLAGS            = -pipe -fno-keep-inline-dllexport|QMAKE_CFLAGS\t\t= -pipe -fno-keep-inline-dllexport -isystem /usr/$HOST/include/ -frandom-seed=qtbuild -I$DEPSDIR/include|" -i ${SPECFILE}
     sed --posix "s|QMAKE_LFLAGS            =|QMAKE_LFLAGS\t\t= -L$DEPSDIR/lib|" -i ${SPECFILE}
-    # ar adds timestamps to every object file included in the static library
-    # providing -D as ar argument is supposed to solve it, but doesn't work as qmake strips off the arguments and adds -M to pass a script...
-    # which somehow cannot be combined with other flags.
-    # use faketime only for ar, as it confuses make/qmake into hanging sometimes
-    sed --posix "s|QMAKE_LIB               = \\\$\\\${CROSS_COMPILE}ar -ru|QMAKE_LIB\t\t= $HOME/ar -Dr|" -i ${SPECFILE}
-    echo '#!/bin/bash' > $HOME/ar
-    echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> $HOME/ar
-    echo "$HOST-ar \"\$@\"" >> $HOME/ar
-    chmod +x $HOME/ar
     # Don't load faketime while compiling Qt, qmake will get stuck in nearly infinite loops
     #export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
     export FAKETIME=$REFERENCE_DATETIME
@@ -76,10 +67,12 @@ script: |
     make $MAKEOPTS install
     #
     cd $INSTALLPREFIX
-
+    # Remove unused non-deterministic stuff
+    rm host/bin/qtpaths.exe lib/libQt5Bootstrap.a lib/libQt5Bootstrap.la
     # as zip stores file timestamps, use faketime to intercept stat calls to set dates for all files to reference date
     export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-    zip -r $OUTDIR/qt-win${BITS}-5.2.0-gitian-r2.zip *
+    find -print0 | xargs -r0 touch # fix up timestamps before packaging
+    find | sort | zip -@ $OUTDIR/qt-win${BITS}-5.2.0-gitian-r2.zip
     unset LD_PRELOAD
     unset FAKETIME
   done # for BITS in
