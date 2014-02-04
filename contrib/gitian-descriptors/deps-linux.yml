@@ -56,7 +56,7 @@ script: |
   cd qrencode-3.4.3
   unset FAKETIME # unset fake time during configure, as it does some clock sanity tests
   #   need --with-pic to avoid relocation error in 64 bit builds
-  ./configure --prefix=$STAGING --enable-static --disable-shared --with-pic --without-tools --disable-dependency-tracking --without-zlib
+  ./configure --prefix=$STAGING --enable-static --disable-shared --with-pic --without-tools --disable-dependency-tracking
   # Workaround to prevent re-configuring by make; make all files have a date in the past
   find . -print0 | xargs -r0 touch -t 200001010000
   export FAKETIME=$REFERENCE_DATETIME
@@ -68,7 +68,7 @@ script: |
   mkdir -p $STAGING/host/bin
   unset FAKETIME # unset fake time during configure, as it does some clock sanity tests
   #   need --with-pic to avoid relocation error in 64 bit builds
-  ./configure --prefix=$STAGING --bindir=$STAGING/host/bin --enable-static --disable-shared --with-pic
+  ./configure --prefix=$STAGING --bindir=$STAGING/host/bin --enable-static --disable-shared --with-pic --without-zlib
   # Workaround to prevent re-configuring by make; make all files have a date in the past
   find . -print0 | xargs -r0 touch -t 200001010000
   export FAKETIME=$REFERENCE_DATETIME
