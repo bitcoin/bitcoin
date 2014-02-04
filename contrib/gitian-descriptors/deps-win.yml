@@ -107,11 +107,13 @@ script: |
     #
     tar xjf $INDIR/qrencode-3.4.3.tar.bz2
     cd qrencode-3.4.3
-    png_CFLAGS="-I$INSTALLPREFIX/include" png_LIBS="-L$INSTALLPREFIX/lib -lpng" ./configure --prefix=$INSTALLPREFIX --host=$HOST --enable-static --disable-shared --without-tools --disable-maintainer-mode --disable-dependency-tracking
+    png_CFLAGS="-I$INSTALLPREFIX/include" png_LIBS="-L$INSTALLPREFIX/lib -lpng" ./configure --prefix=$INSTALLPREFIX --host=$HOST --enable-static --disable-shared --without-tools --disable-dependency-tracking
+    # Workaround to prevent re-configuring by make (resulting in missing m4 error); make all files have a date in the past
+    find . -print0 | xargs -r0 touch -t 200001010000
     make
     make install
     cd ..
     #
     cd $INSTALLPREFIX
-    zip -r $OUTDIR/bitcoin-deps-win$BITS-gitian-r10.zip include lib
+    find include lib | sort | zip -@ $OUTDIR/bitcoin-deps-win$BITS-gitian-r10.zip
   done # for BITS in

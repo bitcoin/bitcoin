@@ -16,6 +16,8 @@ files:
 - "boost-mingw-gas-cross-compile-2013-03-03.patch"
 script: |
   # Defines
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
   INDIR=$HOME/build
   # Input Integrity Check
@@ -35,7 +37,7 @@ script: |
     mkdir -p $INSTALLPREFIX $BUILDDIR
     cd $BUILDDIR
     #
-    tar xjf $INDIR/boost_1_55_0.tar.bz2
+    tar --warning=no-timestamp -xjf $INDIR/boost_1_55_0.tar.bz2
     cd boost_1_55_0
     GCCVERSION=$($HOST-g++ -E -dM $(mktemp --suffix=.h) | grep __VERSION__ | cut -d ' ' -f 3 | cut -d '"' -f 2)
     echo "using gcc : $GCCVERSION : $HOST-g++
@@ -70,10 +72,6 @@ script: |
     ./bjam toolset=gcc binary-format=pe target-os=windows threadapi=win32 address-model=$BITS threading=multi variant=release link=static runtime-link=static --user-config=user-config.jam --without-mpi --without-python -sNO_BZIP2=1 -sNO_ZLIB=1 --layout=tagged --build-type=complete --prefix="$INSTALLPREFIX" $MAKEOPTS install
     #
     cd "$INSTALLPREFIX"
-    export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-    export FAKETIME=$REFERENCE_DATETIME
-    zip -r $OUTDIR/boost-win$BITS-1.55.0-gitian-r6.zip *
-    unset LD_PRELOAD
-    unset FAKETIME
+    find | sort | zip -@ $OUTDIR/boost-win$BITS-1.55.0-gitian-r6.zip
   done # for BITS in
 
