@@ -11,7 +11,7 @@ configure Tor.
 ---------------------------------
 
 The first step is running Bitcoin behind a Tor proxy. This will already make all
-outgoing connections be anonimized, but more is possible.
+outgoing connections be anonymized, but more is possible.
 
 	-socks=5        SOCKS5 supports connecting-to-hostname, which can be used instead
 	                of doing a (leaking) local DNS lookup. SOCKS5 is the default,
