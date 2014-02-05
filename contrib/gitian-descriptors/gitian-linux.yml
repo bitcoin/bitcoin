@@ -29,6 +29,8 @@ script: |
   STAGING="$HOME/install"
   OPTFLAGS='-O2'
   BINDIR="${OUTDIR}/bin/${GBUILD_BITS}" # 32/64 bit build specific output directory
+  TEMPDIR="$HOME/tempdir"
+  export TZ=UTC
   export LIBRARY_PATH="$STAGING/lib"
   mkdir -p ${BINDIR}
   #
@@ -39,15 +41,20 @@ script: |
   cd ../build
   #
   cd bitcoin
-  export TAR_OPTIONS=--mtime=`echo $REFERENCE_DATETIME | awk '{ print $1 }'`
   ./autogen.sh
   ./configure --prefix=$STAGING --bindir=$BINDIR --with-protoc-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt"
   make dist
+  DISTNAME=`echo bitcoin-*.tar.gz`
   mkdir -p distsrc
   cd distsrc
-  tar --strip-components=1 -xf ../bitcoin-*.tar.*
+  tar --strip-components=1 -xf ../$DISTNAME
   ./configure --prefix=$STAGING --bindir=$BINDIR --with-protoc-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt"
   make $MAKEOPTS
   make $MAKEOPTS install-strip
+  
+  # sort distribution tar file and normalize user/group/mtime information for deterministic output
   mkdir -p $OUTDIR/src
-  cp ../bitcoin-*.tar.* $OUTDIR/src
+  rm -rf $TEMPDIR
+  mkdir -p $TEMPDIR
+  cd $TEMPDIR
+  tar -xvf $HOME/build/bitcoin/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
