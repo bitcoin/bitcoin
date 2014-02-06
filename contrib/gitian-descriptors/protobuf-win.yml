@@ -17,6 +17,7 @@ script: |
   #
   export TZ=UTC
   INDIR=$HOME/build
+  TEMPDIR=$HOME/tmp
   OPTFLAGS="-O2"
   # Integrity Check
   echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
@@ -48,9 +49,17 @@ script: |
     export FAKETIME=$REFERENCE_DATETIME
     make
     make install
+    # post-process all generated libraries to be deterministic
+    # extract them to a temporary directory then re-build them deterministically
+    for LIB in $(find $INSTALLPREFIX -name \*.a); do
+        rm -rf $TEMPDIR && mkdir $TEMPDIR && cd $TEMPDIR
+        $HOST-ar xv $LIB | cut -b5- > /tmp/list.txt
+        rm $LIB
+        $HOST-ar crsD $LIB $(cat /tmp/list.txt)
+    done
     #
     cd $INSTALLPREFIX
-    find include lib host | sort | zip -@ $OUTDIR/protobuf-win$BITS-2.5.0-gitian-r4.zip
+    find include lib host | sort | zip -X@ $OUTDIR/protobuf-win$BITS-2.5.0-gitian-r4.zip
     unset LD_PRELOAD
     unset FAKETIME
   done # for BITS in
