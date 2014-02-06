@@ -26,6 +26,7 @@ script: |
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
   INDIR=$HOME/build
+  TEMPDIR=$HOME/tmp
   # Input Integrity Check
   echo "f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3  openssl-1.0.1e.tar.gz"  | sha256sum -c
   echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"    | sha256sum -c
@@ -113,7 +114,15 @@ script: |
     make
     make install
     cd ..
+    # post-process all generated libraries to be deterministic
+    # extract them to a temporary directory then re-build them deterministically
+    for LIB in $(find $INSTALLPREFIX -name \*.a); do
+        rm -rf $TEMPDIR && mkdir $TEMPDIR && cd $TEMPDIR
+        $HOST-ar xv $LIB | cut -b5- > /tmp/list.txt
+        rm $LIB
+        $HOST-ar crsD $LIB $(cat /tmp/list.txt)
+    done
     #
     cd $INSTALLPREFIX
-    find include lib | sort | zip -@ $OUTDIR/bitcoin-deps-win$BITS-gitian-r10.zip
+    find include lib | sort | zip -X@ $OUTDIR/bitcoin-deps-win$BITS-gitian-r10.zip
   done # for BITS in
