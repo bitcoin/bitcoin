@@ -23,6 +23,7 @@ files:
 - "db-4.8.30.NC.tar.gz"
 script: |
   STAGING="$HOME/install"
+  TEMPDIR="$HOME/tmp"
   OPTFLAGS='-O2'
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
@@ -84,6 +85,14 @@ script: |
   make $MAKEOPTS library_build
   make install_lib install_include
   cd ../..
+  # post-process all generated libraries to be deterministic
+  # extract them to a temporary directory then re-build them deterministically
+  for LIB in $(find $STAGING -name \*.a); do
+    rm -rf $TEMPDIR && mkdir $TEMPDIR && cd $TEMPDIR
+    ar xv $LIB | cut -b5- > /tmp/list.txt
+    rm $LIB
+    ar crsD $LIB $(cat /tmp/list.txt)
+  done
   #
   cd $STAGING
-  find include lib bin host -type f | sort | zip -X@ $OUTDIR/bitcoin-deps-linux${GBUILD_BITS}-gitian-r3.zip
+  find include lib bin host | sort | zip -X@ $OUTDIR/bitcoin-deps-linux${GBUILD_BITS}-gitian-r3.zip
