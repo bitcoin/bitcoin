@@ -138,11 +138,15 @@ void OptionsDialog::setModel(OptionsModel *model)
     /* update the display unit, to not use the default ("BTC") */
     updateDisplayUnit();
 
+    /* show warning if fee is too low or too high */
+    updateFeeWarning();
+
     /* warn when one of the following settings changes by user action (placed here so init via mapper doesn't trigger them) */
 
     /* Main */
     connect(ui->databaseCache, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     connect(ui->threadsScriptVerif, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
+    connect(ui->transactionFee, SIGNAL(textChanged()), this, SLOT(updateFeeWarning()));
     /* Network */
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Display */
@@ -255,6 +259,8 @@ void OptionsDialog::updateDisplayUnit()
     {
         /* Update transactionFee with the current unit */
         ui->transactionFee->setDisplayUnit(model->getDisplayUnit());
+
+        updateCurrentDefaultFee();
     }
 }
 
@@ -290,4 +296,30 @@ bool OptionsDialog::eventFilter(QObject *object, QEvent *event)
         }
     }
     return QDialog::eventFilter(object, event);
+}
+
+void OptionsDialog::updateCurrentDefaultFee()
+{
+    if(model)
+        ui->labelCurrentDefaultFee->setText(tr("The recommended default fee per kB is currently <b>%1</b>.").arg(BitcoinUnits::formatWithUnit(model->getDisplayUnit(), CTransaction::nMinTxFee)));
+}
+
+void OptionsDialog::updateFeeWarning()
+{
+    bool fShowWarning = true;
+    int64_t nFee = (int64_t)ui->transactionFee->value();
+
+    if (mapArgs.count("-mintxfee")) // dont show warning if the user has messed with nMinTxFee
+        fShowWarning = false;
+    else if (nFee == 0)
+        ui->labelFeeWarning->setText(tr("You currently pay zero transaction fee. This may result in very long confirmation times."));
+    else if (nFee < CTransaction::nMinTxFee)
+        ui->labelFeeWarning->setText(tr("Fees below the recommended default fee are considered zero fee by bitcoin miners. This may result in very long confirmation times."));
+    else if (nFee >= CTransaction::nMinTxFee * 5)
+        ui->labelFeeWarning->setText(tr("Your fee is much higher than the recommended default fee. Please double-check your setting."));
+    else
+        fShowWarning = false;
+
+    ui->labelFeeWarningHead->setVisible(fShowWarning);
+    ui->labelFeeWarning->setVisible(fShowWarning);
 }
