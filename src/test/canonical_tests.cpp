@@ -89,4 +89,21 @@ BOOST_AUTO_TEST_CASE(script_noncanon)
     }
 }
 
+BOOST_AUTO_TEST_CASE(script_signstrict)
+{
+    for (int i=0; i<100; i++) {
+        CKey key;
+        key.MakeNewKey(i & 1);
+        std::vector<unsigned char> sig;
+        uint256 hash = GetRandHash();
+
+        BOOST_CHECK(key.Sign(hash, sig)); // Generate a random signature.
+        BOOST_CHECK(key.GetPubKey().Verify(hash, sig)); // Check it.
+        sig.push_back(0x01); // Append a sighash type.
+
+        BOOST_CHECK(IsCanonicalSignature(sig, SCRIPT_VERIFY_STRICTENC | SCRIPT_VERIFY_LOW_S));
+        BOOST_CHECK(IsCanonicalSignature_OpenSSL(sig));
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
