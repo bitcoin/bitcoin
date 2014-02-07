@@ -290,10 +290,11 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
 
 BitcoinApplication::~BitcoinApplication()
 {
-    LogPrintf("Stopping thread\n");
+    /* Do not use logging here, as it will write to the data directory
+     * which may not even have been initialized yet.
+     */
     emit stopThread();
     coreThread->wait();
-    LogPrintf("Stopped thread\n");
 
     delete window;
     window = 0;
