@@ -2,8 +2,8 @@ Bitcoin Core version 0.9.0rc1 is now available from:
 
   http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.9.0rc1/
 
-This is a release candidate for a new major version. A major version brings both
-new features and bug fixes.
+This is a release candidate for a new major version. A major version brings
+both new features and bug fixes.
 
 Please report bugs using the issue tracker at github:
 
@@ -12,33 +12,31 @@ Please report bugs using the issue tracker at github:
 How to Upgrade
 --------------
 
-If you are running an older version, shut it down. Wait
-until it has completely shut down (which might take a few minutes for older
-versions), uninstall all earlier versions of Bitcoin, 
-then run the installer (on Windows) or just copy over
-/Applications/Bitcoin-Qt (on Mac) or bitcoind/bitcoin-qt (on Linux).
+If you are running an older version, shut it down. Wait until it has completely
+shut down (which might take a few minutes for older versions), uninstall all
+earlier versions of Bitcoin, then run the installer (on Windows) or just copy
+over /Applications/Bitcoin-Qt (on Mac) or bitcoind/bitcoin-qt (on Linux).
 
-If you are upgrading from version 0.7.2 or earlier, the first time you
-run 0.9.0 your blockchain files will be re-indexed, which will take
-anywhere from 30 minutes to several hours, depending on the speed of
-your machine.
+If you are upgrading from version 0.7.2 or earlier, the first time you run
+0.9.0 your blockchain files will be re-indexed, which will take anywhere from
+30 minutes to several hours, depending on the speed of your machine.
 
-On Windows, do not forget to uninstall all earlier versions of the Bitcoin 
+On Windows, do not forget to uninstall all earlier versions of the Bitcoin
 client first, especially if you are switching to the 64-bit version.
 
 Windows 64-bit installer
 -------------------------
 
-New in 0.9.0 is the Windows 64-bit version of the client.
-There have been frequent reports of users running out of virtual memory on 32-bit systems
-during the initial sync. Because of this it is recommended to install the 64-bit version if
-your system supports it.
+New in 0.9.0 is the Windows 64-bit version of the client. There have been
+frequent reports of users running out of virtual memory on 32-bit systems
+during the initial sync. Because of this it is recommended to install the
+64-bit version if your system supports it.
 
 Rebranding to Bitcoin Core
 ---------------------------
 
-To reduce confusion between Bitcoin-the-network and Bitcoin-the-software we have
-renamed the reference client to Bitcoin Core.
+To reduce confusion between Bitcoin-the-network and Bitcoin-the-software we
+have renamed the reference client to Bitcoin Core.
 
 Autotools build system
 -----------------------
@@ -55,12 +53,11 @@ Be sure to check doc/build-*.md for your platform before building from source.
 Bitcoin-cli
 -------------
 
-Another change in the 0.9 release is moving away from the
-bitcoind executable functioning both as a server and as a RPC client.  The RPC
-client functionality (“tell the running bitcoin daemon to do THIS”) was split
-into a separate executable, 'bitcoin-cli'. The RPC client code will
-eventually be removed from bitcoind, but will be kept for backwards
-compatibility for a release or two.
+Another change in the 0.9 release is moving away from the bitcoind executable
+functioning both as a server and as a RPC client. The RPC client functionality
+(“tell the running bitcoin daemon to do THIS”) was split into a separate
+executable, 'bitcoin-cli'. The RPC client code will eventually be removed from
+bitcoind, but will be kept for backwards compatibility for a release or two.
 
 0.9.0rc1 Release notes
 =======================
@@ -69,12 +66,14 @@ RPC:
 
 - 'listreceivedbyaddress' now provides tx ids
 - Updated help and tests for 'getreceivedby(account|address)'
-- In 'getblock', accept 2nd 'verbose' parameter, similar to getrawtransaction, but defaulting to 1 for backward compatibility
+- In 'getblock', accept 2nd 'verbose' parameter, similar to getrawtransaction,
+  but defaulting to 1 for backward compatibility
 - Add 'verifychain', to verify chain database at runtime
 - Add 'dumpwallet' and 'importwallet' RPCs
 - 'keypoolrefill' gains optional size parameter
 - Add 'getbestblockhash', to return tip of best chain
-- Add 'chainwork' (the total work done by all blocks since the genesis block) to 'getblock' output
+- Add 'chainwork' (the total work done by all blocks since the genesis block)
+  to 'getblock' output
 - Make RPC password resistant to timing attacks
 - Clarify help messages and add examples
 - Add 'getrawchangeaddress' call for raw transaction change destinations
@@ -82,7 +81,8 @@ RPC:
 - Add RPC call 'decodescript' to decode a hex-encoded transaction script
 - Make 'validateaddress' provide redeemScript
 - Add 'getnetworkhashps' to get the calculated network hashrate
-- New RPC 'ping' command to request ping, new 'pingtime' and 'pingwait' fields in 'getpeerinfo' output
+- New RPC 'ping' command to request ping, new 'pingtime' and 'pingwait' fields
+  in 'getpeerinfo' output
 - Adding new 'addrlocal' field to 'getpeerinfo' output
 - Add verbose boolean to 'getrawmempool'
 - Add rpc command 'getunconfirmedbalance' to obtain total unconfirmed balance
@@ -103,7 +103,8 @@ Command-line options:
 Block-chain handling and storage:
 
 - Update leveldb to 1.15
-- Check for correct genesis (prevent cases where accidentally a datadir from the wrong network is loaded)
+- Check for correct genesis (prevent cases where a datadir from the wrong
+  network is accidentally loaded)
 - Allow txindex to be removed and add a reindex dialog
 - Log aborted block database rebuilds
 - Store orphan blocks in serialized form, to save memory
@@ -147,23 +148,24 @@ Validation:
 
 - Log reason for non-standard transaction rejection
 - Prune provably-unspendable outputs
-- Detect any sufficiently long fork and add a warning.
-- Call the -alertnotify script when we see a long or invalid fork.
+- Detect any sufficiently long fork and add a warning
+- Call the -alertnotify script when we see a long or invalid fork
 - Fix multi-block reorg transaction resurrection
 - Reject non-canonically-encoded serialization sizes
-- Only create signatures with even S, and verification mode to check.
+- Only create signatures with even S, and verification mode to check
 - Reject dust amounts during validation
 - Use 'low S' as malleability breaker rather than 'even S'
 - Skip unspendable outputs in consistency check
 - Generalize the remove-outputs check for fully-prunable transactions
-- Accept nLockTime transactions that finalize in the next block"
+- Accept nLockTime transactions that finalize in the next block
 
 Build system:
 
 - Switch to autotools-based build system
-- Build without wallet by passing `--disable-wallet` to configure, this
-  removes the BerkeleyDB dependency
-- Upgrade gitian dependencies (libpng, libz, libupnpc, boost, openssl) to more recent versions
+- Build without wallet by passing `--disable-wallet` to configure, this removes
+  the BerkeleyDB dependency
+- Upgrade gitian dependencies (libpng, libz, libupnpc, boost, openssl) to more
+  recent versions
 - Windows 64-bit build support
 - Solaris compatibility fixes
 - Check integrity of gitian input source tarballs
@@ -183,22 +185,24 @@ GUI:
 - Add network traffic graph in debug window
 - Add open URI dialog
 - Add Coin Control Features
-- Improve receive coins workflow: make the 'Receive' tab into a form to
-  request payments, and move historical address list functionality to File menu.
+- Improve receive coins workflow: make the 'Receive' tab into a form to request
+  payments, and move historical address list functionality to File menu.
 - Rebrand to `Bitcoin Core`
-- Move initialization/shutdown to a thread. This prevents "Not responding" messages during start.
-  Also show a window during shutdown.
+- Move initialization/shutdown to a thread. This prevents “Not responding”
+  messages during startup. Also show a window during shutdown.
 - Don't regenerate autostart link on every client startup
 - Show and store message of normal bitcoin:URI
 - Fix richtext detection hang issue on very old Qt versions
-- osx: make use of the 10.8+ user notification center to display growl like notifications
-- osx: Added NSHighResolutionCapable flag to Info.plist for better font rendering on Retina displays.
-- osx: fix bitcoin-qt startup crash when clicking dock icon
+- osx: Make use of the 10.8+ user notification center to display growl like
+       notifications
+- osx: Added NSHighResolutionCapable flag to Info.plist for better font
+       rendering on Retina displays.
+- osx: Fix bitcoin-qt startup crash when clicking dock icon
 - linux: Fix Gnome bitcoin: URI handler
 
 Miscellaneous:
 
-- Add Linux script (contrib/qos/tc.sh) to limit outgoing bandwidth used by Bitcoin
+- Add Linux script (contrib/qos/tc.sh) to limit outgoing bandwidth
 - Add '-regtest' mode, similar to testnet but private with instant block
   generation with 'setgenerate' RPC.
 - Add 'linearize.py' script to contrib, for creating bootstrap.dat
