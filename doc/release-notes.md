@@ -108,6 +108,7 @@ Block-chain handling and storage:
 - Allow txindex to be removed and add a reindex dialog
 - Log aborted block database rebuilds
 - Store orphan blocks in serialized form, to save memory
+- Limit the number of orphan blocks in memory to 750
 - Fix non-standard disconnected transactions causing mempool orphans
 - Add a new checkpoint at block 279,000
 
@@ -121,6 +122,7 @@ Wallet:
 - Don't count txins for priority to encourage sweeping
 - Don't create empty transactions when reading a corrupted wallet
 - Fix rescan to start from beginning after importprivkey
+- Only create signatures with low S values.
 
 Mining:
 
@@ -147,16 +149,12 @@ Protocol and network:
 Validation:
 
 - Log reason for non-standard transaction rejection
-- Prune provably-unspendable outputs
+- Prune provably-unspendable outputs, and adapt consistency check for it.
 - Detect any sufficiently long fork and add a warning
 - Call the -alertnotify script when we see a long or invalid fork
 - Fix multi-block reorg transaction resurrection
 - Reject non-canonically-encoded serialization sizes
-- Only create signatures with even S, and verification mode to check
 - Reject dust amounts during validation
-- Use 'low S' as malleability breaker rather than 'even S'
-- Skip unspendable outputs in consistency check
-- Generalize the remove-outputs check for fully-prunable transactions
 - Accept nLockTime transactions that finalize in the next block
 
 Build system:
