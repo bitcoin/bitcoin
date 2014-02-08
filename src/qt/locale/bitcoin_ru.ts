@@ -573,7 +573,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+6"/>
         <source>Up to date</source>
-        <translation>Синхронизированно</translation>
+        <translation>Синхронизировано</translation>
     </message>
     <message>
         <location line="+7"/>
