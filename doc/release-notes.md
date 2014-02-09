@@ -132,7 +132,7 @@ Mining:
 Protocol and network:
 
 - Send tx relay flag with version
-- New 'reject' P2P message (BIP 0061)
+- New 'reject' P2P message (BIP 0061, see https://gist.github.com/gavinandresen/7079034 for draft)
 - Dump addresses every 15 minutes instead of 10 seconds
 - Relay OP_RETURN data TxOut as standard transaction type
 - Remove CENT-output free transaction rule when relaying
