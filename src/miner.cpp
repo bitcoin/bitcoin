@@ -15,7 +15,7 @@ using namespace std;
 // BitcoinMiner
 //
 
-string strMintMessage = "Info: Mining suspended due to locked wallet.";
+string strMintMessage = "Stake miner suspended due to locked wallet.";
 string strMintWarning;
 
 extern unsigned int nMinerSleep;
