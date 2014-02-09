@@ -130,69 +130,6 @@ void OptionsModel::Reset()
     // default setting for OptionsModel::StartAtStartup - disabled
     if (GUIUtil::GetStartOnSystemStartup())
         GUIUtil::SetStartOnSystemStartup(false);
-
-    // Ensure Upgrade() is not running again by setting the bImportFinished flag
-    settings.setValue("bImportFinished", true);
-}
-
-void OptionsModel::Upgrade()
-{
-    QSettings settings;
-
-    // Already upgraded
-    if (settings.contains("bImportFinished"))
-        return;
-
-    settings.setValue("bImportFinished", true);
-
-#ifdef ENABLE_WALLET
-    // Move settings from old wallet.dat (if any):
-    CWalletDB walletdb(strWalletFile);
-
-    QList<QString> intOptions;
-    intOptions << "nDisplayUnit" << "nTransactionFee";
-    foreach(QString key, intOptions)
-    {
-        int value = 0;
-        if (walletdb.ReadSetting(key.toStdString(), value))
-        {
-            settings.setValue(key, value);
-            walletdb.EraseSetting(key.toStdString());
-        }
-    }
-    QList<QString> boolOptions;
-    boolOptions << "bDisplayAddresses" << "fMinimizeToTray" << "fMinimizeOnClose" << "fUseProxy" << "fUseUPnP";
-    foreach(QString key, boolOptions)
-    {
-        bool value = false;
-        if (walletdb.ReadSetting(key.toStdString(), value))
-        {
-            settings.setValue(key, value);
-            walletdb.EraseSetting(key.toStdString());
-        }
-    }
-    try
-    {
-        CAddress addrProxyAddress;
-        if (walletdb.ReadSetting("addrProxy", addrProxyAddress))
-        {
-            settings.setValue("addrProxy", addrProxyAddress.ToStringIPPort().c_str());
-            walletdb.EraseSetting("addrProxy");
-        }
-    }
-    catch (std::ios_base::failure &e)
-    {
-        // 0.6.0rc1 saved this as a CService, which causes failure when parsing as a CAddress
-        CService addrProxy;
-        if (walletdb.ReadSetting("addrProxy", addrProxy))
-        {
-            settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
-            walletdb.EraseSetting("addrProxy");
-        }
-    }
-#endif
-
-    Init();
 }
 
 int OptionsModel::rowCount(const QModelIndex & parent) const

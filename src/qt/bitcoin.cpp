@@ -376,9 +376,6 @@ void BitcoinApplication::initializeResult(int retval)
     returnValue = retval ? 0 : 1;
     if(retval)
     {
-        // Miscellaneous initialization after core is initialized
-        optionsModel->Upgrade(); // Must be done after AppInit2
-
 #ifdef ENABLE_WALLET
         PaymentServer::LoadRootCAs();
         paymentServer->setOptionsModel(optionsModel);
