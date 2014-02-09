@@ -8,6 +8,8 @@
 #include <QMessageBox>
 #include <QObject>
 #include <QString>
+#include <QTableView>
+#include <QHeaderView>
 
 class QValidatedLineEdit;
 class SendCoinsRecipient;
@@ -114,6 +116,40 @@ namespace GUIUtil
 
     private:
         int size_threshold;
+    };
+
+    /**
+     * Makes a QTableView last column feel as if it was being resized from its left border.
+     * In Qt, all columns are resizable from the right, but it's not intuitive resizing the last column from the right.
+     * Usually our second to last columns behave as if stretched, and when on strech mode, columns aren't resizable
+     * interactively or programatically.
+     *
+     * This helper object takes care of this issue.
+     *
+     */
+    class TableViewLastColumnResizingFixer: public QObject
+    {
+    Q_OBJECT
+    public:
+        TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth);
+
+        int getRemainingWidthForColumn(int column);
+        void adjustTableColumnsWidth();
+        void connectViewHeadersSignals();
+        void disconnectViewHeadersSignals();
+        void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
+
+    private:
+        QTableView* tableView;
+        int lastColumnMinimumWidth;
+        int lastColumnIndex;
+        int secondToLastColumnIndex;
+
+        int getWidthSumForOtherColumns(int nColumnIndex);
+
+    private slots:
+        void on_sectionResized();
+        void on_geometriesChanged();
     };
 
     bool GetStartOnSystemStartup();

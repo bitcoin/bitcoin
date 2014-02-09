@@ -11,6 +11,7 @@
 #include <QPoint>
 #include <QVariant>
 #include <QHeaderView>
+#include "guiutil.h"
 
 namespace Ui {
     class ReceiveCoinsDialog;
@@ -50,14 +51,10 @@ protected:
 
 private:
     Ui::ReceiveCoinsDialog *ui;
+    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
     WalletModel *model;
     QMenu *contextMenu;
     void copyColumnToClipboard(int column);
-    int  getRemainingWidthForColumn(int column);
-    void adjustRecentRequestsColumnsWidth();
-    void connectRecentRequestsViewHeadersSignals();
-    void disconnectRecentRequestsViewHeadersSignals();
-    void setRecentRequestViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
     virtual void resizeEvent(QResizeEvent* event);
 
 private slots:
@@ -65,8 +62,6 @@ private slots:
     void on_showRequestButton_clicked();
     void on_removeRequestButton_clicked();
     void on_recentRequestsView_doubleClicked(const QModelIndex &index);
-    void on_sectionResized();
-    void on_geometriesChanged();
     void updateDisplayUnit();
     void showMenu(const QPoint &);
     void copyLabel();
