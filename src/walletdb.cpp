@@ -154,12 +154,6 @@ bool CWalletDB::ErasePool(int64_t nPool)
     return Erase(std::make_pair(std::string("pool"), nPool));
 }
 
-bool CWalletDB::EraseSetting(const std::string& strKey)
-{
-    nWalletDBUpdated++;
-    return Erase(std::make_pair(std::string("setting"), strKey));
-}
-
 bool CWalletDB::WriteMinVersion(int nVersion)
 {
     return Write(std::string("minversion"), nVersion);
