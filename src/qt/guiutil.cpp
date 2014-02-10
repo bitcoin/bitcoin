@@ -451,7 +451,7 @@ void TableViewLastColumnResizingFixer::on_sectionResized()
 
 void TableViewLastColumnResizingFixer::debugColumns()
 {
-   auto columnCount = tableView->model()->columnCount();
+   int columnCount = tableView->model()->columnCount();
    for (int i=0; i < columnCount; i++) {
        std::cout << "col " << i << " " << tableView->columnWidth(i);
        if (i == columnCount-1) {
