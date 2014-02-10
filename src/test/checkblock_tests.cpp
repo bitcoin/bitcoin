@@ -15,8 +15,7 @@
 
 BOOST_AUTO_TEST_SUITE(CheckBlock_tests)
 
-bool
-read_block(const std::string& filename, CBlock& block)
+bool read_block(const std::string& filename, CBlock& block)
 {
     namespace fs = boost::filesystem;
     fs::path testFile = fs::current_path() / "data" / filename;
