@@ -131,7 +131,7 @@ namespace GUIUtil
     {
     Q_OBJECT
     public:
-        TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth);
+        TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth);
 
         int getRemainingWidthForColumn(int column);
         void adjustTableColumnsWidth();
@@ -142,10 +142,12 @@ namespace GUIUtil
     private:
         QTableView* tableView;
         int lastColumnMinimumWidth;
+        int allColumnsMinimumWidth;
         int lastColumnIndex;
         int secondToLastColumnIndex;
 
         int getWidthSumForOtherColumns(int nColumnIndex);
+        void debugColumns();
 
     private slots:
         void on_sectionResized();

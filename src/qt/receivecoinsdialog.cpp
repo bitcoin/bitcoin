@@ -67,16 +67,19 @@ void ReceiveCoinsDialog::setModel(WalletModel *model)
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
-        ui->recentRequestsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        ui->recentRequestsView->setModel(model->getRecentRequestsTableModel());
-        ui->recentRequestsView->setAlternatingRowColors(true);
-        ui->recentRequestsView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        ui->recentRequestsView->setSelectionMode(QAbstractItemView::ContiguousSelection);
-        ui->recentRequestsView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
-        ui->recentRequestsView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
+        QTableView* tableView = ui->recentRequestsView;
+
+        tableView->verticalHeader()->hide();
+        tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tableView->setModel(model->getRecentRequestsTableModel());
+        tableView->setAlternatingRowColors(true);
+        tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        tableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
+        tableView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
+        tableView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
 
         //(last 2 columns are set when the table geometry is ready) by the columnResizingFixer.
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->recentRequestsView,AMOUNT_MINIMUM_COLUMN_WIDTH);
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH);
     }
 }
 
