@@ -576,3 +576,25 @@ Value sendrawtransaction(const Array& params, bool fHelp)
 
     return hashTx.GetHex();
 }
+
+Value getnormalizedtxid(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error("blah");
+
+    // parse hex string from parameter
+    vector<unsigned char> txData(ParseHexV(params[0], "parameter"));
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+    CTransaction tx;
+
+    // deserialize binary data stream
+    try {
+        ssData >> tx;
+    }
+    catch (std::exception &e) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+    uint256 hashNormalized = tx.GetNormalizedHash();
+
+    return hashNormalized.GetHex();
+}
