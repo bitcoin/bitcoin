@@ -40,6 +40,13 @@ static leveldb::Options GetOptions(size_t nCacheSize) {
     return options;
 }
 
+CLevelDBIterator::~CLevelDBIterator() { delete piter; }
+bool CLevelDBIterator::Valid() { return piter->Valid(); }
+void CLevelDBIterator::SeekToFirst() { piter->SeekToFirst(); }
+void CLevelDBIterator::SeekToLast() { piter->SeekToLast(); }
+void CLevelDBIterator::Next() { piter->Next(); }
+void CLevelDBIterator::Prev() { piter->Prev(); }
+
 CLevelDBWrapper::CLevelDBWrapper(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe) {
     penv = NULL;
     readoptions.verify_checksums = true;
