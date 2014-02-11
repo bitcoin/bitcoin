@@ -442,6 +442,10 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
             reason = "scriptsig-not-pushonly";
             return false;
         }
+        if (!txin.scriptSig.HasCanonicalPushes()) {
+            reason = "non-canonical-push";
+            return false;
+        }
     }
 
     unsigned int nDataOut = 0;
