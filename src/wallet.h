@@ -18,6 +18,8 @@
 #include "util.h"
 #include "walletdb.h"
 
+extern bool bSpendZeroConfChange;
+
 class CAccountingEntry;
 class CWalletTx;
 class CReserveKey;
