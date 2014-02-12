@@ -1869,4 +1869,28 @@ Value settxfee(const Array& params, bool fHelp)
     return true;
 }
 
+Value resendwallettx(const Array& params, bool fHelp)
+{
+    if (fHelp)
+        throw runtime_error(
+            "resendwallettx\n"
+            "\nRebroadcast a specific wallet transaction or all wallet transactions.\n"
+            "1. \"txid\"    (string, optional) The transaction id, match all unconfirmed transactions if not provided\n"
+            "\nExamples:\n"
+            + HelpExampleCli("resendwallettx", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
+            + HelpExampleRpc("resendwallettx", "")
+        );
+    if(params.size() > 0)
+    {
+        uint256 hash;
+        hash.SetHex(params[0].get_str());
+        std::map<uint256, CWalletTx>::iterator i = pwalletMain->mapWallet.find(hash);
+        if (i == pwalletMain->mapWallet.end())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+        i->second.RelayWalletTransaction();
+    } else {
+        pwalletMain->DoResendWalletTransactions(true);
+    }
+    return true;
+}
 
