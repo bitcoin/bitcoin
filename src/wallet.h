@@ -230,7 +230,11 @@ public:
     void WalletUpdateSpent(const CTransaction& prevout);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
+    /// Conditionally resend wallet transactions if it has been long enough ago
     void ResendWalletTransactions();
+    /// Resend wallet transactions now
+    /// @argument bForce flag to resend all wallet transactions, even those that have been sent less than 5 hours ago
+    void DoResendWalletTransactions(bool bForce);
     int64_t GetBalance() const;
     int64_t GetUnconfirmedBalance() const;
     int64_t GetImmatureBalance() const;
