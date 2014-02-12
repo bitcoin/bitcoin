@@ -702,7 +702,7 @@ public:
             return false;
         if (GetDepthInMainChain() >= 1)
             return true;
-        if (!IsFromMe()) // using wtx's cached debit
+        if (!bSpendZeroConfChange || !IsFromMe()) // using wtx's cached debit
             return false;
 
         // If no confirmations but it's from us, we can still
