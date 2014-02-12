@@ -1021,11 +1021,15 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
             if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
                 continue;
 
+            int nDepth = pcoin->GetDepthInMainChain();
+            if (nDepth < 0)
+                continue;
+
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
                 if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) &&
                     !IsLockedCoin((*it).first, i) && pcoin->vout[i].nValue > 0 &&
                     (!coinControl || !coinControl->HasSelected() || coinControl->IsSelected((*it).first, i)))
-                        vCoins.push_back(COutput(pcoin, i, pcoin->GetDepthInMainChain()));
+                        vCoins.push_back(COutput(pcoin, i, nDepth));
             }
         }
     }
