@@ -196,6 +196,55 @@ Value getrawtransaction(const Array& params, bool fHelp)
 }
 
 #ifdef ENABLE_WALLET
+Value getrawwallettransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "getrawwallettransaction \"txid\" ( verbose )\n"
+            "\nReturn raw wallet transaction data from the wallet.\n"
+            "\nIf verbose=0, returns a string that is serialized, hex-encoded data for 'txid'.\n"
+            "If verbose is non-zero, returns an Object with information about 'txid'.\n"
+
+            "\nArguments:\n"
+            "1. \"txid\"      (string, required) The transaction id to look up in the wallet\n"
+            "2. verbose       (numeric, optional, default=0) If 0, return a string, other return a json object\n"
+
+            "\nResult (if verbose is not set or set to 0):\n"
+            "\"data\"      (string) The serialized, hex-encoded data for 'txid'\n"
+
+            "\nResult (if verbose > 0):\n"
+            "See the help for 'getrawtransaction'.\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("getrawwallettransaction", "\"mytxid\"")
+            + HelpExampleCli("getrawwallettransaction", "\"mytxid\" 1")
+            + HelpExampleRpc("getrawwallettransaction", "\"mytxid\", 1")
+        );
+
+    uint256 hash = ParseHashV(params[0], "parameter 1");
+
+    bool fVerbose = false;
+    if (params.size() > 1)
+        fVerbose = (params[1].get_int() != 0);
+
+    std::map<uint256, CWalletTx>::iterator i = pwalletMain->mapWallet.find(hash);
+    if (i == pwalletMain->mapWallet.end())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    const CTransaction &tx = i->second;
+
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    ssTx << tx;
+    string strHex = HexStr(ssTx.begin(), ssTx.end());
+
+    if (!fVerbose)
+        return strHex;
+
+    Object result;
+    result.push_back(Pair("hex", strHex));
+    TxToJSON(tx, uint256(0), result);
+    return result;
+}
+
 Value listunspent(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 3)
