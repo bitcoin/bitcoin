@@ -700,8 +700,11 @@ public:
         // Quick answer in most cases
         if (!IsFinalTx(*this))
             return false;
-        if (GetDepthInMainChain() >= 1)
+        int nDepth = GetDepthInMainChain();
+        if (nDepth >= 1)
             return true;
+        if (nDepth < 0)
+            return false;
         if (!bSpendZeroConfChange || !IsFromMe()) // using wtx's cached debit
             return false;
 
@@ -717,8 +720,11 @@ public:
 
             if (!IsFinalTx(*ptx))
                 return false;
-            if (ptx->GetDepthInMainChain() >= 1)
+            int nPDepth = ptx->GetDepthInMainChain();
+            if (nPDepth >= 1)
                 continue;
+            if (nPDepth < 0)
+                return false;
             if (!pwallet->IsFromMe(*ptx))
                 return false;
 
