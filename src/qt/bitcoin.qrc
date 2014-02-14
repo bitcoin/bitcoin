@@ -12,6 +12,7 @@
         <file alias="connect_4">res/icons/connect4_16.png</file>
         <file alias="transaction_0">res/icons/transaction0.png</file>
         <file alias="transaction_confirmed">res/icons/transaction2.png</file>
+        <file alias="transaction_conflicted">res/icons/transaction_conflicted.png</file>
         <file alias="transaction_1">res/icons/clock1.png</file>
         <file alias="transaction_2">res/icons/clock2.png</file>
         <file alias="transaction_3">res/icons/clock3.png</file>

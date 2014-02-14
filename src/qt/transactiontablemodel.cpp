@@ -312,13 +312,16 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
             status = tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx->status.open_for));
             break;
         case TransactionStatus::Offline:
-            status = tr("Offline (%1 confirmations)").arg(wtx->status.depth);
+            status = tr("Offline");
             break;
         case TransactionStatus::Unconfirmed:
             status = tr("Unconfirmed (%1 of %2 confirmations)").arg(wtx->status.depth).arg(TransactionRecord::NumConfirmations);
             break;
         case TransactionStatus::HaveConfirmations:
             status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
+            break;
+        case TransactionStatus::Conflicted:
+            status = tr("Conflicted");
             break;
         }
     }
@@ -471,7 +474,6 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
         case TransactionStatus::OpenUntilBlock:
         case TransactionStatus::OpenUntilDate:
             return QColor(64,64,255);
-            break;
         case TransactionStatus::Offline:
             return QColor(192,192,192);
         case TransactionStatus::Unconfirmed:
@@ -486,6 +488,8 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
             };
         case TransactionStatus::HaveConfirmations:
             return QIcon(":/icons/transaction_confirmed");
+        case TransactionStatus::Conflicted:
+            return QIcon(":/icons/transaction_conflicted");
         }
     }
     return QColor(0,0,0);
@@ -587,6 +591,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
                                           rec->status.maturity != TransactionStatus::Mature);
     case FormattedAmountRole:
         return formatTxAmount(rec, false);
+    case StatusRole:
+        return rec->status.status;
     }
     return QVariant();
 }
