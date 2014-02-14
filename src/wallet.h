@@ -108,6 +108,12 @@ private:
     int64_t nNextResend;
     int64_t nLastResend;
 
+    // Used to detect and report conflicted transactions:
+    typedef std::multimap<COutPoint, uint256> TxConflicts;
+    TxConflicts mapTxConflicts;
+    void AddToConflicts(const uint256& wtxhash);
+    void SyncMetaData(std::pair<TxConflicts::iterator, TxConflicts::iterator>);
+
 public:
     /// Main wallet lock.
     /// This lock protects all the fields added by CWallet
@@ -151,6 +157,7 @@ public:
     }
 
     std::map<uint256, CWalletTx> mapWallet;
+
     int64_t nOrderPosNext;
     std::map<uint256, int> mapRequestCount;
 
@@ -223,7 +230,7 @@ public:
     TxItems OrderedTxItems(std::list<CAccountingEntry>& acentries, std::string strAccount = "");
 
     void MarkDirty();
-    bool AddToWallet(const CWalletTx& wtxIn);
+    bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet=false);
     void SyncTransaction(const uint256 &hash, const CTransaction& tx, const CBlock* pblock);
     bool AddToWalletIfInvolvingMe(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate);
     void EraseFromWallet(const uint256 &hash);
@@ -356,6 +363,9 @@ public:
 
     // get the current wallet format (the oldest client version guaranteed to understand this wallet)
     int GetVersion() { AssertLockHeld(cs_wallet); return nWalletVersion; }
+
+    // Get wallet transactions that conflict with given transaction (spend same outputs)
+    std::set<uint256> GetConflicts(const uint256& txid) const;
 
     /** Address book entry changed.
      * @note called with lock cs_wallet held.
@@ -752,6 +762,8 @@ public:
     void AddSupportingTransactions();
     bool AcceptWalletTransaction();
     void RelayWalletTransaction();
+
+    std::set<uint256> GetConflicts() const;
 };
 
 
