@@ -77,6 +77,11 @@ uint256 CTransaction::GetHash() const
     return SerializeHash(*this);
 }
 
+uint256 CTransaction::GetNormalizedHash() const
+{
+    return SignatureHash(CScript(), *this, 0, SIGHASH_ALL);
+}
+
 bool CTransaction::IsNewerThan(const CTransaction& old) const
 {
     if (vin.size() != old.vin.size())
