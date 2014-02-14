@@ -36,7 +36,8 @@ public:
         OpenUntilBlock,
         Offline,
         Unconfirmed,
-        HaveConfirmations
+        HaveConfirmations,
+        Conflicted
     };
 
     bool confirmed;

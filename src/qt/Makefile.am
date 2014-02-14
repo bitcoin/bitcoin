@@ -243,6 +243,7 @@ RES_ICONS = \
   res/icons/toolbar_testnet.png \
   res/icons/transaction0.png \
   res/icons/transaction2.png \
+  res/icons/transaction_conflicted.png \
   res/icons/tx_inout.png \
   res/icons/tx_input.png \
   res/icons/tx_output.png \
