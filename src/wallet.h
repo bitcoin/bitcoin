@@ -323,6 +323,7 @@ public:
     void SetBestChain(const CBlockLocator& loc);
 
     DBErrors LoadWallet(bool& fFirstRunRet);
+    DBErrors ZapWalletTx();
 
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
