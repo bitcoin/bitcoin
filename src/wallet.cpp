@@ -231,6 +231,82 @@ bool CWallet::SetMaxVersion(int nVersion)
     return true;
 }
 
+set<uint256> CWallet::GetConflicts(const uint256& txid) const
+{
+    set<uint256> result;
+    AssertLockHeld(cs_wallet);
+
+    std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(txid);
+    if (it == mapWallet.end())
+        return result;
+    const CWalletTx& wtx = it->second;
+
+    std::pair<TxConflicts::const_iterator, TxConflicts::const_iterator> range;
+
+    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+    {
+        range = mapTxConflicts.equal_range(txin.prevout);
+        for (TxConflicts::const_iterator it = range.first; it != range.second; ++it)
+            result.insert(it->second);
+    }
+    return result;
+}
+
+void CWallet::SyncMetaData(pair<TxConflicts::iterator, TxConflicts::iterator> range)
+{
+    // We want all the wallet transactions in range to have the same metadata as
+    // the oldest (smallest nOrderPos).
+    // So: find smallest nOrderPos:
+
+    int nMinOrderPos = std::numeric_limits<int>::max();
+    const CWalletTx* copyFrom = NULL;
+    for (TxConflicts::iterator it = range.first; it != range.second; ++it)
+    {
+        const uint256& hash = it->second;
+        int n = mapWallet[hash].nOrderPos;
+        if (n < nMinOrderPos)
+        {
+            nMinOrderPos = n;
+            copyFrom = &mapWallet[hash];
+        }
+    }
+    // Now copy data from copyFrom to rest:
+    for (TxConflicts::iterator it = range.first; it != range.second; ++it)
+    {
+        const uint256& hash = it->second;
+        CWalletTx* copyTo = &mapWallet[hash];
+        if (copyFrom == copyTo) continue;
+        copyTo->mapValue = copyFrom->mapValue;
+        copyTo->vOrderForm = copyFrom->vOrderForm;
+        // fTimeReceivedIsTxTime not copied on purpose
+        // nTimeReceived not copied on purpose
+        copyTo->nTimeSmart = copyFrom->nTimeSmart;
+        copyTo->fFromMe = copyFrom->fFromMe;
+        copyTo->strFromAccount = copyFrom->strFromAccount;
+        // vfSpent not copied on purpose
+        // nOrderPos not copied on purpose
+        // cached members not copied on purpose
+    }
+}
+
+void CWallet::AddToConflicts(const uint256& wtxhash)
+{
+    assert(mapWallet.count(wtxhash));
+    CWalletTx& thisTx = mapWallet[wtxhash];
+    if (thisTx.IsCoinBase())
+        return;
+
+    BOOST_FOREACH(const CTxIn& txin, thisTx.vin)
+    {
+        mapTxConflicts.insert(make_pair(txin.prevout, wtxhash));
+
+        pair<TxConflicts::iterator, TxConflicts::iterator> range;
+        range = mapTxConflicts.equal_range(txin.prevout);
+        if (range.first != range.second)
+            SyncMetaData(range);
+    }
+}
+
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 {
     if (IsCrypted())
@@ -385,9 +461,16 @@ void CWallet::MarkDirty()
     }
 }
 
-bool CWallet::AddToWallet(const CWalletTx& wtxIn)
+bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
 {
     uint256 hash = wtxIn.GetHash();
+
+    if (fFromLoadWallet)
+    {
+        mapWallet[hash] = wtxIn;
+        AddToConflicts(hash);
+    }
+    else
     {
         LOCK(cs_wallet);
         // Inserts only if not already there, returns tx inserted or tx found
@@ -445,6 +528,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
                              wtxIn.GetHash().ToString(),
                              wtxIn.hashBlock.ToString());
             }
+            AddToConflicts(hash);
         }
 
         bool fUpdated = false;
@@ -907,6 +991,18 @@ void CWalletTx::RelayWalletTransaction()
     }
 }
 
+set<uint256> CWalletTx::GetConflicts() const
+{
+    set<uint256> result;
+    if (pwallet != NULL)
+    {
+        uint256 myHash = GetHash();
+        result = pwallet->GetConflicts(myHash);
+        result.erase(myHash);
+    }
+    return result;
+}
+
 void CWallet::ResendWalletTransactions()
 {
     // Do this infrequently and randomly to avoid giving away
@@ -980,7 +1076,7 @@ int64_t CWallet::GetUnconfirmedBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            if (!IsFinalTx(*pcoin) || !pcoin->IsTrusted())
+            if (!IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0))
                 nTotal += pcoin->GetAvailableCredit();
         }
     }
