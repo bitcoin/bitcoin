@@ -88,8 +88,10 @@ B2ADDRESS=$( $CLI $B2ARGS getnewaddress )
 # Have B1 create two transactions; second will
 # spend change from first, since B1 starts with only a single
 # 50 bitcoin output:
-TXID1=$( $CLI $B1ARGS sendtoaddress $B2ADDRESS 1.0 )
-TXID2=$( $CLI $B1ARGS sendtoaddress $B2ADDRESS 2.0 )
+$CLI $B1ARGS move "" "foo" 10.0
+$CLI $B1ARGS move "" "bar" 10.0
+TXID1=$( $CLI $B1ARGS sendfrom foo $B2ADDRESS 1.0 0)
+TXID2=$( $CLI $B1ARGS sendfrom bar $B2ADDRESS 2.0 0)
 
 # Mutate TXID1 and add it to B2's memory pool:
 RAWTX1=$( $CLI $B1ARGS getrawtransaction $TXID1 )
@@ -122,7 +124,9 @@ echo "Mutated: " $MUTATEDTXID
 $CLI $B2ARGS addnode 127.0.0.1:11000 onetry
 WaitPeers "$B1ARGS" 1
 
-$CLI $B2ARGS setgenerate true 1
+$CLI $B2ARGS setgenerate true 3
+WaitBlocks
+$CLI $B1ARGS setgenerate true 3
 WaitBlocks
 
 $CLI $B2ARGS stop > /dev/null 2>&1
