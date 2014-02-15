@@ -1,9 +1,10 @@
 Regression tests of RPC interface
 =================================
 
-wallet.sh : Exercise wallet send/receive code.
+Bash scripts that use the RPC interface and command-line bitcoin-cli to test
+full functionality in -regtest mode.
 
-walletbackup.sh : Exercise wallet backup / dump / import
+wallet.sh : Exercise wallet send/receive code.
 
 txnmall.sh : Test proper accounting of malleable transactions
 

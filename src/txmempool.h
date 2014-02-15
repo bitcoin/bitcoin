@@ -5,6 +5,8 @@
 #ifndef BITCOIN_TXMEMPOOL_H
 #define BITCOIN_TXMEMPOOL_H
 
+#include <list>
+
 #include "coins.h"
 #include "core.h"
 #include "sync.h"
@@ -72,8 +74,8 @@ public:
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
-    bool remove(const CTransaction &tx, bool fRecursive = false);
-    bool removeConflicts(const CTransaction &tx);
+    void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
+    void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
