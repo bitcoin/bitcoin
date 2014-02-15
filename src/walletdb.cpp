@@ -684,7 +684,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     return result;
 }
 
-DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, vector<uint256>& vTxHash)
+DBErrors CWalletDB::FindWalletTxes(CWallet* pwallet, vector<uint256>& vTxHash)
 {
     pwallet->vchDefaultKey = CPubKey();
     CWalletScanState wss;
@@ -747,11 +747,11 @@ DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, vector<uint256>& vTxHash)
     return result;
 }
 
-DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet)
+DBErrors CWalletDB::ZapWalletTxes(CWallet* pwallet)
 {
     // build list of wallet TXs
     vector<uint256> vTxHash;
-    DBErrors err = FindWalletTx(pwallet, vTxHash);
+    DBErrors err = FindWalletTxes(pwallet, vTxHash);
     if (err != DB_LOAD_OK)
         return err;
 
@@ -760,6 +760,15 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet)
         if (!EraseTx(hash))
             return DB_CORRUPT;
     }
+
+    return DB_LOAD_OK;
+}
+
+DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, uint256 hash)
+{
+    // erase wallet TX
+    if (!EraseTx(hash))
+        return DB_CORRUPT;
 
     return DB_LOAD_OK;
 }
