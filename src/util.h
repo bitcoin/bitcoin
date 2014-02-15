@@ -31,6 +31,7 @@
 #endif
 
 #include <boost/filesystem/path.hpp>
+#include <boost/integer.hpp>
 #include <boost/thread.hpp>
 
 class CNetAddr;
@@ -177,10 +178,20 @@ std::string EncodeBase64(const unsigned char* pch, size_t len);
 std::string EncodeBase64(const std::string& str);
 extern const char *pbase32;
 extern const int decode32_table[256];
+inline char Rfc3548Code(boost::uint_t<5>::fast digit)
+    { return pbase32[digit]; }
+inline boost::uint_t<5>::fast Rfc3548Digit(char c)
+    { return decode32_table[(unsigned char)c]; }
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid = NULL);
 std::string DecodeBase32(const std::string& str);
 std::string EncodeBase32(const unsigned char* pch, size_t len);
 std::string EncodeBase32(const std::string& str);
+extern const char *pzbase32;
+extern const int decode_zbase32_table[256];
+inline char ZBase32Code(boost::uint_t<5>::fast digit)
+    { return pzbase32[digit]; }
+inline boost::uint_t<5>::fast ZBase32Digit(char c)
+    { return decode_zbase32_table[(unsigned char)c]; }
 void ParseParameters(int argc, const char*const argv[]);
 bool WildcardMatch(const char* psz, const char* mask);
 bool WildcardMatch(const std::string& str, const std::string& mask);
