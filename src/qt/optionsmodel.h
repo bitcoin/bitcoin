@@ -40,6 +40,7 @@ public:
         CoinControlFeatures,    // bool
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
+        SpendZeroConfChange,    // bool
         OptionIDRowCount,
     };
 
