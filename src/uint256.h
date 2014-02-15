@@ -8,17 +8,24 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <sstream>
 #include <string>
 #include <string.h>
+#include <stdexcept> // for runtime_error
+#include <algorithm> // for std::copy
+#include <map>
 #include <vector>
 
-extern const signed char p_util_hexdigit[256]; // defined in util.cpp
-
+// defined in util.cpp
+extern int ilog2(int value);
+extern const signed char p_util_hexdigit[256];
 inline signed char HexDigit(char c)
-{
-    return p_util_hexdigit[(unsigned char)c];
-}
-
+    { return p_util_hexdigit[(unsigned char)c]; }
+extern const char *pbase32;
+std::string EncodeBase32(const unsigned char* pch, size_t len);
+std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid);
+std::string AddErrorCorrectionCode32(const std::string& str);
+std::string RemoveErrorCorrectionCode32(const std::string& str, bool* pfInvalid, std::map<size_t, char> *pMapErrors);
 /** Base class without constructors for uint256 and uint160.
  * This makes the compiler let you use it in a union.
  */
@@ -340,6 +347,153 @@ public:
     std::string ToString() const
     {
         return (GetHex());
+    }
+
+    std::string GetCodedBase32(int nExtra=0) const
+    {
+        // The length of the decoded payload is always a power-of-2 multiple of 128.
+        // The parameter e is the solution to the equations size=128*n and n=2^e.
+        // Most or all of the following bit-twiddling should be optimized away by any decent compiler.
+        // See: <http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2>
+        int n, e, i;
+        e = (BITS+127) / 128 - 1;
+        e = (e >> 1)  | e;
+        e = (e >> 2)  | e;
+        e = (e >> 4)  | e;
+        e = (e >> 8)  | e;
+        e = (e >> 16) | e;
+        e = ilog2(e + 1);
+        n = 1 << e;
+
+        std::vector<unsigned char> payload(
+            reinterpret_cast<const unsigned char*>(pn),
+            reinterpret_cast<const unsigned char*>(pn)+BITS/8);
+        payload.resize((130*n+7)/8); // 130 bits per 128 bits input
+
+        std::vector<unsigned char>::iterator begin = payload.begin();
+        std::vector<unsigned char>::iterator end   = payload.begin()+16*n;
+        std::vector<unsigned char>::iterator itr;
+
+        // Shift in 2*n zeroed padding bits to form the payload prefix.
+        div_t d = div(2*n, 8);
+        if (d.rem)
+        {
+            for (itr = end++; itr != begin; --itr)
+                *itr = *itr >> d.rem | (*(itr-1) & (1<<d.rem)-1) << 8-d.rem;
+            *begin >>= d.rem;
+        }
+        if (d.quot)
+        {
+            std::copy_backward(begin, end, payload.end());
+            std::fill(begin, begin + d.quot, 0);
+        }
+
+        // Add prefix bits encoding the length of the payload.
+        for (i=0; i<e; ++i)
+            *(begin + i/8) |= 1 << (7 - (i&7));
+
+        // Add the nExtra field, which is 2*n-e-1 bits in length
+        for (i=0; i<2*n-e-1; ++i, nExtra>>=1)
+        {
+            d = div(2*n - i - 1, 8);
+            *(begin + d.quot) |= (nExtra&1) << (7 - d.rem);
+        }
+
+        std::string b32 = EncodeBase32(&payload[0], payload.size());
+        b32.resize((BITS+2*n+4)/5); // strip redundant padding
+
+        // Add error correction encoding, and return.
+        return AddErrorCorrectionCode32(b32);
+    }
+
+    void SetCodedBase32(const char* psz, int *pnExtra=NULL)
+    {
+        // The length of the decoded payload is always a power-of-2 multiple of 128.
+        // The parameter e is the solution to the equations size=128*n and n=2^e.
+        // Most or all of the following bit-twiddling should be optimized away by any decent compiler.
+        // See: <http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2>
+        int n, e, i;
+        e = (BITS+127) / 128 - 1;
+        e = (e >> 1)  | e;
+        e = (e >> 2)  | e;
+        e = (e >> 4)  | e;
+        e = (e >> 8)  | e;
+        e = (e >> 16) | e;
+        e = ilog2(e + 1);
+        n = 1 << e;
+
+        std::string b32(psz);
+
+        // Drop prefix characters (e.g. "tx") if present
+        div_t d = div(BITS+2*n, 130);
+        size_t len = static_cast<size_t>(
+            31*d.quot + (d.rem+4)/5 + 5*((d.rem+129)/130));
+        if (b32.size() < len)
+        {
+            std::ostringstream ss;
+            ss << "improper length: expected " << len
+               << " z-base-32 digits, received " << b32.size()
+               << " quot=" << d.quot << ",rem=" << d.rem;
+            throw std::runtime_error(ss.str());
+        }
+        if (b32.size() > len)
+            b32 = b32.substr(b32.size()-len, std::string::npos);
+
+        std::map<size_t, char> mapErrors;
+        b32 = RemoveErrorCorrectionCode32(b32, NULL, &mapErrors);
+
+        // Add zero-valued padding to achieve 8-bit alignment
+        b32.resize((b32.size()+7)&~7, pbase32[0]);
+        std::vector<unsigned char> payload = DecodeBase32(b32.c_str(), NULL);
+
+        std::vector<unsigned char>::iterator begin = payload.begin();
+        std::vector<unsigned char>::iterator itr;
+
+        // Check prefix bits encoding the length of the payload.
+        for (i=0; i<e; ++i)
+        {
+            if (!(*(begin + i/8) & 1 << (7 - (i&7))))
+            {
+                std::ostringstream ss;
+                ss << "invalid padding: prefix[" << i << "] bit is 0, instead of 1";
+                throw std::runtime_error(ss.str());
+            }
+        }
+        if (*(begin + i/8) & 1 << (7 - (i&7)))
+        {
+            std::ostringstream ss;
+            ss << "invalid padding: prefix[" << i << "] bit is 1, instead of 0";
+            throw std::runtime_error(ss.str());
+        }
+
+        // Extract nExtra field, which is 2*n-e-1 bits in length.
+        if (pnExtra) {
+            *pnExtra = 0;
+            for (++i; i < 2*n; ++i) {
+                *pnExtra <<= 1;
+                if (*(begin + i/8) & (1 << (7 - (i&7))))
+                    *pnExtra |= 1;
+            }
+        }
+
+        // Shift out the 2*n padding bits from the payload prefix.
+        d = div(2*n, 8);
+        if (d.quot)
+            std::copy(payload.begin()+d.quot,
+                      payload.end(),
+                      payload.begin());
+        if (d.rem)
+            for (itr=begin; itr != begin+16*n; ++itr)
+                *itr = *itr << d.rem | (*(itr+1) >> 8-d.rem) & (1<<d.rem)-1;
+
+        std::copy(&payload[0],
+                  &payload[BITS/8],
+                  reinterpret_cast<unsigned char*>(pn));
+    }
+
+    void SetCodedBase32(const std::string& str, int *pnExtra=NULL)
+    {
+        SetCodedBase32(str.c_str(), pnExtra);
     }
 
     unsigned char* begin()

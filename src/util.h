@@ -192,6 +192,11 @@ inline char ZBase32Code(boost::uint_t<5>::fast digit)
     { return pzbase32[digit]; }
 inline boost::uint_t<5>::fast ZBase32Digit(char c)
     { return decode_zbase32_table[(unsigned char)c]; }
+extern const unsigned char EC[31];
+std::string RemoveErrorCorrectionCode32(const char *pch, size_t len, bool* pfInvalid=NULL, std::map<size_t, char> *pMapErrors=NULL);
+std::string RemoveErrorCorrectionCode32(const std::string& str, bool* pfInvalid=NULL, std::map<size_t, char> *pMapErrors=NULL);
+std::string AddErrorCorrectionCode32(const char *pch, size_t len);
+std::string AddErrorCorrectionCode32(const std::string& str);
 void ParseParameters(int argc, const char*const argv[]);
 bool WildcardMatch(const char* psz, const char* mask);
 bool WildcardMatch(const std::string& str, const std::string& mask);
