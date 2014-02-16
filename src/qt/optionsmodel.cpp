@@ -84,7 +84,7 @@ void OptionsModel::Init()
 #endif
 
     if (!settings.contains("nDatabaseCache"))
-        settings.setValue("nDatabaseCache", 25);
+        settings.setValue("nDatabaseCache", 100);
     if (!SoftSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
         strOverriddenByCommandLine += "-dbcache ";
 
