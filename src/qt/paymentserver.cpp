@@ -527,7 +527,13 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
     recipient.paymentRequest = request;
     recipient.message = GUIUtil::HtmlEscape(request.getDetails().memo());
 
-    request.getMerchant(PaymentServer::certStore, recipient.authenticatedMerchant);
+    if (!request.getMerchant(PaymentServer::certStore, recipient.authenticatedMerchant))
+    {
+        emit message(tr("Payment request rejected"), tr("Failed to query merchant because of certificate related errors."),
+            CClientUIInterface::MSG_ERROR);
+
+        return false;
+    }
 
     QList<std::pair<CScript, qint64> > sendingTos = request.getPayTo();
     QStringList addresses;

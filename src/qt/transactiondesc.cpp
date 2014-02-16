@@ -238,7 +238,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
             req.parse(QByteArray::fromRawData(r.second.data(), r.second.size()));
             QString merchant;
             if (req.getMerchant(PaymentServer::getCertStore(), merchant))
-                strHTML += "<b>" + tr("Merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
+                strHTML += "<b>" + tr("Authenticated merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
         }
     }
 
