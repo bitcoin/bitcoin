@@ -77,12 +77,6 @@ static const unsigned char REJECT_CHECKPOINT = 0x43;
 
 
 extern CScript COINBASE_FLAGS;
-
-
-
-
-
-
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
@@ -96,7 +90,6 @@ extern bool fBenchmark;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern unsigned int nCoinCacheSize;
-extern bool fHaveGUI;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
