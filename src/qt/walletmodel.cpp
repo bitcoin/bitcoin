@@ -274,7 +274,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         }
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        if(!wallet->CommitTransaction(*newTx, *keyChange))
+        if(!wallet->CommitTransaction(*newTx, keyChange))
             return TransactionCommitFailed;
 
         CTransaction* t = (CTransaction*)newTx;

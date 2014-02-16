@@ -864,7 +864,7 @@ Value sendmany(const Array& params, bool fHelp)
     bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strFailReason);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
-    if (!pwalletMain->CommitTransaction(wtx, keyChange))
+    if (!pwalletMain->CommitTransaction(wtx, &keyChange))
         throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
 
     return wtx.GetHash().GetHex();
@@ -1890,4 +1890,45 @@ Value settxfee(const Array& params, bool fHelp)
     return true;
 }
 
+Value reissuetransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "reissuetransaction \"txid\"\n"
+            "\nRe-issue a stuck in-wallet transaction <txid>.\n"
+            "For conflicted transactions which cannot make it into a block, update its inputs where necessary and re-sign.\n"
+            "For unconfirmed transactions simply re-broadcast the transaction for the network.\n"
+            "For confirmed transactions this is a no-op.\n"
+            "\nArguments:\n"
+            "1. \"txid\"    (string, required) The transaction id\n"
 
+            "\nbExamples\n"
+            + HelpExampleCli("reissuetransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleRpc("reissuetransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+        );
+
+    EnsureWalletIsUnlocked();
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    Object entry;
+    if (!pwalletMain->mapWallet.count(hash))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    const CWalletTx& wtx = pwalletMain->mapWallet[hash];
+    if(wtx.GetDepthInMainChain() > 0) // If transaction is already confirmed, this is a no-op
+        return true;
+
+    CWalletTx wtxNew;
+    if(!pwalletMain->ReissueTransaction(wtx, wtxNew))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not re-issue transaction; re-issue parent transactions first");
+    if(pwalletMain->mapWallet.count(wtx.GetHash()))
+    {
+        // If the transaction is unchanged, simply relay it
+        wtxNew.RelayWalletTransaction();
+    } else {
+        // Otherwise, commit it to make sure it is stored in the wallet as well as broadcasted to the network
+        if(!pwalletMain->CommitTransaction(wtxNew, 0))
+            throw JSONRPCError(RPC_WALLET_ERROR, "Unable to commit re-issued transaction");
+    }
+    return true;
+}
