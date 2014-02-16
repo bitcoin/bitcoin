@@ -296,6 +296,7 @@ static const CRPCCommand vRPCCommands[] =
     { "lockunspent",            &lockunspent,            false,     false,      true },
     { "listlockunspent",        &listlockunspent,        false,     false,      true },
     { "settxfee",               &settxfee,               false,     false,      true },
+    { "zapwallettx",            &zapwallettx,            false,     false,      true },
 
     /* Wallet-enabled mining */
     { "getgenerate",            &getgenerate,            true,      false,      false },

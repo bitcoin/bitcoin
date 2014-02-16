@@ -764,10 +764,53 @@ DBErrors CWalletDB::ZapWalletTxes(CWallet* pwallet)
     return DB_LOAD_OK;
 }
 
-DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, uint256 hash)
+DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, const CWalletTx& wtx)
 {
+    LogPrintf("ZapWalletTx %s\n", wtx.GetHash().GetHex());
+
+    // erase child TX's
+    for (unsigned int nVoutIndex = 0; nVoutIndex < wtx.vout.size(); nVoutIndex++)
+    {
+        for (map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin();
+             it != pwallet->mapWallet.end();
+             ++it)
+        {
+            const CWalletTx& wtxPotentialChild = (*it).second;
+            BOOST_FOREACH(const CTxIn& txin, wtxPotentialChild.vin)
+            {
+                if (txin.prevout.hash == wtx.GetHash() && txin.prevout.n == nVoutIndex)
+                {
+                    LogPrintf("ZapWalletTx found child tx %s\n", wtxPotentialChild.GetHash().GetHex());
+                    //TODO: recursion could be a problem if it gets too deep
+                    DBErrors ret = ZapWalletTx(pwallet, wtxPotentialChild);
+                    if (ret != DB_LOAD_OK)
+                        return ret;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // modify parent TX's spent outputs
+    for (unsigned int nVinIndex = 0; nVinIndex < wtx.vin.size(); nVinIndex++)
+    {
+        const CTxIn& txin = wtx.vin[nVinIndex];
+        for (map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin();
+             it != pwallet->mapWallet.end();
+             ++it)
+        {
+            CWalletTx& wtxPotentialParent = (*it).second;
+            if (wtxPotentialParent.GetHash() == txin.prevout.hash)
+            {
+                LogPrintf("ZapWalletTx found parent tx %s\n", wtxPotentialParent.GetHash().GetHex());
+                wtxPotentialParent.MarkUnspent(nVinIndex);
+                break;
+            }
+        }
+    }
+
     // erase wallet TX
-    if (!EraseTx(hash))
+    if (!EraseTx(wtx.GetHash()))
         return DB_CORRUPT;
 
     return DB_LOAD_OK;

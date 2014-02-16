@@ -1525,11 +1525,11 @@ DBErrors CWallet::ZapWalletTxes()
 }
 
 
-DBErrors CWallet::ZapWalletTx(uint256 hash)
+DBErrors CWallet::ZapWalletTx(const CWalletTx& wtx)
 {
     if (!fFileBacked)
         return DB_LOAD_OK;
-    DBErrors nZapWalletTxRet = CWalletDB(strWalletFile,"cr+").ZapWalletTx(this, hash);
+    DBErrors nZapWalletTxRet = CWalletDB(strWalletFile,"cr+").ZapWalletTx(this, wtx);
     if (nZapWalletTxRet == DB_NEED_REWRITE)
     {
         if (CDB::Rewrite(strWalletFile, "\x04pool"))

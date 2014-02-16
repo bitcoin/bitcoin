@@ -1902,11 +1902,11 @@ Value zapwallettx(const Array& params, bool fHelp)
     uint256 hash;
     hash.SetHex(params[0].get_str());
 
-    Object entry;
     if (!pwalletMain->mapWallet.count(hash))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    const CWalletTx& wtx = pwalletMain->mapWallet[hash];
 
-    return pwalletMain->ZapWalletTx(hash) == DB_LOAD_OK;
+    return pwalletMain->ZapWalletTx(wtx) == DB_LOAD_OK;
 }
 
 

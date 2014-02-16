@@ -324,7 +324,7 @@ public:
 
     DBErrors LoadWallet(bool& fFirstRunRet);
     DBErrors ZapWalletTxes();
-    DBErrors ZapWalletTx(uint256 hash);
+    DBErrors ZapWalletTx(const CWalletTx& wtx);
 
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
@@ -598,6 +598,18 @@ public:
         if (!vfSpent[nOut])
         {
             vfSpent[nOut] = true;
+            fAvailableCreditCached = false;
+        }
+    }
+
+    void MarkUnspent(unsigned int nOut)
+    {
+        if (nOut >= vout.size())
+            throw std::runtime_error("CWalletTx::MarkUnspent() : nOut out of range");
+        vfSpent.resize(vout.size());
+        if (vfSpent[nOut])
+        {
+            vfSpent[nOut] = false;
             fAvailableCreditCached = false;
         }
     }
