@@ -443,7 +443,7 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
             return false;
         }
         if (!txin.scriptSig.HasCanonicalPushes()) {
-            reason = "non-canonical-push";
+            reason = "scriptsig-non-canonical-push";
             return false;
         }
     }
