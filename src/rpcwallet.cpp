@@ -1496,7 +1496,7 @@ Value gettransaction(const Array& params, bool fHelp)
     entry.push_back(Pair("details", details));
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << wtx;
+    ssTx << static_cast<CTransaction>(wtx);
     string strHex = HexStr(ssTx.begin(), ssTx.end());
     entry.push_back(Pair("hex", strHex));
 
