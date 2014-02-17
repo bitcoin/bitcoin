@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1497,7 +1497,7 @@ Value gettransaction(const Array& params, bool fHelp)
     entry.push_back(Pair("details", details));
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << wtx;
+    ssTx << static_cast<CTransaction>(wtx);
     string strHex = HexStr(ssTx.begin(), ssTx.end());
     entry.push_back(Pair("hex", strHex));
 
@@ -1575,6 +1575,9 @@ Value walletpassphrase(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
+            "\nNote:\n"
+            "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
+            "time that overrides the old one.\n"
             "\nExamples:\n"
             "\nunlock the wallet for 60 seconds\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60") +
