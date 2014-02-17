@@ -71,7 +71,7 @@ def getblock(rpc, settings, n):
 
 def get_blocks(settings):
 	rpc = BitcoinRPC(settings['host'], settings['port'],
-			 settings['rpcuser'], settings['rpcpass'])
+			 settings['rpcuser'], settings['rpcpassword'])
 
 	outf = open(settings['output'], 'ab')
 
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 		settings['min_height'] = 0
 	if 'max_height' not in settings:
 		settings['max_height'] = 279000
-	if 'rpcuser' not in settings or 'rpcpass' not in settings:
+	if 'rpcuser' not in settings or 'rpcpassword' not in settings:
 		print "Missing username and/or password in cfg file"
 		sys.exit(1)
 
