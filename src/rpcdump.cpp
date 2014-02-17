@@ -23,13 +23,13 @@ using namespace std;
 void EnsureWalletIsUnlocked();
 
 std::string static EncodeDumpTime(int64_t nTime) {
-    return DateTimeStrFormat("%Y-%m-%"PRId64"T%H:%M:%SZ", nTime);
+    return DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", nTime);
 }
 
 int64_t static DecodeDumpTime(const std::string &str) {
-    static boost::posix_time::time_input_facet facet("%Y-%m-%dT%H:%M:%SZ");
     static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
-    const std::locale loc(std::locale::classic(), &facet);
+    static const std::locale loc(std::locale::classic(),
+        new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
     std::istringstream iss(str);
     iss.imbue(loc);
     boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
