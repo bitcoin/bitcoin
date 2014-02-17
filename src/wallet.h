@@ -245,7 +245,7 @@ public:
                            CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
     bool CreateTransaction(CScript scriptPubKey, int64_t nValue,
                            CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
-    bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
+    bool CommitTransaction(CWalletTx& wtxNew, CReserveKey* reservekey);
     std::string SendMoney(CScript scriptPubKey, int64_t nValue, CWalletTx& wtxNew);
     std::string SendMoneyToDestination(const CTxDestination &address, int64_t nValue, CWalletTx& wtxNew);
 
@@ -367,6 +367,9 @@ public:
 
     // Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const;
+
+    /// Reissue a wallet transaction.
+    bool ReissueTransaction(const CWalletTx& wtx, CWalletTx& wtxNew);
 
     /** Address book entry changed.
      * @note called with lock cs_wallet held.

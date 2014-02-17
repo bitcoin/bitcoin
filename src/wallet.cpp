@@ -1474,7 +1474,7 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64_t nValue,
 }
 
 // Call after CreateTransaction unless you want to abort
-bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
+bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey* reservekey)
 {
     {
         LOCK2(cs_main, cs_wallet);
@@ -1486,7 +1486,8 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
             CWalletDB* pwalletdb = fFileBacked ? new CWalletDB(strWalletFile,"r") : NULL;
 
             // Take key pair from key pool so it won't be used again
-            reservekey.KeepKey();
+            if(reservekey)
+                reservekey->KeepKey();
 
             // Add tx to wallet, because if it has change it's also ours,
             // otherwise just for transaction history.
@@ -1545,7 +1546,7 @@ string CWallet::SendMoney(CScript scriptPubKey, int64_t nValue, CWalletTx& wtxNe
         return strError;
     }
 
-    if (!CommitTransaction(wtxNew, reservekey))
+    if (!CommitTransaction(wtxNew, &reservekey))
         return _("Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
 
     return "";
@@ -2168,3 +2169,65 @@ bool CWallet::GetDestData(const CTxDestination &dest, const std::string &key, st
     }
     return false;
 }
+
+bool CWallet::ReissueTransaction(const CWalletTx& wtxIn, CWalletTx& wtxNew)
+{
+    LOCK(cs_wallet);
+    LogPrint("wallet", "ReissueTransaction: Reissuing transaction %s\n", wtxIn.GetHash().ToString());
+
+    wtxNew = wtxIn;
+    for (unsigned int nIn = 0; nIn < wtxNew.vin.size(); ++nIn)
+    {
+        CTxIn& txin =  wtxNew.vin[nIn];
+        std::map<uint256, CWalletTx>::iterator i = mapWallet.find(txin.prevout.hash);
+        if(i == mapWallet.end())
+        {
+            LogPrint("wallet", "ReissueTransaction: Unable to find parent transaction %s in wallet\n",
+                    txin.prevout.hash.ToString());
+            return false;
+        }
+        if(!i->second.IsTrusted())
+        {
+            LogPrint("wallet", "ReissueTransaction: Parent transaction %s not trusted, finding alternative\n",
+                    txin.prevout.hash.ToString());
+            const CWalletTx *newPrevTx = 0;
+            BOOST_FOREACH(const uint256& althash, GetConflicts(txin.prevout.hash))
+            {
+                std::map<uint256, CWalletTx>::iterator j = mapWallet.find(althash);
+                if(j == mapWallet.end())
+                {
+                    LogPrint("wallet", "ReissueTransaction: Unable to find alternate transaction %s in wallet\n",
+                            althash.ToString());
+                    return false;
+                }
+                if(j->second.IsTrusted())
+                {
+                    newPrevTx = &j->second;
+                    break;
+                }
+            }
+            if(newPrevTx)
+            {
+                LogPrint("wallet", "ReissueTransaction: Found trusted alternative %s for %s. Updating input prevout and resigning.\n",
+                        newPrevTx->GetHash().ToString(), txin.prevout.hash.ToString());
+                // Update prevout and re-sign
+                txin.prevout.hash = newPrevTx->GetHash();
+                txin.scriptSig.clear();
+                if(!SignSignature(*this, newPrevTx->vout[txin.prevout.n].scriptPubKey, wtxNew, nIn))
+                {
+                    LogPrintf("ReissueTransaction: Re-signing transaction failed\n");
+                    return false;
+                }
+            } else {
+                LogPrint("wallet", "ReissueTransaction: No trusted alternative for parent transaction %s found\n",
+                        txin.prevout.hash.ToString());
+                return false;
+            }
+        }
+    }
+    LogPrint("wallet", "ReissueTransaction: New transaction: %s (%s)\n",
+            wtxNew.ToString(), wtxNew.GetHash().ToString());
+    return true;
+}
+
+
