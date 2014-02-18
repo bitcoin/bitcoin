@@ -1529,7 +1529,8 @@ DBErrors CWallet::ZapWalletTx(const CWalletTx& wtx)
 {
     if (!fFileBacked)
         return DB_LOAD_OK;
-    DBErrors nZapWalletTxRet = CWalletDB(strWalletFile,"cr+").ZapWalletTx(this, wtx);
+    vector<CWalletTx> vErasedTxes;
+    DBErrors nZapWalletTxRet = CWalletDB(strWalletFile,"cr+").ZapWalletTx(this, wtx, vErasedTxes);
     if (nZapWalletTxRet == DB_NEED_REWRITE)
     {
         if (CDB::Rewrite(strWalletFile, "\x04pool"))
@@ -1540,6 +1541,13 @@ DBErrors CWallet::ZapWalletTx(const CWalletTx& wtx)
             // User will be prompted to unlock wallet the next operation
             // the requires a new key.
         }
+    }
+
+    {
+        // remove zapped CWalletDB txes from mapWallet also
+        LOCK(cs_wallet);
+        BOOST_FOREACH(const CWalletTx& tx, vErasedTxes)
+            mapWallet.erase(tx.GetHash());
     }
 
     if (nZapWalletTxRet != DB_LOAD_OK)

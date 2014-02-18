@@ -764,25 +764,23 @@ DBErrors CWalletDB::ZapWalletTxes(CWallet* pwallet)
     return DB_LOAD_OK;
 }
 
-DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, const CWalletTx& wtx)
+DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, const CWalletTx& wtx, vector<CWalletTx>& vErasedTxes)
 {
     LogPrintf("ZapWalletTx %s\n", wtx.GetHash().GetHex());
 
     // erase child TX's
     for (unsigned int nVoutIndex = 0; nVoutIndex < wtx.vout.size(); nVoutIndex++)
     {
-        for (map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin();
-             it != pwallet->mapWallet.end();
-             ++it)
+        BOOST_FOREACH(PAIRTYPE(uint256, CWalletTx) walletEntry, pwallet->mapWallet)
         {
-            const CWalletTx& wtxPotentialChild = (*it).second;
+            const CWalletTx& wtxPotentialChild = walletEntry.second;
             BOOST_FOREACH(const CTxIn& txin, wtxPotentialChild.vin)
             {
                 if (txin.prevout.hash == wtx.GetHash() && txin.prevout.n == nVoutIndex)
                 {
                     LogPrintf("ZapWalletTx found child tx %s\n", wtxPotentialChild.GetHash().GetHex());
                     //TODO: recursion could be a problem if it gets too deep
-                    DBErrors ret = ZapWalletTx(pwallet, wtxPotentialChild);
+                    DBErrors ret = ZapWalletTx(pwallet, wtxPotentialChild, vErasedTxes);
                     if (ret != DB_LOAD_OK)
                         return ret;
                     break;
@@ -795,11 +793,9 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, const CWalletTx& wtx)
     for (unsigned int nVinIndex = 0; nVinIndex < wtx.vin.size(); nVinIndex++)
     {
         const CTxIn& txin = wtx.vin[nVinIndex];
-        for (map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin();
-             it != pwallet->mapWallet.end();
-             ++it)
+        BOOST_FOREACH(PAIRTYPE(uint256, CWalletTx) walletEntry, pwallet->mapWallet)
         {
-            CWalletTx& wtxPotentialParent = (*it).second;
+            CWalletTx& wtxPotentialParent = walletEntry.second;
             if (wtxPotentialParent.GetHash() == txin.prevout.hash)
             {
                 LogPrintf("ZapWalletTx found parent tx %s\n", wtxPotentialParent.GetHash().GetHex());
@@ -812,6 +808,8 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, const CWalletTx& wtx)
     // erase wallet TX
     if (!EraseTx(wtx.GetHash()))
         return DB_CORRUPT;
+    // add to list of erased TX to be cleaned up from pwallet->mapWallet
+    vErasedTxes.push_back(wtx);
 
     return DB_LOAD_OK;
 }

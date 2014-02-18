@@ -124,7 +124,7 @@ public:
     DBErrors LoadWallet(CWallet* pwallet);
     DBErrors FindWalletTxes(CWallet* pwallet, std::vector<uint256>& vTxHash);
     DBErrors ZapWalletTxes(CWallet* pwallet);
-    DBErrors ZapWalletTx(CWallet* pwallet, const CWalletTx& wtx);
+    DBErrors ZapWalletTx(CWallet* pwallet, const CWalletTx& wtx, std::vector<CWalletTx>& vErasedTxes);
     static bool Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys);
     static bool Recover(CDBEnv& dbenv, std::string filename);
 };
