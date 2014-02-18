@@ -3147,7 +3147,7 @@ Adres: %4
     <message>
         <location filename="../walletframe.cpp" line="+26"/>
         <source>No wallet has been loaded.</source>
-        <translation>Portomonnee werd niet geladen.</translation>
+        <translation>Portemonnee werd niet geladen.</translation>
     </message>
 </context>
 <context>
@@ -3173,7 +3173,7 @@ Adres: %4
     <message>
         <location line="+181"/>
         <source>Backup Wallet</source>
-        <translation>Portomonnee backuppen</translation>
+        <translation>Portemonnee backuppen</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3671,7 +3671,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Verifying wallet...</source>
-        <translation>Portomonnee aan het controleren...</translation>
+        <translation>Portemonnee aan het controleren...</translation>
     </message>
     <message>
         <location line="+1"/>
