@@ -14,7 +14,7 @@
 #include "monitoreddatamapper.h"
 #include "optionsmodel.h"
 
-#include "main.h" // for CTransaction::nMinTxFee
+#include "main.h" // for CTransaction::nMinTxFee and MAX_SCRIPTCHECK_THREADS
 #include "netbase.h"
 #include "txdb.h" // for -dbcache defaults
 
@@ -37,6 +37,8 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);
     ui->databaseCache->setMaximum(nMaxDbCache);
+    ui->threadsScriptVerif->setMinimum(-(int)boost::thread::hardware_concurrency());
+    ui->threadsScriptVerif->setMaximum(MAX_SCRIPTCHECK_THREADS);
 
     /* Network elements init */
 #ifndef USE_UPNP
