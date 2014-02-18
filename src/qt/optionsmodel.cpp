@@ -14,6 +14,7 @@
 #include "init.h"
 #include "main.h"
 #include "net.h"
+#include "txdb.h" // for -dbcache defaults
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #include "walletdb.h"
@@ -84,7 +85,7 @@ void OptionsModel::Init()
 #endif
 
     if (!settings.contains("nDatabaseCache"))
-        settings.setValue("nDatabaseCache", 25);
+        settings.setValue("nDatabaseCache", nDefaultDbCache);
     if (!SoftSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
         strOverriddenByCommandLine += "-dbcache ";
 
