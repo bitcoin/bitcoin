@@ -108,6 +108,16 @@ private:
     int64_t nNextResend;
     int64_t nLastResend;
 
+    // Used to keep track of spent outpoints, and
+    // detect and report conflicts (double-spends or
+    // mutated transactions where the mutant gets mined).
+    typedef std::multimap<COutPoint, uint256> TxSpends;
+    TxSpends mapTxSpends;
+    void AddToSpends(const COutPoint& outpoint, const uint256& wtxid);
+    void AddToSpends(const uint256& wtxid);
+
+    void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
+
 public:
     /// Main wallet lock.
     /// This lock protects all the fields added by CWallet
@@ -151,6 +161,7 @@ public:
     }
 
     std::map<uint256, CWalletTx> mapWallet;
+
     int64_t nOrderPosNext;
     std::map<uint256, int> mapRequestCount;
 
@@ -167,6 +178,8 @@ public:
 
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL) const;
     bool SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
+
+    bool IsSpent(const COutPoint& outpoint) const;
 
     bool IsLockedCoin(uint256 hash, unsigned int n) const;
     void LockCoin(COutPoint& output);
@@ -223,11 +236,10 @@ public:
     TxItems OrderedTxItems(std::list<CAccountingEntry>& acentries, std::string strAccount = "");
 
     void MarkDirty();
-    bool AddToWallet(const CWalletTx& wtxIn);
+    bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet=false);
     void SyncTransaction(const uint256 &hash, const CTransaction& tx, const CBlock* pblock);
     bool AddToWalletIfInvolvingMe(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate);
     void EraseFromWallet(const uint256 &hash);
-    void WalletUpdateSpent(const CTransaction& prevout);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
@@ -359,6 +371,9 @@ public:
     // get the current wallet format (the oldest client version guaranteed to understand this wallet)
     int GetVersion() { AssertLockHeld(cs_wallet); return nWalletVersion; }
 
+    // Get wallet transactions that conflict with given transaction (spend same outputs)
+    std::set<uint256> GetConflicts(const uint256& txid) const;
+
     /** Address book entry changed.
      * @note called with lock cs_wallet held.
      */
@@ -438,7 +453,6 @@ public:
     unsigned int nTimeSmart;
     char fFromMe;
     std::string strFromAccount;
-    std::vector<char> vfSpent; // which outputs are already spent
     int64_t nOrderPos;  // position in ordered transaction list
 
     // memory only
@@ -484,7 +498,6 @@ public:
         nTimeSmart = 0;
         fFromMe = false;
         strFromAccount.clear();
-        vfSpent.clear();
         fDebitCached = false;
         fCreditCached = false;
         fImmatureCreditCached = false;
@@ -509,15 +522,6 @@ public:
         {
             pthis->mapValue["fromaccount"] = pthis->strFromAccount;
 
-            std::string str;
-            BOOST_FOREACH(char f, vfSpent)
-            {
-                str += (f ? '1' : '0');
-                if (f)
-                    fSpent = true;
-            }
-            pthis->mapValue["spent"] = str;
-
             WriteOrderPos(pthis->nOrderPos, pthis->mapValue);
 
             if (nTimeSmart)
@@ -537,12 +541,6 @@ public:
         {
             pthis->strFromAccount = pthis->mapValue["fromaccount"];
 
-            if (mapValue.count("spent"))
-                BOOST_FOREACH(char c, pthis->mapValue["spent"])
-                    pthis->vfSpent.push_back(c != '0');
-            else
-                pthis->vfSpent.assign(vout.size(), fSpent);
-
             ReadOrderPos(pthis->nOrderPos, pthis->mapValue);
 
             pthis->nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(pthis->mapValue["timesmart"]) : 0;
@@ -554,26 +552,6 @@ public:
         pthis->mapValue.erase("n");
         pthis->mapValue.erase("timesmart");
     )
-
-    // marks certain txout's as spent
-    // returns true if any update took place
-    bool UpdateSpent(const std::vector<char>& vfNewSpent)
-    {
-        bool fReturn = false;
-        for (unsigned int i = 0; i < vfNewSpent.size(); i++)
-        {
-            if (i == vfSpent.size())
-                break;
-
-            if (vfNewSpent[i] && !vfSpent[i])
-            {
-                vfSpent[i] = true;
-                fReturn = true;
-                fAvailableCreditCached = false;
-            }
-        }
-        return fReturn;
-    }
 
     // make sure balances are recalculated
     void MarkDirty()
@@ -588,39 +566,6 @@ public:
     {
         pwallet = pwalletIn;
         MarkDirty();
-    }
-
-    void MarkSpent(unsigned int nOut)
-    {
-        if (nOut >= vout.size())
-            throw std::runtime_error("CWalletTx::MarkSpent() : nOut out of range");
-        vfSpent.resize(vout.size());
-        if (!vfSpent[nOut])
-        {
-            vfSpent[nOut] = true;
-            fAvailableCreditCached = false;
-        }
-    }
-
-    void MarkUnspent(unsigned int nOut)
-    {
-        if (nOut >= vout.size())
-            throw std::runtime_error("CWalletTx::MarkUnspent() : nOut out of range");
-        vfSpent.resize(vout.size());
-        if (vfSpent[nOut])
-        {
-            vfSpent[nOut] = false;
-            fAvailableCreditCached = false;
-        }
-    }
-
-    bool IsSpent(unsigned int nOut) const
-    {
-        if (nOut >= vout.size())
-            throw std::runtime_error("CWalletTx::IsSpent() : nOut out of range");
-        if (nOut >= vfSpent.size())
-            return false;
-        return (!!vfSpent[nOut]);
     }
 
     int64_t GetDebit() const
@@ -664,6 +609,9 @@ public:
 
     int64_t GetAvailableCredit(bool fUseCache=true) const
     {
+        if (pwallet == 0)
+            return 0;
+
         // Must wait until coinbase is safely deep enough in the chain before valuing it
         if (IsCoinBase() && GetBlocksToMaturity() > 0)
             return 0;
@@ -674,7 +622,7 @@ public:
         int64_t nCredit = 0;
         for (unsigned int i = 0; i < vout.size(); i++)
         {
-            if (!IsSpent(i))
+            if (!pwallet->IsSpent(COutPoint(GetHash(), i)))
             {
                 const CTxOut &txout = vout[i];
                 nCredit += pwallet->GetCredit(txout);
@@ -766,6 +714,8 @@ public:
     void AddSupportingTransactions();
     bool AcceptWalletTransaction();
     void RelayWalletTransaction();
+
+    std::set<uint256> GetConflicts() const;
 };
 
 

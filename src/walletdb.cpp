@@ -382,7 +382,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             if (wtx.nOrderPos == -1)
                 wss.fAnyUnordered = true;
 
-            pwallet->mapWallet[hash] = wtx;
+            pwallet->AddToWallet(wtx, true);
             //// debug print
             //LogPrintf("LoadWallet  %s\n", wtx.GetHash().ToString());
             //LogPrintf(" %12"PRId64"  %s  %s  %s\n",
@@ -789,22 +789,6 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, const CWalletTx& wtx, vector<C
         }
     }
     
-    // modify parent TX's spent outputs
-    for (unsigned int nVinIndex = 0; nVinIndex < wtx.vin.size(); nVinIndex++)
-    {
-        const CTxIn& txin = wtx.vin[nVinIndex];
-        BOOST_FOREACH(PAIRTYPE(uint256, CWalletTx) walletEntry, pwallet->mapWallet)
-        {
-            CWalletTx& wtxPotentialParent = walletEntry.second;
-            if (wtxPotentialParent.GetHash() == txin.prevout.hash)
-            {
-                LogPrintf("ZapWalletTx found parent tx %s\n", wtxPotentialParent.GetHash().GetHex());
-                wtxPotentialParent.MarkUnspent(nVinIndex);
-                break;
-            }
-        }
-    }
-
     // erase wallet TX
     if (!EraseTx(wtx.GetHash()))
         return DB_CORRUPT;

@@ -1867,7 +1867,7 @@ bool static DisconnectTip(CValidationState &state) {
     // Write the chain state to disk, if necessary.
     if (!WriteChainState(state))
         return false;
-    // Ressurect mempool transactions from the disconnected block.
+    // Resurrect mempool transactions from the disconnected block.
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
         // ignore validation errors in resurrected transactions
         CValidationState stateDummy; 
@@ -1878,6 +1878,11 @@ bool static DisconnectTip(CValidationState &state) {
     mempool.check(pcoinsTip);
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
+    // Let wallets know transactions went from 1-confirmed to
+    // 0-confirmed or conflicted:
+    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
+        SyncWithWallets(tx.GetHash(), tx, NULL);
+    }
     return true;
 }
 
@@ -1908,13 +1913,20 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     if (!WriteChainState(state))
         return false;
     // Remove conflicting transactions from the mempool.
+    list<CTransaction> txConflicted;
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
         mempool.remove(tx);
-        mempool.removeConflicts(tx);
+        list<CTransaction> r = mempool.removeConflicts(tx);
+        txConflicted.insert(txConflicted.begin(), r.begin(), r.end());
     }
     mempool.check(pcoinsTip);
     // Update chainActive & related variables.
     UpdateTip(pindexNew);
+    // Tell wallet about transactions that went from mempool
+    // to conflicted:
+    BOOST_FOREACH(const CTransaction &tx, txConflicted) {
+        SyncWithWallets(tx.GetHash(), tx, NULL);
+    }
     return true;
 }
 
