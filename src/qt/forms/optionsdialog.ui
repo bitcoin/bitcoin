@@ -142,7 +142,7 @@
       <attribute name="title">
        <string>W&amp;allet</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_Network">
+      <layout class="QVBoxLayout" name="verticalLayout_Wallet">
        <item>
         <widget class="QLabel" name="transactionFeeInfoLabel">
          <property name="text">
@@ -157,7 +157,7 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_1_Main">
+        <layout class="QHBoxLayout" name="horizontalLayout_1_Wallet">
          <item>
           <widget class="QLabel" name="transactionFeeLabel">
            <property name="text">
@@ -175,7 +175,7 @@
           <widget class="BitcoinAmountField" name="transactionFee"/>
          </item>
          <item>
-          <spacer name="horizontalSpacer_1_Main">
+          <spacer name="horizontalSpacer_1_Wallet">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -190,9 +190,12 @@
         </layout>
        </item>
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="spendZeroConfChangeInfoLabel">
          <property name="text">
           <string>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -202,12 +205,12 @@
        <item>
         <widget class="QCheckBox" name="spendZeroConfChange">
          <property name="text">
-          <string>Spend unconfirmed change  (experts only)</string>
+          <string>&amp;Spend unconfirmed change (experts only)</string>
          </property>
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer">
+        <spacer name="verticalSpacer_Wallet">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
