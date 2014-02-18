@@ -8,6 +8,8 @@ if [ $# -lt 1 ]; then
         exit 1
 fi
 
+set -f
+
 BITCOIND=${1}/bitcoind
 CLI=${1}/bitcoin-cli
 
@@ -23,13 +25,13 @@ D=$(mktemp -d test.XXXXX)
 
 D1=${D}/node1
 CreateDataDir $D1 port=11000 rpcport=11001
-B1ARGS="-datadir=$D1 -debug"
+B1ARGS="-datadir=$D1"
 $BITCOIND $B1ARGS &
 B1PID=$!
 
 D2=${D}/node2
 CreateDataDir $D2 port=11010 rpcport=11011
-B2ARGS="-datadir=$D2 -debug"
+B2ARGS="-datadir=$D2"
 $BITCOIND $B2ARGS &
 B2PID=$!
 
