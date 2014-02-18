@@ -53,17 +53,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="databaseCache">
-           <property name="toolTip">
-            <string>Set database cache size in megabytes (default: 25)</string>
-           </property>
-           <property name="maximum">
-            <number>1024</number>
-           </property>
-           <property name="value">
-            <number>25</number>
-           </property>
-          </widget>
+          <widget class="QSpinBox" name="databaseCache"/>
          </item>
          <item>
           <widget class="QLabel" name="databaseCacheUnitLabel">
