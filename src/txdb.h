@@ -18,6 +18,13 @@ class CBigNum;
 class CCoins;
 class uint256;
 
+// -dbcache default (MiB)
+static const int nDefaultDbCache = 100;
+// max. -dbcache in (MiB)
+static const int nMaxDbCache = sizeof(void*) > 4 ? 4096 : 1024;
+// min. -dbcache in (MiB)
+static const int nMinDbCache = 4;
+
 /** CCoinsView backed by the LevelDB coin database (chainstate/) */
 class CCoinsViewDB : public CCoinsView
 {
