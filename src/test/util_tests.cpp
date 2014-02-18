@@ -1,4 +1,6 @@
 #include "util.h"
+#include "core.h"
+#include "uint256.h"
 
 #include "sync.h"
 
@@ -336,6 +338,16 @@ BOOST_AUTO_TEST_CASE(strprintf_numbers)
 BOOST_AUTO_TEST_CASE(gettime)
 {
     BOOST_CHECK((GetTime() & ~0xFFFFFFFFLL) == 0);
+}
+
+/* Check that the scarcity of bitcoins has not been violated
+
+ */
+BOOST_AUTO_TEST_CASE(scaricity_check)
+{
+    const int64_t CORRECT_COIN = 100000000;
+    BOOST_CHECK(COIN == CORRECT_COIN);
+    BOOST_CHECK(MAX_MONEY == (CORRECT_COIN * 21000000));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
