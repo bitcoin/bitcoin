@@ -194,7 +194,7 @@ void CWallet::SetBestChain(const CBlockLocator& loc)
 
 bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn, bool fExplicit)
 {
-    AssertLockHeld(cs_wallet); // nWalletVersion
+    LOCK(cs_wallet); // nWalletVersion
     if (nWalletVersion >= nVersion)
         return true;
 
@@ -221,7 +221,7 @@ bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn,
 
 bool CWallet::SetMaxVersion(int nVersion)
 {
-    AssertLockHeld(cs_wallet); // nWalletVersion, nWalletMaxVersion
+    LOCK(cs_wallet); // nWalletVersion, nWalletMaxVersion
     // cannot downgrade below current version
     if (nWalletVersion > nVersion)
         return false;
@@ -1623,14 +1623,17 @@ DBErrors CWallet::ZapWalletTx()
 
 bool CWallet::SetAddressBook(const CTxDestination& address, const string& strName, const string& strPurpose)
 {
-    AssertLockHeld(cs_wallet); // mapAddressBook
-    std::map<CTxDestination, CAddressBookData>::iterator mi = mapAddressBook.find(address);
-    mapAddressBook[address].name = strName;
-    if (!strPurpose.empty()) /* update purpose only if requested */
-        mapAddressBook[address].purpose = strPurpose;
+    bool fUpdated = false;
+    {
+        LOCK(cs_wallet); // mapAddressBook
+        std::map<CTxDestination, CAddressBookData>::iterator mi = mapAddressBook.find(address);
+        fUpdated = mi != mapAddressBook.end();
+        mapAddressBook[address].name = strName;
+        if (!strPurpose.empty()) /* update purpose only if requested */
+            mapAddressBook[address].purpose = strPurpose;
+    }
     NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, address),
-            mapAddressBook[address].purpose,
-            (mi == mapAddressBook.end()) ?  CT_NEW : CT_UPDATED);
+                             strPurpose, (fUpdated ? CT_UPDATED : CT_NEW) );
     if (!fFileBacked)
         return false;
     if (!strPurpose.empty() && !CWalletDB(strWalletFile).WritePurpose(CBitcoinAddress(address).ToString(), strPurpose))
@@ -1640,21 +1643,23 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const string& strNam
 
 bool CWallet::DelAddressBook(const CTxDestination& address)
 {
-
-    AssertLockHeld(cs_wallet); // mapAddressBook
-
-    if(fFileBacked)
     {
-        // Delete destdata tuples associated with address
-        std::string strAddress = CBitcoinAddress(address).ToString();
-        BOOST_FOREACH(const PAIRTYPE(string, string) &item, mapAddressBook[address].destdata)
+        LOCK(cs_wallet); // mapAddressBook
+
+        if(fFileBacked)
         {
-            CWalletDB(strWalletFile).EraseDestData(strAddress, item.first);
+            // Delete destdata tuples associated with address
+            std::string strAddress = CBitcoinAddress(address).ToString();
+            BOOST_FOREACH(const PAIRTYPE(string, string) &item, mapAddressBook[address].destdata)
+            {
+                CWalletDB(strWalletFile).EraseDestData(strAddress, item.first);
+            }
         }
+        mapAddressBook.erase(address);
     }
 
-    mapAddressBook.erase(address);
     NotifyAddressBookChanged(this, address, "", ::IsMine(*this, address), "", CT_DELETED);
+
     if (!fFileBacked)
         return false;
     CWalletDB(strWalletFile).ErasePurpose(CBitcoinAddress(address).ToString());
