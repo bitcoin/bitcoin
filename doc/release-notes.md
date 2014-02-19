@@ -59,6 +59,27 @@ functioning both as a server and as a RPC client. The RPC client functionality
 executable, 'bitcoin-cli'. The RPC client code will eventually be removed from
 bitcoind, but will be kept for backwards compatibility for a release or two.
 
+`walletpassphrase` RPC
+-----------------------
+
+The behavior of the `walletpassphrase` RPC when the wallet is already unlocked
+has changed between 0.8 and 0.9.
+
+The 0.8 behavior of `walletpassphrase` is to fail when the wallet is already unlocked:
+
+    > walletpassphrase 1000
+    walletunlocktime = now + 1000
+    > walletpassphrase 10
+    Error: Wallet is already unlocked (old unlock time stays)
+
+The new behavior of `walletpassphrase` is to set a new unlock time overriding
+the old one:
+
+    > walletpassphrase 1000
+    walletunlocktime = now + 1000
+    > walletpassphrase 10
+    walletunlocktime = now + 10 (overriding the old unlock time)
+
 0.9.0rc1 Release notes
 =======================
 

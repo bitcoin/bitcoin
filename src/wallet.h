@@ -173,6 +173,8 @@ public:
 
     int64_t nTimeFirstKey;
 
+    const CWalletTx* GetWalletTx(const uint256& hash) const;
+
     // check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
 
@@ -445,7 +447,7 @@ private:
     const CWallet* pwallet;
 
 public:
-    std::vector<CMerkleTx> vtxPrev;
+    std::vector<CMerkleTx> vUnused;// Used to be vtxPrev
     mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int fTimeReceivedIsTxTime;
@@ -490,7 +492,6 @@ public:
     void Init(const CWallet* pwalletIn)
     {
         pwallet = pwalletIn;
-        vtxPrev.clear();
         mapValue.clear();
         vOrderForm.clear();
         fTimeReceivedIsTxTime = false;
@@ -529,7 +530,7 @@ public:
         }
 
         nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion,ser_action);
-        READWRITE(vtxPrev);
+        READWRITE(vUnused);
         READWRITE(mapValue);
         READWRITE(vOrderForm);
         READWRITE(fTimeReceivedIsTxTime);
@@ -670,38 +671,13 @@ public:
         if (!bSpendZeroConfChange || !IsFromMe()) // using wtx's cached debit
             return false;
 
-        // If no confirmations but it's from us, we can still
-        // consider it confirmed if all dependencies are confirmed
-        std::map<uint256, const CMerkleTx*> mapPrev;
-        std::vector<const CMerkleTx*> vWorkQueue;
-        vWorkQueue.reserve(vtxPrev.size()+1);
-        vWorkQueue.push_back(this);
-        for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+        // Trusted if all inputs are trusted (recursively)
+        BOOST_FOREACH(const CTxIn& txin, vin)
         {
-            const CMerkleTx* ptx = vWorkQueue[i];
-
-            if (!IsFinalTx(*ptx))
+            // Transactions not from us: not trusted
+            const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
+            if (parent == NULL || !parent->IsTrusted())
                 return false;
-            int nPDepth = ptx->GetDepthInMainChain();
-            if (nPDepth >= 1)
-                continue;
-            if (nPDepth < 0)
-                return false;
-            if (!pwallet->IsFromMe(*ptx))
-                return false;
-
-            if (mapPrev.empty())
-            {
-                BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
-                    mapPrev[tx.GetHash()] = &tx;
-            }
-
-            BOOST_FOREACH(const CTxIn& txin, ptx->vin)
-            {
-                if (!mapPrev.count(txin.prevout.hash))
-                    return false;
-                vWorkQueue.push_back(mapPrev[txin.prevout.hash]);
-            }
         }
         return true;
     }
@@ -711,8 +687,6 @@ public:
     int64_t GetTxTime() const;
     int GetRequestCount() const;
 
-    void AddSupportingTransactions();
-    bool AcceptWalletTransaction();
     void RelayWalletTransaction();
 
     std::set<uint256> GetConflicts() const;
