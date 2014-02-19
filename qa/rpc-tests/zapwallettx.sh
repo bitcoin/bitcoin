@@ -65,20 +65,31 @@ WaitBlocks
 CheckBalance "$B1ARGS" 50
 CheckBalance "$B2ARGS" 50
 
-# Send 21 XBT from 1 to 3
-TXID=$(Send $B1ARGS $B3ARGS 21)
+echo "Sending coins from B1 to B3..."
+for N in 1 2 3
+do
+    # Send N XBT from 1 to 3
+    TXID[$N]=$(Send $B1ARGS $B3ARGS $N)
 
-# Have B2 mine 100 blocks so B1 transactions are mature:
-$CLI $B2ARGS setgenerate true 100
-WaitBlocks
+    # Have B2 mine 10 blocks so B1 transactions are mature:
+    $CLI $B2ARGS setgenerate true 10
+    WaitBlocks
+done
 
 # B1 should end up with 50 XBT in block rewards,
-# minus the 21 XBT sent to B3:
-CheckBalance "$B1ARGS" "50-21"
-CheckBalance "$B3ARGS" "21"
+# minus the 6 (1, 2, 3) XBT sent to B3:
+CheckBalance "$B1ARGS" "50-1-2-3"
+CheckBalance "$B3ARGS" "1+2+3"
 
-# Zap send tx from B1, balance should again be 50 XBT
-$CLI "$B1ARGS" zapwallettx $TXID
+# Zap send tx from B1 (TXID[3]), balance now be 47 XBT
+echo "Zapping last tx..."
+$CLI "$B1ARGS" zapwallettx ${TXID[3]}
+CheckBalance "$B1ARGS" "50-1-2"
+
+# Zap send tx from B1 (TXID[1]), balance should again be 50 XBT
+# as TDID[2] used an output from TXID[1] and hence also removed
+echo "Zapping first tx..."
+$CLI "$B1ARGS" zapwallettx ${TXID[1]}
 CheckBalance "$B1ARGS" "50"
 
 $CLI $B3ARGS stop > /dev/null 2>&1
