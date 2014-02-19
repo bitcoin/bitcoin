@@ -1109,6 +1109,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
+        int txindex = 0;
         BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64_t)& s, listSent)
         {
             Object entry;
@@ -1121,14 +1122,19 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             if (fLong)
+            {
                 WalletTxToJSON(wtx, entry);
+                entry.push_back(Pair("txindex", txindex));
+            }
             ret.push_back(entry);
+            txindex++;
         }
     }
 
     // Received
     if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
     {
+        int txindex = 0;
         BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64_t)& r, listReceived)
         {
             string account;
@@ -1157,9 +1163,13 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 }
                 entry.push_back(Pair("amount", ValueFromAmount(r.second)));
                 if (fLong)
+                {
                     WalletTxToJSON(wtx, entry);
+                    entry.push_back(Pair("txindex", txindex));
+                }
                 ret.push_back(entry);
             }
+            txindex++;
         }
     }
 }
