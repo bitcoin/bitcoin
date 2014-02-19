@@ -45,6 +45,7 @@ test_bitcoin_SOURCES = \
   DoS_tests.cpp \
   getarg_tests.cpp \
   key_tests.cpp \
+  main_tests.cpp \
   miner_tests.cpp \
   mruset_tests.cpp \
   multisig_tests.cpp \
