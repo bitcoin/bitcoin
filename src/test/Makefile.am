@@ -14,6 +14,7 @@ JSON_TEST_FILES = \
   data/base58_encode_decode.json \
   data/base58_keys_invalid.json \
   data/ecc32_encode_decode.json \
+  data/ecc32_recover.json \
   data/script_invalid.json \
   data/tx_invalid.json \
   data/tx_valid.json
