@@ -19,6 +19,7 @@
 #include "json/json_spirit_writer_template.h"
 
 class CBlockIndex;
+class CWallet;
 
 /* Start RPC threads */
 void StartRPCThreads();
@@ -108,6 +109,7 @@ extern std::string HelpExampleCli(std::string methodname, std::string args);
 extern std::string HelpExampleRpc(std::string methodname, std::string args);
 
 extern void EnsureWalletIsUnlocked();
+extern void LockWallet(CWallet* pWallet);
 
 extern json_spirit::Value getconnectioncount(const json_spirit::Array& params, bool fHelp); // in rpcnet.cpp
 extern json_spirit::Value getpeerinfo(const json_spirit::Array& params, bool fHelp);

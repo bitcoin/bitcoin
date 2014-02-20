@@ -732,6 +732,9 @@ Value signrawtransaction(const Array& params, bool fHelp)
     result.push_back(Pair("hex", HexStr(ssTx.begin(), ssTx.end())));
     result.push_back(Pair("complete", fComplete));
 
+    if (!fGivenKeys && nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
+
     return result;
 }
 

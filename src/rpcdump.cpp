@@ -132,6 +132,8 @@ Value importprivkey(const Array& params, bool fHelp)
         }
     }
 
+    if (nWalletUnlockTime == -1) LockWallet(pwalletMain);
+
     return Value::null;
 }
 
@@ -222,6 +224,8 @@ Value importwallet(const Array& params, bool fHelp)
     if (!fGood)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys to wallet");
 
+    if (nWalletUnlockTime == -1) LockWallet(pwalletMain);
+
     return Value::null;
 }
 
@@ -254,6 +258,9 @@ Value dumpprivkey(const Array& params, bool fHelp)
     CKey vchSecret;
     if (!pwalletMain->GetKey(keyID, vchSecret))
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
+
+    if (nWalletUnlockTime == -1) LockWallet(pwalletMain);
+
     return CBitcoinSecret(vchSecret).ToString();
 }
 
@@ -315,5 +322,8 @@ Value dumpwallet(const Array& params, bool fHelp)
     file << "\n";
     file << "# End of dump\n";
     file.close();
+
+    if (nWalletUnlockTime == -1) LockWallet(pwalletMain);
+
     return Value::null;
 }
