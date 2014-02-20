@@ -202,7 +202,8 @@ Value getrawchangeaddress(const Array& params, bool fHelp)
 
     CKeyID keyID = vchPubKey.GetID();
 
-    if (nWalletUnlockTime == -1) LockWallet(pwalletMain);
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
 
     return CBitcoinAddress(keyID).ToString();
 }
@@ -347,7 +348,8 @@ Value sendtoaddress(const Array& params, bool fHelp)
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
-    if (nWalletUnlockTime == -1) LockWallet(pwalletMain);
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
 
     return wtx.GetHash().GetHex();
 }
@@ -447,7 +449,8 @@ Value signmessage(const Array& params, bool fHelp)
     if (!key.SignCompact(ss.GetHash(), vchSig))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
 
-    if (nWalletUnlockTime == -1) LockWallet(pwalletMain);
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
 
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
@@ -791,7 +794,8 @@ Value sendfrom(const Array& params, bool fHelp)
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
-    if (nWalletUnlockTime == -1) LockWallet(pwalletMain);
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
 
     return wtx.GetHash().GetHex();
 }
@@ -875,7 +879,8 @@ Value sendmany(const Array& params, bool fHelp)
     if (!pwalletMain->CommitTransaction(wtx, keyChange))
         throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
 
-    if (nWalletUnlockTime == -1) LockWallet(pwalletMain);
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
 
     return wtx.GetHash().GetHex();
 }
@@ -1563,7 +1568,8 @@ Value keypoolrefill(const Array& params, bool fHelp)
     if (pwalletMain->GetKeyPoolSize() < kpSize)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
 
-    if (nWalletUnlockTime == -1) LockWallet(pwalletMain);
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
 
     return Value::null;
 }
@@ -1624,12 +1630,13 @@ Value walletpassphrase(const Array& params, bool fHelp)
 
     int64_t nSleepTime = params[1].get_int64();
     LOCK(cs_nWalletUnlockTime);
-    if (nSleepTime == -1) {
-        nWalletUnlockTime = -1;
-    } else {
+    if (nSleepTime != -1)
+    {
         nWalletUnlockTime = GetTime() + nSleepTime;
         RPCRunLater("lockwallet", boost::bind(LockWallet, pwalletMain), nSleepTime);
     }
+    else
+        nWalletUnlockTime = -1;
 
     return Value::null;
 }
