@@ -116,7 +116,11 @@ Value importprivkey(const Array& params, bool fHelp)
 
         // Don't throw error in case a key is already there
         if (pwalletMain->HaveKey(vchAddress))
+        {
+            if (nWalletUnlockTime == -1)
+                LockWallet(pwalletMain);
             return Value::null;
+        }
 
         pwalletMain->mapKeyMetadata[vchAddress].nCreateTime = 1;
 
