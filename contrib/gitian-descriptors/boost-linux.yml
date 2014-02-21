@@ -39,7 +39,23 @@ script: |
 
   ./bootstrap.sh --without-icu
 
-  ./bjam toolset=gcc threadapi=pthread threading=multi variant=release link=static runtime-link=shared --user-config=user-config.jam --without-mpi --without-python -sNO_BZIP2=1 --layout=tagged --build-type=complete --prefix="$STAGING" $MAKEOPTS -d+2 install
+  # Patch to support-sNO_ZLIB=1 on boost 1.55
+  # see https://svn.boost.org/trac/boost/ticket/9156
+  echo "
+  --- libs/iostreams/build/Jamfile.v2.old 2014-02-21 20:26:34.090861872 +0000
+  +++ libs/iostreams/build/Jamfile.v2     2014-02-21 20:27:39.562868347 +0000
+  @@ -159,8 +159,6 @@
+       : $(sources)
+       : <link>shared:<define>BOOST_IOSTREAMS_DYN_LINK=1
+         <define>BOOST_IOSTREAMS_USE_DEPRECATED
+  -      [ ac.check-library /zlib//zlib : <library>/zlib//zlib
+  -        <source>zlib.cpp <source>gzip.cpp ]
+       :
+       : <link>shared:<define>BOOST_IOSTREAMS_DYN_LINK=1
+       ;
+  " | patch -p0
+
+  ./bjam toolset=gcc threadapi=pthread threading=multi variant=release link=static runtime-link=shared --user-config=user-config.jam --without-mpi --without-python -sNO_BZIP2=1 -sNO_ZLIB=1 --layout=tagged --build-type=complete --prefix="$STAGING" $MAKEOPTS -d+2 install
 
   # post-process all generated libraries to be deterministic
   # extract them to a temporary directory then re-build them deterministically
