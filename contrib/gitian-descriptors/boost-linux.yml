@@ -13,6 +13,7 @@ packages:
 - "faketime"
 - "bsdmainutils"
 - "zip"
+- "libz-dev"
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
