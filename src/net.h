@@ -18,7 +18,6 @@
 #include "util.h"
 
 #include <deque>
-#include <inttypes.h>
 #include <stdint.h>
 
 #ifndef WIN32
