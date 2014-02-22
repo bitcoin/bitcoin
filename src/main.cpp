@@ -17,7 +17,6 @@
 #include "ui_interface.h"
 #include "util.h"
 
-#include <inttypes.h>
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
