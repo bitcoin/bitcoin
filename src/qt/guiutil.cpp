@@ -379,17 +379,16 @@ bool ToolTipToRichTextFilter::eventFilter(QObject *obj, QEvent *evt)
     return QObject::eventFilter(obj, evt);
 }
 
-//recent request table's header signals
 void TableViewLastColumnResizingFixer::connectViewHeadersSignals()
 {
-    connect(tableView->horizontalHeader(), SIGNAL(sectionResized(int,int,int)), this, SLOT(on_sectionResized()));
+    connect(tableView->horizontalHeader(), SIGNAL(sectionResized(int,int,int)), this, SLOT(on_sectionResized(int,int,int)));
     connect(tableView->horizontalHeader(), SIGNAL(geometriesChanged()), this, SLOT(on_geometriesChanged()));
 }
 
-//we need to disconnect these while handling the resize events, otherwise we can enter an infinite loop
+//we need to disconnect these while handling the resize events, otherwise we can enter infinite loops
 void TableViewLastColumnResizingFixer::disconnectViewHeadersSignals()
 {
-    disconnect(tableView->horizontalHeader(), SIGNAL(sectionResized(int,int,int)), this, SLOT(on_sectionResized()));
+    disconnect(tableView->horizontalHeader(), SIGNAL(sectionResized(int,int,int)), this, SLOT(on_sectionResized(int,int,int)));
     disconnect(tableView->horizontalHeader(), SIGNAL(geometriesChanged()), this, SLOT(on_geometriesChanged()));
 }
 
@@ -403,29 +402,29 @@ void TableViewLastColumnResizingFixer::setViewHeaderResizeMode(int logicalIndex,
 #endif
 }
 
-int TableViewLastColumnResizingFixer::getWidthSumForOtherColumns(int nColumnIndex)
-{
-    int result = 0;
-    QHeaderView* headerView = tableView->horizontalHeader();
-
-    for (int i = 0; i < headerView->count(); i++)
-    {
-        if (i!=nColumnIndex) {
-            result += headerView->sectionSize(i);
-        }
-    }
-
-    return result;
+void TableViewLastColumnResizingFixer::resizeColumn(int nColumnIndex, int width) {
+    tableView->setColumnWidth(nColumnIndex, width);
+    tableView->horizontalHeader()->resizeSection(nColumnIndex, width);
 }
 
-int TableViewLastColumnResizingFixer::getRemainingWidthForColumn(int column)
+int TableViewLastColumnResizingFixer::getColumnsWidth()
+{
+    int nColumnsWidthSum = 0;
+    for (int i = 0; i < columnCount; i++)
+    {
+        nColumnsWidthSum += tableView->horizontalHeader()->sectionSize(i);
+    }
+    return nColumnsWidthSum;
+}
+
+int TableViewLastColumnResizingFixer::getAvailableWidthForColumn(int column)
 {
     int nResult = lastColumnMinimumWidth;
-    int nTableWidth = tableView->width();
+    int nTableWidth = tableView->horizontalHeader()->width();
 
     if (nTableWidth > 0)
     {
-        int nOtherColsWidth = getWidthSumForOtherColumns(column);
+        int nOtherColsWidth = getColumnsWidth() - tableView->horizontalHeader()->sectionSize(column);
         nResult = std::max(nResult, nTableWidth - nOtherColsWidth);
     }
 
@@ -436,71 +435,62 @@ int TableViewLastColumnResizingFixer::getRemainingWidthForColumn(int column)
 void TableViewLastColumnResizingFixer::adjustTableColumnsWidth()
 {
     disconnectViewHeadersSignals();
-    tableView->setColumnWidth(lastColumnIndex, std::max(getRemainingWidthForColumn(lastColumnIndex),lastColumnMinimumWidth));
-    tableView->setColumnWidth(secondToLastColumnIndex, getRemainingWidthForColumn(secondToLastColumnIndex));
+    resizeColumn(lastColumnIndex, getAvailableWidthForColumn(lastColumnIndex));
     connectViewHeadersSignals();
-    std::cout << "adjustTableColumnsWidth -> ";
-    debugColumns();
+
+    int nTableWidth = tableView->horizontalHeader()->width();
+    int nColsWidth = getColumnsWidth();
+    if (nColsWidth > nTableWidth)
+    {
+        int nWidestColumnIndex = secondToLastColumnIndex;
+        resizeColumn(nWidestColumnIndex,getAvailableWidthForColumn(nWidestColumnIndex));
+    }
+
 }
 
 //when a section is resized this is a slot-proxy for ajustAmountColumnWidth()
-void TableViewLastColumnResizingFixer::on_sectionResized()
+void TableViewLastColumnResizingFixer::on_sectionResized(int logicalIndex, int oldSize, int newSize)
 {
     adjustTableColumnsWidth();
-}
-
-void TableViewLastColumnResizingFixer::debugColumns()
-{
-   int columnCount = tableView->model()->columnCount();
-   for (int i=0; i < columnCount; i++) {
-       std::cout << "col " << i << " " << tableView->columnWidth(i);
-       if (i == columnCount-1) {
-           std::cout << std::endl;
-       } else {
-           std::cout << ", ";
-       }
-   }
+    int remainingWidth = getAvailableWidthForColumn(logicalIndex);
+    if (newSize > remainingWidth)
+    {
+       resizeColumn(logicalIndex, remainingWidth);
+    }
 }
 
 //when the table's geometry is ready, we manually perform the Stretch of the "Message" column
 //as the "Stretch" resize mode does not allow for interactive resizing.
 void TableViewLastColumnResizingFixer::on_geometriesChanged()
 {
-    disconnectViewHeadersSignals();
-    tableView->setColumnWidth(lastColumnIndex, lastColumnMinimumWidth);
-    qDebug("on geometries changed:\n");
-    std::cout << "\t last column ("<< lastColumnIndex <<") set it to " << lastColumnMinimumWidth << "; get width = " << tableView->columnWidth(lastColumnIndex) << "\n";
-    tableView->setColumnWidth(secondToLastColumnIndex, getRemainingWidthForColumn(secondToLastColumnIndex));
-    std::cout << "\t 2nd to last column (" << secondToLastColumnIndex << ") width = " << getRemainingWidthForColumn(secondToLastColumnIndex) << "\n";
-    debugColumns();
-    std::cout << endl;
-    connectViewHeadersSignals();
+    if (!geometryInitialized)
+    {
+        disconnectViewHeadersSignals();
+        resizeColumn(lastColumnIndex, lastColumnMinimumWidth);
+        resizeColumn(secondToLastColumnIndex, getAvailableWidthForColumn(secondToLastColumnIndex));
+        connectViewHeadersSignals();
+        geometryInitialized = true;
+    }
 }
 
 /**
- * Initializes all internal variables,
- * prepares the resize modes of the last 2 columns of the table and
- * connects the appropiate signals of the table's view header.
+ * Initializes all internal variables and prepares the
+ * the resize modes of the last 2 columns of the table and
  */
 TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth) :
         tableView(table),
         lastColumnMinimumWidth(lastColMinimumWidth),
-        allColumnsMinimumWidth(allColsMinimumWidth)
+        allColumnsMinimumWidth(allColsMinimumWidth),
+        geometryInitialized(false)
 {
-
-    int columnCount = tableView->model()->columnCount();
-    qDebug("Column Count %d\n", columnCount);
+    columnCount = tableView->horizontalHeader()->count();
     lastColumnIndex = columnCount - 1;
     secondToLastColumnIndex = columnCount - 2;
-
+    tableView->horizontalHeader()->setMinimumSectionSize(allColumnsMinimumWidth);
     setViewHeaderResizeMode(secondToLastColumnIndex, QHeaderView::Interactive);
-    setViewHeaderResizeMode(lastColumnIndex, QHeaderView::Fixed);
-
-    tableView->horizontalHeader()->setMinimumSectionSize(allColsMinimumWidth);
-    tableView->setColumnWidth(lastColMinimumWidth, lastColMinimumWidth);
-
-    connectViewHeadersSignals();
+    setViewHeaderResizeMode(lastColumnIndex, QHeaderView::Interactive);
 }
+
 
 #ifdef WIN32
 boost::filesystem::path static StartupShortcutPath()

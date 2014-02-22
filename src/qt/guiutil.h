@@ -120,6 +120,7 @@ namespace GUIUtil
 
     /**
      * Makes a QTableView last column feel as if it was being resized from its left border.
+     * Also makes sure the column widths are never larger than the table's viewport.
      * In Qt, all columns are resizable from the right, but it's not intuitive resizing the last column from the right.
      * Usually our second to last columns behave as if stretched, and when on strech mode, columns aren't resizable
      * interactively or programatically.
@@ -132,25 +133,26 @@ namespace GUIUtil
     Q_OBJECT
     public:
         TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth);
-
-        int getRemainingWidthForColumn(int column);
         void adjustTableColumnsWidth();
-        void connectViewHeadersSignals();
-        void disconnectViewHeadersSignals();
-        void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
 
     private:
         QTableView* tableView;
         int lastColumnMinimumWidth;
         int allColumnsMinimumWidth;
         int lastColumnIndex;
+        int columnCount;
         int secondToLastColumnIndex;
+        bool geometryInitialized;
 
-        int getWidthSumForOtherColumns(int nColumnIndex);
-        void debugColumns();
+        int getAvailableWidthForColumn(int column);
+        int getColumnsWidth();
+        void connectViewHeadersSignals();
+        void disconnectViewHeadersSignals();
+        void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
+        void resizeColumn(int nColumnIndex, int width);
 
     private slots:
-        void on_sectionResized();
+        void on_sectionResized(int logicalIndex, int oldSize, int newSize);
         void on_geometriesChanged();
     };
 
