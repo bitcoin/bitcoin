@@ -41,8 +41,9 @@ function AssertEqual {
 
 # CheckBalance -datadir=... amount account minconf
 function CheckBalance {
+  declare -i EXPECT="$2"
   B=$( $CLI $1 getbalance $3 $4 )
-  if (( $( echo "$B == $2" | bc ) == 0 ))
+  if (( $( echo "$B == $EXPECT" | bc ) == 0 ))
   then
     echoerr "bad balance: $B (expected $2)"
     exit 1
@@ -60,7 +61,7 @@ function Send {
   to=$2
   amount=$3
   address=$(Address $to)
-  txid=$( ${SENDANDWAIT} $CLI $from sendtoaddress $address $amount )
+  ${SENDANDWAIT} $CLI $from sendtoaddress $address $amount
 }
 
 # Use: Unspent <datadir> <n'th-last-unspent> <var>
@@ -87,5 +88,5 @@ function SendRawTxn {
 # Use: GetBlocks <datadir>
 # returns number of blocks from getinfo
 function GetBlocks {
-    ExtractKey blocks "$( $CLI $1 getinfo )"
+    $CLI $1 getblockcount
 }

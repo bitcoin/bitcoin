@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Test block generation and basic wallet sending
+# Test zapping a single wallet transaction
 
 if [ $# -lt 1 ]; then
         echo "Usage: $0 path_to_binaries"
@@ -65,42 +65,32 @@ WaitBlocks
 CheckBalance "$B1ARGS" 50
 CheckBalance "$B2ARGS" 50
 
-# Send 21 XBT from 1 to 3. Second
-# transaction will be child of first, and
-# will require a fee
-Send $B1ARGS $B3ARGS 11
-Send $B1ARGS $B3ARGS 10
+echo "Sending coins from B1 to B3..."
+for N in 1 2 3
+do
+    # Send N XBT from 1 to 3
+    TXID[$N]=$(Send $B1ARGS $B3ARGS $N)
 
-# Have B1 mine a new block, and mature it
-# to recover transaction fees
-$CLI $B1ARGS setgenerate true 1
-WaitBlocks
+    # Have B2 mine 10 blocks so B1 transactions are mature:
+    $CLI $B2ARGS setgenerate true 10
+    WaitBlocks
+done
 
-# Have B2 mine 100 blocks so B1's block is mature:
-$CLI $B2ARGS setgenerate true 100
-WaitBlocks
+# B1 should end up with 50 XBT in block rewards,
+# minus the 6 (1, 2, 3) XBT sent to B3:
+CheckBalance "$B1ARGS" "50-1-2-3"
+CheckBalance "$B3ARGS" "1+2+3"
 
-# B1 should end up with 100 XBT in block rewards plus fees,
-# minus the 21 XBT sent to B3:
-CheckBalance "$B1ARGS" "100-21"
-CheckBalance "$B3ARGS" "21"
+# Zap send tx from B1 (TXID[3]), balance now be 47 XBT
+echo "Zapping last tx..."
+$CLI "$B1ARGS" zapwallettx ${TXID[3]}
+CheckBalance "$B1ARGS" "50-1-2"
 
-# B1 should have two unspent outputs; create a couple
-# of raw transactions to send them to B3, submit them through
-# B2, and make sure both B1 and B3 pick them up properly:
-RAW1=$(CreateTxn1 $B1ARGS 1 $(Address $B3ARGS "from1" ) )
-RAW2=$(CreateTxn1 $B1ARGS 2 $(Address $B3ARGS "from1" ) )
-RAWTXID1=$(SendRawTxn "$B2ARGS" $RAW1)
-RAWTXID2=$(SendRawTxn "$B2ARGS" $RAW2)
-
-# Have B2 mine a block to confirm transactions:
-$CLI $B2ARGS setgenerate true 1
-WaitBlocks
-
-# Check balances after confirmation
-CheckBalance "$B1ARGS" 0
-CheckBalance "$B3ARGS" 100
-CheckBalance "$B3ARGS" "100-21" "from1"
+# Zap send tx from B1 (TXID[1]), balance should again be 50 XBT
+# as TDID[2] used an output from TXID[1] and hence also removed
+echo "Zapping first tx..."
+$CLI "$B1ARGS" zapwallettx ${TXID[1]}
+CheckBalance "$B1ARGS" "50"
 
 $CLI $B3ARGS stop > /dev/null 2>&1
 wait $B3PID
