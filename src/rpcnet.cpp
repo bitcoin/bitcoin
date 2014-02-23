@@ -15,8 +15,6 @@
 #include "wallet.h" // for getinfo
 #endif
 
-#include <inttypes.h>
-
 #include <boost/foreach.hpp>
 #include "json/json_spirit_value.h"
 

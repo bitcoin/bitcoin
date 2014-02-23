@@ -16,7 +16,6 @@
 
 #include <cstdio>
 #include <exception>
-#include <inttypes.h>
 #include <map>
 #include <stdarg.h>
 #include <stdint.h>
@@ -45,13 +44,25 @@ static const int64_t CENT = 1000000;
 #define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 
-/* Format characters for (s)size_t and ptrdiff_t (C99 standard) */
-#define PRIszx    "zx"
-#define PRIszu    "zu"
-#define PRIszd    "zd"
-#define PRIpdx    "tx"
-#define PRIpdu    "tu"
-#define PRIpdd    "td"
+/* Format characters for (s)size_t, ptrdiff_t, uint64_t.
+ *
+ * As the tinyformat-based formatting system is type-safe, no special format
+ * characters are really needed to specify sizes. Tinyformat can support
+ * (ignores) the C99 prefixes such as "ll" but chokes on MSVC's inttypes
+ * defines prefixes such as "I64X".  So don't include inttypes.h and define our
+ * own for compatibility.
+ * If you get a warning here about a redefine of PRI?64, make sure that
+ * inttypes.h is not included.
+ */
+#define PRIszx    "x"
+#define PRIszu    "u"
+#define PRIszd    "d"
+#define PRIpdx    "x"
+#define PRIpdu    "u"
+#define PRIpdd    "d"
+#define PRIx64    "x"
+#define PRIu64    "u"
+#define PRId64    "d"
 
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
 #define PAIRTYPE(t1, t2)    std::pair<t1, t2>
