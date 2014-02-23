@@ -52,7 +52,7 @@ tests each pull and when master is tested using jenkins.
 ### [Verify SF Binaries](/contrib/verifysfbinaries) ###
 This script attempts to download and verify the signature file SHA256SUMS.asc from SourceForge.
 
-### [Developer tools](/control/devtools) ###
+### [Developer tools](/contrib/devtools) ###
 Specific tools for developers working on this repository.
 Contains the script `github-merge.sh` for merging github pull requests securely and signing them using GPG.
 
