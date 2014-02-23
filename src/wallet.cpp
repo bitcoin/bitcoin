@@ -9,8 +9,6 @@
 #include "coincontrol.h"
 #include "net.h"
 
-#include <inttypes.h>
-
 #include <boost/algorithm/string/replace.hpp>
 #include <openssl/rand.h>
 
