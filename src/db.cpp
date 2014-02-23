@@ -10,7 +10,6 @@
 #include "protocol.h"
 #include "util.h"
 
-#include <inttypes.h>
 #include <stdint.h>
 
 #ifndef WIN32

@@ -24,7 +24,6 @@
 #include "walletdb.h"
 #endif
 
-#include <inttypes.h>
 #include <stdint.h>
 
 #ifndef WIN32
