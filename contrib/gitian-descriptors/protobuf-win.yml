@@ -38,13 +38,13 @@ script: |
     tar xjf $INDIR/protobuf-2.5.0.tar.bz2
     cd protobuf-2.5.0
     # First: build a native (linux) protoc
-    ./configure --enable-shared=no --disable-dependency-tracking
+    ./configure --enable-shared=no --disable-dependency-tracking --without-zlib CXXFLAGS="-frandom-seed=11 ${OPTFLAGS}"
     make
     mkdir -p $INSTALLPREFIX/host/bin
     cp src/protoc $INSTALLPREFIX/host/bin
     # Now recompile with the mingw cross-compiler:
     make distclean
-    ./configure --prefix=$INSTALLPREFIX --enable-shared=no --disable-dependency-tracking --with-protoc=$INSTALLPREFIX/host/bin/protoc --host=$HOST CXXFLAGS="-frandom-seed=11 ${OPTFLAGS}"
+    ./configure --prefix=$INSTALLPREFIX --enable-shared=no --disable-dependency-tracking --without-zlib --with-protoc=$INSTALLPREFIX/host/bin/protoc --host=$HOST CXXFLAGS="-frandom-seed=11 ${OPTFLAGS}"
     export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
     export FAKETIME=$REFERENCE_DATETIME
     make
