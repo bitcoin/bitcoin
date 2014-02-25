@@ -808,7 +808,7 @@ void CWalletTx::AddSupportingTransactions()
 {
     vtxPrev.clear();
 
-    const int COPY_DEPTH = 3;
+    const unsigned char COPY_DEPTH = 3;
     if (SetMerkleBranch() < COPY_DEPTH)
     {
         vector<uint256> vWorkQueue;
