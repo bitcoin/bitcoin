@@ -14,7 +14,9 @@
 #include "monitoreddatamapper.h"
 #include "optionsmodel.h"
 
+#include "main.h" // for CTransaction::nMinTxFee
 #include "netbase.h"
+#include "txdb.h" // for -dbcache defaults
 
 #include <QDir>
 #include <QIntValidator>
@@ -33,7 +35,8 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     GUIUtil::restoreWindowGeometry("nOptionsDialogWindow", this->size(), this);
 
     /* Main elements init */
-    ui->databaseCache->setMaximum(sizeof(void*) > 4 ? 4096 : 1024);
+    ui->databaseCache->setMinimum(nMinDbCache);
+    ui->databaseCache->setMaximum(nMaxDbCache);
 
     /* Network elements init */
 #ifndef USE_UPNP
@@ -93,6 +96,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     }
 
     ui->unit->setModel(new BitcoinUnits(this));
+    ui->transactionFee->setSingleStep(CTransaction::nMinTxFee);
 
     /* Widget-to-option mapper */
     mapper = new MonitoredDataMapper(this);
@@ -148,10 +152,13 @@ void OptionsDialog::setModel(OptionsModel *model)
 void OptionsDialog::setMapper()
 {
     /* Main */
-    mapper->addMapping(ui->transactionFee, OptionsModel::Fee);
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
+
+    /* Wallet */
+    mapper->addMapping(ui->transactionFee, OptionsModel::Fee);
+    mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);

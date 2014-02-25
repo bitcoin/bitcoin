@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,7 @@
 #include "init.h"
 #include "main.h"
 #include "net.h"
+#include "txdb.h" // for -dbcache defaults
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #include "walletdb.h"
@@ -76,10 +77,15 @@ void OptionsModel::Init()
     nTransactionFee = settings.value("nTransactionFee").toLongLong(); // if -paytxfee is set, this will be overridden later in init.cpp
     if (mapArgs.count("-paytxfee"))
         strOverriddenByCommandLine += "-paytxfee ";
+
+    if (!settings.contains("bSpendZeroConfChange"))
+        settings.setValue("bSpendZeroConfChange", true);
+    if (!SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
+        strOverriddenByCommandLine += "-spendzeroconfchange ";
 #endif
 
     if (!settings.contains("nDatabaseCache"))
-        settings.setValue("nDatabaseCache", 25);
+        settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
     if (!SoftSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
         strOverriddenByCommandLine += "-dbcache ";
 
@@ -184,6 +190,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             // Todo: Consider to revert back to use just nTransactionFee here, if we don't want
             // -paytxfee to update our QSettings!
             return settings.value("nTransactionFee");
+        case SpendZeroConfChange:
+            return settings.value("bSpendZeroConfChange");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -273,6 +281,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             nTransactionFee = value.toLongLong();
             settings.setValue("nTransactionFee", (qint64)nTransactionFee);
             emit transactionFeeChanged(nTransactionFee);
+            break;
+        case SpendZeroConfChange:
+            if (settings.value("bSpendZeroConfChange") != value) {
+                settings.setValue("bSpendZeroConfChange", value);
+                setRestartRequired(true);
+            }
             break;
 #endif
         case DisplayUnit:

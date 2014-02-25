@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,8 +14,6 @@
 #include "init.h" // for getinfo
 #include "wallet.h" // for getinfo
 #endif
-
-#include <inttypes.h>
 
 #include <boost/foreach.hpp>
 #include "json/json_spirit_value.h"

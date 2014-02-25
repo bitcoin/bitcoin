@@ -16,8 +16,11 @@ files:
 - "boost-mingw-gas-cross-compile-2013-03-03.patch"
 script: |
   # Defines
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
   INDIR=$HOME/build
+  TEMPDIR=$HOME/tmp
   # Input Integrity Check
   echo "fff00023dd79486d444c8e29922f4072e1d451fc5a4d2b6075852ead7f2b7b52  boost_1_55_0.tar.bz2" | shasum -c
   echo "d2b7f6a1d7051faef3c9cf41a92fa3671d905ef1e1da920d07651a43299f6268  boost-mingw-gas-cross-compile-2013-03-03.patch" | shasum -c
@@ -35,7 +38,7 @@ script: |
     mkdir -p $INSTALLPREFIX $BUILDDIR
     cd $BUILDDIR
     #
-    tar xjf $INDIR/boost_1_55_0.tar.bz2
+    tar --warning=no-timestamp -xjf $INDIR/boost_1_55_0.tar.bz2
     cd boost_1_55_0
     GCCVERSION=$($HOST-g++ -E -dM $(mktemp --suffix=.h) | grep __VERSION__ | cut -d ' ' -f 3 | cut -d '"' -f 2)
     echo "using gcc : $GCCVERSION : $HOST-g++
@@ -68,12 +71,16 @@ script: |
     # http://statmt.org/~s0565741/software/boost_1_52_0/libs/context/doc/html/context/requirements.html
     # "For cross-compiling the lib you must specify certain additional properties at bjam command line: target-os, abi, binary-format, architecture and address-model."
     ./bjam toolset=gcc binary-format=pe target-os=windows threadapi=win32 address-model=$BITS threading=multi variant=release link=static runtime-link=static --user-config=user-config.jam --without-mpi --without-python -sNO_BZIP2=1 -sNO_ZLIB=1 --layout=tagged --build-type=complete --prefix="$INSTALLPREFIX" $MAKEOPTS install
+    # post-process all generated libraries to be deterministic
+    # extract them to a temporary directory then re-build them deterministically
+    for LIB in $(find $INSTALLPREFIX -name \*.a); do
+        rm -rf $TEMPDIR && mkdir $TEMPDIR && cd $TEMPDIR
+        $HOST-ar xv $LIB | cut -b5- > /tmp/list.txt
+        rm $LIB
+        $HOST-ar crsD $LIB $(cat /tmp/list.txt)
+    done
     #
     cd "$INSTALLPREFIX"
-    export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-    export FAKETIME=$REFERENCE_DATETIME
-    zip -r $OUTDIR/boost-win$BITS-1.55.0-gitian-r6.zip *
-    unset LD_PRELOAD
-    unset FAKETIME
+    find | sort | zip -X@ $OUTDIR/boost-win$BITS-1.55.0-gitian-r6.zip
   done # for BITS in
 

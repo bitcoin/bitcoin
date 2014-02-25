@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,6 @@
 #include "ui_interface.h"
 #include "util.h"
 
-#include <inttypes.h>
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -53,7 +52,7 @@ unsigned int nCoinCacheSize = 5000;
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
 int64_t CTransaction::nMinTxFee = 10000;  // Override with -mintxfee
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
-int64_t CTransaction::nMinRelayTxFee = 10000;
+int64_t CTransaction::nMinRelayTxFee = 1000;
 
 static CMedianFilter<int> cPeerBlockCounts(8, 0); // Amount of blocks that other nodes claim to have
 
@@ -440,6 +439,10 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
         }
         if (!txin.scriptSig.IsPushOnly()) {
             reason = "scriptsig-not-pushonly";
+            return false;
+        }
+        if (!txin.scriptSig.HasCanonicalPushes()) {
+            reason = "scriptsig-non-canonical-push";
             return false;
         }
     }
@@ -868,7 +871,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 }
 
 
-int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const
+int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
 {
     if (hashBlock == 0 || nIndex == -1)
         return 0;
@@ -893,6 +896,14 @@ int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const
     return chainActive.Height() - pindex->nHeight + 1;
 }
 
+int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const
+{
+    int nResult = GetDepthInMainChainINTERNAL(pindexRet);
+    if (nResult == 0 && !mempool.exists(GetHash()))
+        return -1; // Not in chain, not in mempool
+
+    return nResult;
+}
 
 int CMerkleTx::GetBlocksToMaturity() const
 {
@@ -2264,6 +2275,11 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
             return state.DoS(100, error("AcceptBlock() : rejected by checkpoint lock-in at %d", nHeight),
                              REJECT_CHECKPOINT, "checkpoint mismatch");
 
+        // Don't accept any forks from the main chain prior to last checkpoint
+        CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+        if (pcheckpoint && nHeight < pcheckpoint->nHeight)
+            return state.DoS(100, error("AcceptBlock() : forked chain older than last checkpoint (height %d)", nHeight));
+
         // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
         if (block.nVersion < 2)
         {
@@ -3121,10 +3137,28 @@ void static ProcessGetData(CNode* pfrom)
 
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
             {
-                // Send block from disk
+                bool send = false;
                 map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.hash);
                 if (mi != mapBlockIndex.end())
                 {
+                    // If the requested block is at a height below our last
+                    // checkpoint, only serve it if it's in the checkpointed chain
+                    int nHeight = mi->second->nHeight;
+                    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+                    if (pcheckpoint && nHeight < pcheckpoint->nHeight) {
+                       if (!chainActive.Contains(mi->second))
+                       {
+                         LogPrintf("ProcessGetData(): ignoring request for old block that isn't in the main chain\n");
+                       } else {
+                         send = true;
+                       }
+                    } else {
+                      send = true;
+                    }
+                }
+                if (send)
+                {
+                    // Send block from disk
                     CBlock block;
                     ReadBlockFromDisk(block, (*mi).second);
                     if (inv.type == MSG_BLOCK)
