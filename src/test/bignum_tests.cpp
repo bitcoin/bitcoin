@@ -135,6 +135,42 @@ BOOST_AUTO_TEST_CASE(bignum_SetCompact)
     BOOST_CHECK_EQUAL(num.GetHex(), "0");
     BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
 
+    num.SetCompact(0x01003456);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x02000056);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x03000000);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x04000000);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x00923456);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x01803456);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x02800056);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x03800000);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    
+    num.SetCompact(0x04800000);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
     num.SetCompact(0x01123456);
     BOOST_CHECK_EQUAL(num.GetHex(), "12");
     BOOST_CHECK_EQUAL(num.GetCompact(), 0x01120000U);
