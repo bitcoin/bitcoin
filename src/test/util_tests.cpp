@@ -311,9 +311,9 @@ BOOST_AUTO_TEST_CASE(strprintf_numbers)
 {
     int64_t s64t = -9223372036854775807LL; /* signed 64 bit test value */
     uint64_t u64t = 18446744073709551615ULL; /* unsigned 64 bit test value */
-    BOOST_CHECK(strprintf("%s %"PRId64" %s", B, s64t, E) == B" -9223372036854775807 "E);
-    BOOST_CHECK(strprintf("%s %"PRIu64" %s", B, u64t, E) == B" 18446744073709551615 "E);
-    BOOST_CHECK(strprintf("%s %"PRIx64" %s", B, u64t, E) == B" ffffffffffffffff "E);
+    BOOST_CHECK(strprintf("%s %d %s", B, s64t, E) == B" -9223372036854775807 "E);
+    BOOST_CHECK(strprintf("%s %u %s", B, u64t, E) == B" 18446744073709551615 "E);
+    BOOST_CHECK(strprintf("%s %x %s", B, u64t, E) == B" ffffffffffffffff "E);
 
     size_t st = 12345678; /* unsigned size_t test value */
     ssize_t sst = -12345678; /* signed size_t test value */
