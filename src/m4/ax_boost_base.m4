@@ -155,7 +155,7 @@ if test "x$want_boost" = "xyes"; then
         AC_MSG_RESULT(yes)
     succeeded=yes
     found_system=yes
-        ],[
+        ],[:
         ])
     AC_LANG_POP([C++])
 
@@ -238,7 +238,7 @@ if test "x$want_boost" = "xyes"; then
             AC_MSG_RESULT(yes)
         succeeded=yes
         found_system=yes
-            ],[
+            ],[:
             ])
         AC_LANG_POP([C++])
     fi
