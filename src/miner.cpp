@@ -319,7 +319,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
-        LogPrintf("CreateNewBlock(): total size %"PRIu64"\n", nBlockSize);
+        LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
         pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
         pblocktemplate->vTxFees[0] = -nFees;
