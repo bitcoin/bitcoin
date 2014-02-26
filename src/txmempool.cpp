@@ -407,11 +407,10 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
 }
 
 
-void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive)
+void CTxMemPool::removeUnlocked(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive)
 {
     // Remove transaction from memory pool
     {
-        LOCK(cs);
         uint256 hash = tx.GetHash();
         if (fRecursive) {
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -429,6 +428,22 @@ void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed
             mapTx.erase(hash);
             nTransactionsUpdated++;
         }
+    }
+}
+
+void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive)
+{
+    LOCK(cs);
+    removeUnlocked(tx, removed, fRecursive);
+}
+
+void CTxMemPool::removeBatch(vector<CTransaction>& vtx, std::list<CTransaction>& removed, bool fRecursive)
+{
+    LOCK(cs);
+    BOOST_FOREACH(const CTransaction& tx, vtx) {
+        uint256 hash = tx.GetHash();
+        if (mapTx.count(hash))
+            removeUnlocked(tx, removed, fRecursive);
     }
 }
 
@@ -528,6 +543,17 @@ void CTxMemPool::queryHashes(vector<uint256>& vtxid)
     vtxid.reserve(mapTx.size());
     for (map<uint256, CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
         vtxid.push_back((*mi).first);
+}
+
+void CTxMemPool::queryOld(vector<CTransaction>& vtx, int64_t matchTime)
+{
+    LOCK(cs);
+
+    for (map<uint256, CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi) {
+        CTxMemPoolEntry& mpe = (*mi).second;
+        if (mpe.GetTime() <= matchTime)
+            vtx.push_back(mpe.GetTx());
+    }
 }
 
 bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const

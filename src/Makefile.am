@@ -96,6 +96,7 @@ BITCOIN_CORE_H = \
   net.h \
   noui.h \
   pow.h \
+  poolman.h \
   protocol.h \
   random.h \
   rpcclient.h \
@@ -204,6 +205,7 @@ libbitcoin_common_a_SOURCES = \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
+  poolman.cpp \
   protocol.cpp \
   script.cpp \
   $(BITCOIN_CORE_H)

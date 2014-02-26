@@ -19,6 +19,7 @@
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "poolman.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
@@ -253,6 +254,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -proxy=<ip:port>       " + _("Connect through SOCKS5 proxy") + "\n";
     strUsage += "  -seednode=<ip>         " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n";
     strUsage += "  -timeout=<n>           " + _("Specify connection timeout in milliseconds (default: 5000)") + "\n";
+    strUsage += "  -janitorinterval=<n>   " + _("Number of seconds between each mempool janitor run (default: 1 day)") + "\n";
+    strUsage += "  -janitorexpire=<n>     " + _("Number of seconds transactions live in memory pool, before removal (default: 3 days)") + "\n";
 #ifdef USE_UPNP
 #if USE_UPNP
     strUsage += "  -upnp                  " + _("Use UPnP to map the listening port (default: 1 when listening)") + "\n";
@@ -722,6 +725,16 @@ bool AppInit2(boost::thread_group& threadGroup)
         LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
         for (int i=0; i<nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
+    }
+
+    // mempool janitor execution interval.  default interval: 1 day
+    int janitorInterval = GetArg("-janitorinterval", (60 * 60 * 24 * 1));
+
+    // mempool janitor TX expiration threshold.  default: 3 days
+    janitorExpire = GetArg("-janitorexpire", (60 * 60 * 24 * 3));
+    if (janitorExpire < 0) {
+        janitorExpire = 0;
+        janitorInterval = 0;
     }
 
     int64_t nStart;
@@ -1240,6 +1253,10 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (pwalletMain)
         GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain, GetArg("-genproclimit", -1));
 #endif
+
+    // start mempool janitor, if interval above sane safety margin
+    if (janitorInterval > 60)
+        threadGroup.create_thread(boost::bind(&LoopForever<void (*)()>, "poolman", &TxMempoolJanitor, janitorInterval * 1000));
 
     // ********************************************************* Step 12: finished
 
