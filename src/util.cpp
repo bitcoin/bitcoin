@@ -948,15 +948,6 @@ void LogException(std::exception* pex, const char* pszThread)
     LogPrintf("\n%s", message);
 }
 
-void PrintException(std::exception* pex, const char* pszThread)
-{
-    std::string message = FormatException(pex, pszThread);
-    LogPrintf("\n\n************************\n%s\n", message);
-    fprintf(stderr, "\n\n************************\n%s\n", message.c_str());
-    strMiscWarning = message;
-    throw;
-}
-
 void PrintExceptionContinue(std::exception* pex, const char* pszThread)
 {
     std::string message = FormatException(pex, pszThread);
