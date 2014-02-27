@@ -208,6 +208,7 @@ public:
     std::string addrName;
     CService addrLocal;
     int nVersion;
+    int nDupBlocks;
     // strSubVer is whatever byte array we read from the wire. However, this field is intended
     // to be printed out, displayed to humans in various forms and so on. So we sanitize it and
     // store the sanitized version in cleanSubVer. The original should be used when dealing with
@@ -278,6 +279,7 @@ public:
         addr = addrIn;
         addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
         nVersion = 0;
+        nDupBlocks = 0;
         strSubVer = "";
         fOneShot = false;
         fClient = false; // set by version message

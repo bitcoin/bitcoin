@@ -2377,10 +2377,22 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 
     // Check for duplicate
     uint256 hash = pblock->GetHash();
-    if (mapBlockIndex.count(hash))
-        return state.Invalid(error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString()), 0, "duplicate");
-    if (mapOrphanBlocks.count(hash))
-        return state.Invalid(error("ProcessBlock() : already have block (orphan) %s", hash.ToString()), 0, "duplicate");
+    if (mapBlockIndex.count(hash)) {
+        if (pfrom) {
+            pfrom->nDupBlocks++;
+            if (pfrom->nDupBlocks > 2) pfrom->fDisconnect = true;
+            return state.Invalid(error("ProcessBlock() : already(%d) have block %d %s", pfrom->nDupBlocks, mapBlockIndex[hash]->nHeight, hash.ToString()), 0, "duplicate");
+        } else
+            return state.Invalid(error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString()), 0, "duplicate");
+    }
+    if (mapOrphanBlocks.count(hash)) {
+        if (pfrom) {
+            if (pfrom->nDupBlocks > 2) pfrom->fDisconnect = true;
+            return state.Invalid(error("ProcessBlock() : already(%d) have block (orphan) %s", pfrom->nDupBlocks, hash.ToString()), 0, "duplicate");
+        } else
+            return state.Invalid(error("ProcessBlock() : already have block (orphan) %s", hash.ToString()), 0, "duplicate");
+    }
+    if (pfrom) pfrom->nDupBlocks = 0; // reset the counter
 
     // Preliminary checks
     if (!CheckBlock(*pblock, state)) {
