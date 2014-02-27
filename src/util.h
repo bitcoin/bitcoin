@@ -152,7 +152,7 @@ static inline bool error(const char* format)
 }
 
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
-std::string FormatMoney(int64_t n, bool fPlus=false);
+std::string FormatMoney(int64_t n, bool fPlus=false, bool fTrim=true);
 bool ParseMoney(const std::string& str, int64_t& nRet);
 bool ParseMoney(const char* pszIn, int64_t& nRet);
 std::string SanitizeString(const std::string& str);

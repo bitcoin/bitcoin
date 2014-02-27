@@ -305,7 +305,7 @@ int LogPrintStr(const std::string &str)
     return ret;
 }
 
-string FormatMoney(int64_t n, bool fPlus)
+string FormatMoney(int64_t n, bool fPlus, bool fTrim)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
@@ -314,12 +314,15 @@ string FormatMoney(int64_t n, bool fPlus)
     int64_t remainder = n_abs%COIN;
     string str = strprintf("%d.%08d", quotient, remainder);
 
-    // Right-trim excess zeros before the decimal point:
-    int nTrim = 0;
-    for (int i = str.size()-1; (str[i] == '0' && isdigit(str[i-2])); --i)
-        ++nTrim;
-    if (nTrim)
-        str.erase(str.size()-nTrim, nTrim);
+    if(fTrim)
+    {
+        // Right-trim excess zeros after the decimal point:
+        int nTrim = 0;
+        for (int i = str.size()-1; (str[i] == '0' && isdigit(str[i-2])); --i)
+            ++nTrim;
+        if (nTrim)
+            str.erase(str.size()-nTrim, nTrim);
+    }
 
     if (n < 0)
         str.insert((unsigned int)0, 1, '-');
