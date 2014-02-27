@@ -596,7 +596,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+12"/>
         <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
-        <translation>已處理了估計全部 %2 個區塊中的 %1 個的交易紀錄.</translation>
+        <translation>已處理了估計全部 %2 個區塊中的 %1 個的交易紀錄。</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -957,7 +957,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation>當優先度低於&quot;中等&quot;時，文字會變紅色。</translation>
+        <translation>當優先度低於「中等」時，文字會變紅色。</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1186,7 +1186,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation>錯誤: 沒辦法造出指定的資料目錄 &quot;%1&quot;.</translation>
+        <translation>錯誤: 沒辦法造出指定的資料目錄 %1 。</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -1392,7 +1392,7 @@ Address: %4
     <message>
         <location line="+8"/>
         <source>User Interface &amp;language:</source>
-        <translation>使用界面的語言:</translation>
+        <translation>使用界面語言:</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1651,12 +1651,17 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation>錯誤: 沒有指定的資料目錄 &quot;%1&quot;.</translation>
+        <translation>錯誤: 沒有指定的資料目錄 %1 。</translation>
     </message>
     <message>
         <location line="-12"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>錯誤: -regtest 和 -testnet 的使用組合無效。</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="+82"/>
+        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>請輸入位元幣位址(像是 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1832,7 +1837,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>請用上下游標鍵來瀏覽歷史指令，並用 &lt;b&gt;Ctrl-L&lt;/b&gt; 來清理畫面。</translation>
+        <translation>請用上下游標鍵來瀏覽先前指令的紀錄，並用 &lt;b&gt;Ctrl-L&lt;/b&gt; 來清理畫面。</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1878,22 +1883,22 @@ Address: %4
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+83"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+107"/>
         <source>&amp;Amount:</source>
         <translation>金額:</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-16"/>
         <source>&amp;Label:</source>
         <translation>標記:</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-37"/>
         <source>&amp;Message:</source>
         <translation>訊息:</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-20"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>重複使用先前使用過的收款位址。重複使用位址會有安全和隱私方面的問題。除非是要重新產生先前的付款要求，不然請不要使用。</translation>
     </message>
@@ -1903,27 +1908,30 @@ Address: %4
         <translation>重複使用現有的收款位址(不建議)</translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>An optional label to associate with the new receiving address</source>
-        <translation>跟新收款位址關聯的標記，可以不填</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+14"/>
+        <location line="+23"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
         <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。注意: 這個訊息不會隨著付款送到位元幣網路上。</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
+        <location line="+21"/>
+        <source>An optional label to associate with the new receiving address.</source>
+        <translation>跟新收款位址關聯的標記，可以不填。</translation>
+    </message>
+    <message>
+        <location line="-7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation>請用這份表單來要求付款。所有欄位都&lt;b&gt;可以不填&lt;/b&gt;。</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+23"/>
+        <location line="+22"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>要求付款的金額，可以不填。不確定金額時可以留白或是填零。</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+32"/>
         <source>Clear all fields of the form.</source>
         <translation>清除表單中的所有欄位。</translation>
     </message>
@@ -1933,17 +1941,17 @@ Address: %4
         <translation>清除</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+78"/>
+        <source>Requested payments history</source>
+        <translation>先前要求付款的記錄</translation>
+    </message>
+    <message>
+        <location line="-98"/>
         <source>&amp;Request payment</source>
         <translation>要求付款</translation>
     </message>
     <message>
-        <location line="+47"/>
-        <source>Requested payments</source>
-        <translation>先前要求的付款</translation>
-    </message>
-    <message>
-        <location line="+16"/>
+        <location line="+120"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>顯示選擇的要求內容(效果跟按它兩下一樣)</translation>
     </message>
@@ -1961,6 +1969,21 @@ Address: %4
         <location line="+3"/>
         <source>Remove</source>
         <translation>刪掉</translation>
+    </message>
+    <message>
+        <location filename="../receivecoinsdialog.cpp" line="+38"/>
+        <source>Copy label</source>
+        <translation>複製標記</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy message</source>
+        <translation>複製訊息</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>複製金額</translation>
     </message>
 </context>
 <context>
@@ -2063,12 +2086,17 @@ Address: %4
         <source>(no message)</source>
         <translation>(無訊息)</translation>
     </message>
+    <message>
+        <location line="+8"/>
+        <source>(no amount)</source>
+        <translation>(無金額)</translation>
+    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+381"/>
+        <location filename="../sendcoinsdialog.cpp" line="+380"/>
         <location line="+80"/>
         <source>Send Coins</source>
         <translation>付款</translation>
@@ -2144,7 +2172,7 @@ Address: %4
         <translation>自定找零位址</translation>
     </message>
     <message>
-        <location line="+115"/>
+        <location line="+164"/>
         <source>Send to multiple recipients at once</source>
         <translation>一次付給多個收款人</translation>
     </message>
@@ -2154,7 +2182,7 @@ Address: %4
         <translation>增加收款人</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="-23"/>
         <source>Clear all fields of the form.</source>
         <translation>清除表單中的所有欄位。</translation>
     </message>
@@ -2164,12 +2192,12 @@ Address: %4
         <translation>全部清掉</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+52"/>
         <source>Balance:</source>
         <translation>餘額:</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="-78"/>
         <source>Confirm the send action</source>
         <translation>確認付款動作</translation>
     </message>
@@ -2179,7 +2207,7 @@ Address: %4
         <translation>付款</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-228"/>
+        <location filename="../sendcoinsdialog.cpp" line="-229"/>
         <source>Confirm send coins</source>
         <translation>確認付款金額</translation>
     </message>
@@ -2192,12 +2220,7 @@ Address: %4
         <translation>%1 給 %2</translation>
     </message>
     <message>
-        <location line="-136"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>請輸入位元幣位址(像是 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
-        <location line="+15"/>
+        <location line="-121"/>
         <source>Copy quantity</source>
         <translation>複製數目</translation>
     </message>
@@ -2247,7 +2270,7 @@ Address: %4
         <translation>或</translation>
     </message>
     <message>
-        <location line="+202"/>
+        <location line="+203"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>收款位址無效，請再檢查看看。</translation>
     </message>
@@ -2282,12 +2305,12 @@ Address: %4
         <translation>交易被拒絕了！有時候會發生這種錯誤，是因為你錢包中的一些錢已經被花掉了。比如說你複製了錢包檔 wallet.dat, 然後用複製的錢包花掉了錢，你現在所用的原來的錢包中，卻沒有那筆錢已經花掉的紀錄。</translation>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+113"/>
         <source>Warning: Invalid Bitcoin address</source>
         <translation>警告: 位元幣位址無效</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+20"/>
         <source>(no label)</source>
         <translation>(無標記)</translation>
     </message>
@@ -2297,7 +2320,7 @@ Address: %4
         <translation>警告: 不明的找零位址</translation>
     </message>
     <message>
-        <location line="-366"/>
+        <location line="-367"/>
         <source>Are you sure you want to send?</source>
         <translation>你確定要付錢出去嗎？</translation>
     </message>
@@ -2307,7 +2330,7 @@ Address: %4
         <translation>加做交易手續費</translation>
     </message>
     <message>
-        <location line="+170"/>
+        <location line="+171"/>
         <source>Payment request expired</source>
         <translation>付款的要求已經過期</translation>
     </message>
@@ -2384,12 +2407,7 @@ Address: %4
         <translation>訊息:</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>附加在位元幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考，注意: 這個訊息不會送到位元幣網路上。</translation>
-    </message>
-    <message>
-        <location line="+958"/>
+        <location line="+968"/>
         <source>This is a verified payment request.</source>
         <translation>這是個已驗證的付款要求。</translation>
     </message>
@@ -2399,7 +2417,12 @@ Address: %4
         <translation>請輸入這個位址的標記，來把它加進去已使用過位址的清單。</translation>
     </message>
     <message>
-        <location line="+459"/>
+        <location line="+33"/>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>附加在位元幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到位元幣網路上。</translation>
+    </message>
+    <message>
+        <location line="+426"/>
         <source>This is an unverified payment request.</source>
         <translation>這是個沒驗證過的付款要求。</translation>
     </message>
@@ -2414,11 +2437,6 @@ Address: %4
         <location line="+536"/>
         <source>Memo:</source>
         <translation>備註:</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>請輸入位元幣位址(像是 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -2457,19 +2475,19 @@ Address: %4
         <translation>用來簽署訊息的位址(像是 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location line="+213"/>
+        <location line="+7"/>
+        <location line="+210"/>
         <source>Choose previously used address</source>
         <translation>選擇先前使用過的位址</translation>
     </message>
     <message>
-        <location line="-203"/>
-        <location line="+213"/>
+        <location line="-200"/>
+        <location line="+210"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
-        <location line="-203"/>
+        <location line="-200"/>
         <source>Paste address from clipboard</source>
         <translation>貼上剪貼簿裡的位址</translation>
     </message>
@@ -2510,19 +2528,19 @@ Address: %4
     </message>
     <message>
         <location line="+3"/>
-        <location line="+146"/>
+        <location line="+143"/>
         <source>Clear &amp;All</source>
         <translation>全部清掉</translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-84"/>
         <source>&amp;Verify Message</source>
         <translation>驗證訊息</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>請在下面輸入簽署的位址，訊息(請確定完整複製了所包含的換行，空格，跳位符號等等)，以及簽章，來驗證這個訊息。請小心，除了訊息內容以外，不要對簽章本身過度解讀，以避免被用&quot;中間人攻擊法&quot;詐騙。</translation>
+        <translation>請在下面輸入簽署的位址，訊息(請確定完整複製了所包含的換行，空格，跳位符號等等)，以及簽章，來驗證這個訊息。請小心，除了訊息內容以外，不要對簽章本身過度解讀，以避免被用「中間人攻擊法」詐騙。</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -2530,7 +2548,7 @@ Address: %4
         <translation>簽署這個訊息的位址(像是 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+37"/>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>驗證這個訊息來確定是用指定的位元幣位址簽署的</translation>
     </message>
@@ -2545,43 +2563,37 @@ Address: %4
         <translation>重置所有訊息驗證欄位</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+29"/>
-        <location line="+3"/>
+        <location filename="../signverifymessagedialog.cpp" line="+30"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>請輸入位元幣位址(像是 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="-2"/>
+        <location line="-1"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation>請按一下&quot;簽署訊息&quot;來產生簽章</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
-        <translation>請輸入位元幣簽章</translation>
+        <translation>請按一下「簽署訊息」來產生簽章</translation>
     </message>
     <message>
         <location line="+84"/>
-        <location line="+81"/>
+        <location line="+80"/>
         <source>The entered address is invalid.</source>
         <translation>輸入的位址無效。</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-80"/>
         <location line="+8"/>
-        <location line="+73"/>
+        <location line="+72"/>
         <location line="+8"/>
         <source>Please check the address and try again.</source>
         <translation>請檢查位址是否正確後再試一次。</translation>
     </message>
     <message>
-        <location line="-81"/>
-        <location line="+81"/>
+        <location line="-80"/>
+        <location line="+80"/>
         <source>The entered address does not refer to a key.</source>
         <translation>輸入的位址沒有對應到你的任何密鑰。</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-72"/>
         <source>Wallet unlock was cancelled.</source>
         <translation>錢包解鎖已取消。</translation>
     </message>
@@ -2601,7 +2613,7 @@ Address: %4
         <translation>訊息簽署好了。</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+58"/>
         <source>The signature could not be decoded.</source>
         <translation>沒辦法把這個簽章解碼。</translation>
     </message>
@@ -2785,7 +2797,7 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>生產出來的錢要再等 %1 個區塊生出來後才成熟可以用。當你生產出區塊時會公告到網路上，來被串連到區塊鏈。如果串連失敗了，狀態就會變成&quot;不被接受&quot;，而且不能夠花。如果在你生產出區塊的幾秒鐘內，也有其他節點生產出來的話，有時候就會發生這種情形。</translation>
+        <translation>生產出來的錢要再等 %1 個區塊生出來後才成熟可以用。當區塊生產出來時會公布到網路上，來被加進區塊鏈。如果加失敗了，狀態就會變成「不被接受」，而且不能夠花。如果在你生產出區塊的幾秒鐘內，也有其他節點生產出來的話，就有可能會發生這種情形。</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -3326,7 +3338,7 @@ rpcuser=bitcoinrpc
 rpcpassword=%s
 (你不用記住這個密碼)
 使用者名稱(rpcuser)和密碼(rpcpassword)不可以相同！
-如果還沒有這個設定檔，請在造出來的時候，設定檔案權限成只有主人才能讀取。
+如果還沒有這個設定檔，請在造出來的時候，設定檔案權限成「只有主人才能讀取」。
 也建議你設定警示通知，發生問題時你才會被通知到；
 比如說設定成:
 alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com</translation>
@@ -3344,7 +3356,7 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com</translat
     <message>
         <location line="+3"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>和指定的位址繫結，並總是在指定位址聽候連線。IPv6 請用 &quot;[主機]:通訊埠&quot; 這種格式</translation>
+        <translation>和指定的位址繫結，並總是在指定位址聽候連線。IPv6 請用 [主機]:通訊埠 這種格式</translation>
     </message>
     <message>
         <location line="+3"/>

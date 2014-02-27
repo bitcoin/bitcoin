@@ -4,12 +4,12 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Sobre Bitcoin core</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Bitcoin core&lt;/b&gt; versión</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -34,7 +34,7 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
     <message>
         <location line="+0"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Os desarrolladores de Bitcoin Core</translation>
     </message>
 </context>
 <context>
@@ -152,7 +152,7 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
     <message>
         <location line="+13"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Exportación falida</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -548,7 +548,7 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
         <location line="+29"/>
         <location line="+2"/>
         <source>&amp;About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sobre Bitcoin Core</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -563,7 +563,7 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
     <message>
         <location line="+3"/>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>Abrir un bitcoin: URI ou solicitude de pago</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -713,27 +713,27 @@ Dirección: %4
     <message>
         <location line="+34"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Cantidade:</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Bytes:</translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Importe:</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Prioridade:</translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Pago:</translation>
     </message>
     <message>
         <location line="+32"/>
@@ -748,22 +748,22 @@ Dirección: %4
     <message>
         <location line="+32"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Cambiar:</translation>
     </message>
     <message>
         <location line="+63"/>
         <source>(un)select all</source>
-        <translation type="unfinished"/>
+        <translation>(des)selecciona todo</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Tree mode</source>
-        <translation type="unfinished"/>
+        <translation>Modo árbore</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>List mode</source>
-        <translation type="unfinished"/>
+        <translation>Modo lista</translation>
     </message>
     <message>
         <location line="+52"/>
@@ -783,7 +783,7 @@ Dirección: %4
     <message>
         <location line="+5"/>
         <source>Confirmations</source>
-        <translation type="unfinished"/>
+        <translation>Confirmacións</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -793,7 +793,7 @@ Dirección: %4
     <message>
         <location line="+5"/>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>Prioridade</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="+42"/>
@@ -819,37 +819,37 @@ Dirección: %4
     <message>
         <location line="+1"/>
         <source>Lock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Bloquear o aforrado</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unlock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Desbloquear o aforrado</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Copiar cantidade</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Copiar pago</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Copiar despóis do pago</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Copiar bytes</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Copiar prioridade</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -859,27 +859,27 @@ Dirección: %4
     <message>
         <location line="+1"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Copiar cambio</translation>
     </message>
     <message>
         <location line="+323"/>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>O máis alto</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>Máis alto que</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>alto</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>medium-high</source>
-        <translation type="unfinished"/>
+        <translation>medio-alto</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -889,27 +889,27 @@ Dirección: %4
     <message>
         <location line="+4"/>
         <source>low-medium</source>
-        <translation type="unfinished"/>
+        <translation>medio-baixo</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>baixo</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>máis baixo que</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>o máis baixo</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>(%1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 bloqueado)</translation>
     </message>
     <message>
         <location line="+31"/>
@@ -919,17 +919,17 @@ Dirección: %4
     <message>
         <location line="+140"/>
         <source>Dust</source>
-        <translation type="unfinished"/>
+        <translation>Limpar</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>yes</source>
-        <translation type="unfinished"/>
+        <translation>Si</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>no</source>
-        <translation type="unfinished"/>
+        <translation>non</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -950,7 +950,7 @@ Dirección: %4
     <message>
         <location line="+2"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation type="unfinished"/>
+        <translation>As transacción con maior prioridade teñen máis posibilidades de ser incluidas nun bloque</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -992,7 +992,7 @@ Dirección: %4
     <message>
         <location line="+1"/>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(cambio)</translation>
     </message>
 </context>
 <context>
@@ -1207,27 +1207,27 @@ Dirección: %4
     <message>
         <location filename="../forms/openuridialog.ui" line="+14"/>
         <source>Open URI</source>
-        <translation type="unfinished"/>
+        <translation>Abrir URI</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
+        <translation>Abrir solicitude de pago dende URI ou ficheiro</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>URI:</source>
-        <translation type="unfinished"/>
+        <translation>URI:</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>Seleccionar ficheiro de solicitude de pago</translation>
     </message>
     <message>
         <location filename="../openuridialog.cpp" line="+47"/>
         <source>Select payment request file to open</source>
-        <translation type="unfinished"/>
+        <translation>Seleccione ficheiro de solicitude de pago para abrir</translation>
     </message>
 </context>
 <context>
@@ -1656,6 +1656,11 @@ Dirección: %4
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>Erro: combinación inválida de -regtest e -testnet.</translation>
     </message>
+    <message>
+        <location filename="../guiutil.cpp" line="+82"/>
+        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Introduce unha dirección Bitcoin (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1876,22 +1881,22 @@ Dirección: %4
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+83"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+107"/>
         <source>&amp;Amount:</source>
         <translation>&amp;Cantidade:</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-16"/>
         <source>&amp;Label:</source>
         <translation>&amp;Etiqueta:</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-37"/>
         <source>&amp;Message:</source>
         <translation>&amp;Mensaxe:</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-20"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>Reutilizar unha das direccións para recibir previas. Reutilizar direccións ten problemas de seguridade e privacidade. Non empregues esto agás que antes se fixese unha solicitude de rexeneración dun pago.</translation>
     </message>
@@ -1901,27 +1906,30 @@ Dirección: %4
         <translation>R&amp;eutilizar unha dirección para recibir existente (non recomendado)</translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>An optional label to associate with the new receiving address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+14"/>
+        <location line="+23"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
+        <location line="+21"/>
+        <source>An optional label to associate with the new receiving address.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+23"/>
+        <location line="+22"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+32"/>
         <source>Clear all fields of the form.</source>
         <translation>Limpar todos os campos do formulario</translation>
     </message>
@@ -1931,17 +1939,17 @@ Dirección: %4
         <translation>Limpar</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+78"/>
+        <source>Requested payments history</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-98"/>
         <source>&amp;Request payment</source>
         <translation>&amp;Solicitar pago</translation>
     </message>
     <message>
-        <location line="+47"/>
-        <source>Requested payments</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+16"/>
+        <location line="+120"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation type="unfinished"/>
     </message>
@@ -1959,6 +1967,21 @@ Dirección: %4
         <location line="+3"/>
         <source>Remove</source>
         <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../receivecoinsdialog.cpp" line="+38"/>
+        <source>Copy label</source>
+        <translation>Copiar etiqueta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy message</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>Copiar cantidade</translation>
     </message>
 </context>
 <context>
@@ -2061,12 +2084,17 @@ Dirección: %4
         <source>(no message)</source>
         <translation type="unfinished"/>
     </message>
+    <message>
+        <location line="+8"/>
+        <source>(no amount)</source>
+        <translation type="unfinished"/>
+    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+381"/>
+        <location filename="../sendcoinsdialog.cpp" line="+380"/>
         <location line="+80"/>
         <source>Send Coins</source>
         <translation>Moedas Enviadas</translation>
@@ -2094,27 +2122,27 @@ Dirección: %4
     <message>
         <location line="+89"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Cantidade:</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Bytes:</translation>
     </message>
     <message>
         <location line="+48"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Importe:</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Prioridade:</translation>
     </message>
     <message>
         <location line="+48"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Pago:</translation>
     </message>
     <message>
         <location line="+32"/>
@@ -2129,7 +2157,7 @@ Dirección: %4
     <message>
         <location line="+32"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Cambiar:</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2142,7 +2170,7 @@ Dirección: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+115"/>
+        <location line="+164"/>
         <source>Send to multiple recipients at once</source>
         <translation>Enviar a múltiples receptores á vez</translation>
     </message>
@@ -2152,7 +2180,7 @@ Dirección: %4
         <translation>Engadir &amp;Receptor</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="-23"/>
         <source>Clear all fields of the form.</source>
         <translation>Limpar tódolos campos do formulario</translation>
     </message>
@@ -2162,12 +2190,12 @@ Dirección: %4
         <translation>Limpar &amp;Todo</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+52"/>
         <source>Balance:</source>
         <translation>Balance:</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="-78"/>
         <source>Confirm the send action</source>
         <translation>Confirmar a acción de envío</translation>
     </message>
@@ -2177,7 +2205,7 @@ Dirección: %4
         <translation>&amp;Enviar</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-228"/>
+        <location filename="../sendcoinsdialog.cpp" line="-229"/>
         <source>Confirm send coins</source>
         <translation>Confirmar envío de moedas</translation>
     </message>
@@ -2190,14 +2218,9 @@ Dirección: %4
         <translation>%1 a %2</translation>
     </message>
     <message>
-        <location line="-136"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Introduce unha dirección Bitcoin (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
-        <location line="+15"/>
+        <location line="-121"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Copiar cantidade</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2207,22 +2230,22 @@ Dirección: %4
     <message>
         <location line="+1"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Copiar pago</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Copiar despóis do pago</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Copiar bytes</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Copiar prioridade</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2232,7 +2255,7 @@ Dirección: %4
     <message>
         <location line="+1"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Copiar cambio</translation>
     </message>
     <message>
         <location line="+170"/>
@@ -2245,7 +2268,7 @@ Dirección: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+202"/>
+        <location line="+203"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>A dirección de recepción non é válida, por favor compróbea.</translation>
     </message>
@@ -2280,22 +2303,22 @@ Dirección: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+113"/>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Atención:  Enderezo Bitcoin non válido</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+20"/>
         <source>(no label)</source>
         <translation>(sen etiqueta)</translation>
     </message>
     <message>
         <location line="-11"/>
         <source>Warning: Unknown change address</source>
-        <translation type="unfinished"/>
+        <translation>Atención: Enderezo de cambio desconocido</translation>
     </message>
     <message>
-        <location line="-366"/>
+        <location line="-367"/>
         <source>Are you sure you want to send?</source>
         <translation>Seguro que queres enviar?</translation>
     </message>
@@ -2305,7 +2328,7 @@ Dirección: %4
         <translation>engadido como tarifa de transacción</translation>
     </message>
     <message>
-        <location line="+170"/>
+        <location line="+171"/>
         <source>Payment request expired</source>
         <translation>A petición de pago expirou</translation>
     </message>
@@ -2352,7 +2375,7 @@ Dirección: %4
     <message>
         <location line="-40"/>
         <source>This is a normal payment.</source>
-        <translation type="unfinished"/>
+        <translation>Este é un pago normal</translation>
     </message>
     <message>
         <location line="+50"/>
@@ -2374,7 +2397,7 @@ Dirección: %4
         <location line="+524"/>
         <location line="+536"/>
         <source>Remove this entry</source>
-        <translation type="unfinished"/>
+        <translation>Eliminar esta entrada</translation>
     </message>
     <message>
         <location line="-1008"/>
@@ -2382,14 +2405,9 @@ Dirección: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+10"/>
-        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+958"/>
+        <location line="+968"/>
         <source>This is a verified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>Esta é unha solicitude de pago verificada</translation>
     </message>
     <message>
         <location line="-991"/>
@@ -2397,26 +2415,26 @@ Dirección: %4
         <translation>Introduce unha etiqueta para esta dirección para engadila á listaxe de direccións empregadas</translation>
     </message>
     <message>
-        <location line="+459"/>
-        <source>This is an unverified payment request.</source>
+        <location line="+33"/>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+426"/>
+        <source>This is an unverified payment request.</source>
+        <translation>Esta é unha solicitude de pago non verificada</translation>
     </message>
     <message>
         <location line="+18"/>
         <location line="+532"/>
         <source>Pay To:</source>
-        <translation type="unfinished"/>
+        <translation>Pagar A:</translation>
     </message>
     <message>
         <location line="-498"/>
         <location line="+536"/>
         <source>Memo:</source>
         <translation>Memo:</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Introduce unha dirección Bitcoin (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -2455,19 +2473,19 @@ Dirección: %4
         <translation>A dirección coa que asinar a mensaxe (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location line="+213"/>
+        <location line="+7"/>
+        <location line="+210"/>
         <source>Choose previously used address</source>
         <translation>Escoller dirección previamente empregada</translation>
     </message>
     <message>
-        <location line="-203"/>
-        <location line="+213"/>
+        <location line="-200"/>
+        <location line="+210"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
-        <location line="-203"/>
+        <location line="-200"/>
         <source>Paste address from clipboard</source>
         <translation>Pegar dirección dende portapapeis</translation>
     </message>
@@ -2508,12 +2526,12 @@ Dirección: %4
     </message>
     <message>
         <location line="+3"/>
-        <location line="+146"/>
+        <location line="+143"/>
         <source>Clear &amp;All</source>
         <translation>Limpar &amp;Todo</translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-84"/>
         <source>&amp;Verify Message</source>
         <translation>&amp;Verificar Mensaxe</translation>
     </message>
@@ -2528,7 +2546,7 @@ Dirección: %4
         <translation>A dirección coa que foi firmada a mensaxe (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+37"/>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección Bitcoin especificada</translation>
     </message>
@@ -2543,43 +2561,37 @@ Dirección: %4
         <translation>Restaurar todos os campos de verificación de mensaxe</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+29"/>
-        <location line="+3"/>
+        <location filename="../signverifymessagedialog.cpp" line="+30"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Introduza unha dirección Bitcoin (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="-2"/>
+        <location line="-1"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
         <translation>Click en &quot;Asinar Mensaxe&quot; para xerar sinatura</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
-        <translation>Introduce sinatura Bitcoin</translation>
-    </message>
-    <message>
         <location line="+84"/>
-        <location line="+81"/>
+        <location line="+80"/>
         <source>The entered address is invalid.</source>
         <translation>A dirección introducida é inválida.</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-80"/>
         <location line="+8"/>
-        <location line="+73"/>
+        <location line="+72"/>
         <location line="+8"/>
         <source>Please check the address and try again.</source>
         <translation>Por favor comproba a dirección e proba de novo.</translation>
     </message>
     <message>
-        <location line="-81"/>
-        <location line="+81"/>
+        <location line="-80"/>
+        <location line="+80"/>
         <source>The entered address does not refer to a key.</source>
         <translation>A dirección introducida non se refire a ninguna clave.</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-72"/>
         <source>Wallet unlock was cancelled.</source>
         <translation>Cancelouse o desbloqueo do moedeiro.</translation>
     </message>
@@ -2599,7 +2611,7 @@ Dirección: %4
         <translation>Mensaxe asinada.</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+58"/>
         <source>The signature could not be decoded.</source>
         <translation>A sinatura non puido ser decodificada.</translation>
     </message>
@@ -2635,7 +2647,7 @@ Dirección: %4
     <message>
         <location line="+2"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Os desarrolladores de Bitcoin Core</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3069,27 +3081,27 @@ Dirección: %4
     <message>
         <location line="+142"/>
         <source>Export Transaction History</source>
-        <translation type="unfinished"/>
+        <translation>Exportar Historial de Transaccións</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Exportación falida</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Houbo un erro intentando salvar o historial  de transaccións a %1.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Exporting Successful</source>
-        <translation type="unfinished"/>
+        <translation>Exportado correctamente</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>O historial de transaccións foi salvado correctamente en %1.</translation>
     </message>
     <message>
         <location line="-22"/>
@@ -3147,7 +3159,7 @@ Dirección: %4
     <message>
         <location filename="../walletframe.cpp" line="+26"/>
         <source>No wallet has been loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Ningún moedeiro cargado</translation>
     </message>
 </context>
 <context>
@@ -3188,12 +3200,12 @@ Dirección: %4
     <message>
         <location line="+0"/>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Houbo un erro intentando gardar os datos de moedeiro en %1.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Os datos do moedeiro foron gardados correctamente en %1.</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -3416,7 +3428,7 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+9"/>
         <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
+        <translation>&lt;categoría&gt; pode ser:</translation>
     </message>
     <message>
         <location line="+6"/>
