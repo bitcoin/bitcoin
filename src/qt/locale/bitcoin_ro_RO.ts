@@ -152,7 +152,7 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
     <message>
         <location line="+13"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Exportare esuata</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -568,7 +568,7 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
     <message>
         <location line="+2"/>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Command-line setări</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1656,6 +1656,11 @@ Adresa: %4
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>Eroare: combinație nevalidă de -regtest și -testnet.</translation>
     </message>
+    <message>
+        <location filename="../guiutil.cpp" line="+82"/>
+        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Introdu o adresă Bitcoin (de exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1876,22 +1881,22 @@ Adresa: %4
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+83"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+107"/>
         <source>&amp;Amount:</source>
         <translation>&amp; suma:</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-16"/>
         <source>&amp;Label:</source>
         <translation>&amp;Etichetă:</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-37"/>
         <source>&amp;Message:</source>
         <translation>&amp; mesaj:</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-20"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>Refolositi una din adresele de primire folosite in prealabil. Refolosirea adreselor poate crea probleme de securitate si confidentialitate. Nu folositi aceasta optiune decat daca o cerere de regenerare a platii a fost facuta in prealabil.</translation>
     </message>
@@ -1901,27 +1906,30 @@ Adresa: %4
         <translation>&amp;Refolosirea unei adrese de primire (nu este recomandat)</translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>An optional label to associate with the new receiving address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+14"/>
+        <location line="+23"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
+        <location line="+21"/>
+        <source>An optional label to associate with the new receiving address.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+23"/>
+        <location line="+22"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+32"/>
         <source>Clear all fields of the form.</source>
         <translation>Stergeti toate campurile formularului</translation>
     </message>
@@ -1931,24 +1939,24 @@ Adresa: %4
         <translation>Stergeti</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+78"/>
+        <source>Requested payments history</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-98"/>
         <source>&amp;Request payment</source>
         <translation>&amp;Cereti plata</translation>
     </message>
     <message>
-        <location line="+47"/>
-        <source>Requested payments</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+16"/>
+        <location line="+120"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Show</source>
-        <translation type="unfinished"/>
+        <translation>Arată</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1958,7 +1966,22 @@ Adresa: %4
     <message>
         <location line="+3"/>
         <source>Remove</source>
+        <translation>Elimină</translation>
+    </message>
+    <message>
+        <location filename="../receivecoinsdialog.cpp" line="+38"/>
+        <source>Copy label</source>
+        <translation>Copiază eticheta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy message</source>
         <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>Copiază suma</translation>
     </message>
 </context>
 <context>
@@ -2059,6 +2082,11 @@ Adresa: %4
     <message>
         <location line="+9"/>
         <source>(no message)</source>
+        <translation>(nici un mesaj)</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>(no amount)</source>
         <translation type="unfinished"/>
     </message>
 </context>
@@ -2066,7 +2094,7 @@ Adresa: %4
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+381"/>
+        <location filename="../sendcoinsdialog.cpp" line="+380"/>
         <location line="+80"/>
         <source>Send Coins</source>
         <translation>Trimite monede</translation>
@@ -2079,17 +2107,17 @@ Adresa: %4
     <message>
         <location line="+20"/>
         <source>Inputs...</source>
-        <translation type="unfinished"/>
+        <translation>Intrări</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>automatically selected</source>
-        <translation type="unfinished"/>
+        <translation>Selectie automatică</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
+        <translation>Fonduri insuficiente!</translation>
     </message>
     <message>
         <location line="+89"/>
@@ -2142,7 +2170,7 @@ Adresa: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+115"/>
+        <location line="+164"/>
         <source>Send to multiple recipients at once</source>
         <translation>Trimite simultan către mai mulți destinatari</translation>
     </message>
@@ -2152,7 +2180,7 @@ Adresa: %4
         <translation>&amp;Adaugă destinatar</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="-23"/>
         <source>Clear all fields of the form.</source>
         <translation>Stergeti toate campurile formularului</translation>
     </message>
@@ -2162,12 +2190,12 @@ Adresa: %4
         <translation>Șterge &amp;tot</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+52"/>
         <source>Balance:</source>
         <translation>Balanță:</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="-78"/>
         <source>Confirm the send action</source>
         <translation>Confirmă operațiunea de trimitere</translation>
     </message>
@@ -2177,7 +2205,7 @@ Adresa: %4
         <translation>&amp;S Trimite</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-228"/>
+        <location filename="../sendcoinsdialog.cpp" line="-229"/>
         <source>Confirm send coins</source>
         <translation>Confirmă trimiterea de monede</translation>
     </message>
@@ -2190,12 +2218,7 @@ Adresa: %4
         <translation>%1 la %2</translation>
     </message>
     <message>
-        <location line="-136"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Introdu o adresă Bitcoin (de exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
-        <location line="+15"/>
+        <location line="-121"/>
         <source>Copy quantity</source>
         <translation>Copiaţi quantitea</translation>
     </message>
@@ -2237,15 +2260,15 @@ Adresa: %4
     <message>
         <location line="+170"/>
         <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
+        <translation>Suma totală %1 (= %2)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>sau</translation>
     </message>
     <message>
-        <location line="+202"/>
+        <location line="+203"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Adresa destinatarului nu este validă, vă rugăm să o verificaţi.</translation>
     </message>
@@ -2280,12 +2303,12 @@ Adresa: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+113"/>
         <source>Warning: Invalid Bitcoin address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+20"/>
         <source>(no label)</source>
         <translation>(fără etichetă)</translation>
     </message>
@@ -2295,7 +2318,7 @@ Adresa: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-366"/>
+        <location line="-367"/>
         <source>Are you sure you want to send?</source>
         <translation>Ești sigur că vrei să trimiți?</translation>
     </message>
@@ -2305,7 +2328,7 @@ Adresa: %4
         <translation>adăugat ca taxă de tranzacție</translation>
     </message>
     <message>
-        <location line="+170"/>
+        <location line="+171"/>
         <source>Payment request expired</source>
         <translation>Cererea de plată a expirat</translation>
     </message>
@@ -2382,12 +2405,7 @@ Adresa: %4
         <translation>Mesaj:</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+958"/>
+        <location line="+968"/>
         <source>This is a verified payment request.</source>
         <translation type="unfinished"/>
     </message>
@@ -2397,7 +2415,12 @@ Adresa: %4
         <translation>Introduceti eticheta pentru ca aceasta adresa sa fie introdusa in lista de adrese folosite</translation>
     </message>
     <message>
-        <location line="+459"/>
+        <location line="+33"/>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+426"/>
         <source>This is an unverified payment request.</source>
         <translation type="unfinished"/>
     </message>
@@ -2412,11 +2435,6 @@ Adresa: %4
         <location line="+536"/>
         <source>Memo:</source>
         <translation>Memo:</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Introdu o adresă Bitcoin (de exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -2455,19 +2473,19 @@ Adresa: %4
         <translation>Introduceţi o adresă Bitcoin (de exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location line="+213"/>
+        <location line="+7"/>
+        <location line="+210"/>
         <source>Choose previously used address</source>
         <translation>Alegeti adrese folosite in prealabil</translation>
     </message>
     <message>
-        <location line="-203"/>
-        <location line="+213"/>
+        <location line="-200"/>
+        <location line="+210"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
-        <location line="-203"/>
+        <location line="-200"/>
         <source>Paste address from clipboard</source>
         <translation>Lipiţi adresa copiată in clipboard.</translation>
     </message>
@@ -2508,12 +2526,12 @@ Adresa: %4
     </message>
     <message>
         <location line="+3"/>
-        <location line="+146"/>
+        <location line="+143"/>
         <source>Clear &amp;All</source>
         <translation>Şterge &amp;tot</translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-84"/>
         <source>&amp;Verify Message</source>
         <translation>Verifica mesajul</translation>
     </message>
@@ -2528,7 +2546,7 @@ Adresa: %4
         <translation>Introduceţi o adresă Bitcoin (de exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+37"/>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>Verifica mesajul pentru a fi sigur ca a fost semnat cu adresa Bitcoin specifica</translation>
     </message>
@@ -2543,43 +2561,37 @@ Adresa: %4
         <translation>Reseteaza toate spatiile mesajelor semnate.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+29"/>
-        <location line="+3"/>
+        <location filename="../signverifymessagedialog.cpp" line="+30"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Introduceţi o adresă Bitcoin (de exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="-2"/>
+        <location line="-1"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
         <translation>Click &quot;Semneaza msajul&quot; pentru a genera semnatura</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
-        <translation>Introduce semnatura bitocin</translation>
-    </message>
-    <message>
         <location line="+84"/>
-        <location line="+81"/>
+        <location line="+80"/>
         <source>The entered address is invalid.</source>
         <translation>Adresa introdusa nu este valida</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-80"/>
         <location line="+8"/>
-        <location line="+73"/>
+        <location line="+72"/>
         <location line="+8"/>
         <source>Please check the address and try again.</source>
         <translation>Te rugam verifica adresa si introduce-o din nou</translation>
     </message>
     <message>
-        <location line="-81"/>
-        <location line="+81"/>
+        <location line="-80"/>
+        <location line="+80"/>
         <source>The entered address does not refer to a key.</source>
         <translation>Adresa introdusa nu se refera la o cheie.</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-72"/>
         <source>Wallet unlock was cancelled.</source>
         <translation>Blocarea portofelului a fost intrerupta</translation>
     </message>
@@ -2599,7 +2611,7 @@ Adresa: %4
         <translation>Mesaj Semnat!</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+58"/>
         <source>The signature could not be decoded.</source>
         <translation>Aceasta semnatura nu a putut fi decodata</translation>
     </message>
@@ -3074,7 +3086,7 @@ Adresa: %4
     <message>
         <location line="+19"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Exportare esuata</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -3676,7 +3688,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+2"/>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>Optiuni de portofel</translation>
     </message>
     <message>
         <location line="+2"/>
