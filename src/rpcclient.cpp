@@ -271,6 +271,7 @@ std::string HelpMessageCli(bool mainProgram)
         strUsage += _("RPC client options:") + "\n";
     }
 
+    strUsage += "  -rpcamount=<format>    " + strprintf(_("Use format for monetary amounts in RPC interface. Available options are number-decimal, number-satoshis, string-decimal, and string-satoshis (default: %s)"), strRPCDefaultAmountMode) + "\n";
     strUsage += "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n";
     strUsage += "  -rpcport=<port>        " + _("Connect to JSON-RPC on <port> (default: 8332 or testnet: 18332)") + "\n";
     strUsage += "  -rpcwait               " + _("Wait for RPC server to start") + "\n";

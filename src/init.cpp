@@ -304,6 +304,7 @@ std::string HelpMessage(HelpMessageMode hmm)
 
     strUsage += "\n" + _("RPC server options:") + "\n";
     strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
+    strUsage += "  -rpcamount=<format>    " + strprintf(_("Use format for monetary amounts in RPC interface. Available options are number-decimal, number-satoshis, string-decimal, and string-satoshis (default: %s)"), strRPCDefaultAmountMode) + "\n";
     strUsage += "  -rpcbind=<addr>        " + _("Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)") + "\n";
     strUsage += "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n";
     strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
@@ -585,6 +586,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif
+    std::string strAmountMode = GetArg("-rpcamount", strRPCDefaultAmountMode);
+    if (!SetRPCAmountMode(strAmountMode))
+        return InitError(strprintf("Invalid -rpcamount setting: %s", strAmountMode.c_str()));
+
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
     std::string strDataDir = GetDataDir().string();
