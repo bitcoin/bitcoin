@@ -72,6 +72,17 @@ for Ubuntu 12.04 and later:
 for Ubuntu 13.10: 
         libboost1.54-all-dev will not work. Remove libboost1.54-all-dev and install libboost1.53-all-dev
 
+for Debian 7 (Wheezy) and later:
+ The oldstable repository contains db4.8 packages.
+ Add the following line to /etc/apt/sources.list,
+ replacing [mirror] with any official debian mirror.
+
+	deb http://[mirror]/debian/ oldstable main
+        
+To enable the change run
+
+	sudo apt-get update
+
 for other Ubuntu & Debian:
 
 	sudo apt-get install libdb4.8-dev
@@ -125,8 +136,10 @@ Berkeley DB
 -----------
 You need Berkeley DB 4.8.  If you have to build Berkeley DB yourself:
 
+	cd build_unix/
 	../dist/configure --enable-cxx
 	make
+	sudo make install
 
 
 Boost
