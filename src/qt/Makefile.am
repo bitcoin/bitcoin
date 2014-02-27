@@ -20,6 +20,8 @@ QT_TS = \
   locale/bitcoin_bs.ts \
   locale/bitcoin_ca_ES.ts \
   locale/bitcoin_ca.ts \
+  locale/bitcoin_ca@valencia.ts \
+  locale/bitcoin_cmn.ts \
   locale/bitcoin_cs.ts \
   locale/bitcoin_cy.ts \
   locale/bitcoin_da.ts \
@@ -29,8 +31,10 @@ QT_TS = \
   locale/bitcoin_en.ts \
   locale/bitcoin_eo.ts \
   locale/bitcoin_es_CL.ts \
+  locale/bitcoin_es_DO.ts \
   locale/bitcoin_es_MX.ts \
   locale/bitcoin_es.ts \
+  locale/bitcoin_es_UY.ts \
   locale/bitcoin_et.ts \
   locale/bitcoin_eu_ES.ts \
   locale/bitcoin_fa_IR.ts \
@@ -47,8 +51,10 @@ QT_TS = \
   locale/bitcoin_id_ID.ts \
   locale/bitcoin_it.ts \
   locale/bitcoin_ja.ts \
+  locale/bitcoin_ka.ts \
   locale/bitcoin_kk_KZ.ts \
   locale/bitcoin_ko_KR.ts \
+  locale/bitcoin_ky.ts \
   locale/bitcoin_la.ts \
   locale/bitcoin_lt.ts \
   locale/bitcoin_lv_LV.ts \
@@ -61,6 +67,7 @@ QT_TS = \
   locale/bitcoin_pt_PT.ts \
   locale/bitcoin_ro_RO.ts \
   locale/bitcoin_ru.ts \
+  locale/bitcoin_sah.ts \
   locale/bitcoin_sk.ts \
   locale/bitcoin_sl_SI.ts \
   locale/bitcoin_sq.ts \
@@ -69,9 +76,12 @@ QT_TS = \
   locale/bitcoin_th_TH.ts \
   locale/bitcoin_tr.ts \
   locale/bitcoin_uk.ts \
+  locale/bitcoin_ur_PK.ts \
+  locale/bitcoin_uz@Cyrl.ts \
   locale/bitcoin_vi.ts \
   locale/bitcoin_vi_VN.ts \
   locale/bitcoin_zh_CN.ts \
+  locale/bitcoin_zh_HK.ts \
   locale/bitcoin_zh_TW.ts
 
 QT_FORMS_UI = \
