@@ -32,7 +32,7 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     <message>
         <location filename="../utilitydialog.cpp" line="+29"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>Copyright</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -201,12 +201,12 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     <message>
         <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation>Repite nueva contraseña:</translation>
+        <translation>Repite nueva contraseña</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="+40"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Introduce la nueva contraseña para la billetera.&lt;br/&gt;Por favor utiliza un contraseña &lt;b&gt;de 10 o mas caracteres aleatorios&lt;/b&gt;, u &lt;b&gt;ocho o mas palabras&lt;/b&gt;.</translation>
+        <translation>Introduce la nueva contraseña para la billetera.&lt;br/&gt;Por favor utiliza un contraseña de&lt;b&gt;10 o más caracteres aleatorios&lt;/b&gt;, u &lt;b&gt;ocho o más palabras&lt;/b&gt;.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -352,7 +352,7 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     <message>
         <location line="+20"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transacciónes</translation>
+        <translation>&amp;Transacciones</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -453,12 +453,12 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     <message>
         <location line="+6"/>
         <source>&amp;Debug window</source>
-        <translation type="unfinished"/>
+        <translation>Ventana &amp;Debug</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Open debugging and diagnostic console</source>
-        <translation type="unfinished"/>
+        <translation>Abre consola de depuración y diagnóstico</translation>
     </message>
     <message>
         <location line="-4"/>
@@ -607,17 +607,17 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     <message numerus="yes">
         <location line="+23"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n hora</numerusform><numerusform>%n horas</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n día</numerusform><numerusform>%n días</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n semana</numerusform><numerusform>%n semanas</numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1273,7 +1273,7 @@ Dirección: %4</translation>
     <message>
         <location line="+13"/>
         <source>Set database cache size in megabytes (default: 25)</source>
-        <translation type="unfinished"/>
+        <translation>Asigna el tamaño del caché de la base de datos en MB (25 predeterminado)</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1313,7 +1313,7 @@ Dirección: %4</translation>
     <message>
         <location line="+43"/>
         <source>Reset all client options to default.</source>
-        <translation type="unfinished"/>
+        <translation>Reestablece todas las opciones.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1433,17 +1433,17 @@ Dirección: %4</translation>
     <message>
         <location line="+136"/>
         <source>&amp;OK</source>
-        <translation type="unfinished"/>
+        <translation>&amp;OK</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Cancel</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Cancela</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="+67"/>
         <source>default</source>
-        <translation type="unfinished"/>
+        <translation>predeterminado</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -1453,7 +1453,7 @@ Dirección: %4</translation>
     <message>
         <location line="+75"/>
         <source>Confirm options reset</source>
-        <translation type="unfinished"/>
+        <translation>Confirmar reestablecimiento de las opciones</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1659,6 +1659,11 @@ Dirección: %4</translation>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation type="unfinished"/>
     </message>
+    <message>
+        <location filename="../guiutil.cpp" line="+82"/>
+        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Introduce una dirección Bitcoin (ej. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1688,7 +1693,7 @@ Dirección: %4</translation>
     <message>
         <location filename="../forms/rpcconsole.ui" line="+46"/>
         <source>Client name</source>
-        <translation type="unfinished"/>
+        <translation>Nombre del cliente</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1738,7 +1743,7 @@ Dirección: %4</translation>
     <message>
         <location line="+29"/>
         <source>Network</source>
-        <translation type="unfinished"/>
+        <translation>Red</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1753,7 +1758,7 @@ Dirección: %4</translation>
     <message>
         <location line="+29"/>
         <source>Block chain</source>
-        <translation type="unfinished"/>
+        <translation>Bloquea cadena</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1879,22 +1884,22 @@ Dirección: %4</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+83"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+107"/>
         <source>&amp;Amount:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-16"/>
         <source>&amp;Label:</source>
         <translation>&amp;Etiqueta:</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-37"/>
         <source>&amp;Message:</source>
         <translation>&amp;mensaje</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-20"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation type="unfinished"/>
     </message>
@@ -1904,27 +1909,30 @@ Dirección: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+27"/>
-        <source>An optional label to associate with the new receiving address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+14"/>
+        <location line="+23"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
+        <location line="+21"/>
+        <source>An optional label to associate with the new receiving address.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+23"/>
+        <location line="+22"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+32"/>
         <source>Clear all fields of the form.</source>
         <translation type="unfinished"/>
     </message>
@@ -1934,17 +1942,17 @@ Dirección: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+78"/>
+        <source>Requested payments history</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-98"/>
         <source>&amp;Request payment</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+47"/>
-        <source>Requested payments</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+16"/>
+        <location line="+120"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation type="unfinished"/>
     </message>
@@ -1962,6 +1970,21 @@ Dirección: %4</translation>
         <location line="+3"/>
         <source>Remove</source>
         <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../receivecoinsdialog.cpp" line="+38"/>
+        <source>Copy label</source>
+        <translation>Copia etiqueta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy message</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>Copiar Cantidad</translation>
     </message>
 </context>
 <context>
@@ -2064,12 +2087,17 @@ Dirección: %4</translation>
         <source>(no message)</source>
         <translation type="unfinished"/>
     </message>
+    <message>
+        <location line="+8"/>
+        <source>(no amount)</source>
+        <translation type="unfinished"/>
+    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+381"/>
+        <location filename="../sendcoinsdialog.cpp" line="+380"/>
         <location line="+80"/>
         <source>Send Coins</source>
         <translation>Enviar monedas</translation>
@@ -2145,7 +2173,7 @@ Dirección: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+115"/>
+        <location line="+164"/>
         <source>Send to multiple recipients at once</source>
         <translation>Enviar a múltiples destinatarios</translation>
     </message>
@@ -2155,7 +2183,7 @@ Dirección: %4</translation>
         <translation>&amp;Agrega destinatario</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="-23"/>
         <source>Clear all fields of the form.</source>
         <translation type="unfinished"/>
     </message>
@@ -2165,12 +2193,12 @@ Dirección: %4</translation>
         <translation>&amp;Borra todos</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+52"/>
         <source>Balance:</source>
         <translation>Balance:</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="-78"/>
         <source>Confirm the send action</source>
         <translation>Confirma el envio</translation>
     </message>
@@ -2180,7 +2208,7 @@ Dirección: %4</translation>
         <translation>&amp;Envía</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-228"/>
+        <location filename="../sendcoinsdialog.cpp" line="-229"/>
         <source>Confirm send coins</source>
         <translation>Confirmar el envio de monedas</translation>
     </message>
@@ -2193,12 +2221,7 @@ Dirección: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-136"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Introduce una dirección Bitcoin (ej. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
-        <location line="+15"/>
+        <location line="-121"/>
         <source>Copy quantity</source>
         <translation type="unfinished"/>
     </message>
@@ -2248,7 +2271,7 @@ Dirección: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+202"/>
+        <location line="+203"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>La dirección de destinatarion no es valida, comprueba otra vez.</translation>
     </message>
@@ -2283,12 +2306,12 @@ Dirección: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+113"/>
         <source>Warning: Invalid Bitcoin address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+20"/>
         <source>(no label)</source>
         <translation>(sin etiqueta)</translation>
     </message>
@@ -2298,7 +2321,7 @@ Dirección: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-366"/>
+        <location line="-367"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished"/>
     </message>
@@ -2308,7 +2331,7 @@ Dirección: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+170"/>
+        <location line="+171"/>
         <source>Payment request expired</source>
         <translation type="unfinished"/>
     </message>
@@ -2385,12 +2408,7 @@ Dirección: %4</translation>
         <translation>Mensaje:</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+958"/>
+        <location line="+968"/>
         <source>This is a verified payment request.</source>
         <translation type="unfinished"/>
     </message>
@@ -2400,7 +2418,12 @@ Dirección: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+459"/>
+        <location line="+33"/>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+426"/>
         <source>This is an unverified payment request.</source>
         <translation type="unfinished"/>
     </message>
@@ -2415,11 +2438,6 @@ Dirección: %4</translation>
         <location line="+536"/>
         <source>Memo:</source>
         <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Introduce una dirección Bitcoin (ej. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -2458,19 +2476,19 @@ Dirección: %4</translation>
         <translation>Introduce una dirección Bitcoin (ej. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location line="+213"/>
+        <location line="+7"/>
+        <location line="+210"/>
         <source>Choose previously used address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-203"/>
-        <location line="+213"/>
+        <location line="-200"/>
+        <location line="+210"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
-        <location line="-203"/>
+        <location line="-200"/>
         <source>Paste address from clipboard</source>
         <translation>Pega dirección desde portapapeles</translation>
     </message>
@@ -2511,12 +2529,12 @@ Dirección: %4</translation>
     </message>
     <message>
         <location line="+3"/>
-        <location line="+146"/>
+        <location line="+143"/>
         <source>Clear &amp;All</source>
         <translation>&amp;Borra todos</translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-84"/>
         <source>&amp;Verify Message</source>
         <translation>&amp;Firmar Mensaje</translation>
     </message>
@@ -2531,7 +2549,7 @@ Dirección: %4</translation>
         <translation>Introduce una dirección Bitcoin (ej. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+37"/>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation type="unfinished"/>
     </message>
@@ -2546,43 +2564,37 @@ Dirección: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+29"/>
-        <location line="+3"/>
+        <location filename="../signverifymessagedialog.cpp" line="+30"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Introduce una dirección Bitcoin (ej. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="-2"/>
+        <location line="-1"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
         <translation>Click en &quot;Firmar Mensage&quot; para conseguir firma</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
-        <translation>Ingresar firma Bicoin</translation>
-    </message>
-    <message>
         <location line="+84"/>
-        <location line="+81"/>
+        <location line="+80"/>
         <source>The entered address is invalid.</source>
         <translation>La dirección introducida &quot;%1&quot; no es una dirección Bitcoin valida.</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-80"/>
         <location line="+8"/>
-        <location line="+73"/>
+        <location line="+72"/>
         <location line="+8"/>
         <source>Please check the address and try again.</source>
         <translation>Por favor, revise la dirección Bitcoin e inténtelo denuevo</translation>
     </message>
     <message>
-        <location line="-81"/>
-        <location line="+81"/>
+        <location line="-80"/>
+        <location line="+80"/>
         <source>The entered address does not refer to a key.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-72"/>
         <source>Wallet unlock was cancelled.</source>
         <translation>Ha fallado el desbloqueo de la billetera</translation>
     </message>
@@ -2602,7 +2614,7 @@ Dirección: %4</translation>
         <translation>Mensaje firmado</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+58"/>
         <source>The signature could not be decoded.</source>
         <translation type="unfinished"/>
     </message>
@@ -2826,7 +2838,7 @@ Dirección: %4</translation>
     <message numerus="yes">
         <location line="-35"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Abierto para %n bloque más</numerusform><numerusform>Abierto para %n bloques más</numerusform></translation>
     </message>
     <message>
         <location line="+70"/>
@@ -2877,7 +2889,7 @@ Dirección: %4</translation>
     <message numerus="yes">
         <location line="+16"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Abierto para &amp;n bloque más</numerusform><numerusform>Abierto para &amp;n bloques más</numerusform></translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3250,7 +3262,7 @@ Dirección: %4</translation>
     <message>
         <location line="-9"/>
         <source>Set database cache size in megabytes (default: 25)</source>
-        <translation type="unfinished"/>
+        <translation>Asigna el tamaño del caché de la base de datos en MB (25 predeterminado)</translation>
     </message>
     <message>
         <location line="-26"/>
@@ -3509,7 +3521,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Error: system error: </source>
-        <translation type="unfinished"/>
+        <translation>Error: error de sistema:</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3519,32 +3531,32 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Failed to read block info</source>
-        <translation type="unfinished"/>
+        <translation>Falló la lectura de la información del bloque</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to read block</source>
-        <translation type="unfinished"/>
+        <translation>Falló la lectura del bloque</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to sync block index</source>
-        <translation type="unfinished"/>
+        <translation>Falló sincronización del índice del bloque</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write block index</source>
-        <translation type="unfinished"/>
+        <translation>Falló la escritura del bloque del índice</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write block info</source>
-        <translation type="unfinished"/>
+        <translation>Falló la escritura de la información del bloque</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write block</source>
-        <translation type="unfinished"/>
+        <translation>Falló la escritura del bloque</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3799,7 +3811,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+6"/>
         <source>System error: </source>
-        <translation type="unfinished"/>
+        <translation>Error de sistema:</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -4035,7 +4047,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+85"/>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>Para utilizar la opción %s</translation>
     </message>
     <message>
         <location line="-77"/>

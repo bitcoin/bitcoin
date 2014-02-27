@@ -415,7 +415,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location line="+3"/>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>Open &amp;URI...</translation>
     </message>
     <message>
         <location line="+325"/>
@@ -440,7 +440,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location line="+12"/>
         <source>Backup wallet to another location</source>
-        <translation>&amp;Backup portemonnee naar een andere locatie</translation>
+        <translation>Backup portemonnee naar een andere locatie</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -568,7 +568,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location line="+2"/>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Commandoregel-opties</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1096,7 +1096,7 @@ Adres: %4
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="+19"/>
         <source>Bitcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core - Commandoregel-opties</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="+38"/>
@@ -1290,7 +1290,7 @@ Adres: %4
     <message>
         <location line="+58"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Verbind met het Bitcoin-netwerk via een SOCKS-proxy.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1456,12 +1456,12 @@ Adres: %4
         <location line="+1"/>
         <location line="+29"/>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Herstart van de client is vereist om veranderingen door te voeren.</translation>
     </message>
     <message>
         <location line="-29"/>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>De client zal worden afgesloten, wilt u doorgaan?</translation>
     </message>
     <message>
         <location line="+33"/>
@@ -1655,6 +1655,11 @@ Adres: %4
         <location line="-12"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>Fout: Ongeldige combinatie van -regtest en -testnet</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="+82"/>
+        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Vul een Bitcoinadres in (bijv. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1876,22 +1881,22 @@ Adres: %4
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+83"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+107"/>
         <source>&amp;Amount:</source>
         <translation>&amp;Bedrag</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-16"/>
         <source>&amp;Label:</source>
         <translation>&amp;Label:</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-37"/>
         <source>&amp;Message:</source>
         <translation>&amp;Bericht</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-20"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>Gebruik een van de eerder gebruikte ontvangstadressen opnieuw. Het opnieuw gebruiken van adressen heeft beveiliging- en privacy problemen. Gebruik dit niet, behalve als er eerder een betalingsverzoek opnieuw gegenereerd is.</translation>
     </message>
@@ -1901,27 +1906,30 @@ Adres: %4
         <translation>H&amp;ergebruik en bestaand ontvangstadres (niet aanbevolen)</translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>An optional label to associate with the new receiving address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+14"/>
+        <location line="+23"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
+        <location line="+21"/>
+        <source>An optional label to associate with the new receiving address.</source>
+        <translation>Een optioneel label om te associëren met het nieuwe ontvangende adres</translation>
+    </message>
+    <message>
+        <location line="-7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+23"/>
+        <location line="+22"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+32"/>
         <source>Clear all fields of the form.</source>
         <translation>Wis alle velden op het formulier.</translation>
     </message>
@@ -1931,17 +1939,17 @@ Adres: %4
         <translation>Wissen</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+78"/>
+        <source>Requested payments history</source>
+        <translation>Geschiedenis van de betalingsverzoeken</translation>
+    </message>
+    <message>
+        <location line="-98"/>
         <source>&amp;Request payment</source>
         <translation>&amp;Betalingsverzoek</translation>
     </message>
     <message>
-        <location line="+47"/>
-        <source>Requested payments</source>
-        <translation>Betalingsverzoeken</translation>
-    </message>
-    <message>
-        <location line="+16"/>
+        <location line="+120"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Toon het geselecteerde verzoek (doet hetzelfde als dubbelklikken)</translation>
     </message>
@@ -1959,6 +1967,21 @@ Adres: %4
         <location line="+3"/>
         <source>Remove</source>
         <translation>Verwijder</translation>
+    </message>
+    <message>
+        <location filename="../receivecoinsdialog.cpp" line="+38"/>
+        <source>Copy label</source>
+        <translation>Kopieer label</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy message</source>
+        <translation>Kopieer bericht</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>Kopieer bedrag</translation>
     </message>
 </context>
 <context>
@@ -2061,12 +2084,17 @@ Adres: %4
         <source>(no message)</source>
         <translation>(geen bericht)</translation>
     </message>
+    <message>
+        <location line="+8"/>
+        <source>(no amount)</source>
+        <translation type="unfinished"/>
+    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+381"/>
+        <location filename="../sendcoinsdialog.cpp" line="+380"/>
         <location line="+80"/>
         <source>Send Coins</source>
         <translation>Verstuur munten</translation>
@@ -2142,7 +2170,7 @@ Adres: %4
         <translation>Maatwerk wijzig adres</translation>
     </message>
     <message>
-        <location line="+115"/>
+        <location line="+164"/>
         <source>Send to multiple recipients at once</source>
         <translation>Verstuur aan verschillende ontvangers ineens</translation>
     </message>
@@ -2152,7 +2180,7 @@ Adres: %4
         <translation>Voeg &amp;Ontvanger Toe</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="-23"/>
         <source>Clear all fields of the form.</source>
         <translation>Wis alle velden van het formulier.</translation>
     </message>
@@ -2162,12 +2190,12 @@ Adres: %4
         <translation>Verwijder &amp;Alles</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+52"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="-78"/>
         <source>Confirm the send action</source>
         <translation>Bevestig de verstuuractie</translation>
     </message>
@@ -2177,7 +2205,7 @@ Adres: %4
         <translation>&amp;Verstuur</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-228"/>
+        <location filename="../sendcoinsdialog.cpp" line="-229"/>
         <source>Confirm send coins</source>
         <translation>Bevestig versturen munten</translation>
     </message>
@@ -2190,12 +2218,7 @@ Adres: %4
         <translation>%1 tot %2</translation>
     </message>
     <message>
-        <location line="-136"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Vul een Bitcoinadres in (bijv. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
-        <location line="+15"/>
+        <location line="-121"/>
         <source>Copy quantity</source>
         <translation>Kopieer aantal</translation>
     </message>
@@ -2245,7 +2268,7 @@ Adres: %4
         <translation>of</translation>
     </message>
     <message>
-        <location line="+202"/>
+        <location line="+203"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Het ontvangstadres is niet geldig, controleer uw invoer.</translation>
     </message>
@@ -2280,12 +2303,12 @@ Adres: %4
         <translation>De transactie was afgewezen. Dit kan gebeuren als u eerder uitgegeven munten opnieuw wilt versturen, zoals wanneer u een kopie van uw wallet.dat heeft gebruikt en in de kopie deze munten zijn gemarkeerd als uitgegeven, maar in de huidige nog niet.</translation>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+113"/>
         <source>Warning: Invalid Bitcoin address</source>
         <translation>Waarschuwing: Ongeldig Bitcoin adres</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+20"/>
         <source>(no label)</source>
         <translation>(geen label)</translation>
     </message>
@@ -2295,7 +2318,7 @@ Adres: %4
         <translation>Waarschuwing: Onbekende adres wijziging</translation>
     </message>
     <message>
-        <location line="-366"/>
+        <location line="-367"/>
         <source>Are you sure you want to send?</source>
         <translation>Weet u zeker dat u wilt verzenden?</translation>
     </message>
@@ -2305,7 +2328,7 @@ Adres: %4
         <translation>toegevoegd als transactiekosten</translation>
     </message>
     <message>
-        <location line="+170"/>
+        <location line="+171"/>
         <source>Payment request expired</source>
         <translation>Betalingsverzoek verlopen</translation>
     </message>
@@ -2382,12 +2405,7 @@ Adres: %4
         <translation>Bericht:</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+958"/>
+        <location line="+968"/>
         <source>This is a verified payment request.</source>
         <translation>Dit is een geverifieerd betalingsverzoek.</translation>
     </message>
@@ -2397,7 +2415,12 @@ Adres: %4
         <translation>Vul een label voor dit adres in om het aan de lijst met gebruikte adressen toe te voegen</translation>
     </message>
     <message>
-        <location line="+459"/>
+        <location line="+33"/>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+426"/>
         <source>This is an unverified payment request.</source>
         <translation>Dit is een ongeverifieerde betalingsverzoek.</translation>
     </message>
@@ -2413,18 +2436,13 @@ Adres: %4
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
-    <message>
-        <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Vul een Bitcoinadres in (bijv. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
 </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
         <location filename="../utilitydialog.cpp" line="+48"/>
         <source>Bitcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core is aan het afsluiten...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2455,19 +2473,19 @@ Adres: %4
         <translation>Het adres om het bericht mee te ondertekenen (Vb.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L).</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location line="+213"/>
+        <location line="+7"/>
+        <location line="+210"/>
         <source>Choose previously used address</source>
         <translation>Kies een eerder gebruikt adres</translation>
     </message>
     <message>
-        <location line="-203"/>
-        <location line="+213"/>
+        <location line="-200"/>
+        <location line="+210"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
-        <location line="-203"/>
+        <location line="-200"/>
         <source>Paste address from clipboard</source>
         <translation>Plak adres vanuit klembord</translation>
     </message>
@@ -2508,12 +2526,12 @@ Adres: %4
     </message>
     <message>
         <location line="+3"/>
-        <location line="+146"/>
+        <location line="+143"/>
         <source>Clear &amp;All</source>
         <translation>Verwijder &amp;Alles</translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-84"/>
         <source>&amp;Verify Message</source>
         <translation>&amp;Verifiëer Bericht</translation>
     </message>
@@ -2528,7 +2546,7 @@ Adres: %4
         <translation>Het adres waarmee bet bericht was ondertekend (Vb.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L).</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+37"/>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>Controleer een bericht om te verifiëren dat het gespecificeerde Bitcoinadres het bericht heeft ondertekend.</translation>
     </message>
@@ -2543,43 +2561,37 @@ Adres: %4
         <translation>Verwijder alles in de invulvelden</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+29"/>
-        <location line="+3"/>
+        <location filename="../signverifymessagedialog.cpp" line="+30"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Vul een Bitcoinadres in (bijv. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="-2"/>
+        <location line="-1"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
         <translation>Klik &quot;Onderteken Bericht&quot; om de handtekening te genereren</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
-        <translation>Voer Bitcoin-handtekening in</translation>
-    </message>
-    <message>
         <location line="+84"/>
-        <location line="+81"/>
+        <location line="+80"/>
         <source>The entered address is invalid.</source>
         <translation>Het opgegeven adres is ongeldig.</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-80"/>
         <location line="+8"/>
-        <location line="+73"/>
+        <location line="+72"/>
         <location line="+8"/>
         <source>Please check the address and try again.</source>
         <translation>Controleer s.v.p. het adres en probeer het opnieuw.</translation>
     </message>
     <message>
-        <location line="-81"/>
-        <location line="+81"/>
+        <location line="-80"/>
+        <location line="+80"/>
         <source>The entered address does not refer to a key.</source>
         <translation>Het opgegeven adres verwijst niet naar een sleutel.</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-72"/>
         <source>Wallet unlock was cancelled.</source>
         <translation>Portemonnee-ontsleuteling is geannuleerd</translation>
     </message>
@@ -2599,7 +2611,7 @@ Adres: %4
         <translation>Bericht ondertekend.</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+58"/>
         <source>The signature could not be decoded.</source>
         <translation>De handtekening kon niet worden gedecodeerd.</translation>
     </message>
@@ -3147,7 +3159,7 @@ Adres: %4
     <message>
         <location filename="../walletframe.cpp" line="+26"/>
         <source>No wallet has been loaded.</source>
-        <translation>Portomonnee werd niet geladen.</translation>
+        <translation>Portemonnee werd niet geladen.</translation>
     </message>
 </context>
 <context>
@@ -3173,7 +3185,7 @@ Adres: %4
     <message>
         <location line="+181"/>
         <source>Backup Wallet</source>
-        <translation>Portomonnee backuppen</translation>
+        <translation>Portemonnee backuppen</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3671,7 +3683,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Verifying wallet...</source>
-        <translation>Portomonnee aan het controleren...</translation>
+        <translation>Portemonnee aan het controleren...</translation>
     </message>
     <message>
         <location line="+1"/>
