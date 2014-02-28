@@ -468,11 +468,12 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
     BOOST_FOREACH(const COutput& out, vOutputs)
     {
-        // unselect already spent, very unlikely scenario, this could happen when selected are spent elsewhere, like rpc or another computer
-        if (out.tx->IsSpent(out.i))
+        // unselect already spent, very unlikely scenario, this could happen
+        // when selected are spent elsewhere, like rpc or another computer
+        uint256 txhash = out.tx->GetHash();
+        COutPoint outpt(txhash, out.i);
+        if (model->isSpent(outpt))
         {
-            uint256 txhash = out.tx->GetHash();
-            COutPoint outpt(txhash, out.i);
             coinControl->UnSelect(outpt);
             continue;
         }
