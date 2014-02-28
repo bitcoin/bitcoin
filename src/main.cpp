@@ -1866,17 +1866,23 @@ bool static DisconnectTip(CValidationState &state) {
     // Write the chain state to disk, if necessary.
     if (!WriteChainState(state))
         return false;
-    // Ressurect mempool transactions from the disconnected block.
+    // Resurrect mempool transactions from the disconnected block.
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
         // ignore validation errors in resurrected transactions
+        list<CTransaction> removed;
         CValidationState stateDummy; 
         if (!tx.IsCoinBase())
             if (!AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
-                mempool.remove(tx, true);
+                mempool.remove(tx, removed, true);
     }
     mempool.check(pcoinsTip);
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
+    // Let wallets know transactions went from 1-confirmed to
+    // 0-confirmed or conflicted:
+    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
+        SyncWithWallets(tx.GetHash(), tx, NULL);
+    }
     return true;
 }
 
@@ -1907,13 +1913,24 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     if (!WriteChainState(state))
         return false;
     // Remove conflicting transactions from the mempool.
+    list<CTransaction> txConflicted;
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        mempool.remove(tx);
-        mempool.removeConflicts(tx);
+        list<CTransaction> unused;
+        mempool.remove(tx, unused);
+        mempool.removeConflicts(tx, txConflicted);
     }
     mempool.check(pcoinsTip);
     // Update chainActive & related variables.
     UpdateTip(pindexNew);
+    // Tell wallet about transactions that went from mempool
+    // to conflicted:
+    BOOST_FOREACH(const CTransaction &tx, txConflicted) {
+        SyncWithWallets(tx.GetHash(), tx, NULL);
+    }
+    // ... and about transactions that got confirmed:
+    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
+        SyncWithWallets(tx.GetHash(), tx, &block);
+    }
     return true;
 }
 
