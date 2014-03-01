@@ -112,7 +112,7 @@ To build with Qt 4 you need the following:
 
 For Qt 5 you need the following:
 
-    apt-get install libqt5gui5 libqt5core5 libqt5dbus5 qttools5-dev-tools libprotobuf-dev
+    apt-get install libqt5gui5 libqt5core5 libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev
 
 libqrencode (optional) can be installed with:
 
