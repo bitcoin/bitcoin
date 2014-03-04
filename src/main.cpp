@@ -1450,11 +1450,14 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
             }
 
             // Check for negative or overflow input values
-            nValueIn += coins.vout[prevout.n].nValue;
-            if (!MoneyRange(coins.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
-                return state.DoS(100, error("CheckInputs() : txin values out of range"),
+            if (!MoneyRange(coins.vout[prevout.n].nValue))
+                return state.DoS(100, error("CheckInputs() : txin value out of range"),
                                  REJECT_INVALID, "bad-txns-inputvalues-outofrange");
 
+            nValueIn += coins.vout[prevout.n].nValue;
+            if (!MoneyRange(nValueIn))
+                return state.DoS(100, error("CheckInputs() : txin sum out of range"),
+                                 REJECT_INVALID, "bad-txns-inputvalues-outofrange");
         }
 
         if (nValueIn < tx.GetValueOut())
