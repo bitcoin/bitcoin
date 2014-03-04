@@ -137,7 +137,9 @@ public:
         return Hash(vch, vch+size());
     }
 
-    // just check syntactic correctness.
+    // Check syntactic correctness.
+    //
+    // Note that this is consensus critical as CheckSig() calls it!
     bool IsValid() const {
         return size() > 0;
     }

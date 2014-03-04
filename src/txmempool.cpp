@@ -86,7 +86,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
 }
 
 
-bool CTxMemPool::remove(const CTransaction &tx, bool fRecursive)
+void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive)
 {
     // Remove transaction from memory pool
     {
@@ -95,34 +95,37 @@ bool CTxMemPool::remove(const CTransaction &tx, bool fRecursive)
         if (fRecursive) {
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
-                if (it != mapNextTx.end())
-                    remove(*it->second.ptx, true);
+                if (it == mapNextTx.end())
+                    continue;
+                remove(*it->second.ptx, removed, true);
             }
         }
         if (mapTx.count(hash))
         {
+            removed.push_front(tx);
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
                 mapNextTx.erase(txin.prevout);
             mapTx.erase(hash);
             nTransactionsUpdated++;
         }
     }
-    return true;
 }
 
-bool CTxMemPool::removeConflicts(const CTransaction &tx)
+void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed)
 {
     // Remove transactions which depend on inputs of tx, recursively
+    list<CTransaction> result;
     LOCK(cs);
     BOOST_FOREACH(const CTxIn &txin, tx.vin) {
         std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
             const CTransaction &txConflict = *it->second.ptx;
             if (txConflict != tx)
-                remove(txConflict, true);
+            {
+                remove(txConflict, removed, true);
+            }
         }
     }
-    return true;
 }
 
 void CTxMemPool::clear()

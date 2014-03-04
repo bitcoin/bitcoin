@@ -10,7 +10,6 @@
 #include "protocol.h"
 #include "util.h"
 
-#include <inttypes.h>
 #include <stdint.h>
 
 #ifndef WIN32
@@ -464,7 +463,7 @@ void CDBEnv::Flush(bool fShutdown)
             else
                 mi++;
         }
-        LogPrint("db", "DBFlush(%s)%s ended %15"PRId64"ms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started", GetTimeMillis() - nStart);
+        LogPrint("db", "DBFlush(%s)%s ended %15dms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started", GetTimeMillis() - nStart);
         if (fShutdown)
         {
             char** listp;

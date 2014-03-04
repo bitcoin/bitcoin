@@ -16,7 +16,6 @@
 
 #include <cstdio>
 #include <exception>
-#include <inttypes.h>
 #include <map>
 #include <stdarg.h>
 #include <stdint.h>
@@ -45,13 +44,17 @@ static const int64_t CENT = 1000000;
 #define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 
-/* Format characters for (s)size_t and ptrdiff_t (C99 standard) */
-#define PRIszx    "zx"
-#define PRIszu    "zu"
-#define PRIszd    "zd"
-#define PRIpdx    "tx"
-#define PRIpdu    "tu"
-#define PRIpdd    "td"
+/* Format characters for (s)size_t, ptrdiff_t.
+ *
+ * Define these as empty as the tinyformat-based formatting system is
+ * type-safe, no special format characters are needed to specify sizes.
+ */
+#define PRIszx    "x"
+#define PRIszu    "u"
+#define PRIszd    "d"
+#define PRIpdx    "x"
+#define PRIpdu    "u"
+#define PRIpdd    "d"
 
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
 #define PAIRTYPE(t1, t2)    std::pair<t1, t2>
@@ -161,7 +164,6 @@ static inline bool error(const char* format)
 
 
 void LogException(std::exception* pex, const char* pszThread);
-void PrintException(std::exception* pex, const char* pszThread);
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
 void ParseString(const std::string& str, char c, std::vector<std::string>& v);
 std::string FormatMoney(int64_t n, bool fPlus=false);
@@ -223,7 +225,7 @@ void runCommand(std::string strCommand);
 
 inline std::string i64tostr(int64_t n)
 {
-    return strprintf("%"PRId64, n);
+    return strprintf("%d", n);
 }
 
 inline std::string itostr(int n)
@@ -555,10 +557,12 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
         throw;
     }
     catch (std::exception& e) {
-        PrintException(&e, name);
+        PrintExceptionContinue(&e, name);
+        throw;
     }
     catch (...) {
-        PrintException(NULL, name);
+        PrintExceptionContinue(NULL, name);
+        throw;
     }
 }
 // .. and a wrapper that just calls func once
@@ -578,10 +582,12 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         throw;
     }
     catch (std::exception& e) {
-        PrintException(&e, name);
+        PrintExceptionContinue(&e, name);
+        throw;
     }
     catch (...) {
-        PrintException(NULL, name);
+        PrintExceptionContinue(NULL, name);
+        throw;
     }
 }
 

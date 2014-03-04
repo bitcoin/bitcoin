@@ -233,10 +233,11 @@ int CommandLineRPC(int argc, char *argv[])
     }
     catch (std::exception& e) {
         strPrint = string("error: ") + e.what();
-        nRet = 87;
+        nRet = abs(RPC_MISC_ERROR);
     }
     catch (...) {
-        PrintException(NULL, "CommandLineRPC()");
+        PrintExceptionContinue(NULL, "CommandLineRPC()");
+        throw;
     }
 
     if (strPrint != "")
