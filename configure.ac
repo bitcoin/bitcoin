@@ -43,6 +43,18 @@ AM_MAINTAINER_MODE([enable])
 dnl make the compilation flags quiet unless V=1 is used
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+# Enable debug
+AC_ARG_ENABLE(debug,
+  AS_HELP_STRING([--enable-debug],
+  [enable debugging, default: no]),
+  [case "${enableval}" in
+        yes) debug=true ;;
+        no)  debug=false ;;
+        *)   AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
+  esac],
+  [debug=false])
+AM_CONDITIONAL(DEBUG, test x"$debug" = x"true")
+
 # Enable wallet
 AC_ARG_ENABLE([wallet],
   [AS_HELP_STRING([--enable-wallet],

@@ -31,6 +31,14 @@ COVERAGE_INFO = baseline_filtered_combined.info baseline.info block_test.info \
   baseline_filtered.info block_test_filtered.info \
   leveldb_baseline_filtered.info test_bitcoin_coverage.info test_bitcoin.info
 
+if DEBUG
+  AM_CFLAGS = -g3 -O0
+  AM_CXXFLAGS = -g3 -O0
+else
+  AM_CFLAGS = -O2
+  AM_CXXFLAGS = -O2
+endif
+
 dist-hook:
 	-$(MAKE) -C $(top_distdir)/src/leveldb clean
 	-$(GIT) archive --format=tar HEAD -- src/version.cpp | $(AMTAR) -C $(top_distdir) -xf -
