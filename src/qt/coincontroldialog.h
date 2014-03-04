@@ -65,8 +65,34 @@ private:
         COLUMN_TXHASH,
         COLUMN_VOUT_INDEX,
         COLUMN_AMOUNT_INT64,
-        COLUMN_PRIORITY_INT64
+        COLUMN_PRIORITY_INT64,
+        COLUMN_DATE_INT64
     };
+
+    // some columns have a hidden column containing the value used for sorting
+    int getMappedColumn(int column, bool fVisibleColumn = true)
+    {
+        if (fVisibleColumn)
+        {
+            if (column == COLUMN_AMOUNT_INT64)
+                return COLUMN_AMOUNT;
+            else if (column == COLUMN_PRIORITY_INT64)
+                return COLUMN_PRIORITY;
+            else if (column == COLUMN_DATE_INT64)
+                return COLUMN_DATE;
+        }
+        else
+        {
+            if (column == COLUMN_AMOUNT)
+                return COLUMN_AMOUNT_INT64;
+            else if (column == COLUMN_PRIORITY)
+                return COLUMN_PRIORITY_INT64;
+            else if (column == COLUMN_DATE)
+                return COLUMN_DATE_INT64;
+        }
+
+        return column;
+    }
 
 private slots:
     void showMenu(const QPoint &);
