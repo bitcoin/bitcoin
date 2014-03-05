@@ -43,18 +43,6 @@ AM_MAINTAINER_MODE([enable])
 dnl make the compilation flags quiet unless V=1 is used
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-# Enable debug
-AC_ARG_ENABLE(debug,
-  AS_HELP_STRING([--enable-debug],
-  [enable debugging, default: no]),
-  [case "${enableval}" in
-        yes) debug=true ;;
-        no)  debug=false ;;
-        *)   AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
-  esac],
-  [debug=false])
-AM_CONDITIONAL(DEBUG, test x"$debug" = x"true")
-
 # Enable wallet
 AC_ARG_ENABLE([wallet],
   [AS_HELP_STRING([--enable-wallet],
@@ -148,6 +136,23 @@ AC_PATH_PROG(CCACHE,ccache)
 AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
 PKG_PROG_PKG_CONFIG
+
+# Enable debug 
+AC_ARG_ENABLE([debug],
+    [AS_HELP_STRING([--enable-debug],
+                    [use debug compiler flags and macros (default is no)])],
+    [enable_debug=$enableval],
+    [enable_debug=no])
+
+if test "x$enable_debug" = xyes; then
+    if test "x$GCC" = xyes; then
+        CFLAGS="-g3 -O0 -DDEBUG"
+    fi
+    
+    if test "x$GXX" = xyes; then
+        CXXFLAGS="-g3 -O0 -DDEBUG"
+    fi
+fi 
 
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
