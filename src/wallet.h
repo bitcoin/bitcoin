@@ -675,8 +675,10 @@ public:
         {
             // Transactions not sent by us: not trusted
             const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
+            if (parent == NULL)
+                return false;
             const CTxOut& parentOut = parent->vout[txin.prevout.n];
-            if (parent == NULL || !pwallet->IsMine(parentOut))
+            if (!pwallet->IsMine(parentOut))
                 return false;
         }
         return true;
