@@ -63,6 +63,8 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
 
     LOCK(pwalletMain->cs_wallet);
 
+    BOOST_CHECK_NO_THROW();
+
     BOOST_CHECK_NO_THROW(CallRPC("listunspent"));
     BOOST_CHECK_THROW(CallRPC("listunspent string"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("listunspent 0 string"), runtime_error);
@@ -84,6 +86,17 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount 0 not_bool"), runtime_error);
     BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaccount 0 true"));
     BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount 0 true extra"), runtime_error);
+
+}
+
+BOOST_AUTO_TEST_CASE(rpc_wallet_sign_message)
+{
+	CPubKey pubkey = pwalletMain->GenerateNewKey();
+	CBitcoinAddress addr = CBitcoinAddress(CTxDestination(pubkey.GetID()));
+	BOOST_CHECK_THROW(CallRPC("signmessage"), runtime_error);
+	/* Should throw error because this address is not loaded in the wallet */
+	BOOST_CHECK_THROW(CallRPC("signmessage 1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ mymessage"), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("signmessage " + addr.ToString() + " mymessage"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

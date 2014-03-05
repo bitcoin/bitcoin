@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="94">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="autom4te.cache">
+      </df>
+      <df name="bitcoinrpc">
+      </df>
+      <df name="contrib">
+        <df name="bitrpc">
+        </df>
+        <df name="debian">
+          <df name="examples">
+          </df>
+          <df name="manpages">
+          </df>
+          <df name="patches">
+          </df>
+          <df name="source">
+          </df>
+        </df>
+        <df name="devtools">
+        </df>
+        <df name="gitian-descriptors">
+        </df>
+        <df name="gitian-downloader">
+        </df>
+        <df name="linearize">
+        </df>
+        <df name="macdeploy">
+        </df>
+        <df name="pyminer">
+        </df>
+        <df name="qos">
+        </df>
+        <df name="seeds">
+        </df>
+        <df name="spendfrom">
+        </df>
+        <df name="test-patches">
+        </df>
+        <df name="testgen">
+        </df>
+        <df name="verifysfbinaries">
+        </df>
+      </df>
+      <df name="doc">
+        <df name="release-notes">
+        </df>
+      </df>
+      <df name="jsonrpc">
+      </df>
+      <df name="qa">
+        <df name="pull-tester">
+        </df>
+        <df name="rpc-tests">
+        </df>
+      </df>
+      <df name="share">
+        <df name="certs">
+        </df>
+        <df name="pixmaps">
+        </df>
+        <df name="qt">
+          <df name="img">
+          </df>
+        </df>
+      </df>
+      <df name="src">
+        <df name="build-aux">
+        </df>
+        <df name="json">
+          <in>json_spirit.h</in>
+          <in>json_spirit_error_position.h</in>
+          <in>json_spirit_reader.cpp</in>
+          <in>json_spirit_reader.h</in>
+          <in>json_spirit_reader_template.h</in>
+          <in>json_spirit_stream_reader.h</in>
+          <in>json_spirit_utils.h</in>
+          <in>json_spirit_value.cpp</in>
+          <in>json_spirit_value.h</in>
+          <in>json_spirit_writer.cpp</in>
+          <in>json_spirit_writer.h</in>
+          <in>json_spirit_writer_template.h</in>
+        </df>
+        <df name="leveldb">
+          <df name="db">
+            <in>autocompact_test.cc</in>
+            <in>builder.cc</in>
+            <in>builder.h</in>
+            <in>c.cc</in>
+            <in>c_test.c</in>
+            <in>corruption_test.cc</in>
+            <in>db_bench.cc</in>
+            <in>db_impl.cc</in>
+            <in>db_impl.h</in>
+            <in>db_iter.cc</in>
+            <in>db_iter.h</in>
+            <in>db_test.cc</in>
+            <in>dbformat.cc</in>
+            <in>dbformat.h</in>
+            <in>dbformat_test.cc</in>
+            <in>filename.cc</in>
+            <in>filename.h</in>
+            <in>filename_test.cc</in>
+            <in>leveldb_main.cc</in>
+            <in>log_format.h</in>
+            <in>log_reader.cc</in>
+            <in>log_reader.h</in>
+            <in>log_test.cc</in>
+            <in>log_writer.cc</in>
+            <in>log_writer.h</in>
+            <in>memtable.cc</in>
+            <in>memtable.h</in>
+            <in>repair.cc</in>
+            <in>skiplist.h</in>
+            <in>skiplist_test.cc</in>
+            <in>snapshot.h</in>
+            <in>table_cache.cc</in>
+            <in>table_cache.h</in>
+            <in>version_edit.cc</in>
+            <in>version_edit.h</in>
+            <in>version_edit_test.cc</in>
+            <in>version_set.cc</in>
+            <in>version_set.h</in>
+            <in>version_set_test.cc</in>
+            <in>write_batch.cc</in>
+            <in>write_batch_internal.h</in>
+            <in>write_batch_test.cc</in>
+          </df>
+          <df name="doc">
+            <df name="bench">
+              <in>db_bench_sqlite3.cc</in>
+              <in>db_bench_tree_db.cc</in>
+            </df>
+          </df>
+          <df name="helpers">
+            <df name="memenv">
+              <in>memenv.cc</in>
+              <in>memenv.h</in>
+              <in>memenv_test.cc</in>
+            </df>
+          </df>
+          <df name="include">
+            <df name="leveldb">
+              <in>c.h</in>
+              <in>cache.h</in>
+              <in>comparator.h</in>
+              <in>db.h</in>
+              <in>env.h</in>
+              <in>filter_policy.h</in>
+              <in>iterator.h</in>
+              <in>options.h</in>
+              <in>slice.h</in>
+              <in>status.h</in>
+              <in>table.h</in>
+              <in>table_builder.h</in>
+              <in>write_batch.h</in>
+            </df>
+          </df>
+          <df name="issues">
+            <in>issue178_test.cc</in>
+            <in>issue200_test.cc</in>
+          </df>
+          <df name="port">
+            <df name="win">
+              <in>stdint.h</in>
+            </df>
+            <in>atomic_pointer.h</in>
+            <in>port.h</in>
+            <in>port_example.h</in>
+            <in>port_posix.cc</in>
+            <in>port_posix.h</in>
+            <in>port_win.cc</in>
+            <in>port_win.h</in>
+            <in>thread_annotations.h</in>
+          </df>
+          <df name="table">
+            <in>block.cc</in>
+            <in>block.h</in>
+            <in>block_builder.cc</in>
+            <in>block_builder.h</in>
+            <in>filter_block.cc</in>
+            <in>filter_block.h</in>
+            <in>filter_block_test.cc</in>
+            <in>format.cc</in>
+            <in>format.h</in>
+            <in>iterator.cc</in>
+            <in>iterator_wrapper.h</in>
+            <in>merger.cc</in>
+            <in>merger.h</in>
+            <in>table.cc</in>
+            <in>table_builder.cc</in>
+            <in>table_test.cc</in>
+            <in>two_level_iterator.cc</in>
+            <in>two_level_iterator.h</in>
+          </df>
+          <df name="util">
+            <in>arena.cc</in>
+            <in>arena.h</in>
+            <in>arena_test.cc</in>
+            <in>bloom.cc</in>
+            <in>bloom_test.cc</in>
+            <in>cache.cc</in>
+            <in>cache_test.cc</in>
+            <in>coding.cc</in>
+            <in>coding.h</in>
+            <in>coding_test.cc</in>
+            <in>comparator.cc</in>
+            <in>crc32c.cc</in>
+            <in>crc32c.h</in>
+            <in>crc32c_test.cc</in>
+            <in>env.cc</in>
+            <in>env_posix.cc</in>
+            <in>env_test.cc</in>
+            <in>env_win.cc</in>
+            <in>filter_policy.cc</in>
+            <in>hash.cc</in>
+            <in>hash.h</in>
+            <in>histogram.cc</in>
+            <in>histogram.h</in>
+            <in>logging.cc</in>
+            <in>logging.h</in>
+            <in>mutexlock.h</in>
+            <in>options.cc</in>
+            <in>posix_logger.h</in>
+            <in>random.h</in>
+            <in>status.cc</in>
+            <in>testharness.cc</in>
+            <in>testharness.h</in>
+            <in>testutil.cc</in>
+            <in>testutil.h</in>
+          </df>
+        </df>
+        <df name="m4">
+        </df>
+        <df name="obj">
+          <in>build.h</in>
+        </df>
+        <df name="obj-test">
+        </df>
+        <df name="qt">
+          <df name="forms">
+          </df>
+          <df name="locale">
+          </df>
+          <df name="res">
+            <df name="icons">
+            </df>
+            <df name="images">
+            </df>
+            <df name="movies">
+            </df>
+            <df name="src">
+            </df>
+          </df>
+          <df name="test">
+            <in>moc_paymentservertests.cpp</in>
+            <in>moc_uritests.cpp</in>
+            <in>paymentrequestdata.h</in>
+            <in>paymentservertests.cpp</in>
+            <in>paymentservertests.h</in>
+            <in>test_main.cpp</in>
+            <in>uritests.cpp</in>
+            <in>uritests.h</in>
+          </df>
+          <in>addressbookpage.cpp</in>
+          <in>addressbookpage.h</in>
+          <in>addresstablemodel.cpp</in>
+          <in>addresstablemodel.h</in>
+          <in>askpassphrasedialog.cpp</in>
+          <in>askpassphrasedialog.h</in>
+          <in>bitcoin.cpp</in>
+          <in>bitcoinaddressvalidator.cpp</in>
+          <in>bitcoinaddressvalidator.h</in>
+          <in>bitcoinamountfield.cpp</in>
+          <in>bitcoinamountfield.h</in>
+          <in>bitcoingui.cpp</in>
+          <in>bitcoingui.h</in>
+          <in>bitcoinstrings.cpp</in>
+          <in>bitcoinunits.cpp</in>
+          <in>bitcoinunits.h</in>
+          <in>clientmodel.cpp</in>
+          <in>clientmodel.h</in>
+          <in>coincontroldialog.cpp</in>
+          <in>coincontroldialog.h</in>
+          <in>coincontroltreewidget.cpp</in>
+          <in>coincontroltreewidget.h</in>
+          <in>csvmodelwriter.cpp</in>
+          <in>csvmodelwriter.h</in>
+          <in>editaddressdialog.cpp</in>
+          <in>editaddressdialog.h</in>
+          <in>guiconstants.h</in>
+          <in>guiutil.cpp</in>
+          <in>guiutil.h</in>
+          <in>intro.cpp</in>
+          <in>intro.h</in>
+          <in>macdockiconhandler.h</in>
+          <in>macdockiconhandler.mm</in>
+          <in>macnotificationhandler.h</in>
+          <in>macnotificationhandler.mm</in>
+          <in>moc_addressbookpage.cpp</in>
+          <in>moc_addresstablemodel.cpp</in>
+          <in>moc_askpassphrasedialog.cpp</in>
+          <in>moc_bitcoinaddressvalidator.cpp</in>
+          <in>moc_bitcoinamountfield.cpp</in>
+          <in>moc_bitcoingui.cpp</in>
+          <in>moc_bitcoinunits.cpp</in>
+          <in>moc_clientmodel.cpp</in>
+          <in>moc_coincontroldialog.cpp</in>
+          <in>moc_coincontroltreewidget.cpp</in>
+          <in>moc_csvmodelwriter.cpp</in>
+          <in>moc_editaddressdialog.cpp</in>
+          <in>moc_guiutil.cpp</in>
+          <in>moc_intro.cpp</in>
+          <in>moc_macdockiconhandler.cpp</in>
+          <in>moc_macnotificationhandler.cpp</in>
+          <in>moc_monitoreddatamapper.cpp</in>
+          <in>moc_notificator.cpp</in>
+          <in>moc_openuridialog.cpp</in>
+          <in>moc_optionsdialog.cpp</in>
+          <in>moc_optionsmodel.cpp</in>
+          <in>moc_overviewpage.cpp</in>
+          <in>moc_paymentserver.cpp</in>
+          <in>moc_qvalidatedlineedit.cpp</in>
+          <in>moc_qvaluecombobox.cpp</in>
+          <in>moc_receivecoinsdialog.cpp</in>
+          <in>moc_receiverequestdialog.cpp</in>
+          <in>moc_recentrequeststablemodel.cpp</in>
+          <in>moc_rpcconsole.cpp</in>
+          <in>moc_sendcoinsdialog.cpp</in>
+          <in>moc_sendcoinsentry.cpp</in>
+          <in>moc_signverifymessagedialog.cpp</in>
+          <in>moc_splashscreen.cpp</in>
+          <in>moc_trafficgraphwidget.cpp</in>
+          <in>moc_transactiondesc.cpp</in>
+          <in>moc_transactiondescdialog.cpp</in>
+          <in>moc_transactionfilterproxy.cpp</in>
+          <in>moc_transactiontablemodel.cpp</in>
+          <in>moc_transactionview.cpp</in>
+          <in>moc_utilitydialog.cpp</in>
+          <in>moc_walletframe.cpp</in>
+          <in>moc_walletmodel.cpp</in>
+          <in>moc_walletview.cpp</in>
+          <in>monitoreddatamapper.cpp</in>
+          <in>monitoreddatamapper.h</in>
+          <in>notificator.cpp</in>
+          <in>notificator.h</in>
+          <in>openuridialog.cpp</in>
+          <in>openuridialog.h</in>
+          <in>optionsdialog.cpp</in>
+          <in>optionsdialog.h</in>
+          <in>optionsmodel.cpp</in>
+          <in>optionsmodel.h</in>
+          <in>overviewpage.cpp</in>
+          <in>overviewpage.h</in>
+          <in>paymentrequest.pb.cc</in>
+          <in>paymentrequestplus.cpp</in>
+          <in>paymentrequestplus.h</in>
+          <in>paymentserver.cpp</in>
+          <in>paymentserver.h</in>
+          <in>qrc_bitcoin.cpp</in>
+          <in>qvalidatedlineedit.cpp</in>
+          <in>qvalidatedlineedit.h</in>
+          <in>qvaluecombobox.cpp</in>
+          <in>qvaluecombobox.h</in>
+          <in>receivecoinsdialog.cpp</in>
+          <in>receivecoinsdialog.h</in>
+          <in>receiverequestdialog.cpp</in>
+          <in>receiverequestdialog.h</in>
+          <in>recentrequeststablemodel.cpp</in>
+          <in>recentrequeststablemodel.h</in>
+          <in>rpcconsole.cpp</in>
+          <in>rpcconsole.h</in>
+          <in>sendcoinsdialog.cpp</in>
+          <in>sendcoinsdialog.h</in>
+          <in>sendcoinsentry.cpp</in>
+          <in>sendcoinsentry.h</in>
+          <in>signverifymessagedialog.cpp</in>
+          <in>signverifymessagedialog.h</in>
+          <in>splashscreen.cpp</in>
+          <in>splashscreen.h</in>
+          <in>trafficgraphwidget.cpp</in>
+          <in>trafficgraphwidget.h</in>
+          <in>transactiondesc.cpp</in>
+          <in>transactiondesc.h</in>
+          <in>transactiondescdialog.cpp</in>
+          <in>transactiondescdialog.h</in>
+          <in>transactionfilterproxy.cpp</in>
+          <in>transactionfilterproxy.h</in>
+          <in>transactionrecord.cpp</in>
+          <in>transactionrecord.h</in>
+          <in>transactiontablemodel.cpp</in>
+          <in>transactiontablemodel.h</in>
+          <in>transactionview.cpp</in>
+          <in>transactionview.h</in>
+          <in>utilitydialog.cpp</in>
+          <in>utilitydialog.h</in>
+          <in>walletframe.cpp</in>
+          <in>walletframe.h</in>
+          <in>walletmodel.cpp</in>
+          <in>walletmodel.h</in>
+          <in>walletmodeltransaction.cpp</in>
+          <in>walletmodeltransaction.h</in>
+          <in>walletview.cpp</in>
+          <in>walletview.h</in>
+        </df>
+        <df name="test">
+          <df name="data">
+          </df>
+          <in>Checkpoints_tests.cpp</in>
+          <in>DoS_tests.cpp</in>
+          <in>accounting_tests.cpp</in>
+          <in>alert_tests.cpp</in>
+          <in>allocator_tests.cpp</in>
+          <in>base32_tests.cpp</in>
+          <in>base58_tests.cpp</in>
+          <in>base64_tests.cpp</in>
+          <in>bignum_tests.cpp</in>
+          <in>bip32_tests.cpp</in>
+          <in>bloom_tests.cpp</in>
+          <in>canonical_tests.cpp</in>
+          <in>checkblock_tests.cpp</in>
+          <in>compress_tests.cpp</in>
+          <in>getarg_tests.cpp</in>
+          <in>hash_tests.cpp</in>
+          <in>hmac_tests.cpp</in>
+          <in>key_tests.cpp</in>
+          <in>miner_tests.cpp</in>
+          <in>mruset_tests.cpp</in>
+          <in>multisig_tests.cpp</in>
+          <in>netbase_tests.cpp</in>
+          <in>pmt_tests.cpp</in>
+          <in>rpc_tests.cpp</in>
+          <in>rpc_wallet_tests.cpp</in>
+          <in>script_P2SH_tests.cpp</in>
+          <in>script_tests.cpp</in>
+          <in>serialize_tests.cpp</in>
+          <in>sighash_tests.cpp</in>
+          <in>sigopcount_tests.cpp</in>
+          <in>test_bitcoin.cpp</in>
+          <in>transaction_tests.cpp</in>
+          <in>uint256_tests.cpp</in>
+          <in>util_tests.cpp</in>
+          <in>wallet_tests.cpp</in>
+        </df>
+        <in>addrman.cpp</in>
+        <in>addrman.h</in>
+        <in>alert.cpp</in>
+        <in>alert.h</in>
+        <in>allocators.cpp</in>
+        <in>allocators.h</in>
+        <in>base58.h</in>
+        <in>bignum.h</in>
+        <in>bitcoin-cli.cpp</in>
+        <in>bitcoin-config.h</in>
+        <in>bitcoind.cpp</in>
+        <in>bloom.cpp</in>
+        <in>bloom.h</in>
+        <in>chainparams.cpp</in>
+        <in>chainparams.h</in>
+        <in>checkpoints.cpp</in>
+        <in>checkpoints.h</in>
+        <in>checkqueue.h</in>
+        <in>clientversion.h</in>
+        <in>coincontrol.h</in>
+        <in>coins.cpp</in>
+        <in>coins.h</in>
+        <in>compat.h</in>
+        <in>core.cpp</in>
+        <in>core.h</in>
+        <in>crypter.cpp</in>
+        <in>crypter.h</in>
+        <in>db.cpp</in>
+        <in>db.h</in>
+        <in>hash.cpp</in>
+        <in>hash.h</in>
+        <in>init.cpp</in>
+        <in>init.h</in>
+        <in>key.cpp</in>
+        <in>key.h</in>
+        <in>keystore.cpp</in>
+        <in>keystore.h</in>
+        <in>leveldbwrapper.cpp</in>
+        <in>leveldbwrapper.h</in>
+        <in>limitedmap.h</in>
+        <in>main.cpp</in>
+        <in>main.h</in>
+        <in>miner.cpp</in>
+        <in>miner.h</in>
+        <in>mruset.h</in>
+        <in>net.cpp</in>
+        <in>net.h</in>
+        <in>netbase.cpp</in>
+        <in>netbase.h</in>
+        <in>noui.cpp</in>
+        <in>noui.h</in>
+        <in>protocol.cpp</in>
+        <in>protocol.h</in>
+        <in>rpcblockchain.cpp</in>
+        <in>rpcclient.cpp</in>
+        <in>rpcclient.h</in>
+        <in>rpcdump.cpp</in>
+        <in>rpcmining.cpp</in>
+        <in>rpcmisc.cpp</in>
+        <in>rpcnet.cpp</in>
+        <in>rpcprotocol.cpp</in>
+        <in>rpcprotocol.h</in>
+        <in>rpcrawtransaction.cpp</in>
+        <in>rpcserver.cpp</in>
+        <in>rpcserver.h</in>
+        <in>rpcwallet.cpp</in>
+        <in>script.cpp</in>
+        <in>script.h</in>
+        <in>serialize.h</in>
+        <in>sync.cpp</in>
+        <in>sync.h</in>
+        <in>threadsafety.h</in>
+        <in>tinyformat.h</in>
+        <in>txdb.cpp</in>
+        <in>txdb.h</in>
+        <in>txmempool.cpp</in>
+        <in>txmempool.h</in>
+        <in>ui_interface.h</in>
+        <in>uint256.h</in>
+        <in>util.cpp</in>
+        <in>util.h</in>
+        <in>version.cpp</in>
+        <in>version.h</in>
+        <in>wallet.cpp</in>
+        <in>wallet.h</in>
+        <in>walletdb.cpp</in>
+        <in>walletdb.h</in>
+      </df>
+    </df>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>4</platform>
+      </toolsSet>
+      <compile>
+        <compiledirpicklist>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+        </compiledirpicklist>
+        <compiledir>${AUTO_FOLDER}</compiledir>
+        <compilecommandpicklist>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+        </compilecommandpicklist>
+        <compilecommand>${AUTO_COMPILE}</compilecommand>
+      </compile>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -datadir="/Volumes/ALON'S HD/bitcoin_data/" -rpcuser=bitcoinrpc -rpcpassword=AgMQNAVuhN5MjikYNT4PA3pPiSYsGbDvfryah8D6LDUe -debug -daemon</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" </runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"
+-datadir="/Volumes/ALON'S HD/bitcoin_data/"
+-rpcuser=bitcoinrpc
+-rpcpassword=AgMQNAVuhN5MjikYNT4PA3pPiSYsGbDvfryah8D6LDUe
+-debug
+-daemon</runcommandpicklistitem>
+          <runcommandpicklistitem>-datadir="/Volumes/ALON'S HD/bitcoin_data/"
+-rpcuser=bitcoinrpc
+-rpcpassword=AgMQNAVuhN5MjikYNT4PA3pPiSYsGbDvfryah8D6LDUe
+-debug
+-daemon</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -datadir="/Volumes/ALON'S HD/bitcoin_data/"
+-rpcuser=bitcoinrpc -rpcpassword=AgMQNAVuhN5MjikYNT4PA3pPiSYsGbDvfryah8D6LDUe 
+-debug 
+-daemon</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}" -datadir="/Volumes/ALON'S HD/bitcoin_data/"
+-rpcuser=bitcoinrpc -rpcpassword=AgMQNAVuhN5MjikYNT4PA3pPiSYsGbDvfryah8D6LDUe 
+-debug 
+-daemon</runcommand>
+        <rundir>.</rundir>
+        <buildfirst>false</buildfirst>
+        <console-type>2</console-type>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>
