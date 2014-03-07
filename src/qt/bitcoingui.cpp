@@ -673,6 +673,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     {
         // Represent time from last generated block in human readable text
         QString timeBehindText;
+        Qstring timeplusTime;
         if(secs < 48*60*60)
         {
             timeBehindText = tr("%n hour(s)","",secs/(60*60));
@@ -693,7 +694,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         //Set Years in Human Readables
         else
         {   
-            timeBehindTxt = tr("%n year(s)","",secs/(52*7*24*60*60));
+            timeBehindTxt = tr("%n year(s)","",secs/(52*7*24*60*60)) + "and" ("%n month(s)","",(secs/(30*24*60*60)-timeBehindTxt*12)));
         }
         progressBarLabel->setVisible(true);
         progressBar->setFormat(tr("%1 behind").arg(timeBehindText));
