@@ -60,7 +60,10 @@ public:
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
     virtual const CBlock& GenesisBlock() const = 0;
     virtual bool RequireRPCPassword() const { return true; }
+    virtual bool CheckMemPool() const { return false; }
+    virtual bool MiningRequiresPeers() const { return true; }
     const string& DataDir() const { return strDataDir; }
+    // TODO get rid of the network specific methods
     virtual bool isMainNet() const { return false; }
     virtual bool isTestNet() const { return false; }
     virtual bool isRegTest() const { return false; }
