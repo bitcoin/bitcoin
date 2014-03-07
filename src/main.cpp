@@ -1435,7 +1435,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
         CBlockIndex *pindexPrev = mapBlockIndex.find(inputs.GetBestBlock())->second;
         int nSpendHeight = pindexPrev->nHeight + 1;
         int64_t nValueIn = 0;
-        int64_t nFees = 0;
         for (unsigned int i = 0; i < tx.vin.size(); i++)
         {
             const COutPoint &prevout = tx.vin[i].prevout;
@@ -1463,12 +1462,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 
         // Tally transaction fees
         int64_t nTxFee = nValueIn - tx.GetValueOut();
-        if (nTxFee < 0)
-            return state.DoS(100, error("CheckInputs() : %s nTxFee < 0", tx.GetHash().ToString()),
-                             REJECT_INVALID, "bad-txns-fee-negative");
-        nFees += nTxFee;
-        if (!MoneyRange(nFees))
-            return state.DoS(100, error("CheckInputs() : nFees out of range"),
+        if (!MoneyRange(nTxFee))
+            return state.DoS(100, error("CheckInputs() : nTxFee out of range"),
                              REJECT_INVALID, "bad-txns-fee-outofrange");
 
         // The first loop above does all the inexpensive checks.
