@@ -685,10 +685,12 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         {
             timeBehindText = tr("%n week(s)","",secs/(7*24*60*60));
         }
+        //Set Months in Human Readables
         else if(secs < 52*7*24*60*60)
         {
             timeBehindTxt = tr("%n month(s)","",secs/(30*24*60*60));
         }
+        //Set Years in Human Readables
         else
         {   
             timeBehindTxt = tr("%n year(s)","",secs/(52*7*24*60*60));
