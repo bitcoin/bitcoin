@@ -681,13 +681,13 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         {
             timeBehindText = tr("%n day(s)","",secs/(24*60*60));
         }
-        else if(secs < 30.4333*24*60*60)
+        else if(secs < 30*24*60*60)
         {
             timeBehindText = tr("%n week(s)","",secs/(7*24*60*60));
         }
         else if(secs < 52*7*24*60*60)
         {
-            timeBehindTxt = tr("%n month(s)","",secs/(30.4333*24*60*60));
+            timeBehindTxt = tr("%n month(s)","",secs/(30*24*60*60));
         }
         else
         {   
