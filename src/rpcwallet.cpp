@@ -202,6 +202,9 @@ Value getrawchangeaddress(const Array& params, bool fHelp)
 
     CKeyID keyID = vchPubKey.GetID();
 
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
+
     return CBitcoinAddress(keyID).ToString();
 }
 
@@ -345,6 +348,9 @@ Value sendtoaddress(const Array& params, bool fHelp)
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
+
     return wtx.GetHash().GetHex();
 }
 
@@ -442,6 +448,9 @@ Value signmessage(const Array& params, bool fHelp)
     vector<unsigned char> vchSig;
     if (!key.SignCompact(ss.GetHash(), vchSig))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
 
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
@@ -785,6 +794,9 @@ Value sendfrom(const Array& params, bool fHelp)
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
+
     return wtx.GetHash().GetHex();
 }
 
@@ -866,6 +878,9 @@ Value sendmany(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     if (!pwalletMain->CommitTransaction(wtx, keyChange))
         throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
+
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
 
     return wtx.GetHash().GetHex();
 }
@@ -1548,11 +1563,14 @@ Value keypoolrefill(const Array& params, bool fHelp)
     if (pwalletMain->GetKeyPoolSize() < kpSize)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
 
+    if (nWalletUnlockTime == -1)
+        LockWallet(pwalletMain);
+
     return Value::null;
 }
 
 
-static void LockWallet(CWallet* pWallet)
+void LockWallet(CWallet* pWallet)
 {
     LOCK(cs_nWalletUnlockTime);
     nWalletUnlockTime = 0;
@@ -1568,7 +1586,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
             "This is needed prior to performing transactions related to private keys such as sending bitcoins\n"
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
-            "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
+            "2. timeout            (numeric, required) The time to keep the decryption key in seconds. If -1 is passed, the server will keep the key until the next api call that requires it.\n"
             "\nNote:\n"
             "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
             "time that overrides the old one.\n"
@@ -1577,6 +1595,8 @@ Value walletpassphrase(const Array& params, bool fHelp)
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60") +
             "\nLock the wallet again (before 60 seconds)\n"
             + HelpExampleCli("walletlock", "") +
+            "\nunlock the wallet until the next key-using call\n"
+            + HelpExampleCli("walletpassphrase", "\"my pass phrase\" -1") +
             "\nAs json rpc call\n"
             + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
         );
@@ -1607,8 +1627,13 @@ Value walletpassphrase(const Array& params, bool fHelp)
 
     int64_t nSleepTime = params[1].get_int64();
     LOCK(cs_nWalletUnlockTime);
-    nWalletUnlockTime = GetTime() + nSleepTime;
-    RPCRunLater("lockwallet", boost::bind(LockWallet, pwalletMain), nSleepTime);
+    if (nSleepTime != -1)
+    {
+        nWalletUnlockTime = GetTime() + nSleepTime;
+        RPCRunLater("lockwallet", boost::bind(LockWallet, pwalletMain), nSleepTime);
+    }
+    else
+        nWalletUnlockTime = -1;
 
     return Value::null;
 }
