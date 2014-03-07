@@ -83,9 +83,9 @@ namespace Checkpoints
     };
 
     const CCheckpointData &Checkpoints() {
-        if (TestNet())
+        if (Params().isTestNet())
             return dataTestnet;
-        else if (MainNet())
+        else if (Params().isMainNet())
             return data;
         else
             return dataRegtest;

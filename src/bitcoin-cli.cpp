@@ -28,7 +28,7 @@ static bool AppInitRPC(int argc, char* argv[])
         return false;
     }
     ReadConfigFile(mapArgs, mapMultiArgs);
-    // Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
+    // Check for -testnet or -regtest parameter (Params().isTestNet() calls are only valid after this clause)
     if (!SelectParamsFromCommandLine()) {
         fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
         return false;

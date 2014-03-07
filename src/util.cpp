@@ -995,8 +995,15 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     LOCK(csPathCached);
 
     int nNet = CChainParams::MAX_NETWORK_TYPES;
-    if (fNetSpecific) nNet = Params().NetworkID();
-
+    if (fNetSpecific) {
+        if (Params().isMainNet()) {
+            nNet = CChainParams::MAIN;
+        } else if (Params().isTestNet()) {
+            nNet = CChainParams::TESTNET;
+        } else if (Params().isRegTest()) {
+            nNet = CChainParams::REGTEST;
+        }
+    }
     fs::path &path = pathCached[nNet];
 
     // This can be called during exceptions by LogPrintf(), so we cache the

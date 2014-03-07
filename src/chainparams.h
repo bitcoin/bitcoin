@@ -61,7 +61,10 @@ public:
     virtual const CBlock& GenesisBlock() const = 0;
     virtual bool RequireRPCPassword() const { return true; }
     const string& DataDir() const { return strDataDir; }
-    virtual Network NetworkID() const = 0;
+    virtual bool isMainNet() const { return false; }
+    virtual bool isTestNet() const { return false; }
+    virtual bool isRegTest() const { return false; }
+
     const vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char> &Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     virtual const vector<CAddress>& FixedSeeds() const = 0;
@@ -96,18 +99,5 @@ void SelectParams(CChainParams::Network network);
  * Returns false if an invalid combination is given.
  */
 bool SelectParamsFromCommandLine();
-
-inline bool MainNet() {
-    return Params().NetworkID() == CChainParams::MAIN;
-}
-
-inline bool TestNet() {
-    // Note: it's deliberate that this returns "false" for regression test mode.
-    return Params().NetworkID() == CChainParams::TESTNET;
-}
-
-inline bool RegTest() {
-    return Params().NetworkID() == CChainParams::REGTEST;
-}
 
 #endif
