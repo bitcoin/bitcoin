@@ -65,10 +65,11 @@ public:
     virtual bool MiningRequiresPeers() const { return true; }
     virtual bool MineBlocksOnDemand() const { return false; }
     const string& DataDir() const { return strDataDir; }
+
+    virtual Network NetworkID() const = 0;
     // TODO get rid of the network specific methods
     virtual bool isMainNet() const { return false; }
     virtual bool isTestNet() const { return false; }
-    virtual bool isRegTest() const { return false; }
 
     const vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char> &Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }

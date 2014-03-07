@@ -171,6 +171,7 @@ public:
     }
 
     virtual const CBlock& GenesisBlock() const { return genesis; }
+    virtual Network NetworkID() const { return CChainParams::MAIN; }
     virtual bool isMainNet() const { return true; }
 
     virtual const vector<CAddress>& FixedSeeds() const {
@@ -218,6 +219,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x35)(0x87)(0xCF);
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x35)(0x83)(0x94);
     }
+    virtual Network NetworkID() const { return CChainParams::TESTNET; }
     virtual bool isTestNet() const { return true; }
 };
 static CTestNetParams testNetParams;
@@ -252,7 +254,7 @@ public:
     virtual bool MiningRequiresPeers() const { return false; }
     virtual bool MineBlocksOnDemand() const { return true; }
 
-    virtual bool isRegTest() const { return true; }
+    virtual Network NetworkID() const { return CChainParams::REGTEST; }
 };
 static CRegTestParams regTestParams;
 
