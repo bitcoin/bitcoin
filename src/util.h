@@ -14,6 +14,4 @@ static void secp256k1_rand256(unsigned char *b32);
 /** Generate a pseudorandom 32-byte array with long sequences of zero and one bits. */
 static void secp256k1_rand256_test(unsigned char *b32);
 
-#include "impl/util.h"
-
 #endif

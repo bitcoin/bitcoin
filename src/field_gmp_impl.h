@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
-#include "../num.h"
-#include "../field.h"
+#include "num.h"
+#include "field.h"
 
 static mp_limb_t secp256k1_field_p[FIELD_LIMBS];
 static mp_limb_t secp256k1_field_pc[(33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS];

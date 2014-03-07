@@ -11,13 +11,13 @@
 
 #include <assert.h>
 #include <string.h>
-#include "../num.h"
-#include "../field.h"
+#include "num.h"
+#include "field.h"
 
 #if defined(USE_FIELD_5X52_ASM)
-#include "field_5x52_asm.h"
+#include "field_5x52_asm_impl.h"
 #elif defined(USE_FIELD_5X52_INT128)
-#include "field_5x52_int128.h"
+#include "field_5x52_int128_impl.h"
 #else
 #error "Please select field_5x52 implementation"
 #endif

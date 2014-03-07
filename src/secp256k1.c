@@ -2,11 +2,11 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "impl/num.h"
-#include "impl/field.h"
-#include "impl/group.h"
-#include "impl/ecmult.h"
-#include "impl/ecdsa.h"
+#include "num_impl.h"
+#include "field_impl.h"
+#include "group_impl.h"
+#include "ecmult_impl.h"
+#include "ecdsa_impl.h"
 
 void secp256k1_start(void) {
     secp256k1_fe_start();

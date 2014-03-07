@@ -11,7 +11,7 @@
 #include <openssl/bn.h>
 #include <openssl/crypto.h>
 
-#include "../num.h"
+#include "num.h"
 
 void static secp256k1_num_init(secp256k1_num_t *r) {
     BN_init(&r->bn);
