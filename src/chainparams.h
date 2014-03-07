@@ -58,6 +58,7 @@ public:
     int GetDefaultPort() const { return nDefaultPort; }
     const CBigNum& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
+    int DefaultMinerThreads() const { return nMinerThreads; }
     virtual const CBlock& GenesisBlock() const = 0;
     virtual bool RequireRPCPassword() const { return true; }
     virtual bool CheckMemPool() const { return false; }
@@ -84,6 +85,7 @@ protected:
     CBigNum bnProofOfWorkLimit;
     int nSubsidyHalvingInterval;
     string strDataDir;
+    int nMinerThreads;
     vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
 };

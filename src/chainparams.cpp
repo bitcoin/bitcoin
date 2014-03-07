@@ -11,6 +11,7 @@
 #include "util.h"
 
 #include <boost/assign/list_of.hpp>
+#include <boost/thread.hpp>
 
 using namespace boost::assign;
 
@@ -112,6 +113,7 @@ public:
         nRPCPort = 8332;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 32);
         nSubsidyHalvingInterval = 210000;
+        nMinerThreads = boost::thread::hardware_concurrency();
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
         // be spent as it did not originally exist in the database.
@@ -232,6 +234,7 @@ public:
         pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xda;
         nSubsidyHalvingInterval = 150;
+        nMinerThreads = 1;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 1);
         genesis.nTime = 1296688602;
         genesis.nBits = 0x207fffff;
