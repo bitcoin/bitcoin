@@ -681,11 +681,18 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         {
             timeBehindText = tr("%n day(s)","",secs/(24*60*60));
         }
-        else
+        else if(secs < 30.4333*2*60*60)
         {
             timeBehindText = tr("%n week(s)","",secs/(7*24*60*60));
         }
-
+        else if(secs < 52*7*2*60*60)
+        {
+            timeBehindTxt = tr("%n month(s)","",secs/(30.4333*24*60*60));
+        }
+        else
+        {   
+            timeBehindTxt = tr("%n year(s)","",secs/(52*7*24*60*60));
+        }
         progressBarLabel->setVisible(true);
         progressBar->setFormat(tr("%1 behind").arg(timeBehindText));
         progressBar->setMaximum(1000000000);
