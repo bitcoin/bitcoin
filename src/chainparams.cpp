@@ -11,6 +11,7 @@
 #include "util.h"
 
 #include <boost/assign/list_of.hpp>
+#include <boost/thread.hpp>
 
 using namespace boost::assign;
 
@@ -112,6 +113,7 @@ public:
         nRPCPort = 8332;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 32);
         nSubsidyHalvingInterval = 210000;
+        nMinerThreads = boost::thread::hardware_concurrency();
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
         // be spent as it did not originally exist in the database.
@@ -170,6 +172,7 @@ public:
 
     virtual const CBlock& GenesisBlock() const { return genesis; }
     virtual Network NetworkID() const { return CChainParams::MAIN; }
+    virtual bool isMainNet() const { return true; }
 
     virtual const vector<CAddress>& FixedSeeds() const {
         return vFixedSeeds;
@@ -217,6 +220,7 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x35)(0x83)(0x94);
     }
     virtual Network NetworkID() const { return CChainParams::TESTNET; }
+    virtual bool isTestNet() const { return true; }
 };
 static CTestNetParams testNetParams;
 
@@ -232,6 +236,7 @@ public:
         pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xda;
         nSubsidyHalvingInterval = 150;
+        nMinerThreads = 1;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 1);
         genesis.nTime = 1296688602;
         genesis.nBits = 0x207fffff;
@@ -245,6 +250,10 @@ public:
     }
 
     virtual bool RequireRPCPassword() const { return false; }
+    virtual bool CheckMemPool() const { return true; }
+    virtual bool MiningRequiresPeers() const { return false; }
+    virtual bool MineBlocksOnDemand() const { return true; }
+
     virtual Network NetworkID() const { return CChainParams::REGTEST; }
 };
 static CRegTestParams regTestParams;

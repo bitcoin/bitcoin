@@ -173,8 +173,8 @@ Value setgenerate(const Array& params, bool fHelp)
             fGenerate = false;
     }
 
-    // -regtest mode: don't return until nGenProcLimit blocks are generated
-    if (fGenerate && Params().NetworkID() == CChainParams::REGTEST)
+    // don't return until nGenProcLimit blocks are generated on demand
+    if (fGenerate && Params().MineBlocksOnDemand())
     {
         int nHeightStart = 0;
         int nHeightEnd = 0;
@@ -264,7 +264,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("genproclimit",     (int)GetArg("-genproclimit", -1)));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(params, false)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
-    obj.push_back(Pair("testnet",          TestNet()));
+    obj.push_back(Pair("testnet",          Params().isTestNet()));
 #ifdef ENABLE_WALLET
     obj.push_back(Pair("generate",         getgenerate(params, false)));
     obj.push_back(Pair("hashespersec",     gethashespersec(params, false)));

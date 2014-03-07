@@ -83,9 +83,9 @@ namespace Checkpoints
     };
 
     const CCheckpointData &Checkpoints() {
-        if (Params().NetworkID() == CChainParams::TESTNET)
+        if (Params().isTestNet())
             return dataTestnet;
-        else if (Params().NetworkID() == CChainParams::MAIN)
+        else if (Params().isMainNet())
             return data;
         else
             return dataRegtest;

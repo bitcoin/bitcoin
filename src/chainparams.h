@@ -58,10 +58,19 @@ public:
     int GetDefaultPort() const { return nDefaultPort; }
     const CBigNum& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
+    int DefaultMinerThreads() const { return nMinerThreads; }
     virtual const CBlock& GenesisBlock() const = 0;
     virtual bool RequireRPCPassword() const { return true; }
+    virtual bool CheckMemPool() const { return false; }
+    virtual bool MiningRequiresPeers() const { return true; }
+    virtual bool MineBlocksOnDemand() const { return false; }
     const string& DataDir() const { return strDataDir; }
+
     virtual Network NetworkID() const = 0;
+    // TODO get rid of the network specific methods
+    virtual bool isMainNet() const { return false; }
+    virtual bool isTestNet() const { return false; }
+
     const vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char> &Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     virtual const vector<CAddress>& FixedSeeds() const = 0;
@@ -78,6 +87,7 @@ protected:
     CBigNum bnProofOfWorkLimit;
     int nSubsidyHalvingInterval;
     string strDataDir;
+    int nMinerThreads;
     vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
 };
@@ -96,14 +106,5 @@ void SelectParams(CChainParams::Network network);
  * Returns false if an invalid combination is given.
  */
 bool SelectParamsFromCommandLine();
-
-inline bool TestNet() {
-    // Note: it's deliberate that this returns "false" for regression test mode.
-    return Params().NetworkID() == CChainParams::TESTNET;
-}
-
-inline bool RegTest() {
-    return Params().NetworkID() == CChainParams::REGTEST;
-}
 
 #endif

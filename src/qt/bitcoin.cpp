@@ -443,17 +443,17 @@ int main(int argc, char *argv[])
     /// 1. Parse command-line options. These take precedence over anything else.
     // Command-line options take precedence:
     ParseParameters(argc, argv);
-    // Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
+    // Check for -testnet or -regtest parameter (Params().isTestNet() calls are only valid after this clause)
     if (!SelectParamsFromCommandLine()) {
         fSelParFromCLFailed = true;
     }
 #ifdef ENABLE_WALLET
-    // Parse URIs on command line -- this can affect TestNet() / RegTest() mode
+    // Parse URIs on command line -- this can affect Params() modes
     if (!PaymentServer::ipcParseCommandLine(argc, argv))
         exit(0);
 #endif
 
-    bool isaTestNet = TestNet() || RegTest();
+    bool isaTestNet = !Params().isMainNet();
 
     // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
 
