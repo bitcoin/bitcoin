@@ -173,8 +173,8 @@ Value setgenerate(const Array& params, bool fHelp)
             fGenerate = false;
     }
 
-    // -regtest mode: don't return until nGenProcLimit blocks are generated
-    if (fGenerate && Params().isRegTest())
+    // don't return until nGenProcLimit blocks are generated on demand
+    if (fGenerate && Params().MineBlocksOnDemand())
     {
         int nHeightStart = 0;
         int nHeightEnd = 0;

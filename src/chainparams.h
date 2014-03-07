@@ -63,6 +63,7 @@ public:
     virtual bool RequireRPCPassword() const { return true; }
     virtual bool CheckMemPool() const { return false; }
     virtual bool MiningRequiresPeers() const { return true; }
+    virtual bool MineBlocksOnDemand() const { return false; }
     const string& DataDir() const { return strDataDir; }
     // TODO get rid of the network specific methods
     virtual bool isMainNet() const { return false; }

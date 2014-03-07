@@ -250,6 +250,7 @@ public:
     virtual bool RequireRPCPassword() const { return false; }
     virtual bool CheckMemPool() const { return true; }
     virtual bool MiningRequiresPeers() const { return false; }
+    virtual bool MineBlocksOnDemand() const { return true; }
 
     virtual bool isRegTest() const { return true; }
 };
