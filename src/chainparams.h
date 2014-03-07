@@ -97,6 +97,10 @@ void SelectParams(CChainParams::Network network);
  */
 bool SelectParamsFromCommandLine();
 
+inline bool MainNet() {
+    return Params().NetworkID() == CChainParams::MAIN;
+}
+
 inline bool TestNet() {
     // Note: it's deliberate that this returns "false" for regression test mode.
     return Params().NetworkID() == CChainParams::TESTNET;
