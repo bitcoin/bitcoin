@@ -57,6 +57,8 @@ public:
     int GetDefaultPort() const { return nDefaultPort; }
     const uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
+    /* Used if GenerateBitcoins is called with a negative number of threads */
+    int DefaultMinerThreads() const { return nMinerThreads; }
     virtual const CBlock& GenesisBlock() const = 0;
     virtual bool RequireRPCPassword() const { return true; }
     /* Make miner wait to have peers to avoid wasting work */
@@ -82,6 +84,7 @@ protected:
     uint256 bnProofOfWorkLimit;
     int nSubsidyHalvingInterval;
     string strDataDir;
+    int nMinerThreads;
     vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
 };
