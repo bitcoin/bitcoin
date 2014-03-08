@@ -245,6 +245,7 @@ public:
     }
 
     virtual bool RequireRPCPassword() const { return false; }
+    virtual bool MiningRequiresPeers() const { return false; }
     virtual Network NetworkID() const { return CChainParams::REGTEST; }
 };
 static CRegTestParams regTestParams;
