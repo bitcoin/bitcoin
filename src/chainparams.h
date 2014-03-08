@@ -60,6 +60,7 @@ public:
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
     virtual const CBlock& GenesisBlock() const = 0;
     virtual bool RequireRPCPassword() const { return true; }
+    virtual bool MiningRequiresPeers() const { return true; }
     const string& DataDir() const { return strDataDir; }
     virtual Network NetworkID() const = 0;
     const vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
