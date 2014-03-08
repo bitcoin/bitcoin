@@ -448,12 +448,12 @@ int main(int argc, char *argv[])
         fSelParFromCLFailed = true;
     }
 #ifdef ENABLE_WALLET
-    // Parse URIs on command line -- this can affect TestNet() / RegTest() mode
+    // Parse URIs on command line -- this can affect Params()
     if (!PaymentServer::ipcParseCommandLine(argc, argv))
         exit(0);
 #endif
 
-    bool isaTestNet = TestNet() || RegTest();
+    bool isaTestNet = Params().NetworkID() != CChainParams::MAIN;
 
     // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
 
