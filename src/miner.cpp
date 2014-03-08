@@ -648,12 +648,8 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
 {
     static boost::thread_group* minerThreads = NULL;
 
-    if (nThreads < 0) {
-        if (Params().NetworkID() == CChainParams::REGTEST)
-            nThreads = 1;
-        else
-            nThreads = boost::thread::hardware_concurrency();
-    }
+    if (nThreads < 0)
+        nThreads = Params().DefaultMinerThreads();
 
     if (minerThreads != NULL)
     {
