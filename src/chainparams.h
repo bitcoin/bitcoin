@@ -62,6 +62,9 @@ public:
     /* Make miner wait to have peers to avoid wasting work */
     virtual bool MiningRequiresPeers() const { return true; }
     const string& DataDir() const { return strDataDir; }
+    /* Make miner stop after a block is found. In RPC, don't return
+     * until nGenProcLimit blocks are generated */
+    virtual bool MineBlocksOnDemand() const { return false; }
     virtual Network NetworkID() const = 0;
     const vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char> &Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
