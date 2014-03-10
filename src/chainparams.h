@@ -63,6 +63,8 @@ public:
     virtual bool RequireRPCPassword() const { return true; }
     /* Make miner wait to have peers to avoid wasting work */
     virtual bool MiningRequiresPeers() const { return true; }
+    /* Default value for -checkmempool argument */
+    virtual bool DefaultCheckMemPool() const { return false; }
     const string& DataDir() const { return strDataDir; }
     /* Make miner stop after a block is found. In RPC, don't return
      * until nGenProcLimit blocks are generated */

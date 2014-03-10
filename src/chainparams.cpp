@@ -250,6 +250,7 @@ public:
     virtual bool RequireRPCPassword() const { return false; }
     virtual bool MiningRequiresPeers() const { return false; }
     virtual bool MineBlocksOnDemand() const { return true; }
+    virtual bool DefaultCheckMemPool() const { return true; }
     virtual Network NetworkID() const { return CChainParams::REGTEST; }
 };
 static CRegTestParams regTestParams;
