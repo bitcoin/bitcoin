@@ -63,6 +63,10 @@ qrc_*.cpp
 # Qt creator
 *.pro.user
 
+#Eclipse 
+.cproject
+.project
+
 # Mac specific
 .DS_Store
 build
