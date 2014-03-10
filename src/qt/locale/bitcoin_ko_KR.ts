@@ -1180,7 +1180,7 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Use a custom data directory:</source>
-        <translation>커스텀 데이터 폴더 사용:</translation>
+        <translation>커스텀 데이터 폴더 사용:</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="+85"/>
@@ -1626,7 +1626,7 @@ Address: %4
     <message>
         <location line="+59"/>
         <source>Refund from %1</source>
-        <translation>%1 으로부터의 환불</translation>
+        <translation>%1 으로부터의 환불</translation>
     </message>
     <message>
         <location line="+43"/>
@@ -1746,7 +1746,7 @@ Address: %4
     <message>
         <location line="+53"/>
         <source>Using OpenSSL version</source>
-        <translation>오픈SSL 버전을 사용합니다</translation>
+        <translation>오픈SSL 버전을 사용합니다</translation>
     </message>
     <message>
         <location line="+49"/>
@@ -2336,7 +2336,7 @@ Address: %4
     <message>
         <location line="-367"/>
         <source>Are you sure you want to send?</source>
-        <translation>정말로 보내시겠습니까?</translation>
+        <translation>정말로 보내시겠습니까?</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -2772,7 +2772,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>not accepted</source>
-        <translation>허용되지 않는다</translation>
+        <translation>허용되지 않는다</translation>
     </message>
     <message>
         <location line="+44"/>
