@@ -34,6 +34,12 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
     <message>
         <location line="+0"/>
         <source>The Bitcoin Core developers</source>
+        <translation>Dezvoltatorii Bitcoin Core</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <location line="+2"/>
+        <source> (%1-bit)</source>
         <translation type="unfinished"/>
     </message>
 </context>
@@ -157,7 +163,7 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
     <message>
         <location line="+1"/>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>A apărut o eroare încercând să se salveze lista de adrese la %1.</translation>
     </message>
 </context>
 <context>
@@ -339,7 +345,7 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
     <message>
         <location line="-137"/>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>Nod</translation>
     </message>
     <message>
         <location line="+138"/>
@@ -415,7 +421,7 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
     <message>
         <location line="+3"/>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>Vizitaţi &amp;URI...</translation>
     </message>
     <message>
         <location line="+325"/>
@@ -690,7 +696,7 @@ Adresa: %4
         <translation>Portofelul este &lt;b&gt;criptat&lt;/b&gt; iar în momentul de față este &lt;b&gt;blocat&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+438"/>
+        <location filename="../bitcoin.cpp" line="+435"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>A survenit o eroare fatala. Bitcoin nu mai poate continua in siguranta si se va opri.</translation>
     </message>
@@ -751,7 +757,7 @@ Adresa: %4
         <translation>Schimb:</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+56"/>
         <source>(un)select all</source>
         <translation>(de)selectaţi tot</translation>
     </message>
@@ -766,7 +772,7 @@ Adresa: %4
         <translation>Modul lista</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+53"/>
         <source>Amount</source>
         <translation>Sumă</translation>
     </message>
@@ -917,7 +923,7 @@ Adresa: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+141"/>
         <source>Dust</source>
         <translation>Praf</translation>
     </message>
@@ -1096,10 +1102,10 @@ Adresa: %4
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="+19"/>
         <source>Bitcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core - Opţiuni Linie de comandă</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="+38"/>
+        <location filename="../utilitydialog.cpp" line="+24"/>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
     </message>
@@ -1243,7 +1249,7 @@ Adresa: %4
         <translation>&amp;Principal</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+122"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
         <translation>Taxa optionala de tranzactie per kB care ajuta ca tranzactiile dumneavoastra sa fie procesate rapid. Majoritatea tranzactiilor sunt 1 kB.</translation>
     </message>
@@ -1253,7 +1259,7 @@ Adresa: %4
         <translation>Plăteşte comision pentru tranzacţie &amp;f</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="-131"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Porneşte automat programul Bitcoin la pornirea computerului.</translation>
     </message>
@@ -1268,12 +1274,7 @@ Adresa: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+13"/>
-        <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>Setează mărimea cache a bazei de date în megabiți (implicit: 25)</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>MB</source>
         <translation type="unfinished"/>
     </message>
@@ -1288,7 +1289,12 @@ Adresa: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+107"/>
+        <source>&amp;Spend unconfirmed change (experts only)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+37"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
         <translation type="unfinished"/>
     </message>
@@ -1323,7 +1329,17 @@ Adresa: %4
         <translation>&amp;Retea</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-86"/>
+        <source>W&amp;allet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+40"/>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Deschide automat în router portul aferent clientului Bitcoin. Funcţionează doar în cazul în care routerul e compatibil UPnP şi opţiunea e activată.</translation>
     </message>
@@ -1438,17 +1454,17 @@ Adresa: %4
         <translation>&amp; Renunta</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+67"/>
+        <location filename="../optionsdialog.cpp" line="+70"/>
         <source>default</source>
         <translation>Initial</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+58"/>
         <source>none</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+78"/>
         <source>Confirm options reset</source>
         <translation>Confirmă resetarea opțiunilor</translation>
     </message>
@@ -1456,17 +1472,17 @@ Adresa: %4
         <location line="+1"/>
         <location line="+29"/>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Este necesar un restart al clientului pentru a activa schimbările.</translation>
     </message>
     <message>
         <location line="-29"/>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>Clientul va fi închis, doriţi să continuaţi?</translation>
     </message>
     <message>
         <location line="+33"/>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>Această schimbare va necesita un restart al clientului.</translation>
     </message>
     <message>
         <location line="+34"/>
@@ -1488,19 +1504,14 @@ Adresa: %4
         <translation>Informațiile afișate pot neactualizate. Portofelul tău se sincronizează automat cu rețeaua Bitcoin după ce o conexiune este stabilită, dar acest proces nu a fost finalizat încă.</translation>
     </message>
     <message>
-        <location line="-155"/>
-        <source>Unconfirmed:</source>
-        <translation>Neconfirmat:</translation>
-    </message>
-    <message>
-        <location line="-83"/>
+        <location line="-238"/>
         <source>Wallet</source>
         <translation>Portofel</translation>
     </message>
     <message>
         <location line="+51"/>
-        <source>Confirmed:</source>
-        <translation>Confirmat:</translation>
+        <source>Available:</source>
+        <translation>Disponibil:</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1508,7 +1519,12 @@ Adresa: %4
         <translation>Balanța ta curentă de cheltuieli</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+16"/>
+        <source>Pending:</source>
+        <translation>În aşteptare:</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>Totalul tranzacțiilor care nu sunt confirmate încă și care nu sunt încă adunate la balanța de cheltuieli</translation>
     </message>
@@ -1725,7 +1741,7 @@ Adresa: %4
     <message>
         <location line="+25"/>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>General</translation>
     </message>
     <message>
         <location line="+53"/>
@@ -1920,7 +1936,7 @@ Adresa: %4
     <message>
         <location line="-7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Folosește acest formular pentru a solicita plăți. Toate câmpurile sunt &lt;b&gt;opționale&lt;/b&gt;.</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -1976,7 +1992,7 @@ Adresa: %4
     <message>
         <location line="+1"/>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>Copiaţi mesajul</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2375,7 +2391,7 @@ Adresa: %4
     <message>
         <location line="-40"/>
         <source>This is a normal payment.</source>
-        <translation type="unfinished"/>
+        <translation>Aceasta este o tranzacţie normală.</translation>
     </message>
     <message>
         <location line="+50"/>
@@ -2442,12 +2458,12 @@ Adresa: %4
     <message>
         <location filename="../utilitydialog.cpp" line="+48"/>
         <source>Bitcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core se închide...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>Nu închide calculatorul până ce această fereastră nu dispare.</translation>
     </message>
 </context>
 <context>
@@ -2647,7 +2663,7 @@ Adresa: %4
     <message>
         <location line="+2"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Dezvoltatorii Bitcoin Core</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2672,6 +2688,11 @@ Adresa: %4
     </message>
     <message>
         <location line="+6"/>
+        <source>conflicted</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>%1/offline</source>
         <translation>%1/deconectat</translation>
     </message>
@@ -2833,12 +2854,12 @@ Adresa: %4
         <translation>, nu s-a propagat încă</translation>
     </message>
     <message numerus="yes">
-        <location line="-35"/>
+        <location line="-37"/>
         <source>Open for %n more block(s)</source>
         <translation><numerusform>Deschis pentru încă %1 bloc</numerusform><numerusform>Deschis pentru încă %1 blocuri</numerusform><numerusform>Deschis pentru încă %1 de blocuri</numerusform></translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+72"/>
         <source>unknown</source>
         <translation>necunoscut</translation>
     </message>
@@ -2879,12 +2900,12 @@ Adresa: %4
         <translation>Cantitate</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+78"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation type="unfinished"/>
     </message>
     <message numerus="yes">
-        <location line="+16"/>
+        <location line="-21"/>
         <source>Open for %n more block(s)</source>
         <translation><numerusform>Deschis pentru încă %1 bloc</numerusform><numerusform>Deschis pentru încă %1 blocuri</numerusform><numerusform>Deschis pentru încă %1 de blocuri</numerusform></translation>
     </message>
@@ -2894,23 +2915,12 @@ Adresa: %4
         <translation>Deschis până la %1</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Offline (%1 confirmations)</source>
-        <translation>Neconectat (%1 confirmări)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation>Neconfirmat (%1 din %2 confirmări)</translation>
-    </message>
-    <message>
-        <location line="-22"/>
-        <location line="+25"/>
+        <location line="+12"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Confirmat (%1 confirmări)</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="+9"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Acest bloc nu a fost recepționat de niciun alt nod și probabil nu va fi acceptat!</translation>
     </message>
@@ -2920,7 +2930,27 @@ Adresa: %4
         <translation>Generat dar neacceptat</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="-21"/>
+        <source>Offline</source>
+        <translation>Deconectat</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed</source>
+        <translation>Neconfirmat</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation>Confirmare (%1 dintre %2 confirmări recomandate)</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Conflicted</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+51"/>
         <source>Received with</source>
         <translation>Recepționat cu</translation>
     </message>
@@ -2950,7 +2980,7 @@ Adresa: %4
         <translation>(n/a)</translation>
     </message>
     <message>
-        <location line="+199"/>
+        <location line="+190"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Starea tranzacției. Treci cu mausul peste acest câmp pentru afișarea numărului de confirmări.</translation>
     </message>
@@ -3081,27 +3111,27 @@ Adresa: %4
     <message>
         <location line="+142"/>
         <source>Export Transaction History</source>
-        <translation type="unfinished"/>
+        <translation>Exportare Istoric Tranzacţii</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Exporting Failed</source>
-        <translation>Exportare esuata</translation>
+        <translation>Exportare Eşuată</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished"/>
+        <translation>S-a produs o eroare încercând să se salveze istoricul tranzacţiilor la %1.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Exporting Successful</source>
-        <translation type="unfinished"/>
+        <translation>Exportare Reuşită</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Istoricul tranzacţiilor a fost salvat cu succes la %1.</translation>
     </message>
     <message>
         <location line="-22"/>
@@ -3159,7 +3189,7 @@ Adresa: %4
     <message>
         <location filename="../walletframe.cpp" line="+26"/>
         <source>No wallet has been loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Nu a fost încărcat niciun portofel.</translation>
     </message>
 </context>
 <context>
@@ -3200,12 +3230,12 @@ Adresa: %4
     <message>
         <location line="+0"/>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished"/>
+        <translation>S-a produs o eroare încercând să se salveze datele portofelului la %1.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Datele portofelului s-au salvat cu succes la %1.</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -3216,12 +3246,12 @@ Adresa: %4
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+221"/>
+        <location filename="../bitcoinstrings.cpp" line="+223"/>
         <source>Usage:</source>
         <translation>Uz:</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-55"/>
         <source>List commands</source>
         <translation>Listă de comenzi</translation>
     </message>
@@ -3276,12 +3306,12 @@ Adresa: %4
         <translation>Specifică adresa ta publică</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Prag pentru deconectarea partenerilor care nu funcționează corect (implicit: 100)</translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-150"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Numărul de secunde pentru a preveni reconectarea partenerilor care nu funcționează corect (implicit: 86400)</translation>
     </message>
@@ -3301,17 +3331,17 @@ Adresa: %4
         <translation>Se acceptă comenzi din linia de comandă și comenzi JSON-RPC</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+81"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Rulează în fundal ca un demon și acceptă comenzi</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+40"/>
         <source>Use the test network</source>
         <translation>Utilizează rețeaua de test</translation>
     </message>
     <message>
-        <location line="-118"/>
+        <location line="-120"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Acceptă conexiuni din afară (implicit: 1  dacă nu se folosește -proxy sau -connect)</translation>
     </message>
@@ -3383,7 +3413,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+5"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation type="unfinished"/>
+        <translation>Utilizare proxy SOCKS5 separat pentru a ajunge la servicii ascunse TOR (implicit: -proxy)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3418,7 +3448,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+9"/>
         <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
+        <translation>&lt;category&gt; poate fi:</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -3428,7 +3458,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Daemon-ul Bitcoin Core</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3442,13 +3472,18 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+5"/>
+        <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Connect only to the specified node(s)</source>
         <translation>Conecteaza-te doar la nod(urile) specifice</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Connect through SOCKS proxy</source>
-        <translation type="unfinished"/>
+        <translation>Conectare prin proxy SOCKS</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3618,7 +3653,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>RPC client options:</source>
-        <translation type="unfinished"/>
+        <translation>Opţiuni client RPC:</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3628,7 +3663,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+5"/>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
-        <translation type="unfinished"/>
+        <translation>Selectaţi versiunea SOCKS pentru -proxy (4 din 5; iniţial: 5)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3638,7 +3673,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+7"/>
         <source>Set maximum block size in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Setaţi dimensiunea maximă a unui block în bytes (implicit: %d)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3652,6 +3687,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+2"/>
+        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Start Bitcoin server</source>
         <translation>A porni serverul Bitcoin</translation>
     </message>
@@ -3678,7 +3718,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
+        <translation>Aşteptaţi serverul RPC să pornească</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3701,12 +3741,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Trebuie să reconstruiești baza de date folosind -reindex pentru a schimba -txindex</translation>
     </message>
     <message>
-        <location line="-79"/>
+        <location line="-80"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importă blocuri dintr-un fișier extern blk000??.dat</translation>
     </message>
     <message>
-        <location line="-105"/>
+        <location line="-106"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Executati comanda cand o alerta relevanta este primita sau vedem o bifurcatie foarte lunga (%s in cmd este inlocuti de mesaj)</translation>
     </message>
@@ -3726,7 +3766,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+90"/>
         <source>Information</source>
         <translation>Informație</translation>
     </message>
@@ -3796,7 +3836,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Specifică intervalul maxim de conectare în milisecunde (implicit: 5000)</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>System error: </source>
         <translation>Eroare de sistem:</translation>
     </message>
@@ -3842,6 +3882,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>version</source>
         <translation>versiunea</translation>
     </message>
@@ -3851,32 +3896,32 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>wallet.dat corupt, recuperare eșuată</translation>
     </message>
     <message>
-        <location line="-58"/>
+        <location line="-60"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Parola pentru conexiunile JSON-RPC</translation>
     </message>
     <message>
-        <location line="-70"/>
+        <location line="-71"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Permite conexiuni JSON-RPC de la adresa IP specificată</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+81"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Trimite comenzi la nodul care rulează la &lt;ip&gt; (implicit: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-133"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Execută comanda când cel mai bun bloc se modifică (%s în cmd este înlocuit cu hash-ul blocului)</translation>
     </message>
     <message>
-        <location line="+161"/>
+        <location line="+163"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Actualizează portofelul la ultimul format</translation>
     </message>
     <message>
-        <location line="-24"/>
+        <location line="-25"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Setează mărimea bazinului de chei la &lt;n&gt; (implicit: 100)</translation>
     </message>
@@ -3886,12 +3931,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Rescanează lanțul de bloc pentru tranzacțiile portofel lipsă</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+39"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Folosește OpenSSL (https) pentru conexiunile JSON-RPC</translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-31"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Certificatul serverului (implicit: server.cert)</translation>
     </message>
@@ -3901,7 +3946,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Cheia privată a serverului (implicit: server.pem)</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+17"/>
         <source>This help message</source>
         <translation>Acest mesaj de ajutor</translation>
     </message>
@@ -3911,12 +3956,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nu se poate folosi %s pe acest calculator (eroarea returnată este %d, %s)</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-109"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Permite căutări DNS pentru -addnode, -seednode și -connect</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Loading addresses...</source>
         <translation>Încarc adrese...</translation>
     </message>
@@ -3931,12 +3976,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Eroare la încărcarea wallet.dat: Portofelul are nevoie de o versiune Bitcoin mai nouă</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+99"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Portofelul trebuie rescris: repornește Bitcoin pentru finalizare</translation>
     </message>
     <message>
-        <location line="-100"/>
+        <location line="-101"/>
         <source>Error loading wallet.dat</source>
         <translation>Eroare la încărcarea wallet.dat</translation>
     </message>
@@ -3946,7 +3991,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Adresa -proxy nevalidă: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+57"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Rețeaua specificată în -onlynet este necunoscută: &apos;%s&apos;</translation>
     </message>
@@ -3956,7 +4001,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>S-a cerut o versiune necunoscută de proxy -socks: %i</translation>
     </message>
     <message>
-        <location line="-101"/>
+        <location line="-103"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Nu se poate rezolva adresa -bind: &apos;%s&apos;</translation>
     </message>
@@ -3966,7 +4011,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nu se poate rezolva adresa -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+49"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Suma nevalidă pentru -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
@@ -3986,7 +4031,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Încarc indice bloc...</translation>
     </message>
     <message>
-        <location line="-62"/>
+        <location line="-63"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Adaugă un nod la care te poți conecta pentru a menține conexiunea deschisă</translation>
     </message>
@@ -3996,12 +4041,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Imposibilitatea de a lega la% s pe acest computer. Bitcoin este, probabil, deja în execuție.</translation>
     </message>
     <message>
-        <location line="+95"/>
+        <location line="+96"/>
         <source>Loading wallet...</source>
         <translation>Încarc portofel...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Cannot downgrade wallet</source>
         <translation>Nu se poate retrograda portofelul</translation>
     </message>
@@ -4011,7 +4056,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nu se poate scrie adresa implicită</translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+68"/>
         <source>Rescanning...</source>
         <translation>Rescanez...</translation>
     </message>
@@ -4021,17 +4066,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Încărcare terminată</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+86"/>
         <source>To use the %s option</source>
         <translation>Pentru a folosi opțiunea %s</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-78"/>
         <source>Error</source>
         <translation>Eroare</translation>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-36"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
