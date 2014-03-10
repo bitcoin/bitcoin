@@ -4,12 +4,12 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Bitcoin Core</source>
-        <translation>Acerca del Núcleo de Bitcoin</translation>
+        <translation>Acerca del Bitcoin Core</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
-        <translation>Versión del &lt;b&gt;Núcleo de Bitcoin&lt;b&gt;</translation>
+        <translation>Versión de &lt;b&gt;Bitcoin Core&lt;b&gt;</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -37,7 +37,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="+0"/>
         <source>The Bitcoin Core developers</source>
-        <translation>Los desarrolladores del Núcleo de Bitcoin</translation>
+        <translation>Los desarrolladores de Bitcoin Core</translation>
     </message>
 </context>
 <context>
@@ -100,12 +100,12 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../addressbookpage.cpp" line="-30"/>
         <source>Choose the address to send coins to</source>
-        <translation>Escoja la dirección para enviar monedas</translation>
+        <translation>Escoja la dirección a la que enviar bitcoins</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Choose the address to receive coins with</source>
-        <translation>Escoja la dirección para recibir monedas</translation>
+        <translation>Escoja la dirección para recibir bitcoins</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -115,17 +115,17 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="+6"/>
         <source>Sending addresses</source>
-        <translation>Enviando dirección</translation>
+        <translation>Direcciones de envío</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Receiving addresses</source>
-        <translation>Recibiendo dirección</translation>
+        <translation>Direcciones de recepción</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Estas son sus direcciones Bitcoin para enviar pagos. Compruebe siempre la cantidad y la dirección receptora antes de transferir monedas.</translation>
+        <translation>Estas son sus direcciones Bitcoin para enviar pagos. Compruebe siempre la cantidad y la dirección receptora antes de transferir bitcoins.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -251,7 +251,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="+1"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Atencion: ¡Si cifra su monedero y pierde la contraseña perderá &lt;b&gt;TODOS SUS BITCOINS&lt;/b&gt;!&quot;</translation>
+        <translation>Atencion: ¡Si cifra su monedero y olvida la contraseña perderá &lt;b&gt;TODOS SUS BITCOINS&lt;/b&gt;!&quot;</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -423,7 +423,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="+325"/>
         <source>Importing blocks from disk...</source>
-        <translation>Importando bloques de disco...</translation>
+        <translation>Importando bloques desde archivo...</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -433,7 +433,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="-405"/>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Enviar monedas a una dirección Bitcoin</translation>
+        <translation>Enviar bitcoins a una dirección Bitcoin</translation>
     </message>
     <message>
         <location line="+49"/>
@@ -540,7 +540,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="-401"/>
         <source>Bitcoin Core</source>
-        <translation>Núcleo de Bitcoin</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <location line="+163"/>
@@ -551,7 +551,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <location line="+29"/>
         <location line="+2"/>
         <source>&amp;About Bitcoin Core</source>
-        <translation>&amp;Acerca del Núcleo de Bitcoin</translation>
+        <translation>&amp;Acerca de Bitcoin Core</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -622,7 +622,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="+4"/>
         <source>%1 behind</source>
-        <translation>%1 atrás</translation>
+        <translation>%1 por detrás</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -632,7 +632,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="+2"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Las transacciones posteriores aún no están visibles.</translation>
+        <translation>Las transacciones posteriores aún no son visibles.</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -711,7 +711,7 @@ Dirección: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="+14"/>
         <source>Coin Control Address Selection</source>
-        <translation>Selección de la dirección de control de la moneda</translation>
+        <translation>Selección de direcciones Coin Control</translation>
     </message>
     <message>
         <location line="+34"/>
@@ -979,7 +979,7 @@ Dirección: %4
     <message>
         <location line="+2"/>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation>Esta etiqueta se vuelve roja si la cantidad de monedas es menor a %1</translation>
+        <translation>Esta etiqueta se vuelve roja si la cantidad de bitcoins es menor a %1</translation>
     </message>
     <message>
         <location line="+43"/>
@@ -1104,7 +1104,7 @@ Dirección: %4
     <message>
         <location filename="../utilitydialog.cpp" line="+38"/>
         <source>Bitcoin Core</source>
-        <translation>Núcleo de Bitcoin</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1157,17 +1157,17 @@ Dirección: %4
     <message>
         <location line="+9"/>
         <source>Welcome to Bitcoin Core.</source>
-        <translation>Bienvenido al Núcleo de Bitcoin</translation>
+        <translation>Bienvenido a Bitcoin Core</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation>Al ser la primera vez que se ejecuta el programa, puede elegir dónde almacenará sus datos Bitcoin-Qt.</translation>
+        <translation>Al ser la primera vez que se ejecuta el programa, puede elegir dónde almacenará sus datos Bitcoin Core.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin-Qt va a descargar y guardar una copia de la cadena de bloques de Bitcoin. Se almacenará al menos %1GB de datos en este directorio, que irá creciendo con el tiempo. El monedero se guardará también en este directorio.</translation>
+        <translation>Bitcoin Core va a descargar y guardar una copia de la cadena de bloques de Bitcoin. Se almacenará al menos %1GB de datos en este directorio, que irá creciendo con el tiempo. El monedero se guardará también en este directorio.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1408,7 +1408,7 @@ Dirección: %4
     <message>
         <location line="+13"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Elegir la subdivisión predeterminada para mostrar cantidades en la interfaz y cuando se envían monedas.</translation>
+        <translation>Elegir la subdivisión predeterminada para mostrar cantidades en la interfaz y cuando se envían bitcoins.</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -1423,12 +1423,12 @@ Dirección: %4
     <message>
         <location line="+7"/>
         <source>Whether to show coin control features or not.</source>
-        <translation>Mostrar o no características de control de moneda</translation>
+        <translation>Mostrar o no características Coin Control</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Display coin &amp;control features (experts only)</source>
-        <translation>Mostrar moneda y características de control (Avanzado)</translation>
+        <translation>Mostrar características Coin Control (solo expertos)</translation>
     </message>
     <message>
         <location line="+136"/>
@@ -1793,7 +1793,7 @@ Dirección: %4
     <message>
         <location line="+52"/>
         <source>&amp;Clear</source>
-        <translation>&amp;Limpiar</translation>
+        <translation>&amp;Vaciar</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1803,12 +1803,12 @@ Dirección: %4
     <message>
         <location line="+64"/>
         <source>In:</source>
-        <translation>Dentro:</translation>
+        <translation>Entrante:</translation>
     </message>
     <message>
         <location line="+80"/>
         <source>Out:</source>
-        <translation>Fuera:</translation>
+        <translation>Saliente:</translation>
     </message>
     <message>
         <location line="-521"/>
@@ -1838,7 +1838,7 @@ Dirección: %4
     <message>
         <location line="+1"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Use las flechas arriba y abajo para navegar por el historial y &lt;b&gt;Control+L&lt;/b&gt; para limpiar la pantalla.</translation>
+        <translation>Use las flechas arriba y abajo para navegar por el historial y &lt;b&gt;Control+L&lt;/b&gt; para vaciar la pantalla.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1934,17 +1934,17 @@ Dirección: %4
     <message>
         <location line="+32"/>
         <source>Clear all fields of the form.</source>
-        <translation>Limpiar todos los campos del formulario.</translation>
+        <translation>Vaciar todos los campos del formulario.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Clear</source>
-        <translation>Limpiar</translation>
+        <translation>Vaciar</translation>
     </message>
     <message>
         <location line="+78"/>
         <source>Requested payments history</source>
-        <translation>Se solicita historial de pagos</translation>
+        <translation>Historial de solicitudes de pago</translation>
     </message>
     <message>
         <location line="-98"/>
@@ -2090,7 +2090,7 @@ Dirección: %4
     <message>
         <location line="+8"/>
         <source>(no amount)</source>
-        <translation>(sin monto)</translation>
+        <translation>(sin cantidad)</translation>
     </message>
 </context>
 <context>
@@ -2100,12 +2100,12 @@ Dirección: %4
         <location filename="../sendcoinsdialog.cpp" line="+380"/>
         <location line="+80"/>
         <source>Send Coins</source>
-        <translation>Enviar monedas</translation>
+        <translation>Enviar bitcoins</translation>
     </message>
     <message>
         <location line="+76"/>
         <source>Coin Control Features</source>
-        <translation>Características de control de la moneda</translation>
+        <translation>Características de Coin Control</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -2165,7 +2165,7 @@ Dirección: %4
     <message>
         <location line="+44"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Al activarse, si la dirección esta vacía o es inválida, las monedas serán enviadas a una nueva dirección generada.</translation>
+        <translation>Al activarse, si la dirección esta vacía o es inválida, las bitcoins serán enviadas a una nueva dirección generada.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2185,12 +2185,12 @@ Dirección: %4
     <message>
         <location line="-23"/>
         <source>Clear all fields of the form.</source>
-        <translation>Limpiar todos los campos del formulario</translation>
+        <translation>Vaciar todos los campos del formulario</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation>Limpiar &amp;todo</translation>
+        <translation>Vaciar &amp;todo</translation>
     </message>
     <message>
         <location line="+52"/>
@@ -2210,7 +2210,7 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-229"/>
         <source>Confirm send coins</source>
-        <translation>Confirmar el envío de monedas</translation>
+        <translation>Confirmar el envío de bitcoins</translation>
     </message>
     <message>
         <location line="-74"/>
@@ -2303,7 +2303,7 @@ Dirección: %4
     <message>
         <location line="+4"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>La transacción fue rechazada. Esto puede haber ocurrido si alguna de las monedas ya estaba gastada o si ha usado una copia de wallet.dat y las monedas se gastaron en la copia pero no se han marcado como gastadas aqui.</translation>
+        <translation>La transacción fue rechazada. Esto puede haber ocurrido si alguna de las bitcoins ya estaba gastada o si ha usado una copia de wallet.dat y las bitcoins se gastaron en la copia pero no se han marcado como gastadas aqui.</translation>
     </message>
     <message>
         <location line="+113"/>
@@ -2445,13 +2445,12 @@ Dirección: %4
     <message>
         <location filename="../utilitydialog.cpp" line="+48"/>
         <source>Bitcoin Core is shutting down...</source>
-        <translation>El núcleo de Bitcoin se está cerrando...
-</translation>
+        <translation>Bitcoin Core se está cerrando...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation>No apague la máquina hasta que desaparezca esta ventana.</translation>
+        <translation>No apague el equipo hasta que desaparezca esta ventana.</translation>
     </message>
 </context>
 <context>
@@ -2526,13 +2525,13 @@ Dirección: %4
     <message>
         <location line="+14"/>
         <source>Reset all sign message fields</source>
-        <translation>Limpiar todos los campos de la firma de mensaje</translation>
+        <translation>Vaciar todos los campos de la firma de mensaje</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+143"/>
         <source>Clear &amp;All</source>
-        <translation>Limpiar &amp;todo</translation>
+        <translation>Vaciar &amp;todo</translation>
     </message>
     <message>
         <location line="-84"/>
@@ -2562,7 +2561,7 @@ Dirección: %4
     <message>
         <location line="+14"/>
         <source>Reset all verify message fields</source>
-        <translation>Limpiar todos los campos de la verificación de mensaje</translation>
+        <translation>Vaciar todos los campos de la verificación de mensaje</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+30"/>
@@ -2646,12 +2645,12 @@ Dirección: %4
     <message>
         <location filename="../splashscreen.cpp" line="+28"/>
         <source>Bitcoin Core</source>
-        <translation>Núcleo de Bitcoin</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>The Bitcoin Core developers</source>
-        <translation>Los desarrolladores del Núcleo de Bitcoin</translation>
+        <translation>Los desarrolladores de Bitcoin Core</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2799,7 +2798,7 @@ Dirección: %4
     <message>
         <location line="+7"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Las monedas generadas deben madurar %1 bloques antes de que puedan ser gastadas. Una vez que generas este bloque, es propagado por la red para ser añadido a la cadena de bloques. Si falla el intento de meterse en la cadena, su estado cambiará a &quot;no aceptado&quot; y ya no se puede gastar. Esto puede ocurrir ocasionalmente si otro nodo genera un bloque a pocos segundos del tuyo.</translation>
+        <translation>Las bitcoins generadas deben madurar %1 bloques antes de que puedan ser gastadas. Una vez que generas este bloque, es propagado por la red para ser añadido a la cadena de bloques. Si falla el intento de meterse en la cadena, su estado cambiará a &quot;no aceptado&quot; y ya no se puede gastar. Esto puede ocurrir ocasionalmente si otro nodo genera un bloque a pocos segundos del tuyo.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -3171,7 +3170,7 @@ Dirección: %4
     <message>
         <location filename="../walletmodel.cpp" line="+245"/>
         <source>Send Coins</source>
-        <translation>Enviar monedas</translation>
+        <translation>Enviar bitcoins</translation>
     </message>
 </context>
 <context>
@@ -3385,12 +3384,12 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+3"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>¡Error: se ha rechazado la transacción! Esto puede ocurrir si ya se han gastado algunas de las monedas del monedero, como ocurriría si hubiera hecho una copia de wallet.dat y se hubieran gastado monedas a partir de la copia, con lo que no se habrían marcado aquí como gastadas.</translation>
+        <translation>¡Error: se ha rechazado la transacción! Esto puede ocurrir si ya se han gastado algunas de las bitcoins del monedero, como ocurriría si hubiera hecho una copia de wallet.dat y se hubieran gastado bitcoins a partir de la copia, con lo que no se habrían marcado aquí como gastadas.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>¡Error: Esta transacción requiere una comisión de al menos %s debido a su monto, complejidad, o al uso de fondos recién recibidos!</translation>
+        <translation>¡Error: Esta transacción requiere una comisión de al menos %s debido a su cantidad, complejidad, o al uso de fondos recién recibidos!</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -3450,7 +3449,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Bitcoin Core Daemon</source>
-        <translation>Proceso Bitcoin-QT</translation>
+        <translation>Proceso Bitcoin Core</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3575,7 +3574,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Failed to write to coin database</source>
-        <translation>No se ha podido escribir en la base de datos de monedas</translation>
+        <translation>No se ha podido escribir en la base de datos de bitcoins</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3600,7 +3599,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Generate coins (default: 0)</source>
-        <translation>Generar monedas (por defecto: 0)</translation>
+        <translation>Generar bitcoins (por defecto: 0)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3650,7 +3649,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+5"/>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
-        <translation>Seleccionar version de SOCKS para -proxy (4 o 5, por defecto: 5)</translation>
+        <translation>Seleccionar versión de SOCKS para -proxy (4 o 5, por defecto: 5)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3755,12 +3754,12 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+4"/>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Inválido por el monto -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation>Cantidad inválida -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Inválido por el monto -mintxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation>Cantidad inválida -mintxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -3825,12 +3824,12 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+5"/>
         <source>Transaction amount too small</source>
-        <translation>Monto de la transacción muy pequeño</translation>
+        <translation>Cantidad de la transacción demasiado pequeña</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction amounts must be positive</source>
-        <translation>Montos de transacciones deben ser positivos</translation>
+        <translation>La cantidad de las transacciones debe ser positiva</translation>
     </message>
     <message>
         <location line="+1"/>
