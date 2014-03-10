@@ -1,4 +1,4 @@
-Bitcoin Core version 0.9.0rc2 is now available from:
+Bitcoin Core version 0.9.0rc3 is now available from:
 
   https://bitcoin.org/bin/0.9.0/test/
 
@@ -121,7 +121,7 @@ As in previous releases, the relay fee may be changed with the -minrelaytxfee
 command-line option, and miners may change the default minimum fee they accept
 with the -mintxfee command-line option.
 
-0.9.0rc2 Release notes
+0.9.0rc3 Release notes
 =======================
 
 RPC:
@@ -190,7 +190,7 @@ Wallet:
 - Don't count txins for priority to encourage sweeping
 - Don't create empty transactions when reading a corrupted wallet
 - Fix rescan to start from beginning after importprivkey
-- Only create signatures with low S values.
+- Only create signatures with low S values
 
 Mining:
 
@@ -288,12 +288,14 @@ Thanks to everyone who contributed to this release:
 - Brandon Dahler
 - Calvin Tam
 - Christian Decker
+- Christian von Roques
 - Christopher Latham
 - Chuck
 - coblee
 - constantined
 - Cory Fields
 - Cozz Lovan
+- daniel
 - Daniel Larimer
 - David Hill
 - Dmitry Smirnov
@@ -333,6 +335,7 @@ Thanks to everyone who contributed to this release:
 - Olivier Langlois
 - patrick s
 - Patrick Strateman
+- paveljanik
 - Peter Todd
 - phantomcircuit
 - phelixbtc
@@ -357,6 +360,8 @@ Thanks to everyone who contributed to this release:
 - Thomas Holenstein
 - Timon Rapp
 - Timothy Stranex
+- Tom Geller
+- Torstein Husebø
 - Vaclav Vobornik
 - vhf / victor felder
 - Vinnie Falco
