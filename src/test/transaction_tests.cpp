@@ -39,6 +39,7 @@ unsigned int ParseFlags(string strFlags){
         mapFlagNames["P2SH"] = SCRIPT_VERIFY_P2SH;
         mapFlagNames["STRICTENC"] = SCRIPT_VERIFY_STRICTENC;
         mapFlagNames["EVEN_S"] = SCRIPT_VERIFY_EVEN_S;
+        mapFlagNames["NULLDUMMY"] = SCRIPT_VERIFY_NULLDUMMY;
     }
 
     BOOST_FOREACH(string word, words)
