@@ -25,6 +25,13 @@ enum BlockSource {
     BLOCK_SOURCE_NETWORK
 };
 
+enum NumConnections {
+    CONNECTIONS_NONE = 0,
+    CONNECTIONS_IN   = (1U << 0),
+    CONNECTIONS_OUT  = (1U << 1),
+    CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
+};
+
 /** Model for Bitcoin network client. */
 class ClientModel : public QObject
 {
@@ -36,7 +43,8 @@ public:
 
     OptionsModel *getOptionsModel();
 
-    int getNumConnections() const;
+    //! Return number of connections, default is in- and outbound (total)
+    int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
     int getNumBlocks() const;
     int getNumBlocksAtStartup();
 
