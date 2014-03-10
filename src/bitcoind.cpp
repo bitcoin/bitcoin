@@ -170,7 +170,6 @@ int main(int argc, char* argv[])
 
     // Connect bitcoind signal handlers
     noui_connect();
-
     fRet = AppInit(argc, argv);
 
     if (fRet && fDaemon)

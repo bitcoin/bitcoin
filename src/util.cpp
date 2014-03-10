@@ -482,7 +482,7 @@ void ParseParameters(int argc, const char* const argv[])
     for (int i = 1; i < argc; i++)
     {
         std::string str(argv[i]);
-        std::string strValue;
+        std::string strValue; 
         size_t is_index = str.find('=');
         if (is_index != std::string::npos)
         {
@@ -496,7 +496,7 @@ void ParseParameters(int argc, const char* const argv[])
 #endif
         if (str[0] != '-')
             break;
-
+        
         mapArgs[str] = strValue;
         mapMultiArgs[str].push_back(strValue);
     }
