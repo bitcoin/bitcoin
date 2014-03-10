@@ -8,6 +8,7 @@
 #include "base58.h"
 #include "coincontrol.h"
 #include "net.h"
+#include "checkpoints.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <openssl/rand.h>
@@ -830,6 +831,7 @@ bool CWalletTx::WriteToDisk()
 int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
 {
     int ret = 0;
+    int64_t nNow = GetTime();
 
     CBlockIndex* pindex = pindexStart;
     {
@@ -851,6 +853,10 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
                     ret++;
             }
             pindex = chainActive.Next(pindex);
+            if (GetTime() >= nNow + 60) {
+                nNow = GetTime();
+                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, Checkpoints::GuessVerificationProgress(pindex));
+            }
         }
     }
     return ret;
