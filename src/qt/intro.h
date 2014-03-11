@@ -36,7 +36,7 @@ public:
      * @note do NOT call global GetDataDir() before calling this function, this
      * will cause the wrong path to be cached.
      */
-    static void pickDataDirectory(bool fIsTestnet);
+    static void pickDataDirectory();
 
     /**
      * Determine default data directory for operating system.

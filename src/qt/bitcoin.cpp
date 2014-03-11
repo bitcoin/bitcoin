@@ -78,6 +78,12 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
 {
     QSettings settings;
 
+    // Remove old translators
+    QApplication::removeTranslator(&qtTranslatorBase);
+    QApplication::removeTranslator(&qtTranslator);
+    QApplication::removeTranslator(&translatorBase);
+    QApplication::removeTranslator(&translator);
+
     // Get desired locale (e.g. "de_DE")
     // 1) System default language
     QString lang_territory = QLocale::system().name();
@@ -439,21 +445,9 @@ void BitcoinApplication::handleRunawayException(const QString &message)
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
-    bool fSelParFromCLFailed = false;
     /// 1. Parse command-line options. These take precedence over anything else.
     // Command-line options take precedence:
     ParseParameters(argc, argv);
-    // Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
-    if (!SelectParamsFromCommandLine()) {
-        fSelParFromCLFailed = true;
-    }
-#ifdef ENABLE_WALLET
-    // Parse URIs on command line -- this can affect Params()
-    if (!PaymentServer::ipcParseCommandLine(argc, argv))
-        exit(0);
-#endif
-
-    bool isaTestNet = Params().NetworkID() != CChainParams::MAIN;
 
     // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
 
@@ -480,12 +474,9 @@ int main(int argc, char *argv[])
     /// 3. Application identification
     // must be set before OptionsModel is initialized or translations are loaded,
     // as it is used to locate QSettings
-    QApplication::setOrganizationName("Bitcoin");
-    QApplication::setOrganizationDomain("bitcoin.org");
-    if (isaTestNet) // Separate UI settings for testnets
-        QApplication::setApplicationName("Bitcoin-Qt-testnet");
-    else
-        QApplication::setApplicationName("Bitcoin-Qt");
+    QApplication::setOrganizationName(QAPP_ORG_NAME);
+    QApplication::setOrganizationDomain(QAPP_ORG_DOMAIN);
+    QApplication::setApplicationName(QAPP_APP_NAME_DEFAULT);
 
     /// 4. Initialization of translations, so that intro dialog is in user's language
     // Now that QSettings are accessible, initialize translations
@@ -501,17 +492,13 @@ int main(int argc, char *argv[])
         help.showOrPrint();
         return 1;
     }
-    // Now that translations are initialized, check for earlier errors and show a translatable error message
-    if (fSelParFromCLFailed) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
-        return 1;
-    }
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
-    Intro::pickDataDirectory(isaTestNet);
+    Intro::pickDataDirectory();
 
     /// 6. Determine availability of data directory and parse bitcoin.conf
+    /// - Do not call GetDataDir(true) before this step finishes
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
         QMessageBox::critical(0, QObject::tr("Bitcoin"),
@@ -520,8 +507,33 @@ int main(int argc, char *argv[])
     }
     ReadConfigFile(mapArgs, mapMultiArgs);
 
+    /// 7. Determine network (and switch to network specific options)
+    // - Do not call Params() before this step
+    // - Do this after parsing the configuration file, as the network can be switched there
+    // - QSettings() will use the new application name after this, resulting in network-specific settings
+    // - Needs to be done before createOptionsModel
+
+    // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+    if (!SelectParamsFromCommandLine()) {
+        QMessageBox::critical(0, QObject::tr("Bitcoin"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
+        return 1;
+    }
 #ifdef ENABLE_WALLET
-    /// 7. URI IPC sending
+    // Parse URIs on command line -- this can affect Params()
+    if (!PaymentServer::ipcParseCommandLine(argc, argv))
+        exit(0);
+#endif
+    bool isaTestNet = Params().NetworkID() != CChainParams::MAIN;
+    // Allow for separate UI settings for testnets
+    if (isaTestNet)
+        QApplication::setApplicationName(QAPP_APP_NAME_TESTNET);
+    else
+        QApplication::setApplicationName(QAPP_APP_NAME_DEFAULT);
+    // Re-initialize translations after changing application name (language in network-specific settings can be different)
+    initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
+
+#ifdef ENABLE_WALLET
+    /// 8. URI IPC sending
     // - Do this early as we don't want to bother initializing if we are just calling IPC
     // - Do this *after* setting up the data directory, as the data directory hash is used in the name
     // of the server.
@@ -535,7 +547,7 @@ int main(int argc, char *argv[])
     app.createPaymentServer();
 #endif
 
-    /// 8. Main GUI initialization
+    /// 9. Main GUI initialization
     // Install global event filter that makes sure that long tooltips can be word-wrapped
     app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
     // Install qDebug() message handler to route to debug.log
