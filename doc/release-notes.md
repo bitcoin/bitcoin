@@ -196,6 +196,7 @@ Mining:
 
 - Increase default -blockmaxsize/prioritysize to 750K/50K
 - 'getblocktemplate' does not require a key to create a block template
+- Mining code fee policy now matches relay fee policy
 
 Protocol and network:
 
