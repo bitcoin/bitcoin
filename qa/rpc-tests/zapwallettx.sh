@@ -83,13 +83,19 @@ CheckBalance "$B3ARGS" "1+2+3"
 
 # Zap send tx from B1 (TXID[3]), balance now be 47 XBT
 echo "Zapping last tx..."
-$CLI "$B1ARGS" zapwallettx ${TXID[3]}
+$CLI "$B1ARGS" zapwallettx ${TXID[3]} false
 CheckBalance "$B1ARGS" "50-1-2"
 
+# Zap send tx from B1 (TXID[2]) with rescan, balance should again be 44 XBT
+# as missing transactions are rescanned from blockchain
+echo "Zapping second tx..."
+$CLI "$B1ARGS" zapwallettx ${TXID[2]} true
+CheckBalance "$B1ARGS" "50-1-2-3"
+
 # Zap send tx from B1 (TXID[1]), balance should again be 50 XBT
-# as TDID[2] used an output from TXID[1] and hence also removed
+# as TXID[2 & 3] build on an output from TXID[1] and hence are also removed
 echo "Zapping first tx..."
-$CLI "$B1ARGS" zapwallettx ${TXID[1]}
+$CLI "$B1ARGS" zapwallettx ${TXID[1]} false
 CheckBalance "$B1ARGS" "50"
 
 $CLI $B3ARGS stop > /dev/null 2>&1
