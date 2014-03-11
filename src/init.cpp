@@ -270,7 +270,6 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -paytxfee=<amt>        " + _("Fee per kB to add to transactions you send") + "\n";
     strUsage += "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + "\n";
     strUsage += "  -zapwallettxes         " + _("Clear list of wallet transactions (diagnostic tool; implies -rescan)") + "\n";
-    strUsage += "  -zapwallettx=<txid>    " + _("Clear single wallet transaction <txid> (diagnostic tool; implies -rescan)") + "\n";
     strUsage += "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + "\n";
     strUsage += "  -upgradewallet         " + _("Upgrade wallet to latest format") + "\n";
     strUsage += "  -wallet=<file>         " + _("Specify wallet file (within data directory)") + "\n";
@@ -463,12 +462,6 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (GetBoolArg("-zapwallettxes", false)) {
         if (SoftSetBoolArg("-rescan", true))
             LogPrintf("AppInit2 : parameter interaction: -zapwallettxes=1 -> setting -rescan=1\n");
-    }
-
-    // -zapwallettx implies a rescan
-    if (mapArgs.count("-zapwallettx")) {
-        if (SoftSetBoolArg("-rescan", true))
-            LogPrintf("AppInit2 : parameter interaction: -zapwallettx -> setting -rescan=1\n");
     }
 
     // Make sure enough file descriptors are available
@@ -924,28 +917,6 @@ bool AppInit2(boost::thread_group& threadGroup)
 
             pwalletMain = new CWallet(strWalletFile);
             DBErrors nZapWalletRet = pwalletMain->ZapWalletTxes();
-            if (nZapWalletRet != DB_LOAD_OK) {
-                uiInterface.InitMessage(_("Error loading wallet.dat: Wallet corrupted"));
-                return false;
-            }
-
-            delete pwalletMain;
-            pwalletMain = NULL;
-        }
-        if (mapArgs.count("-zapwallettx")) {
-            uiInterface.InitMessage(_("Zapping transaction from wallet..."));
-
-            // txid
-            uint256 hash;
-            hash.SetHex(GetArg("-zapwallettx", ""));
-
-            pwalletMain = new CWallet(strWalletFile);
-            if (!pwalletMain->mapWallet.count(hash)) {
-                uiInterface.InitMessage(_("Invalid or non-wallet transaction id"));
-                return false;
-            }
-            const CWalletTx& wtx = pwalletMain->mapWallet[hash];
-            DBErrors nZapWalletRet = pwalletMain->ZapWalletTx(wtx);
             if (nZapWalletRet != DB_LOAD_OK) {
                 uiInterface.InitMessage(_("Error loading wallet.dat: Wallet corrupted"));
                 return false;
