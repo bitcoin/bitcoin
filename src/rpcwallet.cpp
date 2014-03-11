@@ -727,6 +727,32 @@ Value movecmd(const Array& params, bool fHelp)
     return true;
 }
 
+Value zapwallettx(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "zapwallettx txid\n"
+            "\nRemove a wallet transaction.\n"
+            "\nArguments:\n"
+            "1. txid           (string) The transaction id.\n"
+            "\nResult\n"
+            "true|false        (boolean) Returns true if successful\n"
+            "\nExamples:\n"
+            + HelpExampleCli("zapwallettx", "00e3c3ec61422aa4e597beceac7f06c771a8024dee38c5ffa413336341befa72")
+            + HelpExampleRpc("zapwallettx", "00e3c3ec61422aa4e597beceac7f06c771a8024dee38c5ffa413336341befa72")
+        );
+
+    // txid
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    if (!pwalletMain->mapWallet.count(hash))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    const CWalletTx& wtx = pwalletMain->mapWallet[hash];
+
+    return pwalletMain->ZapWalletTx(wtx) == DB_LOAD_OK;
+}
+
 
 Value sendfrom(const Array& params, bool fHelp)
 {
