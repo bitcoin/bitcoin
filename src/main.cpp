@@ -1783,7 +1783,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     // ppcoin: compute stake modifier
     uint64 nStakeModifier = 0;
     bool fGeneratedStakeModifier = false;
-    if (!ComputeNextStakeModifier(pindexNew->pprev, nStakeModifier, fGeneratedStakeModifier))
+    if (!ComputeNextStakeModifier(pindexNew, nStakeModifier, fGeneratedStakeModifier))
         return error("AddToBlockIndex() : ComputeNextStakeModifier() failed");
     pindexNew->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
     pindexNew->nStakeModifierChecksum = GetStakeModifierChecksum(pindexNew);
@@ -2138,6 +2138,29 @@ bool CBlock::CheckBlockSignature() const
     return false;
 }
 
+// ppcoin: entropy bit for stake modifier if chosen by modifier
+unsigned int CBlock::GetStakeEntropyBit() const
+{
+    unsigned int nEntropyBit = 0;
+    if (IsProtocolV04(nTime))
+    {
+        nEntropyBit = ((GetHash().Get64()) & 1llu);// last bit of block hash
+        if (fDebug && GetBoolArg("-printstakemodifier"))
+            printf("GetStakeEntropyBit(v0.4+): nTime=%u hashBlock=%s entropybit=%d\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
+    }
+    else
+    {
+        // old protocol for entropy bit pre v0.4
+        uint160 hashSig = Hash160(vchBlockSig);
+        if (fDebug && GetBoolArg("-printstakemodifier"))
+            printf("GetStakeEntropyBit(v0.3): nTime=%u hashSig=%s", nTime, hashSig.ToString().c_str());
+        hashSig >>= 159; // take the first bit of the hash
+        nEntropyBit = hashSig.Get64();
+        if (fDebug && GetBoolArg("-printstakemodifier"))
+            printf(" entropybit=%d\n", nEntropyBit);
+    }
+    return nEntropyBit;
+}
 
 
 
@@ -2283,6 +2306,15 @@ bool LoadBlockIndex(bool fAllowNew)
         // ppcoin: initialize synchronized checkpoint
         if (!Checkpoints::WriteSyncCheckpoint(hashGenesisBlock))
             return error("LoadBlockIndex() : failed to init sync checkpoint");
+
+        // ppcoin: upgrade time set to zero if txdb initialized
+        {
+            CTxDB txdb;
+            if (!txdb.WriteV04UpgradeTime(0))
+                return error("LoadBlockIndex() : failed to init upgrade info");
+            printf(" Upgrade Info: v0.4+ txdb initialization\n");
+            txdb.Close();
+        }
     }
 
     // ppcoin: if checkpoint master key changed must reset sync-checkpoint
@@ -2299,6 +2331,26 @@ bool LoadBlockIndex(bool fAllowNew)
                 return error("LoadBlockIndex() : failed to commit new checkpoint master key to db");
             if ((!fTestNet) && !Checkpoints::ResetSyncCheckpoint())
                 return error("LoadBlockIndex() : failed to reset sync-checkpoint");
+        }
+        txdb.Close();
+    }
+
+    // ppcoin: upgrade time set to zero if txdb initialized
+    {
+        CTxDB txdb;
+        if (txdb.ReadV04UpgradeTime(nProtocolV04UpgradeTime))
+        {
+            if (nProtocolV04UpgradeTime)
+                printf(" Upgrade Info: txdb upgrade to v0.4 detected at timestamp %d\n", nProtocolV04UpgradeTime);
+            else
+                printf(" Upgrade Info: v0.4+ no txdb upgrade detected.\n");
+        }
+        else
+        {
+            nProtocolV04UpgradeTime = GetTime();
+            printf(" Upgrade Info: upgrading txdb from v0.3 at timestamp %u\n", nProtocolV04UpgradeTime);
+            if (!txdb.WriteV04UpgradeTime(nProtocolV04UpgradeTime))
+                return error("LoadBlockIndex() : failed to write upgrade info");
         }
         txdb.Close();
     }
@@ -2437,6 +2489,14 @@ string GetWarnings(string strFor)
     {
         nPriority = 3000;
         strStatusBar = strRPC = "WARNING: Invalid checkpoint found! Displayed transactions may not be correct! You may need to upgrade, or notify developers of the issue.";
+    }
+
+    // ppcoin: if detected unmet upgrade requirement enter safe mode
+    // Note: v0.4 upgrade requires blockchain redownload if past protocol switch
+    if (IsProtocolV04(nProtocolV04UpgradeTime + 60*60*24)) // 1 day margin
+    {
+        nPriority = 5000;
+        strStatusBar = strRPC = "WARNING: Blockchain redownload required approaching or past v0.4 upgrade deadline.";
     }
 
     // Alerts

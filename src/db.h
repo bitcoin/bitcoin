@@ -300,6 +300,8 @@ public:
     bool WriteSyncCheckpoint(uint256 hashCheckpoint);
     bool ReadCheckpointPubKey(std::string& strPubKey);
     bool WriteCheckpointPubKey(const std::string& strPubKey);
+    bool ReadV04UpgradeTime(unsigned int& nUpgradeTime);
+    bool WriteV04UpgradeTime(const unsigned int& nUpgradeTime);
     bool LoadBlockIndex();
 };
 
