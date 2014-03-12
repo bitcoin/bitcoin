@@ -112,14 +112,23 @@ Transaction Fees
 ----------------
 
 This release drops the default fee required to relay transactions across the
-network to 0.01mBTC per kilobyte. Note that getting a transaction relayed across
-the network does NOT guarantee that the transaction will be accepted by a miner
-and included in a block, and the default fee accepted by miners remains 0.1mBTC
-per kilobyte.
+network and for miners to consider the transaction in their blocks to
+0.01mBTC per kilobyte.
 
-As in previous releases, the relay fee may be changed with the -minrelaytxfee
-command-line option, and miners may change the default minimum fee they accept
-with the -mintxfee command-line option.
+Note that getting a transaction relayed across the network does NOT guarantee
+that the transaction will be accepted by a miner; by default, miners fill
+their blocks with 50 kilobytes of high-priority transactions, and then with
+700 kilobytes of the highest-fee-per-kilobyte transactions.
+
+The minimum relay/mining fee-per-kilobyte may be changed with the
+minrelaytxfee option. Note that previous releases incorrectly used
+the mintxfee setting to determine which low-priority transactions should
+be considered for inclusion in blocks.
+
+The wallet code still uses a default fee for low-priority transactions of
+0.1mBTC per kilobyte. During periods of heavy transaction volume, even this
+fee may not be enough to get transactions confirmed quickly; the mintxfee
+option may be used to override the default.
 
 0.9.0rc3 Release notes
 =======================
