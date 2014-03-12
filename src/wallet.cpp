@@ -1533,13 +1533,11 @@ DBErrors CWallet::ZapWalletTx(const CWalletTx& wtx)
         }
     }
 
-    {
-        // remove zapped CWalletDB txes from mapWallet also
-        BOOST_FOREACH(const CWalletTx& tx, vErasedTxes)
-            mapWallet.erase(tx.GetHash());
-        // clear tx cache variables
-        MarkDirty();
-    }
+    // remove zapped CWalletDB txes from mapWallet also
+    BOOST_FOREACH(const CWalletTx& tx, vErasedTxes)
+        mapWallet.erase(tx.GetHash());
+    // clear tx cache variables
+    MarkDirty();
 
     if (nZapWalletTxRet != DB_LOAD_OK)
         return nZapWalletTxRet;

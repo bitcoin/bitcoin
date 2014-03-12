@@ -13,6 +13,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
+#include <queue>
 
 using namespace std;
 using namespace boost;
@@ -766,33 +767,41 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, const CWalletTx& wtx, vector<C
 {
     LogPrintf("ZapWalletTx %s\n", wtx.GetHash().GetHex());
 
-    // erase child TX's
-    for (unsigned int nVoutIndex = 0; nVoutIndex < wtx.vout.size(); nVoutIndex++)
+    // insert initial tx into queue
+    queue<CWalletTx> txesToErase;
+    txesToErase.push(wtx);
+
+    while (txesToErase.size() > 0)
     {
-        BOOST_FOREACH(PAIRTYPE(uint256, CWalletTx) walletEntry, pwallet->mapWallet)
+        // get first tx from queue
+        CWalletTx wtx = txesToErase.front();
+        txesToErase.pop();
+
+        // add child tx's to queue
+        for (unsigned int nVoutIndex = 0; nVoutIndex < wtx.vout.size(); nVoutIndex++)
         {
-            const CWalletTx& wtxPotentialChild = walletEntry.second;
-            BOOST_FOREACH(const CTxIn& txin, wtxPotentialChild.vin)
+            BOOST_FOREACH(PAIRTYPE(uint256, CWalletTx) walletEntry, pwallet->mapWallet)
             {
-                if (txin.prevout.hash == wtx.GetHash() && txin.prevout.n == nVoutIndex)
+                const CWalletTx& wtxPotentialChild = walletEntry.second;
+                BOOST_FOREACH(const CTxIn& txin, wtxPotentialChild.vin)
                 {
-                    LogPrintf("ZapWalletTx found child tx %s\n", wtxPotentialChild.GetHash().GetHex());
-                    //TODO: recursion could be a problem if it gets too deep
-                    DBErrors ret = ZapWalletTx(pwallet, wtxPotentialChild, vErasedTxes);
-                    if (ret != DB_LOAD_OK)
-                        return ret;
-                    break;
+                    if (txin.prevout.hash == wtx.GetHash() && txin.prevout.n == nVoutIndex)
+                    {
+                        LogPrintf("ZapWalletTx found child tx %s\n", wtxPotentialChild.GetHash().GetHex());
+                        txesToErase.push(wtxPotentialChild);
+                        break;
+                    }
                 }
             }
         }
+
+        // erase current tx
+        if (!EraseTx(wtx.GetHash()))
+            return DB_CORRUPT;
+        // add to list of erased tx to be cleaned up from pwallet->mapWallet
+        vErasedTxes.push_back(wtx);
     }
     
-    // erase wallet TX
-    if (!EraseTx(wtx.GetHash()))
-        return DB_CORRUPT;
-    // add to list of erased TX to be cleaned up from pwallet->mapWallet
-    vErasedTxes.push_back(wtx);
-
     return DB_LOAD_OK;
 }
 
