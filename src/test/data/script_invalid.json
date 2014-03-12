@@ -325,5 +325,7 @@
 ["NOP1 0x01 1", "HASH160 0x14 0xda1745e9b549bd0bfa1a569971c77eba30cd5a4b EQUAL"],
 
 ["0 0x01 0x50", "HASH160 0x14 0xece424a6bb6ddf4db592c0faed60685047a361b1 EQUAL", "OP_RESERVED in P2SH should fail"],
-["0 0x01 VER", "HASH160 0x14 0x0f4d7845db968f2a81b530b6f3c1d6246d4c7e01 EQUAL", "OP_VER in P2SH should fail"]
+["0 0x01 VER", "HASH160 0x14 0x0f4d7845db968f2a81b530b6f3c1d6246d4c7e01 EQUAL", "OP_VER in P2SH should fail"],
+
+["0x00", "'00' EQUAL", "Basic OP_0 execution"]
 ]
