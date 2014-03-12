@@ -64,9 +64,20 @@ void static secp256k1_ecmult_table_precomp_ge(secp256k1_ge_t *pre, const secp256
 #define ECMULT_TABLE_GET_GE(r,pre,n,w)  ECMULT_TABLE_GET((r),(pre),(n),(w),secp256k1_ge_neg)
 
 typedef struct {
+    // For accelerating the computation of a*P + b*G:
     secp256k1_ge_t pre_g[ECMULT_TABLE_SIZE(WINDOW_G)];    // odd multiples of the generator
     secp256k1_ge_t pre_g_128[ECMULT_TABLE_SIZE(WINDOW_G)]; // odd multiples of 2^128*generator
-    secp256k1_ge_t prec[64][16]; // prec[j][i] = 16^j * (i+1) * G
+
+    // For accelerating the computation of a*G:
+    // To harden against timing attacks, use the following mechanism:
+    // * Break up the multiplicand into groups of 4 bits, called n_0, n_1, n_2, ..., n_63.
+    // * Compute sum((n_i + 1) * 16^i * G, i=0..63).
+    // * Subtract sum(1 * 16^i * G, i=0..63).
+    // For each i, and each of the 16 possible values of n_i, ((n_i + 1) * 16^i * G) is
+    // precomputed (call it prec(i,n_i), as well as -sum(1 * 16^i * G) (called fin).
+    // The formula now becomes sum(prec(i, n_i), i=0..63) + fin.
+    // To make memory access uniform, the bytes of prec(i,n_i) are sliced per value of n_i.
+    unsigned char prec[64][sizeof(secp256k1_ge_t)][16]; // prec[j][k][i] = k'th byte of (16^j * (i+1) * G)
     secp256k1_ge_t fin; // -(sum(prec[j][0], j=0..63))
 } secp256k1_ecmult_consts_t;
 
@@ -94,16 +105,21 @@ static void secp256k1_ecmult_start(void) {
 
     // compute prec and fin
     secp256k1_gej_t gg; secp256k1_gej_set_ge(&gg, g);
+    secp256k1_ge_t ggn; ggn = *g;
     secp256k1_ge_t ad = *g;
     secp256k1_gej_t fn; secp256k1_gej_set_infinity(&fn);
     for (int j=0; j<64; j++) {
-        secp256k1_ge_set_gej(&ret->prec[j][0], &gg);
+        for (int k=0; k<sizeof(secp256k1_ge_t); k++)
+            ret->prec[j][k][0] = ((unsigned char*)(&ggn))[k];
         secp256k1_gej_add(&fn, &fn, &gg);
         for (int i=1; i<16; i++) {
             secp256k1_gej_add_ge(&gg, &gg, &ad);
-            secp256k1_ge_set_gej(&ret->prec[j][i], &gg);
+            secp256k1_ge_set_gej(&ggn, &gg);
+            if (i == 15)
+              ad = ggn;
+            for (int k=0; k<sizeof(secp256k1_ge_t); k++)
+              ret->prec[j][k][i] = ((unsigned char*)(&ggn))[k];
         }
-        ad = ret->prec[j][15];
     }
     secp256k1_ge_set_gej(&ret->fin, &fn);
     secp256k1_ge_neg(&ret->fin, &ret->fin);
@@ -163,9 +179,14 @@ void static secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_num_t *gn) 
     secp256k1_num_init(&n);
     secp256k1_num_copy(&n, gn);
     const secp256k1_ecmult_consts_t *c = secp256k1_ecmult_consts;
-    secp256k1_gej_set_ge(r, &c->prec[0][secp256k1_num_shift(&n, 4)]);
-    for (int j=1; j<64; j++)
-        secp256k1_gej_add_ge(r, r, &c->prec[j][secp256k1_num_shift(&n, 4)]);
+    secp256k1_gej_set_infinity(r);
+    for (int j=0; j<64; j++) {
+        secp256k1_ge_t add;
+        int bits = secp256k1_num_shift(&n, 4);
+        for (int k=0; k<sizeof(secp256k1_ge_t); k++)
+            ((unsigned char*)(&add))[k] = c->prec[j][k][bits];
+        secp256k1_gej_add_ge(r, r, &add);
+    }
     secp256k1_num_free(&n);
     secp256k1_gej_add_ge(r, r, &c->fin);
 }
