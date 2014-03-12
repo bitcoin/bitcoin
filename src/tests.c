@@ -9,12 +9,12 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "impl/num.h"
-#include "impl/field.h"
-#include "impl/group.h"
-#include "impl/ecmult.h"
-#include "impl/ecdsa.h"
-#include "impl/util.h"
+#include "num_impl.h"
+#include "field_impl.h"
+#include "group_impl.h"
+#include "ecmult_impl.h"
+#include "ecdsa_impl.h"
+#include "util_impl.h"
 
 #ifdef ENABLE_OPENSSL_TESTS
 #include "openssl/bn.h"

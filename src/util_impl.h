@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../util.h"
+#include "util.h"
 
 static inline uint32_t secp256k1_rand32(void) {
     static uint32_t Rz = 11, Rw = 11;

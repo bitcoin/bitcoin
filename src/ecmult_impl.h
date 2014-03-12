@@ -5,9 +5,9 @@
 #ifndef _SECP256K1_ECMULT_IMPL_H_
 #define _SECP256K1_ECMULT_IMPL_H_
 
-#include "../num.h"
-#include "../group.h"
-#include "../ecmult.h"
+#include "num.h"
+#include "group.h"
+#include "ecmult.h"
 
 // optimal for 128-bit and 256-bit exponents.
 #define WINDOW_A 5

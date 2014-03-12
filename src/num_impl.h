@@ -9,12 +9,12 @@
 #include "libsecp256k1-config.h"
 #endif
 
-#include "../num.h"
+#include "num.h"
 
 #if defined(USE_NUM_GMP)
-#include "num_gmp.h"
+#include "num_gmp_impl.h"
 #elif defined(USE_NUM_OPENSSL)
-#include "num_openssl.h"
+#include "num_openssl_impl.h"
 #else
 #error "Please select num implementation"
 #endif

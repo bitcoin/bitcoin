@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
-#include "../num.h"
-#include "../field.h"
+#include "num.h"
+#include "field.h"
 
 void static secp256k1_fe_inner_start(void) {}
 void static secp256k1_fe_inner_stop(void) {}
