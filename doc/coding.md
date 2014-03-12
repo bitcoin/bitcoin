@@ -63,32 +63,32 @@ and its cs_KeyStore lock for example).
 -------
 Threads
 
+- ThreadScriptCheck : Verifies block scripts.
+
+- ThreadImport : Loads blocks from blk*.dat files or bootstrap.dat.
+
 - StartNode : Starts other threads.
 
-- ThreadGetMyExternalIP : Determines outside-the-firewall IP address, sends addr message to connected peers when it determines it. 
+- ThreadGetMyExternalIP : Determines outside-the-firewall IP address, sends addr message to connected peers when it determines it.
+
+- ThreadDNSAddressSeed : Loads addresses of peers from the DNS.
+
+- ThreadMapPort : Universal plug-and-play startup/shutdown
 
 - ThreadSocketHandler : Sends/Receives data from peers on port 8333.
- 
-- ThreadMessageHandler : Higher-level message handling (sending and receiving).
- 
+
+- ThreadOpenAddedConnections : Opens network connections to added nodes.
+
 - ThreadOpenConnections : Initiates new connections to peers.
 
-- ThreadTopUpKeyPool : replenishes the keystore's keypool.
- 
-- ThreadCleanWalletPassphrase : re-locks an encrypted wallet after user has unlocked it for a period of time. 
- 
-- SendingDialogStartTransfer : used by pay-via-ip-address code (obsolete)
- 
-- ThreadDelayedRepaint : repaint the gui 
+- ThreadMessageHandler : Higher-level message handling (sending and receiving).
+
+- DumpAddresses : Dumps IP addresses of nodes to peers.dat.
 
 - ThreadFlushWalletDB : Close the wallet.dat file if it hasn't been used in 500ms.
- 
+
 - ThreadRPCServer : Remote procedure call handler, listens on port 8332 for connections and services them.
- 
-- ThreadBitcoinMiner : Generates bitcoins
-  
-- ThreadMapPort : Universal plug-and-play startup/shutdown
- 
-- Shutdown : Does an orderly shutdown of everything
- 
-- ExitTimeout : Windows-only, sleeps 5 seconds then exits application
+
+- BitcoinMiner : Generates bitcoins (if wallet is enabled).
+
+- Shutdown : Does an orderly shutdown of everything.
