@@ -114,7 +114,7 @@ public:
         case CT_NEW:
             if(inModel)
             {
-                qDebug() << "AddressTablePriv::updateEntry : Warning: Got CT_NOW, but entry is already in model";
+                qDebug() << "AddressTablePriv::updateEntry : Warning: Got CT_NEW, but entry is already in model";
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
