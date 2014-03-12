@@ -43,6 +43,22 @@ OSX 10.5 / 32-bit no longer supported
 * A 64-bit-capable CPU (see http://support.apple.com/kb/ht3696);
 * Mac OS 10.6 or later (see https://support.apple.com/kb/ht1633).
 
+Downgrading warnings
+--------------------
+
+The 'chainstate' for this release is not always compatible with previous
+releases, so if you run 0.9 and then decide to switch back to a
+0.8.x release you might get a blockchain validation error when starting the
+old release (due to 'pruned outputs' being omitted from the index of
+unspent transaction outputs).
+
+Running the old release with the -reindex option will rebuild the chainstate
+data structures and correct the problem.
+
+Also, the first time you run a 0.8.x release on a 0.9 wallet it will rescan
+the blockchain for missing spent coins, which will take a long time (tens
+of minutes on a typical machine).
+
 Rebranding to Bitcoin Core
 ---------------------------
 
