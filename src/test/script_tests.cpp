@@ -63,7 +63,11 @@ ParseScript(string s)
 
     BOOST_FOREACH(string w, words)
     {
-        if (all(w, is_digit()) ||
+        if (w.size() == 0)
+        {
+            // Empty string, ignore. (boost::split given '' will return one word)
+        }
+        else if (all(w, is_digit()) ||
             (starts_with(w, "-") && all(string(w.begin()+1, w.end()), is_digit())))
         {
             // Number

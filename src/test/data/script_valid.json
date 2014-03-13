@@ -1,4 +1,16 @@
 [
+["", "DEPTH 0 EQUAL",   "Test the test: we should have an empty stack after scriptSig evaluation"],
+["  ", "DEPTH 0 EQUAL", "and multiple spaces should not change that."],
+["   ", "DEPTH 0 EQUAL"],
+["    ", "DEPTH 0 EQUAL"],
+["1 2", "2 EQUALVERIFY 1 EQUAL", "Similarly whitespace around and between symbols"],
+["1  2", "2 EQUALVERIFY 1 EQUAL"],
+["  1  2", "2 EQUALVERIFY 1 EQUAL"],
+["1  2  ", "2 EQUALVERIFY 1 EQUAL"],
+["  1  2  ", "2 EQUALVERIFY 1 EQUAL"],
+
+["1", ""],
+
 ["0x01 0x0b", "11 EQUAL", "push 1 byte"],
 ["0x02 0x417a", "'Az' EQUAL"],
 ["0x4b 0x417a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a",
