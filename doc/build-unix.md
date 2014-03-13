@@ -46,7 +46,7 @@ Licenses of statically linked libraries:
 -  GCC           4.3.3
 -  OpenSSL       1.0.1c
 -  Berkeley DB   4.8.30.NC
--  Boost         1.37
+-  Boost         1.55
 -  miniupnpc     1.6
 -  qt            4.8.3
 -  protobuf      2.5.0
@@ -72,9 +72,10 @@ for Ubuntu 12.04 and later:
 
  Ubuntu 12.04 and later have packages for libdb5.1-dev and libdb5.1++-dev,
  but using these will break binary wallet compatibility, and is not recommended.
- 
-for Ubuntu 13.10: 
-        libboost1.54-all-dev will not work. Remove libboost1.54-all-dev and install libboost1.53-all-dev
+
+for Ubuntu 13.10:
+	libboost1.54 will not work,
+	remove libboost1.54-all-dev and install libboost1.53-all-dev instead.
 
 for Debian 7 (Wheezy) and later:
  The oldstable repository contains db4.8 packages.
@@ -82,7 +83,7 @@ for Debian 7 (Wheezy) and later:
  replacing [mirror] with any official debian mirror.
 
 	deb http://[mirror]/debian/ oldstable main
-        
+
 To enable the change run
 
 	sudo apt-get update
@@ -91,8 +92,7 @@ for other Ubuntu & Debian:
 
 	sudo apt-get install libdb4.8-dev
 	sudo apt-get install libdb4.8++-dev
-	sudo apt-get install libboost1.37-dev
- (If using Boost 1.37, append -mt to the boost libraries in the makefile)
+	sudo apt-get install libboost1.55-all-dev
 
 Optional:
 
