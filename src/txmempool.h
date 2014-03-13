@@ -13,6 +13,7 @@
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
 class CMinerPolicyEstimator; // Internal class used for estimatefee functionality
+class CMinerPolicyEstimator2;
 
 /*
  * CTxMemPool stores these:
@@ -57,6 +58,7 @@ private:
     bool fSanityCheck; // Normally false, true if -checkmempool or -regtest
     unsigned int nTransactionsUpdated;
     CMinerPolicyEstimator* minerPolicyEstimator; // For estimating transaction fees
+    CMinerPolicyEstimator2* minerPolicyEstimator2;
 
     void writeEntry(CAutoFile& file, const uint256& txid, std::set<uint256>& alreadyWritten) const;
 
@@ -80,11 +82,14 @@ public:
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
     bool remove(const CTransaction &tx, bool fRecursive = false, unsigned int nBlockHeight = 0);
     bool removeConflicts(const CTransaction &tx);
+    void removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
     double estimateFreePriority(double dPriorityMedian, bool fUseHardCoded=false);
     double estimateFee(double dFeeMedian, bool fUseHardCoded=false); // Returns satoshi-per-byte estimate
+    double estimatePriorityToConfirmWithin(int nBlocks);
+    double estimateFeeToConfirmWithin(int nBlocks);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
 
