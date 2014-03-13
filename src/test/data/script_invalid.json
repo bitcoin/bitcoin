@@ -1,8 +1,18 @@
 [
+["", "DEPTH",   "Test the test: we should have an empty stack after scriptSig evaluation"],
+["  ", "DEPTH", "and multiple spaces should not change that."],
+["   ", "DEPTH"],
+["    ", "DEPTH"],
+
 ["", ""],
 ["", "NOP"],
+["", "NOP DEPTH"],
 ["NOP", ""],
+["NOP", "DEPTH"],
 ["NOP","NOP"],
+["NOP","NOP DEPTH"],
+
+["DEPTH", ""],
 
 ["0x4c01","0x01 NOP", "PUSHDATA1 with not enough bytes"],
 ["0x4d0200ff","0x01 NOP", "PUSHDATA2 with not enough bytes"],
