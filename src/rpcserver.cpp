@@ -732,7 +732,7 @@ static string JSONRPCExecBatch(const Array& vReq)
 void ServiceConnection(AcceptedConnection *conn)
 {
     bool fRun = true;
-    while (fRun)
+    while (fRun && !ShutdownRequested())
     {
         int nProto = 0;
         map<string, string> mapHeaders;
