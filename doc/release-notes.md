@@ -113,7 +113,7 @@ Transaction malleability-related fixes
 This release contains a few fixes for transaction ID (TXID) malleability 
 issues:
 
-- -nospendzeroconfchange command-line option, to avoid spending
+- -spendzeroconfchange=0 command-line option, to avoid spending
   zero-confirmation change
 - IsStandard() transaction rules tightened to prevent relaying and mining of
   mutated transactions
