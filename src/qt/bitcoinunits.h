@@ -25,7 +25,8 @@ public:
     {
         BTC,
         mBTC,
-        uBTC
+        uBTC,
+        piBTC
     };
 
     //! @name Static API
