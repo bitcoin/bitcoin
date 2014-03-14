@@ -122,14 +122,17 @@ Rerunning "openssl version" should now return the correct version.
 
         patch -p1 < contrib/homebrew/makefile.osx.patch
 
-3.  Build bitcoind:
+3.  Build bitcoind, MAVERICKS is optional (required on Mac OS X 10.9):
 
         cd src
-        make -f makefile.osx
+        make -f makefile.osx [MAVERICKS=1]
 
 4.  It is a good idea to build and run the unit tests, too:
 
         make -f makefile.osx test
+
+5. Building bitcoind for RELEASE, MAVERICKS is optional (required on Mac OS X 10.9):
+		make -f makefile.osx RELEASE=1 [MAVERICKS=1]
 
 Creating a release build
 ------------------------
