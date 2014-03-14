@@ -19,6 +19,7 @@
 #include <QMessageBox>
 #include <QTextDocument>
 #include <QScrollBar>
+#include <QItemSelection>
 
 ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
     QDialog(parent),
@@ -77,6 +78,11 @@ void ReceiveCoinsDialog::setModel(WalletModel *model)
         ui->recentRequestsView->horizontalHeader()->resizeSection(RecentRequestsTableModel::Amount, 100);
 
         model->getRecentRequestsTableModel()->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
+
+        connect(ui->recentRequestsView->selectionModel(),
+            SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
+            this,
+            SLOT(on_recentRequestsView_selectionChanged(QItemSelection, QItemSelection)));
     }
 }
 
@@ -159,6 +165,15 @@ void ReceiveCoinsDialog::on_recentRequestsView_doubleClicked(const QModelIndex &
     dialog->setInfo(submodel->entry(index.row()).recipient);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->show();
+}
+
+void ReceiveCoinsDialog::on_recentRequestsView_selectionChanged(const QItemSelection &selected,
+                                                                const QItemSelection &deselected)
+{
+    // Enable Show/Remove buttons only if anything is selected.
+    bool enable = !ui->recentRequestsView->selectionModel()->selectedRows().isEmpty();
+    ui->showRequestButton->setEnabled(enable);
+    ui->removeRequestButton->setEnabled(enable);
 }
 
 void ReceiveCoinsDialog::on_showRequestButton_clicked()
