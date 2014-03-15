@@ -673,17 +673,27 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     {
         // Represent time from last generated block in human readable text
         QString timeBehindText;
-        if(secs < 48*60*60)
+        const int HOUR_IN_SECONDS = 60*60;
+        const int DAY_IN_SECONDS = 24*60*60;
+        const int WEEK_IN_SECONDS = 7*24*60*60;
+        const int YEAR_IN_SECONDS = 31556952; // Average length of year in Gregorian calendar
+        if(secs < 2*DAY_IN_SECONDS)
         {
-            timeBehindText = tr("%n hour(s)","",secs/(60*60));
+            timeBehindText = tr("%n hour(s)","",secs/HOUR_IN_SECONDS);
         }
-        else if(secs < 14*24*60*60)
+        else if(secs < 2*WEEK_IN_SECONDS)
         {
-            timeBehindText = tr("%n day(s)","",secs/(24*60*60));
+            timeBehindText = tr("%n day(s)","",secs/DAY_IN_SECONDS);
+        }
+        else if(secs < YEAR_IN_SECONDS)
+        {
+            timeBehindText = tr("%n week(s)","",secs/WEEK_IN_SECONDS);
         }
         else
         {
-            timeBehindText = tr("%n week(s)","",secs/(7*24*60*60));
+            int years = secs / YEAR_IN_SECONDS;
+            int remainder = secs % YEAR_IN_SECONDS;
+            timeBehindText = tr("%1 and %2").arg(tr("%n year(s)", "", years)).arg(tr("%n week(s)","", remainder/WEEK_IN_SECONDS));
         }
 
         progressBarLabel->setVisible(true);
