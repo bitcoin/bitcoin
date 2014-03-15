@@ -637,6 +637,19 @@ This product includes software developed by the OpenSSL Project for use in the O
         </translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>%1 and %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n year(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n year</numerusform>
+            <numerusform>%n years</numerusform>
+        </translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>%1 behind</source>
         <translation>%1 behind</translation>
