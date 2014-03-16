@@ -426,8 +426,8 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
                 deployFrameworks([dependency], appBundleInfo.path, destinationPath, strip, verbose, deploymentInfo)
 
 qt_conf="""[Paths]
-translations=Resources
-plugins=PlugIns
+Translations=Resources
+Plugins=PlugIns
 """
 
 ap = ArgumentParser(description="""Improved version of macdeployqt.
