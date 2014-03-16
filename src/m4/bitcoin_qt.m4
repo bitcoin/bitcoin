@@ -124,12 +124,12 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
     if test x$have_qt_test = xno; then
       bitcoin_enable_qt_test=no
     fi
-    bitcoin_enable_qt_dbus=yes
-    if test x$have_qt_dbus = xno;  then
-      bitcoin_enable_qt_dbus=no
-      if test x$use_dbus = xyes; then
-        AC_MSG_ERROR("libQtDBus not found. Install libQtDBus or remove --with-qtdbus.")
-      fi
+    bitcoin_enable_qt_dbus=no
+    if test x$use_dbus != xno && test x$have_qt_dbus = xyes; then
+      bitcoin_enable_qt_dbus=yes
+    fi
+    if test x$use_dbus = xyes && test x$have_qt_dbus = xno; then
+      AC_MSG_ERROR("libQtDBus not found. Install libQtDBus or remove --with-qtdbus.")
     fi
     if test x$LUPDATE == x; then
       AC_MSG_WARN("lupdate is required to update qt translations")
