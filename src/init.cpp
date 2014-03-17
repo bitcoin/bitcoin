@@ -59,6 +59,7 @@ enum BindFlags {
     BF_REPORT_ERROR = (1U << 1)
 };
 
+static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -121,6 +122,14 @@ void Shutdown()
 #endif
     StopNode();
     UnregisterNodeSignals(GetNodeSignals());
+
+    boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
+    CAutoFile est_fileout = CAutoFile(fopen(est_path.string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
+    if (est_fileout)
+        mempool.WriteFeeEstimates(est_fileout);
+    else
+        LogPrintf("failed to write fee estimates");
+
     {
         LOCK(cs_main);
 #ifdef ENABLE_WALLET
@@ -932,6 +941,11 @@ bool AppInit2(boost::thread_group& threadGroup)
             LogPrintf("No blocks matching %s were found\n", strMatch);
         return false;
     }
+
+    boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
+    CAutoFile est_filein = CAutoFile(fopen(est_path.string().c_str(), "rb"), SER_DISK, CLIENT_VERSION);
+    if (est_filein)
+        mempool.ReadFeeEstimates(est_filein);
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
