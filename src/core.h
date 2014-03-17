@@ -120,6 +120,7 @@ class CFeeRate
 private:
     int64_t nSatoshisPerK; // unit is satoshis-per-1,000-bytes
 public:
+    CFeeRate() : nSatoshisPerK(0) { }
     explicit CFeeRate(int64_t _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) { }
     CFeeRate(int64_t nFeePaid, size_t nSize);
     CFeeRate(const CFeeRate& other) { nSatoshisPerK = other.nSatoshisPerK; }
@@ -132,6 +133,8 @@ public:
     friend bool operator==(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK == b.nSatoshisPerK; }
 
     std::string ToString() const;
+
+    IMPLEMENT_SERIALIZE( READWRITE(nSatoshisPerK); )
 };
 
 
