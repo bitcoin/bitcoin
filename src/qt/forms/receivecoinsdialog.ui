@@ -263,6 +263,9 @@
           <property name="text">
            <string>Show</string>
           </property>
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="icon">
            <iconset resource="../bitcoin.qrc">
             <normaloff>:/icons/edit</normaloff>:/icons/edit</iconset>
@@ -276,6 +279,9 @@
           </property>
           <property name="text">
            <string>Remove</string>
+          </property>
+          <property name="enabled">
+           <bool>false</bool>
           </property>
           <property name="icon">
            <iconset resource="../bitcoin.qrc">
