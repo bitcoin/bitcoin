@@ -12,6 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python
 
 from decimal import Decimal
 import json
+import random
 import shutil
 import subprocess
 import time
@@ -70,6 +71,7 @@ def initialize_datadir(dir, n):
         f.write("rpcpassword=rt\n");
         f.write("port="+str(p2p_port(n))+"\n");
         f.write("rpcport="+str(rpc_port(n))+"\n");
+    return datadir
 
 def initialize_chain(test_dir):
     """
@@ -82,7 +84,7 @@ def initialize_chain(test_dir):
         devnull = open("/dev/null", "w+")
         # Create cache directories, run bitcoinds:
         for i in range(4):
-            initialize_datadir("cache", i)
+            datadir=initialize_datadir("cache", i)
             args = [ "bitcoind", "-keypool=1", "-datadir="+datadir ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
@@ -140,25 +142,28 @@ def _rpchost_to_args(rpchost):
         rv += ['-rpcport=' + rpcport]
     return rv
 
-def start_nodes(num_nodes, dir, extra_args=None, rpchost=None):
-    # Start bitcoinds, and wait for RPC interface to be up and running:
+def start_node(i, dir, extra_args=None, rpchost=None):
+    """
+    Start a bitcoind and return RPC connection to it
+    """
+    datadir = os.path.join(dir, "node"+str(i))
+    args = [ "bitcoind", "-datadir="+datadir, "-keypool=1" ]
+    if extra_args is not None: args.extend(extra_args)
+    bitcoind_processes.append(subprocess.Popen(args))
     devnull = open("/dev/null", "w+")
-    for i in range(num_nodes):
-        datadir = os.path.join(dir, "node"+str(i))
-        args = [ "bitcoind", "-datadir="+datadir, "-keypool=1" ]
-        if extra_args is not None:
-            args += extra_args[i]
-        bitcoind_processes.append(subprocess.Popen(args))
-        subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir] +
-                                  _rpchost_to_args(rpchost)  +
-                                  ["-rpcwait", "getblockcount"], stdout=devnull)
+    subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir] +
+                          _rpchost_to_args(rpchost)  +
+                          ["-rpcwait", "getblockcount"], stdout=devnull)
     devnull.close()
-    # Create&return JSON-RPC connections
-    rpc_connections = []
-    for i in range(num_nodes):
-        url = "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', rpc_port(i))
-        rpc_connections.append(AuthServiceProxy(url))
-    return rpc_connections
+    url = "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', rpc_port(i))
+    return AuthServiceProxy(url)
+
+def start_nodes(num_nodes, dir, extra_args=None, rpchost=None):
+    """
+    Start multiple bitcoinds, return RPC connections to them
+    """
+    if extra_args is None: extra_args = [ None for i in range(num_nodes) ]
+    return [ start_node(i, dir, extra_args[i], rpchost) for i in range(num_nodes) ]
 
 def debug_log(dir, n_node):
     return os.path.join(dir, "node"+str(n_node), "regtest", "debug.log")
@@ -177,6 +182,108 @@ def wait_bitcoinds():
 def connect_nodes(from_connection, node_num):
     ip_port = "127.0.0.1:"+str(p2p_port(node_num))
     from_connection.addnode(ip_port, "onetry")
+
+def find_output(node, txid, amount):
+    """
+    Return index to output of txid with value amount
+    Raises exception if there is none.
+    """
+    txdata = node.getrawtransaction(txid, 1)
+    for i in range(len(txdata["vout"])):
+        if txdata["vout"][i]["value"] == amount:
+            return i
+    raise RuntimeError("find_output txid %s : %s not found"%(txid,str(amount)))
+
+def gather_inputs(from_node, amount_needed):
+    """
+    Return a random set of unspent txouts that are enough to pay amount_needed
+    """
+    utxo = from_node.listunspent(1)
+    random.shuffle(utxo)
+    inputs = []
+    total_in = Decimal("0.00000000")
+    while total_in < amount_needed and len(utxo) > 0:
+        t = utxo.pop()
+        total_in += t["amount"]
+        inputs.append({ "txid" : t["txid"], "vout" : t["vout"], "address" : t["address"] } )
+    if total_in < amount_needed:
+        raise RuntimeError("Insufficient funds: need %d, have %d"%(amount+fee*2, total_in))
+    return (total_in, inputs)
+
+def make_change(from_node, amount_in, amount_out, fee):
+    """
+    Create change output(s), return them
+    """
+    outputs = {}
+    amount = amount_out+fee
+    change = amount_in - amount
+    if change > amount*2:
+        # Create an extra change output to break up big inputs
+        outputs[from_node.getnewaddress()] = float(change/2)
+        change = change/2
+    if change > 0:
+        outputs[from_node.getnewaddress()] = float(change)
+    return outputs
+
+def send_zeropri_transaction(from_node, to_node, amount, fee):
+    """
+    Create&broadcast a zero-priority transaction.
+    Returns (txid, hex-encoded-txdata)
+    Ensures transaction is zero-priority by first creating a send-to-self,
+    then using it's output
+    """
+
+    # Create a send-to-self with confirmed inputs:
+    self_address = from_node.getnewaddress()
+    (total_in, inputs) = gather_inputs(from_node, amount+fee*2)
+    outputs = make_change(from_node, total_in, amount+fee, fee)
+    outputs[self_address] = float(amount+fee)
+
+    self_rawtx = from_node.createrawtransaction(inputs, outputs)
+    self_signresult = from_node.signrawtransaction(self_rawtx)
+    self_txid = from_node.sendrawtransaction(self_signresult["hex"], True)
+
+    vout = find_output(from_node, self_txid, amount+fee)
+    # Now immediately spend the output to create a 1-input, 1-output
+    # zero-priority transaction:
+    inputs = [ { "txid" : self_txid, "vout" : vout } ]
+    outputs = { to_node.getnewaddress() : float(amount) }
+
+    rawtx = from_node.createrawtransaction(inputs, outputs)
+    signresult = from_node.signrawtransaction(rawtx)
+    txid = from_node.sendrawtransaction(signresult["hex"], True)
+
+    return (txid, signresult["hex"])
+
+def random_zeropri_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
+    """
+    Create a random zero-priority transaction.
+    Returns (txid, hex-encoded-transaction-data, fee)
+    """
+    from_node = random.choice(nodes)
+    to_node = random.choice(nodes)
+    fee = min_fee + fee_increment*random.randint(0,fee_variants)
+    (txid, txhex) = send_zeropri_transaction(from_node, to_node, amount, fee)
+    return (txid, txhex, fee)
+
+def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
+    """
+    Create a random transaction.
+    Returns (txid, hex-encoded-transaction-data, fee)
+    """
+    from_node = random.choice(nodes)
+    to_node = random.choice(nodes)
+    fee = min_fee + fee_increment*random.randint(0,fee_variants)
+
+    (total_in, inputs) = gather_inputs(from_node, amount+fee)
+    outputs = make_change(from_node, total_in, amount, fee)
+    outputs[to_node.getnewaddress()] = float(amount)
+
+    rawtx = from_node.createrawtransaction(inputs, outputs)
+    signresult = from_node.signrawtransaction(rawtx)
+    txid = from_node.sendrawtransaction(signresult["hex"], True)
+
+    return (txid, signresult["hex"], fee)
 
 def assert_equal(thing1, thing2):
     if thing1 != thing2:
