@@ -5,8 +5,12 @@
 #include "splashscreen.h"
 
 #include "clientversion.h"
+#include "init.h"
 #include "ui_interface.h"
 #include "util.h"
+#ifdef ENABLE_WALLET
+#include "wallet.h"
+#endif
 
 #include <QApplication>
 #include <QPainter>
@@ -109,14 +113,33 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
         Q_ARG(QColor, QColor(55,55,55)));
 }
 
+static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress)
+{
+    InitMessage(splash, title + strprintf("%d", nProgress) + "%");
+}
+
+#ifdef ENABLE_WALLET
+static void ConnectWallet(SplashScreen *splash, CWallet* wallet)
+{
+    wallet->ShowProgress.connect(boost::bind(ShowProgress, splash, _1, _2));
+}
+#endif
+
 void SplashScreen::subscribeToCoreSignals()
 {
     // Connect signals to client
     uiInterface.InitMessage.connect(boost::bind(InitMessage, this, _1));
+#ifdef ENABLE_WALLET
+    uiInterface.LoadWallet.connect(boost::bind(ConnectWallet, this, _1));
+#endif
 }
 
 void SplashScreen::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
     uiInterface.InitMessage.disconnect(boost::bind(InitMessage, this, _1));
+#ifdef ENABLE_WALLET
+    if(pwalletMain)
+        pwalletMain->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
+#endif
 }
