@@ -331,6 +331,13 @@ void RPCConsole::clear()
                         tr("Type <b>help</b> for an overview of available commands.")), true);
 }
 
+void RPCConsole::reject()
+{
+    // Ignore escape keypress if this is not a seperate window
+    if(windowType() != Qt::Widget)
+        QDialog::reject();
+}
+
 void RPCConsole::message(int category, const QString &message, bool html)
 {
     QTime time = QTime::currentTime();
