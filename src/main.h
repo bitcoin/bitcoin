@@ -812,13 +812,13 @@ public:
         return (int64_t)nTime;
     }
 
-    CBigNum GetBlockWork() const
+    uint256 GetBlockWork() const
     {
         CBigNum bnTarget;
         bnTarget.SetCompact(nBits);
         if (bnTarget <= 0)
             return 0;
-        return (CBigNum(1)<<256) / (bnTarget+1);
+        return ((CBigNum(1)<<256) / (bnTarget+1)).getuint256();
     }
 
     bool CheckIndex() const

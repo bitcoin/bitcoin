@@ -178,6 +178,16 @@ public:
         return *this;
     }
 
+    base_uint& operator*=(uint32_t b32)
+    {
+        uint32_t carry = 0;
+        for (unsigned int i = 0; i < WIDTH; i++) {
+            uint64_t sum = carry + (uint64_t)pn[i]*b32;
+            pn[i] = sum & 0xFFFFFFFF;
+            carry = sum >> 32;
+        }
+        return *this;
+    }
 
     base_uint& operator++()
     {
@@ -477,6 +487,8 @@ inline const uint160 operator<<(const base_uint160& a, unsigned int shift)   { r
 inline const uint160 operator>>(const base_uint160& a, unsigned int shift)   { return uint160(a) >>= shift; }
 inline const uint160 operator<<(const uint160& a, unsigned int shift)        { return uint160(a) <<= shift; }
 inline const uint160 operator>>(const uint160& a, unsigned int shift)        { return uint160(a) >>= shift; }
+inline const uint160 operator*(const base_uint160& a, uint32_t b)            { return uint160(a) *= b; }
+inline const uint160 operator*(const uint160& a, uint32_t b)                 { return uint160(a) *= b; }
 
 inline const uint160 operator^(const base_uint160& a, const base_uint160& b) { return uint160(a) ^= b; }
 inline const uint160 operator&(const base_uint160& a, const base_uint160& b) { return uint160(a) &= b; }
@@ -589,6 +601,8 @@ inline const uint256 operator<<(const base_uint256& a, unsigned int shift)   { r
 inline const uint256 operator>>(const base_uint256& a, unsigned int shift)   { return uint256(a) >>= shift; }
 inline const uint256 operator<<(const uint256& a, unsigned int shift)        { return uint256(a) <<= shift; }
 inline const uint256 operator>>(const uint256& a, unsigned int shift)        { return uint256(a) >>= shift; }
+inline const uint256 operator*(const base_uint256& a, uint32_t b)            { return uint256(a) *= b; }
+inline const uint256 operator*(const uint256& a, uint32_t b)                 { return uint256(a) *= b; }
 
 inline const uint256 operator^(const base_uint256& a, const base_uint256& b) { return uint256(a) ^= b; }
 inline const uint256 operator&(const base_uint256& a, const base_uint256& b) { return uint256(a) &= b; }
