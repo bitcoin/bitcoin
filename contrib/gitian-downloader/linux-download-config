@@ -43,4 +43,8 @@ signers:
     weight: 1
     name: michagogo
     key: michagogo
+  E944AE667CF960B1004BC32FCA662BE18B877A60:
+    weight: 40
+    name: "Andreas Schildbach"
+    key: aschildbach
 minimum_weight: 120
