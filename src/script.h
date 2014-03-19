@@ -797,6 +797,26 @@ public:
 bool IsCanonicalPubKey(const std::vector<unsigned char> &vchPubKey, unsigned int flags);
 bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig, unsigned int flags);
 
+class EvalScriptState {
+public:
+    std::vector<std::vector<unsigned char> > *pstack;
+    const CScript *pscript;
+    const CTransaction *ptxTo;
+    unsigned int nIn;
+    unsigned int flags;
+    int nHashType;
+
+    CScript::const_iterator pc;
+    CScript::const_iterator pbegincodehash;
+    std::vector<bool> vfExec;
+    std::vector<std::vector<unsigned char> > altstack;
+    int nOpCount;
+
+    EvalScriptState(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
+    bool Start();
+    bool Step(bool & fEof);
+};
+
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned char> >& vSolutions);

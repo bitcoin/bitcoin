@@ -301,21 +301,58 @@ bool IsCanonicalSignature(const valtype &vchSig, unsigned int flags) {
 
 bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
 {
-    CScript::const_iterator pc = script.begin();
+    EvalScriptState ess(stack, script, txTo, nIn, flags, nHashType);
+    if (!ess.Start())
+        return false;
+
+    bool fEof = false;
+    while (!fEof)
+    {
+        if (!ess.Step(fEof))
+            return false;
+    }
+
+    return true;
+}
+
+EvalScriptState::EvalScriptState(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int _nIn, unsigned int _flags, int _nHashType)
+: pstack(&stack), pscript(&script), ptxTo(&txTo), nIn(_nIn), flags(_flags), nHashType(_nHashType),
+vfExec(), altstack(), nOpCount(0)
+{
+    pbegincodehash = pc = script.begin();
+}
+
+bool EvalScriptState::Start()
+{
+    if (pscript->size() > 10000)
+        return false;
+    return true;
+}
+
+bool EvalScriptState::Step(bool & fEof)
+{
+    std::vector<std::vector<unsigned char> > & stack = *pstack;
+    const CScript & script = *pscript;
+    const CTransaction & txTo = *ptxTo;
+    unsigned int & nIn = this->nIn;
+    unsigned int & flags = this->flags;
+    int & nHashType = this->nHashType;
+
+    CScript::const_iterator & pc = this->pc;
     CScript::const_iterator pend = script.end();
-    CScript::const_iterator pbegincodehash = script.begin();
+    CScript::const_iterator & pbegincodehash = this->pbegincodehash;
     opcodetype opcode;
     valtype vchPushValue;
-    vector<bool> vfExec;
-    vector<valtype> altstack;
-    if (script.size() > 10000)
-        return false;
-    int nOpCount = 0;
+    vector<bool> & vfExec = this->vfExec;
+    vector<valtype> & altstack = this->altstack;
+    int & nOpCount = this->nOpCount;
+
+    fEof = !(pc < pend);
+    if (fEof)
+        return vfExec.empty();
 
     try
     {
-        while (pc < pend)
-        {
             bool fExec = !count(vfExec.begin(), vfExec.end(), false);
 
             //
@@ -953,16 +990,11 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
             // Size limits
             if (stack.size() + altstack.size() > 1000)
                 return false;
-        }
     }
     catch (...)
     {
         return false;
     }
-
-
-    if (!vfExec.empty())
-        return false;
 
     return true;
 }
