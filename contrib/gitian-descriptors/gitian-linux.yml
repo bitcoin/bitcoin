@@ -39,18 +39,39 @@ script: |
   unzip ../build/bitcoin-deps-linux${GBUILD_BITS}-gitian-r3.zip
   unzip ../build/boost-linux${GBUILD_BITS}-1.55.0-gitian-r1.zip
   cd ../build
+
+  function do_configure {
+    ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt"
+  }
   #
   cd bitcoin
   ./autogen.sh
-  ./configure --prefix=$STAGING --bindir=$BINDIR --with-protoc-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt"
+  do_configure
   make dist
   DISTNAME=`echo bitcoin-*.tar.gz`
+
+  # Build dynamic versions of everything
+  # (with static linking to boost and openssl as well a some non-OS deps)
   mkdir -p distsrc
   cd distsrc
   tar --strip-components=1 -xf ../$DISTNAME
-  ./configure --enable-upnp-default --prefix=$STAGING --bindir=$BINDIR --with-protoc-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt"
+  do_configure --bindir=$BINDIR 
   make $MAKEOPTS
   make $MAKEOPTS install-strip
+  make $MAKEOPTS clean
+
+  # Build fully static versions of bitcoind and bitcoin-cli for older Linux distros
+  STATIC_BINDIR="$HOME/bindir.static"
+  mkdir -p $STATIC_BINDIR
+  # For 32-bit, -pie cannot be used with -static, as invalid executables are generated
+  # For 64-bit, -pie with -static causes a link error
+  # Disable hardening in configure and manually pass 'static-safe' hardening flags
+  OPTFLAGS='-O2 -static -Wstack-protector -fstack-protector-all -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -Wl,-z,relro -Wl,-z,now'
+  do_configure --bindir=$STATIC_BINDIR --disable-tests --enable-upnp-default --without-gui --disable-hardening
+  make $MAKEOPTS
+  make $MAKEOPTS install-strip
+  cp $STATIC_BINDIR/bitcoind $BINDIR/bitcoind.static
+  cp $STATIC_BINDIR/bitcoin-cli $BINDIR/bitcoin-cli.static
   
   # sort distribution tar file and normalize user/group/mtime information for deterministic output
   mkdir -p $OUTDIR/src
