@@ -45,6 +45,7 @@ private slots:
     void clearStatusLabel();
     void updateDisplayUnit();
     void doProxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
+    void updateFeeWarning();
 
 signals:
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
@@ -54,6 +55,7 @@ private:
     OptionsModel *model;
     MonitoredDataMapper *mapper;
     bool fProxyIpValid;
+    void updateCurrentDefaultFee();
 };
 
 #endif // OPTIONSDIALOG_H
