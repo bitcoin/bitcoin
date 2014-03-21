@@ -190,26 +190,6 @@
         </layout>
        </item>
        <item>
-        <widget class="QLabel" name="spendZeroConfChangeInfoLabel">
-         <property name="text">
-          <string>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="spendZeroConfChange">
-         <property name="text">
-          <string>&amp;Spend unconfirmed change (experts only)</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <spacer name="verticalSpacer_Wallet">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -221,6 +201,35 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Expert</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QCheckBox" name="coinControlFeatures">
+            <property name="toolTip">
+             <string>Whether to show coin control features or not.</string>
+            </property>
+            <property name="text">
+             <string>Enable coin &amp;control features</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="spendZeroConfChange">
+            <property name="toolTip">
+             <string>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</string>
+            </property>
+            <property name="text">
+             <string>&amp;Spend unconfirmed change</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -465,16 +474,6 @@
          </property>
          <property name="text">
           <string>&amp;Display addresses in transaction list</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="coinControlFeatures">
-         <property name="toolTip">
-          <string>Whether to show coin control features or not.</string>
-         </property>
-         <property name="text">
-          <string>Display coin &amp;control features (experts only)</string>
          </property>
         </widget>
        </item>
