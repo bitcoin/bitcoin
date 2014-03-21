@@ -4,12 +4,12 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>O jedru Bitcoina</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Jedro Bitcoina&lt;/b&gt; različica</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -31,6 +31,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <source>The Bitcoin Core developers</source>
         <translation type="unfinished"/>
     </message>
+    <message>
+        <location line="+12"/>
+        <location line="+2"/>
+        <source> (%1-bit)</source>
+        <translation>(%1-bitov)</translation>
+    </message>
 </context>
 <context>
     <name>AddressBookPage</name>
@@ -47,7 +53,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Novo</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -57,12 +63,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kopiraj</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zapri (close)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="+74"/>
@@ -82,7 +88,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Izvozi</translation>
     </message>
     <message>
         <location line="-27"/>
@@ -92,27 +98,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="-30"/>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Izberi naslov prejemnika kovancev</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Izberi naslov pošiljatelja kovancev</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Izberi</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>Pošiljati naslove</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Prejemati naslovi</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -122,7 +128,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+4"/>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>To so vaši Bitcoin naslovi za prejemanje plačil. Priporočljivo je uporabljati nov prejemni naslov za vsako izmed transakcij.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -137,7 +143,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+194"/>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Izvozi seznam naslovov</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -147,7 +153,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+13"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Neuspešen izvoz</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -400,17 +406,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+10"/>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Pošiljanje naslovov...</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Prejemanje naslovov...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>Odpri &amp;URI...</translation>
     </message>
     <message>
         <location line="+325"/>
@@ -425,7 +431,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-405"/>
         <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Pošlji kovance na Bitcoin naslov</translation>
     </message>
     <message>
         <location line="+49"/>
@@ -470,23 +476,23 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+146"/>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Pošlji</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Receive</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sprejmi</translation>
     </message>
     <message>
         <location line="+46"/>
         <location line="+2"/>
         <source>&amp;Show / Hide</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Prikaži / Skrij</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show or hide the main Window</source>
-        <translation type="unfinished"/>
+        <translation>Prikaži ali skrij glavno okno</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -496,7 +502,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+7"/>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>Za dokaz, da ste lastniki sporočil, se podpišite z Bitcoin naslovom</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -543,22 +549,22 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+29"/>
         <location line="+2"/>
         <source>&amp;About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>&amp;O jedru Bitcoina</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Prikaži seznam uporabljenih naslovov za pošiljanje in oznak</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Prikaži seznam uporabljenih sprejemnih naslovov in oznak</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>Odpri Bitcoin: URI ali zahteva o plačilu</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -599,22 +605,32 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location line="+23"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n ura</numerusform><numerusform>%n uri</numerusform><numerusform>%n ure</numerusform><numerusform>%n ura</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n dan</numerusform><numerusform>%n dneva</numerusform><numerusform>%n dnevi</numerusform><numerusform>%n dni</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n teden</numerusform><numerusform>%n tedna</numerusform><numerusform>%n tedni</numerusform><numerusform>%n tednov</numerusform></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1 and %2</source>
+        <translation type="unfinished"/>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n year(s)</source>
+        <translation><numerusform>%n leto</numerusform><numerusform>%n leti</numerusform><numerusform>%n leta</numerusform><numerusform>%n let</numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>%1 behind</source>
-        <translation type="unfinished"/>
+        <translation>%1 odzadaj</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -624,7 +640,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+2"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished"/>
+        <translation>Transkacija za tem ne bo bila še na voljo.</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -639,7 +655,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Informacije</translation>
     </message>
     <message>
         <location line="-85"/>
@@ -685,7 +701,7 @@ Naslov: %4
         <translation>Denarnica je &lt;b&gt;šifrirana&lt;/b&gt; in trenutno &lt;b&gt;zaklenjena&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+438"/>
+        <location filename="../bitcoin.cpp" line="+435"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation type="unfinished"/>
     </message>
@@ -695,7 +711,7 @@ Naslov: %4
     <message>
         <location filename="../clientmodel.cpp" line="+119"/>
         <source>Network Alert</source>
-        <translation type="unfinished"/>
+        <translation>Omrežno Opozorilo</translation>
     </message>
 </context>
 <context>
@@ -713,7 +729,7 @@ Naslov: %4
     <message>
         <location line="+29"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Biti:</translation>
     </message>
     <message>
         <location line="+45"/>
@@ -723,12 +739,12 @@ Naslov: %4
     <message>
         <location line="+29"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Prednostno mesto:</translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Provizija:</translation>
     </message>
     <message>
         <location line="+32"/>
@@ -746,7 +762,7 @@ Naslov: %4
         <translation>Sprememba:</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+56"/>
         <source>(un)select all</source>
         <translation type="unfinished"/>
     </message>
@@ -761,7 +777,7 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+53"/>
         <source>Amount</source>
         <translation>Količina</translation>
     </message>
@@ -778,7 +794,7 @@ Naslov: %4
     <message>
         <location line="+5"/>
         <source>Confirmations</source>
-        <translation type="unfinished"/>
+        <translation>Potrdila</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -788,7 +804,7 @@ Naslov: %4
     <message>
         <location line="+5"/>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>Prednostno mesto</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="+42"/>
@@ -809,7 +825,7 @@ Naslov: %4
     <message>
         <location line="-25"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Kopiraj ID transakcije</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -824,12 +840,12 @@ Naslov: %4
     <message>
         <location line="+22"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Kopiraj količino</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Kopiraj provizijo</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -839,12 +855,12 @@ Naslov: %4
     <message>
         <location line="+1"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Kopiraj bite</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Kopiraj prednostno mesto</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -859,52 +875,52 @@ Naslov: %4
     <message>
         <location line="+323"/>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>najvišja</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>višja</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>visoka</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>medium-high</source>
-        <translation type="unfinished"/>
+        <translation>srednje visoka</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>srednje</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>low-medium</source>
-        <translation type="unfinished"/>
+        <translation>srednje nizka</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>nizka</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>nižja</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>najnižja</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>(%1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 zaklenjeno)</translation>
     </message>
     <message>
         <location line="+31"/>
@@ -912,9 +928,9 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+141"/>
         <source>Dust</source>
-        <translation type="unfinished"/>
+        <translation>Prah</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -929,7 +945,7 @@ Naslov: %4
     <message>
         <location line="+10"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation type="unfinished"/>
+        <translation>V primeru, da je velikost transakcije večja od 1000 bitov, se ta oznaka se obarva rdeče.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1005,7 +1021,7 @@ Naslov: %4
     <message>
         <location line="+10"/>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>Oznaka je povezana s tem vnosom seznama naslovov</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -1045,7 +1061,7 @@ Naslov: %4
     <message>
         <location line="-5"/>
         <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>Vnešeni naslov &quot;%1&quot; ni veljaven Bitcoin naslov.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1068,7 +1084,7 @@ Naslov: %4
     <message>
         <location line="+22"/>
         <source>name</source>
-        <translation type="unfinished"/>
+        <translation>ime</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1094,7 +1110,7 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="+38"/>
+        <location filename="../utilitydialog.cpp" line="+24"/>
         <source>Bitcoin Core</source>
         <translation>Jedro Bitcoina</translation>
     </message>
@@ -1144,12 +1160,12 @@ Naslov: %4
     <message>
         <location filename="../forms/intro.ui" line="+14"/>
         <source>Welcome</source>
-        <translation type="unfinished"/>
+        <translation>Dobrodošli</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Welcome to Bitcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Dobrodošli v jedru Bitcoina</translation>
     </message>
     <message>
         <location line="+26"/>
@@ -1189,7 +1205,7 @@ Naslov: %4
     <message>
         <location line="+9"/>
         <source>GB of free space available</source>
-        <translation type="unfinished"/>
+        <translation>GB prostora na voljo</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1202,17 +1218,17 @@ Naslov: %4
     <message>
         <location filename="../forms/openuridialog.ui" line="+14"/>
         <source>Open URI</source>
-        <translation type="unfinished"/>
+        <translation>Odpri URl</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
+        <translation>Odpri zahtevo o plačilo od ORI ali datoteke</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>URI:</source>
-        <translation type="unfinished"/>
+        <translation>URI:</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1235,22 +1251,22 @@ Naslov: %4
     <message>
         <location line="+13"/>
         <source>&amp;Main</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Glavno</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+122"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+15"/>
         <source>Pay transaction &amp;fee</source>
-        <translation type="unfinished"/>
+        <translation>Nakazilo plačila &amp; provizija</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="-131"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>Po prijavi v sistem samodejno zaženite Bitcoin.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1263,14 +1279,9 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+13"/>
-        <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>Nastavi pomnilnik podatkovne zbirke v megabajtih (privzeto: 25)</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>megabite</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -1283,7 +1294,12 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+107"/>
+        <source>&amp;Spend unconfirmed change (experts only)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+37"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
         <translation type="unfinished"/>
     </message>
@@ -1318,7 +1334,17 @@ Naslov: %4
         <translation>&amp;Omrežje</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-86"/>
+        <source>W&amp;allet</source>
+        <translation>&amp;Denarnica</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+40"/>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation type="unfinished"/>
     </message>
@@ -1433,17 +1459,17 @@ Naslov: %4
         <translation>&amp;Prekini</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+67"/>
+        <location filename="../optionsdialog.cpp" line="+70"/>
         <source>default</source>
         <translation>privzeto</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+58"/>
         <source>none</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+78"/>
         <source>Confirm options reset</source>
         <translation type="unfinished"/>
     </message>
@@ -1480,32 +1506,32 @@ Naslov: %4
         <location line="+50"/>
         <location line="+231"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>Prikazanim podatkom je lahko potekel rok. Vaša denarnica bo po vzpostavitvi povezave samodejno sinhronizirana z Bitcoin omrežjem, ampak ta proces še ni bil zaključen.</translation>
     </message>
     <message>
-        <location line="-155"/>
-        <source>Unconfirmed:</source>
-        <translation>Nepotrjeno:</translation>
-    </message>
-    <message>
-        <location line="-83"/>
+        <location line="-238"/>
         <source>Wallet</source>
         <translation>Denarnica</translation>
     </message>
     <message>
         <location line="+51"/>
-        <source>Confirmed:</source>
-        <translation type="unfinished"/>
+        <source>Available:</source>
+        <translation>Razpoložljivost:</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Your current spendable balance</source>
+        <translation>Vaše trenutno razpoložljivo stanje</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Pending:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+16"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Skupno število potrjenih transakcij, ki sicer niso bile prištete k razpoložljivem stanju</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1525,7 +1551,7 @@ Naslov: %4
     <message>
         <location line="+16"/>
         <source>Your current total balance</source>
-        <translation type="unfinished"/>
+        <translation>Vaše trenutno skupno stanje</translation>
     </message>
     <message>
         <location line="+71"/>
@@ -1565,7 +1591,7 @@ Naslov: %4
         <location line="+18"/>
         <location line="+16"/>
         <source>Payment request error</source>
-        <translation type="unfinished"/>
+        <translation>Napaka pri zahtevi plačila</translation>
     </message>
     <message>
         <location line="-353"/>
@@ -1610,7 +1636,7 @@ Naslov: %4
     <message>
         <location line="+43"/>
         <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"/>
+        <translation>Napaka pri povezavi z  %1: %2</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -1620,17 +1646,17 @@ Naslov: %4
     <message>
         <location line="+11"/>
         <source>Bad response from server %1</source>
-        <translation type="unfinished"/>
+        <translation>Slab odziv strežnika %1</translation>
     </message>
     <message>
         <location line="+33"/>
         <source>Payment acknowledged</source>
-        <translation type="unfinished"/>
+        <translation>Plačilo priznano</translation>
     </message>
     <message>
         <location line="-11"/>
         <source>Network request error</source>
-        <translation type="unfinished"/>
+        <translation>Napaka omrežne zahteve</translation>
     </message>
 </context>
 <context>
@@ -1644,12 +1670,17 @@ Naslov: %4
     <message>
         <location line="+1"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation type="unfinished"/>
+        <translation>Napaka: Želena nahajališče datoteke &quot;%1&quot; ne obstaja.</translation>
     </message>
     <message>
         <location line="-12"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"/>
+        <translation>Napaka: Neveljavna kombinacija -regtest and -testnet</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="+82"/>
+        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Vnesite bitcoin naslov (npr.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1657,12 +1688,12 @@ Naslov: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="+36"/>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Shrani sliko...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kopiraj sliko</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -1672,7 +1703,7 @@ Naslov: %4
     <message>
         <location line="+0"/>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>PNG slika (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1695,7 +1726,7 @@ Naslov: %4
         <location line="+23"/>
         <location filename="../rpcconsole.cpp" line="+359"/>
         <source>N/A</source>
-        <translation type="unfinished"/>
+        <translation>Neznano</translation>
     </message>
     <message>
         <location line="-223"/>
@@ -1775,17 +1806,17 @@ Naslov: %4
     <message>
         <location line="+72"/>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Omrežni promet</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>&amp;Clear</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Pošisti</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>Vsote</translation>
     </message>
     <message>
         <location line="+64"/>
@@ -1830,63 +1861,63 @@ Naslov: %4
     <message>
         <location line="+1"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation type="unfinished"/>
+        <translation>Vtipkaj &lt;b&gt;pomoč&lt;/b&gt; za vpogled v razpožljive ukaze.</translation>
     </message>
     <message>
         <location line="+122"/>
         <source>%1 B</source>
-        <translation type="unfinished"/>
+        <translation>%1 bitov</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 KB</source>
-        <translation type="unfinished"/>
+        <translation>%1 kilobitov</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 MB</source>
-        <translation type="unfinished"/>
+        <translation>%1 megabitov</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 GB</source>
-        <translation type="unfinished"/>
+        <translation>%1 gigabitov</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>%1 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 minut</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>%1 h</source>
-        <translation type="unfinished"/>
+        <translation>%1 ur</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 h %2 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 ur %2 minut</translation>
     </message>
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+83"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+107"/>
         <source>&amp;Amount:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Količina:</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-16"/>
         <source>&amp;Label:</source>
         <translation>&amp;Oznaka:</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-37"/>
         <source>&amp;Message:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sporočilo:</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-20"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation type="unfinished"/>
     </message>
@@ -1896,47 +1927,50 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+27"/>
-        <source>An optional label to associate with the new receiving address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+14"/>
+        <location line="+23"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
+        <location line="+21"/>
+        <source>An optional label to associate with the new receiving address.</source>
+        <translation>Pomožna oznaka je povezana z novim sprejemnim naslovom.</translation>
+    </message>
+    <message>
+        <location line="-7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+23"/>
+        <location line="+22"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+32"/>
         <source>Clear all fields of the form.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Clear</source>
+        <translation>Počisti</translation>
+    </message>
+    <message>
+        <location line="+78"/>
+        <source>Requested payments history</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="-98"/>
         <source>&amp;Request payment</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zahtevaj plačilo</translation>
     </message>
     <message>
-        <location line="+47"/>
-        <source>Requested payments</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+16"/>
+        <location line="+120"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation type="unfinished"/>
     </message>
@@ -1955,28 +1989,43 @@ Naslov: %4
         <source>Remove</source>
         <translation>Odstrani</translation>
     </message>
+    <message>
+        <location filename="../receivecoinsdialog.cpp" line="+38"/>
+        <source>Copy label</source>
+        <translation>Kopiraj oznako</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy message</source>
+        <translation>Kopiraj sporočilo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>Kopiraj količino</translation>
+    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="+29"/>
         <source>QR Code</source>
-        <translation type="unfinished"/>
+        <translation>QR Koda</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished"/>
+        <translation>Kopraj &amp;URl</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>Kopiraj &amp;Naslov</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Shrani sliko..</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="+56"/>
@@ -1986,7 +2035,7 @@ Naslov: %4
     <message>
         <location line="+6"/>
         <source>Payment information</source>
-        <translation type="unfinished"/>
+        <translation>Informacija o plačilu</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2056,12 +2105,17 @@ Naslov: %4
         <source>(no message)</source>
         <translation>(ni sporočila)</translation>
     </message>
+    <message>
+        <location line="+8"/>
+        <source>(no amount)</source>
+        <translation>(brez količine)</translation>
+    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+381"/>
+        <location filename="../sendcoinsdialog.cpp" line="+380"/>
         <location line="+80"/>
         <source>Send Coins</source>
         <translation>Pošlji kovance</translation>
@@ -2074,17 +2128,17 @@ Naslov: %4
     <message>
         <location line="+20"/>
         <source>Inputs...</source>
-        <translation type="unfinished"/>
+        <translation>Vnosi...</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>automatically selected</source>
-        <translation type="unfinished"/>
+        <translation>samodejno izbran</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
+        <translation>Premalo sredstev!</translation>
     </message>
     <message>
         <location line="+89"/>
@@ -2094,7 +2148,7 @@ Naslov: %4
     <message>
         <location line="+35"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Biti:</translation>
     </message>
     <message>
         <location line="+48"/>
@@ -2104,12 +2158,12 @@ Naslov: %4
     <message>
         <location line="+32"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Prednostno mesto:</translation>
     </message>
     <message>
         <location line="+48"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Provizija:</translation>
     </message>
     <message>
         <location line="+32"/>
@@ -2137,7 +2191,7 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+115"/>
+        <location line="+164"/>
         <source>Send to multiple recipients at once</source>
         <translation>Pošlji več prejemnikom hkrati</translation>
     </message>
@@ -2147,7 +2201,7 @@ Naslov: %4
         <translation>Dodaj &amp;prejemnika</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="-23"/>
         <source>Clear all fields of the form.</source>
         <translation type="unfinished"/>
     </message>
@@ -2157,12 +2211,12 @@ Naslov: %4
         <translation>Počisti &amp;vse</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+52"/>
         <source>Balance:</source>
         <translation>Dobroimetje:</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="-78"/>
         <source>Confirm the send action</source>
         <translation>Potrdi odlivno dejanje</translation>
     </message>
@@ -2172,7 +2226,7 @@ Naslov: %4
         <translation>P&amp;ošlji</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-228"/>
+        <location filename="../sendcoinsdialog.cpp" line="-229"/>
         <source>Confirm send coins</source>
         <translation>Potrdi odliv kovancev </translation>
     </message>
@@ -2185,14 +2239,9 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-136"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Vnesite bitcoin naslov (npr.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
-        <location line="+15"/>
+        <location line="-121"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Kopiraj količino</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2202,7 +2251,7 @@ Naslov: %4
     <message>
         <location line="+1"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Kopiraj provizijo</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2212,12 +2261,12 @@ Naslov: %4
     <message>
         <location line="+1"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Kopiraj bite</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Kopiraj prednostno mesto</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2240,7 +2289,7 @@ Naslov: %4
         <translation>ali</translation>
     </message>
     <message>
-        <location line="+202"/>
+        <location line="+203"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation type="unfinished"/>
     </message>
@@ -2262,7 +2311,7 @@ Naslov: %4
     <message>
         <location line="+3"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation type="unfinished"/>
+        <translation>Najdena kopija naslova, možnost pošiljanja na vsakega izmed naslov le enkrat ob pošiljanju.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2275,12 +2324,12 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+113"/>
         <source>Warning: Invalid Bitcoin address</source>
         <translation>Opozorilo: Neveljaven Bitcoin naslov</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+20"/>
         <source>(no label)</source>
         <translation>(ni oznake)</translation>
     </message>
@@ -2290,24 +2339,24 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-366"/>
+        <location line="-367"/>
         <source>Are you sure you want to send?</source>
-        <translation type="unfinished"/>
+        <translation>Ali ste prepričani, da želite poslati?</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>added as transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>dodano kot provizija transakcije</translation>
     </message>
     <message>
-        <location line="+170"/>
+        <location line="+171"/>
         <source>Payment request expired</source>
-        <translation type="unfinished"/>
+        <translation>Zahteva plačila je potekla</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Invalid payment address %1</source>
-        <translation type="unfinished"/>
+        <translation>Neveljaven naslov plačila %1</translation>
     </message>
 </context>
 <context>
@@ -2342,7 +2391,7 @@ Naslov: %4
     <message>
         <location line="-50"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Izberi zadnje uporabljen naslov</translation>
     </message>
     <message>
         <location line="-40"/>
@@ -2377,22 +2426,22 @@ Naslov: %4
         <translation>Sporočilo:</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+958"/>
+        <location line="+968"/>
         <source>This is a verified payment request.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="-991"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
+        <translation>Vnesite oznako za ta naslov, ki bo shranjena v seznam uporabljenih naslovov</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+459"/>
+        <location line="+426"/>
         <source>This is an unverified payment request.</source>
         <translation type="unfinished"/>
     </message>
@@ -2408,11 +2457,6 @@ Naslov: %4
         <source>Memo:</source>
         <translation type="unfinished"/>
     </message>
-    <message>
-        <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Vnesite bitcoin naslov (npr.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
 </context>
 <context>
     <name>ShutdownWindow</name>
@@ -2424,7 +2468,7 @@ Naslov: %4
     <message>
         <location line="+1"/>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>Ne zaustavite računalnika dokler to okno ne izgine.</translation>
     </message>
 </context>
 <context>
@@ -2450,19 +2494,19 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+10"/>
-        <location line="+213"/>
+        <location line="+7"/>
+        <location line="+210"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Izberi zadnje uporabljen naslov</translation>
     </message>
     <message>
-        <location line="-203"/>
-        <location line="+213"/>
+        <location line="-200"/>
+        <location line="+210"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
-        <location line="-203"/>
+        <location line="-200"/>
         <source>Paste address from clipboard</source>
         <translation>Prilepi naslov iz odložišča</translation>
     </message>
@@ -2479,7 +2523,7 @@ Naslov: %4
     <message>
         <location line="+7"/>
         <source>Signature</source>
-        <translation type="unfinished"/>
+        <translation>Podpis</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -2503,12 +2547,12 @@ Naslov: %4
     </message>
     <message>
         <location line="+3"/>
-        <location line="+146"/>
+        <location line="+143"/>
         <source>Clear &amp;All</source>
         <translation>Počisti &amp;vse </translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-84"/>
         <source>&amp;Verify Message</source>
         <translation>&amp;Preveri sporočilo</translation>
     </message>
@@ -2523,14 +2567,14 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+37"/>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
         <source>Verify &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>Preveri &amp;Sporočilo</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -2538,50 +2582,44 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+29"/>
-        <location line="+3"/>
+        <location filename="../signverifymessagedialog.cpp" line="+30"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Vnesite bitcoin naslov (npr.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="-2"/>
+        <location line="-1"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
-        <translation type="unfinished"/>
+        <translation>Kliknite &quot;Podpiši sporočilo&quot; za ustvaritev podpisa</translation>
     </message>
     <message>
         <location line="+84"/>
-        <location line="+81"/>
+        <location line="+80"/>
         <source>The entered address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>Vnešeni naslov ni veljaven.</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-80"/>
         <location line="+8"/>
-        <location line="+73"/>
+        <location line="+72"/>
         <location line="+8"/>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Prosimo preverite naslov in poizkusite znova.</translation>
     </message>
     <message>
-        <location line="-81"/>
-        <location line="+81"/>
+        <location line="-80"/>
+        <location line="+80"/>
         <source>The entered address does not refer to a key.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-72"/>
         <source>Wallet unlock was cancelled.</source>
         <translation>Odklepanje denarnice je bilo prekinjeno.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished"/>
+        <translation>Zasebni ključ vnešenega naslov ni na voljo.</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -2594,15 +2632,15 @@ Naslov: %4
         <translation>Sporočilo podpisano.</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+58"/>
         <source>The signature could not be decoded.</source>
-        <translation type="unfinished"/>
+        <translation>Ni bilo mogoče dešifrirati podpisa.</translation>
     </message>
     <message>
         <location line="+0"/>
         <location line="+13"/>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Prosimo preverite podpis in poizkusite znova.</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -2655,6 +2693,11 @@ Naslov: %4
     </message>
     <message>
         <location line="+6"/>
+        <source>conflicted</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>%1/offline</source>
         <translation type="unfinished"/>
     </message>
@@ -2697,20 +2740,20 @@ Naslov: %4
         <location line="+5"/>
         <location line="+17"/>
         <source>From</source>
-        <translation type="unfinished"/>
+        <translation>Pošiljatelj</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+22"/>
         <location line="+58"/>
         <source>To</source>
-        <translation type="unfinished"/>
+        <translation>Prejemnik</translation>
     </message>
     <message>
         <location line="-77"/>
         <location line="+2"/>
         <source>own address</source>
-        <translation type="unfinished"/>
+        <translation>lasten naslov</translation>
     </message>
     <message>
         <location line="-2"/>
@@ -2734,7 +2777,7 @@ Naslov: %4
     <message>
         <location line="+2"/>
         <source>not accepted</source>
-        <translation type="unfinished"/>
+        <translation>ni bilo sprejeto</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2747,12 +2790,12 @@ Naslov: %4
     <message>
         <location line="-62"/>
         <source>Transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>Provizija transakcije</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Net amount</source>
-        <translation type="unfinished"/>
+        <translation>Neto količina</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2773,7 +2816,7 @@ Naslov: %4
     <message>
         <location line="+18"/>
         <source>Merchant</source>
-        <translation type="unfinished"/>
+        <translation>Trgovec</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2793,7 +2836,7 @@ Naslov: %4
     <message>
         <location line="+3"/>
         <source>Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Vnosi</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -2803,12 +2846,12 @@ Naslov: %4
     <message>
         <location line="+1"/>
         <source>true</source>
-        <translation type="unfinished"/>
+        <translation>pravilno</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>false</source>
-        <translation type="unfinished"/>
+        <translation>nepravilno</translation>
     </message>
     <message>
         <location line="-232"/>
@@ -2816,12 +2859,12 @@ Naslov: %4
         <translation>, še ni bila uspešno raznešena</translation>
     </message>
     <message numerus="yes">
-        <location line="-35"/>
+        <location line="-37"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+72"/>
         <source>unknown</source>
         <translation>neznano</translation>
     </message>
@@ -2862,12 +2905,12 @@ Naslov: %4
         <translation>Količina</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+78"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation type="unfinished"/>
     </message>
     <message numerus="yes">
-        <location line="+16"/>
+        <location line="-21"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
@@ -2877,23 +2920,12 @@ Naslov: %4
         <translation>Odpri enoto %1</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Offline (%1 confirmations)</source>
-        <translation>Brez povezave (%1 potrdil)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation>Nepotrjeno (&amp;1 od %2 potrdil)</translation>
-    </message>
-    <message>
-        <location line="-22"/>
-        <location line="+25"/>
+        <location line="+12"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Potrjeno (%1 potrdil)</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="+9"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Ta blok ni prejelo še nobeno vozlišče. Najverjetneje ne bo sprejet!</translation>
     </message>
@@ -2903,7 +2935,27 @@ Naslov: %4
         <translation>Generirano, toda ne sprejeto</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="-21"/>
+        <source>Offline</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed</source>
+        <translation>Nepotrjeno</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Conflicted</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+51"/>
         <source>Received with</source>
         <translation>Prejeto z</translation>
     </message>
@@ -2933,7 +2985,7 @@ Naslov: %4
         <translation>(ni na voljo)</translation>
     </message>
     <message>
-        <location line="+199"/>
+        <location line="+190"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Stanje transakcije. Zapeljite z miško čez to polje za prikaz števila potrdil. </translation>
     </message>
@@ -3049,7 +3101,7 @@ Naslov: %4
     <message>
         <location line="+1"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Kopiraj ID transakcije</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3069,7 +3121,7 @@ Naslov: %4
     <message>
         <location line="+19"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Neuspešen izvoz</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -3079,12 +3131,12 @@ Naslov: %4
     <message>
         <location line="+4"/>
         <source>Exporting Successful</source>
-        <translation type="unfinished"/>
+        <translation>Uspešen izvoz</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Zgodovina poteklih transakcij je bila uspešno shranjena na %1.</translation>
     </message>
     <message>
         <location line="-22"/>
@@ -3158,7 +3210,7 @@ Naslov: %4
     <message>
         <location filename="../walletview.cpp" line="+43"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Izvozi</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3168,43 +3220,43 @@ Naslov: %4
     <message>
         <location line="+181"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Napravi varnostno kopijo denarnice</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"/>
+        <translation>Podatki denarnice (*.dat)</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation>Varnostna kopijo neuspešna</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Prišlo je do napake pri shranjevanju podatkov denarnice na %1.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Podatki denarnice so bili uspešno shranjena na %1.</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Backup Successful</source>
-        <translation type="unfinished"/>
+        <translation>Varnostna kopija uspešna</translation>
     </message>
 </context>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+221"/>
+        <location filename="../bitcoinstrings.cpp" line="+223"/>
         <source>Usage:</source>
         <translation>Uporaba:</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-55"/>
         <source>List commands</source>
         <translation>Prikaži ukaze</translation>
     </message>
@@ -3256,15 +3308,15 @@ Naslov: %4
     <message>
         <location line="+84"/>
         <source>Specify your own public address</source>
-        <translation type="unfinished"/>
+        <translation>Določite vaš lasten javni naslov</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Prag za prekinitev povezav s slabimi odjemalci (privzeto: 1000)</translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-150"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation type="unfinished"/>
     </message>
@@ -3284,17 +3336,17 @@ Naslov: %4
         <translation>Sprejmi ukaze iz ukazne vrstice in JSON-RPC</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+81"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Teci v ozadju in sprejemaj ukaze</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+40"/>
         <source>Use the test network</source>
         <translation>Uporabi testno omrežje</translation>
     </message>
     <message>
-        <location line="-118"/>
+        <location line="-120"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation type="unfinished"/>
     </message>
@@ -3346,22 +3398,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+3"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Napaka: Transakcija ni bila sprejeta! To se je morebiti zgodilo, ker so nekateri kovanci v vaši denarnici bili že porabljeni, na primer če ste uporabili kopijo wallet.dat in so tako kovanci bili porabljeni v kopiji, ostali pa označeni kot neporabljeni.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation type="unfinished"/>
+        <translation>Napaka: Ta transakcija potrebuje povizijo, ki je najmanj %s zaradi svoje količine, kompliciranosti, ali zaradi uporabe prejetih sredstev.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished"/>
+        <translation>Izvedi ukaz, ko bo transakcija denarnice se spremenila (V cmd je bil TxID zamenjan za %s)</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"/>
+        <translation>To je pred izdana poizkusna verzija - uporaba na lastno odgovornost - ne uporabljajte je za rudarstvo ali trgovske aplikacije</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -3391,7 +3443,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+3"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Opozorilo: napaka pri branju wallet.dat! Vsi ključi so bili pravilno prebrani, podatki o transakciji ali imenik vnešenih naslovov so morda izgubljeni ali nepravilni.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3401,7 +3453,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+9"/>
         <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
+        <translation>&lt;kategorija&gt; je lahko:</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -3425,6 +3477,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+5"/>
+        <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Connect only to the specified node(s)</source>
         <translation type="unfinished"/>
     </message>
@@ -3481,17 +3538,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+2"/>
         <source>Error: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>Opozorilo: Premalo prostora na disku!</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation type="unfinished"/>
+        <translation>Opozorilo: Denarnica je zaklenjena, ni mogoče opraviti transkacijo! </translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: system error: </source>
-        <translation type="unfinished"/>
+        <translation>Napaka: sistemska napaka:</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3531,12 +3588,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Failed to write file info</source>
-        <translation type="unfinished"/>
+        <translation>Zapisovanje informacij o datoteki neuspešno</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to write to coin database</source>
-        <translation type="unfinished"/>
+        <translation>Neuspešno zapisovanje na bazi podatkov kovancev</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3561,7 +3618,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Generate coins (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Ustvari kovance (privzeto: 0)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3616,7 +3673,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Send command to Bitcoin server</source>
-        <translation type="unfinished"/>
+        <translation>Pošlji ukaz na Bitcoin strežnik</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3635,8 +3692,13 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+2"/>
-        <source>Start Bitcoin server</source>
+        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
         <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Start Bitcoin server</source>
+        <translation>Zaženi Bitcoin strežnik</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3661,7 +3723,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
+        <translation>Počakajte na zagon RPC strežnika</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3684,12 +3746,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-79"/>
+        <location line="-80"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-105"/>
+        <location line="-106"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation type="unfinished"/>
     </message>
@@ -3709,9 +3771,9 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+90"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Informacije</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -3779,24 +3841,24 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>System error: </source>
-        <translation type="unfinished"/>
+        <translation>Sistemska napaka:</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Transaction amount too small</source>
-        <translation type="unfinished"/>
+        <translation>Količina transakcije je pramajhna</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
+        <translation>Količina transkacije mora biti pozitivna</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>Transkacija je prevelika</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -3825,41 +3887,46 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>version</source>
         <translation>različica</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat poškodovana, neuspešna obnova</translation>
     </message>
     <message>
-        <location line="-58"/>
+        <location line="-60"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Geslo za JSON-RPC povezave</translation>
     </message>
     <message>
-        <location line="-70"/>
+        <location line="-71"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Dovoli JSON-RPC povezave z določenega IP naslova</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+81"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Pošlji ukaze vozlišču na &lt;ip&gt; (privzet: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-133"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+161"/>
+        <location line="+163"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Posodobi denarnico v najnovejši zapis</translation>
     </message>
     <message>
-        <location line="-24"/>
+        <location line="-25"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Nastavi velikost ključa bazena na &lt;n&gt; (privzeto: 100)</translation>
     </message>
@@ -3869,12 +3936,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Ponovno preglej verigo blokov za manjkajoče transakcije denarnice</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+39"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Uporabi OpenSSL (https) za JSON-RPC povezave</translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-31"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Datoteka potrdila strežnika (privzeta: server.cert)</translation>
     </message>
@@ -3884,7 +3951,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Zasebni ključ strežnika (privzet: server.pem)</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+17"/>
         <source>This help message</source>
         <translation>To sporočilo pomoči</translation>
     </message>
@@ -3894,12 +3961,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-109"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Loading addresses...</source>
         <translation>Nalaganje naslovov ...</translation>
     </message>
@@ -3914,12 +3981,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Napaka pri nalaganju wallet.dat: denarnica zahteva novejšo različico Bitcoina</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+99"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Denarnica mora biti prepisana: ponovno zaženite Bitcoin za doknčanje</translation>
     </message>
     <message>
-        <location line="-100"/>
+        <location line="-101"/>
         <source>Error loading wallet.dat</source>
         <translation>Napaka pri nalaganju wallet.dat</translation>
     </message>
@@ -3929,7 +3996,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+57"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
@@ -3939,7 +4006,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-101"/>
+        <location line="-103"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
@@ -3949,19 +4016,19 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+49"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount</source>
-        <translation type="unfinished"/>
+        <translation>Neveljavna količina</translation>
     </message>
     <message>
         <location line="-6"/>
         <source>Insufficient funds</source>
-        <translation type="unfinished"/>
+        <translation>Premalo sredstev</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -3969,7 +4036,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nalaganje indeksa blokov ...</translation>
     </message>
     <message>
-        <location line="-62"/>
+        <location line="-63"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Dodaj vozlišče za povezavo nanj in skušaj le to obdržati odprto</translation>
     </message>
@@ -3979,12 +4046,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+95"/>
+        <location line="+96"/>
         <source>Loading wallet...</source>
         <translation>Nalaganje denarnice ...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Cannot downgrade wallet</source>
         <translation>Ne morem </translation>
     </message>
@@ -3994,7 +4061,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+68"/>
         <source>Rescanning...</source>
         <translation>Ponovno pregledovanje ...</translation>
     </message>
@@ -4004,17 +4071,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nalaganje končano</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+86"/>
         <source>To use the %s option</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-78"/>
         <source>Error</source>
         <translation>Napaka</translation>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-36"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
