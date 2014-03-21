@@ -392,14 +392,15 @@ void TableViewLastColumnResizingFixer::connectViewHeadersSignals()
     connect(tableView->horizontalHeader(), SIGNAL(geometriesChanged()), this, SLOT(on_geometriesChanged()));
 }
 
-//we need to disconnect these while handling the resize events, otherwise we can enter infinite loops
+// We need to disconnect these while handling the resize events, otherwise we can enter infinite loops.
 void TableViewLastColumnResizingFixer::disconnectViewHeadersSignals()
 {
     disconnect(tableView->horizontalHeader(), SIGNAL(sectionResized(int,int,int)), this, SLOT(on_sectionResized(int,int,int)));
     disconnect(tableView->horizontalHeader(), SIGNAL(geometriesChanged()), this, SLOT(on_geometriesChanged()));
 }
 
-//setup the resize mode, handles compatibility for QT5 and below as the method signatures changed. (refactored here for readability)
+// Setup the resize mode, handles compatibility for Qt5 and below as the method signatures changed.
+// Refactored here for readability.
 void TableViewLastColumnResizingFixer::setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode)
 {
 #if QT_VERSION < 0x050000
@@ -409,7 +410,8 @@ void TableViewLastColumnResizingFixer::setViewHeaderResizeMode(int logicalIndex,
 #endif
 }
 
-void TableViewLastColumnResizingFixer::resizeColumn(int nColumnIndex, int width) {
+void TableViewLastColumnResizingFixer::resizeColumn(int nColumnIndex, int width)
+{
     tableView->setColumnWidth(nColumnIndex, width);
     tableView->horizontalHeader()->resizeSection(nColumnIndex, width);
 }
@@ -438,7 +440,7 @@ int TableViewLastColumnResizingFixer::getAvailableWidthForColumn(int column)
     return nResult;
 }
 
-//make sure we don't make the columns wider than the table's viewport's width.
+// Make sure we don't make the columns wider than the tables viewport width.
 void TableViewLastColumnResizingFixer::adjustTableColumnsWidth()
 {
     disconnectViewHeadersSignals();
@@ -453,14 +455,15 @@ void TableViewLastColumnResizingFixer::adjustTableColumnsWidth()
     }
 }
 
-//make column use all the space available, useful during window resizing.
-void TableViewLastColumnResizingFixer::stretchColumnWidth(int column) {
+// Make column use all the space available, useful during window resizing.
+void TableViewLastColumnResizingFixer::stretchColumnWidth(int column)
+{
     disconnectViewHeadersSignals();
     resizeColumn(column, getAvailableWidthForColumn(column));
     connectViewHeadersSignals();
 }
 
-//when a section is resized this is a slot-proxy for ajustAmountColumnWidth()
+// When a section is resized this is a slot-proxy for ajustAmountColumnWidth().
 void TableViewLastColumnResizingFixer::on_sectionResized(int logicalIndex, int oldSize, int newSize)
 {
     adjustTableColumnsWidth();
@@ -471,8 +474,8 @@ void TableViewLastColumnResizingFixer::on_sectionResized(int logicalIndex, int o
     }
 }
 
-//when the table's geometry is ready, we manually perform the Stretch of the "Message" column
-//as the "Stretch" resize mode does not allow for interactive resizing.
+// When the tabless geometry is ready, we manually perform the stretch of the "Message" column,
+// as the "Stretch" resize mode does not allow for interactive resizing.
 void TableViewLastColumnResizingFixer::on_geometriesChanged()
 {
     if ((getColumnsWidth() - this->tableView->horizontalHeader()->width()) != 0)
@@ -488,9 +491,9 @@ void TableViewLastColumnResizingFixer::on_geometriesChanged()
  * the resize modes of the last 2 columns of the table and
  */
 TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth) :
-        tableView(table),
-        lastColumnMinimumWidth(lastColMinimumWidth),
-        allColumnsMinimumWidth(allColsMinimumWidth)
+    tableView(table),
+    lastColumnMinimumWidth(lastColMinimumWidth),
+    allColumnsMinimumWidth(allColsMinimumWidth)
 {
     columnCount = tableView->horizontalHeader()->count();
     lastColumnIndex = columnCount - 1;
@@ -499,7 +502,6 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
     setViewHeaderResizeMode(secondToLastColumnIndex, QHeaderView::Interactive);
     setViewHeaderResizeMode(lastColumnIndex, QHeaderView::Interactive);
 }
-
 
 #ifdef WIN32
 boost::filesystem::path static StartupShortcutPath()
