@@ -44,15 +44,10 @@ static const int64_t CENT = 1000000;
 #define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 
-/* Format characters for (s)size_t, ptrdiff_t, uint64_t.
+/* Format characters for (s)size_t, ptrdiff_t.
  *
- * As the tinyformat-based formatting system is type-safe, no special format
- * characters are really needed to specify sizes. Tinyformat can support
- * (ignores) the C99 prefixes such as "ll" but chokes on MSVC's inttypes
- * defines prefixes such as "I64X".  So don't include inttypes.h and define our
- * own for compatibility.
- * If you get a warning here about a redefine of PRI?64, make sure that
- * inttypes.h is not included.
+ * Define these as empty as the tinyformat-based formatting system is
+ * type-safe, no special format characters are needed to specify sizes.
  */
 #define PRIszx    "x"
 #define PRIszu    "u"
@@ -60,9 +55,6 @@ static const int64_t CENT = 1000000;
 #define PRIpdx    "x"
 #define PRIpdu    "u"
 #define PRIpdd    "d"
-#define PRIx64    "x"
-#define PRIu64    "u"
-#define PRId64    "d"
 
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
 #define PAIRTYPE(t1, t2)    std::pair<t1, t2>
@@ -172,7 +164,6 @@ static inline bool error(const char* format)
 
 
 void LogException(std::exception* pex, const char* pszThread);
-void PrintException(std::exception* pex, const char* pszThread);
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
 void ParseString(const std::string& str, char c, std::vector<std::string>& v);
 std::string FormatMoney(int64_t n, bool fPlus=false);
@@ -234,7 +225,7 @@ void runCommand(std::string strCommand);
 
 inline std::string i64tostr(int64_t n)
 {
-    return strprintf("%"PRId64, n);
+    return strprintf("%d", n);
 }
 
 inline std::string itostr(int n)
@@ -566,10 +557,12 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
         throw;
     }
     catch (std::exception& e) {
-        PrintException(&e, name);
+        PrintExceptionContinue(&e, name);
+        throw;
     }
     catch (...) {
-        PrintException(NULL, name);
+        PrintExceptionContinue(NULL, name);
+        throw;
     }
 }
 // .. and a wrapper that just calls func once
@@ -589,10 +582,12 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         throw;
     }
     catch (std::exception& e) {
-        PrintException(&e, name);
+        PrintExceptionContinue(&e, name);
+        throw;
     }
     catch (...) {
-        PrintException(NULL, name);
+        PrintExceptionContinue(NULL, name);
+        throw;
     }
 }
 

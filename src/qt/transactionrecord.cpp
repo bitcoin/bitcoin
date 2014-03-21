@@ -164,7 +164,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         (wtx.IsCoinBase() ? 1 : 0),
         wtx.nTimeReceived,
         idx);
-    status.confirmed = wtx.IsTrusted();
+    status.countsForBalance = wtx.IsTrusted() && !(wtx.GetBlocksToMaturity() > 0);
     status.depth = wtx.GetDepthInMainChain();
     status.cur_num_blocks = chainActive.Height();
 
@@ -181,6 +181,31 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
             status.open_for = wtx.nLockTime;
         }
     }
+    // For generated transactions, determine maturity
+    else if(type == TransactionRecord::Generated)
+    {
+        if (wtx.GetBlocksToMaturity() > 0)
+        {
+            status.status = TransactionStatus::Immature;
+
+            if (wtx.IsInMainChain())
+            {
+                status.matures_in = wtx.GetBlocksToMaturity();
+
+                // Check if the block was requested by anyone
+                if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                    status.status = TransactionStatus::MaturesWarning;
+            }
+            else
+            {
+                status.status = TransactionStatus::NotAccepted;
+            }
+        }
+        else
+        {
+            status.status = TransactionStatus::Confirmed;
+        }
+    }
     else
     {
         if (status.depth < 0)
@@ -191,42 +216,20 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         {
             status.status = TransactionStatus::Offline;
         }
-        else if (status.depth < NumConfirmations)
+        else if (status.depth == 0)
         {
             status.status = TransactionStatus::Unconfirmed;
         }
-        else
+        else if (status.depth < RecommendedNumConfirmations)
         {
-            status.status = TransactionStatus::HaveConfirmations;
-        }
-    }
-
-    // For generated transactions, determine maturity
-    if(type == TransactionRecord::Generated)
-    {
-        int64_t nCredit = wtx.GetCredit(true);
-        if (nCredit == 0)
-        {
-            status.maturity = TransactionStatus::Immature;
-
-            if (wtx.IsInMainChain())
-            {
-                status.matures_in = wtx.GetBlocksToMaturity();
-
-                // Check if the block was requested by anyone
-                if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-                    status.maturity = TransactionStatus::MaturesWarning;
-            }
-            else
-            {
-                status.maturity = TransactionStatus::NotAccepted;
-            }
+            status.status = TransactionStatus::Confirming;
         }
         else
         {
-            status.maturity = TransactionStatus::Mature;
+            status.status = TransactionStatus::Confirmed;
         }
     }
+
 }
 
 bool TransactionRecord::statusUpdateNeeded()

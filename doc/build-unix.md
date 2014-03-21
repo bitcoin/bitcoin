@@ -14,21 +14,21 @@ This will build bitcoin-qt as well if the dependencies are met.
 Dependencies
 ---------------------
 
- Library     Purpose           Description
- -------     -------           -----------
- libssl      SSL Support       Secure communications
- libdb4.8    Berkeley DB       Wallet storage
- libboost    Boost             C++ Library
- miniupnpc   UPnP Support      Optional firewall-jumping support
- qt          GUI               GUI toolkit
- protobuf    Payments in GUI   Data interchange format used for payment protocol
- libqrencode QR codes in GUI   Optional for generating QR codes
+ Library     | Purpose          | Description
+ ------------|------------------|----------------------
+ libssl      | SSL Support      | Secure communications
+ libdb4.8    | Berkeley DB      | Wallet storage
+ libboost    | Boost            | C++ Library
+ miniupnpc   | UPnP Support     | Optional firewall-jumping support
+ qt          | GUI              | GUI toolkit
+ protobuf    | Payments in GUI  | Data interchange format used for payment protocol
+ libqrencode | QR codes in GUI  | Optional for generating QR codes
 
 [miniupnpc](http://miniupnp.free.fr/) may be used for UPnP port mapping.  It can be downloaded from [here](
 http://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
 turned off by default.  See the configure options for upnp behavior desired:
 
-	--with-miniupnpc         No UPnP support miniupnp not required
+	--without-miniupnpc      No UPnP support miniupnp not required
 	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
 	--enable-upnp-default    UPnP support turned on by default at runtime
 
@@ -46,7 +46,7 @@ Licenses of statically linked libraries:
 -  GCC           4.3.3
 -  OpenSSL       1.0.1c
 -  Berkeley DB   4.8.30.NC
--  Boost         1.37
+-  Boost         1.55
 -  miniupnpc     1.6
 -  qt            4.8.3
 -  protobuf      2.5.0
@@ -65,19 +65,34 @@ for Ubuntu 12.04 and later:
 	sudo apt-get install libboost-all-dev
 
  db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
+ You can add the repository using the following command:
+
+        sudo add-apt-repository ppa:bitcoin/bitcoin
+        sudo apt-get update
 
  Ubuntu 12.04 and later have packages for libdb5.1-dev and libdb5.1++-dev,
  but using these will break binary wallet compatibility, and is not recommended.
- 
-for Ubuntu 13.10: 
-        libboost1.54-all-dev will not work. Remove libboost1.54-all-dev and install libboost1.53-all-dev
+
+for Ubuntu 13.10:
+	libboost1.54 will not work,
+	remove libboost1.54-all-dev and install libboost1.53-all-dev instead.
+
+for Debian 7 (Wheezy) and later:
+ The oldstable repository contains db4.8 packages.
+ Add the following line to /etc/apt/sources.list,
+ replacing [mirror] with any official debian mirror.
+
+	deb http://[mirror]/debian/ oldstable main
+
+To enable the change run
+
+	sudo apt-get update
 
 for other Ubuntu & Debian:
 
 	sudo apt-get install libdb4.8-dev
 	sudo apt-get install libdb4.8++-dev
-	sudo apt-get install libboost1.37-dev
- (If using Boost 1.37, append -mt to the boost libraries in the makefile)
+	sudo apt-get install libboost1.55-all-dev
 
 Optional:
 
@@ -97,7 +112,7 @@ To build with Qt 4 you need the following:
 
 For Qt 5 you need the following:
 
-    apt-get install libqt5gui5 libqt5core5 libqt5dbus5 qttools5-dev-tools libprotobuf-dev
+    apt-get install libqt5gui5 libqt5core5 libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev
 
 libqrencode (optional) can be installed with:
 
@@ -125,8 +140,10 @@ Berkeley DB
 -----------
 You need Berkeley DB 4.8.  If you have to build Berkeley DB yourself:
 
+	cd build_unix/
 	../dist/configure --enable-cxx
 	make
+	sudo make install
 
 
 Boost

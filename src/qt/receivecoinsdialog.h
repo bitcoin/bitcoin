@@ -11,6 +11,7 @@
 #include <QPoint>
 #include <QVariant>
 #include <QHeaderView>
+#include <QItemSelection>
 #include "guiutil.h"
 
 namespace Ui {
@@ -62,6 +63,7 @@ private slots:
     void on_showRequestButton_clicked();
     void on_removeRequestButton_clicked();
     void on_recentRequestsView_doubleClicked(const QModelIndex &index);
+    void on_recentRequestsView_selectionChanged(const QItemSelection &, const QItemSelection &);
     void updateDisplayUnit();
     void showMenu(const QPoint &);
     void copyLabel();

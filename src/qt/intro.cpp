@@ -14,7 +14,7 @@
 
 /* Minimum free space (in bytes) needed for data directory */
 static const uint64_t GB_BYTES = 1000000000LL;
-static const uint64_t BLOCK_CHAIN_SIZE = 10LL * GB_BYTES;
+static const uint64_t BLOCK_CHAIN_SIZE = 20LL * GB_BYTES;
 
 /* Check free space asynchronously to prevent hanging the UI thread.
 
@@ -146,7 +146,7 @@ QString Intro::getDefaultDataDirectory()
     return QString::fromStdString(GetDefaultDataDir().string());
 }
 
-void Intro::pickDataDirectory(bool fIsTestnet)
+void Intro::pickDataDirectory()
 {
     namespace fs = boost::filesystem;
     QSettings settings;
@@ -164,10 +164,7 @@ void Intro::pickDataDirectory(bool fIsTestnet)
         /* If current default data directory does not exist, let the user choose one */
         Intro intro;
         intro.setDataDirectory(dataDir);
-        if (!fIsTestnet)
-            intro.setWindowIcon(QIcon(":icons/bitcoin"));
-        else
-            intro.setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+        intro.setWindowIcon(QIcon(":icons/bitcoin"));
 
         while(true)
         {

@@ -30,6 +30,11 @@ OptionsModel::OptionsModel(QObject *parent) :
     Init();
 }
 
+void OptionsModel::addOverriddenOption(const std::string &option)
+{
+    strOverriddenByCommandLine += QString::fromStdString(option) + "=" + QString::fromStdString(mapArgs[option]) + " ";
+}
+
 // Writes all missing QSettings with their default values
 void OptionsModel::Init()
 {
@@ -76,23 +81,23 @@ void OptionsModel::Init()
         settings.setValue("nTransactionFee", 0);
     nTransactionFee = settings.value("nTransactionFee").toLongLong(); // if -paytxfee is set, this will be overridden later in init.cpp
     if (mapArgs.count("-paytxfee"))
-        strOverriddenByCommandLine += "-paytxfee ";
+        addOverriddenOption("-paytxfee");
 
     if (!settings.contains("bSpendZeroConfChange"))
         settings.setValue("bSpendZeroConfChange", true);
     if (!SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
-        strOverriddenByCommandLine += "-spendzeroconfchange ";
+        addOverriddenOption("-spendzeroconfchange");
 #endif
 
     if (!settings.contains("nDatabaseCache"))
         settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
     if (!SoftSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
-        strOverriddenByCommandLine += "-dbcache ";
+        addOverriddenOption("-dbcache");
 
     if (!settings.contains("nThreadsScriptVerif"))
         settings.setValue("nThreadsScriptVerif", 0);
     if (!SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
-        strOverriddenByCommandLine += "-par ";
+        addOverriddenOption("-par");
 
     // Network
     if (!settings.contains("fUseUPnP"))
@@ -100,9 +105,9 @@ void OptionsModel::Init()
         settings.setValue("fUseUPnP", true);
 #else
         settings.setValue("fUseUPnP", false);
-#endif	
+#endif
     if (!SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
-        strOverriddenByCommandLine += "-upnp ";
+        addOverriddenOption("-upnp");
 
     if (!settings.contains("fUseProxy"))
         settings.setValue("fUseProxy", false);
@@ -110,18 +115,18 @@ void OptionsModel::Init()
         settings.setValue("addrProxy", "127.0.0.1:9050");
     // Only try to set -proxy, if user has enabled fUseProxy
     if (settings.value("fUseProxy").toBool() && !SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString()))
-        strOverriddenByCommandLine += "-proxy ";
+        addOverriddenOption("-proxy");
     if (!settings.contains("nSocksVersion"))
         settings.setValue("nSocksVersion", 5);
     // Only try to set -socks, if user has enabled fUseProxy
     if (settings.value("fUseProxy").toBool() && !SoftSetArg("-socks", settings.value("nSocksVersion").toString().toStdString()))
-        strOverriddenByCommandLine += "-socks ";
+        addOverriddenOption("-socks");
 
     // Display
     if (!settings.contains("language"))
         settings.setValue("language", "");
     if (!SoftSetArg("-lang", settings.value("language").toString().toStdString()))
-        strOverriddenByCommandLine += "-lang";
+        addOverriddenOption("-lang");
 
     language = settings.value("language").toString();
 }

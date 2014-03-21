@@ -20,7 +20,6 @@
 #include <boost/foreach.hpp>
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
 #include "json/json_spirit_writer_template.h"
 
@@ -233,10 +232,11 @@ int CommandLineRPC(int argc, char *argv[])
     }
     catch (std::exception& e) {
         strPrint = string("error: ") + e.what();
-        nRet = 87;
+        nRet = abs(RPC_MISC_ERROR);
     }
     catch (...) {
-        PrintException(NULL, "CommandLineRPC()");
+        PrintExceptionContinue(NULL, "CommandLineRPC()");
+        throw;
     }
 
     if (strPrint != "")
