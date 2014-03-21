@@ -623,6 +623,16 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
         <translation><numerusform>%n săptămână</numerusform><numerusform>%n săptămâni</numerusform><numerusform>%n de săptămâni</numerusform></translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>%1 and %2</source>
+        <translation>%1 si %2</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n year(s)</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>%1 behind</source>
         <translation>%1 în urmă</translation>
@@ -1276,7 +1286,7 @@ Adresa: %4
     <message>
         <location line="+16"/>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>MB</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -1296,7 +1306,7 @@ Adresa: %4
     <message>
         <location line="+37"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Conecteaza-te la reteaua Bitcoin printr-un proxy SOCKS</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2311,17 +2321,17 @@ Adresa: %4
     <message>
         <location line="+3"/>
         <source>Transaction creation failed!</source>
-        <translation type="unfinished"/>
+        <translation>Creare de tranzactie nereusita!</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Tranzactia a fost respinsa! Acest lucru se poate intampla daca o parte din monedele tale din portofel au fost deja cheltuite, la fel ca si cum ai fi folosit o copie a wallet.dat si monedele au fost cheltuite in copie, dar nu au fost marcate si si cheltuite si aici.</translation>
     </message>
     <message>
         <location line="+113"/>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Atentie: Adresa Bitcoin invalida!</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -2331,7 +2341,7 @@ Adresa: %4
     <message>
         <location line="-11"/>
         <source>Warning: Unknown change address</source>
-        <translation type="unfinished"/>
+        <translation>Atentie: Schimbare de adresa necunoscuta</translation>
     </message>
     <message>
         <location line="-367"/>
@@ -2423,7 +2433,7 @@ Adresa: %4
     <message>
         <location line="+968"/>
         <source>This is a verified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>Aceasta este o cerere de plata verificata</translation>
     </message>
     <message>
         <location line="-991"/>
@@ -2438,13 +2448,13 @@ Adresa: %4
     <message>
         <location line="+426"/>
         <source>This is an unverified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>Aceasta este o cerere de plata neverificata</translation>
     </message>
     <message>
         <location line="+18"/>
         <location line="+532"/>
         <source>Pay To:</source>
-        <translation type="unfinished"/>
+        <translation>Plateste catre:</translation>
     </message>
     <message>
         <location line="-498"/>
@@ -3358,7 +3368,18 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
 </source>
-        <translation type="unfinished"/>
+        <translation>%s trebuie sa setezi o parola rpc in fisierul de configurare
+%s
+Este recomandat sa folosesti aceasta parola aleatorie:
+rpcuser=bitcoinrpc
+parola rpc=%s
+(nu este necesar ca sa iti amintesti aceasta parola)
+Numele de utilizator si parola NU trebuie sa fie la fel.
+Daca fisierul nu exista, creaza-l cu fisier de citit permis doar proprietarului.
+Este de asemenea recomandat sa setezi alerta de notificare ca sa primesti notificari ale problemelor;
+spre exemplu: alertnotify=echo %%s | mail -s &quot;Alerta Bitcoin&quot; admin@foo.com
+
+</translation>
     </message>
     <message>
         <location line="+12"/>

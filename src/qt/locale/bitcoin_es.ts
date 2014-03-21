@@ -9,7 +9,7 @@
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
-        <translation>Versión del &lt;b&gt;Núcleo de Bitcoin&lt;b&gt;</translation>
+        <translation>Versión de &lt;b&gt;Bitcoin Core&lt;b&gt;</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -37,7 +37,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="+0"/>
         <source>The Bitcoin Core developers</source>
-        <translation>Los desarrolladores del Núcleo de Bitcoin</translation>
+        <translation>Los desarrolladores de Bitcoin Core</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -404,7 +404,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="+3"/>
         <source>&amp;Backup Wallet...</source>
-        <translation>Copia de &amp;respaldo del monedero...</translation>
+        <translation>%Guardar copia del monedero...</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -577,12 +577,12 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="+2"/>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Opciones de línea de comandos</translation>
+        <translation>&amp;Opciones de consola de comandos</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Muestra el mensaje de ayuda Bitcoin Core para obtener una lista con las posibles opciones de línea de comandos Bitcoin</translation>
+        <translation>Muestra el mensaje de ayuda Bitcoin Core para obtener una lista con las posibles opciones de la consola de comandos de Bitcoin</translation>
     </message>
     <message>
         <location line="+159"/>
@@ -624,6 +624,16 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <location line="+4"/>
         <source>%n week(s)</source>
         <translation><numerusform>%n semana</numerusform><numerusform>%n semanas</numerusform></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1 and %2</source>
+        <translation>%1 y %2</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n year(s)</source>
+        <translation><numerusform>%n año</numerusform><numerusform>%n años</numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
@@ -762,12 +772,12 @@ Dirección: %4
     <message>
         <location line="+56"/>
         <source>(un)select all</source>
-        <translation>(des)selecciona todos</translation>
+        <translation>(des)marcar todos</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Tree mode</source>
-        <translation>Modo arbol</translation>
+        <translation>Modo árbol</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -923,7 +933,7 @@ Dirección: %4
     <message>
         <location line="+31"/>
         <source>none</source>
-        <translation>nada</translation>
+        <translation>ninguna</translation>
     </message>
     <message>
         <location line="+141"/>
@@ -1105,12 +1115,12 @@ Dirección: %4
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="+19"/>
         <source>Bitcoin Core - Command-line options</source>
-        <translation>Bitcoin Core - opciones de línea de comandos</translation>
+        <translation>Bitcoin Core - Opciones de consola de comandos</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="+24"/>
         <source>Bitcoin Core</source>
-        <translation>Núcleo de Bitcoin</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1125,7 +1135,7 @@ Dirección: %4
     <message>
         <location line="+1"/>
         <source>command-line options</source>
-        <translation>opciones de la línea de órdenes</translation>
+        <translation>opciones de la consola de comandos</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1163,7 +1173,7 @@ Dirección: %4
     <message>
         <location line="+9"/>
         <source>Welcome to Bitcoin Core.</source>
-        <translation>Bienvenido al Núcleo de Bitcoin</translation>
+        <translation>Bienvenido a Bitcoin Core</translation>
     </message>
     <message>
         <location line="+26"/>
@@ -1284,7 +1294,7 @@ Dirección: %4
     <message>
         <location line="+27"/>
         <source>Number of script &amp;verification threads</source>
-        <translation>Número de hilos de &amp;verificación de scripts</translation>
+        <translation>Número de procesos de &amp;verificación de scripts</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1314,7 +1324,7 @@ Dirección: %4
     <message>
         <location line="+224"/>
         <source>Active command-line options that override above options:</source>
-        <translation>Opciones activas de línea de comandos que tienen preferencia sobre las opciones antes mencionadas:</translation>
+        <translation>Opciones activas de consola de comandos que tienen preferencia sobre las opciones antes mencionadas:</translation>
     </message>
     <message>
         <location line="+43"/>
@@ -1464,7 +1474,7 @@ Dirección: %4
     <message>
         <location line="+58"/>
         <source>none</source>
-        <translation>nada</translation>
+        <translation>ninguna</translation>
     </message>
     <message>
         <location line="+78"/>
@@ -1809,7 +1819,7 @@ Dirección: %4
     <message>
         <location line="+52"/>
         <source>&amp;Clear</source>
-        <translation>&amp;Limpiar</translation>
+        <translation>&amp;Vaciar</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1854,7 +1864,7 @@ Dirección: %4
     <message>
         <location line="+1"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Use las flechas arriba y abajo para navegar por el historial y &lt;b&gt;Control+L&lt;/b&gt; para limpiar la pantalla.</translation>
+        <translation>Use las flechas arriba y abajo para navegar por el historial y &lt;b&gt;Control+L&lt;/b&gt; para vaciar la pantalla.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1939,7 +1949,7 @@ Dirección: %4
     <message>
         <location line="-7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>Utiliza este formulario para solicitar pagos. Todos los campos son &lt;b&gt;opcionales&lt;/b&gt;.</translation>
+        <translation>Utilice este formulario para solicitar pagos. Todos los campos son &lt;b&gt;opcionales&lt;/b&gt;.</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -1950,17 +1960,17 @@ Dirección: %4
     <message>
         <location line="+32"/>
         <source>Clear all fields of the form.</source>
-        <translation>Limpiar todos los campos del formulario.</translation>
+        <translation>Vaciar todos los campos del formulario.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Clear</source>
-        <translation>Limpiar</translation>
+        <translation>Vaciar</translation>
     </message>
     <message>
         <location line="+78"/>
         <source>Requested payments history</source>
-        <translation>Se solicita historial de pagos</translation>
+        <translation>Historial de pagos solicitados</translation>
     </message>
     <message>
         <location line="-98"/>
@@ -2131,7 +2141,7 @@ Dirección: %4
     <message>
         <location line="+7"/>
         <source>automatically selected</source>
-        <translation>Seleccionado automaticamente</translation>
+        <translation>Seleccionado automáticamente</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -2181,7 +2191,7 @@ Dirección: %4
     <message>
         <location line="+44"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Si esto se activa pero la dirección de cambio está vacía o es inválida, el cambio se enviará a una nueva dirección recién generada.</translation>
+        <translation>Si se marca esta opción pero la dirección de cambio está vacía o es inválida, el cambio se enviará a una nueva dirección recién generada.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2201,12 +2211,12 @@ Dirección: %4
     <message>
         <location line="-23"/>
         <source>Clear all fields of the form.</source>
-        <translation>Limpiar todos los campos del formulario</translation>
+        <translation>Vaciar todos los campos del formulario</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation>Limpiar &amp;todo</translation>
+        <translation>Vaciar &amp;todo</translation>
     </message>
     <message>
         <location line="+52"/>
@@ -2461,7 +2471,7 @@ Dirección: %4
     <message>
         <location filename="../utilitydialog.cpp" line="+48"/>
         <source>Bitcoin Core is shutting down...</source>
-        <translation>El núcleo de Bitcoin se está cerrando...
+        <translation>Bitcoin Core se está cerrando...
 </translation>
     </message>
     <message>
@@ -2542,13 +2552,13 @@ Dirección: %4
     <message>
         <location line="+14"/>
         <source>Reset all sign message fields</source>
-        <translation>Limpiar todos los campos de la firma de mensaje</translation>
+        <translation>Vaciar todos los campos de la firma de mensaje</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+143"/>
         <source>Clear &amp;All</source>
-        <translation>Limpiar &amp;todo</translation>
+        <translation>Vaciar &amp;todo</translation>
     </message>
     <message>
         <location line="-84"/>
@@ -2578,7 +2588,7 @@ Dirección: %4
     <message>
         <location line="+14"/>
         <source>Reset all verify message fields</source>
-        <translation>Limpiar todos los campos de la verificación de mensaje</translation>
+        <translation>Vaciar todos los campos de la verificación de mensaje</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+30"/>
@@ -2662,12 +2672,12 @@ Dirección: %4
     <message>
         <location filename="../splashscreen.cpp" line="+28"/>
         <source>Bitcoin Core</source>
-        <translation>Núcleo de Bitcoin</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>The Bitcoin Core developers</source>
-        <translation>Los desarrolladores del Núcleo de Bitcoin</translation>
+        <translation>Los desarrolladores de Bitcoin Core</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3219,7 +3229,7 @@ Dirección: %4
     <message>
         <location line="+181"/>
         <source>Backup Wallet</source>
-        <translation>Respaldo de monedero</translation>
+        <translation>Copia de seguridad del monedero</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3244,7 +3254,7 @@ Dirección: %4
     <message>
         <location line="+0"/>
         <source>Backup Successful</source>
-        <translation>Se ha completado con éxito la copia de respaldo</translation>
+        <translation>Se ha completado la copia de seguridad del monedero</translation>
     </message>
 </context>
 <context>
@@ -3700,7 +3710,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+2"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>Establecer el número de hilos para atender las llamadas RPC (predeterminado: 4)</translation>
+        <translation>Establecer el número de procesos para atender las llamadas RPC (predeterminado: 4)</translation>
     </message>
     <message>
         <location line="+7"/>
