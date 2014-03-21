@@ -10,7 +10,9 @@
 #include <QMenu>
 #include <QPoint>
 #include <QVariant>
+#include <QHeaderView>
 #include <QItemSelection>
+#include "guiutil.h"
 
 namespace Ui {
     class ReceiveCoinsDialog;
@@ -28,10 +30,17 @@ class ReceiveCoinsDialog : public QDialog
     Q_OBJECT
 
 public:
+    enum ColumnWidths {
+      DATE_COLUMN_WIDTH = 130,
+      LABEL_COLUMN_WIDTH = 120,
+      AMOUNT_MINIMUM_COLUMN_WIDTH = 160,
+      MINIMUM_COLUMN_WIDTH = 130
+    };
+
     explicit ReceiveCoinsDialog(QWidget *parent = 0);
     ~ReceiveCoinsDialog();
-
     void setModel(WalletModel *model);
+
 
 public slots:
     void clear();
@@ -43,9 +52,11 @@ protected:
 
 private:
     Ui::ReceiveCoinsDialog *ui;
+    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
     WalletModel *model;
     QMenu *contextMenu;
     void copyColumnToClipboard(int column);
+    virtual void resizeEvent(QResizeEvent* event);
 
 private slots:
     void on_receiveButton_clicked();
