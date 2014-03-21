@@ -5,8 +5,9 @@
 #ifndef TRANSACTIONVIEW_H
 #define TRANSACTIONVIEW_H
 
-#include <QWidget>
 #include "guiutil.h"
+
+#include <QWidget>
 
 class TransactionFilterProxy;
 class WalletModel;
@@ -46,11 +47,11 @@ public:
     };
 
     enum ColumnWidths {
-      STATUS_COLUMN_WIDTH = 23,
-      DATE_COLUMN_WIDTH = 120,
-      TYPE_COLUMN_WIDTH = 120,
-      AMOUNT_MINIMUM_COLUMN_WIDTH = 120,
-      MINIMUM_COLUMN_WIDTH = 23
+        STATUS_COLUMN_WIDTH = 23,
+        DATE_COLUMN_WIDTH = 120,
+        TYPE_COLUMN_WIDTH = 120,
+        AMOUNT_MINIMUM_COLUMN_WIDTH = 120,
+        MINIMUM_COLUMN_WIDTH = 23
     };
 
 private:
