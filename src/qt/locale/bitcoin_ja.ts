@@ -36,6 +36,12 @@ MIT/X11 ソフトウェア ライセンスの下で配布されています。�
         <source>The Bitcoin Core developers</source>
         <translation type="unfinished"/>
     </message>
+    <message>
+        <location line="+12"/>
+        <location line="+2"/>
+        <source> (%1-bit)</source>
+        <translation type="unfinished"/>
+    </message>
 </context>
 <context>
     <name>AddressBookPage</name>
@@ -617,6 +623,16 @@ MIT/X11 ソフトウェア ライセンスの下で配布されています。�
         <translation><numerusform>%n 週間</numerusform></translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>%1 and %2</source>
+        <translation type="unfinished"/>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n year(s)</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>%1 behind</source>
         <translation>%1 遅延</translation>
@@ -689,7 +705,7 @@ Address: %4
         <translation>ウォレットは&lt;b&gt;暗号化されて、ロックされています&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+438"/>
+        <location filename="../bitcoin.cpp" line="+435"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>致命的なエラーが発生しました。Bitcoin は安全に継続することができず終了するでしょう。
 </translation>
@@ -751,7 +767,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+56"/>
         <source>(un)select all</source>
         <translation type="unfinished"/>
     </message>
@@ -766,7 +782,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+53"/>
         <source>Amount</source>
         <translation>総額</translation>
     </message>
@@ -917,7 +933,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+141"/>
         <source>Dust</source>
         <translation type="unfinished"/>
     </message>
@@ -1099,7 +1115,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="+38"/>
+        <location filename="../utilitydialog.cpp" line="+24"/>
         <source>Bitcoin Core</source>
         <translation>Bitcoin のコア</translation>
     </message>
@@ -1243,7 +1259,7 @@ Address: %4
         <translation>メイン (&amp;M)</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+122"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
         <translation>あたなの取引が早く処理されるように任意で kB 毎の取引手数料を設定します。ほとんどの取引は 1 kB です。</translation>
     </message>
@@ -1253,7 +1269,7 @@ Address: %4
         <translation>支払う取引手数料 (&amp;f)</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="-131"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>システムにログインした時に自動的に Bitcoin を起動します。</translation>
     </message>
@@ -1268,12 +1284,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+13"/>
-        <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>データベースのキャッシュサイズをメガバイトで設定 (初期値: 25)</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>MB</source>
         <translation type="unfinished"/>
     </message>
@@ -1288,7 +1299,12 @@ Address: %4
         <translation>スクリプト検証スレッドを設定 (最大 16, 0 = 自動, &lt;0 = たくさんのコアを自由にしておく, 初期値: 0)</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+107"/>
+        <source>&amp;Spend unconfirmed change (experts only)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+37"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
         <translation type="unfinished"/>
     </message>
@@ -1323,7 +1339,17 @@ Address: %4
         <translation>ネットワーク (&amp;N)</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-86"/>
+        <source>W&amp;allet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+40"/>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>自動的にルーター上の Bitcoin クライアントのポートを開きます。あなたのルーターが UPnP に対応していて、それが有効になっている場合に作動します。</translation>
     </message>
@@ -1438,17 +1464,17 @@ Address: %4
         <translation>キャンセル (&amp;C)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+67"/>
+        <location filename="../optionsdialog.cpp" line="+70"/>
         <source>default</source>
         <translation>初期値</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+58"/>
         <source>none</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+78"/>
         <source>Confirm options reset</source>
         <translation>オプションのリセットの確認</translation>
     </message>
@@ -1488,19 +1514,14 @@ Address: %4
         <translation>表示された情報は古いかもしれません。接続が確立されると、あなたのウォレットは Bitcoin ネットワークと自動的に同期しますが、このプロセスはまだ完了していません。</translation>
     </message>
     <message>
-        <location line="-155"/>
-        <source>Unconfirmed:</source>
-        <translation>未確認：</translation>
-    </message>
-    <message>
-        <location line="-83"/>
+        <location line="-238"/>
         <source>Wallet</source>
         <translation>ウォレット</translation>
     </message>
     <message>
         <location line="+51"/>
-        <source>Confirmed:</source>
-        <translation>確認済み:</translation>
+        <source>Available:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+16"/>
@@ -1508,7 +1529,12 @@ Address: %4
         <translation>あなたの利用可能残高</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+16"/>
+        <source>Pending:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>未検証の取引で利用可能残高に反映されていない数</translation>
     </message>
@@ -1656,6 +1682,11 @@ Address: %4
         <location line="-12"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>エラー：　-regtestと-testnetは一緒にするのは無効です。</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="+82"/>
+        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Bitcoin アドレスを入力します (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1877,22 +1908,22 @@ Address: %4
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+83"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+107"/>
         <source>&amp;Amount:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-16"/>
         <source>&amp;Label:</source>
         <translation>ラベル(&amp;L):</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-37"/>
         <source>&amp;Message:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-20"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation type="unfinished"/>
     </message>
@@ -1902,27 +1933,30 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+27"/>
-        <source>An optional label to associate with the new receiving address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+14"/>
+        <location line="+23"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
+        <location line="+21"/>
+        <source>An optional label to associate with the new receiving address.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+23"/>
+        <location line="+22"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+32"/>
         <source>Clear all fields of the form.</source>
         <translation type="unfinished"/>
     </message>
@@ -1932,17 +1966,17 @@ Address: %4
         <translation>クリア</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+78"/>
+        <source>Requested payments history</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-98"/>
         <source>&amp;Request payment</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+47"/>
-        <source>Requested payments</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+16"/>
+        <location line="+120"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation type="unfinished"/>
     </message>
@@ -1960,6 +1994,21 @@ Address: %4
         <location line="+3"/>
         <source>Remove</source>
         <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../receivecoinsdialog.cpp" line="+38"/>
+        <source>Copy label</source>
+        <translation>ラベルをコピーする</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy message</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>総額のコピー</translation>
     </message>
 </context>
 <context>
@@ -2062,12 +2111,17 @@ Address: %4
         <source>(no message)</source>
         <translation type="unfinished"/>
     </message>
+    <message>
+        <location line="+8"/>
+        <source>(no amount)</source>
+        <translation type="unfinished"/>
+    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+381"/>
+        <location filename="../sendcoinsdialog.cpp" line="+380"/>
         <location line="+80"/>
         <source>Send Coins</source>
         <translation>コインを送る</translation>
@@ -2143,7 +2197,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+115"/>
+        <location line="+164"/>
         <source>Send to multiple recipients at once</source>
         <translation>一度に複数の人に送る</translation>
     </message>
@@ -2153,7 +2207,7 @@ Address: %4
         <translation>受取人を追加 (&amp;R)</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="-23"/>
         <source>Clear all fields of the form.</source>
         <translation type="unfinished"/>
     </message>
@@ -2163,12 +2217,12 @@ Address: %4
         <translation>すべてクリア (&amp;A)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+52"/>
         <source>Balance:</source>
         <translation>残高:</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="-78"/>
         <source>Confirm the send action</source>
         <translation>送る操作を確認する</translation>
     </message>
@@ -2178,7 +2232,7 @@ Address: %4
         <translation>送る (&amp;e)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-228"/>
+        <location filename="../sendcoinsdialog.cpp" line="-229"/>
         <source>Confirm send coins</source>
         <translation>コインを送る確認</translation>
     </message>
@@ -2191,12 +2245,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-136"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Bitcoin アドレスを入力します (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
-        <location line="+15"/>
+        <location line="-121"/>
         <source>Copy quantity</source>
         <translation type="unfinished"/>
     </message>
@@ -2246,7 +2295,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+202"/>
+        <location line="+203"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>受取人のアドレスが不正です。再確認してください。</translation>
     </message>
@@ -2281,12 +2330,12 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+113"/>
         <source>Warning: Invalid Bitcoin address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+20"/>
         <source>(no label)</source>
         <translation>（ラベル無し）</translation>
     </message>
@@ -2296,7 +2345,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-366"/>
+        <location line="-367"/>
         <source>Are you sure you want to send?</source>
         <translation>送ってよろしいですか？</translation>
     </message>
@@ -2306,7 +2355,7 @@ Address: %4
         <translation>取引手数料として追加された</translation>
     </message>
     <message>
-        <location line="+170"/>
+        <location line="+171"/>
         <source>Payment request expired</source>
         <translation>支払いのリクエストは期限切れです</translation>
     </message>
@@ -2383,12 +2432,7 @@ Address: %4
         <translation>メッセージ:</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>A message that was attached to the Bitcoin URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+958"/>
+        <location line="+968"/>
         <source>This is a verified payment request.</source>
         <translation type="unfinished"/>
     </message>
@@ -2398,7 +2442,12 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+459"/>
+        <location line="+33"/>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+426"/>
         <source>This is an unverified payment request.</source>
         <translation type="unfinished"/>
     </message>
@@ -2413,11 +2462,6 @@ Address: %4
         <location line="+536"/>
         <source>Memo:</source>
         <translation>メモ：</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Bitcoin アドレスを入力します (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -2456,19 +2500,19 @@ Address: %4
         <translation>メッセージの署名に使うアドレス (例 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location line="+213"/>
+        <location line="+7"/>
+        <location line="+210"/>
         <source>Choose previously used address</source>
         <translation>前に使用したアドレスを選ぶ</translation>
     </message>
     <message>
-        <location line="-203"/>
-        <location line="+213"/>
+        <location line="-200"/>
+        <location line="+210"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
-        <location line="-203"/>
+        <location line="-200"/>
         <source>Paste address from clipboard</source>
         <translation>クリップボードからアドレスを貼付ける</translation>
     </message>
@@ -2509,12 +2553,12 @@ Address: %4
     </message>
     <message>
         <location line="+3"/>
-        <location line="+146"/>
+        <location line="+143"/>
         <source>Clear &amp;All</source>
         <translation>すべてクリア (&amp;A)</translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-84"/>
         <source>&amp;Verify Message</source>
         <translation>メッセージの検証 (&amp;V)</translation>
     </message>
@@ -2529,7 +2573,7 @@ Address: %4
         <translation>メッセージが署名されたアドレス (例 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+37"/>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>指定された Bitcoin アドレスで署名されたことを保証するメッセージを検証</translation>
     </message>
@@ -2544,43 +2588,37 @@ Address: %4
         <translation>入力項目の内容をすべて消去します</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+29"/>
-        <location line="+3"/>
+        <location filename="../signverifymessagedialog.cpp" line="+30"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Bitcoin アドレスを入力します (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location line="-2"/>
+        <location line="-1"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
         <translation>署名を作成するには&quot;メッセージの署名&quot;をクリック</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
-        <translation>Bitcoin 署名を入力</translation>
-    </message>
-    <message>
         <location line="+84"/>
-        <location line="+81"/>
+        <location line="+80"/>
         <source>The entered address is invalid.</source>
         <translation>不正なアドレスが入力されました。</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-80"/>
         <location line="+8"/>
-        <location line="+73"/>
+        <location line="+72"/>
         <location line="+8"/>
         <source>Please check the address and try again.</source>
         <translation>アドレスを確かめてからもう一度試してください。</translation>
     </message>
     <message>
-        <location line="-81"/>
-        <location line="+81"/>
+        <location line="-80"/>
+        <location line="+80"/>
         <source>The entered address does not refer to a key.</source>
         <translation>入力されたアドレスに関連するキーがありません。</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-72"/>
         <source>Wallet unlock was cancelled.</source>
         <translation>ウォレットのアンロックはキャンセルされました。</translation>
     </message>
@@ -2600,7 +2638,7 @@ Address: %4
         <translation>メッセージに署名しました。</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+58"/>
         <source>The signature could not be decoded.</source>
         <translation>署名がデコードできません。</translation>
     </message>
@@ -2661,6 +2699,11 @@ Address: %4
     </message>
     <message>
         <location line="+6"/>
+        <source>conflicted</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>%1/offline</source>
         <translation>%1/オフライン</translation>
     </message>
@@ -2822,12 +2865,12 @@ Address: %4
         <translation>まだブロードキャストが成功していません</translation>
     </message>
     <message numerus="yes">
-        <location line="-35"/>
+        <location line="-37"/>
         <source>Open for %n more block(s)</source>
         <translation><numerusform>%n 以上のブロックを開く</numerusform></translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+72"/>
         <source>unknown</source>
         <translation>未確認</translation>
     </message>
@@ -2868,12 +2911,12 @@ Address: %4
         <translation>総額</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+78"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation type="unfinished"/>
     </message>
     <message numerus="yes">
-        <location line="+16"/>
+        <location line="-21"/>
         <source>Open for %n more block(s)</source>
         <translation><numerusform>%n 以上のブロックを開く</numerusform></translation>
     </message>
@@ -2883,23 +2926,12 @@ Address: %4
         <translation>ユニット %1 を開く</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Offline (%1 confirmations)</source>
-        <translation>オフライン (%1 検証済み)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation>検証済み (%2) 未検証 (%1)</translation>
-    </message>
-    <message>
-        <location line="-22"/>
-        <location line="+25"/>
+        <location line="+12"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>検証されました (%1 検証済み)</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="+9"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>このブロックは他のどのノードによっても受け取られないで、多分受け入れられないでしょう！</translation>
     </message>
@@ -2909,7 +2941,27 @@ Address: %4
         <translation>生成されましたが承認されませんでした</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="-21"/>
+        <source>Offline</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Conflicted</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+51"/>
         <source>Received with</source>
         <translation>受信元</translation>
     </message>
@@ -2939,7 +2991,7 @@ Address: %4
         <translation>(n/a)</translation>
     </message>
     <message>
-        <location line="+199"/>
+        <location line="+190"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>取引の状況。このフィールドの上にカーソルを置くと検証の数を表示します。</translation>
     </message>
@@ -3205,12 +3257,12 @@ Address: %4
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+221"/>
+        <location filename="../bitcoinstrings.cpp" line="+223"/>
         <source>Usage:</source>
         <translation>使用法:</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-55"/>
         <source>List commands</source>
         <translation>コマンド一覧</translation>
     </message>
@@ -3265,12 +3317,12 @@ Address: %4
         <translation>あなた自身のパブリックなアドレスを指定</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>不正なピアを切断するためのしきい値 (初期値: 100)</translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-150"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>不正なピアを再接続するまでの秒数 (初期値: 86400)</translation>
     </message>
@@ -3290,17 +3342,17 @@ Address: %4
         <translation>コマンドラインと JSON-RPC コマンドを許可</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+81"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>デーモンとしてバックグランドで実行しコマンドを許可</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+40"/>
         <source>Use the test network</source>
         <translation>テストのためのネットワークを使用</translation>
     </message>
     <message>
-        <location line="-118"/>
+        <location line="-120"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>外部からの接続を許可 (初期値:  -proxy または -connect を使用していない場合は1)</translation>
     </message>
@@ -3440,6 +3492,11 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+5"/>
+        <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Connect only to the specified node(s)</source>
         <translation>指定したノードだけに接続</translation>
     </message>
@@ -3651,6 +3708,11 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+2"/>
+        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Start Bitcoin server</source>
         <translation>Bitcoinサーバーを始める</translation>
     </message>
@@ -3700,12 +3762,12 @@ rpcpassword=%s
         <translation>-txindex を変更するには -reindex を使用してデータベースを再構築する必要があります</translation>
     </message>
     <message>
-        <location line="-79"/>
+        <location line="-80"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>外部の blk000??.dat ファイルからブロックをインポート</translation>
     </message>
     <message>
-        <location line="-105"/>
+        <location line="-106"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>関連のアラートをもらってもすごく長いのフォークを見てもコマンドを実行 (コマンドの中にあるの%sはメッセージから置き換えさせる)</translation>
     </message>
@@ -3725,7 +3787,7 @@ rpcpassword=%s
         <translation>スクリプト検証スレッドを設定 (最大 16, 0 = 自動, &lt;0 = たくさんのコアを自由にしておく, 初期値: 0)</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+90"/>
         <source>Information</source>
         <translation>情報</translation>
     </message>
@@ -3795,7 +3857,7 @@ rpcpassword=%s
         <translation>接続のタイムアウトをミリセコンドで指定 (初期値: 5000)</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>System error: </source>
         <translation>システム エラー:</translation>
     </message>
@@ -3841,6 +3903,11 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>version</source>
         <translation>バージョン</translation>
     </message>
@@ -3850,32 +3917,32 @@ rpcpassword=%s
         <translation>wallet.dat が壊れ、復旧に失敗しました</translation>
     </message>
     <message>
-        <location line="-58"/>
+        <location line="-60"/>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC 接続のパスワード</translation>
     </message>
     <message>
-        <location line="-70"/>
+        <location line="-71"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>指定した IP アドレスからの JSON-RPC 接続を許可</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+81"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>&lt;ip&gt; (初期値: 127.0.0.1) で実行中のノードにコマンドを送信</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-133"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>最良のブロックに変更する際にコマンドを実行 (cmd の %s はブロック ハッシュに置換される)</translation>
     </message>
     <message>
-        <location line="+161"/>
+        <location line="+163"/>
         <source>Upgrade wallet to latest format</source>
         <translation>ウォレットを最新のフォーマットにアップグレード</translation>
     </message>
     <message>
-        <location line="-24"/>
+        <location line="-25"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>key pool のサイズを &lt;n&gt; (初期値: 100) にセット</translation>
     </message>
@@ -3885,12 +3952,12 @@ rpcpassword=%s
         <translation>失ったウォレットの取引のブロック チェーンを再スキャン</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+39"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>JSON-RPC 接続に OpenSSL (https) を使用</translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-31"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>サーバ証明書ファイル (初期値: server.cert)</translation>
     </message>
@@ -3900,7 +3967,7 @@ rpcpassword=%s
         <translation>サーバの秘密鍵 (初期値: server.pem)</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+17"/>
         <source>This help message</source>
         <translation>このヘルプ メッセージ</translation>
     </message>
@@ -3910,12 +3977,12 @@ rpcpassword=%s
         <translation>このコンピュータの %s にバインドすることができません (バインドが返したエラーは %d, %s)</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-109"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>-addnode, -seednode と -connect で DNS ルックアップを許可する</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Loading addresses...</source>
         <translation>アドレスを読み込んでいます...</translation>
     </message>
@@ -3930,12 +3997,12 @@ rpcpassword=%s
         <translation>wallet.dat 読み込みエラー: ウォレットは Bitcoin の最新バージョンを必要とします</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+99"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>ウォレットが書き直される必要がありました: 完了するために Bitcoin を再起動します</translation>
     </message>
     <message>
-        <location line="-100"/>
+        <location line="-101"/>
         <source>Error loading wallet.dat</source>
         <translation>wallet.dat 読み込みエラー</translation>
     </message>
@@ -3945,7 +4012,7 @@ rpcpassword=%s
         <translation>無効な -proxy アドレス: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+57"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>-onlynet で指定された &apos;%s&apos; は未知のネットワークです</translation>
     </message>
@@ -3955,7 +4022,7 @@ rpcpassword=%s
         <translation>-socks で指定された %i は未知のバージョンです</translation>
     </message>
     <message>
-        <location line="-101"/>
+        <location line="-103"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>-bind のアドレス &apos;%s&apos; を解決できません</translation>
     </message>
@@ -3965,7 +4032,7 @@ rpcpassword=%s
         <translation>-externalip のアドレス &apos;%s&apos; を解決できません</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+49"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>-paytxfee=&lt;amount&gt; の額 &apos;%s&apos; が無効です</translation>
     </message>
@@ -3985,7 +4052,7 @@ rpcpassword=%s
         <translation>ブロック インデックスを読み込んでいます...</translation>
     </message>
     <message>
-        <location line="-62"/>
+        <location line="-63"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>接続するノードを追加し接続を持続するように試します</translation>
     </message>
@@ -3995,12 +4062,12 @@ rpcpassword=%s
         <translation>このコンピュータの %s にバインドすることができません。おそらく Bitcoin は既に実行されています。</translation>
     </message>
     <message>
-        <location line="+95"/>
+        <location line="+96"/>
         <source>Loading wallet...</source>
         <translation>ウォレットを読み込んでいます...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Cannot downgrade wallet</source>
         <translation>ウォレットのダウングレードはできません</translation>
     </message>
@@ -4010,7 +4077,7 @@ rpcpassword=%s
         <translation>初期値のアドレスを書き込むことができません</translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+68"/>
         <source>Rescanning...</source>
         <translation>再スキャン中...</translation>
     </message>
@@ -4020,17 +4087,17 @@ rpcpassword=%s
         <translation>読み込み完了</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+86"/>
         <source>To use the %s option</source>
         <translation>%s オプションを使うには</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-78"/>
         <source>Error</source>
         <translation>エラー</translation>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-36"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>

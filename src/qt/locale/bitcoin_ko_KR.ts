@@ -48,7 +48,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location filename="../forms/addressbookpage.ui" line="+30"/>
         <source>Double-click to edit address or label</source>
-        <translation>표 또는 주소를 편집하기 위해 더블클릭 하세요</translation>
+        <translation>주소 또는 표를 편집하기 위해 더블클릭 하시오</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -411,12 +411,12 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+10"/>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;주소 보내는 중</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp; 주소 받는 중</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -621,6 +621,16 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
         <location line="+4"/>
         <source>%n week(s)</source>
         <translation><numerusform>주</numerusform></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1 and %2</source>
+        <translation>%1 그리고 %2</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n year(s)</source>
+        <translation><numerusform>%n 년</numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
@@ -3002,7 +3012,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished"/>
+        <translation>변경된 잔고.</translation>
     </message>
 </context>
 <context>
@@ -3189,7 +3199,7 @@ Address: %4
     <message>
         <location filename="../walletframe.cpp" line="+26"/>
         <source>No wallet has been loaded.</source>
-        <translation type="unfinished"/>
+        <translation>지갑 불러오기가 안됩니다</translation>
     </message>
 </context>
 <context>
@@ -3288,7 +3298,7 @@ Address: %4
     <message>
         <location line="-26"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation type="unfinished"/>
+        <translation>&lt;port&gt;로 연결을 허용한다 (기본값: 8333 또는 테스트넷: 18333)</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -3308,12 +3318,12 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>이상행동 네트워크 참여자의 연결을 차단시키기 위한 한계치 (기본값: 100)</translation>
     </message>
     <message>
         <location line="-150"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation type="unfinished"/>
+        <translation>이상행동을 하는 네트워크 참여자들을 다시 연결시키는데 걸리는 시간 (기본값: 86400초)</translation>
     </message>
     <message>
         <location line="-36"/>
@@ -3413,7 +3423,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+5"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation type="unfinished"/>
+        <translation>Tor 서비스를 이용하여 네트워크에 참여하기 위해서 SOCKS5 프록시를 따로 사용함 (기본값: -proxy)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3433,7 +3443,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+3"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"/>
+        <translation>경고: 현재 비트코인 버전이 다른 네트워크 참여자들과 동일하지 않는 것 같습니다. 당신 또는 다른 참여자들이 동일한 비트코인 버전으로 업그레이드 할 필요가 있습니다.</translation>
     </message>
     <message>
         <location line="+3"/>
