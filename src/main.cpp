@@ -1317,7 +1317,7 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 bool CScriptCheck::operator()() const {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     if (!VerifyScript(scriptSig, scriptPubKey, *ptxTo, nIn, nFlags))
-        return error("CScriptCheck() : %s VerifySignature failed", ptxTo->GetHash().ToString());
+        return error("CScriptCheck() : %s:%d VerifySignature failed", ptxTo->GetHash().ToString(), nIn);
     return true;
 }
 
