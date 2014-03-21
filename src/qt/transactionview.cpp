@@ -441,5 +441,5 @@ void TransactionView::focusTransaction(const QModelIndex &idx)
 //We override the virtual resizeEvent of the QWidget to adjust tablet's column sizes as the table's width is proportional to the dialog's.
 void TransactionView::resizeEvent(QResizeEvent* event) {
   QWidget::resizeEvent(event);
-  columnResizingFixer->adjustTableColumnsWidth();
+  columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
 }

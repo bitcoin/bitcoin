@@ -191,7 +191,7 @@ void ReceiveCoinsDialog::on_removeRequestButton_clicked()
 //We override the virtual resizeEvent of the QWidget to adjust tablet's column sizes as the table's width is proportional to the dialog's.
 void ReceiveCoinsDialog::resizeEvent(QResizeEvent* event) {
   QWidget::resizeEvent(event);
-  columnResizingFixer->adjustTableColumnsWidth();
+  columnResizingFixer->stretchColumnWidth(RecentRequestsTableModel::Message);
 }
 
 void ReceiveCoinsDialog::keyPressEvent(QKeyEvent *event)

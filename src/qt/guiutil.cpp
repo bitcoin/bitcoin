@@ -442,10 +442,15 @@ void TableViewLastColumnResizingFixer::adjustTableColumnsWidth()
     int nColsWidth = getColumnsWidth();
     if (nColsWidth > nTableWidth)
     {
-        int nWidestColumnIndex = secondToLastColumnIndex;
-        resizeColumn(nWidestColumnIndex,getAvailableWidthForColumn(nWidestColumnIndex));
+        resizeColumn(secondToLastColumnIndex,getAvailableWidthForColumn(secondToLastColumnIndex));
     }
+}
 
+//make column use all the space available, useful during window resizing.
+void TableViewLastColumnResizingFixer::stretchColumnWidth(int column) {
+    disconnectViewHeadersSignals();
+    resizeColumn(column, getAvailableWidthForColumn(column));
+    connectViewHeadersSignals();
 }
 
 //when a section is resized this is a slot-proxy for ajustAmountColumnWidth()
@@ -466,7 +471,6 @@ void TableViewLastColumnResizingFixer::on_geometriesChanged()
     if ((getColumnsWidth() - this->tableView->horizontalHeader()->width()) != 0)
     {
         disconnectViewHeadersSignals();
-        resizeColumn(lastColumnIndex, lastColumnMinimumWidth);
         resizeColumn(secondToLastColumnIndex, getAvailableWidthForColumn(secondToLastColumnIndex));
         connectViewHeadersSignals();
     }
