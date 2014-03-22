@@ -595,7 +595,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+22"/>
         <source>No block source available...</source>
-        <translation>No block source available...</translation>
+        <translation>沒有可用的区块来源...</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -1153,7 +1153,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation>启动时显示版权页 (缺省: 1)</translation>
+        <translation>启动时显示版权页 (默认: 1)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2867,7 +2867,7 @@ Address: %4
     <message numerus="yes">
         <location line="-37"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Open for %n more block</numerusform></translation>
+        <translation><numerusform>再等 %n 个区块生出來后才确定</numerusform></translation>
     </message>
     <message>
         <location line="+72"/>
@@ -2918,7 +2918,7 @@ Address: %4
     <message numerus="yes">
         <location line="-21"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Open for %n more block</numerusform></translation>
+        <translation><numerusform>再等 %n 个区块生出來后才确定</numerusform></translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3325,12 +3325,12 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>断开行为不端对端阀值（缺省: 100）</translation>
+        <translation>断开异常节点的阀值（缺省: 100）</translation>
     </message>
     <message>
         <location line="-150"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Number of seconds to keep misbehaving peers from reconnecting (缺省: 86400)</translation>
+        <translation>重新连接异常节点的秒数(缺省: 86400)</translation>
     </message>
     <message>
         <location line="-36"/>
@@ -3654,7 +3654,7 @@ rpcpassword=%s
     <message>
         <location line="+1"/>
         <source>How thorough the block verification is (0-4, default: 3)</source>
-        <translation>How thorough the block verification is (0-4, default: 3)</translation>
+        <translation>区块检查的仔细程度(0 到 4, 默认为: 3)</translation>
     </message>
     <message>
         <location line="+1"/>
