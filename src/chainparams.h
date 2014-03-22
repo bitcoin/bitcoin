@@ -70,6 +70,8 @@ public:
     virtual bool MiningRequiresPeers() const { return true; }
     /* Default value for -checkmempool argument */
     virtual bool DefaultCheckMemPool() const { return false; }
+    /* Allow mining of a min-difficulty block */
+    virtual bool AllowMinDifficultyBlocks() const { return false; }
     const string& DataDir() const { return strDataDir; }
     /* Make miner stop after a block is found. In RPC, don't return
      * until nGenProcLimit blocks are generated */
