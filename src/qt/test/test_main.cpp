@@ -7,6 +7,7 @@
 #include "paymentservertests.h"
 #endif
 #include "uritests.h"
+#include "util.h"
 
 #include <QCoreApplication>
 #include <QObject>
@@ -29,6 +30,8 @@ int main(int argc, char *argv[])
     // QCoreApplication:: in the tests
     QCoreApplication app(argc, argv);
     app.setApplicationName("Bitcoin-Qt-test");
+
+    BoostFilesystemToUTF8();
 
     URITests test1;
     if (QTest::qExec(&test1) != 0)

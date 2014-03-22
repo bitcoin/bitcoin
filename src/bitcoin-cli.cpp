@@ -18,6 +18,8 @@
 //
 static bool AppInitRPC(int argc, char* argv[])
 {
+    BoostFilesystemToUTF8();
+
     //
     // Parameters
     //

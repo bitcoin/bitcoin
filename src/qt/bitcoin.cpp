@@ -30,6 +30,7 @@
 #include <stdint.h>
 
 #include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <QApplication>
 #include <QLibraryInfo>
 #include <QLocale>
@@ -457,6 +458,7 @@ int main(int argc, char *argv[])
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
     QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
 #endif
+    BoostFilesystemToUTF8();
 
     Q_INIT_RESOURCE(bitcoin);
     BitcoinApplication app(argc, argv);
