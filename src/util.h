@@ -439,6 +439,12 @@ bool TimingResistantEqual(const T& a, const T& b)
     return accumulator == 0;
 }
 
+/**
+ * Convince boost::filesystem that all standard strings are UTF-8.
+ * Call this before using any boost::filesystem functions.
+ */
+void BoostFilesystemToUTF8();
+
 /** Median filter over a stream of values.
  * Returns the median of the last N numbers
  */

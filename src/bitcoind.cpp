@@ -60,6 +60,7 @@ bool AppInit(int argc, char* argv[])
     bool fRet = false;
     try
     {
+        BoostFilesystemToUTF8();
         //
         // Parameters
         //

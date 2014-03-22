@@ -68,6 +68,7 @@
 #include <boost/foreach.hpp>
 #include <boost/program_options/detail/config_file.hpp>
 #include <boost/program_options/parsers.hpp>
+#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 
@@ -1425,5 +1426,14 @@ void RenameThread(const char* name)
     // Prevent warnings for unused parameters...
     (void)name;
 #endif
+}
+
+void BoostFilesystemToUTF8()
+{
+    // Convince boost::filesystem globally that all standard strings (both those passed in and
+    // retrieved) are UTF-8
+    std::locale global_loc = std::locale();
+    std::locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet);
+    boost::filesystem::path::imbue(loc);
 }
 
