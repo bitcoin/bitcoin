@@ -34,6 +34,7 @@ src/qt/test/moc*.cpp
 *.rej
 *.orig
 *.o
+*.o-*
 *.patch
 .bitcoin
 *.a
