@@ -47,6 +47,8 @@ public:
     */
     void setClientModel(ClientModel *clientModel);
 
+    RPCConsole *rpcConsole;
+
 #ifdef ENABLE_WALLET
     /** Set the wallet model.
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
@@ -68,6 +70,8 @@ private:
     ClientModel *clientModel;
     WalletFrame *walletFrame;
 
+    bool enableWallet;
+
     QLabel *labelEncryptionIcon;
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocksIcon;
@@ -77,6 +81,7 @@ private:
     QMenuBar *appMenuBar;
     QAction *overviewAction;
     QAction *historyAction;
+    QAction *debugAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *usedSendingAddressesAction;
@@ -97,7 +102,6 @@ private:
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
-    RPCConsole *rpcConsole;
 
     /** Keep track of previous number of blocks, to detect progress */
     int prevBlocks;
@@ -164,6 +168,8 @@ private slots:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+    /** Switch to debug page */
+    void gotoDebugPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
@@ -179,6 +185,8 @@ private slots:
     void aboutClicked();
     /** Show help message dialog */
     void showHelpMessageClicked();
+    /** Open debugging and diagnostic console */
+    void debugWindowClicked();
 #ifndef Q_OS_MAC
     /** Handle tray icon clicked */
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);

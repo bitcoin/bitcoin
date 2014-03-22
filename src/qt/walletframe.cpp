@@ -5,6 +5,7 @@
 #include "walletframe.h"
 
 #include "bitcoingui.h"
+#include "rpcconsole.h"
 #include "walletview.h"
 
 #include <cstdio>
@@ -19,9 +20,13 @@ WalletFrame::WalletFrame(BitcoinGUI *_gui) :
     // Leave HBox hook for adding a list view later
     QHBoxLayout *walletFrameLayout = new QHBoxLayout(this);
     setContentsMargins(0,0,0,0);
-    walletStack = new QStackedWidget(this);
+    frameStack = new QStackedWidget(this);
+    walletStack = new QStackedWidget(frameStack);
+    widgetStack = new QStackedWidget(frameStack);
+    frameStack->addWidget(walletStack);
+    frameStack->addWidget(widgetStack);
     walletFrameLayout->setContentsMargins(0,0,0,0);
-    walletFrameLayout->addWidget(walletStack);
+    walletFrameLayout->addWidget(frameStack);
 
     QLabel *noWallet = new QLabel(tr("No wallet has been loaded."));
     noWallet->setAlignment(Qt::AlignCenter);
@@ -107,6 +112,7 @@ void WalletFrame::showOutOfSyncWarning(bool fShow)
 
 void WalletFrame::gotoOverviewPage()
 {
+    frameStack->setCurrentWidget(walletStack);
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoOverviewPage();
@@ -114,6 +120,7 @@ void WalletFrame::gotoOverviewPage()
 
 void WalletFrame::gotoHistoryPage()
 {
+    frameStack->setCurrentWidget(walletStack);
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoHistoryPage();
@@ -121,6 +128,7 @@ void WalletFrame::gotoHistoryPage()
 
 void WalletFrame::gotoReceiveCoinsPage()
 {
+    frameStack->setCurrentWidget(walletStack);
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoReceiveCoinsPage();
@@ -128,9 +136,16 @@ void WalletFrame::gotoReceiveCoinsPage()
 
 void WalletFrame::gotoSendCoinsPage(QString addr)
 {
+    frameStack->setCurrentWidget(walletStack);
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoSendCoinsPage(addr);
+}
+
+void WalletFrame::gotoDebugPage()
+{
+    frameStack->setCurrentWidget(widgetStack);
+    widgetStack->setCurrentWidget(gui->rpcConsole);
 }
 
 void WalletFrame::gotoSignMessageTab(QString addr)
@@ -192,5 +207,10 @@ void WalletFrame::usedReceivingAddresses()
 WalletView *WalletFrame::currentWalletView()
 {
     return qobject_cast<WalletView*>(walletStack->currentWidget());
+}
+
+void WalletFrame::addWidget(QWidget *widget)
+{
+    widgetStack->addWidget(widget);
 }
 

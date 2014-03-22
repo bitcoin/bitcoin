@@ -233,6 +233,7 @@ RES_ICONS = \
   res/icons/connect3_16.png \
   res/icons/connect4_16.png \
   res/icons/debugwindow.png \
+  res/icons/debugtab.png \
   res/icons/edit.png \
   res/icons/editcopy.png \
   res/icons/editpaste.png \

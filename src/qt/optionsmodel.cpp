@@ -63,6 +63,10 @@ void OptionsModel::Init()
         settings.setValue("bDisplayAddresses", false);
     bDisplayAddresses = settings.value("bDisplayAddresses", false).toBool();
 
+    if (!settings.contains("fDebugTab"))
+        settings.setValue("fDebugTab", false);
+    fDebugTab = settings.value("fDebugTab", false).toBool();
+
     if (!settings.contains("fCoinControlFeatures"))
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
@@ -202,6 +206,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return nDisplayUnit;
         case DisplayAddresses:
             return bDisplayAddresses;
+        case DebugTab:
+            return fDebugTab;
         case Language:
             return settings.value("language");
         case CoinControlFeatures:
@@ -302,6 +308,14 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case DisplayAddresses:
             bDisplayAddresses = value.toBool();
             settings.setValue("bDisplayAddresses", bDisplayAddresses);
+            break;
+        case DebugTab:
+            if (fDebugTab != value.toBool())
+            {
+                fDebugTab = value.toBool();
+                settings.setValue("fDebugTab", fDebugTab);
+                setRestartRequired(true);
+            }
             break;
         case Language:
             if (settings.value("language") != value) {
