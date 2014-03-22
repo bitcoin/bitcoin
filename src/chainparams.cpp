@@ -226,6 +226,7 @@ public:
     }
 
     virtual bool AllowMinDifficultyBlocks() const { return true; }
+    virtual bool RequireStandard() const { return false; }
     virtual Network NetworkID() const { return CChainParams::TESTNET; }
 };
 static CTestNetParams testNetParams;
@@ -262,6 +263,7 @@ public:
     virtual bool MiningRequiresPeers() const { return false; }
     virtual bool MineBlocksOnDemand() const { return true; }
     virtual bool DefaultCheckMemPool() const { return true; }
+    virtual bool RequireStandard() const { return false; }
     virtual Network NetworkID() const { return CChainParams::REGTEST; }
 };
 static CRegTestParams regTestParams;
