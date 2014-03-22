@@ -85,7 +85,7 @@ void BitcoinUnitsTests::formatTests()
 
     QCOMPARE(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, 100000000, false, true, locale1), QString("1.00 BTC"));
     QCOMPARE(BitcoinUnits::formatWithUnit(BitcoinUnits::mBTC, 100000000, false, true, locale1), QString("1,000.00 mBTC"));
-    QCOMPARE(BitcoinUnits::formatWithUnit(BitcoinUnits::uBTC, 100000000, false, true, locale1), QString("1,000,000.00 μBTC"));
+    QCOMPARE(BitcoinUnits::formatWithUnit(BitcoinUnits::uBTC, 100000000, false, true, locale1), QString("1,000,000.00 ")+QChar(0x03BC)+QString("BTC"));
 
     /// Tests with nl_NL locale
     QLocale locale2("nl_NL");
