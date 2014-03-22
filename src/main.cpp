@@ -1210,7 +1210,7 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
     const uint256 &bnLimit = Params().ProofOfWorkLimit();
     // Testnet has min-difficulty blocks
     // after nTargetSpacing*2 time between blocks:
-    if (TestNet() && nTime > nTargetSpacing*2)
+    if (Params().AllowMinDifficultyBlocks() && nTime > nTargetSpacing*2)
         return bnLimit.GetCompact();
 
     uint256 bnResult;
@@ -1238,7 +1238,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // Only change once per interval
     if ((pindexLast->nHeight+1) % nInterval != 0)
     {
-        if (TestNet())
+        if (Params().AllowMinDifficultyBlocks())
         {
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
@@ -1468,7 +1468,7 @@ void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev)
     block.nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
 
     // Updating time can change work required on testnet:
-    if (TestNet())
+    if (Params().AllowMinDifficultyBlocks())
         block.nBits = GetNextWorkRequired(pindexPrev, &block);
 }
 
