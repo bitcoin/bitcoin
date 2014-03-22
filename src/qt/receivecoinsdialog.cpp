@@ -65,10 +65,6 @@ void ReceiveCoinsDialog::setModel(WalletModel *model)
     {
         model->getRecentRequestsTableModel()->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
-        connect(ui->recentRequestsView->selectionModel(),
-            SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
-            this,
-            SLOT(on_recentRequestsView_selectionChanged(QItemSelection, QItemSelection)));
         updateDisplayUnit();
 
         QTableView* tableView = ui->recentRequestsView;
@@ -81,6 +77,11 @@ void ReceiveCoinsDialog::setModel(WalletModel *model)
         tableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
         tableView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
         tableView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
+
+        connect(tableView->selectionModel(),
+            SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
+            this,
+            SLOT(on_recentRequestsView_selectionChanged(QItemSelection, QItemSelection)));
 
         //(last 2 columns are set when the table geometry is ready) by the columnResizingFixer.
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH);
