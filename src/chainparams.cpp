@@ -117,6 +117,8 @@ public:
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 0;
+        nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+        nTargetSpacing = 10 * 60;
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
         // be spent as it did not originally exist in the database.
@@ -204,6 +206,9 @@ public:
         nEnforceBlockUpgradeMajority = 51;
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
+        nMinerThreads = 0;
+        nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+        nTargetSpacing = 10 * 60;
         strDataDir = "testnet3";
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
@@ -251,6 +256,8 @@ public:
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 1;
+        nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+        nTargetSpacing = 10 * 60;
         bnProofOfWorkLimit = ~uint256(0) >> 1;
         genesis.nTime = 1296688602;
         genesis.nBits = 0x207fffff;
