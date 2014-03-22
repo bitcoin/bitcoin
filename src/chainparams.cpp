@@ -227,6 +227,7 @@ public:
 
     virtual bool AllowMinDifficultyBlocks() const { return true; }
     virtual bool RequireStandard() const { return false; }
+    virtual bool RPCisTestNet() const { return true; }
     virtual Network NetworkID() const { return CChainParams::TESTNET; }
 };
 static CTestNetParams testNetParams;
