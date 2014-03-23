@@ -16,6 +16,7 @@ class WalletView;
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
+class QWidget;
 QT_END_NAMESPACE
 
 class WalletFrame : public QFrame
@@ -37,8 +38,12 @@ public:
 
     void showOutOfSyncWarning(bool fShow);
 
+    void addWidget(QWidget *widget);
+
 private:
+    QStackedWidget *frameStack;
     QStackedWidget *walletStack;
+    QStackedWidget *widgetStack;
     BitcoinGUI *gui;
     ClientModel *clientModel;
     QMap<QString, WalletView*> mapWalletViews;
@@ -56,6 +61,8 @@ public slots:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+    /** Switch to debug page */
+    void gotoDebugPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");

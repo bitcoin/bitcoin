@@ -478,6 +478,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="debugTab">
+         <property name="toolTip">
+          <string>Adds a new tab to the main tab bar showing the debug window.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Show debug window as main tab</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_Display">
          <property name="orientation">
           <enum>Qt::Vertical</enum>

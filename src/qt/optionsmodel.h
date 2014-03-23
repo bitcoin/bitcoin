@@ -41,6 +41,7 @@ public:
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
+        DebugTab,               // bool
         OptionIDRowCount,
     };
 
@@ -56,6 +57,7 @@ public:
     bool getMinimizeOnClose() { return fMinimizeOnClose; }
     int getDisplayUnit() { return nDisplayUnit; }
     bool getDisplayAddresses() { return bDisplayAddresses; }
+    bool getDebugTab() { return fDebugTab; }
     bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() { return fCoinControlFeatures; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
@@ -71,6 +73,7 @@ private:
     QString language;
     int nDisplayUnit;
     bool bDisplayAddresses;
+    bool fDebugTab;
     bool fCoinControlFeatures;
     /* settings that were overriden by command-line */
     QString strOverriddenByCommandLine;
