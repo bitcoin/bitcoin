@@ -72,7 +72,7 @@ bool CDBEnv::Open(const boost::filesystem::path& pathIn)
 
     path = pathIn;
     filesystem::path pathLogDir = path / "database";
-    filesystem::create_directory(pathLogDir);
+    TryCreateDirectory(pathLogDir);
     filesystem::path pathErrorFile = path / "db.log";
     LogPrintf("dbenv.open LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
 

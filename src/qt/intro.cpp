@@ -175,7 +175,7 @@ void Intro::pickDataDirectory()
             }
             dataDir = intro.getDataDirectory();
             try {
-                fs::create_directory(dataDir.toStdString());
+                TryCreateDirectory(dataDir.toStdString());
                 break;
             } catch(fs::filesystem_error &e) {
                 QMessageBox::critical(0, tr("Bitcoin"),
