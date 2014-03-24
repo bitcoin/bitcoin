@@ -48,7 +48,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location filename="../forms/addressbookpage.ui" line="+30"/>
         <source>Double-click to edit address or label</source>
-        <translation>표 또는 주소를 편집하기 위해 더블클릭 하세요</translation>
+        <translation>이름이나 주소를 편집하려면 더블클릭 하세요</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -58,27 +58,27 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+3"/>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>새 주소(&amp;N)</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>현재 선택한 주소를 시스템 클립보드로 복사하기</translation>
+        <translation>현재 선택한 주소를 클립보드로 복사하기</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Copy</source>
-        <translation>복사</translation>
+        <translation>복사(&amp;C)</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>닫기(&amp;L)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="+74"/>
         <source>&amp;Copy Address</source>
-        <translation>계좌 복사(&amp;C)</translation>
+        <translation>주소 복사(&amp;C)</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="-41"/>
@@ -93,12 +93,12 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>내보내기(&amp;E)</translation>
     </message>
     <message>
         <location line="-27"/>
         <source>&amp;Delete</source>
-        <translation>&amp;삭제</translation>
+        <translation>삭제(&amp;D)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="-30"/>
@@ -113,37 +113,37 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+5"/>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>선택(&amp;H)</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Sending addresses</source>
-        <translation>보내는 주소들</translation>
+        <translation>보내는 주소</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Receiving addresses</source>
-        <translation>받은 주소들</translation>
+        <translation>받은 주소</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>지불을 보내기 위한 비트코인 주소입니다. 코인을 보내기 전에 항상 금액과 받는 주소를 확인하세요.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>지불을 받기 위한 비트코인 주소입니다. 매 거래마다 새로운 주소를 사용하시길 권장합니다.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Copy &amp;Label</source>
-        <translation>표 복사</translation>
+        <translation>이름 복사</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>&amp;Edit</source>
-        <translation>편집&amp;</translation>
+        <translation>편집(&amp;E)</translation>
     </message>
     <message>
         <location line="+194"/>
@@ -153,7 +153,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>각각의 파일에 쉼표하기(*.csv)</translation>
+        <translation>CSV 파일(*.csv)</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -163,7 +163,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+1"/>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>%1에 주소 목록을 저장하는데 실패했습니다.</translation>
     </message>
 </context>
 <context>
@@ -171,7 +171,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location filename="../addresstablemodel.cpp" line="+168"/>
         <source>Label</source>
-        <translation>표</translation>
+        <translation>이름</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -181,7 +181,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+36"/>
         <source>(no label)</source>
-        <translation>(표 없음)</translation>
+        <translation>(이름 없음)</translation>
     </message>
 </context>
 <context>
@@ -204,12 +204,12 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation>새 암호 반복</translation>
+        <translation>새로운 암호 확인</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="+40"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>새로운 암호를 지갑에 입력. 8자보다 많은 단어를 입력하거나 10 자보다 많은 여러 종류를 암호에 사용하세요.</translation>
+        <translation>새로운 암호를 지갑에 입력. 8자보다 많은 단어를 입력하거나 10 자보다 많은 무작위 문자를 암호에 사용하세요.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -219,7 +219,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>이 작업은 지갑을 열기위해 사용자의 지갑의  암호가 필요합니다.</translation>
+        <translation>이 작업은 지갑을 열기 위해 사용자 지갑의 암호가 필요합니다.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -229,7 +229,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>이 작업은 지갑을 해독하기 위해 사용자의 지갑 암호가 필요합니다.</translation>
+        <translation>이 작업은 지갑을 해독하기 위해 사용자 지갑의 암호가 필요합니다.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -249,7 +249,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation>지갑의 암호화를 확정</translation>
+        <translation>지갑 암호화 적용</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -259,18 +259,18 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+0"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>지갑 암호화를 허용하시겠습니까?</translation>
+        <translation>지갑을 암호화 하시겠습니까?</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"/>
+        <translation>중요: 기존에 만들어진 암호화 지갑들은 새로 생성된 암호화 지갑 파일로 대체 되어집니다. 보안상의 이유로 기존 암호화 지갑들은 새로 암호화된 지갑이 생성되면 더이상 사용할 수 없습니다.</translation>
     </message>
     <message>
         <location line="+100"/>
         <location line="+24"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>경고: 캡스록 키가 켜져있습니다!</translation>
+        <translation>경고: Caps Lock 키가 켜져있습니다!</translation>
     </message>
     <message>
         <location line="-130"/>
@@ -294,7 +294,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="-54"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>지갑 암호화는 내부 에러로 인해 실패했습니다.  당신의 지갑은 암호화 되지 않았습니다.</translation>
+        <translation>지갑 암호화가 내부 에러로 인해 실패했습니다. 당신의 지갑은 암호화 되지 않았습니다.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -330,7 +330,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location filename="../bitcoingui.cpp" line="+295"/>
         <source>Sign &amp;message...</source>
-        <translation>메시지 서명&amp;...</translation>
+        <translation>메시지 서명...(&amp;M)</translation>
     </message>
     <message>
         <location line="+335"/>
@@ -340,7 +340,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="-407"/>
         <source>&amp;Overview</source>
-        <translation>&amp;개요</translation>
+        <translation>개요(&amp;O)</translation>
     </message>
     <message>
         <location line="-137"/>
@@ -350,12 +350,12 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+138"/>
         <source>Show general overview of wallet</source>
-        <translation>지갑의 일반적 개요를 보여 줍니다.</translation>
+        <translation>지갑의 대체적인 개요를 보여 줍니다.</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;거래</translation>
+        <translation>거래(&amp;T)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -396,32 +396,32 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+9"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>지갑 암호화&amp;...</translation>
+        <translation>지갑 암호화...(&amp;E)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Backup Wallet...</source>
-        <translation>지갑 백업&amp;...</translation>
+        <translation>지갑 백업...(&amp;B)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation>암호문 변경&amp;...</translation>
+        <translation>암호문 변경...(&amp;C)</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>보내는 주소들...(&amp;S)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>받는 주소들...(&amp;R)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open &amp;URI...</source>
-        <translation>URI&amp;열기</translation>
+        <translation>&amp;URI 열기(&amp;U)</translation>
     </message>
     <message>
         <location line="+325"/>
@@ -456,7 +456,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+6"/>
         <source>&amp;Debug window</source>
-        <translation>디버그 창&amp;</translation>
+        <translation>디버그 창(&amp;D)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -466,7 +466,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="-4"/>
         <source>&amp;Verify message...</source>
-        <translation>메시지 확인&amp;...</translation>
+        <translation>메시지 확인...(&amp;V)</translation>
     </message>
     <message>
         <location line="+430"/>
@@ -497,7 +497,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+1"/>
         <source>Show or hide the main Window</source>
-        <translation>주 창 보이기 또는 숨기기</translation>
+        <translation>메인 창 보이기 또는 숨기기</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -507,7 +507,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <message>
         <location line="+7"/>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation></translation>
     </message>
     <message>
         <location line="+2"/>
