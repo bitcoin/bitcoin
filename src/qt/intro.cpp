@@ -178,7 +178,7 @@ void Intro::pickDataDirectory()
             }
             dataDir = intro.getDataDirectory();
             try {
-                fs::create_directory(GUIUtil::qstringToBoostPath(dataDir));
+                TryCreateDirectory(GUIUtil::qstringToBoostPath(dataDir));
                 break;
             } catch(fs::filesystem_error &e) {
                 QMessageBox::critical(0, tr("Bitcoin"),
