@@ -66,11 +66,11 @@ $(OSX_APP)/Contents/Resources/empty.lproj:
 
 $(OSX_APP)/Contents/Info.plist: $(OSX_PLIST)
 	$(MKDIR_P) $(@D)
-	$(INSTALL) $< $@
+	$(INSTALL_DATA) $< $@
 
 $(OSX_APP)/Contents/Resources/bitcoin.icns: $(OSX_INSTALLER_ICONS)
 	$(MKDIR_P) $(@D)
-	$(INSTALL) $< $@
+	$(INSTALL_DATA) $< $@
 
 $(OSX_APP)/Contents/MacOS/Bitcoin-Qt: $(BITCOIN_QT_BIN)
 	$(MKDIR_P) $(@D)
