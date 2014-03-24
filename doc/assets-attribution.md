@@ -78,13 +78,13 @@ Everaldo (Everaldo Coelho)
 ### Assets Used
 	scripts/img/reload.xcf (modified), src/qt/res/movies/*.png
 
-[Vignoni David](http://www.oxygen-icons.org)
+[Vignoni David](http://techbase.kde.org/Projects/Oxygen)
 -----------------------
 
 ### Info
 * Designer: Vignoni David
 * License: Oxygen icon theme is dual licensed. You may copy it under the Creative Common Attribution-ShareAlike 3.0 License or the GNU Library General Public License.
-* Site: [http://www.oxygen-icons.org](http://www.oxygen-icons.org)
+* Site: [http://techbase.kde.org/Projects/Oxygen](http://techbase.kde.org/Projects/Oxygen)
 
 ### Assets Used
 	src/qt/res/icons/debugwindow.png
