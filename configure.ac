@@ -6,6 +6,14 @@ define(_CLIENT_VERSION_REVISION, 99)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2014)
+
+# Dynamic library version: this is not the same as the version number of the
+# package as a whole.  The library version number uses an established scheme to
+# indicate what type of changes happened to your library's interface. The
+# scheme is documented in
+# https://www.gnu.org/software/libtool/manual/html_node/Libtool-versioning.html
+define(_CLIENT_VERSION_DYNLIB, 1:0:0)
+
 AC_INIT([Bitcoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@bitcoin.org],[bitcoin])
 AC_CONFIG_AUX_DIR([src/build-aux])
 AC_CONFIG_MACRO_DIR([src/m4])
@@ -13,6 +21,7 @@ AC_CANONICAL_HOST
 AH_TOP([#ifndef BITCOIN_CONFIG_H])
 AH_TOP([#define BITCOIN_CONFIG_H])
 AH_BOTTOM([#endif //BITCOIN_CONFIG_H])
+LT_INIT([disable-shared])
 
 # This m4 will only be used if a system copy cannot be found. This is helpful
 # on systems where autotools are installed but the pkg-config macros are not in
@@ -370,6 +379,15 @@ AC_SUBST(LEVELDB_CPPFLAGS)
 AC_SUBST(LIBLEVELDB)
 AC_SUBST(LIBMEMENV)
 
+dnl If shared library is requested, build leveldb with -fPIC so that it can be
+dnl linked as part of shared library.
+if test "x$enable_shared" = xyes; then
+    LEVELDB_EXTRA_CXXFLAGS="-fPIC"
+else
+    LEVELDB_EXTRA_CXXFLAGS=""
+fi
+AC_SUBST(LEVELDB_EXTRA_CXXFLAGS)
+
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
     BITCOIN_FIND_BDB48
@@ -703,6 +721,7 @@ AC_SUBST(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR)
 AC_SUBST(CLIENT_VERSION_REVISION, _CLIENT_VERSION_REVISION)
 AC_SUBST(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD)
 AC_SUBST(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE)
+AC_SUBST(CLIENT_VERSION_DYNLIB, _CLIENT_VERSION_DYNLIB)
 AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
 
 
@@ -719,4 +738,5 @@ AC_SUBST(BUILD_TEST_QT)
 AC_CONFIG_FILES([Makefile src/Makefile src/test/Makefile src/qt/Makefile src/qt/test/Makefile share/setup.nsi share/qt/Info.plist])
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/build-tests.sh],[chmod +x qa/pull-tester/build-tests.sh])
+AC_CONFIG_FILES([share/bitcoincore_common.pc share/bitcoincore_server.pc share/bitcoincore_cli.pc share/bitcoincore_wallet.pc])
 AC_OUTPUT

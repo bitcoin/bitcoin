@@ -33,6 +33,12 @@ COVERAGE_INFO = baseline_filtered_combined.info baseline.info block_test.info \
   baseline_filtered.info block_test_filtered.info \
   leveldb_baseline_filtered.info test_bitcoin_coverage.info test_bitcoin.info
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = share/bitcoincore_common.pc share/bitcoincore_server.pc share/bitcoincore_cli.pc
+if ENABLE_WALLET
+pkgconfig_DATA += share/bitcoincore_wallet.pc
+endif
+
 dist-hook:
 	-$(MAKE) -C $(top_distdir)/src/leveldb clean
 	-$(GIT) archive --format=tar HEAD -- src/version.cpp | $(AMTAR) -C $(top_distdir) -xf -
