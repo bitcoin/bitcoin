@@ -84,6 +84,7 @@ libbitcoincore_common_la_SOURCES = \
 libbitcoincore_common_la_LDFLAGS = -version-info $(CLIENT_VERSION_DYNLIB)
 libbitcoincore_common_la_LIBADD = $(BOOST_LIBS)
 nodist_libbitcoincore_common_la_SOURCES = $(top_srcdir)/src/obj/build.h
+nodist_libbitcoincore_common_include_HEADERS = bitcoin-config.h
 
 # server library #
 libbitcoincore_server_includedir = $(includedir)/$(PACKAGE)

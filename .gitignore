@@ -45,6 +45,9 @@ src/qt/test/moc*.cpp
 *.la
 .libs
 
+# pkgconfig
+*.pc
+
 *.log
 *.trs
 *.dmg
