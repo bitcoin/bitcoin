@@ -29,9 +29,11 @@ class CMessageHeader
 {
     public:
         CMessageHeader();
-        CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn);
+        CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn, const unsigned char * messageStartChars);
 
         std::string GetCommand() const;
+        bool IsBitcoinMessage() const;
+        bool IsBitcreditMessage() const;
         bool IsValid() const;
 
         IMPLEMENT_SERIALIZE

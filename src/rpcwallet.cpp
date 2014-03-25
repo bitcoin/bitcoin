@@ -23,23 +23,37 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
-int64_t nWalletUnlockTime;
-static CCriticalSection cs_nWalletUnlockTime;
+int64_t bitcredit_nWalletUnlockTime;
+static CCriticalSection bitcredit_cs_nWalletUnlockTime;
+int64_t deposit_nWalletUnlockTime;
+static CCriticalSection deposit_cs_nWalletUnlockTime;
+int64_t bitcoin_nWalletUnlockTime;
+static CCriticalSection bitcoin_cs_nWalletUnlockTime;
 
 std::string HelpRequiringPassphrase()
 {
-    return pwalletMain && pwalletMain->IsCrypted()
+    return bitcredit_pwalletMain && bitcredit_pwalletMain->IsCrypted()
         ? "\nRequires wallet passphrase to be set with walletpassphrase call."
         : "";
 }
 
-void EnsureWalletIsUnlocked()
+void Bitcredit_EnsureWalletIsUnlocked()
 {
-    if (pwalletMain->IsLocked())
+    if (bitcredit_pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 }
+void Deposit_EnsureWalletIsUnlocked()
+{
+    if (deposit_pwalletMain->IsLocked())
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet deposit passphrase with deposit_walletpassphrase first.");
+}
+void Bitcoin_EnsureWalletIsUnlocked()
+{
+    if (bitcoin_pwalletMain->IsLocked())
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the bitcoin wallet passphrase with bitcoin_walletpassphrase first.");
+}
 
-void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
+void WalletTxToJSON(const Bitcredit_CWalletTx& wtx, Object& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
     entry.push_back(Pair("confirmations", confirms));
@@ -49,7 +63,7 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
     {
         entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
         entry.push_back(Pair("blockindex", wtx.nIndex));
-        entry.push_back(Pair("blocktime", (int64_t)(mapBlockIndex[wtx.hashBlock]->nTime)));
+        entry.push_back(Pair("blocktime", (int64_t)(bitcredit_mapBlockIndex[wtx.hashBlock]->nTime)));
     }
     uint256 hash = wtx.GetHash();
     entry.push_back(Pair("txid", hash.GetHex()));
@@ -76,7 +90,7 @@ Value getnewaddress(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getnewaddress ( \"account\" )\n"
-            "\nReturns a new Bitcoin address for receiving payments.\n"
+            "\nReturns a new Bitcredit address for receiving payments.\n"
             "If 'account' is specified (recommended), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
@@ -95,16 +109,16 @@ Value getnewaddress(const Array& params, bool fHelp)
     if (params.size() > 0)
         strAccount = AccountFromValue(params[0]);
 
-    if (!pwalletMain->IsLocked())
-        pwalletMain->TopUpKeyPool();
+    if (!bitcredit_pwalletMain->IsLocked())
+        bitcredit_pwalletMain->TopUpKeyPool();
 
     // Generate a new key that is added to wallet
     CPubKey newKey;
-    if (!pwalletMain->GetKeyFromPool(newKey))
+    if (!bitcredit_pwalletMain->GetKeyFromPool(newKey))
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     CKeyID keyID = newKey.GetID();
 
-    pwalletMain->SetAddressBook(keyID, strAccount, "receive");
+    bitcredit_pwalletMain->SetAddressBook(keyID, strAccount, "receive");
 
     return CBitcoinAddress(keyID).ToString();
 }
@@ -112,7 +126,7 @@ Value getnewaddress(const Array& params, bool fHelp)
 
 CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
-    CWalletDB walletdb(pwalletMain->strWalletFile);
+    Bitcredit_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
 
     CAccount account;
     walletdb.ReadAccount(strAccount, account);
@@ -124,11 +138,11 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     {
         CScript scriptPubKey;
         scriptPubKey.SetDestination(account.vchPubKey.GetID());
-        for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
-             it != pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
+        for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin();
+             it != bitcredit_pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
              ++it)
         {
-            const CWalletTx& wtx = (*it).second;
+            const Bitcredit_CWalletTx& wtx = (*it).second;
             BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 if (txout.scriptPubKey == scriptPubKey)
                     bKeyUsed = true;
@@ -138,10 +152,10 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     // Generate a new key
     if (!account.vchPubKey.IsValid() || bForceNew || bKeyUsed)
     {
-        if (!pwalletMain->GetKeyFromPool(account.vchPubKey))
+        if (!bitcredit_pwalletMain->GetKeyFromPool(account.vchPubKey))
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
 
-        pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, "receive");
+        bitcredit_pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, "receive");
         walletdb.WriteAccount(strAccount, account);
     }
 
@@ -153,7 +167,7 @@ Value getaccountaddress(const Array& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "getaccountaddress \"account\"\n"
-            "\nReturns the current Bitcoin address for receiving payments to this account.\n"
+            "\nReturns the current Bitcredit address for receiving payments to this account.\n"
             "\nArguments:\n"
             "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
             "\nResult:\n"
@@ -181,7 +195,7 @@ Value getrawchangeaddress(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getrawchangeaddress\n"
-            "\nReturns a new Bitcoin address, for receiving change.\n"
+            "\nReturns a new Bitcredit address, for receiving change.\n"
             "This is for use with raw transactions, NOT normal use.\n"
             "\nResult:\n"
             "\"address\"    (string) The address\n"
@@ -190,10 +204,10 @@ Value getrawchangeaddress(const Array& params, bool fHelp)
             + HelpExampleRpc("getrawchangeaddress", "")
        );
 
-    if (!pwalletMain->IsLocked())
-        pwalletMain->TopUpKeyPool();
+    if (!bitcredit_pwalletMain->IsLocked())
+        bitcredit_pwalletMain->TopUpKeyPool();
 
-    CReserveKey reservekey(pwalletMain);
+    Bitcredit_CReserveKey reservekey(bitcredit_pwalletMain);
     CPubKey vchPubKey;
     if (!reservekey.GetReservedKey(vchPubKey))
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Unable to obtain key for change");
@@ -222,7 +236,7 @@ Value setaccount(const Array& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcredit address");
 
 
     string strAccount;
@@ -230,14 +244,14 @@ Value setaccount(const Array& params, bool fHelp)
         strAccount = AccountFromValue(params[1]);
 
     // Detect when changing the account of an address that is the 'unused current key' of another account:
-    if (pwalletMain->mapAddressBook.count(address.Get()))
+    if (bitcredit_pwalletMain->mapAddressBook.count(address.Get()))
     {
-        string strOldAccount = pwalletMain->mapAddressBook[address.Get()].name;
+        string strOldAccount = bitcredit_pwalletMain->mapAddressBook[address.Get()].name;
         if (address == GetAccountAddress(strOldAccount))
             GetAccountAddress(strOldAccount, true);
     }
 
-    pwalletMain->SetAddressBook(address.Get(), strAccount, "receive");
+    bitcredit_pwalletMain->SetAddressBook(address.Get(), strAccount, "receive");
 
     return Value::null;
 }
@@ -260,11 +274,11 @@ Value getaccount(const Array& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcredit address");
 
     string strAccount;
-    map<CTxDestination, CAddressBookData>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
-    if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.name.empty())
+    map<CTxDestination, CAddressBookData>::iterator mi = bitcredit_pwalletMain->mapAddressBook.find(address.Get());
+    if (mi != bitcredit_pwalletMain->mapAddressBook.end() && !(*mi).second.name.empty())
         strAccount = (*mi).second.name;
     return strAccount;
 }
@@ -292,7 +306,7 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 
     // Find all addresses that have the given account
     Array ret;
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, bitcredit_pwalletMain->mapAddressBook)
     {
         const CBitcoinAddress& address = item.first;
         const string& strName = item.second.name;
@@ -327,21 +341,21 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcredit address");
 
     // Amount
     int64_t nAmount = AmountFromValue(params[1]);
 
     // Wallet comments
-    CWalletTx wtx;
+    Bitcredit_CWalletTx wtx;
     if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
         wtx.mapValue["comment"] = params[2].get_str();
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["to"]      = params[3].get_str();
 
-    EnsureWalletIsUnlocked();
+    Bitcredit_EnsureWalletIsUnlocked();
 
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
+    string strError = bitcredit_pwalletMain->SendMoneyToDestination(bitcoin_pwalletMain, deposit_pwalletMain, address.Get(), nAmount, wtx);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
@@ -374,8 +388,8 @@ Value listaddressgroupings(const Array& params, bool fHelp)
         );
 
     Array jsonGroupings;
-    map<CTxDestination, int64_t> balances = pwalletMain->GetAddressBalances();
-    BOOST_FOREACH(set<CTxDestination> grouping, pwalletMain->GetAddressGroupings())
+    map<CTxDestination, int64_t> balances = bitcredit_pwalletMain->GetAddressBalances();
+    BOOST_FOREACH(set<CTxDestination> grouping, bitcredit_pwalletMain->GetAddressGroupings())
     {
         Array jsonGrouping;
         BOOST_FOREACH(CTxDestination address, grouping)
@@ -384,9 +398,9 @@ Value listaddressgroupings(const Array& params, bool fHelp)
             addressInfo.push_back(CBitcoinAddress(address).ToString());
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
-                LOCK(pwalletMain->cs_wallet);
-                if (pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get()) != pwalletMain->mapAddressBook.end())
-                    addressInfo.push_back(pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second.name);
+                LOCK(bitcredit_pwalletMain->cs_wallet);
+                if (bitcredit_pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get()) != bitcredit_pwalletMain->mapAddressBook.end())
+                    addressInfo.push_back(bitcredit_pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second.name);
             }
             jsonGrouping.push_back(addressInfo);
         }
@@ -418,7 +432,7 @@ Value signmessage(const Array& params, bool fHelp)
             + HelpExampleRpc("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"my message\"")
         );
 
-    EnsureWalletIsUnlocked();
+    Bitcredit_EnsureWalletIsUnlocked();
 
     string strAddress = params[0].get_str();
     string strMessage = params[1].get_str();
@@ -432,11 +446,11 @@ Value signmessage(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
 
     CKey key;
-    if (!pwalletMain->GetKey(keyID, key))
+    if (!bitcredit_pwalletMain->GetKey(keyID, key))
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
 
     CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
+    ss << bitcredit_strMessageMagic;
     ss << strMessage;
 
     vector<unsigned char> vchSig;
@@ -468,13 +482,13 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
             + HelpExampleRpc("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", 6")
        );
 
-    // Bitcoin address
+    // Bitcredit address
     CBitcoinAddress address = CBitcoinAddress(params[0].get_str());
     CScript scriptPubKey;
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcredit address");
     scriptPubKey.SetDestination(address.Get());
-    if (!IsMine(*pwalletMain,scriptPubKey))
+    if (!IsMine(*bitcredit_pwalletMain,scriptPubKey))
         return (double)0.0;
 
     // Minimum confirmations
@@ -484,10 +498,10 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 
     // Tally
     int64_t nAmount = 0;
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
     {
-        const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !IsFinalTx(wtx))
+        const Bitcredit_CWalletTx& wtx = (*it).second;
+        if (wtx.IsCoinBase() || !Bitcredit_IsFinalTx(wtx))
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
@@ -529,20 +543,20 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 
     // Get the set of pub keys assigned to account
     string strAccount = AccountFromValue(params[0]);
-    set<CTxDestination> setAddress = pwalletMain->GetAccountAddresses(strAccount);
+    set<CTxDestination> setAddress = bitcredit_pwalletMain->GetAccountAddresses(strAccount);
 
     // Tally
     int64_t nAmount = 0;
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
     {
-        const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !IsFinalTx(wtx))
+        const Bitcredit_CWalletTx& wtx = (*it).second;
+        if (wtx.IsCoinBase() || !Bitcredit_IsFinalTx(wtx))
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             CTxDestination address;
-            if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwalletMain, address) && setAddress.count(address))
+            if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*bitcredit_pwalletMain, address) && setAddress.count(address))
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
                     nAmount += txout.nValue;
         }
@@ -552,15 +566,15 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 }
 
 
-int64_t GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinDepth)
+int64_t GetAccountBalance(Bitcredit_CWalletDB& walletdb, const string& strAccount, int nMinDepth)
 {
     int64_t nBalance = 0;
 
     // Tally wallet transactions
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
     {
-        const CWalletTx& wtx = (*it).second;
-        if (!IsFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
+        const Bitcredit_CWalletTx& wtx = (*it).second;
+        if (!Bitcredit_IsFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetFirstDepositOutBlocksToMaturity() || wtx.GetSecondDepositOutBlocksToMaturity() || wtx.GetDepthInMainChain() < 0)
             continue;
 
         int64_t nReceived, nSent, nFee;
@@ -579,7 +593,7 @@ int64_t GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMi
 
 int64_t GetAccountBalance(const string& strAccount, int nMinDepth)
 {
-    CWalletDB walletdb(pwalletMain->strWalletFile);
+    Bitcredit_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
     return GetAccountBalance(walletdb, strAccount, nMinDepth);
 }
 
@@ -611,8 +625,13 @@ Value getbalance(const Array& params, bool fHelp)
             + HelpExampleRpc("getbalance", "\"tabby\", 6")
         );
 
-    if (params.size() == 0)
-        return  ValueFromAmount(pwalletMain->GetBalance());
+    if (params.size() == 0) {
+        //Find all prepared deposit transactions
+        map<uint256, set<int> > mapPreparedDepositTxInPoints;
+        deposit_pwalletMain->PreparedDepositTxInPoints(mapPreparedDepositTxInPoints);
+
+        return  ValueFromAmount(bitcredit_pwalletMain->GetBalance(mapPreparedDepositTxInPoints));
+    }
 
     int nMinDepth = 1;
     if (params.size() > 1)
@@ -623,10 +642,10 @@ Value getbalance(const Array& params, bool fHelp)
         // (GetBalance() sums up all unspent TxOuts)
         // getbalance and getbalance '*' 0 should return the same number
         int64_t nBalance = 0;
-        for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+        for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
         {
-            const CWalletTx& wtx = (*it).second;
-            if (!wtx.IsTrusted() || wtx.GetBlocksToMaturity() > 0)
+            const Bitcredit_CWalletTx& wtx = (*it).second;
+            if (!wtx.IsTrusted() || wtx.GetBlocksToMaturity() > 0 || wtx.GetFirstDepositOutBlocksToMaturity() > 0 || wtx.GetSecondDepositOutBlocksToMaturity() > 0)
                 continue;
 
             int64_t allFee;
@@ -659,7 +678,12 @@ Value getunconfirmedbalance(const Array &params, bool fHelp)
         throw runtime_error(
                 "getunconfirmedbalance\n"
                 "Returns the server's total unconfirmed balance\n");
-    return ValueFromAmount(pwalletMain->GetUnconfirmedBalance());
+
+    //Find all prepared deposit transactions
+    map<uint256, set<int> > mapPreparedDepositTxInPoints;
+    deposit_pwalletMain->PreparedDepositTxInPoints(mapPreparedDepositTxInPoints);
+
+    return ValueFromAmount(bitcredit_pwalletMain->GetUnconfirmedBalance(mapPreparedDepositTxInPoints));
 }
 
 
@@ -695,7 +719,7 @@ Value movecmd(const Array& params, bool fHelp)
     if (params.size() > 4)
         strComment = params[4].get_str();
 
-    CWalletDB walletdb(pwalletMain->strWalletFile);
+    Bitcredit_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
     if (!walletdb.TxnBegin())
         throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
 
@@ -703,23 +727,23 @@ Value movecmd(const Array& params, bool fHelp)
 
     // Debit
     CAccountingEntry debit;
-    debit.nOrderPos = pwalletMain->IncOrderPosNext(&walletdb);
+    debit.nOrderPos = bitcredit_pwalletMain->IncOrderPosNext(&walletdb);
     debit.strAccount = strFrom;
     debit.nCreditDebit = -nAmount;
     debit.nTime = nNow;
     debit.strOtherAccount = strTo;
     debit.strComment = strComment;
-    walletdb.WriteAccountingEntry(debit);
+    walletdb.WriteAccountingEntry(debit, bitcredit_nAccountingEntryNumber);
 
     // Credit
     CAccountingEntry credit;
-    credit.nOrderPos = pwalletMain->IncOrderPosNext(&walletdb);
+    credit.nOrderPos = bitcredit_pwalletMain->IncOrderPosNext(&walletdb);
     credit.strAccount = strTo;
     credit.nCreditDebit = nAmount;
     credit.nTime = nNow;
     credit.strOtherAccount = strFrom;
     credit.strComment = strComment;
-    walletdb.WriteAccountingEntry(credit);
+    walletdb.WriteAccountingEntry(credit, bitcredit_nAccountingEntryNumber);
 
     if (!walletdb.TxnCommit())
         throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
@@ -760,20 +784,20 @@ Value sendfrom(const Array& params, bool fHelp)
     string strAccount = AccountFromValue(params[0]);
     CBitcoinAddress address(params[1].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcredit address");
     int64_t nAmount = AmountFromValue(params[2]);
     int nMinDepth = 1;
     if (params.size() > 3)
         nMinDepth = params[3].get_int();
 
-    CWalletTx wtx;
+    Bitcredit_CWalletTx wtx;
     wtx.strFromAccount = strAccount;
     if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
         wtx.mapValue["comment"] = params[4].get_str();
     if (params.size() > 5 && params[5].type() != null_type && !params[5].get_str().empty())
         wtx.mapValue["to"]      = params[5].get_str();
 
-    EnsureWalletIsUnlocked();
+    Bitcredit_EnsureWalletIsUnlocked();
 
     // Check funds
     int64_t nBalance = GetAccountBalance(strAccount, nMinDepth);
@@ -781,7 +805,7 @@ Value sendfrom(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
     // Send
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
+    string strError = bitcredit_pwalletMain->SendMoneyToDestination(bitcoin_pwalletMain, deposit_pwalletMain, address.Get(), nAmount, wtx);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
@@ -823,7 +847,7 @@ Value sendmany(const Array& params, bool fHelp)
     if (params.size() > 2)
         nMinDepth = params[2].get_int();
 
-    CWalletTx wtx;
+    Bitcredit_CWalletTx wtx;
     wtx.strFromAccount = strAccount;
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["comment"] = params[3].get_str();
@@ -836,7 +860,7 @@ Value sendmany(const Array& params, bool fHelp)
     {
         CBitcoinAddress address(s.name_);
         if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+s.name_);
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcredit address: ")+s.name_);
 
         if (setAddress.count(address))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
@@ -850,7 +874,7 @@ Value sendmany(const Array& params, bool fHelp)
         vecSend.push_back(make_pair(scriptPubKey, nAmount));
     }
 
-    EnsureWalletIsUnlocked();
+    Bitcredit_EnsureWalletIsUnlocked();
 
     // Check funds
     int64_t nBalance = GetAccountBalance(strAccount, nMinDepth);
@@ -858,13 +882,16 @@ Value sendmany(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
     // Send
-    CReserveKey keyChange(pwalletMain);
+    Bitcredit_CReserveKey keyChange(bitcredit_pwalletMain);
     int64_t nFeeRequired = 0;
     string strFailReason;
-    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strFailReason);
+    bool fCreated = bitcredit_pwalletMain->CreateTransaction(deposit_pwalletMain, vecSend, wtx, keyChange, nFeeRequired, strFailReason);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
-    if (!pwalletMain->CommitTransaction(wtx, keyChange))
+
+    //Just an empty vector
+    std::vector<Bitcredit_CReserveKey *> keyRecipients;
+    if (!bitcredit_pwalletMain->CommitTransaction(bitcoin_pwalletMain, wtx, keyChange, keyRecipients))
         throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
 
     return wtx.GetHash().GetHex();
@@ -879,7 +906,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
     {
         string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
-            "Each key is a Bitcoin address or hex-encoded public key.\n"
+            "Each key is a Bitcredit address or hex-encoded public key.\n"
             "If 'account' is specified, assign address to that account.\n"
 
             "\nArguments:\n"
@@ -910,9 +937,9 @@ Value addmultisigaddress(const Array& params, bool fHelp)
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig_redeemScript(params);
     CScriptID innerID = inner.GetID();
-    pwalletMain->AddCScript(inner);
+    bitcredit_pwalletMain->AddCScript(inner);
 
-    pwalletMain->SetAddressBook(innerID, strAccount, "send");
+    bitcredit_pwalletMain->SetAddressBook(innerID, strAccount, "send");
     return CBitcoinAddress(innerID).ToString();
 }
 
@@ -943,11 +970,11 @@ Value ListReceived(const Array& params, bool fByAccounts)
 
     // Tally
     map<CBitcoinAddress, tallyitem> mapTally;
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
     {
-        const CWalletTx& wtx = (*it).second;
+        const Bitcredit_CWalletTx& wtx = (*it).second;
 
-        if (wtx.IsCoinBase() || !IsFinalTx(wtx))
+        if (wtx.IsCoinBase() || !Bitcredit_IsFinalTx(wtx))
             continue;
 
         int nDepth = wtx.GetDepthInMainChain();
@@ -957,7 +984,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             CTxDestination address;
-            if (!ExtractDestination(txout.scriptPubKey, address) || !IsMine(*pwalletMain, address))
+            if (!ExtractDestination(txout.scriptPubKey, address) || !IsMine(*bitcredit_pwalletMain, address))
                 continue;
 
             tallyitem& item = mapTally[address];
@@ -970,7 +997,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
     // Reply
     Array ret;
     map<string, tallyitem> mapAccountTally;
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, bitcredit_pwalletMain->mapAddressBook)
     {
         const CBitcoinAddress& address = item.first;
         const string& strAccount = item.second.name;
@@ -1095,7 +1122,7 @@ static void MaybePushAddress(Object & entry, const CTxDestination &dest)
         entry.push_back(Pair("address", addr.ToString()));
 }
 
-void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
+void ListTransactions(const Bitcredit_CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
     int64_t nFee;
     string strSentAccount;
@@ -1129,8 +1156,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64_t)& r, listReceived)
         {
             string account;
-            if (pwalletMain->mapAddressBook.count(r.first))
-                account = pwalletMain->mapAddressBook[r.first].name;
+            if (bitcredit_pwalletMain->mapAddressBook.count(r.first))
+                account = bitcredit_pwalletMain->mapAddressBook[r.first].name;
             if (fAllAccounts || (account == strAccount))
             {
                 Object entry;
@@ -1249,12 +1276,12 @@ Value listtransactions(const Array& params, bool fHelp)
     Array ret;
 
     std::list<CAccountingEntry> acentries;
-    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, strAccount);
+    Bitcredit_CWallet::TxItems txOrdered = bitcredit_pwalletMain->OrderedTxItems(acentries, strAccount);
 
     // iterate backwards until we have nCount items to return:
-    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+    for (Bitcredit_CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
-        CWalletTx *const pwtx = (*it).second.first;
+        Bitcredit_CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0)
             ListTransactions(*pwtx, strAccount, 0, true, ret);
         CAccountingEntry *const pacentry = (*it).second.second;
@@ -1311,20 +1338,24 @@ Value listaccounts(const Array& params, bool fHelp)
         nMinDepth = params[0].get_int();
 
     map<string, int64_t> mapAccountBalances;
-    BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& entry, pwalletMain->mapAddressBook) {
-        if (IsMine(*pwalletMain, entry.first)) // This address belongs to me
+    BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& entry, bitcredit_pwalletMain->mapAddressBook) {
+        if (IsMine(*bitcredit_pwalletMain, entry.first)) // This address belongs to me
             mapAccountBalances[entry.second.name] = 0;
     }
 
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
     {
-        const CWalletTx& wtx = (*it).second;
+        const Bitcredit_CWalletTx& wtx = (*it).second;
         int64_t nFee;
         string strSentAccount;
         list<pair<CTxDestination, int64_t> > listReceived;
         list<pair<CTxDestination, int64_t> > listSent;
         int nDepth = wtx.GetDepthInMainChain();
         if (wtx.GetBlocksToMaturity() > 0 || nDepth < 0)
+            continue;
+        if (wtx.GetFirstDepositOutBlocksToMaturity() > 0 || nDepth < 0)
+            continue;
+        if (wtx.GetSecondDepositOutBlocksToMaturity() > 0 || nDepth < 0)
             continue;
         wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount);
         mapAccountBalances[strSentAccount] -= nFee;
@@ -1333,15 +1364,15 @@ Value listaccounts(const Array& params, bool fHelp)
         if (nDepth >= nMinDepth)
         {
             BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64_t)& r, listReceived)
-                if (pwalletMain->mapAddressBook.count(r.first))
-                    mapAccountBalances[pwalletMain->mapAddressBook[r.first].name] += r.second;
+                if (bitcredit_pwalletMain->mapAddressBook.count(r.first))
+                    mapAccountBalances[bitcredit_pwalletMain->mapAddressBook[r.first].name] += r.second;
                 else
                     mapAccountBalances[""] += r.second;
         }
     }
 
     list<CAccountingEntry> acentries;
-    CWalletDB(pwalletMain->strWalletFile).ListAccountCreditDebit("*", acentries);
+    Bitcredit_CWalletDB(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb).ListAccountCreditDebit("*", acentries);
     BOOST_FOREACH(const CAccountingEntry& entry, acentries)
         mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
 
@@ -1388,7 +1419,7 @@ Value listsinceblock(const Array& params, bool fHelp)
             + HelpExampleRpc("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6")
         );
 
-    CBlockIndex *pindex = NULL;
+    Bitcredit_CBlockIndex *pindex = NULL;
     int target_confirms = 1;
 
     if (params.size() > 0)
@@ -1396,8 +1427,8 @@ Value listsinceblock(const Array& params, bool fHelp)
         uint256 blockId = 0;
 
         blockId.SetHex(params[0].get_str());
-        std::map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(blockId);
-        if (it != mapBlockIndex.end())
+        std::map<uint256, Bitcredit_CBlockIndex*>::iterator it = bitcredit_mapBlockIndex.find(blockId);
+        if (it != bitcredit_mapBlockIndex.end())
             pindex = it->second;
     }
 
@@ -1409,19 +1440,19 @@ Value listsinceblock(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
     }
 
-    int depth = pindex ? (1 + chainActive.Height() - pindex->nHeight) : -1;
+    int depth = pindex ? (1 + bitcredit_chainActive.Height() - pindex->nHeight) : -1;
 
     Array transactions;
 
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); it++)
+    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); it++)
     {
-        CWalletTx tx = (*it).second;
+        Bitcredit_CWalletTx tx = (*it).second;
 
         if (depth == -1 || tx.GetDepthInMainChain() < depth)
             ListTransactions(tx, "*", 0, true, transactions);
     }
 
-    CBlockIndex *pblockLast = chainActive[chainActive.Height() + 1 - target_confirms];
+    Bitcredit_CBlockIndex *pblockLast = bitcredit_chainActive[bitcredit_chainActive.Height() + 1 - target_confirms];
     uint256 lastblock = pblockLast ? pblockLast->GetBlockHash() : 0;
 
     Object ret;
@@ -1469,12 +1500,15 @@ Value gettransaction(const Array& params, bool fHelp)
     uint256 hash;
     hash.SetHex(params[0].get_str());
 
-    Object entry;
-    if (!pwalletMain->mapWallet.count(hash))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
-    const CWalletTx& wtx = pwalletMain->mapWallet[hash];
+    //The decomposed transactions should not be affected by prepared deposits. Passing in empty list.
+    map<uint256, set<int> > mapPreparedDepositTxInPoints;
 
-    int64_t nCredit = wtx.GetCredit();
+    Object entry;
+    if (!bitcredit_pwalletMain->mapWallet.count(hash))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    const Bitcredit_CWalletTx& wtx = bitcredit_pwalletMain->mapWallet[hash];
+
+    int64_t nCredit = wtx.GetCredit(mapPreparedDepositTxInPoints);
     int64_t nDebit = wtx.GetDebit();
     int64_t nNet = nCredit - nDebit;
     int64_t nFee = (wtx.IsFromMe() ? wtx.GetValueOut() - nDebit : 0);
@@ -1489,8 +1523,8 @@ Value gettransaction(const Array& params, bool fHelp)
     ListTransactions(wtx, "*", 0, false, details);
     entry.push_back(Pair("details", details));
 
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << static_cast<CTransaction>(wtx);
+    CDataStream ssTx(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    ssTx << static_cast<Bitcredit_CTransaction>(wtx);
     string strHex = HexStr(ssTx.begin(), ssTx.end());
     entry.push_back(Pair("hex", strHex));
 
@@ -1512,7 +1546,7 @@ Value backupwallet(const Array& params, bool fHelp)
         );
 
     string strDest = params[0].get_str();
-    if (!BackupWallet(*pwalletMain, strDest))
+    if (!Bitcredit_BackupWallet(*bitcredit_pwalletMain, strDest))
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet backup failed!");
 
     return Value::null;
@@ -1541,30 +1575,42 @@ Value keypoolrefill(const Array& params, bool fHelp)
         kpSize = (unsigned int)params[0].get_int();
     }
 
-    EnsureWalletIsUnlocked();
-    pwalletMain->TopUpKeyPool(kpSize);
+    Bitcredit_EnsureWalletIsUnlocked();
+    bitcredit_pwalletMain->TopUpKeyPool(kpSize);
 
-    if (pwalletMain->GetKeyPoolSize() < kpSize)
+    if (bitcredit_pwalletMain->GetKeyPoolSize() < kpSize)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
 
     return Value::null;
 }
 
 
-static void LockWallet(CWallet* pWallet)
+static void Bitcredit_LockWallet(Bitcredit_CWallet* pWallet)
 {
-    LOCK(cs_nWalletUnlockTime);
-    nWalletUnlockTime = 0;
+    LOCK(bitcredit_cs_nWalletUnlockTime);
+    bitcredit_nWalletUnlockTime = 0;
+    pWallet->Lock();
+}
+static void Deposit_LockWallet(Bitcredit_CWallet* pWallet)
+{
+    LOCK(deposit_cs_nWalletUnlockTime);
+    deposit_nWalletUnlockTime = 0;
+    pWallet->Lock();
+}
+static void Bitcoin_LockWallet(Bitcoin_CWallet* pWallet)
+{
+    LOCK(bitcoin_cs_nWalletUnlockTime);
+    bitcoin_nWalletUnlockTime = 0;
     pWallet->Lock();
 }
 
-Value walletpassphrase(const Array& params, bool fHelp)
+Value bitcredit_walletpassphrase(const Array& params, bool fHelp)
 {
-    if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
+    if (bitcredit_pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
             "walletpassphrase \"passphrase\" timeout\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
-            "This is needed prior to performing transactions related to private keys such as sending bitcoins\n"
+            "This is needed prior to performing transactions related to private keys such as sending bitcredits\n"
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
@@ -1582,7 +1628,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
 
     if (fHelp)
         return true;
-    if (!pwalletMain->IsCrypted())
+    if (!bitcredit_pwalletMain->IsCrypted())
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrase was called.");
 
     // Note that the walletpassphrase is stored in params[0] which is not mlock()ed
@@ -1594,7 +1640,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
 
     if (strWalletPass.length() > 0)
     {
-        if (!pwalletMain->Unlock(strWalletPass))
+        if (!bitcredit_pwalletMain->Unlock(strWalletPass))
             throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
     }
     else
@@ -1602,20 +1648,128 @@ Value walletpassphrase(const Array& params, bool fHelp)
             "walletpassphrase <passphrase> <timeout>\n"
             "Stores the wallet decryption key in memory for <timeout> seconds.");
 
-    pwalletMain->TopUpKeyPool();
+    bitcredit_pwalletMain->TopUpKeyPool();
 
     int64_t nSleepTime = params[1].get_int64();
-    LOCK(cs_nWalletUnlockTime);
-    nWalletUnlockTime = GetTime() + nSleepTime;
-    RPCRunLater("lockwallet", boost::bind(LockWallet, pwalletMain), nSleepTime);
+    LOCK(bitcredit_cs_nWalletUnlockTime);
+    bitcredit_nWalletUnlockTime = GetTime() + nSleepTime;
+    RPCRunLater("lockwallet", boost::bind(Bitcredit_LockWallet, bitcredit_pwalletMain), nSleepTime);
+
+    return Value::null;
+}
+
+Value deposit_walletpassphrase(const Array& params, bool fHelp)
+{
+    if (deposit_pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
+        throw runtime_error(
+            "deposit_walletpassphrase \"passphrase\" timeout\n"
+            "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
+            "This is needed prior to performing transactions related to private keys such as sending bitcredits\n"
+            "\nArguments:\n"
+            "1. \"passphrase\"     (string, required) The wallet passphrase\n"
+            "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
+            "\nNote:\n"
+            "Issuing the deposit_walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
+            "time that overrides the old one.\n"
+            "\nExamples:\n"
+            "\nunlock the wallet for 60 seconds\n"
+            + HelpExampleCli("deposit_walletpassphrase", "\"my pass phrase\" 60") +
+            "\nLock the wallet again (before 60 seconds)\n"
+            + HelpExampleCli("deposit_walletlock", "") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("deposit_walletpassphrase", "\"my pass phrase\", 60")
+        );
+
+    if (fHelp)
+        return true;
+    if (!deposit_pwalletMain->IsCrypted())
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but deposit_walletpassphrase was called.");
+
+    // Note that the walletpassphrase is stored in params[0] which is not mlock()ed
+    SecureString strWalletPass;
+    strWalletPass.reserve(100);
+    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    strWalletPass = params[0].get_str().c_str();
+
+    if (strWalletPass.length() > 0)
+    {
+        if (!deposit_pwalletMain->Unlock(strWalletPass))
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+    }
+    else
+        throw runtime_error(
+            "deposit_walletpassphrase <passphrase> <timeout>\n"
+            "Stores the wallet decryption key in memory for <timeout> seconds.");
+
+    deposit_pwalletMain->TopUpKeyPool();
+
+    int64_t nSleepTime = params[1].get_int64();
+    LOCK(deposit_cs_nWalletUnlockTime);
+    deposit_nWalletUnlockTime = GetTime() + nSleepTime;
+    RPCRunLater("deposit_lockwallet", boost::bind(Deposit_LockWallet, deposit_pwalletMain), nSleepTime);
+
+    return Value::null;
+}
+
+Value bitcoin_walletpassphrase(const Array& params, bool fHelp)
+{
+    if (bitcoin_pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
+        throw runtime_error(
+            "bitcoin_walletpassphrase \"passphrase\" timeout\n"
+            "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
+            "This is needed prior to performing transactions related to private keys such as sending bitcoins\n"
+            "\nArguments:\n"
+            "1. \"passphrase\"     (string, required) The wallet passphrase\n"
+            "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
+            "\nNote:\n"
+            "Issuing the bitcoin_walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
+            "time that overrides the old one.\n"
+            "\nExamples:\n"
+            "\nunlock the wallet for 60 seconds\n"
+            + HelpExampleCli("bitcoin_walletpassphrase", "\"my pass phrase\" 60") +
+            "\nLock the wallet again (before 60 seconds)\n"
+            + HelpExampleCli("bitcoin_walletlock", "") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("bitcoin_walletpassphrase", "\"my pass phrase\", 60")
+        );
+
+    if (fHelp)
+        return true;
+    if (!bitcoin_pwalletMain->IsCrypted())
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but bitcoin_walletpassphrase was called.");
+
+    // Note that the walletpassphrase is stored in params[0] which is not mlock()ed
+    SecureString strWalletPass;
+    strWalletPass.reserve(100);
+    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    strWalletPass = params[0].get_str().c_str();
+
+    if (strWalletPass.length() > 0)
+    {
+        if (!bitcoin_pwalletMain->Unlock(strWalletPass))
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+    }
+    else
+        throw runtime_error(
+            "bitcoin_walletpassphrase <passphrase> <timeout>\n"
+            "Stores the wallet decryption key in memory for <timeout> seconds.");
+
+    bitcoin_pwalletMain->TopUpKeyPool();
+
+    int64_t nSleepTime = params[1].get_int64();
+    LOCK(bitcoin_cs_nWalletUnlockTime);
+    bitcoin_nWalletUnlockTime = GetTime() + nSleepTime;
+    RPCRunLater("bitcoin_lockwallet", boost::bind(Bitcoin_LockWallet, bitcoin_pwalletMain), nSleepTime);
 
     return Value::null;
 }
 
 
-Value walletpassphrasechange(const Array& params, bool fHelp)
+Value bitcredit_walletpassphrasechange(const Array& params, bool fHelp)
 {
-    if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
+    if (bitcredit_pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
             "walletpassphrasechange \"oldpassphrase\" \"newpassphrase\"\n"
             "\nChanges the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n"
@@ -1629,7 +1783,7 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
 
     if (fHelp)
         return true;
-    if (!pwalletMain->IsCrypted())
+    if (!bitcredit_pwalletMain->IsCrypted())
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
 
     // TODO: get rid of these .c_str() calls by implementing SecureString::operator=(std::string)
@@ -1647,16 +1801,96 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
             "walletpassphrasechange <oldpassphrase> <newpassphrase>\n"
             "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
 
-    if (!pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
+    if (!bitcredit_pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
+        throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+
+    return Value::null;
+}
+
+Value deposit_walletpassphrasechange(const Array& params, bool fHelp)
+{
+    if (deposit_pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
+        throw runtime_error(
+            "deposit_walletpassphrasechange \"oldpassphrase\" \"newpassphrase\"\n"
+            "\nChanges the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n"
+            "\nArguments:\n"
+            "1. \"oldpassphrase\"      (string) The current passphrase\n"
+            "2. \"newpassphrase\"      (string) The new passphrase\n"
+            "\nExamples:\n"
+            + HelpExampleCli("deposit_walletpassphrasechange", "\"old one\" \"new one\"")
+            + HelpExampleRpc("deposit_walletpassphrasechange", "\"old one\", \"new one\"")
+        );
+
+    if (fHelp)
+        return true;
+    if (!deposit_pwalletMain->IsCrypted())
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
+
+    // TODO: get rid of these .c_str() calls by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    SecureString strOldWalletPass;
+    strOldWalletPass.reserve(100);
+    strOldWalletPass = params[0].get_str().c_str();
+
+    SecureString strNewWalletPass;
+    strNewWalletPass.reserve(100);
+    strNewWalletPass = params[1].get_str().c_str();
+
+    if (strOldWalletPass.length() < 1 || strNewWalletPass.length() < 1)
+        throw runtime_error(
+            "deposit_walletpassphrasechange <oldpassphrase> <newpassphrase>\n"
+            "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
+
+    if (!deposit_pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
+        throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+
+    return Value::null;
+}
+
+Value bitcoin_walletpassphrasechange(const Array& params, bool fHelp)
+{
+    if (bitcoin_pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
+        throw runtime_error(
+            "bitcoin_walletpassphrasechange \"oldpassphrase\" \"newpassphrase\"\n"
+            "\nChanges the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n"
+            "\nArguments:\n"
+            "1. \"oldpassphrase\"      (string) The current passphrase\n"
+            "2. \"newpassphrase\"      (string) The new passphrase\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bitcoin_walletpassphrasechange", "\"old one\" \"new one\"")
+            + HelpExampleRpc("bitcoin_walletpassphrasechange", "\"old one\", \"new one\"")
+        );
+
+    if (fHelp)
+        return true;
+    if (!bitcoin_pwalletMain->IsCrypted())
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but bitcoin_walletpassphrasechange was called.");
+
+    // TODO: get rid of these .c_str() calls by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    SecureString strOldWalletPass;
+    strOldWalletPass.reserve(100);
+    strOldWalletPass = params[0].get_str().c_str();
+
+    SecureString strNewWalletPass;
+    strNewWalletPass.reserve(100);
+    strNewWalletPass = params[1].get_str().c_str();
+
+    if (strOldWalletPass.length() < 1 || strNewWalletPass.length() < 1)
+        throw runtime_error(
+            "bitcoin_walletpassphrasechange <oldpassphrase> <newpassphrase>\n"
+            "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
+
+    if (!bitcoin_pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
         throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
 
     return Value::null;
 }
 
 
-Value walletlock(const Array& params, bool fHelp)
+Value bitcredit_walletlock(const Array& params, bool fHelp)
 {
-    if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
+    if (bitcredit_pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
         throw runtime_error(
             "walletlock\n"
             "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
@@ -1675,22 +1909,88 @@ Value walletlock(const Array& params, bool fHelp)
 
     if (fHelp)
         return true;
-    if (!pwalletMain->IsCrypted())
+    if (!bitcredit_pwalletMain->IsCrypted())
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletlock was called.");
 
     {
-        LOCK(cs_nWalletUnlockTime);
-        pwalletMain->Lock();
-        nWalletUnlockTime = 0;
+        LOCK(bitcredit_cs_nWalletUnlockTime);
+        bitcredit_pwalletMain->Lock();
+        bitcredit_nWalletUnlockTime = 0;
+    }
+
+    return Value::null;
+}
+
+Value deposit_walletlock(const Array& params, bool fHelp)
+{
+    if (deposit_pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
+        throw runtime_error(
+            "deposit_walletlock\n"
+            "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
+            "After calling this method, you will need to call deposit_walletpassphrase again\n"
+            "before being able to call any methods which require the wallet to be unlocked.\n"
+            "\nExamples:\n"
+            "\nSet the passphrase for 2 minutes to perform a transaction\n"
+            + HelpExampleCli("deposit_walletpassphrase", "\"my pass phrase\" 120") +
+            "\nPerform a send (requires passphrase set)\n"
+            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 1.0") +
+            "\nClear the passphrase since we are done before 2 minutes is up\n"
+            + HelpExampleCli("deposit_walletlock", "") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("deposit_walletlock", "")
+        );
+
+    if (fHelp)
+        return true;
+    if (!deposit_pwalletMain->IsCrypted())
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but deposit_walletlock was called.");
+
+    {
+        LOCK(deposit_cs_nWalletUnlockTime);
+        deposit_pwalletMain->Lock();
+        deposit_nWalletUnlockTime = 0;
+    }
+
+    return Value::null;
+}
+
+Value bitcoin_walletlock(const Array& params, bool fHelp)
+{
+    if (bitcoin_pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
+        throw runtime_error(
+            "bitcoin_walletlock\n"
+            "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
+            "After calling this method, you will need to call bitcoin_walletpassphrase again\n"
+            "before being able to call any methods which require the wallet to be unlocked.\n"
+            "\nExamples:\n"
+            "\nSet the passphrase for 2 minutes to perform a transaction\n"
+            + HelpExampleCli("bitcoin_walletpassphrase", "\"my pass phrase\" 120") +
+            "\nPerform a send (requires passphrase set)\n"
+            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 1.0") +
+            "\nClear the passphrase since we are done before 2 minutes is up\n"
+            + HelpExampleCli("bitcoin_walletlock", "") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("bitcoin_walletlock", "")
+        );
+
+    if (fHelp)
+        return true;
+    if (!bitcoin_pwalletMain->IsCrypted())
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but bitcoin_walletlock was called.");
+
+    {
+        LOCK(bitcoin_cs_nWalletUnlockTime);
+        bitcoin_pwalletMain->Lock();
+        bitcoin_nWalletUnlockTime = 0;
     }
 
     return Value::null;
 }
 
 
-Value encryptwallet(const Array& params, bool fHelp)
+Value bitcredit_encryptwallet(const Array& params, bool fHelp)
 {
-    if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
+    if (!bitcredit_pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
         throw runtime_error(
             "encryptwallet \"passphrase\"\n"
             "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
@@ -1716,7 +2016,7 @@ Value encryptwallet(const Array& params, bool fHelp)
 
     if (fHelp)
         return true;
-    if (pwalletMain->IsCrypted())
+    if (bitcredit_pwalletMain->IsCrypted())
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
 
     // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
@@ -1730,14 +2030,118 @@ Value encryptwallet(const Array& params, bool fHelp)
             "encryptwallet <passphrase>\n"
             "Encrypts the wallet with <passphrase>.");
 
-    if (!pwalletMain->EncryptWallet(strWalletPass))
+    if (!bitcredit_pwalletMain->EncryptWallet(strWalletPass))
         throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
 
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys. So:
     StartShutdown();
-    return "wallet encrypted; Bitcoin server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
+    return "wallet encrypted; Bitcredit server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
+}
+
+Value deposit_encryptwallet(const Array& params, bool fHelp)
+{
+    if (!deposit_pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
+        throw runtime_error(
+            "deposit_encryptwallet \"passphrase\"\n"
+            "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
+            "After this, any calls that interact with private keys such as sending or signing \n"
+            "will require the passphrase to be set prior the making these calls.\n"
+            "Use the deposit_walletpassphrase call for this, and then deposit_walletlock call.\n"
+            "If the wallet is already encrypted, use the deposit_walletpassphrasechange call.\n"
+            "Note that this will shutdown the server.\n"
+            "\nArguments:\n"
+            "1. \"passphrase\"    (string) The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long.\n"
+            "\nExamples:\n"
+            "\nEncrypt you wallet\n"
+            + HelpExampleCli("deposit_encryptwallet", "\"my pass phrase\"") +
+            "\nNow set the passphrase to use the wallet, such as for signing or sending bitcoin\n"
+            + HelpExampleCli("deposit_walletpassphrase", "\"my pass phrase\"") +
+            "\nNow we can so something like sign\n"
+            + HelpExampleCli("signmessage", "\"bitcoinaddress\" \"test message\"") +
+            "\nNow lock the wallet again by removing the passphrase\n"
+            + HelpExampleCli("deposit_walletlock", "") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("deposit_encryptwallet", "\"my pass phrase\"")
+        );
+
+    if (fHelp)
+        return true;
+    if (deposit_pwalletMain->IsCrypted())
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
+
+    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    SecureString strWalletPass;
+    strWalletPass.reserve(100);
+    strWalletPass = params[0].get_str().c_str();
+
+    if (strWalletPass.length() < 1)
+        throw runtime_error(
+            "deposit_encryptwallet <passphrase>\n"
+            "Encrypts the wallet with <passphrase>.");
+
+    if (!deposit_pwalletMain->EncryptWallet(strWalletPass))
+        throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
+
+    // BDB seems to have a bad habit of writing old data into
+    // slack space in .dat files; that is bad if the old data is
+    // unencrypted private keys. So:
+    StartShutdown();
+    return "wallet encrypted; Bitcredit server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
+}
+
+Value bitcoin_encryptwallet(const Array& params, bool fHelp)
+{
+    if (!bitcoin_pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
+        throw runtime_error(
+            "bitcoin_encryptwallet \"passphrase\"\n"
+            "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
+            "After this, any calls that interact with private keys such as sending or signing \n"
+            "will require the passphrase to be set prior the making these calls.\n"
+            "Use the bitcoin_walletpassphrase call for this, and then bitcoin_walletlock call.\n"
+            "If the wallet is already encrypted, use the bitcoin_walletpassphrasechange call.\n"
+            "Note that this will shutdown the server.\n"
+            "\nArguments:\n"
+            "1. \"passphrase\"    (string) The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long.\n"
+            "\nExamples:\n"
+            "\nEncrypt you wallet\n"
+            + HelpExampleCli("bitcoin_encryptwallet", "\"my pass phrase\"") +
+            "\nNow set the passphrase to use the wallet, such as for signing or sending bitcoin\n"
+            + HelpExampleCli("bitcoin_walletpassphrase", "\"my pass phrase\"") +
+            "\nNow we can so something like sign\n"
+            + HelpExampleCli("signmessage", "\"bitcoinaddress\" \"test message\"") +
+            "\nNow lock the wallet again by removing the passphrase\n"
+            + HelpExampleCli("bitcoin_walletlock", "") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("bitcoin_encryptwallet", "\"my pass phrase\"")
+        );
+
+    if (fHelp)
+        return true;
+    if (bitcoin_pwalletMain->IsCrypted())
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
+
+    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    SecureString strWalletPass;
+    strWalletPass.reserve(100);
+    strWalletPass = params[0].get_str().c_str();
+
+    if (strWalletPass.length() < 1)
+        throw runtime_error(
+            "bitcoin_encryptwallet <passphrase>\n"
+            "Encrypts the wallet with <passphrase>.");
+
+    if (!bitcoin_pwalletMain->EncryptWallet(strWalletPass))
+        throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
+
+    // BDB seems to have a bad habit of writing old data into
+    // slack space in .dat files; that is bad if the old data is
+    // unencrypted private keys. So:
+    StartShutdown();
+    return "wallet encrypted; Bitcredit server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
 }
 
 Value lockunspent(const Array& params, bool fHelp)
@@ -1787,7 +2191,7 @@ Value lockunspent(const Array& params, bool fHelp)
 
     if (params.size() == 1) {
         if (fUnlock)
-            pwalletMain->UnlockAllCoins();
+            bitcredit_pwalletMain->UnlockAllCoins();
         return true;
     }
 
@@ -1811,9 +2215,9 @@ Value lockunspent(const Array& params, bool fHelp)
         COutPoint outpt(uint256(txid), nOutput);
 
         if (fUnlock)
-            pwalletMain->UnlockCoin(outpt);
+            bitcredit_pwalletMain->UnlockCoin(outpt);
         else
-            pwalletMain->LockCoin(outpt);
+            bitcredit_pwalletMain->LockCoin(outpt);
     }
 
     return true;
@@ -1848,7 +2252,7 @@ Value listlockunspent(const Array& params, bool fHelp)
         );
 
     vector<COutPoint> vOutpts;
-    pwalletMain->ListLockedCoins(vOutpts);
+    bitcredit_pwalletMain->ListLockedCoins(vOutpts);
 
     Array ret;
 
@@ -1870,7 +2274,7 @@ Value settxfee(const Array& params, bool fHelp)
             "settxfee amount\n"
             "\nSet the transaction fee per kB.\n"
             "\nArguments:\n"
-            "1. amount         (numeric, required) The transaction fee in BTC/kB rounded to the nearest 0.00000001\n"
+            "1. amount         (numeric, required) The transaction fee in CRE/kB rounded to the nearest 0.00000001\n"
             "\nResult\n"
             "true|false        (boolean) Returns true if successful\n"
             "\nExamples:\n"
@@ -1883,11 +2287,11 @@ Value settxfee(const Array& params, bool fHelp)
     if (params[0].get_real() != 0.0)
         nAmount = AmountFromValue(params[0]);        // rejects 0.0 amounts
 
-    nTransactionFee = nAmount;
+    bitcredit_nTransactionFee = nAmount;
     return true;
 }
 
-Value getwalletinfo(const Array& params, bool fHelp)
+Value bitcredit_getwalletinfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -1907,13 +2311,52 @@ Value getwalletinfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getwalletinfo", "")
         );
 
+    //Find all prepared deposit transactions
+    map<uint256, set<int> > mapPreparedDepositTxInPoints;
+    deposit_pwalletMain->PreparedDepositTxInPoints(mapPreparedDepositTxInPoints);
+
     Object obj;
-    obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
-    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
-    obj.push_back(Pair("txcount",       (int)pwalletMain->mapWallet.size()));
-    obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
-    obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
-    if (pwalletMain->IsCrypted())
-        obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
+    obj.push_back(Pair("walletversion", bitcredit_pwalletMain->GetVersion()));
+    obj.push_back(Pair("balance",       ValueFromAmount(bitcredit_pwalletMain->GetBalance(mapPreparedDepositTxInPoints))));
+    obj.push_back(Pair("txcount",       (int)bitcredit_pwalletMain->mapWallet.size()));
+    obj.push_back(Pair("keypoololdest", bitcredit_pwalletMain->GetOldestKeyPoolTime()));
+    obj.push_back(Pair("keypoolsize",   (int)bitcredit_pwalletMain->GetKeyPoolSize()));
+    if (bitcredit_pwalletMain->IsCrypted())
+        obj.push_back(Pair("unlocked_until", bitcredit_nWalletUnlockTime));
+    return obj;
+}
+
+Value bitcoin_getwalletinfo(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "bitcoin_getwalletinfo\n"
+            "Returns an object containing various wallet state info.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total bitcoin balance of the wallet\n"
+            "  \"txcount\": xxxxxxx,         (numeric) the total number of transactions in the wallet\n"
+            "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since GMT epoch) of the oldest pre-generated key in the key pool\n"
+            "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
+            "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bitcoin_getwalletinfo", "")
+            + HelpExampleRpc("bitcoin_getwalletinfo", "")
+        );
+
+    //Find all claimed  transactions
+    map<uint256, set<int> > mapClaimTxInPoints;
+    bitcredit_pwalletMain->ClaimTxInPoints(mapClaimTxInPoints);
+
+    Object obj;
+    obj.push_back(Pair("walletversion", bitcoin_pwalletMain->GetVersion()));
+    obj.push_back(Pair("balance",       ValueFromAmount(bitcoin_pwalletMain->GetBalance(*bitcoin_pclaimCoinsTip, mapClaimTxInPoints))));
+    obj.push_back(Pair("txcount",       (int)bitcoin_pwalletMain->mapWallet.size()));
+    obj.push_back(Pair("keypoololdest", bitcoin_pwalletMain->GetOldestKeyPoolTime()));
+    obj.push_back(Pair("keypoolsize",   (int)bitcoin_pwalletMain->GetKeyPoolSize()));
+    if (bitcoin_pwalletMain->IsCrypted())
+        obj.push_back(Pair("unlocked_until", bitcoin_nWalletUnlockTime));
     return obj;
 }

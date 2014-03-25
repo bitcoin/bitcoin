@@ -65,7 +65,7 @@ void SendCoinsEntry::on_payTo_textChanged(const QString &address)
     updateLabel(address);
 }
 
-void SendCoinsEntry::setModel(WalletModel *model)
+void SendCoinsEntry::setModel(Bitcredit_WalletModel *model)
 {
     this->model = model;
 
@@ -98,7 +98,7 @@ void SendCoinsEntry::clear()
     ui->memoTextLabel_s->clear();
     ui->payAmount_s->clear();
 
-    // update the display unit, to not use the default ("BTC")
+    // update the display unit, to not use the default ("CRE")
     updateDisplayUnit();
 }
 
@@ -139,7 +139,7 @@ bool SendCoinsEntry::validate()
     return retval;
 }
 
-SendCoinsRecipient SendCoinsEntry::getValue()
+Bitcredit_SendCoinsRecipient SendCoinsEntry::getValue()
 {
     // Payment request
     if (recipient.paymentRequest.IsInitialized())
@@ -165,7 +165,7 @@ QWidget *SendCoinsEntry::setupTabChain(QWidget *prev)
     return ui->deleteButton;
 }
 
-void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
+void SendCoinsEntry::setValue(const Bitcredit_SendCoinsRecipient &value)
 {
     recipient = value;
 

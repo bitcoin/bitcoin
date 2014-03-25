@@ -8,9 +8,9 @@
 #include <QWidget>
 
 class ClientModel;
-class TransactionFilterProxy;
+class Bitcredit_TransactionFilterProxy;
 class TxViewDelegate;
-class WalletModel;
+class Bitcredit_WalletModel;
 
 namespace Ui {
     class OverviewPage;
@@ -30,11 +30,12 @@ public:
     ~OverviewPage();
 
     void setClientModel(ClientModel *clientModel);
-    void setWalletModel(WalletModel *walletModel);
+    void setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModel *deposit_model);
     void showOutOfSyncWarning(bool fShow);
 
 public slots:
-    void setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
+    void setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 preparedDepositBalance, qint64 inDepositBalance);
+    void refreshBalance();
 
 signals:
     void transactionClicked(const QModelIndex &index);
@@ -42,13 +43,16 @@ signals:
 private:
     Ui::OverviewPage *ui;
     ClientModel *clientModel;
-    WalletModel *walletModel;
+    Bitcredit_WalletModel *bitcredit_model;
+    Bitcredit_WalletModel *deposit_model;
     qint64 currentBalance;
     qint64 currentUnconfirmedBalance;
     qint64 currentImmatureBalance;
+    qint64 currentPreparedDepositBalance;
+    qint64 currentInDepositBalance;
 
     TxViewDelegate *txdelegate;
-    TransactionFilterProxy *filter;
+    Bitcredit_TransactionFilterProxy *filter;
 
 private slots:
     void updateDisplayUnit();

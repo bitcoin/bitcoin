@@ -441,6 +441,14 @@ vector<unsigned char> ParseHex(const string& str)
     return ParseHex(str.c_str());
 }
 
+std::string GetAsHexString(const unsigned char * bytes, unsigned int size) {
+    char result[size*2 + 1];
+    for (unsigned int i = 0; i < size; i++) {
+        sprintf(result + i*2, "%02x", ((unsigned char*)bytes)[i]);
+    }
+    return std::string(result, result + size*2);
+}
+
 static void InterpretNegativeSetting(string name, map<string, string>& mapSettingsRet)
 {
     // interpret -nofoo as -foo=0 (and -nofoo=0 as -foo=1) as long as -foo not set
@@ -876,7 +884,7 @@ static std::string FormatException(std::exception* pex, const char* pszThread)
     char pszModule[MAX_PATH] = "";
     GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = "bitcoin";
+    const char* pszModule = "bitcredit";
 #endif
     if (pex)
         return strprintf(
@@ -897,13 +905,13 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
-    // Mac: ~/Library/Application Support/Bitcoin
-    // Unix: ~/.bitcoin
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcredit
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcredit
+    // Mac: ~/Library/Application Support/Bitcredit
+    // Unix: ~/.bitcredit
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcredit";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -915,10 +923,10 @@ boost::filesystem::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     TryCreateDirectory(pathRet);
-    return pathRet / "Bitcoin";
+    return pathRet / "Bitcredit";
 #else
     // Unix
-    return pathRet / ".bitcoin";
+    return pathRet / ".bitcredit";
 #endif
 #endif
 }
@@ -933,7 +941,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     LOCK(csPathCached);
 
     int nNet = CChainParams::MAX_NETWORK_TYPES;
-    if (fNetSpecific) nNet = Params().NetworkID();
+    if (fNetSpecific) nNet = Bitcredit_Params().NetworkID();
 
     fs::path &path = pathCached[nNet];
 
@@ -952,7 +960,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
         path = GetDefaultDataDir();
     }
     if (fNetSpecific)
-        path /= Params().DataDir();
+        path /= Bitcredit_Params().DataDir();
 
     fs::create_directories(path);
 
@@ -967,7 +975,7 @@ void ClearDatadirCache()
 
 boost::filesystem::path GetConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-conf", "bitcredit.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
     return pathConfigFile;
 }
@@ -977,14 +985,14 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 {
     boost::filesystem::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
-        return; // No bitcoin.conf file is OK
+        return; // No bitcredit.conf file is OK
 
     set<string> setOptions;
     setOptions.insert("*");
 
     for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
-        // Don't overwrite existing settings so command line settings override bitcoin.conf
+        // Don't overwrite existing settings so command line settings override bitcredit.conf
         string strKey = string("-") + it->string_key;
         if (mapSettingsRet.count(strKey) == 0)
         {
@@ -1000,7 +1008,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 
 boost::filesystem::path GetPidFile()
 {
-    boost::filesystem::path pathPidFile(GetArg("-pid", "bitcoind.pid"));
+    boost::filesystem::path pathPidFile(GetArg("-pid", "bitcreditd.pid"));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }
@@ -1028,6 +1036,12 @@ bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest)
 #endif /* WIN32 */
 }
 
+void InitDataDir(std::string dirName) {
+	boost::filesystem::path dir = GetDataDir() / dirName;
+    if (!boost::filesystem::exists(dir)) {
+    	boost::filesystem::create_directories(dir);
+    }
+}
 
 // Ignores exceptions thrown by boost's create_directory if the requested directory exists.
 //   Specifically handles case where path p exists, but it wasn't possible for the user to write to the parent directory.
@@ -1042,6 +1056,21 @@ bool TryCreateDirectory(const boost::filesystem::path& p)
     }
 
     // create_directory didn't create the directory, it had to have existed already
+    return false;
+}
+// Ignores exceptions thrown by boost's create_directory if the requested directory exists.
+//   Specifically handles case where path p exists, but it wasn't possible for the user to write to the parent directory.
+bool TryRemoveDirectory(const boost::filesystem::path& p)
+{
+    try
+    {
+        return boost::filesystem::remove_all(p);
+    } catch (boost::filesystem::filesystem_error) {
+        if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
+            throw;
+    }
+
+    // remove directory didn't remove the directory
     return false;
 }
 
@@ -1233,7 +1262,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nTime)
                 if (!fMatch)
                 {
                     fDone = true;
-                    string strMessage = _("Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin will not work properly.");
+                    string strMessage = _("Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcredit will not work properly.");
                     strMiscWarning = strMessage;
                     LogPrintf("*** %s\n", strMessage);
                     uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
@@ -1404,4 +1433,86 @@ std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
     ss.imbue(loc);
     ss << boost::posix_time::from_time_t(nTime);
     return ss.str();
+}
+
+#ifndef WIN32
+void PrintStackTrace(std::string strMessage) {
+	const unsigned int maxFrames = 128;
+	std::string strStackTrace = "";
+
+// storage array for stack trace address data
+	void* addrlist[maxFrames + 1];
+
+// retrieve current stack addresses
+	int addrlen = backtrace(addrlist, sizeof(addrlist) / sizeof(void*));
+
+	if (addrlen == 0) {
+		strStackTrace += "  <empty, possibly corrupt>\n";
+	} else {
+
+		// resolve addresses into strings containing "filename(function+address)",
+		// this array must be free()-ed
+		char** symbollist = backtrace_symbols(addrlist, addrlen);
+
+		// allocate string which will be filled with the demangled function name
+		size_t funcnamesize = 256;
+		char* funcname = (char*) malloc(funcnamesize);
+
+		// iterate over the returned symbol lines. skip the first, it is the
+		// address of this function.
+		for (int i = 1; i < addrlen; i++) {
+			strStackTrace += strprintf("  %s\n", symbollist[i]);
+		}
+
+		free(funcname);
+		free(symbollist);
+	}
+
+	std::string strFullErrorMessage = "\n-------------------------------\n";
+	strFullErrorMessage += strMessage;
+	strFullErrorMessage += "\nStack trace is:\n" + strStackTrace;
+	strFullErrorMessage += "\n-------------------------------\n";
+
+	LogPrintf("\n%s \n", strFullErrorMessage);
+}
+
+void TrowErrorWithStackTrace(std::string strMessage) {
+	PrintStackTrace(strMessage);
+	throw std::runtime_error(strMessage);
+}
+
+void HandleSIGSEGV(int sig) {
+	PrintStackTrace("SIGSEGV error occurred");
+	exit(1);
+}
+#endif
+
+
+uint256 ReduceByFraction(const uint256 nValue, const int64_t nNumerator, const int64_t nDenominator) {
+	if(nNumerator >= nDenominator) {
+		return nValue;
+	}
+
+	const uint256 nNumerator256(nNumerator);
+	const uint256 nDenominator256 (nDenominator);
+	const uint256 div = nValue / nDenominator256;
+	const uint256 mod = nValue - div * nDenominator256;
+	const uint256 nValue256 =  div * nNumerator256 + ((mod * nNumerator256) / nDenominator256);
+	assert(nValue >= nValue256);
+	return nValue256;
+}
+
+int64_t ReduceByFraction(const int64_t nValue, const int64_t nNumerator, const int64_t nDenominator) {
+	if(nNumerator == nDenominator) {
+		return nValue;
+	}
+
+	const uint256 nNumerator256(nNumerator);
+	const uint256 nDenominator256(nDenominator);
+	const uint256 nValue256(nValue);
+
+	const int64_t nValue64 = ((nValue256 * nNumerator256) / nDenominator256).GetLow64();
+	assert(nValue >= nValue64);
+	assert(nValue64 >= 0);
+	return nValue64;
 }

@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "bitcredit-config.h"
 #endif
 
 #include "addressbookpage.h"
@@ -61,11 +61,11 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     switch(tab)
     {
     case SendingTab:
-        ui->labelExplanation->setText(tr("These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins."));
+        ui->labelExplanation->setText(tr("These are your Bitcredit addresses for sending payments. Always check the amount and the receiving address before sending coins."));
         ui->deleteAddress->setVisible(true);
         break;
     case ReceivingTab:
-        ui->labelExplanation->setText(tr("These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction."));
+        ui->labelExplanation->setText(tr("These are your Bitcredit addresses for receiving payments. It is recommended to use a new receiving address for each transaction."));
         ui->deleteAddress->setVisible(false);
         break;
     }
@@ -101,7 +101,7 @@ AddressBookPage::~AddressBookPage()
     delete ui;
 }
 
-void AddressBookPage::setModel(AddressTableModel *model)
+void AddressBookPage::setModel(Bitcredit_AddressTableModel *model)
 {
     this->model = model;
     if(!model)
@@ -116,13 +116,13 @@ void AddressBookPage::setModel(AddressTableModel *model)
     {
     case ReceivingTab:
         // Receive filter
-        proxyModel->setFilterRole(AddressTableModel::TypeRole);
-        proxyModel->setFilterFixedString(AddressTableModel::Receive);
+        proxyModel->setFilterRole(Bitcredit_AddressTableModel::TypeRole);
+        proxyModel->setFilterFixedString(Bitcredit_AddressTableModel::Receive);
         break;
     case SendingTab:
         // Send filter
-        proxyModel->setFilterRole(AddressTableModel::TypeRole);
-        proxyModel->setFilterFixedString(AddressTableModel::Send);
+        proxyModel->setFilterRole(Bitcredit_AddressTableModel::TypeRole);
+        proxyModel->setFilterFixedString(Bitcredit_AddressTableModel::Send);
         break;
     }
     ui->tableView->setModel(proxyModel);
@@ -130,11 +130,11 @@ void AddressBookPage::setModel(AddressTableModel *model)
 
     // Set column widths
 #if QT_VERSION < 0x050000
-    ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::Label, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::Address, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setResizeMode(Bitcredit_AddressTableModel::Label, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setResizeMode(Bitcredit_AddressTableModel::Address, QHeaderView::ResizeToContents);
 #else
-    ui->tableView->horizontalHeader()->setSectionResizeMode(AddressTableModel::Label, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(AddressTableModel::Address, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(Bitcredit_AddressTableModel::Label, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(Bitcredit_AddressTableModel::Address, QHeaderView::ResizeToContents);
 #endif
 
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
@@ -148,12 +148,12 @@ void AddressBookPage::setModel(AddressTableModel *model)
 
 void AddressBookPage::on_copyAddress_clicked()
 {
-    GUIUtil::copyEntryData(ui->tableView, AddressTableModel::Address);
+    GUIUtil::copyEntryData(ui->tableView, Bitcredit_AddressTableModel::Address);
 }
 
 void AddressBookPage::onCopyLabelAction()
 {
-    GUIUtil::copyEntryData(ui->tableView, AddressTableModel::Label);
+    GUIUtil::copyEntryData(ui->tableView, Bitcredit_AddressTableModel::Label);
 }
 
 void AddressBookPage::onEditAction()
@@ -167,10 +167,10 @@ void AddressBookPage::onEditAction()
     if(indexes.isEmpty())
         return;
 
-    EditAddressDialog dlg(
+    Bitcredit_EditAddressDialog dlg(
         tab == SendingTab ?
-        EditAddressDialog::EditSendingAddress :
-        EditAddressDialog::EditReceivingAddress, this);
+        Bitcredit_EditAddressDialog::EditSendingAddress :
+        Bitcredit_EditAddressDialog::EditReceivingAddress, this);
     dlg.setModel(model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());
@@ -182,10 +182,10 @@ void AddressBookPage::on_newAddress_clicked()
     if(!model)
         return;
 
-    EditAddressDialog dlg(
+    Bitcredit_EditAddressDialog dlg(
         tab == SendingTab ?
-        EditAddressDialog::NewSendingAddress :
-        EditAddressDialog::NewReceivingAddress, this);
+        Bitcredit_EditAddressDialog::NewSendingAddress :
+        Bitcredit_EditAddressDialog::NewReceivingAddress, this);
     dlg.setModel(model);
     if(dlg.exec())
     {
@@ -246,7 +246,7 @@ void AddressBookPage::done(int retval)
         return;
 
     // Figure out which address was selected, and return it
-    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
+    QModelIndexList indexes = table->selectionModel()->selectedRows(Bitcredit_AddressTableModel::Address);
 
     foreach (QModelIndex index, indexes)
     {
@@ -277,8 +277,8 @@ void AddressBookPage::on_exportButton_clicked()
 
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("Label", AddressTableModel::Label, Qt::EditRole);
-    writer.addColumn("Address", AddressTableModel::Address, Qt::EditRole);
+    writer.addColumn("Label", Bitcredit_AddressTableModel::Label, Qt::EditRole);
+    writer.addColumn("Address", Bitcredit_AddressTableModel::Address, Qt::EditRole);
 
     if(!writer.write()) {
         QMessageBox::critical(this, tr("Exporting Failed"),
@@ -297,7 +297,7 @@ void AddressBookPage::contextualMenu(const QPoint &point)
 
 void AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int /*end*/)
 {
-    QModelIndex idx = proxyModel->mapFromSource(model->index(begin, AddressTableModel::Address, parent));
+    QModelIndex idx = proxyModel->mapFromSource(model->index(begin, Bitcredit_AddressTableModel::Address, parent));
     if(idx.isValid() && (idx.data(Qt::EditRole).toString() == newAddressToSelect))
     {
         // Select row of newly created address, once

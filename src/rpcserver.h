@@ -18,7 +18,7 @@
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_writer_template.h"
 
-class CBlockIndex;
+class CBlockIndexBase;
 class CNetAddr;
 
 /* Start RPC threads */
@@ -67,7 +67,7 @@ public:
 };
 
 /**
- * Bitcoin RPC command dispatcher.
+ * Bitcredit RPC command dispatcher.
  */
 class CRPCTable
 {
@@ -99,31 +99,45 @@ extern uint256 ParseHashO(const json_spirit::Object& o, std::string strKey);
 extern std::vector<unsigned char> ParseHexV(const json_spirit::Value& v, std::string strName);
 extern std::vector<unsigned char> ParseHexO(const json_spirit::Object& o, std::string strKey);
 
-extern void InitRPCMining();
+extern void InitRPCMining(bool coinbaseDepositDisabled);
 extern void ShutdownRPCMining();
 
-extern int64_t nWalletUnlockTime;
+extern int64_t bitcredit_nWalletUnlockTime;
+extern int64_t deposit_nWalletUnlockTime;
+extern int64_t bitcoin_nWalletUnlockTime;
 extern int64_t AmountFromValue(const json_spirit::Value& value);
 extern json_spirit::Value ValueFromAmount(int64_t amount);
-extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
+extern double Bitcredit_GetDifficulty(const CBlockIndexBase* blockindex = NULL);
+extern double Bitcoin_GetDifficulty(const CBlockIndexBase* blockindex = NULL);
 extern std::string HexBits(unsigned int nBits);
 extern std::string HelpRequiringPassphrase();
 extern std::string HelpExampleCli(std::string methodname, std::string args);
 extern std::string HelpExampleRpc(std::string methodname, std::string args);
 
-extern void EnsureWalletIsUnlocked();
+extern void Bitcredit_EnsureWalletIsUnlocked();
+extern void Bitcoin_EnsureWalletIsUnlocked();
 
-extern json_spirit::Value getconnectioncount(const json_spirit::Array& params, bool fHelp); // in rpcnet.cpp
-extern json_spirit::Value getpeerinfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value ping(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value addnode(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getaddednodeinfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getnettotals(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_getconnectioncount(const json_spirit::Array& params, bool fHelp); // in rpcnet.cpp
+extern json_spirit::Value bitcoin_getconnectioncount(const json_spirit::Array& params, bool fHelp); // in rpcnet.cpp
+extern json_spirit::Value bitcredit_getpeerinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_getpeerinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_ping(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_ping(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_addnode(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_addnode(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_getaddednodeinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_getaddednodeinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_getnettotals(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_getnettotals(const json_spirit::Array& params, bool fHelp);
 
-extern json_spirit::Value dumpprivkey(const json_spirit::Array& params, bool fHelp); // in rpcdump.cpp
-extern json_spirit::Value importprivkey(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value dumpwallet(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value importwallet(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_dumpprivkey(const json_spirit::Array& params, bool fHelp); // in rpcdump.cpp
+extern json_spirit::Value bitcoin_dumpprivkey(const json_spirit::Array& params, bool fHelp); // in rpcdump.cpp
+extern json_spirit::Value bitcredit_importprivkey(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_importprivkey(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_dumpwallet(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_dumpwallet(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_importwallet(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_importwallet(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value getgenerate(const json_spirit::Array& params, bool fHelp); // in rpcmining.cpp
 extern json_spirit::Value setgenerate(const json_spirit::Array& params, bool fHelp);
@@ -161,15 +175,27 @@ extern json_spirit::Value listsinceblock(const json_spirit::Array& params, bool 
 extern json_spirit::Value gettransaction(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value backupwallet(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value keypoolrefill(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value walletpassphrase(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value walletpassphrasechange(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value walletlock(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value encryptwallet(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_walletpassphrase(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value deposit_walletpassphrase(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_walletpassphrase(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_walletpassphrasechange(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value deposit_walletpassphrasechange(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_walletpassphrasechange(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_walletlock(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value deposit_walletlock(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_walletlock(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_encryptwallet(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value deposit_encryptwallet(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_encryptwallet(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value validateaddress(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getinfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getwalletinfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getblockchaininfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getnetworkinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_getinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_getinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_getwalletinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_getwalletinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_getblockchaininfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_getblockchaininfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_getnetworkinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_getnetworkinfo(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value getrawtransaction(const json_spirit::Array& params, bool fHelp); // in rcprawtransaction.cpp
 extern json_spirit::Value listunspent(const json_spirit::Array& params, bool fHelp);
@@ -181,9 +207,12 @@ extern json_spirit::Value decodescript(const json_spirit::Array& params, bool fH
 extern json_spirit::Value signrawtransaction(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendrawtransaction(const json_spirit::Array& params, bool fHelp);
 
-extern json_spirit::Value getblockcount(const json_spirit::Array& params, bool fHelp); // in rpcblockchain.cpp
-extern json_spirit::Value getbestblockhash(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getdifficulty(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_getblockcount(const json_spirit::Array& params, bool fHelp); // in rpcblockchain.cpp
+extern json_spirit::Value bitcoin_getblockcount(const json_spirit::Array& params, bool fHelp); // in rpcblockchain.cpp
+extern json_spirit::Value bitcredit_getbestblockhash(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_getbestblockhash(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcredit_getdifficulty(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_getdifficulty(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value settxfee(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getrawmempool(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getblockhash(const json_spirit::Array& params, bool fHelp);

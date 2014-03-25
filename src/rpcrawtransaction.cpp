@@ -51,13 +51,15 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
     out.push_back(Pair("addresses", a));
 }
 
-void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
+void TxToJSON(const Bitcredit_CTransaction& tx, const uint256 hashBlock, Object& entry)
 {
     entry.push_back(Pair("txid", tx.GetHash().GetHex()));
     entry.push_back(Pair("version", tx.nVersion));
+    entry.push_back(Pair("type", (int64_t)tx.nTxType));
+    entry.push_back(Pair("signingkeyid", tx.signingKeyId.GetHex()));
     entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
     Array vin;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
     {
         Object in;
         if (tx.IsCoinBase())
@@ -71,7 +73,6 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
             o.push_back(Pair("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
             in.push_back(Pair("scriptSig", o));
         }
-        in.push_back(Pair("sequence", (int64_t)txin.nSequence));
         vin.push_back(in);
     }
     entry.push_back(Pair("vin", vin));
@@ -92,13 +93,13 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
     if (hashBlock != 0)
     {
         entry.push_back(Pair("blockhash", hashBlock.GetHex()));
-        map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
-        if (mi != mapBlockIndex.end() && (*mi).second)
+        map<uint256, Bitcredit_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.find(hashBlock);
+        if (mi != bitcredit_mapBlockIndex.end() && (*mi).second)
         {
-            CBlockIndex* pindex = (*mi).second;
-            if (chainActive.Contains(pindex))
+            Bitcredit_CBlockIndex* pindex = (*mi).second;
+            if (bitcredit_chainActive.Contains(pindex))
             {
-                entry.push_back(Pair("confirmations", 1 + chainActive.Height() - pindex->nHeight));
+                entry.push_back(Pair("confirmations", 1 + bitcredit_chainActive.Height() - pindex->nHeight));
                 entry.push_back(Pair("time", (int64_t)pindex->nTime));
                 entry.push_back(Pair("blocktime", (int64_t)pindex->nTime));
             }
@@ -177,12 +178,12 @@ Value getrawtransaction(const Array& params, bool fHelp)
     if (params.size() > 1)
         fVerbose = (params[1].get_int() != 0);
 
-    CTransaction tx;
+    Bitcredit_CTransaction tx;
     uint256 hashBlock = 0;
-    if (!GetTransaction(hash, tx, hashBlock, true))
+    if (!Bitcredit_GetTransaction(hash, tx, hashBlock, true))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
 
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
     ssTx << tx;
     string strHex = HexStr(ssTx.begin(), ssTx.end());
 
@@ -252,18 +253,21 @@ Value listunspent(const Array& params, bool fHelp)
         {
             CBitcoinAddress address(input.get_str());
             if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+input.get_str());
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcredit address: ")+input.get_str());
             if (setAddress.count(address))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+input.get_str());
            setAddress.insert(address);
         }
     }
 
+    //The decomposed transactions should not be affected by prepared deposits. Passing in empty list.
+    map<uint256, set<int> > mapPreparedDepositTxInPoints;
+
     Array results;
-    vector<COutput> vecOutputs;
-    assert(pwalletMain != NULL);
-    pwalletMain->AvailableCoins(vecOutputs, false);
-    BOOST_FOREACH(const COutput& out, vecOutputs)
+    vector<Bitcredit_COutput> vecOutputs;
+    assert(bitcredit_pwalletMain != NULL);
+    bitcredit_pwalletMain->AvailableCoins(vecOutputs, mapPreparedDepositTxInPoints, false);
+    BOOST_FOREACH(const Bitcredit_COutput& out, vecOutputs)
     {
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
             continue;
@@ -287,8 +291,8 @@ Value listunspent(const Array& params, bool fHelp)
         if (ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
         {
             entry.push_back(Pair("address", CBitcoinAddress(address).ToString()));
-            if (pwalletMain->mapAddressBook.count(address))
-                entry.push_back(Pair("account", pwalletMain->mapAddressBook[address].name));
+            if (bitcredit_pwalletMain->mapAddressBook.count(address))
+                entry.push_back(Pair("account", bitcredit_pwalletMain->mapAddressBook[address].name));
         }
         entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
         if (pk.IsPayToScriptHash())
@@ -298,7 +302,7 @@ Value listunspent(const Array& params, bool fHelp)
             {
                 const CScriptID& hash = boost::get<const CScriptID&>(address);
                 CScript redeemScript;
-                if (pwalletMain->GetCScript(hash, redeemScript))
+                if (bitcredit_pwalletMain->GetCScript(hash, redeemScript))
                     entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
             }
         }
@@ -349,7 +353,8 @@ Value createrawtransaction(const Array& params, bool fHelp)
     Array inputs = params[0].get_array();
     Object sendTo = params[1].get_obj();
 
-    CTransaction rawTx;
+    Bitcredit_CTransaction rawTx;
+    rawTx.nTxType = TX_TYPE_STANDARD;
 
     BOOST_FOREACH(const Value& input, inputs)
     {
@@ -364,7 +369,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
         if (nOutput < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
 
-        CTxIn in(COutPoint(txid, nOutput));
+        Bitcredit_CTxIn in(COutPoint(txid, nOutput));
         rawTx.vin.push_back(in);
     }
 
@@ -373,7 +378,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
     {
         CBitcoinAddress address(s.name_);
         if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+s.name_);
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcredit address: ")+s.name_);
 
         if (setAddress.count(address))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
@@ -387,7 +392,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
         rawTx.vout.push_back(out);
     }
 
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ss(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
     ss << rawTx;
     return HexStr(ss.begin(), ss.end());
 }
@@ -444,8 +449,8 @@ Value decoderawtransaction(const Array& params, bool fHelp)
         );
 
     vector<unsigned char> txData(ParseHexV(params[0], "argument"));
-    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
-    CTransaction tx;
+    CDataStream ssData(txData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    Bitcredit_CTransaction tx;
     try {
         ssData >> tx;
     }
@@ -553,12 +558,12 @@ Value signrawtransaction(const Array& params, bool fHelp)
     RPCTypeCheck(params, list_of(str_type)(array_type)(array_type)(str_type), true);
 
     vector<unsigned char> txData(ParseHexV(params[0], "argument 1"));
-    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
-    vector<CTransaction> txVariants;
+    CDataStream ssData(txData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    vector<Bitcredit_CTransaction> txVariants;
     while (!ssData.empty())
     {
         try {
-            CTransaction tx;
+            Bitcredit_CTransaction tx;
             ssData >> tx;
             txVariants.push_back(tx);
         }
@@ -572,21 +577,21 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the rawtx:
-    CTransaction mergedTx(txVariants[0]);
+    Bitcredit_CTransaction mergedTx(txVariants[0]);
     bool fComplete = true;
 
     // Fetch previous transactions (inputs):
-    CCoinsView viewDummy;
-    CCoinsViewCache view(viewDummy);
+    Bitcredit_CCoinsView viewDummy;
+    Bitcredit_CCoinsViewCache view(viewDummy);
     {
-        LOCK(mempool.cs);
-        CCoinsViewCache &viewChain = *pcoinsTip;
-        CCoinsViewMemPool viewMempool(viewChain, mempool);
+        LOCK(bitcredit_mempool.cs);
+        Bitcredit_CCoinsViewCache &viewChain = *bitcredit_pcoinsTip;
+        Bitcredit_CCoinsViewMemPool viewMempool(viewChain, bitcredit_mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
-        BOOST_FOREACH(const CTxIn& txin, mergedTx.vin) {
+        BOOST_FOREACH(Bitcredit_CTxIn& txin, mergedTx.vin) {
             const uint256& prevHash = txin.prevout.hash;
-            CCoins coins;
+            Bitcredit_CCoins coins;
             view.GetCoins(prevHash, coins); // this is certainly allowed to fail
         }
 
@@ -611,7 +616,8 @@ Value signrawtransaction(const Array& params, bool fHelp)
     }
 #ifdef ENABLE_WALLET
     else
-        EnsureWalletIsUnlocked();
+        Bitcredit_EnsureWalletIsUnlocked();
+        Bitcoin_EnsureWalletIsUnlocked();
 #endif
 
     // Add previous txouts given in the RPC call:
@@ -636,7 +642,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             vector<unsigned char> pkData(ParseHexO(prevOut, "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
-            CCoins coins;
+            Bitcredit_CCoins coins;
             if (view.GetCoins(txid, coins)) {
                 if (coins.IsAvailable(nOut) && coins.vout[nOut].scriptPubKey != scriptPubKey) {
                     string err("Previous output scriptPubKey mismatch:\n");
@@ -669,7 +675,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     }
 
 #ifdef ENABLE_WALLET
-    const CKeyStore& keystore = ((fGivenKeys || !pwalletMain) ? tempKeystore : *pwalletMain);
+    const CKeyStore& keystore = ((fGivenKeys || !bitcredit_pwalletMain) ? tempKeystore : *bitcredit_pwalletMain);
 #else
     const CKeyStore& keystore = tempKeystore;
 #endif
@@ -698,8 +704,8 @@ Value signrawtransaction(const Array& params, bool fHelp)
     // Sign what we can:
     for (unsigned int i = 0; i < mergedTx.vin.size(); i++)
     {
-        CTxIn& txin = mergedTx.vin[i];
-        CCoins coins;
+        Bitcredit_CTxIn& txin = mergedTx.vin[i];
+        Bitcredit_CCoins coins;
         if (!view.GetCoins(txin.prevout.hash, coins) || !coins.IsAvailable(txin.prevout.n))
         {
             fComplete = false;
@@ -710,19 +716,19 @@ Value signrawtransaction(const Array& params, bool fHelp)
         txin.scriptSig.clear();
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mergedTx.vout.size()))
-            SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
+            Bitcredit_SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
 
         // ... and merge in other signatures:
-        BOOST_FOREACH(const CTransaction& txv, txVariants)
+        BOOST_FOREACH(const Bitcredit_CTransaction& txv, txVariants)
         {
-            txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
+            txin.scriptSig = Bitcredit_CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
         }
-        if (!VerifyScript(txin.scriptSig, prevPubKey, mergedTx, i, STANDARD_SCRIPT_VERIFY_FLAGS, 0))
+        if (!Bitcredit_VerifyScript(txin.scriptSig, prevPubKey, mergedTx, i, STANDARD_SCRIPT_VERIFY_FLAGS, 0))
             fComplete = false;
     }
 
     Object result;
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
     ssTx << mergedTx;
     result.push_back(Pair("hex", HexStr(ssTx.begin(), ssTx.end())));
     result.push_back(Pair("complete", fComplete));
@@ -756,8 +762,8 @@ Value sendrawtransaction(const Array& params, bool fHelp)
 
     // parse hex string from parameter
     vector<unsigned char> txData(ParseHexV(params[0], "parameter"));
-    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
-    CTransaction tx;
+    CDataStream ssData(txData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    Bitcredit_CTransaction tx;
 
     bool fOverrideFees = false;
     if (params.size() > 1)
@@ -772,16 +778,16 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     }
     uint256 hashTx = tx.GetHash();
 
-    CCoinsViewCache &view = *pcoinsTip;
-    CCoins existingCoins;
-    bool fHaveMempool = mempool.exists(hashTx);
+    Bitcredit_CCoinsViewCache &view = *bitcredit_pcoinsTip;
+    Bitcredit_CCoins existingCoins;
+    bool fHaveMempool = bitcredit_mempool.exists(hashTx);
     bool fHaveChain = view.GetCoins(hashTx, existingCoins) && existingCoins.nHeight < 1000000000;
     if (!fHaveMempool && !fHaveChain) {
         // push to local node and sync with wallets
-        CValidationState state;
-        if (AcceptToMemoryPool(mempool, state, tx, false, NULL, !fOverrideFees))
-            SyncWithWallets(hashTx, tx, NULL);
-        else {
+    	CValidationState state;
+        if (Bitcredit_AcceptToMemoryPool(bitcredit_mempool, state, tx, false, NULL, !fOverrideFees)) {
+            Bitcredit_SyncWithWallets(bitcoin_pwalletMain, *bitcoin_pclaimCoinsTip, hashTx, tx, NULL);
+        } else {
             if(state.IsInvalid())
                 throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
             else
@@ -790,7 +796,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     } else if (fHaveChain) {
         throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in block chain");
     }
-    RelayTransaction(tx, hashTx);
+    Bitcredit_RelayTransaction(tx, hashTx, Bitcredit_NetParams());
 
     return hashTx.GetHex();
 }

@@ -1,14 +1,14 @@
 Format: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?rev=174
-Upstream-Name: Bitcoin
+Upstream-Name: Bitcredit
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
  irc://#bitcoin@freenode.net
 Source: http://sourceforge.net/projects/bitcoin/files/
  https://github.com/bitcoin/bitcoin
 
 Files: *
-Copyright: 2009-2012, Bitcoin Core Developers
+Copyright: 2013-, Bitcredit Core Developers
 License: Expat
-Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
+Comment: The Bitcredit Core Developers encompasses the current developers listed on bitcoin.org,
          as well as the numerous contributors to the project.
 
 Files: src/json/*
@@ -66,7 +66,7 @@ Copyright: http://www.everaldo.com
 License: LGPL
 Comment: Icon Pack: Crystal SVG
 
-Files: src/qt/res/icons/bitcoin.png, src/qt/res/icons/toolbar.png
+Files: src/qt/res/icons/bitcredit.png, src/qt/res/icons/toolbar.png
 Copyright: Bitboy (optimized for 16x16 by Wladimir van der Laan)
 License: PUB-DOM
 Comment: Site: https://bitcointalk.org/?topic=1756.0

@@ -7,7 +7,7 @@
 #define BITCOIN_MAIN_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "bitcredit-config.h"
 #endif
 
 #include "chainparams.h"
@@ -19,6 +19,9 @@
 #include "txmempool.h"
 #include "uint256.h"
 
+#include "main_common.h"
+#include "bitcoin_main.h"
+
 #include <algorithm>
 #include <exception>
 #include <map>
@@ -28,161 +31,187 @@
 #include <utility>
 #include <vector>
 
-class CBlockIndex;
+class Bitcredit_CBlockIndex;
 class CBloomFilter;
 class CInv;
+class Bitcredit_CWallet;
+class Bitcoin_CWallet;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
-static const unsigned int MAX_BLOCK_SIZE = 1000000;
+static const unsigned int BITCREDIT_MAX_BLOCK_SIZE = 4 * 1000000;
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
-static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
-static const unsigned int DEFAULT_BLOCK_MIN_SIZE = 0;
+static const unsigned int BITCREDIT_DEFAULT_BLOCK_MAX_SIZE = 4 * 750000;
+static const unsigned int BITCREDIT_DEFAULT_BLOCK_MIN_SIZE = 0;
 /** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
-static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 50000;
+static const unsigned int BITCREDIT_DEFAULT_BLOCK_PRIORITY_SIZE = 50000;
 /** The maximum size for transactions we're willing to relay/mine */
-static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
+static const unsigned int BITCREDIT_MAX_STANDARD_TX_SIZE = 100000;
 /** The maximum allowed number of signature check operations in a block (network rule) */
-static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
+static const unsigned int BITCREDIT_MAX_BLOCK_SIGOPS = BITCREDIT_MAX_BLOCK_SIZE/50;
 /** The maximum number of orphan transactions kept in memory */
-static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
+static const unsigned int BITCREDIT_MAX_ORPHAN_TRANSACTIONS = BITCREDIT_MAX_BLOCK_SIZE/100;
 /** Default for -maxorphanblocks, maximum number of orphan blocks kept in memory */
-static const unsigned int DEFAULT_MAX_ORPHAN_BLOCKS = 750;
+static const unsigned int BITCREDIT_DEFAULT_MAX_ORPHAN_BLOCKS = 750;
 /** The maximum size of a blk?????.dat file (since 0.8) */
-static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
+static const unsigned int BITCREDIT_MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
-static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
+static const unsigned int BITCREDIT_BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
-static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
+static const unsigned int BITCREDIT_UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
-static const int COINBASE_MATURITY = 100;
+static const int BITCREDIT_COINBASE_MATURITY = 100;
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
-static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+static const unsigned int BITCREDIT_LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
 /** Maximum number of script-checking threads allowed */
-static const int MAX_SCRIPTCHECK_THREADS = 16;
+static const int BITCREDIT_MAX_SCRIPTCHECK_THREADS = 16;
 /** -par default (number of script-checking threads, 0 = auto) */
-static const int DEFAULT_SCRIPTCHECK_THREADS = 0;
+static const int BITCREDIT_DEFAULT_SCRIPTCHECK_THREADS = 0;
 /** Number of blocks that can be requested at any given time from a single peer. */
-static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 128;
+static const int BITCREDIT_MAX_BLOCKS_IN_TRANSIT_PER_PEER = 128;
 /** Timeout in seconds before considering a block download peer unresponsive. */
-static const unsigned int BLOCK_DOWNLOAD_TIMEOUT = 60;
+static const unsigned int BITCREDIT_BLOCK_DOWNLOAD_TIMEOUT = 60;
+/** The highest a bitcoin block can be in the blockchain to be referenced from a bitcredit block.
+ * 	Once that threshold has been passed bitcredit can run without a reference to the bitcoin blockchain.
+ * 	When that bitcoin block is mined, the total monetary base for bitcoin will be 18 000 000 BTC
+ *  Block 600000 is approximately year 2020. */
+static const int BITCREDIT_MAX_BITCOIN_LINK_HEIGHT = 600000;
+/** The maximum amount of bitcoins that can be claimed. */
+static const int64_t BITCREDIT_MAX_BITCOIN_CLAIM = 15000000 * COIN;
+/** At this depth block values are deducted from the deposit calculation amount.*/
+static const int BITCREDIT_DEPOSIT_CUTOFF_DEPTH = 400000;
+/** The totalDepositBase level when a lowered reward will be enforced if deposit is not large enough.
+ *  Up until this level the only thing a too low deposit will lead to is a higher difficulty. */
+static const int64_t BITCREDIT_ENFORCE_SUBSIDY_REDUCTION_AFTER = 15000000 * COIN;
 
 #ifdef USE_UPNP
-static const int fHaveUPnP = true;
+static const int bitcredit_fHaveUPnP = true;
 #else
-static const int fHaveUPnP = false;
+static const int bitcredit_fHaveUPnP = false;
 #endif
 
 /** "reject" message codes **/
-static const unsigned char REJECT_MALFORMED = 0x01;
-static const unsigned char REJECT_INVALID = 0x10;
-static const unsigned char REJECT_OBSOLETE = 0x11;
-static const unsigned char REJECT_DUPLICATE = 0x12;
-static const unsigned char REJECT_NONSTANDARD = 0x40;
-static const unsigned char REJECT_DUST = 0x41;
-static const unsigned char REJECT_INSUFFICIENTFEE = 0x42;
-static const unsigned char REJECT_CHECKPOINT = 0x43;
+static const unsigned char BITCREDIT_REJECT_MALFORMED = 0x01;
+static const unsigned char BITCREDIT_REJECT_INVALID = 0x10;
+static const unsigned char BITCREDIT_REJECT_OBSOLETE = 0x11;
+static const unsigned char BITCREDIT_REJECT_DUPLICATE = 0x12;
+static const unsigned char BITCREDIT_REJECT_NONSTANDARD = 0x40;
+static const unsigned char BITCREDIT_REJECT_DUST = 0x41;
+static const unsigned char BITCREDIT_REJECT_INSUFFICIENTFEE = 0x42;
+static const unsigned char BITCREDIT_REJECT_CHECKPOINT = 0x43;
+static const unsigned char BITCREDIT_REJECT_INVALID_BITCOIN_BLOCK_LINK = 0x44;
 
+extern MainState bitcredit_mainState;
 
-extern CScript COINBASE_FLAGS;
-extern CCriticalSection cs_main;
-extern CTxMemPool mempool;
-extern std::map<uint256, CBlockIndex*> mapBlockIndex;
-extern uint64_t nLastBlockTx;
-extern uint64_t nLastBlockSize;
-extern const std::string strMessageMagic;
-extern int64_t nTimeBestReceived;
-extern bool fImporting;
-extern bool fReindex;
-extern bool fBenchmark;
-extern int nScriptCheckThreads;
-extern bool fTxIndex;
-extern unsigned int nCoinCacheSize;
+extern CScript BITCREDIT_COINBASE_FLAGS;
+extern Bitcredit_CTxMemPool bitcredit_mempool;
+extern std::map<uint256, Bitcredit_CBlockIndex*> bitcredit_mapBlockIndex;
+extern uint64_t bitcredit_nLastBlockTx;
+extern uint64_t bitcredit_nLastBlockSize;
+extern const std::string bitcredit_strMessageMagic;
+extern int64_t bitcredit_nTimeBestReceived;
+extern bool bitcredit_fBenchmark;
+extern int bitcredit_nScriptCheckThreads;
+extern bool bitcredit_fTxIndex;
+extern unsigned int bitcredit_nCoinCacheSize;
 
 // Minimum disk space required - used in CheckDiskSpace()
-static const uint64_t nMinDiskSpace = 52428800;
+static const uint64_t bitcredit_nMinDiskSpace = 52428800;
 
 
-class CBlockTreeDB;
-struct CDiskBlockPos;
-class CTxUndo;
-class CScriptCheck;
+class Bitcredit_CBlockTreeDB;
+class Bitcredit_CTxUndo;
+class Bitcredit_CScriptCheck;
 class CValidationState;
-class CWalletInterface;
-struct CNodeStateStats;
+class Bitcredit_CWalletInterface;
 
-struct CBlockTemplate;
+struct Bitcredit_CBlockTemplate;
 
 /** Register a wallet to receive updates from core */
-void RegisterWallet(CWalletInterface* pwalletIn);
+void Bitcredit_RegisterWallet(Bitcredit_CWalletInterface* pwalletIn);
 /** Unregister a wallet from core */
-void UnregisterWallet(CWalletInterface* pwalletIn);
+void Bitcredit_UnregisterWallet(Bitcredit_CWalletInterface* pwalletIn);
 /** Unregister all wallets from core */
-void UnregisterAllWallets();
+void Bitcredit_UnregisterAllWallets();
 /** Push an updated transaction to all registered wallets */
-void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock = NULL);
+void Bitcredit_SyncWithWallets(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock = NULL);
 
 /** Register with a network node to receive its signals */
-void RegisterNodeSignals(CNodeSignals& nodeSignals);
+void Bitcredit_RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */
-void UnregisterNodeSignals(CNodeSignals& nodeSignals);
+void Bitcredit_UnregisterNodeSignals(CNodeSignals& nodeSignals);
 
-void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd);
+void Bitcredit_PushGetBlocks(CNode* pnode, Bitcredit_CBlockIndex* pindexBegin, uint256 hashEnd);
 
 /** Process an incoming block */
-bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp = NULL);
+bool Bitcredit_ProcessBlock(CValidationState &state, CNode* pfrom, Bitcredit_CBlock* pblock, CDiskBlockPos *dbp = NULL);
 /** Check whether enough disk space is available for an incoming block */
-bool CheckDiskSpace(uint64_t nAdditionalBytes = 0);
+bool Bitcredit_CheckDiskSpace(uint64_t nAdditionalBytes = 0);
 /** Open a block file (blk?????.dat) */
-FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+FILE* Bitcredit_OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Open an undo file (rev?????.dat) */
-FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+FILE* Bitcredit_OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Import blocks from an external file */
-bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp = NULL);
+bool Bitcredit_LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp = NULL);
 /** Initialize a new block tree database + block data on disk */
-bool InitBlockIndex();
+bool Bitcredit_InitBlockIndex();
 /** Load the block tree and coins database from disk */
-bool LoadBlockIndex();
+bool Bitcredit_LoadBlockIndex();
 /** Unload database information */
-void UnloadBlockIndex();
+void Bitcredit_UnloadBlockIndex();
 /** Print the loaded block tree */
-void PrintBlockTree();
+void Bitcredit_PrintBlockTree();
 /** Process protocol messages received from a given node */
-bool ProcessMessages(CNode* pfrom);
+bool Bitcredit_ProcessMessages(CNode* pfrom);
 /** Send queued protocol messages to be sent to a give node */
-bool SendMessages(CNode* pto, bool fSendTrickle);
+bool Bitcredit_SendMessages(CNode* pto, bool fSendTrickle);
 /** Run an instance of the script checking thread */
-void ThreadScriptCheck();
+void Bitcredit_ThreadScriptCheck();
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits);
+bool Bitcredit_CheckProofOfWork(uint256 hash, unsigned int nBits, uint64_t nTotalDepositBase, uint64_t nDepositAmount);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
-unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime);
+unsigned int Bitcredit_ComputeMinWork(unsigned int nBase, int64_t nTime);
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
-bool IsInitialBlockDownload();
+bool Bitcredit_IsInitialBlockDownload();
 /** Format a string that describes several potential problems detected by the core */
-std::string GetWarnings(std::string strFor);
+std::string Bitcredit_GetWarnings(std::string strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
-bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
+bool Bitcredit_GetTransaction(const uint256 &hash, Bitcredit_CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
 /** Find the best known block, and make it the tip of the block chain */
-bool ActivateBestChain(CValidationState &state);
-int64_t GetBlockValue(int nHeight, int64_t nFees);
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
+bool Bitcredit_ActivateBestChain(CValidationState &state);
+/** The max subsidy a block can give if the deposit is large enough */
+uint64_t Bitcredit_GetMaxBlockSubsidy(const uint64_t nTotalMonetaryBase);
+/** Gets the coinbase value with fees and deposit amount taken into account */
+uint64_t Bitcredit_GetAllowedBlockSubsidy(const uint64_t nTotalMonetaryBase, const uint64_t nTotalDepositBase, uint64_t nDepositAmount);
+unsigned int Bitcredit_GetNextWorkRequired(const Bitcredit_CBlockIndex* pindexLast, const Bitcredit_CBlockHeader *pblock);
 
-void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev);
+/**
+ * To be able to claim full reward a deposit of 1/15 000 of half the total deposit base
+ * must be put as deposit in the block. All values are rounded down by normal integer rounding.
+ * The requirement to put 1/15000 of half the total monetary base will cause each deposit
+ * to be locked for approximately 100 days.
+ * Ex: 5 000 000 / (2 * 15 000) = 167 bitcredits.
+ * 167 bitcredits * 6 *24 (blocks each day) * 100 (days) = 2 400 000.
+ */
+uint64_t Bitcredit_GetRequiredDeposit(const uint64_t nTotalDepositBase);
+
+//ONLY exposed here for testability
+uint256 Bitcredit_ReduceByReqDepositLevel(uint256 nValue, const uint64_t nTotalDepositBase, const uint64_t nDepositAmount);
+
+
+void Bitcredit_UpdateTime(Bitcredit_CBlockHeader& block, const Bitcredit_CBlockIndex* pindexPrev);
 
 /** Create a new block index entry for a given block hash */
-CBlockIndex * InsertBlockIndex(uint256 hash);
+Bitcredit_CBlockIndex * Bitcredit_InsertBlockIndex(uint256 hash);
 /** Verify a signature */
-bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
-/** Abort with a message */
-bool AbortNode(const std::string &msg);
+bool Bitcredit_VerifySignature(const Bitcredit_CCoins& txFrom, const Bitcredit_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 /** Get statistics from node state */
-bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
+bool Bitcredit_GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
-void Misbehaving(NodeId nodeid, int howmuch);
+void Bitcredit_Misbehaving(NodeId nodeid, int howmuch);
 
 
 /** (try to) add transaction to memory pool **/
-bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
+bool Bitcredit_AcceptToMemoryPool(Bitcredit_CTxMemPool& pool, CValidationState &state, const Bitcredit_CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectInsaneFee=false);
 
 
@@ -192,72 +221,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
 
 
-struct CNodeStateStats {
-    int nMisbehavior;
-};
 
-struct CDiskBlockPos
-{
-    int nFile;
-    unsigned int nPos;
-
-    IMPLEMENT_SERIALIZE(
-        READWRITE(VARINT(nFile));
-        READWRITE(VARINT(nPos));
-    )
-
-    CDiskBlockPos() {
-        SetNull();
-    }
-
-    CDiskBlockPos(int nFileIn, unsigned int nPosIn) {
-        nFile = nFileIn;
-        nPos = nPosIn;
-    }
-
-    friend bool operator==(const CDiskBlockPos &a, const CDiskBlockPos &b) {
-        return (a.nFile == b.nFile && a.nPos == b.nPos);
-    }
-
-    friend bool operator!=(const CDiskBlockPos &a, const CDiskBlockPos &b) {
-        return !(a == b);
-    }
-
-    void SetNull() { nFile = -1; nPos = 0; }
-    bool IsNull() const { return (nFile == -1); }
-};
-
-struct CDiskTxPos : public CDiskBlockPos
-{
-    unsigned int nTxOffset; // after header
-
-    IMPLEMENT_SERIALIZE(
-        READWRITE(*(CDiskBlockPos*)this);
-        READWRITE(VARINT(nTxOffset));
-    )
-
-    CDiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
-    }
-
-    CDiskTxPos() {
-        SetNull();
-    }
-
-    void SetNull() {
-        CDiskBlockPos::SetNull();
-        nTxOffset = 0;
-    }
-};
-
-
-
-enum GetMinFee_mode
-{
-    GMF_RELAY,
-    GMF_SEND,
-};
-
-int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, enum GetMinFee_mode mode);
+int64_t Bitcredit_GetMinFee(const Bitcredit_CTransaction& tx, unsigned int nBytes, bool fAllowFree, enum GetMinFee_mode mode);
 
 //
 // Check transaction inputs, and make sure any
@@ -275,98 +240,102 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, 
     @param[in] mapInputs    Map of previous transactions that have outputs we're spending
     @return True if all inputs (scriptSigs) use only standard transaction forms
 */
-bool AreInputsStandard(const CTransaction& tx, CCoinsViewCache& mapInputs);
+bool Bitcredit_AreInputsStandard(const Bitcredit_CTransaction& tx, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view);
 
 /** Count ECDSA signature operations the old-fashioned (pre-0.6) way
     @return number of sigops this transaction's outputs will produce when spent
-    @see CTransaction::FetchInputs
+    @see Bitcredit_CTransaction::FetchInputs
 */
-unsigned int GetLegacySigOpCount(const CTransaction& tx);
+unsigned int Bitcredit_GetLegacySigOpCount(const Bitcredit_CTransaction& tx);
 
 /** Count ECDSA signature operations in pay-to-script-hash inputs.
 
     @param[in] mapInputs	Map of previous transactions that have outputs we're spending
     @return maximum number of sigops required to validate this transaction's inputs
-    @see CTransaction::FetchInputs
+    @see Bitcredit_CTransaction::FetchInputs
  */
-unsigned int GetP2SHSigOpCount(const CTransaction& tx, CCoinsViewCache& mapInputs);
+unsigned int Bitcredit_GetP2SHSigOpCount(const Bitcredit_CTransaction& tx, Bitcredit_CCoinsViewCache& bitcredit_inputs, Bitcoin_CClaimCoinsViewCache& claim_inputs);
 
 
-inline bool AllowFree(double dPriority)
+inline bool Bitcredit_AllowFree(double dPriority)
 {
     // Large (in bytes) low-priority (new, small-coin) transactions
     // need a fee.
     return dPriority > COIN * 144 / 250;
 }
 
+bool Bitcredit_FindBestBlockAndCheckClaims(Bitcoin_CClaimCoinsViewCache &claim_view, const int64_t nClaimedCoins);
+//Check that the claiming attempts being done are within the limits (90% of total monetary base and max 15 000 000  coins). Max bitcoin block height (600 000) tested in Bitcredit_CheckBlockHeader
+bool Bitcredit_CheckClaimsAreInBounds(Bitcoin_CClaimCoinsViewCache &bitcoin_inputs, const int64_t nTryClaimedCoins, const int nBitcoinBlockHeight);
+
 // Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
 // This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
 // instead of being performed inline.
-bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCache &view, bool fScriptChecks = true,
+bool Bitcredit_CheckInputs(const Bitcredit_CTransaction& tx, CValidationState &state, Bitcredit_CCoinsViewCache &bitcredit_inputs, Bitcoin_CClaimCoinsViewCache &claim_inputs, int64_t &nTotalClaimedCoins, bool fScriptChecks = true,
                  unsigned int flags = STANDARD_SCRIPT_VERIFY_FLAGS,
-                 std::vector<CScriptCheck> *pvChecks = NULL);
+                 std::vector<Bitcredit_CScriptCheck> *pvChecks = NULL);
 
 // Apply the effects of this transaction on the UTXO set represented by view
-void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, CTxUndo &txundo, int nHeight, const uint256 &txhash);
+void Bitcredit_UpdateCoins(const Bitcredit_CTransaction& tx, CValidationState &state, Bitcredit_CCoinsViewCache &bitcredit_inputs, Bitcoin_CClaimCoinsViewCache &claim_inputs, Bitcredit_CTxUndo &txundo,  int nHeight, const uint256 &txhash);
 
 // Context-independent validity checks
-bool CheckTransaction(const CTransaction& tx, CValidationState& state);
+bool Bitcredit_CheckTransaction(const Bitcredit_CTransaction& tx, CValidationState& state);
 
 /** Check for standard transaction types
     @return True if all outputs (scriptPubKeys) use only standard transaction forms
 */
-bool IsStandardTx(const CTransaction& tx, std::string& reason);
+bool Bitcredit_IsStandardTx(const Bitcredit_CTransaction& tx, std::string& reason);
 
-bool IsFinalTx(const CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
+bool Bitcredit_IsFinalTx(const Bitcredit_CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
 
 /** Undo information for a CBlock */
-class CBlockUndo
+class Bitcredit_CBlockUndo
 {
 public:
-    std::vector<CTxUndo> vtxundo; // for all but the coinbase
+    std::vector<Bitcredit_CTxUndo> vtxundo; // for all but the coinbase
 
     IMPLEMENT_SERIALIZE(
         READWRITE(vtxundo);
     )
 
-    bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock)
+    bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock, CNetParams * netParams)
     {
         // Open history file to append
-        CAutoFile fileout = CAutoFile(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
+        CAutoFile fileout = CAutoFile(Bitcredit_OpenUndoFile(pos), SER_DISK, netParams->ClientVersion());
         if (!fileout)
-            return error("CBlockUndo::WriteToDisk : OpenUndoFile failed");
+            return error("Bitcredit: CBlockUndo::WriteToDisk : OpenUndoFile failed");
 
         // Write index header
         unsigned int nSize = fileout.GetSerializeSize(*this);
-        fileout << FLATDATA(Params().MessageStart()) << nSize;
+        fileout << FLATDATA(netParams->MessageStart()) << nSize;
 
         // Write undo data
         long fileOutPos = ftell(fileout);
         if (fileOutPos < 0)
-            return error("CBlockUndo::WriteToDisk : ftell failed");
+            return error("Bitcredit: CBlockUndo::WriteToDisk : ftell failed");
         pos.nPos = (unsigned int)fileOutPos;
         fileout << *this;
 
         // calculate & write checksum
-        CHashWriter hasher(SER_GETHASH, PROTOCOL_VERSION);
+        CHashWriter hasher(SER_GETHASH, BITCREDIT_PROTOCOL_VERSION);
         hasher << hashBlock;
         hasher << *this;
         fileout << hasher.GetHash();
 
         // Flush stdio buffers and commit to disk before returning
         fflush(fileout);
-        if (!IsInitialBlockDownload())
+        if (!Bitcredit_IsInitialBlockDownload())
             FileCommit(fileout);
 
         return true;
     }
 
-    bool ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock)
+    bool ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock, CNetParams * netParams)
     {
         // Open history file to read
-        CAutoFile filein = CAutoFile(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
+        CAutoFile filein = CAutoFile(Bitcredit_OpenUndoFile(pos, true), SER_DISK, netParams->ClientVersion());
         if (!filein)
-            return error("CBlockUndo::ReadFromDisk : OpenBlockFile failed");
+            return error("Bitcredit: CBlockUndo::ReadFromDisk : OpenBlockFile failed");
 
         // Read block
         uint256 hashChecksum;
@@ -375,15 +344,15 @@ public:
             filein >> hashChecksum;
         }
         catch (std::exception &e) {
-            return error("%s : Deserialize or I/O error - %s", __func__, e.what());
+            return error("Bitcredit: %s : Deserialize or I/O error - %s", __func__, e.what());
         }
 
         // Verify checksum
-        CHashWriter hasher(SER_GETHASH, PROTOCOL_VERSION);
+        CHashWriter hasher(SER_GETHASH, BITCREDIT_PROTOCOL_VERSION);
         hasher << hashBlock;
         hasher << *this;
         if (hashChecksum != hasher.GetHash())
-            return error("CBlockUndo::ReadFromDisk : Checksum mismatch");
+            return error("Bitcredit: CBlockUndo::ReadFromDisk : Checksum mismatch");
 
         return true;
     }
@@ -392,24 +361,27 @@ public:
 
 /** Closure representing one script verification
  *  Note that this stores references to the spending transaction */
-class CScriptCheck
+class Bitcredit_CScriptCheck
 {
 private:
     CScript scriptPubKey;
-    const CTransaction *ptxTo;
+    const Bitcredit_CTransaction *ptxTo;
     unsigned int nIn;
     unsigned int nFlags;
     int nHashType;
 
 public:
-    CScriptCheck() {}
-    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
+    Bitcredit_CScriptCheck() {}
+    Bitcredit_CScriptCheck(const Bitcredit_CCoins& txFromIn, const Bitcredit_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
+        scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
+        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), nHashType(nHashTypeIn) { }
+    Bitcredit_CScriptCheck(const Bitcoin_CClaimCoins& txFromIn, const Bitcredit_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
         scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
         ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), nHashType(nHashTypeIn) { }
 
     bool operator()() const;
 
-    void swap(CScriptCheck &check) {
+    void swap(Bitcredit_CScriptCheck &check) {
         scriptPubKey.swap(check.scriptPubKey);
         std::swap(ptxTo, check.ptxTo);
         std::swap(nIn, check.nIn);
@@ -419,10 +391,10 @@ public:
 };
 
 /** A transaction with a merkle branch linking it to the block chain. */
-class CMerkleTx : public CTransaction
+class Bitcredit_CMerkleTx : public Bitcredit_CTransaction
 {
 private:
-    int GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const;
+    int GetDepthInMainChainINTERNAL(Bitcredit_CBlockIndex* &pindexRet) const;
 
 public:
     uint256 hashBlock;
@@ -433,12 +405,12 @@ public:
     mutable bool fMerkleVerified;
 
 
-    CMerkleTx()
+    Bitcredit_CMerkleTx()
     {
         Init();
     }
 
-    CMerkleTx(const CTransaction& txIn) : CTransaction(txIn)
+    Bitcredit_CMerkleTx(const Bitcredit_CTransaction& txIn) : Bitcredit_CTransaction(txIn)
     {
         Init();
     }
@@ -453,7 +425,7 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-        nSerSize += SerReadWrite(s, *(CTransaction*)this, nType, nVersion, ser_action);
+        nSerSize += SerReadWrite(s, *(Bitcredit_CTransaction*)this, nType, nVersion, ser_action);
         nVersion = this->nVersion;
         READWRITE(hashBlock);
         READWRITE(vMerkleBranch);
@@ -461,16 +433,18 @@ public:
     )
 
 
-    int SetMerkleBranch(const CBlock* pblock=NULL);
+    int SetMerkleBranch(const Bitcredit_CBlock* pblock=NULL);
 
     // Return depth of transaction in blockchain:
     // -1  : not in blockchain, and not in memory pool (conflicted transaction)
     //  0  : in memory pool, waiting to be included in a block
     // >=1 : this many blocks deep in the main chain
-    int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
-    int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
-    bool IsInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChainINTERNAL(pindexRet) > 0; }
+    int GetDepthInMainChain(Bitcredit_CBlockIndex* &pindexRet) const;
+    int GetDepthInMainChain() const { Bitcredit_CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
+    bool IsInMainChain() const { Bitcredit_CBlockIndex *pindexRet; return GetDepthInMainChainINTERNAL(pindexRet) > 0; }
     int GetBlocksToMaturity() const;
+    int GetFirstDepositOutBlocksToMaturity() const;
+    int GetSecondDepositOutBlocksToMaturity() const;
     bool AcceptToMemoryPool(bool fLimitFree=true);
 };
 
@@ -478,108 +452,12 @@ public:
 
 
 
-/** Data structure that represents a partial merkle tree.
- *
- * It respresents a subset of the txid's of a known block, in a way that
- * allows recovery of the list of txid's and the merkle root, in an
- * authenticated way.
- *
- * The encoding works as follows: we traverse the tree in depth-first order,
- * storing a bit for each traversed node, signifying whether the node is the
- * parent of at least one matched leaf txid (or a matched txid itself). In
- * case we are at the leaf level, or this bit is 0, its merkle node hash is
- * stored, and its children are not explorer further. Otherwise, no hash is
- * stored, but we recurse into both (or the only) child branch. During
- * decoding, the same depth-first traversal is performed, consuming bits and
- * hashes as they written during encoding.
- *
- * The serialization is fixed and provides a hard guarantee about the
- * encoded size:
- *
- *   SIZE <= 10 + ceil(32.25*N)
- *
- * Where N represents the number of leaf nodes of the partial tree. N itself
- * is bounded by:
- *
- *   N <= total_transactions
- *   N <= 1 + matched_transactions*tree_height
- *
- * The serialization format:
- *  - uint32     total_transactions (4 bytes)
- *  - varint     number of hashes   (1-3 bytes)
- *  - uint256[]  hashes in depth-first order (<= 32*N bytes)
- *  - varint     number of bytes of flag bits (1-3 bytes)
- *  - byte[]     flag bits, packed per 8 in a byte, least significant bit first (<= 2*N-1 bits)
- * The size constraints follow from this.
- */
-class CPartialMerkleTree
-{
-protected:
-    // the total number of transactions in the block
-    unsigned int nTransactions;
-
-    // node-is-parent-of-matched-txid bits
-    std::vector<bool> vBits;
-
-    // txids and internal hashes
-    std::vector<uint256> vHash;
-
-    // flag set when encountering invalid data
-    bool fBad;
-
-    // helper function to efficiently calculate the number of nodes at given height in the merkle tree
-    unsigned int CalcTreeWidth(int height) {
-        return (nTransactions+(1 << height)-1) >> height;
-    }
-
-    // calculate the hash of a node in the merkle tree (at leaf level: the txid's themself)
-    uint256 CalcHash(int height, unsigned int pos, const std::vector<uint256> &vTxid);
-
-    // recursive function that traverses tree nodes, storing the data as bits and hashes
-    void TraverseAndBuild(int height, unsigned int pos, const std::vector<uint256> &vTxid, const std::vector<bool> &vMatch);
-
-    // recursive function that traverses tree nodes, consuming the bits and hashes produced by TraverseAndBuild.
-    // it returns the hash of the respective node.
-    uint256 TraverseAndExtract(int height, unsigned int pos, unsigned int &nBitsUsed, unsigned int &nHashUsed, std::vector<uint256> &vMatch);
-
-public:
-
-    // serialization implementation
-    IMPLEMENT_SERIALIZE(
-        READWRITE(nTransactions);
-        READWRITE(vHash);
-        std::vector<unsigned char> vBytes;
-        if (fRead) {
-            READWRITE(vBytes);
-            CPartialMerkleTree &us = *(const_cast<CPartialMerkleTree*>(this));
-            us.vBits.resize(vBytes.size() * 8);
-            for (unsigned int p = 0; p < us.vBits.size(); p++)
-                us.vBits[p] = (vBytes[p / 8] & (1 << (p % 8))) != 0;
-            us.fBad = false;
-        } else {
-            vBytes.resize((vBits.size()+7)/8);
-            for (unsigned int p = 0; p < vBits.size(); p++)
-                vBytes[p / 8] |= vBits[p] << (p % 8);
-            READWRITE(vBytes);
-        }
-    )
-
-    // Construct a partial merkle tree from a list of transaction id's, and a mask that selects a subset of them
-    CPartialMerkleTree(const std::vector<uint256> &vTxid, const std::vector<bool> &vMatch);
-
-    CPartialMerkleTree();
-
-    // extract the matching txid's represented by this partial merkle tree.
-    // returns the merkle root, or 0 in case of failure
-    uint256 ExtractMatches(std::vector<uint256> &vMatch);
-};
-
 
 
 /** Functions for disk access for blocks */
-bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos);
-bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos);
-bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
+bool Bitcredit_WriteBlockToDisk(Bitcredit_CBlock& block, CDiskBlockPos& pos);
+bool Bitcredit_ReadBlockFromDisk(Bitcredit_CBlock& block, const CDiskBlockPos& pos);
+bool Bitcredit_ReadBlockFromDisk(Bitcredit_CBlock& block, const Bitcredit_CBlockIndex* pindex);
 
 
 /** Functions for validating blocks and updating the block tree */
@@ -588,146 +466,50 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
  *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
-bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool* pfClean = NULL);
+bool Bitcredit_DisconnectBlock(Bitcredit_CBlock& block, CValidationState& state, Bitcredit_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, bool* pfClean = NULL);
 
+/** Calculates resurrection of deposit base. Should be used just before coins are updated */
+void UpdateResurrectedDepositBase(const Bitcredit_CBlockIndex* pBlockToTrim, const Bitcredit_CTransaction &tx, int64_t &nResurrectedDepositBase, Bitcredit_CCoinsViewCache& bitcredit_view);
+/** Calculates trimming of deposit base. Should be used just after coins are updated */
+void UpdateTrimmedDepositBase(const Bitcredit_CBlockIndex* pBlockToTrim, Bitcredit_CBlock &trimBlock, int64_t &nTrimmedDepositBase, Bitcredit_CCoinsViewCache& bitcredit_view);
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
-bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool fJustCheck = false);
+bool Bitcredit_ConnectBlock(Bitcredit_CBlock& block, CValidationState& state, Bitcredit_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, bool fJustCheck);
 
 // Add this block to the block index, and if necessary, switch the active block chain to this
-bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos& pos);
+bool Bitcredit_AddToBlockIndex(Bitcredit_CBlock& block, CValidationState& state, const CDiskBlockPos& pos);
 
 // Context-independent validity checks
-bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
-bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+bool Bitcredit_CheckBlockHeader(const Bitcredit_CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
+bool Bitcredit_CheckBlock(const Bitcredit_CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
 // Store block on disk
 // if dbp is provided, the file is known to already reside on disk
-bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex **pindex, CDiskBlockPos* dbp = NULL);
-bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex **ppindex= NULL);
+bool Bitcredit_AcceptBlock(Bitcredit_CBlock& block, CValidationState& state, Bitcredit_CBlockIndex **pindex, CDiskBlockPos* dbp, CNetParams * netParams);
+bool Bitcredit_AcceptBlockHeader(Bitcredit_CBlockHeader& block, CValidationState& state, Bitcredit_CBlockIndex **ppindex= NULL);
 
-
-
-class CBlockFileInfo
-{
-public:
-    unsigned int nBlocks;      // number of blocks stored in file
-    unsigned int nSize;        // number of used bytes of block file
-    unsigned int nUndoSize;    // number of used bytes in the undo file
-    unsigned int nHeightFirst; // lowest height of block in file
-    unsigned int nHeightLast;  // highest height of block in file
-    uint64_t nTimeFirst;         // earliest time of block in file
-    uint64_t nTimeLast;          // latest time of block in file
-
-    IMPLEMENT_SERIALIZE(
-        READWRITE(VARINT(nBlocks));
-        READWRITE(VARINT(nSize));
-        READWRITE(VARINT(nUndoSize));
-        READWRITE(VARINT(nHeightFirst));
-        READWRITE(VARINT(nHeightLast));
-        READWRITE(VARINT(nTimeFirst));
-        READWRITE(VARINT(nTimeLast));
-     )
-
-     void SetNull() {
-         nBlocks = 0;
-         nSize = 0;
-         nUndoSize = 0;
-         nHeightFirst = 0;
-         nHeightLast = 0;
-         nTimeFirst = 0;
-         nTimeLast = 0;
-     }
-
-     CBlockFileInfo() {
-         SetNull();
-     }
-
-     std::string ToString() const {
-         return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst).c_str(), DateTimeStrFormat("%Y-%m-%d", nTimeLast).c_str());
-     }
-
-     // update statistics (does not update nSize)
-     void AddBlock(unsigned int nHeightIn, uint64_t nTimeIn) {
-         if (nBlocks==0 || nHeightFirst > nHeightIn)
-             nHeightFirst = nHeightIn;
-         if (nBlocks==0 || nTimeFirst > nTimeIn)
-             nTimeFirst = nTimeIn;
-         nBlocks++;
-         if (nHeightIn > nHeightLast)
-             nHeightLast = nHeightIn;
-         if (nTimeIn > nTimeLast)
-             nTimeLast = nTimeIn;
-     }
-};
-
-enum BlockStatus {
-    BLOCK_VALID_UNKNOWN      =    0,
-    BLOCK_VALID_HEADER       =    1, // parsed, version ok, hash satisfies claimed PoW, 1 <= vtx count <= max, timestamp not in future
-    BLOCK_VALID_TREE         =    2, // parent found, difficulty matches, timestamp >= median previous, checkpoint
-    BLOCK_VALID_TRANSACTIONS =    3, // only first tx is coinbase, 2 <= coinbase input script length <= 100, transactions valid, no duplicate txids, sigops, size, merkle root
-    BLOCK_VALID_CHAIN        =    4, // outputs do not overspend inputs, no double spends, coinbase output ok, immature coinbase spends, BIP30
-    BLOCK_VALID_SCRIPTS      =    5, // scripts/signatures ok
-    BLOCK_VALID_MASK         =    7,
-
-    BLOCK_HAVE_DATA          =    8, // full block available in blk*.dat
-    BLOCK_HAVE_UNDO          =   16, // undo data available in rev*.dat
-    BLOCK_HAVE_MASK          =   24,
-
-    BLOCK_FAILED_VALID       =   32, // stage after last reached validness failed
-    BLOCK_FAILED_CHILD       =   64, // descends from failed block
-    BLOCK_FAILED_MASK        =   96
-};
 
 /** The block chain is a tree shaped structure starting with the
  * genesis block at the root, with each block potentially having multiple
  * candidates to be the next block. A blockindex may have multiple pprev pointing
  * to it, but at most one of them can be part of the currently active branch.
  */
-class CBlockIndex
+class Bitcredit_CBlockIndex : public CBlockIndexBase
 {
 public:
-    // pointer to the hash of the block, if any. memory is owned by this CBlockIndex
-    const uint256* phashBlock;
-
-    // pointer to the index of the predecessor of this block
-    CBlockIndex* pprev;
-
-    // height of the entry in the chain. The genesis block has height 0
-    int nHeight;
-
-    // Which # file this block is stored in (blk?????.dat)
-    int nFile;
-
-    // Byte offset within blk?????.dat where this block's data is stored
-    unsigned int nDataPos;
-
-    // Byte offset within rev?????.dat where this block's undo data is stored
-    unsigned int nUndoPos;
-
-    // (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
-    uint256 nChainWork;
-
-    // Number of transactions in this block.
-    // Note: in a potential headers-first mode, this number cannot be relied upon
-    unsigned int nTx;
-
-    // (memory only) Number of transactions in the chain up to and including this block
-    unsigned int nChainTx; // change to 64-bit type when necessary; won't happen before 2030
-
-    // Verification status of this block. See enum BlockStatus
-    unsigned int nStatus;
-
     // block header
     int nVersion;
     uint256 hashMerkleRoot;
-    unsigned int nTime;
-    unsigned int nBits;
+    uint256 hashLinkedBitcoinBlock;
+    uint256 hashSigMerkleRoot;
     unsigned int nNonce;
+    uint64_t nTotalMonetaryBase;
+    uint64_t nTotalDepositBase;
+    uint64_t nDepositAmount;
 
     // (memory only) Sequencial id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
 
-    CBlockIndex()
+    Bitcredit_CBlockIndex()
     {
         phashBlock = NULL;
         pprev = NULL;
@@ -743,12 +525,17 @@ public:
 
         nVersion       = 0;
         hashMerkleRoot = 0;
+        hashLinkedBitcoinBlock         = 0;
+        hashSigMerkleRoot         = 0;
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+        nTotalMonetaryBase         = 0;
+        nTotalDepositBase         = 0;
+        nDepositAmount         = 0;
     }
 
-    CBlockIndex(CBlockHeader& block)
+    Bitcredit_CBlockIndex(Bitcredit_CBlockHeader& block)
     {
         phashBlock = NULL;
         pprev = NULL;
@@ -764,9 +551,14 @@ public:
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
+        hashLinkedBitcoinBlock         = block.hashLinkedBitcoinBlock;
+        hashSigMerkleRoot         = block.hashSigMerkleRoot;
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+        nTotalMonetaryBase         = block.nTotalMonetaryBase;
+        nTotalDepositBase         = block.nTotalDepositBase;
+        nDepositAmount         = block.nDepositAmount;
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -787,47 +579,27 @@ public:
         return ret;
     }
 
-    CBlockHeader GetBlockHeader() const
+    Bitcredit_CBlockHeader GetBlockHeader() const
     {
-        CBlockHeader block;
+        Bitcredit_CBlockHeader block;
         block.nVersion       = nVersion;
         if (pprev)
             block.hashPrevBlock = pprev->GetBlockHash();
         block.hashMerkleRoot = hashMerkleRoot;
+        block.hashLinkedBitcoinBlock         = hashLinkedBitcoinBlock;
+        block.hashSigMerkleRoot         = hashSigMerkleRoot;
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.nTotalMonetaryBase = nTotalMonetaryBase;
+        block.nTotalDepositBase = nTotalDepositBase;
+        block.nDepositAmount = nDepositAmount;
         return block;
-    }
-
-    uint256 GetBlockHash() const
-    {
-        return *phashBlock;
-    }
-
-    int64_t GetBlockTime() const
-    {
-        return (int64_t)nTime;
-    }
-
-    uint256 GetBlockWork() const
-    {
-        uint256 bnTarget;
-        bool fNegative;
-        bool fOverflow;
-        bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
-        if (fNegative || fOverflow || bnTarget == 0)
-            return 0;
-        // We need to compute 2**256 / (bnTarget+1), but we can't represent 2**256
-        // as it's too large for a uint256. However, as 2**256 is at least as large
-        // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
-        // or ~bnTarget / (nTarget+1) + 1.
-        return (~bnTarget / (bnTarget + 1)) + 1;
     }
 
     bool CheckIndex() const
     {
-        return CheckProofOfWork(GetBlockHash(), nBits);
+        return Bitcredit_CheckProofOfWork(GetBlockHash(), nBits, nTotalDepositBase, nDepositAmount);
     }
 
     enum { nMedianTimeSpan=11 };
@@ -838,7 +610,7 @@ public:
         int64_t* pbegin = &pmedian[nMedianTimeSpan];
         int64_t* pend = &pmedian[nMedianTimeSpan];
 
-        const CBlockIndex* pindex = this;
+        const CBlockIndexBase* pindex = this;
         for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
             *(--pbegin) = pindex->GetBlockTime();
 
@@ -850,14 +622,15 @@ public:
      * Returns true if there are nRequired or more blocks of minVersion or above
      * in the last nToCheck blocks, starting at pstart and going backwards.
      */
-    static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart,
+    static bool IsSuperMajority(int minVersion, const Bitcredit_CBlockIndex* pstart,
                                 unsigned int nRequired, unsigned int nToCheck);
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
+        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, sigmerkle=%s, hashBlock=%s)",
             pprev, nHeight,
             hashMerkleRoot.ToString(),
+            hashSigMerkleRoot.ToString(),
             GetBlockHash().ToString());
     }
 
@@ -890,19 +663,17 @@ public:
     }
 };
 
-
-
 /** Used to marshal pointers into hashes for db storage. */
-class CDiskBlockIndex : public CBlockIndex
+class Bitcredit_CDiskBlockIndex : public Bitcredit_CBlockIndex
 {
 public:
     uint256 hashPrev;
 
-    CDiskBlockIndex() {
+    Bitcredit_CDiskBlockIndex() {
         hashPrev = 0;
     }
 
-    explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex) {
+    explicit Bitcredit_CDiskBlockIndex(Bitcredit_CBlockIndex* pindex) : Bitcredit_CBlockIndex(*pindex) {
         hashPrev = (pprev ? pprev->GetBlockHash() : 0);
     }
 
@@ -925,20 +696,30 @@ public:
         READWRITE(this->nVersion);
         READWRITE(hashPrev);
         READWRITE(hashMerkleRoot);
+        READWRITE(hashLinkedBitcoinBlock);
+        READWRITE(hashSigMerkleRoot);
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(nTotalMonetaryBase);
+        READWRITE(nTotalDepositBase);
+        READWRITE(nDepositAmount);
     )
 
     uint256 GetBlockHash() const
     {
-        CBlockHeader block;
+        Bitcredit_CBlockHeader block;
         block.nVersion        = nVersion;
         block.hashPrevBlock   = hashPrev;
         block.hashMerkleRoot  = hashMerkleRoot;
+        block.hashLinkedBitcoinBlock          = hashLinkedBitcoinBlock;
+        block.hashSigMerkleRoot          = hashSigMerkleRoot;
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
+        block.nTotalMonetaryBase = nTotalMonetaryBase;
+        block.nTotalDepositBase = nTotalDepositBase;
+        block.nDepositAmount = nDepositAmount;
         return block.GetHash();
     }
 
@@ -946,7 +727,7 @@ public:
     std::string ToString() const
     {
         std::string str = "CDiskBlockIndex(";
-        str += CBlockIndex::ToString();
+        str += Bitcredit_CBlockIndex::ToString();
         str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
             GetBlockHash().ToString(),
             hashPrev.ToString());
@@ -959,150 +740,75 @@ public:
     }
 };
 
-/** Capture information about block/transaction validation */
-class CValidationState {
-private:
-    enum mode_state {
-        MODE_VALID,   // everything ok
-        MODE_INVALID, // network rule violation (DoS value may be set)
-        MODE_ERROR,   // run-time error
-    } mode;
-    int nDoS;
-    std::string strRejectReason;
-    unsigned char chRejectCode;
-    bool corruptionPossible;
-public:
-    CValidationState() : mode(MODE_VALID), nDoS(0), corruptionPossible(false) {}
-    bool DoS(int level, bool ret = false,
-             unsigned char chRejectCodeIn=0, std::string strRejectReasonIn="",
-             bool corruptionIn=false) {
-        chRejectCode = chRejectCodeIn;
-        strRejectReason = strRejectReasonIn;
-        corruptionPossible = corruptionIn;
-        if (mode == MODE_ERROR)
-            return ret;
-        nDoS += level;
-        mode = MODE_INVALID;
-        return ret;
-    }
-    bool Invalid(bool ret = false,
-                 unsigned char _chRejectCode=0, std::string _strRejectReason="") {
-        return DoS(0, ret, _chRejectCode, _strRejectReason);
-    }
-    bool Error(std::string strRejectReasonIn="") {
-        if (mode == MODE_VALID)
-            strRejectReason = strRejectReasonIn;
-        mode = MODE_ERROR;
-        return false;
-    }
-    bool Abort(const std::string &msg) {
-        AbortNode(msg);
-        return Error(msg);
-    }
-    bool IsValid() const {
-        return mode == MODE_VALID;
-    }
-    bool IsInvalid() const {
-        return mode == MODE_INVALID;
-    }
-    bool IsError() const {
-        return mode == MODE_ERROR;
-    }
-    bool IsInvalid(int &nDoSOut) const {
-        if (IsInvalid()) {
-            nDoSOut = nDoS;
-            return true;
-        }
-        return false;
-    }
-    bool CorruptionPossible() const {
-        return corruptionPossible;
-    }
-    unsigned char GetRejectCode() const { return chRejectCode; }
-    std::string GetRejectReason() const { return strRejectReason; }
-};
 
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
-class CVerifyDB {
+class Bitcredit_CVerifyDB {
 public:
 
-    CVerifyDB();
-    ~CVerifyDB();
+	Bitcredit_CVerifyDB();
+    ~Bitcredit_CVerifyDB();
     bool VerifyDB(int nCheckLevel, int nCheckDepth);
 };
 
 /** An in-memory indexed chain of blocks. */
-class CChain {
-private:
-    std::vector<CBlockIndex*> vChain;
-
+class Bitcredit_CChain : public CChain {
 public:
     /** Returns the index entry for the genesis block of this chain, or NULL if none. */
-    CBlockIndex *Genesis() const {
-        return vChain.size() > 0 ? vChain[0] : NULL;
-    }
-
-    /** Returns the index entry for the tip of this chain, or NULL if none. */
-    CBlockIndex *Tip() const {
-        return vChain.size() > 0 ? vChain[vChain.size() - 1] : NULL;
+    Bitcredit_CBlockIndex *Genesis() const {
+        return (Bitcredit_CBlockIndex*)(vChain.size() > 0 ? vChain[0] : NULL);
     }
 
     /** Returns the index entry at a particular height in this chain, or NULL if no such height exists. */
-    CBlockIndex *operator[](int nHeight) const {
+    Bitcredit_CBlockIndex *operator[](int nHeight) const {
         if (nHeight < 0 || nHeight >= (int)vChain.size())
             return NULL;
-        return vChain[nHeight];
+        return (Bitcredit_CBlockIndex*)vChain[nHeight];
     }
 
     /** Compare two chains efficiently. */
-    friend bool operator==(const CChain &a, const CChain &b) {
+    friend bool operator==(const Bitcredit_CChain &a, const Bitcredit_CChain &b) {
         return a.vChain.size() == b.vChain.size() &&
                a.vChain[a.vChain.size() - 1] == b.vChain[b.vChain.size() - 1];
     }
 
     /** Efficiently check whether a block is present in this chain. */
-    bool Contains(const CBlockIndex *pindex) const {
+    bool Contains(const CBlockIndexBase *pindex) const {
         return (*this)[pindex->nHeight] == pindex;
     }
 
     /** Find the successor of a block in this chain, or NULL if the given index is not found or is the tip. */
-    CBlockIndex *Next(const CBlockIndex *pindex) const {
+    Bitcredit_CBlockIndex *Next(const Bitcredit_CBlockIndex *pindex) const {
         if (Contains(pindex))
             return (*this)[pindex->nHeight + 1];
         else
             return NULL;
     }
 
-    /** Return the maximal height in the chain. Is equal to chain.Tip() ? chain.Tip()->nHeight : -1. */
-    int Height() const {
-        return vChain.size() - 1;
-    }
-
     /** Set/initialize a chain with a given tip. Returns the forking point. */
-    CBlockIndex *SetTip(CBlockIndex *pindex);
+    CBlockIndexBase *SetTip(CBlockIndexBase *pindex);
 
     /** Return a CBlockLocator that refers to a block in this chain (by default the tip). */
-    CBlockLocator GetLocator(const CBlockIndex *pindex = NULL) const;
+    CBlockLocator GetLocator(const CBlockIndexBase *pindex = NULL) const;
 
     /** Find the last common block between this chain and a locator. */
-    CBlockIndex *FindFork(const CBlockLocator &locator) const;
+    Bitcredit_CBlockIndex *FindFork(const CBlockLocator &locator) const;
 };
 
 /** The currently-connected chain of blocks. */
-extern CChain chainActive;
+extern Bitcredit_CChain bitcredit_chainActive;
 
 /** The currently best known chain of headers (some of which may be invalid). */
-extern CChain chainMostWork;
+extern Bitcredit_CChain bitcredit_chainMostWork;
 
-/** Global variable that points to the active CCoinsView (protected by cs_main) */
-extern CCoinsViewCache *pcoinsTip;
+/** Global variable that points to the active Bitcredit_CCoinsView (protected by cs_main) */
+extern Bitcredit_CCoinsViewCache *bitcredit_pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
-extern CBlockTreeDB *pblocktree;
+extern Bitcredit_CBlockTreeDB *bitcredit_pblocktree;
 
-struct CBlockTemplate
+struct Bitcredit_CBlockTemplate
 {
-    CBlock block;
+	Bitcredit_CBlock block;
     std::vector<int64_t> vTxFees;
     std::vector<int64_t> vTxSigOps;
 };
@@ -1115,11 +821,11 @@ struct CBlockTemplate
 /** Used to relay blocks as header + vector<merkle branch>
  * to filtered nodes.
  */
-class CMerkleBlock
+class Bitcredit_CMerkleBlock
 {
 public:
     // Public only for unit testing
-    CBlockHeader header;
+    Bitcredit_CBlockHeader header;
     CPartialMerkleTree txn;
 
 public:
@@ -1130,7 +836,7 @@ public:
     // Create from a CBlock, filtering transactions according to filter
     // Note that this will call IsRelevantAndUpdate on the filter for each transaction,
     // thus the filter will likely be modified.
-    CMerkleBlock(const CBlock& block, CBloomFilter& filter);
+    Bitcredit_CMerkleBlock(const Bitcredit_CBlock& block, CBloomFilter& filter);
 
     IMPLEMENT_SERIALIZE
     (
@@ -1140,17 +846,17 @@ public:
 };
 
 
-class CWalletInterface {
+class Bitcredit_CWalletInterface {
 protected:
-    virtual void SyncTransaction(const uint256 &hash, const CTransaction &tx, const CBlock *pblock) =0;
-    virtual void EraseFromWallet(const uint256 &hash) =0;
+    virtual void SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcredit_CTransaction &tx, const Bitcredit_CBlock *pblock) =0;
+    virtual void EraseFromWallet(Bitcredit_CWallet *bitcredit_wallet, const uint256 &hash) =0;
     virtual void SetBestChain(const CBlockLocator &locator) =0;
     virtual void UpdatedTransaction(const uint256 &hash) =0;
     virtual void Inventory(const uint256 &hash) =0;
     virtual void ResendWalletTransactions() =0;
-    friend void ::RegisterWallet(CWalletInterface*);
-    friend void ::UnregisterWallet(CWalletInterface*);
-    friend void ::UnregisterAllWallets();
+    friend void ::Bitcredit_RegisterWallet(Bitcredit_CWalletInterface*);
+    friend void ::Bitcredit_UnregisterWallet(Bitcredit_CWalletInterface*);
+    friend void ::Bitcredit_UnregisterAllWallets();
 };
 
 #endif

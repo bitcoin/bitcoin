@@ -15,9 +15,6 @@
 
 using namespace std;
 
-// Test routines internal to script.cpp:
-extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
-
 // Helpers:
 static std::vector<unsigned char>
 Serialize(const CScript& s)
@@ -30,11 +27,11 @@ static bool
 Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict)
 {
     // Create dummy to/from transactions:
-    CTransaction txFrom;
+    Bitcredit_CTransaction txFrom;
     txFrom.vout.resize(1);
     txFrom.vout[0].scriptPubKey = scriptPubKey;
 
-    CTransaction txTo;
+    Bitcredit_CTransaction txTo;
     txTo.vin.resize(1);
     txTo.vout.resize(1);
     txTo.vin[0].prevout.n = 0;
@@ -42,7 +39,7 @@ Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict)
     txTo.vin[0].scriptSig = scriptSig;
     txTo.vout[0].nValue = 1;
 
-    return VerifyScript(scriptSig, scriptPubKey, txTo, 0, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, 0);
+    return Bitcredit_VerifyScript(scriptSig, scriptPubKey, txTo, 0, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, 0);
 }
 
 
@@ -50,7 +47,7 @@ BOOST_AUTO_TEST_SUITE(script_P2SH_tests)
 
 BOOST_AUTO_TEST_CASE(sign)
 {
-    LOCK(cs_main);
+    LOCK(bitcredit_mainState.cs_main);
     // Pay-to-script-hash looks like this:
     // scriptSig:    <sig> <sig...> <serialized_script>
     // scriptPubKey: HASH160 <hash> EQUAL
@@ -78,7 +75,7 @@ BOOST_AUTO_TEST_CASE(sign)
         evalScripts[i].SetDestination(standardScripts[i].GetID());
     }
 
-    CTransaction txFrom;  // Funding transaction:
+    Bitcredit_CTransaction txFrom;  // Funding transaction:
     string reason;
     txFrom.vout.resize(8);
     for (int i = 0; i < 4; i++)
@@ -88,9 +85,9 @@ BOOST_AUTO_TEST_CASE(sign)
         txFrom.vout[i+4].scriptPubKey = standardScripts[i];
         txFrom.vout[i+4].nValue = COIN;
     }
-    BOOST_CHECK(IsStandardTx(txFrom, reason));
+    BOOST_CHECK(Bitcredit_IsStandardTx(txFrom, reason));
 
-    CTransaction txTo[8]; // Spending transactions
+    Bitcredit_CTransaction txTo[8]; // Spending transactions
     for (int i = 0; i < 8; i++)
     {
         txTo[i].vin.resize(1);
@@ -102,7 +99,7 @@ BOOST_AUTO_TEST_CASE(sign)
     }
     for (int i = 0; i < 8; i++)
     {
-        BOOST_CHECK_MESSAGE(SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
+        BOOST_CHECK_MESSAGE(Bitcredit_SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
     }
     // All of the above should be OK, and the txTos have valid signatures
     // Check to make sure signature verification fails if we use the wrong ScriptSig:
@@ -111,7 +108,7 @@ BOOST_AUTO_TEST_CASE(sign)
         {
             CScript sigSave = txTo[i].vin[0].scriptSig;
             txTo[i].vin[0].scriptSig = txTo[j].vin[0].scriptSig;
-            bool sigOK = VerifySignature(CCoins(txFrom, 0), txTo[i], 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, 0);
+            bool sigOK = Bitcredit_VerifySignature(Bitcredit_CCoins(txFrom, 0), txTo[i], 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, 0);
             if (i == j)
                 BOOST_CHECK_MESSAGE(sigOK, strprintf("VerifySignature %d %d", i, j));
             else
@@ -148,7 +145,7 @@ BOOST_AUTO_TEST_CASE(norecurse)
 
 BOOST_AUTO_TEST_CASE(set)
 {
-    LOCK(cs_main);
+    LOCK(bitcredit_mainState.cs_main);
     // Test the CScript::Set* methods
     CBasicKeyStore keystore;
     CKey key[4];
@@ -173,7 +170,7 @@ BOOST_AUTO_TEST_CASE(set)
         keystore.AddCScript(inner[i]);
     }
 
-    CTransaction txFrom;  // Funding transaction:
+    Bitcredit_CTransaction txFrom;  // Funding transaction:
     string reason;
     txFrom.vout.resize(4);
     for (int i = 0; i < 4; i++)
@@ -181,9 +178,9 @@ BOOST_AUTO_TEST_CASE(set)
         txFrom.vout[i].scriptPubKey = outer[i];
         txFrom.vout[i].nValue = CENT;
     }
-    BOOST_CHECK(IsStandardTx(txFrom, reason));
+    BOOST_CHECK(Bitcredit_IsStandardTx(txFrom, reason));
 
-    CTransaction txTo[4]; // Spending transactions
+    Bitcredit_CTransaction txTo[4]; // Spending transactions
     for (int i = 0; i < 4; i++)
     {
         txTo[i].vin.resize(1);
@@ -196,8 +193,8 @@ BOOST_AUTO_TEST_CASE(set)
     }
     for (int i = 0; i < 4; i++)
     {
-        BOOST_CHECK_MESSAGE(SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
-        BOOST_CHECK_MESSAGE(IsStandardTx(txTo[i], reason), strprintf("txTo[%d].IsStandard", i));
+        BOOST_CHECK_MESSAGE(Bitcredit_SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
+        BOOST_CHECK_MESSAGE(Bitcredit_IsStandardTx(txTo[i], reason), strprintf("txTo[%d].IsStandard", i));
     }
 }
 
@@ -252,9 +249,13 @@ BOOST_AUTO_TEST_CASE(switchover)
 
 BOOST_AUTO_TEST_CASE(AreInputsStandard)
 {
-    LOCK(cs_main);
-    CCoinsView coinsDummy;
-    CCoinsViewCache coins(coinsDummy);
+    LOCK(bitcredit_mainState.cs_main);
+
+    Bitcredit_CCoinsView coinsDummy;
+    Bitcredit_CCoinsViewCache bitcredit_coins(coinsDummy);
+    Bitcoin_CClaimCoinsView bitcoin_coinsDummy;
+    Bitcoin_CClaimCoinsViewCache bitcoin_coins(bitcoin_coinsDummy, bitcoin_nClaimCoinCacheFlushSize);
+
     CBasicKeyStore keystore;
     CKey key[3];
     vector<CPubKey> keys;
@@ -265,7 +266,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
         keys.push_back(key[i].GetPubKey());
     }
 
-    CTransaction txFrom;
+    Bitcredit_CTransaction txFrom;
     txFrom.vout.resize(6);
 
     // First three are standard:
@@ -297,36 +298,36 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txFrom.vout[5].scriptPubKey.SetDestination(oneOfEleven.GetID());
     txFrom.vout[5].nValue = 6000;
 
-    coins.SetCoins(txFrom.GetHash(), CCoins(txFrom, 0));
+    bitcredit_coins.SetCoins(txFrom.GetHash(), Bitcredit_CCoins(txFrom, 0));
 
-    CTransaction txTo;
+    Bitcredit_CTransaction txTo;
     txTo.vout.resize(1);
     txTo.vout[0].scriptPubKey.SetDestination(key[1].GetPubKey().GetID());
 
     txTo.vin.resize(3);
     txTo.vin[0].prevout.n = 0;
     txTo.vin[0].prevout.hash = txFrom.GetHash();
-    BOOST_CHECK(SignSignature(keystore, txFrom, txTo, 0));
+    BOOST_CHECK(Bitcredit_SignSignature(keystore, txFrom, txTo, 0));
     txTo.vin[1].prevout.n = 1;
     txTo.vin[1].prevout.hash = txFrom.GetHash();
-    BOOST_CHECK(SignSignature(keystore, txFrom, txTo, 1));
+    BOOST_CHECK(Bitcredit_SignSignature(keystore, txFrom, txTo, 1));
     txTo.vin[2].prevout.n = 2;
     txTo.vin[2].prevout.hash = txFrom.GetHash();
-    BOOST_CHECK(SignSignature(keystore, txFrom, txTo, 2));
+    BOOST_CHECK(Bitcredit_SignSignature(keystore, txFrom, txTo, 2));
 
-    BOOST_CHECK(::AreInputsStandard(txTo, coins));
-    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txTo, coins), 1U);
+    BOOST_CHECK(::Bitcredit_AreInputsStandard(txTo, bitcredit_coins, bitcoin_coins));
+    BOOST_CHECK_EQUAL(Bitcredit_GetP2SHSigOpCount(txTo, bitcredit_coins, bitcoin_coins), 1U);
 
     // Make sure adding crap to the scriptSigs makes them non-standard:
     for (int i = 0; i < 3; i++)
     {
         CScript t = txTo.vin[i].scriptSig;
         txTo.vin[i].scriptSig = (CScript() << 11) + t;
-        BOOST_CHECK(!::AreInputsStandard(txTo, coins));
+        BOOST_CHECK(!::Bitcredit_AreInputsStandard(txTo, bitcredit_coins, bitcoin_coins));
         txTo.vin[i].scriptSig = t;
     }
 
-    CTransaction txToNonStd;
+    Bitcredit_CTransaction txToNonStd;
     txToNonStd.vout.resize(1);
     txToNonStd.vout[0].scriptPubKey.SetDestination(key[1].GetPubKey().GetID());
     txToNonStd.vout[0].nValue = 1000;
@@ -338,11 +339,11 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd.vin[1].prevout.hash = txFrom.GetHash();
     txToNonStd.vin[1].scriptSig << OP_0 << Serialize(oneOfEleven);
 
-    BOOST_CHECK(!::AreInputsStandard(txToNonStd, coins));
-    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txToNonStd, coins), 11U);
+    BOOST_CHECK(!::Bitcredit_AreInputsStandard(txToNonStd, bitcredit_coins, bitcoin_coins));
+    BOOST_CHECK_EQUAL(Bitcredit_GetP2SHSigOpCount(txToNonStd, bitcredit_coins, bitcoin_coins), 11U);
 
     txToNonStd.vin[0].scriptSig.clear();
-    BOOST_CHECK(!::AreInputsStandard(txToNonStd, coins));
+    BOOST_CHECK(!::Bitcredit_AreInputsStandard(txToNonStd, bitcredit_coins, bitcoin_coins));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

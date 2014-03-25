@@ -7,7 +7,7 @@
 
 #include <QDialog>
 
-class WalletModel;
+class Bitcredit_WalletModel;
 
 namespace Ui {
     class SignVerifyMessageDialog;
@@ -21,7 +21,7 @@ public:
     explicit SignVerifyMessageDialog(QWidget *parent);
     ~SignVerifyMessageDialog();
 
-    void setModel(WalletModel *model);
+    void setModel(Bitcredit_WalletModel *model);
     void setAddress_SM(const QString &address);
     void setAddress_VM(const QString &address);
 
@@ -33,7 +33,7 @@ protected:
 
 private:
     Ui::SignVerifyMessageDialog *ui;
-    WalletModel *model;
+    Bitcredit_WalletModel *model;
 
 private slots:
     /* sign message */

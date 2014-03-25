@@ -7,8 +7,12 @@
 #define BITCOIN_CHAIN_PARAMS_H
 
 #include "uint256.h"
+#include "core.h"
+#include "bitcoin_core.h"
 
 #include <vector>
+
+#include "subsidylevels.h"
 
 using namespace std;
 
@@ -16,7 +20,7 @@ using namespace std;
 typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
 class CAddress;
-class CBlock;
+class Bitcredit_CBlock;
 
 struct CDNSSeedData {
     string name, host;
@@ -25,7 +29,7 @@ struct CDNSSeedData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Bitcoin system. There are three: the main network on which people trade goods
+ * Bitcredit system. There are three: the main network on which people trade goods
  * and services, the public test network which gets reset from time to time and
  * a regression test mode which is intended for private networks only. It has
  * minimal difficulty to ensure that blocks can be found instantly.
@@ -53,11 +57,10 @@ public:
 
     const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
+    const std::string AddrFileName() const { return addrFileName; }
     const vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
     const uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
-    int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
-    virtual const CBlock& GenesisBlock() const = 0;
     virtual bool RequireRPCPassword() const { return true; }
     const string& DataDir() const { return strDataDir; }
     virtual Network NetworkID() const = 0;
@@ -65,29 +68,74 @@ public:
     const std::vector<unsigned char> &Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     virtual const vector<CAddress>& FixedSeeds() const = 0;
     int RPCPort() const { return nRPCPort; }
+    int ClientVersion() const { return nClientVersion; }
+    int AcceptDepthLinkedBitcoinBlock() const { return nAcceptDepthLinkedBitcoinBlock; }
+    int DepositLockDepth() const { return nDepositLockDepth; }
 protected:
     CChainParams() {}
 
     uint256 hashGenesisBlock;
     MessageStartChars pchMessageStart;
+    std::string addrFileName;
     // Raw pub key bytes for the broadcast alert signing key.
     vector<unsigned char> vAlertPubKey;
     int nDefaultPort;
     int nRPCPort;
+    int nClientVersion;
+    //How deep in the bitcoin blockchain the hashLinkedBitcoinBlock reference must be
+    int nAcceptDepthLinkedBitcoinBlock;
+    //At what depth is a deposit released for spending
+    int nDepositLockDepth;
     uint256 bnProofOfWorkLimit;
-    int nSubsidyHalvingInterval;
     string strDataDir;
     vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
+};
+
+class Bitcredit_CMainParams : public CChainParams {
+public:
+    Bitcredit_CMainParams();
+
+    vector<SubsidyLevel> getSubsidyLevels() const { return vSubsidyLevels; }
+    virtual const Bitcredit_CBlock& GenesisBlock() const { return genesis; }
+    virtual Network NetworkID() const { return CChainParams::MAIN; }
+    virtual int FastForwardClaimBitcoinBlockHeight() const { return 340874; }
+    virtual uint256 FastForwardClaimBitcoinBlockHash() const { return uint256("0x000000000000000005a50dde9c4522c05b6b9051dd04b450b9c6721483c213b9"); }
+
+    virtual const vector<CAddress>& FixedSeeds() const {
+        return vFixedSeeds;
+    }
+protected:
+    vector<SubsidyLevel> vSubsidyLevels;
+    Bitcredit_CBlock genesis;
+    vector<CAddress> vFixedSeeds;
+};
+
+class Bitcoin_CMainParams : public CChainParams {
+public:
+	Bitcoin_CMainParams();
+
+	int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
+    virtual const Bitcoin_CBlock& GenesisBlock() const { return genesis; }
+    virtual Network NetworkID() const { return CChainParams::MAIN; }
+
+    virtual const vector<CAddress>& FixedSeeds() const {
+        return vFixedSeeds;
+    }
+protected:
+    int nSubsidyHalvingInterval;
+    Bitcoin_CBlock genesis;
+    vector<CAddress> vFixedSeeds;
 };
 
 /**
  * Return the currently selected parameters. This won't change after app startup
  * outside of the unit tests.
  */
-const CChainParams &Params();
+const Bitcredit_CMainParams &Bitcredit_Params();
+const Bitcoin_CMainParams &Bitcoin_Params();
 
-/** Sets the params returned by Params() to those for the given network. */
+/** Sets the params returned by xxx_Params() to those for the given network. */
 void SelectParams(CChainParams::Network network);
 
 /**
@@ -96,13 +144,21 @@ void SelectParams(CChainParams::Network network);
  */
 bool SelectParamsFromCommandLine();
 
-inline bool TestNet() {
+inline bool Bitcoin_TestNet() {
     // Note: it's deliberate that this returns "false" for regression test mode.
-    return Params().NetworkID() == CChainParams::TESTNET;
+    return Bitcoin_Params().NetworkID() == CChainParams::TESTNET;
+}
+inline bool Bitcredit_TestNet() {
+    // Note: it's deliberate that this returns "false" for regression test mode.
+    return Bitcredit_Params().NetworkID() == CChainParams::TESTNET;
 }
 
-inline bool RegTest() {
-    return Params().NetworkID() == CChainParams::REGTEST;
+inline bool Bitcoin_RegTest() {
+    return Bitcoin_Params().NetworkID() == CChainParams::REGTEST;
 }
+inline bool Bitcredit_RegTest() {
+    return Bitcredit_Params().NetworkID() == CChainParams::REGTEST;
+}
+bool FastForwardClaimStateFor(const int nBitcoinBlockHeight, const uint256 nBitcoinBlockHash);
 
 #endif

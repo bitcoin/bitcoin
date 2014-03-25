@@ -7,7 +7,7 @@
 
 #include "addressbookpage.h"
 #include "addresstablemodel.h"
-#include "bitcoinunits.h"
+#include "bitcreditunits.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
 #include "receiverequestdialog.h"
@@ -55,13 +55,13 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 }
 
-void ReceiveCoinsDialog::setModel(WalletModel *model)
+void ReceiveCoinsDialog::setModel(Bitcredit_WalletModel *model)
 {
     this->model = model;
 
     if(model && model->getOptionsModel())
     {
-        model->getRecentRequestsTableModel()->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
+        model->getRecentRequestsTableModel()->sort(Bitcredit_RecentRequestsTableModel::Date, Qt::DescendingOrder);
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
@@ -73,8 +73,8 @@ void ReceiveCoinsDialog::setModel(WalletModel *model)
         tableView->setAlternatingRowColors(true);
         tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
         tableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
-        tableView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
-        tableView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
+        tableView->setColumnWidth(Bitcredit_RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
+        tableView->setColumnWidth(Bitcredit_RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
 
         connect(tableView->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this,
@@ -140,9 +140,9 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         }
     } else {
         /* Generate new receiving address */
-        address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
+        address = model->getAddressTableModel()->addRow(Bitcredit_AddressTableModel::Receive, label, "");
     }
-    SendCoinsRecipient info(address, label,
+    Bitcredit_SendCoinsRecipient info(address, label,
         ui->reqAmount->value(), ui->reqMessage->text());
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
@@ -157,7 +157,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
 
 void ReceiveCoinsDialog::on_recentRequestsView_doubleClicked(const QModelIndex &index)
 {
-    const RecentRequestsTableModel *submodel = model->getRecentRequestsTableModel();
+    const Bitcredit_RecentRequestsTableModel *submodel = model->getRecentRequestsTableModel();
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
     dialog->setModel(model->getOptionsModel());
     dialog->setInfo(submodel->entry(index.row()).recipient);
@@ -202,7 +202,7 @@ void ReceiveCoinsDialog::on_removeRequestButton_clicked()
 void ReceiveCoinsDialog::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
-    columnResizingFixer->stretchColumnWidth(RecentRequestsTableModel::Message);
+    columnResizingFixer->stretchColumnWidth(Bitcredit_RecentRequestsTableModel::Message);
 }
 
 void ReceiveCoinsDialog::keyPressEvent(QKeyEvent *event)
@@ -248,17 +248,17 @@ void ReceiveCoinsDialog::showMenu(const QPoint &point)
 // context menu action: copy label
 void ReceiveCoinsDialog::copyLabel()
 {
-    copyColumnToClipboard(RecentRequestsTableModel::Label);
+    copyColumnToClipboard(Bitcredit_RecentRequestsTableModel::Label);
 }
 
 // context menu action: copy message
 void ReceiveCoinsDialog::copyMessage()
 {
-    copyColumnToClipboard(RecentRequestsTableModel::Message);
+    copyColumnToClipboard(Bitcredit_RecentRequestsTableModel::Message);
 }
 
 // context menu action: copy amount
 void ReceiveCoinsDialog::copyAmount()
 {
-    copyColumnToClipboard(RecentRequestsTableModel::Amount);
+    copyColumnToClipboard(Bitcredit_RecentRequestsTableModel::Amount);
 }

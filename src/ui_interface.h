@@ -13,7 +13,8 @@
 #include <boost/signals2/signal.hpp>
 
 class CBasicKeyStore;
-class CWallet;
+class Bitcredit_CWallet;
+class Bitcoin_CWallet;
 class uint256;
 
 /** General change type (added, updated, removed). */
@@ -83,9 +84,6 @@ public:
     /** Block chain changed. */
     boost::signals2::signal<void ()> NotifyBlocksChanged;
 
-    /** Number of network connections changed. */
-    boost::signals2::signal<void (int newNumConnections)> NotifyNumConnectionsChanged;
-
     /**
      * New, updated or cancelled alert.
      * @note called with lock cs_mapAlerts held.
@@ -93,7 +91,8 @@ public:
     boost::signals2::signal<void (const uint256 &hash, ChangeType status)> NotifyAlertChanged;
 
     /** A wallet has been loaded. */
-    boost::signals2::signal<void (CWallet* wallet)> LoadWallet;
+    boost::signals2::signal<void (Bitcredit_CWallet* wallet)> LoadWallet;
+    boost::signals2::signal<void (Bitcoin_CWallet* wallet)> Bitcoin_LoadWallet;
 
     /** Show progress e.g. for verifychain */
     boost::signals2::signal<void (const std::string &title, int nProgress)> ShowProgress;

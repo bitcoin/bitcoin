@@ -9,7 +9,7 @@
 
 #include <QStackedWidget>
 
-class WalletModel;
+class Bitcredit_WalletModel;
 
 namespace Ui {
     class SendCoinsEntry;
@@ -28,14 +28,14 @@ public:
     explicit SendCoinsEntry(QWidget *parent = 0);
     ~SendCoinsEntry();
 
-    void setModel(WalletModel *model);
+    void setModel(Bitcredit_WalletModel *model);
     bool validate();
-    SendCoinsRecipient getValue();
+    Bitcredit_SendCoinsRecipient getValue();
 
     /** Return whether the entry is still empty and unedited */
     bool isClear();
 
-    void setValue(const SendCoinsRecipient &value);
+    void setValue(const Bitcredit_SendCoinsRecipient &value);
     void setAddress(const QString &address);
 
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases
@@ -60,9 +60,9 @@ private slots:
     void updateDisplayUnit();
 
 private:
-    SendCoinsRecipient recipient;
+    Bitcredit_SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;
-    WalletModel *model;
+    Bitcredit_WalletModel *model;
 
     bool updateLabel(const QString &address);
 };

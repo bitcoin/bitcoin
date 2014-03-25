@@ -5,13 +5,13 @@
 #include "coincontroltreewidget.h"
 #include "coincontroldialog.h"
 
-CoinControlTreeWidget::CoinControlTreeWidget(QWidget *parent) :
+Bitcredit_CoinControlTreeWidget::Bitcredit_CoinControlTreeWidget(QWidget *parent) :
     QTreeWidget(parent)
 {
 
 }
 
-void CoinControlTreeWidget::keyPressEvent(QKeyEvent *event)
+void Bitcredit_CoinControlTreeWidget::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Space) // press spacebar -> select checkbox
     {
@@ -22,7 +22,7 @@ void CoinControlTreeWidget::keyPressEvent(QKeyEvent *event)
     else if (event->key() == Qt::Key_Escape) // press esc -> close dialog
     {
         event->ignore();
-        CoinControlDialog *coinControlDialog = (CoinControlDialog*)this->parentWidget();
+        Bitcredit_CoinControlDialog *coinControlDialog = (Bitcredit_CoinControlDialog*)this->parentWidget();
         coinControlDialog->done(QDialog::Accepted);
     }
     else

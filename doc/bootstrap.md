@@ -53,7 +53,7 @@ Open Finder by pressing Press [shift] + [cmd] + [g] and enter:
 **For Linux users:**
 The directory is hidden in your User folder. Go to:
 
-	~/.bitcoin/
+	~/.bitcredit/
     
 ### Importing the blockchain
 Now start the Bitcoin client software. It should show "Importing blocks from disk" like the image below. 

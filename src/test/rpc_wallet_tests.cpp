@@ -17,13 +17,14 @@ using namespace json_spirit;
 extern Array createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL);
 extern Value CallRPC(string args);
 
-extern CWallet* pwalletMain;
+extern Bitcredit_CDBEnv bitcredit_bitdb;
+extern Bitcredit_CWallet* bitcredit_pwalletMain;
 
 BOOST_AUTO_TEST_SUITE(rpc_wallet_tests)
 
 BOOST_AUTO_TEST_CASE(rpc_addmultisig)
 {
-    LOCK(pwalletMain->cs_wallet);
+    LOCK(bitcredit_pwalletMain->cs_wallet);
 
     rpcfn_type addmultisig = tableRPC["addmultisigaddress"]->actor;
 
@@ -65,18 +66,18 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     // Test RPC calls for various wallet statistics
     Value r;
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(bitcredit_mainState.cs_main, bitcredit_pwalletMain->cs_wallet);
 
-    CPubKey demoPubkey = pwalletMain->GenerateNewKey();
+    CPubKey demoPubkey = bitcredit_pwalletMain->GenerateNewKey();
 	CBitcoinAddress demoAddress = CBitcoinAddress(CTxDestination(demoPubkey.GetID()));
 	Value retValue;
 	string strAccount = "walletDemoAccount";
 	string strPurpose = "receive";
 	BOOST_CHECK_NO_THROW({ /*Initialize Wallet with an account */
-		CWalletDB walletdb(pwalletMain->strWalletFile);
+		Bitcredit_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
 		CAccount account;
 		account.vchPubKey = demoPubkey;
-		pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, strPurpose);
+		bitcredit_pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, strPurpose);
 		walletdb.WriteAccount(strAccount, account);
 	});
 

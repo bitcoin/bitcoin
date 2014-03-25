@@ -24,26 +24,51 @@ using namespace std;
 #ifdef ENABLE_WALLET
 // Key used by getwork miners.
 // Allocated in InitRPCMining, free'd in ShutdownRPCMining
-static CReserveKey* pMiningKey = NULL;
+static Bitcredit_CReserveKey* pMiningKey = NULL;
+static Bitcredit_CReserveKey* pDepositMiningKey = NULL;
+static Bitcredit_CReserveKey* pDepositChangeMiningKey = NULL;
+static Bitcredit_CReserveKey* pDepositSigningMiningKey = NULL;
+static bool coinbaseDepositDisabled = false;
 
-void InitRPCMining()
+void InitRPCMining(bool coinbaseDepositDisabledIn)
 {
-    if (!pwalletMain)
+	coinbaseDepositDisabled = coinbaseDepositDisabledIn;
+
+    if (!bitcredit_pwalletMain)
         return;
 
-    // getwork/getblocktemplate mining rewards paid here:
-    pMiningKey = new CReserveKey(pwalletMain);
+    // getwork/getblocktemplate mining rewards paid here
+    //in the case of using coinbase as deposit the coinbase is spent in the same block and the
+    //pDepositMiningKey becomes the holder of the mining reward
+    if(bitcredit_pwalletMain->IsLocked() && !coinbaseDepositDisabled) {
+    	pMiningKey = new Bitcredit_CReserveKey(deposit_pwalletMain);
+    } else {
+    	pMiningKey = new Bitcredit_CReserveKey(bitcredit_pwalletMain);
+    }
+    pDepositMiningKey = new Bitcredit_CReserveKey(bitcredit_pwalletMain);
+    pDepositChangeMiningKey = new Bitcredit_CReserveKey(bitcredit_pwalletMain);
+    pDepositSigningMiningKey = new Bitcredit_CReserveKey(deposit_pwalletMain);
 }
 
 void ShutdownRPCMining()
 {
     if (!pMiningKey)
         return;
+    if (!pDepositMiningKey)
+        return;
+    if (!pDepositChangeMiningKey)
+        return;
+    if (!pDepositSigningMiningKey)
+        return;
 
     delete pMiningKey; pMiningKey = NULL;
+    delete pDepositMiningKey; pDepositMiningKey = NULL;
+    delete pDepositChangeMiningKey; pDepositChangeMiningKey = NULL;
+    delete pDepositSigningMiningKey; pDepositSigningMiningKey = NULL;
+    coinbaseDepositDisabled = false;
 }
 #else
-void InitRPCMining()
+void InitRPCMining(bool coinbaseDepositDisabled)
 {
 }
 void ShutdownRPCMining()
@@ -55,10 +80,10 @@ void ShutdownRPCMining()
 // or from the last difficulty change if 'lookup' is nonpositive.
 // If 'height' is nonnegative, compute the estimate at the time when a given block was found.
 Value GetNetworkHashPS(int lookup, int height) {
-    CBlockIndex *pb = chainActive.Tip();
+    CBlockIndexBase *pb = bitcredit_chainActive.Tip();
 
-    if (height >= 0 && height < chainActive.Height())
-        pb = chainActive[height];
+    if (height >= 0 && height < bitcredit_chainActive.Height())
+        pb = bitcredit_chainActive[height];
 
     if (pb == NULL || !pb->nHeight)
         return 0;
@@ -71,7 +96,7 @@ Value GetNetworkHashPS(int lookup, int height) {
     if (lookup > pb->nHeight)
         lookup = pb->nHeight;
 
-    CBlockIndex *pb0 = pb;
+    CBlockIndexBase *pb0 = pb;
     int64_t minTime = pb0->GetBlockTime();
     int64_t maxTime = minTime;
     for (int i = 0; i < lookup; i++) {
@@ -119,16 +144,23 @@ Value getgenerate(const Array& params, bool fHelp)
         throw runtime_error(
             "getgenerate\n"
             "\nReturn if the server is set to generate coins or not. The default is false.\n"
-            "It is set with the command line argument -gen (or bitcoin.conf setting gen)\n"
+            "It is set with the command line argument -gen (or bitcredit.conf setting gen)\n"
             "It can also be set with the setgenerate call.\n"
             "\nResult\n"
             "true|false      (boolean) If the server is set to generate coins or not\n"
+            "true|false      (boolean) If mining with coinbase included is disabled or not\n"
             "\nExamples:\n"
             + HelpExampleCli("getgenerate", "")
             + HelpExampleRpc("getgenerate", "")
         );
 
     if (!pMiningKey)
+        return false;
+    if (!pDepositMiningKey)
+        return false;
+    if (!pDepositChangeMiningKey)
+        return false;
+    if (!pDepositSigningMiningKey)
         return false;
 
     return GetBoolArg("-gen", false);
@@ -137,9 +169,9 @@ Value getgenerate(const Array& params, bool fHelp)
 
 Value setgenerate(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
-            "setgenerate generate ( genproclimit )\n"
+            "setgenerate generate ( genproclimit ) (coinbasedepositdisabled) \n"
             "\nSet 'generate' true or false to turn generation on or off.\n"
             "Generation is limited to 'genproclimit' processors, -1 is unlimited.\n"
             "See the getgenerate call for the current setting.\n"
@@ -147,9 +179,10 @@ Value setgenerate(const Array& params, bool fHelp)
             "1. generate         (boolean, required) Set to true to turn on generation, off to turn off.\n"
             "2. genproclimit     (numeric, optional) Set the processor limit for when generation is on. Can be -1 for unlimited.\n"
             "                    Note: in -regtest mode, genproclimit controls how many blocks are generated immediately.\n"
+            "3. coinbasedepositdisabled     (boolean, optional) If set to true, using coinbase as part of deposit will be disabled. Default false. \n"
             "\nExamples:\n"
-            "\nSet the generation on with a limit of one processor\n"
-            + HelpExampleCli("setgenerate", "true 1") +
+            "\nSet the generation on with a limit of one processor with coinabse as deposit disabled\n"
+            + HelpExampleCli("setgenerate", "true 1 true") +
             "\nCheck the setting\n"
             + HelpExampleCli("getgenerate", "") +
             "\nTurn off generation\n"
@@ -158,7 +191,7 @@ Value setgenerate(const Array& params, bool fHelp)
             + HelpExampleRpc("setgenerate", "true, 1")
         );
 
-    if (pwalletMain == NULL)
+    if (bitcredit_pwalletMain == NULL)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
 
     bool fGenerate = true;
@@ -173,16 +206,22 @@ Value setgenerate(const Array& params, bool fHelp)
             fGenerate = false;
     }
 
+    bool coinbaseDepositDisabled = false;
+    if (params.size() > 2)
+    {
+    	coinbaseDepositDisabled = params[2].get_bool();
+    }
+
     // -regtest mode: don't return until nGenProcLimit blocks are generated
-    if (fGenerate && Params().NetworkID() == CChainParams::REGTEST)
+    if (fGenerate && Bitcredit_Params().NetworkID() == CChainParams::REGTEST)
     {
         int nHeightStart = 0;
         int nHeightEnd = 0;
         int nHeight = 0;
         int nGenerate = (nGenProcLimit > 0 ? nGenProcLimit : 1);
         {   // Don't keep cs_main locked
-            LOCK(cs_main);
-            nHeightStart = chainActive.Height();
+            LOCK(bitcredit_mainState.cs_main);
+            nHeightStart = bitcredit_chainActive.Height();
             nHeight = nHeightStart;
             nHeightEnd = nHeightStart+nGenerate;
         }
@@ -192,12 +231,12 @@ Value setgenerate(const Array& params, bool fHelp)
             if (nHeightLast != nHeight)
             {
                 nHeightLast = nHeight;
-                GenerateBitcoins(fGenerate, pwalletMain, 1);
+                GenerateBitcredits(fGenerate, bitcredit_pwalletMain, deposit_pwalletMain, 1, coinbaseDepositDisabled);
             }
             MilliSleep(1);
             {   // Don't keep cs_main locked
-                LOCK(cs_main);
-                nHeight = chainActive.Height();
+                LOCK(bitcredit_mainState.cs_main);
+                nHeight = bitcredit_chainActive.Height();
             }
         }
     }
@@ -205,7 +244,8 @@ Value setgenerate(const Array& params, bool fHelp)
     {
         mapArgs["-gen"] = (fGenerate ? "1" : "0");
         mapArgs ["-genproclimit"] = itostr(nGenProcLimit);
-        GenerateBitcoins(fGenerate, pwalletMain, nGenProcLimit);
+        mapArgs ["-coinbasedepositdisabled"] = coinbaseDepositDisabled ? "1" : "0";
+        GenerateBitcredits(fGenerate, bitcredit_pwalletMain, deposit_pwalletMain, nGenProcLimit, coinbaseDepositDisabled);
     }
 
     return Value::null;
@@ -247,6 +287,7 @@ Value getmininginfo(const Array& params, bool fHelp)
             "  \"errors\": \"...\"          (string) Current errors\n"
             "  \"generate\": true|false     (boolean) If the generation is on or off (see getgenerate or setgenerate calls)\n"
             "  \"genproclimit\": n          (numeric) The processor limit for generation. -1 if no generation. (see getgenerate or setgenerate calls)\n"
+            "  \"coinbasedepositdisabled\": n          (boolean) If set to true, coinbase will NOT be used as deposit. (see getgenerate or setgenerate calls)\n"
             "  \"hashespersec\": n          (numeric) The hashes per second of the generation, or 0 if no generation.\n"
             "  \"pooledtx\": n              (numeric) The size of the mem pool\n"
             "  \"testnet\": true|false      (boolean) If using testnet or not\n"
@@ -257,15 +298,16 @@ Value getmininginfo(const Array& params, bool fHelp)
         );
 
     Object obj;
-    obj.push_back(Pair("blocks",           (int)chainActive.Height()));
-    obj.push_back(Pair("currentblocksize", (uint64_t)nLastBlockSize));
-    obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
-    obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
-    obj.push_back(Pair("errors",           GetWarnings("statusbar")));
+    obj.push_back(Pair("blocks",           (int)bitcredit_chainActive.Height()));
+    obj.push_back(Pair("currentblocksize", (uint64_t)bitcredit_nLastBlockSize));
+    obj.push_back(Pair("currentblocktx",   (uint64_t)bitcredit_nLastBlockTx));
+    obj.push_back(Pair("difficulty",       (double)Bitcredit_GetDifficulty()));
+    obj.push_back(Pair("errors",           Bitcredit_GetWarnings("statusbar")));
     obj.push_back(Pair("genproclimit",     (int)GetArg("-genproclimit", -1)));
+    obj.push_back(Pair("coinbasedepositdisabled",     (bool)GetBoolArg("-coinbasedepositdisabled", false)));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(params, false)));
-    obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
-    obj.push_back(Pair("testnet",          TestNet()));
+    obj.push_back(Pair("pooledtx",         (uint64_t)bitcredit_mempool.size()));
+    obj.push_back(Pair("testnet",          Bitcredit_TestNet()));
 #ifdef ENABLE_WALLET
     obj.push_back(Pair("generate",         getgenerate(params, false)));
     obj.push_back(Pair("hashespersec",     gethashespersec(params, false)));
@@ -275,6 +317,7 @@ Value getmininginfo(const Array& params, bool fHelp)
 
 
 #ifdef ENABLE_WALLET
+//TODO - This is NOT working whatsoever
 Value getwork(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -298,31 +341,33 @@ Value getwork(const Array& params, bool fHelp)
             + HelpExampleRpc("getwork", "")
         );
 
-    if (vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
+    CNetParams * netParams = Bitcredit_NetParams();
 
-    if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+    if (netParams->vNodes.empty())
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcredit is not connected!");
 
-    typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
+    if (Bitcredit_IsInitialBlockDownload() || Bitcoin_IsInitialBlockDownload())
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcredit is downloading blocks...");
+
+    typedef map<uint256, pair<Bitcredit_CBlock*, CScript> > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
-    static vector<CBlockTemplate*> vNewBlockTemplate;
+    static vector<Bitcredit_CBlockTemplate*> vNewBlockTemplate;
 
     if (params.size() == 0)
     {
         // Update block
         static unsigned int nTransactionsUpdatedLast;
-        static CBlockIndex* pindexPrev;
+        static Bitcredit_CBlockIndex* pindexPrev;
         static int64_t nStart;
-        static CBlockTemplate* pblocktemplate;
-        if (pindexPrev != chainActive.Tip() ||
-            (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
+        static Bitcredit_CBlockTemplate* pblocktemplate;
+        if (pindexPrev != bitcredit_chainActive.Tip() ||
+            (bitcredit_mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
         {
-            if (pindexPrev != chainActive.Tip())
+            if (pindexPrev != bitcredit_chainActive.Tip())
             {
                 // Deallocate old blocks since they're obsolete now
                 mapNewBlock.clear();
-                BOOST_FOREACH(CBlockTemplate* pblocktemplate, vNewBlockTemplate)
+                BOOST_FOREACH(Bitcredit_CBlockTemplate* pblocktemplate, vNewBlockTemplate)
                     delete pblocktemplate;
                 vNewBlockTemplate.clear();
             }
@@ -331,12 +376,12 @@ Value getwork(const Array& params, bool fHelp)
             pindexPrev = NULL;
 
             // Store the pindexBest used before CreateNewBlock, to avoid races
-            nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-            CBlockIndex* pindexPrevNew = chainActive.Tip();
+            nTransactionsUpdatedLast = bitcredit_mempool.GetTransactionsUpdated();
+            Bitcredit_CBlockIndex* pindexPrevNew = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
             nStart = GetTime();
 
             // Create new block
-            pblocktemplate = CreateNewBlockWithKey(*pMiningKey);
+            pblocktemplate = CreateNewBlockWithKey(*pMiningKey, *pDepositMiningKey, *pDepositChangeMiningKey, *pDepositSigningMiningKey, bitcredit_pwalletMain, deposit_pwalletMain, coinbaseDepositDisabled);
             if (!pblocktemplate)
                 throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
             vNewBlockTemplate.push_back(pblocktemplate);
@@ -344,15 +389,15 @@ Value getwork(const Array& params, bool fHelp)
             // Need to update only after we know CreateNewBlock succeeded
             pindexPrev = pindexPrevNew;
         }
-        CBlock* pblock = &pblocktemplate->block; // pointer for convenience
+        Bitcredit_CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
         // Update nTime
-        UpdateTime(*pblock, pindexPrev);
+        Bitcredit_UpdateTime(*pblock, pindexPrev);
         pblock->nNonce = 0;
 
         // Update nExtraNonce
         static unsigned int nExtraNonce = 0;
-        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
+        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce, bitcredit_pwalletMain, deposit_pwalletMain, coinbaseDepositDisabled);
 
         // Save
         mapNewBlock[pblock->hashMerkleRoot] = make_pair(pblock, pblock->vtx[0].vin[0].scriptSig);
@@ -378,7 +423,7 @@ Value getwork(const Array& params, bool fHelp)
         vector<unsigned char> vchData = ParseHex(params[0].get_str());
         if (vchData.size() != 128)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
-        CBlock* pdata = (CBlock*)&vchData[0];
+        Bitcredit_CBlock* pdata = (Bitcredit_CBlock*)&vchData[0];
 
         // Byte reverse
         for (int i = 0; i < 128/4; i++)
@@ -387,22 +432,28 @@ Value getwork(const Array& params, bool fHelp)
         // Get saved block
         if (!mapNewBlock.count(pdata->hashMerkleRoot))
             return false;
-        CBlock* pblock = mapNewBlock[pdata->hashMerkleRoot].first;
+        Bitcredit_CBlock* pblock = mapNewBlock[pdata->hashMerkleRoot].first;
 
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
+        pblock->nTotalMonetaryBase = pdata->nTotalMonetaryBase;
+        pblock->nTotalDepositBase = pdata->nTotalDepositBase;
+        pblock->nDepositAmount = pdata->nDepositAmount;
+        pblock->hashLinkedBitcoinBlock = pdata->hashLinkedBitcoinBlock;
         pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+        pblock->hashSigMerkleRoot = pblock->BuildSigMerkleTree();
+        pblock->UpdateSignatures(*deposit_pwalletMain);
 
-        assert(pwalletMain != NULL);
-        return CheckWork(pblock, *pwalletMain, *pMiningKey);
+        assert(bitcredit_pwalletMain != NULL);
+        return CheckWork(pblock, *bitcredit_pwalletMain, *deposit_pwalletMain, *pMiningKey, *pDepositMiningKey, *pDepositChangeMiningKey, *pDepositSigningMiningKey);
     }
 }
 #endif
 
 Value getblocktemplate(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
             "getblocktemplate ( \"jsonrequestobject\" )\n"
             "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
@@ -462,6 +513,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
             + HelpExampleRpc("getblocktemplate", "")
          );
 
+    CNetParams * netParams = Bitcredit_NetParams();
+
     std::string strMode = "template";
     if (params.size() > 0)
     {
@@ -476,30 +529,35 @@ Value getblocktemplate(const Array& params, bool fHelp)
         else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
     }
+    bool coinbaseDepositDisabled = true;
+    if (params.size() > 1)
+    {
+        coinbaseDepositDisabled = params[1].get_bool();
+    }
 
     if (strMode != "template")
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
-    if (vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
+    if (netParams->vNodes.empty())
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcredit is not connected!");
 
-    if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+    if (Bitcredit_IsInitialBlockDownload() || Bitcoin_IsInitialBlockDownload())
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcredit is downloading blocks...");
 
     // Update block
     static unsigned int nTransactionsUpdatedLast;
-    static CBlockIndex* pindexPrev;
+    static Bitcredit_CBlockIndex* pindexPrev;
     static int64_t nStart;
-    static CBlockTemplate* pblocktemplate;
-    if (pindexPrev != chainActive.Tip() ||
-        (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
+    static Bitcredit_CBlockTemplate* pblocktemplate;
+    if (pindexPrev != bitcredit_chainActive.Tip() ||
+        (bitcredit_mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
     {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = NULL;
 
         // Store the pindexBest used before CreateNewBlock, to avoid races
-        nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-        CBlockIndex* pindexPrevNew = chainActive.Tip();
+        nTransactionsUpdatedLast = bitcredit_mempool.GetTransactionsUpdated();
+        Bitcredit_CBlockIndex* pindexPrevNew = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
         nStart = GetTime();
 
         // Create new block
@@ -509,23 +567,27 @@ Value getblocktemplate(const Array& params, bool fHelp)
             pblocktemplate = NULL;
         }
         CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = CreateNewBlock(scriptDummy);
+        CScript scriptDummyDeposit = CScript() << OP_TRUE;
+        CScript scriptDummyDepositChange = CScript() << OP_TRUE;
+        CPubKey pubkeySigningKeyDeposit;
+        //TODO - Empty scriptDummy and depositSscriptDummy and CPubKey passed in here. Must be set later in this function
+        pblocktemplate = CreateNewBlock(scriptDummy, scriptDummyDeposit,  scriptDummyDepositChange, pubkeySigningKeyDeposit, bitcredit_pwalletMain, deposit_pwalletMain, coinbaseDepositDisabled);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
         // Need to update only after we know CreateNewBlock succeeded
         pindexPrev = pindexPrevNew;
     }
-    CBlock* pblock = &pblocktemplate->block; // pointer for convenience
+    Bitcredit_CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
     // Update nTime
-    UpdateTime(*pblock, pindexPrev);
+    Bitcredit_UpdateTime(*pblock, pindexPrev);
     pblock->nNonce = 0;
 
     Array transactions;
     map<uint256, int64_t> setTxIndex;
     int i = 0;
-    BOOST_FOREACH (CTransaction& tx, pblock->vtx)
+    BOOST_FOREACH (Bitcredit_CTransaction& tx, pblock->vtx)
     {
         uint256 txHash = tx.GetHash();
         setTxIndex[txHash] = i++;
@@ -535,14 +597,14 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
         Object entry;
 
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssTx(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
         ssTx << tx;
         entry.push_back(Pair("data", HexStr(ssTx.begin(), ssTx.end())));
 
         entry.push_back(Pair("hash", txHash.GetHex()));
 
         Array deps;
-        BOOST_FOREACH (const CTxIn &in, tx.vin)
+        BOOST_FOREACH (const Bitcredit_CTxIn &in, tx.vin)
         {
             if (setTxIndex.count(in.prevout.hash))
                 deps.push_back(setTxIndex[in.prevout.hash]);
@@ -557,7 +619,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     }
 
     Object aux;
-    aux.push_back(Pair("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
+    aux.push_back(Pair("flags", HexStr(BITCREDIT_COINBASE_FLAGS.begin(), BITCREDIT_COINBASE_FLAGS.end())));
 
     uint256 hashTarget = uint256().SetCompact(pblock->nBits);
 
@@ -579,8 +641,13 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
     result.push_back(Pair("mutable", aMutable));
     result.push_back(Pair("noncerange", "00000000ffffffff"));
-    result.push_back(Pair("sigoplimit", (int64_t)MAX_BLOCK_SIGOPS));
-    result.push_back(Pair("sizelimit", (int64_t)MAX_BLOCK_SIZE));
+    result.push_back(Pair("totalmonetarybase", (pblock->nTotalMonetaryBase + pblock->vtx[0].vout[0].nValue)));
+    result.push_back(Pair("totaldepositbase", (pblock->nTotalDepositBase + pblock->vtx[0].vout[0].nValue)));
+    result.push_back(Pair("deposit", pblock->nDepositAmount));
+    result.push_back(Pair("hashlinkedbitcoinblock", pblock->hashLinkedBitcoinBlock.GetHex()));
+    result.push_back(Pair("hashsigmerkleroot", pblock->hashSigMerkleRoot.GetHex()));
+    result.push_back(Pair("sigoplimit", (int64_t)BITCREDIT_MAX_BLOCK_SIGOPS));
+    result.push_back(Pair("sizelimit", (int64_t)BITCREDIT_MAX_BLOCK_SIZE));
     result.push_back(Pair("curtime", (int64_t)pblock->nTime));
     result.push_back(Pair("bits", HexBits(pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
@@ -610,8 +677,8 @@ Value submitblock(const Array& params, bool fHelp)
         );
 
     vector<unsigned char> blockData(ParseHex(params[0].get_str()));
-    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
-    CBlock pblock;
+    CDataStream ssBlock(blockData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    Bitcredit_CBlock pblock;
     try {
         ssBlock >> pblock;
     }
@@ -620,7 +687,7 @@ Value submitblock(const Array& params, bool fHelp)
     }
 
     CValidationState state;
-    bool fAccepted = ProcessBlock(state, NULL, &pblock);
+    bool fAccepted = Bitcredit_ProcessBlock(state, NULL, &pblock);
     if (!fAccepted)
         return "rejected"; // TODO: report validation state
 

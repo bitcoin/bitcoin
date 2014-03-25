@@ -16,7 +16,7 @@ OpenURIDialog::OpenURIDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 #if QT_VERSION >= 0x040700
-    ui->uriEdit->setPlaceholderText("bitcoin:");
+    ui->uriEdit->setPlaceholderText("bitcredit:");
 #endif
 }
 
@@ -32,8 +32,8 @@ QString OpenURIDialog::getURI()
 
 void OpenURIDialog::accept()
 {
-    SendCoinsRecipient rcp;
-    if(GUIUtil::parseBitcoinURI(getURI(), &rcp))
+    Bitcredit_SendCoinsRecipient rcp;
+    if(GUIUtil::parseBitcreditURI(getURI(), &rcp))
     {
         /* Only accept value URIs */
         QDialog::accept();
@@ -48,5 +48,5 @@ void OpenURIDialog::on_selectFileButton_clicked()
     if(filename.isEmpty())
         return;
     QUrl fileUri = QUrl::fromLocalFile(filename);
-    ui->uriEdit->setText("bitcoin:?r=" + QUrl::toPercentEncoding(fileUri.toString()));
+    ui->uriEdit->setText("bitcredit:?r=" + QUrl::toPercentEncoding(fileUri.toString()));
 }

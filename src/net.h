@@ -16,6 +16,7 @@
 #include "sync.h"
 #include "uint256.h"
 #include "util.h"
+#include "addrman.h"
 
 #include <deque>
 #include <stdint.h>
@@ -29,7 +30,8 @@
 #include <openssl/rand.h>
 
 class CAddrMan;
-class CBlockIndex;
+class CNetParams;
+class Bitcredit_CBlockIndex;
 class CNode;
 
 namespace boost {
@@ -48,17 +50,14 @@ static const bool DEFAULT_UPNP = false;
 inline unsigned int ReceiveFloodSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000); }
 inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
 
-void AddOneShot(std::string strDest);
-bool RecvLine(SOCKET hSocket, std::string& strLine);
-bool GetMyExternalIP(CNetAddr& ipRet);
-void AddressCurrentlyConnected(const CService& addr);
-CNode* FindNode(const CNetAddr& ip);
-CNode* FindNode(const CService& ip);
-CNode* ConnectNode(CAddress addrConnect, const char *strDest = NULL);
-bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false);
-void MapPort(bool fUseUPnP);
-unsigned short GetListenPort();
-bool BindListenPort(const CService &bindAddr, std::string& strError=REF(std::string()));
+void AddOneShot(std::string strDest, CNetParams * netParams);
+bool RecvLine(SOCKET hSocket, std::string& strLine, CNetParams * netParams);
+bool GetMyExternalIP(CNetAddr& ipRet, CNetParams * netParams);
+CNode* FindNode(const CNetAddr& ip, CNetParams * netParams);
+CNode* FindNode(const CService& ip, CNetParams * netParams);
+CNode* ConnectNode(CAddress addrConnect, const char *strDest, CNetParams * netParams);
+void MapPort(bool fUseUPnP, CNetParams * netParams);
+bool BindListenPort(const CService &bindAddr, std::string& strError, CNetParams * netParams);
 void StartNode(boost::thread_group& threadGroup);
 bool StopNode();
 void SocketSendData(CNode *pnode);
@@ -76,9 +75,6 @@ struct CNodeSignals
 };
 
 
-CNodeSignals& GetNodeSignals();
-
-
 enum
 {
     LOCAL_NONE,   // unknown
@@ -91,46 +87,21 @@ enum
     LOCAL_MAX
 };
 
-void SetLimited(enum Network net, bool fLimited = true);
-bool IsLimited(enum Network net);
-bool IsLimited(const CNetAddr& addr);
-bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
-bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
-bool SeenLocal(const CService& addr);
-bool IsLocal(const CService& addr);
-bool GetLocal(CService &addr, const CNetAddr *paddrPeer = NULL);
-bool IsReachable(const CNetAddr &addr);
-void SetReachable(enum Network net, bool fFlag = true);
-CAddress GetLocalAddress(const CNetAddr *paddrPeer = NULL);
-
-
-extern bool fDiscover;
-extern bool fListen;
-extern uint64_t nLocalServices;
-extern uint64_t nLocalHostNonce;
-extern CAddrMan addrman;
-extern int nMaxConnections;
-
-extern std::vector<CNode*> vNodes;
-extern CCriticalSection cs_vNodes;
-extern std::map<CInv, CDataStream> mapRelay;
-extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
-extern CCriticalSection cs_mapRelay;
-extern limitedmap<CInv, int64_t> mapAlreadyAskedFor;
-
-extern std::vector<std::string> vAddedNodes;
-extern CCriticalSection cs_vAddedNodes;
-
-extern NodeId nLastNodeId;
-extern CCriticalSection cs_nLastNodeId;
+void SetLimited(enum Network net, bool fLimited, CNetParams * netParams);
+bool IsLimited(enum Network net, CNetParams * netParams);
+bool IsLimited(const CService& addr, CNetParams * netParams);
+bool AddLocal(const CService& addr, int nScore, CNetParams * netParams);
+bool SeenLocal(const CService& addr, CNetParams * netParams);
+bool IsLocal(const CService& addr, CNetParams * netParams);
+bool GetLocal(CService &addr, const CNetAddr *paddrPeer, CNetParams * netParams);
+bool IsReachable(const CService &addr, CNetParams * netParams);
+void SetReachable(enum Network net, bool fFlag, CNetParams * netParams);
+CAddress GetLocalAddress(const CService *paddrPeer, CNetParams * netParams);
 
 struct LocalServiceInfo {
     int nScore;
     int nPort;
 };
-
-extern CCriticalSection cs_mapLocalHost;
-extern map<CNetAddr, LocalServiceInfo> mapLocalHost;
 
 class CNodeStats
 {
@@ -154,6 +125,106 @@ public:
 };
 
 
+class CNetParams{
+public:
+	CNetParams() : mapAlreadyAskedFor(MAX_INV_SZ){
+		pnodeSync = NULL;
+		semOutbound = NULL;
+		nLastNodeId = 0;
+		fDiscover = true;
+		fListen = true;
+		nLocalServices = NODE_NETWORK;
+		vfReachable[NET_UNROUTABLE] = false;
+		vfReachable[NET_IPV4] = false;
+		vfReachable[NET_IPV6] = false;
+		vfReachable[NET_TOR] = false;
+		vfLimited[NET_UNROUTABLE] = false;
+		vfLimited[NET_IPV4] = false;
+		vfLimited[NET_IPV6] = false;
+		vfLimited[NET_TOR] = false;
+		pnodeLocalHost = NULL;
+		nLocalHostNonce = 0;
+		nMaxConnections = 125;
+    }
+
+	CAddrMan addrman;
+
+	vector<CNode*> vNodes;
+	CCriticalSection cs_vNodes;
+
+	deque<string> vOneShots;
+	CCriticalSection cs_vOneShots;
+
+	CNode* pnodeSync;
+
+	CSemaphore* semOutbound;
+
+	std::vector<SOCKET> vhListenSocket;
+	list<CNode*> vNodesDisconnected;
+
+	map<CInv, CDataStream> mapRelay;
+	deque<pair<int64_t, CInv> > vRelayExpiration;
+	CCriticalSection cs_mapRelay;
+	limitedmap<CInv, int64_t> mapAlreadyAskedFor;
+
+	set<CNetAddr> setservAddNodeAddresses;
+	CCriticalSection cs_setservAddNodeAddresses;
+
+	vector<std::string> vAddedNodes;
+	CCriticalSection cs_vAddedNodes;
+
+	NodeId nLastNodeId;
+	CCriticalSection cs_nLastNodeId;
+
+	CCriticalSection cs_mapLocalHost;
+	map<CNetAddr, LocalServiceInfo> mapLocalHost;
+
+	bool fDiscover;
+	bool fListen;
+	uint64_t nLocalServices;
+	bool vfReachable[NET_MAX];
+	bool vfLimited[NET_MAX];
+	CNode* pnodeLocalHost;
+	uint64_t nLocalHostNonce;
+	int nMaxConnections;
+
+	// Signals for message handling
+	CNodeSignals g_signals;
+
+	virtual const CChainParams& Params() = 0;
+	virtual const std::string LogPrefix() = 0;
+	virtual const char * DebugCategory() = 0;
+	virtual const std::string ClientName() = 0;
+	virtual const int& ProtocolVersion() = 0;
+	virtual unsigned short GetListenPort() = 0;
+	CNodeSignals& GetNodeSignals() { return g_signals; }
+	virtual void RegisterNodeSignals() = 0;
+	virtual void UnregisterNodeSignals() = 0;
+	unsigned short GetDefaultPort() {
+		return Params().GetDefaultPort();
+	}
+	unsigned short GetRPCPort() {
+		return Params().RPCPort();
+	}
+	const vector<CDNSSeedData>& GetDNSSeeds() {
+		return Params().DNSSeeds();
+	}
+	const vector<CAddress>& GetFixedSeeds() {
+		return Params().FixedSeeds();
+	}
+	const std::string AddrFileName() {
+		return Params().AddrFileName();
+	}
+	const MessageStartChars& MessageStart() {
+		return Params().MessageStart();
+	}
+	int ClientVersion() {
+		return Params().ClientVersion();
+	}
+};
+
+CNetParams * Bitcredit_NetParams() ;
+CNetParams * Bitcoin_NetParams();
 
 
 class CNetMessage {
@@ -199,6 +270,7 @@ public:
 class CNode
 {
 public:
+    CNetParams * netParams;
     // socket
     uint64_t nServices;
     SOCKET hSocket;
@@ -256,7 +328,7 @@ protected:
 
 public:
     uint256 hashContinue;
-    CBlockIndex* pindexLastGetBlocksBegin;
+    CBlockIndexBase* pindexLastGetBlocksBegin;
     uint256 hashLastGetBlocksEnd;
     int nStartingHeight;
     bool fStartSync;
@@ -279,8 +351,9 @@ public:
     int64_t nPingUsecTime;
     bool fPingQueued;
 
-    CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false) : ssSend(SER_NETWORK, INIT_PROTO_VERSION), setAddrKnown(5000)
+    CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn, bool fInboundIn, CNetParams * netParamsIn) : ssSend(SER_NETWORK, INIT_PROTO_VERSION), setAddrKnown(5000)
     {
+    	netParams = netParamsIn;
         nServices = 0;
         hSocket = hSocketIn;
         nRecvVersion = INIT_PROTO_VERSION;
@@ -318,15 +391,15 @@ public:
         fPingQueued = false;
 
         {
-            LOCK(cs_nLastNodeId);
-            id = nLastNodeId++;
+            LOCK(netParams->cs_nLastNodeId);
+            id = netParams->nLastNodeId++;
         }
 
         // Be shy and don't send version until we hear
         if (hSocket != INVALID_SOCKET && !fInbound)
             PushVersion();
 
-        GetNodeSignals().InitializeNode(GetId(), this);
+        netParams->GetNodeSignals().InitializeNode(GetId(), this);
     }
 
     ~CNode()
@@ -338,21 +411,28 @@ public:
         }
         if (pfilter)
             delete pfilter;
-        GetNodeSignals().FinalizeNode(GetId());
+        netParams->GetNodeSignals().FinalizeNode(GetId());
     }
 
 private:
     // Network usage totals
-    static CCriticalSection cs_totalBytesRecv;
-    static CCriticalSection cs_totalBytesSent;
-    static uint64_t nTotalBytesRecv;
-    static uint64_t nTotalBytesSent;
+    static CCriticalSection bitcredit_cs_totalBytesRecv;
+    static CCriticalSection bitcredit_cs_totalBytesSent;
+    static uint64_t bitcredit_nTotalBytesRecv;
+    static uint64_t bitcredit_nTotalBytesSent;
+    static CCriticalSection bitcoin_cs_totalBytesRecv;
+    static CCriticalSection bitcoin_cs_totalBytesSent;
+    static uint64_t bitcoin_nTotalBytesRecv;
+    static uint64_t bitcoin_nTotalBytesSent;
 
     CNode(const CNode&);
     void operator=(const CNode&);
 
 public:
 
+    CNetParams * GetNetParams() const {
+      return netParams;
+    }
     NodeId GetId() const {
       return id;
     }
@@ -433,12 +513,12 @@ public:
         // We're using mapAskFor as a priority queue,
         // the key is the earliest time the request can be sent
         int64_t nRequestTime;
-        limitedmap<CInv, int64_t>::const_iterator it = mapAlreadyAskedFor.find(inv);
-        if (it != mapAlreadyAskedFor.end())
+        limitedmap<CInv, int64_t>::const_iterator it = netParams->mapAlreadyAskedFor.find(inv);
+        if (it != netParams->mapAlreadyAskedFor.end())
             nRequestTime = it->second;
         else
             nRequestTime = 0;
-        LogPrint("net", "askfor %s   %d (%s)\n", inv.ToString(), nRequestTime, DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000).c_str());
+        LogPrint(netParams->DebugCategory(), "%s askfor %s   %d (%s)\n", netParams->LogPrefix(), inv.ToString(), nRequestTime, DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000).c_str());
 
         // Make sure not to reuse time indexes to keep things in the same order
         int64_t nNow = GetTimeMicros() - 1000000;
@@ -449,10 +529,10 @@ public:
 
         // Each retry is 2 minutes after the last
         nRequestTime = std::max(nRequestTime + 2 * 60 * 1000000, nNow);
-        if (it != mapAlreadyAskedFor.end())
-            mapAlreadyAskedFor.update(it, nRequestTime);
+        if (it != netParams->mapAlreadyAskedFor.end())
+        	netParams->mapAlreadyAskedFor.update(it, nRequestTime);
         else
-            mapAlreadyAskedFor.insert(std::make_pair(inv, nRequestTime));
+        	netParams->mapAlreadyAskedFor.insert(std::make_pair(inv, nRequestTime));
         mapAskFor.insert(std::make_pair(nRequestTime, inv));
     }
 
@@ -463,8 +543,8 @@ public:
     {
         ENTER_CRITICAL_SECTION(cs_vSend);
         assert(ssSend.size() == 0);
-        ssSend << CMessageHeader(pszCommand, 0);
-        LogPrint("net", "sending: %s ", pszCommand);
+        ssSend << CMessageHeader(pszCommand, 0, netParams->MessageStart());
+        LogPrint(netParams->DebugCategory(), "%s sending: %s ", netParams->LogPrefix(), pszCommand);
     }
 
     // TODO: Document the precondition of this function.  Is cs_vSend locked?
@@ -474,7 +554,7 @@ public:
 
         LEAVE_CRITICAL_SECTION(cs_vSend);
 
-        LogPrint("net", "(aborted)\n");
+        LogPrint(netParams->DebugCategory(), "(aborted)\n");
     }
 
     // TODO: Document the precondition of this function.  Is cs_vSend locked?
@@ -485,7 +565,7 @@ public:
         // not intended for end-users.
         if (mapArgs.count("-dropmessagestest") && GetRand(GetArg("-dropmessagestest", 2)) == 0)
         {
-            LogPrint("net", "dropmessages DROPPING SEND MESSAGE\n");
+            LogPrint(netParams->DebugCategory(), "%s dropmessages DROPPING SEND MESSAGE\n", netParams->LogPrefix());
             AbortMessage();
             return;
         }
@@ -506,7 +586,7 @@ public:
         assert(ssSend.size () >= CMessageHeader::CHECKSUM_OFFSET + sizeof(nChecksum));
         memcpy((char*)&ssSend[CMessageHeader::CHECKSUM_OFFSET], &nChecksum, sizeof(nChecksum));
 
-        LogPrint("net", "(%d bytes)\n", nSize);
+        LogPrint(netParams->DebugCategory(), "(%d bytes)\n", nSize);
 
         std::deque<CSerializeData>::iterator it = vSendMsg.insert(vSendMsg.end(), CSerializeData());
         ssSend.GetAndClear(*it);
@@ -707,26 +787,36 @@ public:
     void copyStats(CNodeStats &stats);
 
     // Network stats
-    static void RecordBytesRecv(uint64_t bytes);
-    static void RecordBytesSent(uint64_t bytes);
+    static void bitcredit_RecordBytesRecv(uint64_t bytes);
+    static void bitcoin_RecordBytesRecv(uint64_t bytes);
+    static void bitcredit_RecordBytesSent(uint64_t bytes);
+    static void bitcoin_RecordBytesSent(uint64_t bytes);
 
-    static uint64_t GetTotalBytesRecv();
-    static uint64_t GetTotalBytesSent();
+    static uint64_t bitcredit_GetTotalBytesRecv();
+    static uint64_t bitcoin_GetTotalBytesRecv();
+    static uint64_t bitcredit_GetTotalBytesSent();
+    static uint64_t bitcoin_GetTotalBytesSent();
 };
 
 
+class Bitcredit_CTransaction;
+void Bitcredit_RelayTransaction(const Bitcredit_CTransaction& tx, const uint256& hash, CNetParams * netParams);
+void Bitcredit_RelayTransaction(const Bitcredit_CTransaction& txWrap, const uint256& hash, const CDataStream& ss, CNetParams * netParams);
 
-class CTransaction;
-void RelayTransaction(const CTransaction& tx, const uint256& hash);
-void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataStream& ss);
+class Bitcoin_CTransaction;
+void Bitcoin_RelayTransaction(const Bitcoin_CTransaction& tx, const uint256& hash, CNetParams * netParams);
+void Bitcoin_RelayTransaction(const Bitcoin_CTransaction& txWrap, const uint256& hash, const CDataStream& ss, CNetParams * netParams);
 
-/** Access to the (IP) address database (peers.dat) */
+/** Access to the (IP) address database (xxx_peers.dat) */
 class CAddrDB
 {
 private:
+    std::string fileName;
+	MessageStartChars messageStart;
+	int clientVersion;
     boost::filesystem::path pathAddr;
 public:
-    CAddrDB();
+    CAddrDB(std::string fileName, const MessageStartChars& messageStart, int clientVersion);
     bool Write(const CAddrMan& addr);
     bool Read(CAddrMan& addr);
 };

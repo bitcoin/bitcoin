@@ -1,5 +1,5 @@
 ---
-name: "bitcoin"
+name: "bitcredit"
 suites:
 - "precise"
 architectures:
@@ -14,8 +14,8 @@ packages:
 
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
+- "url": "/opt/bit/bitcredit"
+  "dir": "bitcredit"
 files:
 - "osx-native-depends-r3.tar.gz"
 - "osx-depends-r3.tar.gz"
@@ -41,7 +41,7 @@ script: |
   tar -C osx-cross-depends -xf osx-depends-qt-5.2.1-r3.tar.gz
   export PATH=`pwd`/osx-cross-depends/native-prefix/bin:$PATH
 
-  cd bitcoin
+  cd bitcredit
 
   export ZERO_AR_DATE=1
   export QT_RCC_TEST=1
@@ -50,11 +50,11 @@ script: |
   make dist
   mkdir -p distsrc
   cd distsrc
-  tar --strip-components=1 -xf ../bitcoin-*.tar*
+  tar --strip-components=1 -xf ../bitcredit-*.tar*
   ./configure --host=${HOST} --with-boost=${PREFIX} CC=clang CXX=clang++ OBJC=clang OBJCXX=clang++ CFLAGS="-target ${HOST} -mmacosx-version-min=10.6 --sysroot ${SDK} -msse2 -Qunused-arguments" CXXFLAGS="-target ${HOST} -mmacosx-version-min=10.6 --sysroot ${SDK} -msse2 -Qunused-arguments" LDFLAGS="-B${NATIVEPREFIX}/bin -L${PREFIX}/lib -L${SDK}/usr/lib/i686-apple-darwin10/4.2.1" CPPFLAGS="-I${NATIVEPREFIX}/lib/clang/3.2/include -I${PREFIX}/include" SSL_LIBS="-lz -lssl -lcrypto" --disable-tests -with-gui=qt5 PKG_CONFIG_LIBDIR="${PREFIX}/lib/pkgconfig"  --disable-dependency-tracking --disable-maintainer-mode
   make $MAKEOPTS
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
   make deploy
-  dmg dmg Bitcoin-Qt.dmg $OUTDIR/Bitcoin-Qt.dmg
+  dmg dmg Bitcredit-Qt.dmg $OUTDIR/Bitcredit-Qt.dmg

@@ -24,17 +24,12 @@ using namespace std;
 using namespace boost;
 
 
-unsigned int nWalletDBUpdated;
-
-
 
 //
 // CDB
 //
 
-CDBEnv bitdb;
-
-void CDBEnv::EnvShutdown()
+void Bitcredit_CDBEnv::EnvShutdown()
 {
     if (!fDbEnvInit)
         return;
@@ -47,23 +42,25 @@ void CDBEnv::EnvShutdown()
         DbEnv(0).remove(path.string().c_str(), 0);
 }
 
-CDBEnv::CDBEnv() : dbenv(DB_CXX_NO_EXCEPTIONS)
+Bitcredit_CDBEnv::Bitcredit_CDBEnv(const std::string dbNameIn, const std::string dbLogIn) : dbenv(DB_CXX_NO_EXCEPTIONS), nWalletDBUpdated(0)
 {
     fDbEnvInit = false;
     fMockDb = false;
+    dbName = dbNameIn;
+    dbLog = dbLogIn;
 }
 
-CDBEnv::~CDBEnv()
+Bitcredit_CDBEnv::~Bitcredit_CDBEnv()
 {
     EnvShutdown();
 }
 
-void CDBEnv::Close()
+void Bitcredit_CDBEnv::Close()
 {
     EnvShutdown();
 }
 
-bool CDBEnv::Open(const boost::filesystem::path& pathIn)
+bool Bitcredit_CDBEnv::Open(const boost::filesystem::path& pathIn)
 {
     if (fDbEnvInit)
         return true;
@@ -71,9 +68,9 @@ bool CDBEnv::Open(const boost::filesystem::path& pathIn)
     boost::this_thread::interruption_point();
 
     path = pathIn;
-    filesystem::path pathLogDir = path / "database";
+    filesystem::path pathLogDir = path / dbName;
     TryCreateDirectory(pathLogDir);
-    filesystem::path pathErrorFile = path / "db.log";
+    filesystem::path pathErrorFile = path / dbLog;
     LogPrintf("CDBEnv::Open : LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
 
     unsigned int nEnvFlags = 0;
@@ -108,7 +105,7 @@ bool CDBEnv::Open(const boost::filesystem::path& pathIn)
     return true;
 }
 
-void CDBEnv::MakeMock()
+void Bitcredit_CDBEnv::MakeMock()
 {
     if (fDbEnvInit)
         throw runtime_error("CDBEnv::MakeMock : Already initialized");
@@ -140,7 +137,7 @@ void CDBEnv::MakeMock()
     fMockDb = true;
 }
 
-CDBEnv::VerifyResult CDBEnv::Verify(std::string strFile, bool (*recoverFunc)(CDBEnv& dbenv, std::string strFile))
+Bitcredit_CDBEnv::VerifyResult Bitcredit_CDBEnv::Verify(std::string strFile, uint64_t &nAccountingEntryNumber, bool (*recoverFunc)(Bitcredit_CDBEnv& dbenv, std::string strFile, uint64_t &nAccountingEntryNumber))
 {
     LOCK(cs_db);
     assert(mapFileUseCount.count(strFile) == 0);
@@ -153,12 +150,12 @@ CDBEnv::VerifyResult CDBEnv::Verify(std::string strFile, bool (*recoverFunc)(CDB
         return RECOVER_FAIL;
 
     // Try to recover:
-    bool fRecovered = (*recoverFunc)(*this, strFile);
+    bool fRecovered = (*recoverFunc)(*this, strFile, nAccountingEntryNumber);
     return (fRecovered ? RECOVER_OK : RECOVER_FAIL);
 }
 
-bool CDBEnv::Salvage(std::string strFile, bool fAggressive,
-                     std::vector<CDBEnv::KeyValPair >& vResult)
+bool Bitcredit_CDBEnv::Salvage(std::string strFile, bool fAggressive,
+                     std::vector<Bitcredit_CDBEnv::KeyValPair >& vResult)
 {
     LOCK(cs_db);
     assert(mapFileUseCount.count(strFile) == 0);
@@ -212,7 +209,7 @@ bool CDBEnv::Salvage(std::string strFile, bool fAggressive,
 }
 
 
-void CDBEnv::CheckpointLSN(std::string strFile)
+void Bitcredit_CDBEnv::CheckpointLSN(std::string strFile)
 {
     dbenv.txn_checkpoint(0, 0, 0);
     if (fMockDb)
@@ -221,9 +218,11 @@ void CDBEnv::CheckpointLSN(std::string strFile)
 }
 
 
-CDB::CDB(const char *pszFile, const char* pszMode) :
+Bitcredit_CDB::Bitcredit_CDB(const char *pszFile, Bitcredit_CDBEnv *bitDbIn, const char* pszMode) :
     pdb(NULL), activeTxn(NULL)
 {
+	pbitDb = bitDbIn;
+
     int ret;
     if (pszFile == NULL)
         return;
@@ -235,18 +234,18 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
         nFlags |= DB_CREATE;
 
     {
-        LOCK(bitdb.cs_db);
-        if (!bitdb.Open(GetDataDir()))
+        LOCK(pbitDb->cs_db);
+        if (!pbitDb->Open(GetDataDir()))
             throw runtime_error("CDB : Failed to open database environment.");
 
         strFile = pszFile;
-        ++bitdb.mapFileUseCount[strFile];
-        pdb = bitdb.mapDb[strFile];
+        ++pbitDb->mapFileUseCount[strFile];
+        pdb = pbitDb->mapDb[strFile];
         if (pdb == NULL)
         {
-            pdb = new Db(&bitdb.dbenv, 0);
+            pdb = new Db(&pbitDb->dbenv, 0);
 
-            bool fMockDb = bitdb.IsMock();
+            bool fMockDb = pbitDb->IsMock();
             if (fMockDb)
             {
                 DbMpoolFile*mpf = pdb->get_mpf();
@@ -266,7 +265,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
             {
                 delete pdb;
                 pdb = NULL;
-                --bitdb.mapFileUseCount[strFile];
+                --pbitDb->mapFileUseCount[strFile];
                 strFile = "";
                 throw runtime_error(strprintf("CDB : Error %d, can't open database %s", ret, pszFile));
             }
@@ -275,16 +274,16 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
             {
                 bool fTmp = fReadOnly;
                 fReadOnly = false;
-                WriteVersion(CLIENT_VERSION);
+                WriteVersion(BITCREDIT_CLIENT_VERSION);
                 fReadOnly = fTmp;
             }
 
-            bitdb.mapDb[strFile] = pdb;
+            pbitDb->mapDb[strFile] = pdb;
         }
     }
 }
 
-void CDB::Flush()
+void Bitcredit_CDB::Flush()
 {
     if (activeTxn)
         return;
@@ -294,10 +293,10 @@ void CDB::Flush()
     if (fReadOnly)
         nMinutes = 1;
 
-    bitdb.dbenv.txn_checkpoint(nMinutes ? GetArg("-dblogsize", 100)*1024 : 0, nMinutes, 0);
+    pbitDb->dbenv.txn_checkpoint(nMinutes ? GetArg("-dblogsize", 100)*1024 : 0, nMinutes, 0);
 }
 
-void CDB::Close()
+void Bitcredit_CDB::Close()
 {
     if (!pdb)
         return;
@@ -309,12 +308,12 @@ void CDB::Close()
     Flush();
 
     {
-        LOCK(bitdb.cs_db);
-        --bitdb.mapFileUseCount[strFile];
+        LOCK(pbitDb->cs_db);
+        --pbitDb->mapFileUseCount[strFile];
     }
 }
 
-void CDBEnv::CloseDb(const string& strFile)
+void Bitcredit_CDBEnv::CloseDb(const string& strFile)
 {
     {
         LOCK(cs_db);
@@ -329,7 +328,7 @@ void CDBEnv::CloseDb(const string& strFile)
     }
 }
 
-bool CDBEnv::RemoveDb(const string& strFile)
+bool Bitcredit_CDBEnv::RemoveDb(const string& strFile)
 {
     this->CloseDb(strFile);
 
@@ -338,25 +337,25 @@ bool CDBEnv::RemoveDb(const string& strFile)
     return (rc == 0);
 }
 
-bool CDB::Rewrite(const string& strFile, const char* pszSkip)
+bool Bitcredit_CDB::Rewrite(const string& strFile, Bitcredit_CDBEnv *pbitDbIn, const char* pszSkip)
 {
     while (true)
     {
         {
-            LOCK(bitdb.cs_db);
-            if (!bitdb.mapFileUseCount.count(strFile) || bitdb.mapFileUseCount[strFile] == 0)
+            LOCK(pbitDbIn->cs_db);
+            if (!pbitDbIn->mapFileUseCount.count(strFile) || pbitDbIn->mapFileUseCount[strFile] == 0)
             {
                 // Flush log data to the dat file
-                bitdb.CloseDb(strFile);
-                bitdb.CheckpointLSN(strFile);
-                bitdb.mapFileUseCount.erase(strFile);
+            	pbitDbIn->CloseDb(strFile);
+            	pbitDbIn->CheckpointLSN(strFile);
+            	pbitDbIn->mapFileUseCount.erase(strFile);
 
                 bool fSuccess = true;
                 LogPrintf("CDB::Rewrite : Rewriting %s...\n", strFile);
                 string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
-                    CDB db(strFile.c_str(), "r");
-                    Db* pdbCopy = new Db(&bitdb.dbenv, 0);
+                    Bitcredit_CDB db(strFile.c_str(), pbitDbIn, "r");
+                    Db* pdbCopy = new Db(&pbitDbIn->dbenv, 0);
 
                     int ret = pdbCopy->open(NULL,                 // Txn pointer
                                             strFileRes.c_str(),   // Filename
@@ -374,8 +373,8 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                     if (pcursor)
                         while (fSuccess)
                         {
-                            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-                            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+                            CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
+                            CDataStream ssValue(SER_DISK, BITCREDIT_CLIENT_VERSION);
                             int ret = db.ReadAtCursor(pcursor, ssKey, ssValue, DB_NEXT);
                             if (ret == DB_NOTFOUND)
                             {
@@ -395,7 +394,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                             {
                                 // Update version:
                                 ssValue.clear();
-                                ssValue << CLIENT_VERSION;
+                                ssValue << BITCREDIT_CLIENT_VERSION;
                             }
                             Dbt datKey(&ssKey[0], ssKey.size());
                             Dbt datValue(&ssValue[0], ssValue.size());
@@ -406,7 +405,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                     if (fSuccess)
                     {
                         db.Close();
-                        bitdb.CloseDb(strFile);
+                        pbitDbIn->CloseDb(strFile);
                         if (pdbCopy->close(0))
                             fSuccess = false;
                         delete pdbCopy;
@@ -414,10 +413,10 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                 }
                 if (fSuccess)
                 {
-                    Db dbA(&bitdb.dbenv, 0);
+                    Db dbA(&pbitDbIn->dbenv, 0);
                     if (dbA.remove(strFile.c_str(), NULL, 0))
                         fSuccess = false;
-                    Db dbB(&bitdb.dbenv, 0);
+                    Db dbB(&pbitDbIn->dbenv, 0);
                     if (dbB.rename(strFileRes.c_str(), NULL, strFile.c_str(), 0))
                         fSuccess = false;
                 }
@@ -432,7 +431,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
 }
 
 
-void CDBEnv::Flush(bool fShutdown)
+void Bitcredit_CDBEnv::Flush(bool fShutdown)
 {
     int64_t nStart = GetTimeMillis();
     // Flush log data to the actual data file on all files that are not in use
@@ -471,7 +470,7 @@ void CDBEnv::Flush(bool fShutdown)
                 dbenv.log_archive(&listp, DB_ARCH_REMOVE);
                 Close();
                 if (!fMockDb)
-                    boost::filesystem::remove_all(path / "database");
+                    boost::filesystem::remove_all(path / dbName);
             }
         }
     }

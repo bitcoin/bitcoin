@@ -34,9 +34,9 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         unsigned int nTx = nTxCounts[n];
 
         // build a block with some dummy transactions
-        CBlock block;
+        Bitcredit_CBlock block;
         for (unsigned int j=0; j<nTx; j++) {
-            CTransaction tx;
+            Bitcredit_CTransaction tx;
             tx.nLockTime = rand(); // actual transaction data doesn't matter; just make the nLockTime's unique
             block.vtx.push_back(tx);
         }
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             CPartialMerkleTree pmt1(vTxid, vMatch);
 
             // serialize
-            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+            CDataStream ss(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
             ss << pmt1;
 
             // verify CPartialMerkleTree's size guarantees
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
 
             // extract merkle root and matched txids from copy
             std::vector<uint256> vMatchTxid2;
-            uint256 merkleRoot2 = pmt2.ExtractMatches(vMatchTxid2);
+            uint256 merkleRoot2 = pmt2.ExtractMatches(vMatchTxid2, BITCREDIT_MAX_BLOCK_SIZE);
 
             // check that it has the same merkle root as the original, and a valid one
             BOOST_CHECK(merkleRoot1 == merkleRoot2);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
                 CPartialMerkleTreeTester pmt3(pmt2);
                 pmt3.Damage();
                 std::vector<uint256> vMatchTxid3;
-                uint256 merkleRoot3 = pmt3.ExtractMatches(vMatchTxid3);
+                uint256 merkleRoot3 = pmt3.ExtractMatches(vMatchTxid3, BITCREDIT_MAX_BLOCK_SIZE);
                 BOOST_CHECK(merkleRoot3 != merkleRoot1);
             }
         }

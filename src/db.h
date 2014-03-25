@@ -19,15 +19,11 @@
 
 class CAddrMan;
 struct CBlockLocator;
-class CDiskBlockIndex;
+class Bitcredit_CDiskBlockIndex;
 class COutPoint;
 
-extern unsigned int nWalletDBUpdated;
 
-void ThreadFlushWalletDB(const std::string& strWalletFile);
-
-
-class CDBEnv
+class Bitcredit_CDBEnv
 {
 private:
     bool fDbEnvInit;
@@ -37,13 +33,16 @@ private:
     void EnvShutdown();
 
 public:
+    std::string dbName;
+    std::string dbLog;
     mutable CCriticalSection cs_db;
     DbEnv dbenv;
     std::map<std::string, int> mapFileUseCount;
     std::map<std::string, Db*> mapDb;
+    unsigned int nWalletDBUpdated;
 
-    CDBEnv();
-    ~CDBEnv();
+    Bitcredit_CDBEnv(const std::string dbNameIn, const std::string dbLogIn);
+    ~Bitcredit_CDBEnv();
     void MakeMock();
     bool IsMock() { return fMockDb; }
 
@@ -54,7 +53,7 @@ public:
      * Returns true if strFile is OK.
      */
     enum VerifyResult { VERIFY_OK, RECOVER_OK, RECOVER_FAIL };
-    VerifyResult Verify(std::string strFile, bool (*recoverFunc)(CDBEnv& dbenv, std::string strFile));
+    VerifyResult Verify(std::string strFile, uint64_t &nAccountingEntryNumber, bool (*recoverFunc)(Bitcredit_CDBEnv& dbenv, std::string strFile, uint64_t &nAccountingEntryNumber));
     /*
      * Salvage data from a file that Verify says is bad.
      * fAggressive sets the DB_AGGRESSIVE flag (see berkeley DB->verify() method documentation).
@@ -83,26 +82,25 @@ public:
     }
 };
 
-extern CDBEnv bitdb;
-
 
 /** RAII class that provides access to a Berkeley database */
-class CDB
+class Bitcredit_CDB
 {
 protected:
     Db* pdb;
     std::string strFile;
     DbTxn *activeTxn;
     bool fReadOnly;
+    Bitcredit_CDBEnv *pbitDb;
 
-    explicit CDB(const char* pszFile, const char* pszMode="r+");
-    ~CDB() { Close(); }
+    explicit Bitcredit_CDB(const char* pszFile,  Bitcredit_CDBEnv *bitDbIn, const char* pszMode="r+");
+    ~Bitcredit_CDB() { Close(); }
 public:
     void Flush();
     void Close();
 private:
-    CDB(const CDB&);
-    void operator=(const CDB&);
+    Bitcredit_CDB(const Bitcredit_CDB&);
+    void operator=(const Bitcredit_CDB&);
 
 protected:
     template<typename K, typename T>
@@ -112,7 +110,7 @@ protected:
             return false;
 
         // Key
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());
@@ -127,7 +125,7 @@ protected:
 
         // Unserialize value
         try {
-            CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
             ssValue >> value;
         }
         catch (std::exception &e) {
@@ -149,13 +147,13 @@ protected:
             assert(!"Write called on database in read-only mode");
 
         // Key
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());
 
         // Value
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        CDataStream ssValue(SER_DISK, BITCREDIT_CLIENT_VERSION);
         ssValue.reserve(10000);
         ssValue << value;
         Dbt datValue(&ssValue[0], ssValue.size());
@@ -178,7 +176,7 @@ protected:
             assert(!"Erase called on database in read-only mode");
 
         // Key
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());
@@ -198,7 +196,7 @@ protected:
             return false;
 
         // Key
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());
@@ -266,7 +264,7 @@ public:
     {
         if (!pdb || activeTxn)
             return false;
-        DbTxn* ptxn = bitdb.TxnBegin();
+        DbTxn* ptxn = pbitDb->TxnBegin();
         if (!ptxn)
             return false;
         activeTxn = ptxn;
@@ -302,7 +300,7 @@ public:
         return Write(std::string("version"), nVersion);
     }
 
-    bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL);
+    bool static Rewrite(const std::string& strFile, Bitcredit_CDBEnv *bitDbIn, const char* pszSkip = NULL);
 };
 
 #endif // BITCOIN_DB_H

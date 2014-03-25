@@ -7,6 +7,9 @@
 
 #include "paymentrequestplus.h"
 #include "walletmodeltransaction.h"
+#include "wallet.h"
+#include "bitcoin_walletmodel.h"
+#include "optionsmodel.h"
 
 #include "allocators.h" /* for SecureString */
 
@@ -15,30 +18,31 @@
 
 #include <QObject>
 
-class AddressTableModel;
+class Bitcredit_AddressTableModel;
 class OptionsModel;
-class RecentRequestsTableModel;
-class TransactionTableModel;
-class WalletModelTransaction;
+class Bitcredit_RecentRequestsTableModel;
+class Bitcredit_TransactionTableModel;
+class Bitcredit_WalletModelTransaction;
+class Bitcredit_CReserveKey;
 
 class CCoinControl;
 class CKeyID;
 class COutPoint;
-class COutput;
+class Bitcredit_COutput;
 class CPubKey;
-class CWallet;
+class Bitcredit_CWallet;
 class uint256;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
 
-class SendCoinsRecipient
+class Bitcredit_SendCoinsRecipient
 {
 public:
-    explicit SendCoinsRecipient() : amount(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
-    explicit SendCoinsRecipient(const QString &addr, const QString &label, quint64 amount, const QString &message):
-        address(addr), label(label), amount(amount), message(message), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+    explicit Bitcredit_SendCoinsRecipient() : amount(0), nVersion(Bitcredit_SendCoinsRecipient::CURRENT_VERSION) { }
+    explicit Bitcredit_SendCoinsRecipient(const QString &addr, const QString &label, quint64 amount, const QString &message):
+        address(addr), label(label), amount(amount), message(message), nVersion(Bitcredit_SendCoinsRecipient::CURRENT_VERSION) {}
 
     // If from an insecure payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
@@ -61,7 +65,7 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-        SendCoinsRecipient* pthis = const_cast<SendCoinsRecipient*>(this);
+        Bitcredit_SendCoinsRecipient* pthis = const_cast<Bitcredit_SendCoinsRecipient*>(this);
 
         std::string sAddress = pthis->address.toStdString();
         std::string sLabel = pthis->label.toStdString();
@@ -92,14 +96,14 @@ public:
     )
 };
 
-/** Interface to Bitcoin wallet from Qt view code. */
-class WalletModel : public QObject
+/** Interface to Bitcredit wallet from Qt view code. */
+class Bitcredit_WalletModel : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent = 0);
-    ~WalletModel();
+    explicit Bitcredit_WalletModel(Bitcredit_CWallet *wallet, Bitcredit_CWallet *deposit_wallet, Bitcoin_CWallet *bitcoin_wallet, OptionsModel *optionsModel, Bitcredit_CWallet *keyholder_wallet, bool isForDepositWallet, QObject *parent = 0);
+    ~Bitcredit_WalletModel();
 
     enum StatusCode // Returned by sendCoins
     {
@@ -110,7 +114,8 @@ public:
         AmountWithFeeExceedsBalance,
         DuplicateAddress,
         TransactionCreationFailed, // Error returned when wallet is still locked
-        TransactionCommitFailed
+        TransactionCommitFailed,
+        TransactionDoubleSpending
     };
 
     enum EncryptionStatus
@@ -121,13 +126,21 @@ public:
     };
 
     OptionsModel *getOptionsModel();
-    AddressTableModel *getAddressTableModel();
-    TransactionTableModel *getTransactionTableModel();
-    RecentRequestsTableModel *getRecentRequestsTableModel();
+    Bitcredit_AddressTableModel *getAddressTableModel();
+    Bitcredit_TransactionTableModel *getTransactionTableModel();
+    Bitcredit_RecentRequestsTableModel *getRecentRequestsTableModel();
 
-    qint64 getBalance(const CCoinControl *coinControl = NULL) const;
-    qint64 getUnconfirmedBalance() const;
-    qint64 getImmatureBalance() const;
+    qint64 getBalance(map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
+    qint64 getUnconfirmedBalance(map<uint256, set<int> >& mapFilterTxInPoints) const;
+    qint64 getImmatureBalance(map<uint256, set<int> >& mapFilterTxInPoints) const;
+    qint64 getPreparedDepositBalance() const;
+    qint64 getInDepositBalance() const;
+    int getBlockHeight() const;
+    qint64 getTotalMonetaryBase() const;
+    qint64 getTotalDepositBase() const;
+    int getNextSubsidyUpdateHeight() const;
+    qint64 getRequiredDepositLevel(unsigned int forwardBlocks) const;
+    qint64 getMaxBlockSubsidy(unsigned int forwardBlocks) const;
     int getNumTransactions() const;
     EncryptionStatus getEncryptionStatus() const;
 
@@ -143,10 +156,19 @@ public:
     };
 
     // prepare transaction for getting txfee before sending coins
-    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
+    SendCoinsReturn prepareTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
+
+    // prepare deposit transaction for getting txfee before sending coins
+    SendCoinsReturn prepareDepositTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const Bitcredit_COutput& coin, Bitcredit_CCoinsViewCache &bitcredit_view, Bitcoin_CClaimCoinsViewCache &claim_view);
+
+    // prepare claim transaction for getting txfee before sending coins
+    SendCoinsReturn prepareClaimTransaction(Bitcoin_WalletModel *bitcoin_model, Bitcoin_CClaimCoinsViewCache &claim_view, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
+
+    // Store deposit coins for later use
+    SendCoinsReturn storeDepositTransaction(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModelTransaction &transaction);
 
     // Send coins to a list of recipients
-    SendCoinsReturn sendCoins(WalletModelTransaction &transaction);
+    SendCoinsReturn sendCoins(Bitcredit_WalletModelTransaction &transaction);
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
@@ -160,7 +182,7 @@ public:
     class UnlockContext
     {
     public:
-        UnlockContext(WalletModel *wallet, bool valid, bool relock);
+        UnlockContext(Bitcredit_WalletModel *wallet, bool valid, bool relock);
         ~UnlockContext();
 
         bool isValid() const { return valid; }
@@ -169,7 +191,7 @@ public:
         UnlockContext(const UnlockContext& obj) { CopyFrom(obj); }
         UnlockContext& operator=(const UnlockContext& rhs) { CopyFrom(rhs); return *this; }
     private:
-        WalletModel *wallet;
+        Bitcredit_WalletModel *wallet;
         bool valid;
         mutable bool relock; // mutable, as it can be set to false by copying
 
@@ -179,9 +201,9 @@ public:
     UnlockContext requestUnlock();
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
-    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
+    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Bitcredit_COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
-    void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;
+    void listCoins(std::map<QString, std::vector<Bitcredit_COutput> >& mapCoins) const;
 
     bool isLockedCoin(uint256 hash, unsigned int n) const;
     void lockCoin(COutPoint& output);
@@ -191,34 +213,56 @@ public:
     void loadReceiveRequests(std::vector<std::string>& vReceiveRequests);
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
 
-private:
-    CWallet *wallet;
+    void checkBalanceChanged();
+    void checkMinerStatisticsChanged();
 
+    Bitcredit_CWallet *wallet;
+    Bitcredit_CWallet *deposit_wallet;
+    Bitcoin_CWallet *bitcoin_wallet;
+
+private:
     // Wallet has an options model for wallet-specific options
     // (transaction fee, for example)
     OptionsModel *optionsModel;
 
-    AddressTableModel *addressTableModel;
-    TransactionTableModel *transactionTableModel;
-    RecentRequestsTableModel *recentRequestsTableModel;
+    Bitcredit_AddressTableModel *addressTableModel;
+    Bitcredit_TransactionTableModel *transactionTableModel;
+    Bitcredit_RecentRequestsTableModel *recentRequestsTableModel;
 
     // Cache some values to be able to detect changes
     qint64 cachedBalance;
     qint64 cachedUnconfirmedBalance;
     qint64 cachedImmatureBalance;
+    qint64 cachedPreparedDepositBalance;
+    qint64 cachedInDepositBalance;
     qint64 cachedNumTransactions;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
+
+    qint64 cachedReqDeposit1;
+    qint64 cachedReqDeposit2;
+    qint64 cachedReqDeposit3;
+    qint64 cachedReqDeposit4;
+    qint64 cachedReqDeposit5;
+    qint64 cachedMaxBlockSubsidy1;
+    qint64 cachedMaxBlockSubsidy2;
+    qint64 cachedMaxBlockSubsidy3;
+    qint64 cachedMaxBlockSubsidy4;
+    qint64 cachedMaxBlockSubsidy5;
+    int cachedBlockHeight;
+    qint64 cachedTotalMonetaryBase;
+    qint64 cachedTotalDepositBase;
+    int cachedNextSubsidyUpdateHeight;
 
     QTimer *pollTimer;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
-    void checkBalanceChanged();
 
 signals:
     // Signal that balance in wallet changed
-    void balanceChanged(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
+    void balanceChanged(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 preparedDepositBalance, qint64 inDepositBalance);
+    void minerStatisticsChanged(qint64 reqDeposit1, qint64 reqDeposit2, qint64 reqDeposit3, qint64 reqDeposit4, qint64 reqDeposit5, qint64 maxSubsidy1, qint64 maxSubsidy2, qint64 maxSubsidy3, qint64 maxSubsidy4, qint64 maxSubsidy5, unsigned int blockHeight, qint64 totalMonetaryBase, qint64 totalDepositBase, int nextSubsidyUpdateHeight);
 
     // Number of transactions in wallet changed
     void numTransactionsChanged(int count);
@@ -235,7 +279,7 @@ signals:
     void message(const QString &title, const QString &message, unsigned int style);
 
     // Coins sent: from wallet, to recipient, in (serialized) transaction:
-    void coinsSent(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
+    void coinsSent(Bitcredit_CWallet* wallet, Bitcredit_SendCoinsRecipient recipient, QByteArray transaction);
 
     // Show progress dialog e.g. for rescan
     void showProgress(const QString &title, int nProgress);

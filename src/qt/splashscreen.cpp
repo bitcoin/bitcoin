@@ -29,9 +29,9 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f, bool isTest
     float fontFactor            = 1.0;
 
     // define text to place
-    QString titleText       = tr("Bitcoin Core");
+    QString titleText       = tr("Bitcredit Core");
     QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
-    QString copyrightText   = QChar(0xA9)+QString(" 2009-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Bitcoin Core developers"));
+    QString copyrightText   = QChar(0xA9)+QString(" 2013-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Bitcredit Core developers"));
     QString testnetAddText  = QString(tr("[testnet]")); // define text to place as single text object
 
     QString font            = "Arial";
@@ -119,7 +119,11 @@ static void ShowProgress(SplashScreen *splash, const std::string &title, int nPr
 }
 
 #ifdef ENABLE_WALLET
-static void ConnectWallet(SplashScreen *splash, CWallet* wallet)
+static void ConnectWallet(SplashScreen *splash, Bitcredit_CWallet* wallet)
+{
+    wallet->ShowProgress.connect(boost::bind(ShowProgress, splash, _1, _2));
+}
+static void Bitcoin_ConnectWallet(SplashScreen *splash, Bitcoin_CWallet* wallet)
 {
     wallet->ShowProgress.connect(boost::bind(ShowProgress, splash, _1, _2));
 }
@@ -132,6 +136,7 @@ void SplashScreen::subscribeToCoreSignals()
     uiInterface.ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
 #ifdef ENABLE_WALLET
     uiInterface.LoadWallet.connect(boost::bind(ConnectWallet, this, _1));
+    uiInterface.Bitcoin_LoadWallet.connect(boost::bind(Bitcoin_ConnectWallet, this, _1));
 #endif
 }
 
@@ -141,7 +146,9 @@ void SplashScreen::unsubscribeFromCoreSignals()
     uiInterface.InitMessage.disconnect(boost::bind(InitMessage, this, _1));
     uiInterface.ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
 #ifdef ENABLE_WALLET
-    if(pwalletMain)
-        pwalletMain->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
+    if(bitcredit_pwalletMain)
+        bitcredit_pwalletMain->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
+    if(bitcoin_pwalletMain)
+        bitcoin_pwalletMain->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
 #endif
 }

@@ -1,7 +1,7 @@
 TOR SUPPORT IN BITCOIN
 ======================
 
-It is possible to run Bitcoin as a Tor hidden service, and connect to such services.
+It is possible to run Bitcredit as a Tor hidden service, and connect to such services.
 
 The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on a random port. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort) for how to properly
 configure Tor.
@@ -10,7 +10,7 @@ configure Tor.
 1. Run bitcoin behind a Tor proxy
 ---------------------------------
 
-The first step is running Bitcoin behind a Tor proxy. This will already make all
+The first step is running Bitcredit behind a Tor proxy. This will already make all
 outgoing connections be anonymized, but more is possible.
 
 	-socks=5        SOCKS5 supports connecting-to-hostname, which can be used instead
@@ -47,11 +47,11 @@ reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equiv
 config file):
 
 	HiddenServiceDir /var/lib/tor/bitcoin-service/
-	HiddenServicePort 8333 127.0.0.1:8333
-	HiddenServicePort 18333 127.0.0.1:18333
+	HiddenServicePort 9333 127.0.0.1:9333
+	HiddenServicePort 19333 127.0.0.1:19333
 
 The directory can be different of course, but (both) port numbers should be equal to
-your bitcoind's P2P listen port (8333 by default).
+your bitcreditd's P2P listen port (9333 by default).
 
 	-externalip=X   You can tell bitcoin about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
@@ -73,15 +73,15 @@ your bitcoind's P2P listen port (8333 by default).
 
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
-	./bitcoind -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
+	./bitcreditd -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
 
 (obviously, replace the Onion address with your own). If you don't care too much
 about hiding your node, and want to be reachable on IPv4 as well, additionally
 specify:
 
-	./bitcoind ... -discover
+	./bitcreditd ... -discover
 
-and open port 8333 on your firewall (or use -upnp).
+and open port 9333 on your firewall (or use -upnp).
 
 If you only want to use Tor to reach onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:

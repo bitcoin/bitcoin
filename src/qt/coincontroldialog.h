@@ -15,31 +15,32 @@
 #include <QTreeWidgetItem>
 
 namespace Ui {
-    class CoinControlDialog;
+    class Bitcredit_CoinControlDialog;
 }
-class WalletModel;
+class Bitcredit_WalletModel;
 class CCoinControl;
 
-class CoinControlDialog : public QDialog
+class Bitcredit_CoinControlDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit CoinControlDialog(QWidget *parent = 0);
-    ~CoinControlDialog();
+    explicit Bitcredit_CoinControlDialog(QWidget *parent = 0);
+    ~Bitcredit_CoinControlDialog();
 
-    void setModel(WalletModel *model);
+    void setModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModel *deposit_model);
 
     // static because also called from sendcoinsdialog
-    static void updateLabels(WalletModel*, QDialog*);
+    static void updateLabels(Bitcredit_WalletModel*, QDialog*);
     static QString getPriorityLabel(double);
 
     static QList<qint64> payAmounts;
     static CCoinControl *coinControl;
 
 private:
-    Ui::CoinControlDialog *ui;
-    WalletModel *model;
+    Ui::Bitcredit_CoinControlDialog *ui;
+    Bitcredit_WalletModel *bitcredit_model;
+    Bitcredit_WalletModel *deposit_model;
     int sortColumn;
     Qt::SortOrder sortOrder;
 

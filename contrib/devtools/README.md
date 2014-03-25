@@ -44,10 +44,10 @@ If you run this script from src/ it will automatically update the year on the co
 .cpp and .h files if these have a git commit from the current year.
 
 For example a file changed in 2014 (with 2014 being the current year):
-```// Copyright (c) 2009-2013 The Bitcoin developers```
+```// Copyright (c) 2009-2013 The Bitcredit developers```
 
 would be changed to:
-```// Copyright (c) 2009-2014 The Bitcoin developers```
+```// Copyright (c) 2009-2014 The Bitcredit developers```
 
 symbol-check.py
 ==================
@@ -64,10 +64,10 @@ If only supported symbols are used the return value will be 0 and the output wil
 
 If there are 'unsupported' symbols, the return value will be 1 a list like this will be printed:
 
-    .../64/test_bitcoin: symbol memcpy from unsupported version GLIBC_2.14
-    .../64/test_bitcoin: symbol __fdelt_chk from unsupported version GLIBC_2.15
-    .../64/test_bitcoin: symbol std::out_of_range::~out_of_range() from unsupported version GLIBCXX_3.4.15
-    .../64/test_bitcoin: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
+    .../64/test_bitcredit: symbol memcpy from unsupported version GLIBC_2.14
+    .../64/test_bitcredit: symbol __fdelt_chk from unsupported version GLIBC_2.15
+    .../64/test_bitcredit: symbol std::out_of_range::~out_of_range() from unsupported version GLIBCXX_3.4.15
+    .../64/test_bitcredit: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
 
 update-translations.py
 =======================

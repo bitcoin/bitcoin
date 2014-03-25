@@ -10,13 +10,17 @@
 #include "serialize.h"
 #include "uint256.h"
 
+#include "keystore.h"
+
 #include <stdint.h>
 
-class CTransaction;
+class Bitcredit_CTransaction;
 
 /** No amount larger than this (in satoshi) is valid */
-static const int64_t MAX_MONEY = 21000000 * COIN;
-inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+static const int64_t BITCOIN_MAX_MONEY = 21000000 * COIN;
+static const int64_t BITCREDIT_MAX_MONEY = 30000000 * COIN;
+inline bool Bitcredit_MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= BITCREDIT_MAX_MONEY); }
+inline bool Bitcoin_MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= BITCOIN_MAX_MONEY); }
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -51,14 +55,14 @@ public:
 };
 
 /** An inpoint - a combination of a transaction and an index n into its vin */
-class CInPoint
+class Bitcredit_CInPoint
 {
 public:
-    const CTransaction* ptx;
+    const Bitcredit_CTransaction* ptx;
     unsigned int n;
 
-    CInPoint() { SetNull(); }
-    CInPoint(const CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
+    Bitcredit_CInPoint() { SetNull(); }
+    Bitcredit_CInPoint(const Bitcredit_CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
     void SetNull() { ptx = NULL; n = (unsigned int) -1; }
     bool IsNull() const { return (ptx == NULL && n == (unsigned int) -1); }
 };
@@ -67,41 +71,31 @@ public:
  * transaction's output that it claims and a signature that matches the
  * output's public key.
  */
-class CTxIn
+class Bitcredit_CTxIn
 {
 public:
     COutPoint prevout;
     CScript scriptSig;
-    unsigned int nSequence;
 
-    CTxIn()
-    {
-        nSequence = std::numeric_limits<unsigned int>::max();
-    }
+    Bitcredit_CTxIn() {}
 
-    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), unsigned int nSequenceIn=std::numeric_limits<unsigned int>::max());
-    CTxIn(uint256 hashPrevTx, unsigned int nOut, CScript scriptSigIn=CScript(), unsigned int nSequenceIn=std::numeric_limits<unsigned int>::max());
+    explicit Bitcredit_CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript());
+    Bitcredit_CTxIn(uint256 hashPrevTx, unsigned int nOut, CScript scriptSigIn=CScript());
 
     IMPLEMENT_SERIALIZE
     (
         READWRITE(prevout);
         READWRITE(scriptSig);
-        READWRITE(nSequence);
     )
 
-    bool IsFinal() const
+    friend bool operator==(const Bitcredit_CTxIn& a, const Bitcredit_CTxIn& b)
     {
-        return (nSequence == std::numeric_limits<unsigned int>::max());
+        return (
+        		a.prevout   == b.prevout &&
+                a.scriptSig == b.scriptSig);
     }
 
-    friend bool operator==(const CTxIn& a, const CTxIn& b)
-    {
-        return (a.prevout   == b.prevout &&
-                a.scriptSig == b.scriptSig &&
-                a.nSequence == b.nSequence);
-    }
-
-    friend bool operator!=(const CTxIn& a, const CTxIn& b)
+    friend bool operator!=(const Bitcredit_CTxIn& a, const Bitcredit_CTxIn& b)
     {
         return !(a == b);
     }
@@ -150,7 +144,7 @@ public:
 
     bool IsDust(int64_t nMinRelayTxFee) const
     {
-        // "Dust" is defined in terms of CTransaction::nMinRelayTxFee,
+        // "Dust" is defined in terms of Bitcredit_CTransaction::nMinRelayTxFee,
         // which has units satoshis-per-kilobyte.
         // If you'd pay more than 1/3 in fees
         // to spend something, then we consider it dust.
@@ -176,22 +170,122 @@ public:
     void print() const;
 };
 
+/** An output of a transaction.  It contains the public key that the next input
+ * must be able to sign with to claim it.
+ */
+class CTxOutClaim
+{
+public:
+    int64_t nValueOriginal;
+    int64_t nValueClaimable;
+    CScript scriptPubKey;
 
+    CTxOutClaim()
+    {
+        SetNull();
+    }
+
+    CTxOutClaim(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn);
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(nValueOriginal);
+        READWRITE(nValueClaimable);
+        READWRITE(scriptPubKey);
+
+        assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginal), strprintf("CTxOutClaim() : valueOriginal out of range: %d", nValueOriginal));
+        assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimable), strprintf("CTxOutClaim() : valueClaimable out of range: %d", nValueClaimable));
+        assert_with_stacktrace(nValueOriginal >= nValueClaimable, strprintf("CTxOutClaim() : valueOriginal less than valueClaimable: %d:%d", nValueOriginal, nValueClaimable));
+    )
+
+    void SetNull()
+    {
+        nValueOriginal = -1;
+        nValueClaimable = -1;
+        scriptPubKey.clear();
+    }
+
+    bool IsNull() const
+    {
+        return (nValueOriginal == -1);
+    }
+
+    uint256 GetHash() const;
+
+    friend bool operator==(const CTxOutClaim& a, const CTxOutClaim& b)
+    {
+        return (a.nValueOriginal       == b.nValueOriginal &&
+        		a.nValueClaimable       == b.nValueClaimable &&
+                a.scriptPubKey == b.scriptPubKey);
+    }
+
+    friend bool operator!=(const CTxOutClaim& a, const CTxOutClaim& b)
+    {
+        return !(a == b);
+    }
+
+    std::string ToString() const;
+    void print() const;
+};
+
+/*
+ * Stores the two different levels of values before spending.
+ * These two are used to calculate the difference between the
+ * original and the claimable state
+ */
+class ClaimSum
+{
+public:
+    int64_t nValueOriginalSum;
+    int64_t nValueClaimableSum;
+
+    ClaimSum()
+    {
+        nValueOriginalSum = 0;
+        nValueClaimableSum = 0;
+    }
+
+    void Validate() {
+    	assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginalSum), strprintf("ClaimSum() : nOriginal out of range: %d", nValueOriginalSum));
+    	assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimableSum), strprintf("ClaimSum() : nClaimable out of range: %d", nValueClaimableSum));
+
+    	assert(nValueOriginalSum >= nValueClaimableSum);
+    }
+};
+
+
+/** Tx types */
+enum
+{
+    TX_TYPE_STANDARD = 1,
+    TX_TYPE_COINBASE = 2,
+    TX_TYPE_DEPOSIT = 3,
+    TX_TYPE_EXTERNAL_BITCOIN = 4,
+    TX_TYPE_SIGNATURE_VERIFIED = 5,
+    TX_TYPE_COLORED = 6,
+};
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
-class CTransaction
+class Bitcredit_CTransaction
 {
 public:
     static int64_t nMinTxFee;
     static int64_t nMinRelayTxFee;
     static const int CURRENT_VERSION=1;
     int nVersion;
-    std::vector<CTxIn> vin;
+	unsigned int nTxType;
+    std::vector<Bitcredit_CTxIn> vin;
     std::vector<CTxOut> vout;
+    CKeyID signingKeyId;
     unsigned int nLockTime;
 
-    CTransaction()
+    Bitcredit_CTransaction(unsigned char nTypeIn)
+    {
+        SetNull();
+        nTxType = nTypeIn;
+    }
+    Bitcredit_CTransaction()
     {
         SetNull();
     }
@@ -200,16 +294,23 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
+        READWRITE(nTxType);
         READWRITE(vin);
         READWRITE(vout);
+        if(IsDeposit()) {
+        	READWRITE(signingKeyId);
+        	assert(signingKeyId != CKeyID(0));
+        }
         READWRITE(nLockTime);
     )
 
     void SetNull()
     {
-        nVersion = CTransaction::CURRENT_VERSION;
+        nVersion = Bitcredit_CTransaction::CURRENT_VERSION;
+    	nTxType = TX_TYPE_STANDARD;
         vin.clear();
         vout.clear();
+        signingKeyId = CKeyID();
         nLockTime = 0;
     }
 
@@ -222,6 +323,7 @@ public:
 
     // Return sum of txouts.
     int64_t GetValueOut() const;
+    int64_t GetDepositValueOut() const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 
@@ -230,18 +332,41 @@ public:
 
     bool IsCoinBase() const
     {
-        return (vin.size() == 1 && vin[0].prevout.IsNull());
+        return nTxType == TX_TYPE_COINBASE;
+    }
+    bool IsValidCoinBase() const
+    {
+        return IsCoinBase() && vin.size() == 1 && vin[0].prevout.hash != 0 && vout.size() > 0 && vout.size() <= 11;
+    }
+    bool IsDeposit() const
+    {
+        return nTxType == TX_TYPE_DEPOSIT;
+    }
+    bool IsValidDeposit() const
+    {
+        return IsDeposit() && vin.size() == 1 && (vout.size() == 1 || vout.size() == 2);
     }
 
-    friend bool operator==(const CTransaction& a, const CTransaction& b)
+    bool IsClaim() const
+    {
+        return nTxType == TX_TYPE_EXTERNAL_BITCOIN;
+    }
+    bool IsStandard() const
+    {
+        return nTxType == TX_TYPE_STANDARD;
+    }
+
+    friend bool operator==(const Bitcredit_CTransaction& a, const Bitcredit_CTransaction& b)
     {
         return (a.nVersion  == b.nVersion &&
+        		a.nTxType   == b.nTxType &&
                 a.vin       == b.vin &&
                 a.vout      == b.vout &&
+                a.signingKeyId      == b.signingKeyId &&
                 a.nLockTime == b.nLockTime);
     }
 
-    friend bool operator!=(const CTransaction& a, const CTransaction& b)
+    friend bool operator!=(const Bitcredit_CTransaction& a, const Bitcredit_CTransaction& b)
     {
         return !(a == b);
     }
@@ -277,25 +402,58 @@ public:
     });)
 };
 
+/** wrapper for CTxOut that provides a more compact serialization */
+class CTxOutClaimCompressor
+{
+private:
+    CTxOutClaim &txout;
+
+public:
+    static uint64_t CompressAmount(uint64_t nAmount);
+    static uint64_t DecompressAmount(uint64_t nAmount);
+
+    CTxOutClaimCompressor(CTxOutClaim &txoutIn) : txout(txoutIn) { }
+
+    IMPLEMENT_SERIALIZE(({
+        if (!fRead) {
+            uint64_t nValOriginal = CompressAmount(txout.nValueOriginal);
+            READWRITE(VARINT(nValOriginal));
+            uint64_t nValClaimable = CompressAmount(txout.nValueClaimable);
+            READWRITE(VARINT(nValClaimable));
+        } else {
+            uint64_t nValOriginal = 0;
+            READWRITE(VARINT(nValOriginal));
+            txout.nValueOriginal = DecompressAmount(nValOriginal);
+            uint64_t nValClaimable = 0;
+            READWRITE(VARINT(nValClaimable));
+            txout.nValueClaimable = DecompressAmount(nValClaimable);
+        }
+        CScriptCompressor cscript(REF(txout.scriptPubKey));
+        READWRITE(cscript);
+    });)
+};
+
 /** Undo information for a CTxIn
  *
  *  Contains the prevout's CTxOut being spent, and if this was the
  *  last output of the affected transaction, its metadata as well
  *  (coinbase or not, height, transaction version)
  */
-class CTxInUndo
+class Bitcredit_CTxInUndo
 {
 public:
     CTxOut txout;         // the txout data before being spent
     bool fCoinBase;       // if the outpoint was the last unspent: whether it belonged to a coinbase
     unsigned int nHeight; // if the outpoint was the last unspent: its height
+    int nMetaData; // if the outpoint was the last unspent: its metadata
     int nVersion;         // if the outpoint was the last unspent: its version
 
-    CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nVersion(0) {}
-    CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
+    Bitcredit_CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nMetaData(0), nVersion(0) {}
+    Bitcredit_CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nMetaDataIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nMetaData(nMetaDataIn), nVersion(nVersionIn) { }
 
     unsigned int GetSerializeSize(int nType, int nVersion) const {
         return ::GetSerializeSize(VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion) +
+               (nHeight > 0 ? ::GetSerializeSize(VARINT(this->nMetaData), nType, nVersion) : 0) +
                (nHeight > 0 ? ::GetSerializeSize(VARINT(this->nVersion), nType, nVersion) : 0) +
                ::GetSerializeSize(CTxOutCompressor(REF(txout)), nType, nVersion);
     }
@@ -303,8 +461,10 @@ public:
     template<typename Stream>
     void Serialize(Stream &s, int nType, int nVersion) const {
         ::Serialize(s, VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion);
-        if (nHeight > 0)
+        if (nHeight > 0) {
+            ::Serialize(s, VARINT(this->nMetaData), nType, nVersion);
             ::Serialize(s, VARINT(this->nVersion), nType, nVersion);
+        }
         ::Serialize(s, CTxOutCompressor(REF(txout)), nType, nVersion);
     }
 
@@ -314,18 +474,20 @@ public:
         ::Unserialize(s, VARINT(nCode), nType, nVersion);
         nHeight = nCode / 2;
         fCoinBase = nCode & 1;
-        if (nHeight > 0)
+        if (nHeight > 0) {
+            ::Unserialize(s, VARINT(this->nMetaData), nType, nVersion);
             ::Unserialize(s, VARINT(this->nVersion), nType, nVersion);
+        }
         ::Unserialize(s, REF(CTxOutCompressor(REF(txout))), nType, nVersion);
     }
 };
 
-/** Undo information for a CTransaction */
-class CTxUndo
+/** Undo information for a Bitcredit_CTransaction */
+class Bitcredit_CTxUndo
 {
 public:
     // undo information for all txins
-    std::vector<CTxInUndo> vprevout;
+    std::vector<Bitcredit_CTxInUndo> vprevout;
 
     IMPLEMENT_SERIALIZE(
         READWRITE(vprevout);
@@ -340,19 +502,24 @@ public:
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-class CBlockHeader
+class Bitcredit_CBlockHeader
 {
 public:
     // header
-    static const int CURRENT_VERSION=2;
+    static const int CURRENT_VERSION=1;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
+    uint256 hashLinkedBitcoinBlock;
+    uint256 hashSigMerkleRoot;
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
+    uint64_t nTotalMonetaryBase;
+    uint64_t nTotalDepositBase;
+    uint64_t nDepositAmount;
 
-    CBlockHeader()
+    Bitcredit_CBlockHeader()
     {
         SetNull();
     }
@@ -363,19 +530,29 @@ public:
         nVersion = this->nVersion;
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
+        READWRITE(hashLinkedBitcoinBlock);
+        READWRITE(hashSigMerkleRoot);
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(nTotalMonetaryBase);
+        READWRITE(nTotalDepositBase);
+        READWRITE(nDepositAmount);
     )
 
     void SetNull()
     {
-        nVersion = CBlockHeader::CURRENT_VERSION;
+        nVersion = Bitcredit_CBlockHeader::CURRENT_VERSION;
         hashPrevBlock = 0;
         hashMerkleRoot = 0;
+        hashLinkedBitcoinBlock = 0;
+        hashSigMerkleRoot = 0;
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        nTotalMonetaryBase = 0;
+        nTotalDepositBase = 0;
+        nDepositAmount = 0;
     }
 
     bool IsNull() const
@@ -384,7 +561,7 @@ public:
     }
 
     uint256 GetHash() const;
-
+    uint256 GetLockHash() const;
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
@@ -392,59 +569,89 @@ public:
 };
 
 
-class CBlock : public CBlockHeader
+class Bitcredit_CBlock : public Bitcredit_CBlockHeader
 {
 public:
     // network and disk
-    std::vector<CTransaction> vtx;
+    std::vector<CCompactSignature> vsig;
+    std::vector<Bitcredit_CTransaction> vtx;
 
     // memory only
+    mutable std::vector<uint256> vSigMerkleTree;
     mutable std::vector<uint256> vMerkleTree;
 
-    CBlock()
+    Bitcredit_CBlock()
     {
         SetNull();
     }
 
-    CBlock(const CBlockHeader &header)
+    Bitcredit_CBlock(const Bitcredit_CBlockHeader &header)
     {
         SetNull();
-        *((CBlockHeader*)this) = header;
+        *((Bitcredit_CBlockHeader*)this) = header;
     }
 
     IMPLEMENT_SERIALIZE
     (
-        READWRITE(*(CBlockHeader*)this);
+        READWRITE(*(Bitcredit_CBlockHeader*)this);
+        READWRITE(vsig);
         READWRITE(vtx);
     )
 
     void SetNull()
     {
-        CBlockHeader::SetNull();
+        Bitcredit_CBlockHeader::SetNull();
+        vsig.clear();
         vtx.clear();
+        vSigMerkleTree.clear();
         vMerkleTree.clear();
     }
 
-    CBlockHeader GetBlockHeader() const
+    Bitcredit_CBlockHeader GetBlockHeader() const
     {
-        CBlockHeader block;
+        Bitcredit_CBlockHeader block;
         block.nVersion       = nVersion;
         block.hashPrevBlock  = hashPrevBlock;
         block.hashMerkleRoot = hashMerkleRoot;
+        block.hashLinkedBitcoinBlock         = hashLinkedBitcoinBlock;
+        block.hashSigMerkleRoot         = hashSigMerkleRoot;
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.nTotalMonetaryBase = nTotalMonetaryBase;
+        block.nTotalDepositBase = nTotalDepositBase;
+        block.nDepositAmount = nDepositAmount;
         return block;
     }
 
+    uint256 BuildSigMerkleTree() const;
     uint256 BuildMerkleTree() const;
-
+    void RecalcLockHashAndMerkleRoot();
+    bool UpdateSignatures(const CKeyStore &deposit_keyStore);
     const uint256 &GetTxHash(unsigned int nIndex) const {
         assert(vMerkleTree.size() > 0); // BuildMerkleTree must have been called first
         assert(nIndex < vtx.size());
         return vMerkleTree[nIndex];
     }
 
+    uint64_t GetDepositAmount() const {
+        uint64_t totalValueOut = 0;
+        for (unsigned int i = 1; i < vtx.size(); i++) {
+        	if(vtx[i].IsDeposit()) {
+        		totalValueOut += vtx[i].GetDepositValueOut();
+        	} else {
+        		break;
+        	}
+        }
+    	return totalValueOut;
+    }
+    uint64_t GetTotalValueOut() const {
+        uint64_t totalValueOut = 0;
+        for (unsigned int i = 0; i < vtx.size(); i++) {
+        	totalValueOut += vtx[i].GetValueOut();
+        }
+    	return totalValueOut;
+    }
     std::vector<uint256> GetMerkleBranch(int nIndex) const;
     static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
     void print() const;
@@ -481,6 +688,72 @@ struct CBlockLocator
     bool IsNull()
     {
         return vHave.empty();
+    }
+};
+
+class CBlockIndexBase {
+public:
+    // pointer to the hash of the block, if any. memory is owned by this CBlockIndex
+    const uint256* phashBlock;
+
+    // pointer to the index of the predecessor of this block
+    CBlockIndexBase* pprev;
+
+    // height of the entry in the chain. The genesis block has height 0
+    int nHeight;
+
+    // Which # file this block is stored in (blk?????.dat)
+    int nFile;
+
+    // Byte offset within blk?????.dat where this block's data is stored
+    unsigned int nDataPos;
+
+    // Byte offset within rev?????.dat where this block's undo data is stored
+    unsigned int nUndoPos;
+
+    // Byte offset within cla?????.dat where this block's undo claim data is stored
+    unsigned int nUndoPosClaim;
+
+    // (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
+    uint256 nChainWork;
+
+    // Number of transactions in this block.
+    // Note: in a potential headers-first mode, this number cannot be relied upon
+    unsigned int nTx;
+
+    // (memory only) Number of transactions in the chain up to and including this block
+    unsigned int nChainTx; // change to 64-bit type when necessary; won't happen before 2030
+
+    // Verification status of this block. See enum BlockStatus
+    int nStatus;
+
+    // block header
+    unsigned int nTime;
+    unsigned int nBits;
+
+    uint256 GetBlockHash() const
+    {
+        return *phashBlock;
+    }
+
+    int64_t GetBlockTime() const
+    {
+        return (int64_t)nTime;
+    }
+
+    uint256 GetBlockWork() const
+    {
+        uint256 bnTarget;
+        bool fNegative;
+        bool fOverflow;
+        bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+        if (fNegative || fOverflow || bnTarget == 0)
+            return 0;
+        // We need to compute 2**256 / (bnTarget+1), but we can't represent 2**256
+        // as it's too large for a uint256. However, as 2**256 is at least as large
+        // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
+        // or ~bnTarget / (nTarget+1) + 1.
+        return (~bnTarget / (bnTarget + 1)) + 1;
     }
 };
 

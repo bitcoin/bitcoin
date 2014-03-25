@@ -12,7 +12,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
-WalletFrame::WalletFrame(BitcoinGUI *_gui) :
+WalletFrame::WalletFrame(BitcreditGUI *_gui) :
     QFrame(_gui),
     gui(_gui)
 {
@@ -37,15 +37,15 @@ void WalletFrame::setClientModel(ClientModel *clientModel)
     this->clientModel = clientModel;
 }
 
-bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel)
+bool WalletFrame::addWallet(const QString& name, Bitcredit_WalletModel *bitcredit_model, Bitcoin_WalletModel *bitcoin_model, Bitcredit_WalletModel *deposit_model)
 {
-    if (!gui || !clientModel || !walletModel || mapWalletViews.count(name) > 0)
+    if (!gui || !clientModel || !bitcredit_model || !bitcoin_model || !deposit_model || mapWalletViews.count(name) > 0)
         return false;
 
     WalletView *walletView = new WalletView(this);
-    walletView->setBitcoinGUI(gui);
+    walletView->setBitcreditGUI(gui);
     walletView->setClientModel(clientModel);
-    walletView->setWalletModel(walletModel);
+    walletView->setWalletModel(bitcredit_model, bitcoin_model, deposit_model);
     walletView->showOutOfSyncWarning(bOutOfSync);
 
      /* TODO we should goto the currently selected page once dynamically adding wallets is supported */
@@ -88,7 +88,7 @@ void WalletFrame::removeAllWallets()
     mapWalletViews.clear();
 }
 
-bool WalletFrame::handlePaymentRequest(const SendCoinsRecipient &recipient)
+bool WalletFrame::handlePaymentRequest(const Bitcredit_SendCoinsRecipient &recipient)
 {
     WalletView *walletView = currentWalletView();
     if (!walletView)
@@ -112,11 +112,25 @@ void WalletFrame::gotoOverviewPage()
         i.value()->gotoOverviewPage();
 }
 
+void WalletFrame::gotoClaimCoinsPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoClaimCoinsPage();
+}
+
 void WalletFrame::gotoHistoryPage()
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoHistoryPage();
+}
+
+void WalletFrame::gotoMinerDepositsPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoMinerDepositsPage();
 }
 
 void WalletFrame::gotoReceiveCoinsPage()
@@ -133,6 +147,13 @@ void WalletFrame::gotoSendCoinsPage(QString addr)
         i.value()->gotoSendCoinsPage(addr);
 }
 
+void WalletFrame::gotoMinerCoinsPage(QString addr)
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoMinerCoinsPage(addr);
+}
+
 void WalletFrame::gotoSignMessageTab(QString addr)
 {
     WalletView *walletView = currentWalletView();
@@ -147,32 +168,80 @@ void WalletFrame::gotoVerifyMessageTab(QString addr)
         walletView->gotoVerifyMessageTab(addr);
 }
 
-void WalletFrame::encryptWallet(bool status)
+void WalletFrame::bitcredit_encryptWallet(bool status)
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
-        walletView->encryptWallet(status);
+        walletView->bitcredit_encryptWallet(status);
+}
+void WalletFrame::bitcoin_encryptWallet(bool status)
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->bitcoin_encryptWallet(status);
+}
+void WalletFrame::deposit_encryptWallet(bool status)
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->deposit_encryptWallet(status);
 }
 
-void WalletFrame::backupWallet()
+void WalletFrame::bitcredit_backupWallet()
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
-        walletView->backupWallet();
+        walletView->bitcredit_backupWallet();
+}
+void WalletFrame::bitcoin_backupWallet()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->bitcoin_backupWallet();
+}
+void WalletFrame::deposit_backupWallet()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->deposit_backupWallet();
 }
 
-void WalletFrame::changePassphrase()
+void WalletFrame::bitcredit_changePassphrase()
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
-        walletView->changePassphrase();
+        walletView->bitcredit_changePassphrase();
+}
+void WalletFrame::bitcoin_changePassphrase()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->bitcoin_changePassphrase();
+}
+void WalletFrame::deposit_changePassphrase()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->deposit_changePassphrase();
 }
 
-void WalletFrame::unlockWallet()
+void WalletFrame::bitcredit_unlockWallet()
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
-        walletView->unlockWallet();
+        walletView->bitcredit_unlockWallet();
+}
+void WalletFrame::bitcoin_unlockWallet()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->bitcoin_unlockWallet();
+}
+void WalletFrame::deposit_unlockWallet()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->deposit_unlockWallet();
 }
 
 void WalletFrame::usedSendingAddresses()
@@ -187,6 +256,12 @@ void WalletFrame::usedReceivingAddresses()
     WalletView *walletView = currentWalletView();
     if (walletView)
         walletView->usedReceivingAddresses();
+}
+
+void WalletFrame::bitcredit_setNumBlocks(int count) {
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->bitcredit_setNumBlocks(count);
 }
 
 WalletView *WalletFrame::currentWalletView()

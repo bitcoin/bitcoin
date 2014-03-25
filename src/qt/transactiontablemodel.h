@@ -8,28 +8,29 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
-class TransactionRecord;
-class TransactionTablePriv;
-class WalletModel;
+class Bitcredit_TransactionRecord;
+class Bitcredit_TransactionTablePriv;
+class Bitcredit_WalletModel;
 
-class CWallet;
+class Bitcredit_CWallet;
 
 /** UI model for the transaction table of a wallet.
  */
-class TransactionTableModel : public QAbstractTableModel
+class Bitcredit_TransactionTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    explicit TransactionTableModel(CWallet* wallet, WalletModel *parent = 0);
-    ~TransactionTableModel();
+    explicit Bitcredit_TransactionTableModel(Bitcredit_CWallet* bitcredit_wallet, Bitcredit_CWallet *keyholder_wallet, bool isForDepositWallet, Bitcredit_WalletModel *parent = 0);
+    ~Bitcredit_TransactionTableModel();
 
     enum ColumnIndex {
         Status = 0,
         Date = 1,
         Type = 2,
         ToAddress = 3,
-        Amount = 4
+        Amount = 4,
+        DepositAmount = 4
     };
 
     /** Roles to get specific information from a transaction row.
@@ -56,7 +57,9 @@ public:
         ConfirmedRole,
         /** Formatted amount, without brackets when unconfirmed */
         FormattedAmountRole,
-        /** Transaction status (TransactionRecord::Status) */
+        /** Formatted amount, without brackets when unconfirmed */
+		FormattedDepositAmountRole,
+        /** Transaction status (Bitcredit_TransactionRecord::Status) */
         StatusRole
     };
 
@@ -67,28 +70,32 @@ public:
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
 
 private:
-    CWallet* wallet;
-    WalletModel *walletModel;
+    Bitcredit_CWallet* wallet;
+    Bitcredit_CWallet* keyholder_wallet;
+    Bitcredit_WalletModel *walletModel;
     QStringList columns;
-    TransactionTablePriv *priv;
+    Bitcredit_TransactionTablePriv *priv;
+    bool isForDepositWallet;
 
     QString lookupAddress(const std::string &address, bool tooltip) const;
-    QVariant addressColor(const TransactionRecord *wtx) const;
-    QString formatTxStatus(const TransactionRecord *wtx) const;
-    QString formatTxDate(const TransactionRecord *wtx) const;
-    QString formatTxType(const TransactionRecord *wtx) const;
-    QString formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
-    QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true) const;
-    QString formatTooltip(const TransactionRecord *rec) const;
-    QVariant txStatusDecoration(const TransactionRecord *wtx) const;
-    QVariant txAddressDecoration(const TransactionRecord *wtx) const;
+    QVariant addressColor(const Bitcredit_TransactionRecord *wtx) const;
+    QString formatTxStatus(const Bitcredit_TransactionRecord *wtx) const;
+    QString formatTxDate(const Bitcredit_TransactionRecord *wtx) const;
+    QString formatTxType(const Bitcredit_TransactionRecord *wtx) const;
+    QString formatTxToAddress(const Bitcredit_TransactionRecord *wtx, bool tooltip) const;
+    QString formatTxAmount(const Bitcredit_TransactionRecord *wtx, bool showUnconfirmed=true) const;
+    QString formatTxAmountWithDeposit(const Bitcredit_TransactionRecord *wtx, bool showUnconfirmed=true) const;
+    QString formatTxDepositAmount(const Bitcredit_TransactionRecord *wtx) const;
+    QString formatTooltip(const Bitcredit_TransactionRecord *rec) const;
+    QVariant txStatusDecoration(const Bitcredit_TransactionRecord *wtx) const;
+    QVariant txAddressDecoration(const Bitcredit_TransactionRecord *wtx) const;
 
 public slots:
     void updateTransaction(const QString &hash, int status);
     void updateConfirmations();
     void updateDisplayUnit();
 
-    friend class TransactionTablePriv;
+    friend class Bitcredit_TransactionTablePriv;
 };
 
 #endif // TRANSACTIONTABLEMODEL_H

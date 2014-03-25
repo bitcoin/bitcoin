@@ -72,7 +72,7 @@ MSYS shell:
 	mkdir miniupnpc
 	cp *.h miniupnpc/
 
-Bitcoin
+Bitcredit
 -------
 MSYS shell:
 
@@ -80,4 +80,4 @@ MSYS shell:
 	sh autogen.sh
 	sh configure
 	mingw32-make
-	strip bitcoind.exe
+	strip bitcreditd.exe

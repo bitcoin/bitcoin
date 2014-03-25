@@ -14,43 +14,57 @@
 #include <utility>
 #include <vector>
 
-class CCoins;
+class Bitcredit_CCoins;
 class uint256;
 
 // -dbcache default (MiB)
-static const int64_t nDefaultDbCache = 100;
+static const int64_t bitcredit_nDefaultDbCache = 100;
 // max. -dbcache in (MiB)
-static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 4096 : 1024;
+static const int64_t bitcredit_nMaxDbCache = sizeof(void*) > 4 ? 4096 : 1024;
 // min. -dbcache in (MiB)
-static const int64_t nMinDbCache = 4;
+static const int64_t bitcredit_nMinDbCache = 4;
 
 /** CCoinsView backed by the LevelDB coin database (chainstate/) */
-class CCoinsViewDB : public CCoinsView
-{
+class Bitcredit_CCoinsViewDB : public Bitcredit_CCoinsView {
+private:
+	static const unsigned char COIN_KEY;
+	static const unsigned char BEST_CHAIN_KEY;
+
+    void BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
+    void BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcredit_CCoins &coins);
 protected:
     CLevelDBWrapper db;
 public:
-    CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    Bitcredit_CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    bool GetCoins(const uint256 &txid, CCoins &coins);
-    bool SetCoins(const uint256 &txid, const CCoins &coins);
+    bool GetCoins(const uint256 &txid, Bitcredit_CCoins &coins);
+    bool SetCoins(const uint256 &txid, const Bitcredit_CCoins &coins);
     bool HaveCoins(const uint256 &txid);
     uint256 GetBestBlock();
     bool SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock);
-    bool GetStats(CCoinsStats &stats);
+    bool BatchWrite(const std::map<uint256, Bitcredit_CCoins> &mapCoins, const uint256 &hashBlock);
+    bool GetStats(Bitcredit_CCoinsStats &stats);
 };
 
 /** Access to the block database (blocks/index/) */
-class CBlockTreeDB : public CLevelDBWrapper
+class Bitcredit_CBlockTreeDB : public CLevelDBWrapper
 {
 public:
-    CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    Bitcredit_CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 private:
-    CBlockTreeDB(const CBlockTreeDB&);
-    void operator=(const CBlockTreeDB&);
+	static const unsigned char BLOCKINDEX_KEY;
+	static const unsigned char REINDEX_KEY;
+	static const unsigned char FILE_KEY;
+	static const unsigned char FLAG_KEY;
+	static const unsigned char LAST_BLOCK_KEY;
+	static const unsigned char TX_KEY;
+	static const unsigned char ONE;
+	static const unsigned char ZERO;
+
+    Bitcredit_CBlockTreeDB(const Bitcredit_CBlockTreeDB&);
+    void operator=(const Bitcredit_CBlockTreeDB&);
 public:
-    bool WriteBlockIndex(const CDiskBlockIndex& blockindex);
+    bool WriteBlockIndex(const Bitcredit_CDiskBlockIndex& blockindex);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);

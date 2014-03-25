@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>EditAddressDialog</class>
- <widget class="QDialog" name="EditAddressDialog">
+ <class>Bitcredit_EditAddressDialog</class>
+ <widget class="QDialog" name="Bitcredit_EditAddressDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -79,7 +79,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>EditAddressDialog</receiver>
+   <receiver>Bitcredit_EditAddressDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -95,7 +95,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>EditAddressDialog</receiver>
+   <receiver>Bitcredit_EditAddressDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

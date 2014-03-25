@@ -16,7 +16,6 @@
 
 #include "chainparams.h"
 #include "key.h"
-#include "script.h"
 
 #include <string>
 #include <vector>
@@ -137,7 +136,7 @@ public:
     void SetKey(const K &key) {
         unsigned char vch[Size];
         key.Encode(vch);
-        SetData(Params().Base58Prefix(Type), vch, vch+Size);
+        SetData(Bitcredit_Params().Base58Prefix(Type), vch, vch+Size);
     }
 
     K GetKey() {

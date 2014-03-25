@@ -53,7 +53,7 @@ public:
     ~ReceiveRequestDialog();
 
     void setModel(OptionsModel *model);
-    void setInfo(const SendCoinsRecipient &info);
+    void setInfo(const Bitcredit_SendCoinsRecipient &info);
 
 private slots:
     void on_btnCopyURI_clicked();
@@ -64,7 +64,7 @@ private slots:
 private:
     Ui::ReceiveRequestDialog *ui;
     OptionsModel *model;
-    SendCoinsRecipient info;
+    Bitcredit_SendCoinsRecipient info;
 };
 
 #endif // QRCODEDIALOG_H

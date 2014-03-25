@@ -11,7 +11,9 @@ QT_BEGIN_NAMESPACE
 class QNetworkProxy;
 QT_END_NAMESPACE
 
-/** Interface from Qt to configuration data structure for Bitcoin client.
+class CNetParams;
+
+/** Interface from Qt to configuration data structure for Bitcredit client.
    To Qt, the options are presented as a list with the different options
    laid out vertically.
    This can be changed to a tree once the settings become sufficiently
@@ -22,7 +24,7 @@ class OptionsModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    explicit OptionsModel(QObject *parent = 0);
+    explicit OptionsModel(QObject *parent, CNetParams * netParams);
 
     enum OptionID {
         StartAtStartup,         // bool
@@ -34,7 +36,7 @@ public:
         ProxyPort,              // int
         ProxySocksVersion,      // int
         Fee,                    // qint64
-        DisplayUnit,            // BitcoinUnits::Unit
+        DisplayUnit,            // BitcreditUnits::Unit
         DisplayAddresses,       // bool
         ThirdPartyTxUrls,       // QString
         Language,               // QString
@@ -67,6 +69,7 @@ public:
     bool isRestartRequired();
 
 private:
+    CNetParams * netParams;
     /* Qt-only settings */
     bool fMinimizeToTray;
     bool fMinimizeOnClose;

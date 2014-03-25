@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CoinControlDialog</class>
- <widget class="QDialog" name="CoinControlDialog">
+ <class>Bitcredit_CoinControlDialog</class>
+ <widget class="QDialog" name="Bitcredit_CoinControlDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -132,7 +132,7 @@
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
-          <string notr="true">0.00 BTC</string>
+          <string notr="true">0.00 CRE</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -206,7 +206,7 @@
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
-          <string notr="true">0.00 BTC</string>
+          <string notr="true">0.00 CRE</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -286,7 +286,7 @@
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
-          <string notr="true">0.00 BTC</string>
+          <string notr="true">0.00 CRE</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -321,7 +321,7 @@
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
-          <string notr="true">0.00 BTC</string>
+          <string notr="true">0.00 CRE</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -420,7 +420,7 @@
     </widget>
    </item>
    <item>
-    <widget class="CoinControlTreeWidget" name="treeWidget">
+    <widget class="Bitcredit_CoinControlTreeWidget" name="treeWidget">
      <property name="contextMenuPolicy">
       <enum>Qt::CustomContextMenu</enum>
      </property>
@@ -521,7 +521,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>CoinControlTreeWidget</class>
+   <class>Bitcredit_CoinControlTreeWidget</class>
    <extends>QTreeWidget</extends>
    <header>coincontroltreewidget.h</header>
   </customwidget>

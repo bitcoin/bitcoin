@@ -21,21 +21,22 @@
 
 using namespace std;
 
-typedef set<pair<const CWalletTx*,unsigned int> > CoinSet;
+typedef set<pair<const Bitcredit_CWalletTx*,unsigned int> > CoinSet;
 
 BOOST_AUTO_TEST_SUITE(wallet_tests)
 
-static CWallet wallet;
-static vector<COutput> vCoins;
+static Bitcredit_CDBEnv bitcredit_bitdb("bitcredit_database", "bitcredit_db.log");
+static Bitcredit_CWallet wallet(&bitcredit_bitdb);
+static vector<Bitcredit_COutput> vCoins;
 
 static void add_coin(int64_t nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0)
 {
     static int nextLockTime = 0;
-    CTransaction tx;
+    Bitcredit_CTransaction tx;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     tx.vout.resize(nInput+1);
     tx.vout[nInput].nValue = nValue;
-    CWalletTx* wtx = new CWalletTx(&wallet, tx);
+    Bitcredit_CWalletTx* wtx = new Bitcredit_CWalletTx(&wallet, tx);
     if (fIsFromMe)
     {
         // IsFromMe() returns (GetDebit() > 0), and GetDebit() is 0 if vin.empty(),
@@ -44,13 +45,13 @@ static void add_coin(int64_t nValue, int nAge = 6*24, bool fIsFromMe = false, in
         wtx->fDebitCached = true;
         wtx->nDebitCached = 1;
     }
-    COutput output(wtx, nInput, nAge);
+    Bitcredit_COutput output(wtx, nInput, nAge);
     vCoins.push_back(output);
 }
 
 static void empty_wallet(void)
 {
-    BOOST_FOREACH(COutput output, vCoins)
+    BOOST_FOREACH(Bitcredit_COutput output, vCoins)
         delete output.tx;
     vCoins.clear();
 }
@@ -174,11 +175,11 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         add_coin( 3*COIN);
         add_coin( 4*COIN); // now we have 5+6+7+8+18+20+30+100+200+300+400 = 1094 cents
         BOOST_CHECK( wallet.SelectCoinsMinConf(95 * CENT, 1, 1, vCoins, setCoinsRet, nValueRet));
-        BOOST_CHECK_EQUAL(nValueRet, 1 * COIN);  // we should get 1 BTC in 1 coin
+        BOOST_CHECK_EQUAL(nValueRet, 1 * COIN);  // we should get 1 CRE in 1 coin
         BOOST_CHECK_EQUAL(setCoinsRet.size(), 1U);
 
         BOOST_CHECK( wallet.SelectCoinsMinConf(195 * CENT, 1, 1, vCoins, setCoinsRet, nValueRet));
-        BOOST_CHECK_EQUAL(nValueRet, 2 * COIN);  // we should get 2 BTC in 1 coin
+        BOOST_CHECK_EQUAL(nValueRet, 2 * COIN);  // we should get 2 CRE in 1 coin
         BOOST_CHECK_EQUAL(setCoinsRet.size(), 1U);
 
         // empty the wallet and start again, now with fractions of a cent, to test sub-cent change avoidance

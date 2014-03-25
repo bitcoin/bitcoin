@@ -17,6 +17,8 @@
 #include "ui_interface.h"
 #include "wallet.h"
 #include "walletdb.h" // for BackupWallet
+#include "txdb.h"
+#include "bitcreditunits.h"
 
 #include <stdint.h>
 
@@ -24,18 +26,18 @@
 #include <QSet>
 #include <QTimer>
 
-WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
-    QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
+Bitcredit_WalletModel::Bitcredit_WalletModel(Bitcredit_CWallet *wallet, Bitcredit_CWallet *deposit_wallet, Bitcoin_CWallet *bitcoin_wallet, OptionsModel *optionsModel, Bitcredit_CWallet *keyholder_wallet, bool isForDepositWallet, QObject *parent) :
+    QObject(parent), wallet(wallet), deposit_wallet(deposit_wallet), bitcoin_wallet(bitcoin_wallet), optionsModel(optionsModel), addressTableModel(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
-    cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
+    cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0), cachedPreparedDepositBalance(0), cachedInDepositBalance(0),
     cachedNumTransactions(0),
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0)
 {
-    addressTableModel = new AddressTableModel(wallet, this);
-    transactionTableModel = new TransactionTableModel(wallet, this);
-    recentRequestsTableModel = new RecentRequestsTableModel(wallet, this);
+    addressTableModel = new Bitcredit_AddressTableModel(wallet, this);
+    transactionTableModel = new Bitcredit_TransactionTableModel(wallet, keyholder_wallet, isForDepositWallet, this);
+    recentRequestsTableModel = new Bitcredit_RecentRequestsTableModel(wallet, this);
 
     // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);
@@ -45,38 +47,111 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     subscribeToCoreSignals();
 }
 
-WalletModel::~WalletModel()
+Bitcredit_WalletModel::~Bitcredit_WalletModel()
 {
     unsubscribeFromCoreSignals();
 }
 
-qint64 WalletModel::getBalance(const CCoinControl *coinControl) const
+qint64 Bitcredit_WalletModel::getBalance(map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl) const
 {
+	wallet->MarkDirty();
+
     if (coinControl)
     {
         qint64 nBalance = 0;
-        std::vector<COutput> vCoins;
-        wallet->AvailableCoins(vCoins, true, coinControl);
-        BOOST_FOREACH(const COutput& out, vCoins)
+        std::vector<Bitcredit_COutput> vCoins;
+        wallet->AvailableCoins(vCoins, mapFilterTxInPoints, true, coinControl);
+        BOOST_FOREACH(const Bitcredit_COutput& out, vCoins)
             nBalance += out.tx->vout[out.i].nValue;
 
         return nBalance;
     }
 
-    return wallet->GetBalance();
+    return wallet->GetBalance(mapFilterTxInPoints);
 }
 
-qint64 WalletModel::getUnconfirmedBalance() const
+qint64 Bitcredit_WalletModel::getUnconfirmedBalance(map<uint256, set<int> >& mapFilterTxInPoints) const
 {
-    return wallet->GetUnconfirmedBalance();
+	wallet->MarkDirty();
+    return wallet->GetUnconfirmedBalance(mapFilterTxInPoints);
 }
 
-qint64 WalletModel::getImmatureBalance() const
+qint64 Bitcredit_WalletModel::getImmatureBalance(map<uint256, set<int> >& mapFilterTxInPoints) const
 {
-    return wallet->GetImmatureBalance();
+	wallet->MarkDirty();
+    return wallet->GetImmatureBalance(mapFilterTxInPoints);
+}
+qint64 Bitcredit_WalletModel::getPreparedDepositBalance() const
+{
+	//NOTE! deposit_wallet referenced here
+    return deposit_wallet->GetPreparedDepositBalance();
+}
+qint64 Bitcredit_WalletModel::getInDepositBalance() const
+{
+    return wallet->GetInDepositBalance();
+}
+int Bitcredit_WalletModel::getBlockHeight() const
+{
+    return bitcredit_chainActive.Height();
+}
+qint64 Bitcredit_WalletModel::getTotalMonetaryBase() const
+{
+    uint64_t nTotalMonetaryBase = 0;
+    if(bitcredit_chainActive.Tip()) {
+    	const Bitcredit_CBlockIndex* ptip = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+    	nTotalMonetaryBase = ptip->nTotalMonetaryBase;
+    }
+    return nTotalMonetaryBase;
+}
+qint64 Bitcredit_WalletModel::getTotalDepositBase() const
+{
+    uint64_t nTotalDepositBase = 0;
+    if(bitcredit_chainActive.Tip()) {
+    	const Bitcredit_CBlockIndex* ptip = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+    	nTotalDepositBase = ptip->nTotalDepositBase;
+    }
+    return nTotalDepositBase;
+}
+int Bitcredit_WalletModel::getNextSubsidyUpdateHeight() const
+{
+	uint64_t monetaryBase = getTotalMonetaryBase();
+	uint64_t maxBlockSubsidy = Bitcredit_GetMaxBlockSubsidy(monetaryBase);
+	uint64_t nextMaxBlockSubsidy = maxBlockSubsidy;
+	//50 000 just to prevent eternal loop
+	unsigned int i = 1;
+	for (; i < 50000; i++) {
+		monetaryBase += Bitcredit_GetMaxBlockSubsidy(monetaryBase);
+		nextMaxBlockSubsidy = Bitcredit_GetMaxBlockSubsidy(monetaryBase);
+		if(maxBlockSubsidy != nextMaxBlockSubsidy) {
+			break;
+		}
+	}
+	return getBlockHeight() + i;
+}
+qint64 Bitcredit_WalletModel::getRequiredDepositLevel(unsigned int forwardBlocks) const
+{
+	uint64_t monetaryBase = getTotalMonetaryBase();
+	uint64_t forwardSubsidies = 0;
+	uint64_t depositBase = getTotalDepositBase();
+	uint64_t reqDepositLevel = Bitcredit_GetRequiredDeposit(depositBase);
+	for (unsigned int i = 0; i < forwardBlocks; ++i) {
+		forwardSubsidies += Bitcredit_GetMaxBlockSubsidy(monetaryBase + forwardSubsidies);
+		reqDepositLevel = Bitcredit_GetRequiredDeposit(depositBase + forwardSubsidies);
+	}
+	return reqDepositLevel;
+}
+qint64 Bitcredit_WalletModel::getMaxBlockSubsidy(unsigned int forwardBlocks) const
+{
+	uint64_t monetaryBase = getTotalMonetaryBase();
+	uint64_t maxBlockSubsidy = Bitcredit_GetMaxBlockSubsidy(monetaryBase);
+	for (unsigned int i = 0; i < forwardBlocks; ++i) {
+		monetaryBase += Bitcredit_GetMaxBlockSubsidy(monetaryBase);
+		maxBlockSubsidy = Bitcredit_GetMaxBlockSubsidy(monetaryBase);
+	}
+	return maxBlockSubsidy;
 }
 
-int WalletModel::getNumTransactions() const
+int Bitcredit_WalletModel::getNumTransactions() const
 {
     int numTransactions = 0;
     {
@@ -88,7 +163,7 @@ int WalletModel::getNumTransactions() const
     return numTransactions;
 }
 
-void WalletModel::updateStatus()
+void Bitcredit_WalletModel::updateStatus()
 {
     EncryptionStatus newEncryptionStatus = getEncryptionStatus();
 
@@ -96,45 +171,120 @@ void WalletModel::updateStatus()
         emit encryptionStatusChanged(newEncryptionStatus);
 }
 
-void WalletModel::pollBalanceChanged()
+void Bitcredit_WalletModel::pollBalanceChanged()
 {
     // Get required locks upfront. This avoids the GUI from getting stuck on
     // periodical polls if the core is holding the locks for a longer time -
     // for example, during a wallet rescan.
-    TRY_LOCK(cs_main, lockMain);
+    TRY_LOCK(bitcredit_mainState.cs_main, lockMain);
     if(!lockMain)
         return;
     TRY_LOCK(wallet->cs_wallet, lockWallet);
     if(!lockWallet)
         return;
 
-    if(chainActive.Height() != cachedNumBlocks)
+    if(bitcredit_chainActive.Height() != cachedNumBlocks)
     {
         // Balance and number of transactions might have changed
-        cachedNumBlocks = chainActive.Height();
+        cachedNumBlocks = bitcredit_chainActive.Height();
 
         checkBalanceChanged();
         if(transactionTableModel)
             transactionTableModel->updateConfirmations();
+
+        checkMinerStatisticsChanged();
     }
 }
 
-void WalletModel::checkBalanceChanged()
+void Bitcredit_WalletModel::checkBalanceChanged()
 {
-    qint64 newBalance = getBalance();
-    qint64 newUnconfirmedBalance = getUnconfirmedBalance();
-    qint64 newImmatureBalance = getImmatureBalance();
+    //Find all prepared deposit transactions
+    map<uint256, set<int> > mapPreparedDepositTxInPoints;
+    deposit_wallet->PreparedDepositTxInPoints(mapPreparedDepositTxInPoints);
 
-    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance)
+    qint64 newBalance = getBalance(mapPreparedDepositTxInPoints);
+    qint64 newUnconfirmedBalance = getUnconfirmedBalance(mapPreparedDepositTxInPoints);
+    qint64 newImmatureBalance = getImmatureBalance(mapPreparedDepositTxInPoints);
+    qint64 newPreparedDepositBalance = getPreparedDepositBalance();
+    qint64 newInDepositBalance = getInDepositBalance();
+
+    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance || cachedPreparedDepositBalance != newPreparedDepositBalance || cachedInDepositBalance != newInDepositBalance)
     {
         cachedBalance = newBalance;
         cachedUnconfirmedBalance = newUnconfirmedBalance;
         cachedImmatureBalance = newImmatureBalance;
-        emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance);
+        cachedPreparedDepositBalance = newPreparedDepositBalance;
+        cachedInDepositBalance = newInDepositBalance;
+        emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance, newPreparedDepositBalance, newInDepositBalance);
     }
 }
 
-void WalletModel::updateTransaction(const QString &hash, int status)
+void Bitcredit_WalletModel::checkMinerStatisticsChanged()
+{
+	const qint64 newReqDeposit1 = getRequiredDepositLevel(1);
+	const qint64 newReqDeposit2 = getRequiredDepositLevel(2);
+	const qint64 newReqDeposit3 = getRequiredDepositLevel(101);
+	const qint64 newReqDeposit4 = getRequiredDepositLevel(1001);
+	const qint64 newReqDeposit5 = getRequiredDepositLevel(10001);
+
+	const qint64 newMaxBlockSubsidy1 = getMaxBlockSubsidy(1);
+	const qint64 newMaxBlockSubsidy2 = getMaxBlockSubsidy(2);
+	const qint64 newMaxBlockSubsidy3 = getMaxBlockSubsidy(101);
+	const qint64 newMaxBlockSubsidy4 = getMaxBlockSubsidy(1001);
+	const qint64 newMaxBlockSubsidy5 = getMaxBlockSubsidy(10001);
+
+	const int newBlockHeight = getBlockHeight();
+	const qint64 newTotalMonetaryBase = getTotalMonetaryBase();
+	const qint64 newTotalDepositBase = getTotalDepositBase();
+	const qint64 newNextSubsidyUpdateHeight = getNextSubsidyUpdateHeight();
+
+    if(cachedReqDeposit1 != newReqDeposit1 ||
+    	cachedReqDeposit2 != newReqDeposit2 ||
+    	cachedReqDeposit3 != newReqDeposit3 ||
+    	cachedReqDeposit4 != newReqDeposit4 ||
+    	cachedReqDeposit5 != newReqDeposit5 ||
+    	cachedMaxBlockSubsidy1 != newMaxBlockSubsidy1 ||
+    	cachedMaxBlockSubsidy2 != newMaxBlockSubsidy2 ||
+    	cachedMaxBlockSubsidy3 != newMaxBlockSubsidy3 ||
+    	cachedMaxBlockSubsidy4 != newMaxBlockSubsidy4 ||
+    	cachedMaxBlockSubsidy5 != newMaxBlockSubsidy5 ||
+    	cachedBlockHeight != newBlockHeight ||
+    	cachedTotalMonetaryBase != newTotalMonetaryBase ||
+    	cachedTotalDepositBase != newTotalDepositBase ||
+    	cachedNextSubsidyUpdateHeight != newNextSubsidyUpdateHeight)
+    {
+    	cachedReqDeposit1 = newReqDeposit1;
+    	cachedReqDeposit2 = newReqDeposit2;
+    	cachedReqDeposit3 = newReqDeposit3;
+    	cachedReqDeposit4 = newReqDeposit4;
+    	cachedReqDeposit5 = newReqDeposit5;
+    	cachedMaxBlockSubsidy1 = newMaxBlockSubsidy1;
+    	cachedMaxBlockSubsidy2 = newMaxBlockSubsidy2;
+    	cachedMaxBlockSubsidy3 = newMaxBlockSubsidy3;
+    	cachedMaxBlockSubsidy4 = newMaxBlockSubsidy4;
+    	cachedMaxBlockSubsidy5 = newMaxBlockSubsidy5;
+    	cachedBlockHeight = newBlockHeight;
+    	cachedTotalMonetaryBase = newTotalMonetaryBase;
+    	cachedTotalDepositBase = newTotalDepositBase;
+    	cachedNextSubsidyUpdateHeight = newNextSubsidyUpdateHeight;
+        emit minerStatisticsChanged(newReqDeposit1,
+        													newReqDeposit2,
+        													newReqDeposit3,
+        													newReqDeposit4,
+        													newReqDeposit5,
+        													newMaxBlockSubsidy1,
+        													newMaxBlockSubsidy2,
+        													newMaxBlockSubsidy3,
+        													newMaxBlockSubsidy4,
+        													newMaxBlockSubsidy5,
+        													newBlockHeight,
+        													newTotalMonetaryBase,
+        													newTotalDepositBase,
+        													newNextSubsidyUpdateHeight);
+    }
+}
+
+void Bitcredit_WalletModel::updateTransaction(const QString &hash, int status)
 {
     if(transactionTableModel)
         transactionTableModel->updateTransaction(hash, status);
@@ -150,23 +300,23 @@ void WalletModel::updateTransaction(const QString &hash, int status)
     }
 }
 
-void WalletModel::updateAddressBook(const QString &address, const QString &label,
+void Bitcredit_WalletModel::updateAddressBook(const QString &address, const QString &label,
         bool isMine, const QString &purpose, int status)
 {
     if(addressTableModel)
         addressTableModel->updateEntry(address, label, isMine, purpose, status);
 }
 
-bool WalletModel::validateAddress(const QString &address)
+bool Bitcredit_WalletModel::validateAddress(const QString &address)
 {
     CBitcoinAddress addressParsed(address.toStdString());
     return addressParsed.IsValid();
 }
 
-WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl)
+Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl)
 {
     qint64 total = 0;
-    QList<SendCoinsRecipient> recipients = transaction.getRecipients();
+    QList<Bitcredit_SendCoinsRecipient> recipients = transaction.getRecipients();
     std::vector<std::pair<CScript, int64_t> > vecSend;
 
     if(recipients.empty())
@@ -178,7 +328,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     int nAddresses = 0;
 
     // Pre-check input data for validity
-    foreach(const SendCoinsRecipient &rcp, recipients)
+    foreach(const Bitcredit_SendCoinsRecipient &rcp, recipients)
     {
         if (rcp.paymentRequest.IsInitialized())
         {   // PaymentRequest...
@@ -224,29 +374,33 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return DuplicateAddress;
     }
 
-    qint64 nBalance = getBalance(coinControl);
+    //Find all prepared deposit transactions
+    map<uint256, set<int> > mapPreparedDepositTxInPoints;
+    deposit_model->wallet->PreparedDepositTxInPoints(mapPreparedDepositTxInPoints);
+
+    qint64 nBalance = getBalance(mapPreparedDepositTxInPoints, coinControl);
 
     if(total > nBalance)
     {
         return AmountExceedsBalance;
     }
 
-    if((total + nTransactionFee) > nBalance)
+    if((total + bitcredit_nTransactionFee) > nBalance)
     {
-        transaction.setTransactionFee(nTransactionFee);
+        transaction.setTransactionFee(bitcredit_nTransactionFee);
         return SendCoinsReturn(AmountWithFeeExceedsBalance);
     }
 
     {
-        LOCK2(cs_main, wallet->cs_wallet);
+        LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
 
         transaction.newPossibleKeyChange(wallet);
         int64_t nFeeRequired = 0;
         std::string strFailReason;
 
-        CWalletTx *newTx = transaction.getTransaction();
-        CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason, coinControl);
+        Bitcredit_CWalletTx *newTx = transaction.getTransaction();
+        Bitcredit_CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        bool fCreated = wallet->CreateTransaction(deposit_model->wallet, vecSend, *newTx, *keyChange, nFeeRequired, strFailReason, coinControl);
         transaction.setTransactionFee(nFeeRequired);
 
         if(!fCreated)
@@ -264,16 +418,183 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     return SendCoinsReturn(OK);
 }
 
-WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &transaction)
+Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareDepositTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const Bitcredit_COutput& coin, Bitcredit_CCoinsViewCache &bitcredit_view, Bitcoin_CClaimCoinsViewCache &claim_view)
+{
+    QList<Bitcredit_SendCoinsRecipient> recipients = transaction.getRecipients();
+    if(recipients.size() != 1) {
+		LogPrintf("TOO MANY RECIPIENT ADRESSES\n");
+		return InvalidAddress;
+    }
+
+    Bitcredit_SendCoinsRecipient& rcp = recipients.back();
+    // Pre-check input data for validity
+	{
+		//Reserve new addresses for each output
+		LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
+
+		transaction.newKeyRecipient(wallet);
+		CPubKey pubKey;
+		transaction.getKeyRecipients().back()->GetReservedKey(pubKey);
+		rcp.address = QString::fromStdString(CBitcoinAddress(pubKey.GetID()).ToString());
+	}
+
+	// User-entered bitcoin address / amount:
+	if(!validateAddress(rcp.address))
+	{
+		LogPrintf("INVALID RECIPIENT ADRESS: %s\n", rcp.address.toStdString().c_str());
+		return InvalidAddress;
+	}
+	if(rcp.amount <= 0)
+	{
+		return InvalidAmount;
+	}
+
+	CScript scriptPubKey;
+	scriptPubKey.SetDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+    std::pair<CScript, int64_t> send(scriptPubKey, rcp.amount);
+
+    qint64 nBalance = coin.tx->vout[coin.i].nValue;
+    if(rcp.amount != nBalance)
+    {
+        return AmountExceedsBalance;
+    }
+
+    {
+        LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
+
+        transaction.newKeyDepositSignature(deposit_wallet);
+        //int64_t nFeeRequired = 0;
+        std::string strFailReason;
+
+        Bitcredit_CWalletTx *newTx = transaction.getTransaction();
+        Bitcredit_CReserveKey *keyDepositSignature = transaction.getKeyDepositSignature();
+        bool fCreated = wallet->CreateDepositTransaction(deposit_model->wallet, send, *newTx, *keyDepositSignature, rcp.amount, strFailReason, coin, bitcredit_view, claim_view);
+        //transaction.setTransactionFee(nFeeRequired);
+
+        //Basic checks to make sure nothing has gone wrong in deposit creation
+        assert(transaction.getTransactionFee() == 0);
+
+        if(!fCreated)
+        {
+            if(rcp.amount > nBalance)
+            {
+                return SendCoinsReturn(AmountExceedsBalance);
+            }
+            emit message(tr("Claim bitcoins"), QString::fromStdString(strFailReason),
+                         CClientUIInterface::MSG_ERROR);
+            return TransactionCreationFailed;
+        }
+    }
+
+    return SendCoinsReturn(OK);
+}
+
+Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareClaimTransaction(Bitcoin_WalletModel *bitcoin_model, Bitcoin_CClaimCoinsViewCache &claim_view, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl)
+{
+    qint64 total = 0;
+    QList<Bitcredit_SendCoinsRecipient> recipients = transaction.getRecipients();
+    std::vector<std::pair<CScript, int64_t> > vecSend;
+
+    if(recipients.empty())
+    {
+        return OK;
+    }
+
+    QSet<QString> setAddress; // Used to detect duplicates
+    int nAddresses = 0;
+
+    //Fetch new coin addresses for each output
+    // Pre-check input data for validity
+    BOOST_FOREACH(Bitcredit_SendCoinsRecipient &rcp, recipients)
+    {
+        {
+        	//Reserve new addresses for each output
+            LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
+
+            transaction.newKeyRecipient(wallet);
+            CPubKey pubKey;
+            transaction.getKeyRecipients().back()->GetReservedKey(pubKey);
+            rcp.address = QString::fromStdString(CBitcoinAddress(pubKey.GetID()).ToString());
+        }
+
+		if(!validateAddress(rcp.address))
+		{
+			LogPrintf("INVALID RECIPIENT ADRESS: %s\n", rcp.address.toStdString().c_str());
+			return InvalidAddress;
+		}
+		if(rcp.amount <= 0)
+		{
+			return InvalidAmount;
+		}
+		setAddress.insert(rcp.address);
+		++nAddresses;
+
+		CScript scriptPubKey;
+		scriptPubKey.SetDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+		vecSend.push_back(std::pair<CScript, int64_t>(scriptPubKey, rcp.amount));
+
+		total += rcp.amount;
+    }
+    if(setAddress.size() != nAddresses)
+    {
+        return DuplicateAddress;
+    }
+
+    //Find all claimed  transactions
+    map<uint256, set<int> > mapClaimTxInPoints;
+    wallet->ClaimTxInPoints(mapClaimTxInPoints);
+
+    qint64 nBalance = bitcoin_model->getBalance(claim_view, mapClaimTxInPoints, coinControl);
+
+    if(total > nBalance)
+    {
+        return AmountExceedsBalance;
+    }
+
+    if((total + bitcredit_nTransactionFee) > nBalance)
+    {
+        transaction.setTransactionFee(bitcredit_nTransactionFee);
+        return SendCoinsReturn(AmountWithFeeExceedsBalance);
+    }
+
+    {
+        LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
+
+        transaction.newPossibleKeyChange(wallet);
+        int64_t nFeeRequired = 0;
+        std::string strFailReason;
+
+        Bitcredit_CWalletTx *newTx = transaction.getTransaction();
+        Bitcredit_CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        bool fCreated = wallet->CreateClaimTransaction(bitcoin_model->wallet, claim_view, vecSend, *newTx, *keyChange, nFeeRequired, strFailReason, coinControl);
+        transaction.setTransactionFee(nFeeRequired);
+
+        if(!fCreated)
+        {
+
+            if((total + nFeeRequired) > nBalance)
+            {
+                return SendCoinsReturn(AmountWithFeeExceedsBalance);
+            }
+            emit message(tr("Claim Coins"), QString::fromStdString(strFailReason),
+                         CClientUIInterface::MSG_ERROR);
+            return TransactionCreationFailed;
+        }
+    }
+
+    return SendCoinsReturn(OK);
+}
+
+Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::sendCoins(Bitcredit_WalletModelTransaction &transaction)
 {
     QByteArray transaction_array; /* store serialized transaction */
 
     {
-        LOCK2(cs_main, wallet->cs_wallet);
-        CWalletTx *newTx = transaction.getTransaction();
+        LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
+        Bitcredit_CWalletTx *newTx = transaction.getTransaction();
 
         // Store PaymentRequests in wtx.vOrderForm in wallet.
-        foreach(const SendCoinsRecipient &rcp, transaction.getRecipients())
+        foreach(const Bitcredit_SendCoinsRecipient &rcp, transaction.getRecipients())
         {
             if (rcp.paymentRequest.IsInitialized())
             {
@@ -282,23 +603,23 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
                 rcp.paymentRequest.SerializeToString(&value);
                 newTx->vOrderForm.push_back(make_pair(key, value));
             }
-            else if (!rcp.message.isEmpty()) // Message from normal bitcoin:URI (bitcoin:123...?message=example)
+            else if (!rcp.message.isEmpty()) // Message from normal bitcredit:URI (bitcredit:123...?message=example)
                 newTx->vOrderForm.push_back(make_pair("Message", rcp.message.toStdString()));
         }
 
-        CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        if(!wallet->CommitTransaction(*newTx, *keyChange))
+        Bitcredit_CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        if(!wallet->CommitTransaction(bitcoin_wallet, *newTx, *keyChange, transaction.getKeyRecipients()))
             return TransactionCommitFailed;
 
-        CTransaction* t = (CTransaction*)newTx;
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        Bitcredit_CTransaction* t = (Bitcredit_CTransaction*)newTx;
+        CDataStream ssTx(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
         ssTx << *t;
         transaction_array.append(&(ssTx[0]), ssTx.size());
     }
 
     // Add addresses / update labels that we've sent to to the address book,
     // and emit coinsSent signal for each recipient
-    foreach(const SendCoinsRecipient &rcp, transaction.getRecipients())
+    foreach(const Bitcredit_SendCoinsRecipient &rcp, transaction.getRecipients())
     {
         // Don't touch the address book when we have a payment request
         if (!rcp.paymentRequest.IsInitialized())
@@ -328,27 +649,85 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     return SendCoinsReturn(OK);
 }
 
-OptionsModel *WalletModel::getOptionsModel()
+Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::storeDepositTransaction(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModelTransaction &transaction)
+{
+//    QByteArray transaction_array; /* store serialized transaction */
+
+    {
+        LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
+
+        //Find all existing prepared deposits
+        map<uint256, set<int> > mapDepositTxIns;
+        wallet->PreparedDepositTxInPoints(mapDepositTxIns);
+
+        Bitcredit_CWalletTx *newTx = transaction.getTransaction();
+        if(IsAnyTxInInFilterPoints(*newTx, mapDepositTxIns)) {
+            return TransactionDoubleSpending;
+        }
+
+//        // Store PaymentRequests in wtx.vOrderForm in wallet.
+//        foreach(const Bitcredit_SendCoinsRecipient &rcp, transaction.getRecipients())
+//        {
+//            if (!rcp.message.isEmpty()) // Message from normal bitcredit:URI (bitcredit:123...?message=example)
+//                newTx->vOrderForm.push_back(make_pair("Message", rcp.message.toStdString()));
+//        }
+
+        Bitcredit_CReserveKey *keyDepositSignature = transaction.getKeyDepositSignature();
+        if(!wallet->CommitDepositTransaction(bitcredit_model->wallet, *newTx, *keyDepositSignature, transaction.getKeyRecipients()))
+            return TransactionCommitFailed;
+
+        LogPrintf("Wrote deposit tx to wallet \n%s\n", newTx->ToString());
+    }
+
+    // Add addresses / update labels that we've sent to to the address book,
+    // and emit coinsSent signal for each recipient
+//    foreach(const Bitcredit_SendCoinsRecipient &rcp, transaction.getRecipients())
+//    {
+//		std::string strAddress = rcp.address.toStdString();
+//		CTxDestination dest = CBitcoinAddress(strAddress).Get();
+//		std::string strLabel = rcp.label.toStdString();
+//		{
+//			LOCK(wallet->cs_wallet);
+//
+//			std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(dest);
+//
+//			// Check if we have a new address or an updated label
+//			if (mi == wallet->mapAddressBook.end())
+//			{
+//				wallet->SetAddressBook(dest, strLabel, "send");
+//			}
+//			else if (mi->second.name != strLabel)
+//			{
+//				wallet->SetAddressBook(dest, strLabel, ""); // "" means don't change purpose
+//			}
+//		}
+//        emit coinsSent(wallet, rcp, transaction_array);
+//    }
+
+    return SendCoinsReturn(OK);
+}
+
+OptionsModel *Bitcredit_WalletModel::getOptionsModel()
 {
     return optionsModel;
 }
 
-AddressTableModel *WalletModel::getAddressTableModel()
+Bitcredit_AddressTableModel *Bitcredit_WalletModel::getAddressTableModel()
 {
     return addressTableModel;
 }
 
-TransactionTableModel *WalletModel::getTransactionTableModel()
+Bitcredit_TransactionTableModel *Bitcredit_WalletModel::getTransactionTableModel()
 {
     return transactionTableModel;
 }
 
-RecentRequestsTableModel *WalletModel::getRecentRequestsTableModel()
+Bitcredit_RecentRequestsTableModel *Bitcredit_WalletModel::getRecentRequestsTableModel()
 {
     return recentRequestsTableModel;
 }
 
-WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
+Bitcredit_WalletModel::EncryptionStatus Bitcredit_WalletModel::getEncryptionStatus() const
 {
     if(!wallet->IsCrypted())
     {
@@ -364,7 +743,7 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
     }
 }
 
-bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphrase)
+bool Bitcredit_WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphrase)
 {
     if(encrypted)
     {
@@ -378,7 +757,7 @@ bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphr
     }
 }
 
-bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
+bool Bitcredit_WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
 {
     if(locked)
     {
@@ -392,7 +771,7 @@ bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
     }
 }
 
-bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureString &newPass)
+bool Bitcredit_WalletModel::changePassphrase(const SecureString &oldPass, const SecureString &newPass)
 {
     bool retval;
     {
@@ -403,19 +782,19 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
     return retval;
 }
 
-bool WalletModel::backupWallet(const QString &filename)
+bool Bitcredit_WalletModel::backupWallet(const QString &filename)
 {
-    return BackupWallet(*wallet, filename.toLocal8Bit().data());
+    return Bitcredit_BackupWallet(*wallet, filename.toLocal8Bit().data());
 }
 
 // Handlers for core signals
-static void NotifyKeyStoreStatusChanged(WalletModel *walletmodel, CCryptoKeyStore *wallet)
+static void NotifyKeyStoreStatusChanged(Bitcredit_WalletModel *walletmodel, CCryptoKeyStore *wallet)
 {
     qDebug() << "NotifyKeyStoreStatusChanged";
     QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
 }
 
-static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
+static void NotifyAddressBookChanged(Bitcredit_WalletModel *walletmodel, Bitcredit_CWallet *wallet,
         const CTxDestination &address, const std::string &label, bool isMine,
         const std::string &purpose, ChangeType status)
 {
@@ -435,7 +814,7 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
 // queue notifications to show a non freezing progress dialog e.g. for rescan
 static bool fQueueNotifications = false;
 static std::vector<std::pair<uint256, ChangeType> > vQueueNotifications;
-static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, ChangeType status)
+static void NotifyTransactionChanged(Bitcredit_WalletModel *walletmodel, Bitcredit_CWallet *wallet, const uint256 &hash, ChangeType status)
 {
     if (fQueueNotifications)
     {
@@ -451,7 +830,7 @@ static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, 
                               Q_ARG(int, status));
 }
 
-static void ShowProgress(WalletModel *walletmodel, const std::string &title, int nProgress)
+static void ShowProgress(Bitcredit_WalletModel *walletmodel, const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
     QMetaObject::invokeMethod(walletmodel, "showProgress", Qt::QueuedConnection,
@@ -470,7 +849,7 @@ static void ShowProgress(WalletModel *walletmodel, const std::string &title, int
     }
 }
 
-void WalletModel::subscribeToCoreSignals()
+void Bitcredit_WalletModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
     wallet->NotifyStatusChanged.connect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
@@ -479,7 +858,7 @@ void WalletModel::subscribeToCoreSignals()
     wallet->ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
 }
 
-void WalletModel::unsubscribeFromCoreSignals()
+void Bitcredit_WalletModel::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from wallet
     wallet->NotifyStatusChanged.disconnect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
@@ -488,8 +867,8 @@ void WalletModel::unsubscribeFromCoreSignals()
     wallet->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
 }
 
-// WalletModel::UnlockContext implementation
-WalletModel::UnlockContext WalletModel::requestUnlock()
+// Bitcredit_WalletModel::UnlockContext implementation
+Bitcredit_WalletModel::UnlockContext Bitcredit_WalletModel::requestUnlock()
 {
     bool was_locked = getEncryptionStatus() == Locked;
     if(was_locked)
@@ -503,14 +882,14 @@ WalletModel::UnlockContext WalletModel::requestUnlock()
     return UnlockContext(this, valid, was_locked);
 }
 
-WalletModel::UnlockContext::UnlockContext(WalletModel *wallet, bool valid, bool relock):
+Bitcredit_WalletModel::UnlockContext::UnlockContext(Bitcredit_WalletModel *wallet, bool valid, bool relock):
         wallet(wallet),
         valid(valid),
         relock(relock)
 {
 }
 
-WalletModel::UnlockContext::~UnlockContext()
+Bitcredit_WalletModel::UnlockContext::~UnlockContext()
 {
     if(valid && relock)
     {
@@ -518,45 +897,51 @@ WalletModel::UnlockContext::~UnlockContext()
     }
 }
 
-void WalletModel::UnlockContext::CopyFrom(const UnlockContext& rhs)
+void Bitcredit_WalletModel::UnlockContext::CopyFrom(const UnlockContext& rhs)
 {
     // Transfer context; old object no longer relocks wallet
     *this = rhs;
     rhs.relock = false;
 }
 
-bool WalletModel::getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
+bool Bitcredit_WalletModel::getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
 {
     return wallet->GetPubKey(address, vchPubKeyOut);
 }
 
 // returns a list of COutputs from COutPoints
-void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs)
+void Bitcredit_WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Bitcredit_COutput>& vOutputs)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
     BOOST_FOREACH(const COutPoint& outpoint, vOutpoints)
     {
         if (!wallet->mapWallet.count(outpoint.hash)) continue;
         int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
         if (nDepth < 0) continue;
-        COutput out(&wallet->mapWallet[outpoint.hash], outpoint.n, nDepth);
+        Bitcredit_COutput out(&wallet->mapWallet[outpoint.hash], outpoint.n, nDepth);
         vOutputs.push_back(out);
     }
 }
 
-bool WalletModel::isSpent(const COutPoint& outpoint) const
+bool Bitcredit_WalletModel::isSpent(const COutPoint& outpoint) const
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
     return wallet->IsSpent(outpoint.hash, outpoint.n);
 }
 
 // AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address)
-void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const
+void Bitcredit_WalletModel::listCoins(std::map<QString, std::vector<Bitcredit_COutput> >& mapCoins) const
 {
-    std::vector<COutput> vCoins;
-    wallet->AvailableCoins(vCoins);
+	wallet->MarkDirty();
 
-    LOCK2(cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
+    //Find all prepared deposit transactions
+    map<uint256, set<int> > mapPreparedDepositTxInPoints;
+    deposit_wallet->PreparedDepositTxInPoints(mapPreparedDepositTxInPoints);
+
+    std::vector<Bitcredit_COutput> vCoins;
+    wallet->AvailableCoins(vCoins, mapPreparedDepositTxInPoints);
+
+    LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
     std::vector<COutPoint> vLockedCoins;
     wallet->ListLockedCoins(vLockedCoins);
 
@@ -566,18 +951,18 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
         if (!wallet->mapWallet.count(outpoint.hash)) continue;
         int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
         if (nDepth < 0) continue;
-        COutput out(&wallet->mapWallet[outpoint.hash], outpoint.n, nDepth);
+        Bitcredit_COutput out(&wallet->mapWallet[outpoint.hash], outpoint.n, nDepth);
         vCoins.push_back(out);
     }
 
-    BOOST_FOREACH(const COutput& out, vCoins)
+    BOOST_FOREACH(const Bitcredit_COutput& out, vCoins)
     {
-        COutput cout = out;
+        Bitcredit_COutput cout = out;
 
         while (wallet->IsChange(cout.tx->vout[cout.i]) && cout.tx->vin.size() > 0 && wallet->IsMine(cout.tx->vin[0]))
         {
             if (!wallet->mapWallet.count(cout.tx->vin[0].prevout.hash)) break;
-            cout = COutput(&wallet->mapWallet[cout.tx->vin[0].prevout.hash], cout.tx->vin[0].prevout.n, 0);
+            cout = Bitcredit_COutput(&wallet->mapWallet[cout.tx->vin[0].prevout.hash], cout.tx->vin[0].prevout.n, 0);
         }
 
         CTxDestination address;
@@ -586,31 +971,31 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
     }
 }
 
-bool WalletModel::isLockedCoin(uint256 hash, unsigned int n) const
+bool Bitcredit_WalletModel::isLockedCoin(uint256 hash, unsigned int n) const
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
     return wallet->IsLockedCoin(hash, n);
 }
 
-void WalletModel::lockCoin(COutPoint& output)
+void Bitcredit_WalletModel::lockCoin(COutPoint& output)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
     wallet->LockCoin(output);
 }
 
-void WalletModel::unlockCoin(COutPoint& output)
+void Bitcredit_WalletModel::unlockCoin(COutPoint& output)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
     wallet->UnlockCoin(output);
 }
 
-void WalletModel::listLockedCoins(std::vector<COutPoint>& vOutpts)
+void Bitcredit_WalletModel::listLockedCoins(std::vector<COutPoint>& vOutpts)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK2(bitcredit_mainState.cs_main, wallet->cs_wallet);
     wallet->ListLockedCoins(vOutpts);
 }
 
-void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests)
+void Bitcredit_WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests)
 {
     LOCK(wallet->cs_wallet);
     BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& item, wallet->mapAddressBook)
@@ -619,7 +1004,7 @@ void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests
                 vReceiveRequests.push_back(item2.second);
 }
 
-bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest)
+bool Bitcredit_WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest)
 {
     CTxDestination dest = CBitcoinAddress(sAddress).Get();
 

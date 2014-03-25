@@ -1,4 +1,4 @@
-#include "bitcoin-config.h"
+#include "bitcredit-config.h"
 #include <cstddef>
 #include <sys/select.h>
 

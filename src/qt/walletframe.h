@@ -8,10 +8,11 @@
 #include <QFrame>
 #include <QMap>
 
-class BitcoinGUI;
+class BitcreditGUI;
 class ClientModel;
-class SendCoinsRecipient;
-class WalletModel;
+class Bitcredit_SendCoinsRecipient;
+class Bitcredit_WalletModel;
+class Bitcoin_WalletModel;
 class WalletView;
 
 QT_BEGIN_NAMESPACE
@@ -23,23 +24,23 @@ class WalletFrame : public QFrame
     Q_OBJECT
 
 public:
-    explicit WalletFrame(BitcoinGUI *_gui = 0);
+    explicit WalletFrame(BitcreditGUI *_gui = 0);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
 
-    bool addWallet(const QString& name, WalletModel *walletModel);
+    bool addWallet(const QString& name, Bitcredit_WalletModel *bitcredit_model, Bitcoin_WalletModel *bitcoin_model, Bitcredit_WalletModel *deposit_model);
     bool setCurrentWallet(const QString& name);
     bool removeWallet(const QString &name);
     void removeAllWallets();
 
-    bool handlePaymentRequest(const SendCoinsRecipient& recipient);
+    bool handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient);
 
     void showOutOfSyncWarning(bool fShow);
 
 private:
     QStackedWidget *walletStack;
-    BitcoinGUI *gui;
+    BitcreditGUI *gui;
     ClientModel *clientModel;
     QMap<QString, WalletView*> mapWalletViews;
 
@@ -50,12 +51,18 @@ private:
 public slots:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
+    /** Switch to new claim coins page */
+    void gotoClaimCoinsPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch to miner deposits page */
+    void gotoMinerDepositsPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+    /** Switch to send coins page */
+    void gotoMinerCoinsPage(QString addr = "");
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
@@ -63,18 +70,28 @@ public slots:
     void gotoVerifyMessageTab(QString addr = "");
 
     /** Encrypt the wallet */
-    void encryptWallet(bool status);
+    void bitcredit_encryptWallet(bool status);
+    void bitcoin_encryptWallet(bool status);
+    void deposit_encryptWallet(bool status);
     /** Backup the wallet */
-    void backupWallet();
+    void bitcredit_backupWallet();
+    void bitcoin_backupWallet();
+    void deposit_backupWallet();
     /** Change encrypted wallet passphrase */
-    void changePassphrase();
+    void bitcredit_changePassphrase();
+    void bitcoin_changePassphrase();
+    void deposit_changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
-    void unlockWallet();
+    void bitcredit_unlockWallet();
+    void bitcoin_unlockWallet();
+    void deposit_unlockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();
     /** Show used receiving addresses */
     void usedReceivingAddresses();
+
+    void bitcredit_setNumBlocks(int count);
 };
 
 #endif // WALLETFRAME_H

@@ -13,7 +13,7 @@
 #include <QDialog>
 
 class ClientModel;
-class CNodeCombinedStats;
+struct CNodeCombinedStats;
 
 QT_BEGIN_NAMESPACE
 class QItemSelection;
@@ -23,7 +23,7 @@ namespace Ui {
     class RPCConsole;
 }
 
-/** Local Bitcoin RPC console. */
+/** Local Bitcredit RPC console. */
 class RPCConsole: public QDialog
 {
     Q_OBJECT

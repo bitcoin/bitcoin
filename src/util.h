@@ -7,12 +7,13 @@
 #define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "bitcredit-config.h"
 #endif
 
 #include "compat.h"
 #include "serialize.h"
 #include "tinyformat.h"
+
 
 #include <cstdio>
 #include <exception>
@@ -27,7 +28,10 @@
 #include <sys/resource.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <execinfo.h>
 #endif
+
+#include <stdio.h>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/thread.hpp>
@@ -57,6 +61,8 @@ T* alignup(T* p)
         size_t n;
     } u;
     u.ptr = p;
+    //Union above causes  to use same memory space as ptr
+    //Move pointer by changing the n member, then clearing last bits to align
     u.n = (u.n + (nBytes-1)) & ~(nBytes-1);
     return u.ptr;
 }
@@ -149,6 +155,11 @@ static inline bool error(const char* format)
     LogPrintStr(std::string("ERROR: ") + format + "\n");
     return false;
 }
+static inline bool error(std::string format)
+{
+    LogPrintStr(std::string("ERROR: ") + format + "\n");
+    return false;
+}
 
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
 std::string FormatMoney(int64_t n, bool fPlus=false);
@@ -157,6 +168,7 @@ bool ParseMoney(const char* pszIn, int64_t& nRet);
 std::string SanitizeString(const std::string& str);
 std::vector<unsigned char> ParseHex(const char* psz);
 std::vector<unsigned char> ParseHex(const std::string& str);
+std::string GetAsHexString(unsigned char * bytes, int size);
 bool IsHex(const std::string& str);
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = NULL);
 std::string DecodeBase64(const std::string& str);
@@ -172,7 +184,9 @@ bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
 bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
+void InitDataDir(std::string dirName);
 bool TryCreateDirectory(const boost::filesystem::path& p);
+bool TryRemoveDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 boost::filesystem::path GetConfigFile();
@@ -193,6 +207,7 @@ int64_t GetTime();
 void SetMockTime(int64_t nMockTimeIn);
 int64_t GetAdjustedTime();
 int64_t GetTimeOffset();
+std::string FormatVersion(int nVersion);
 std::string FormatFullVersion();
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
 void AddTimeData(const CNetAddr& ip, int64_t nTime);
@@ -566,5 +581,21 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         throw;
     }
 }
+
+#ifndef WIN32
+#define assert_with_stacktrace(expect, message) \
+	if (!(expect))  \
+		TrowErrorWithStackTrace(message)
+
+void TrowErrorWithStackTrace(std::string strMessage);
+#else
+#define assert_with_stacktrace(expect, message)  \
+    assert(expect)
+#endif
+
+void HandleSIGSEGV(int sig);
+
+uint256 ReduceByFraction(const uint256 nValue, const int64_t nNumerator, const int64_t nDenominator);
+int64_t ReduceByFraction(const int64_t nValue, const int64_t nNumerator, const int64_t nDenominator);
 
 #endif

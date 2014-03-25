@@ -19,7 +19,7 @@
 
 BOOST_AUTO_TEST_SUITE(CheckBlock_tests)
 
-bool read_block(const std::string& filename, CBlock& block)
+bool read_block(const std::string& filename, Bitcredit_CBlock& block)
 {
     namespace fs = boost::filesystem;
     fs::path testFile = fs::current_path() / "data" / filename;
@@ -34,7 +34,7 @@ bool read_block(const std::string& filename, CBlock& block)
 
     fseek(fp, 8, SEEK_SET); // skip msgheader/size
 
-    CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
+    CAutoFile filein = CAutoFile(fp, SER_DISK, BITCREDIT_CLIENT_VERSION);
     if (!filein) return false;
 
     filein >> block;
@@ -51,14 +51,14 @@ BOOST_AUTO_TEST_CASE(May15)
     unsigned int tMay15 = 1368576000;
     SetMockTime(tMay15); // Test as if it was right at May 15
 
-    CBlock forkingBlock;
+    Bitcredit_CBlock forkingBlock;
     if (read_block("Mar12Fork.dat", forkingBlock))
     {
         CValidationState state;
 
         // After May 15'th, big blocks are OK:
         forkingBlock.nTime = tMay15; // Invalidates PoW
-        BOOST_CHECK(CheckBlock(forkingBlock, state, false, false));
+        BOOST_CHECK(Bitcredit_CheckBlock(forkingBlock, state, false, false));
     }
 
     SetMockTime(0);

@@ -7,10 +7,10 @@
 
 #include <QDialog>
 
-class AddressTableModel;
+class Bitcredit_AddressTableModel;
 
 namespace Ui {
-    class EditAddressDialog;
+    class Bitcredit_EditAddressDialog;
 }
 
 QT_BEGIN_NAMESPACE
@@ -19,7 +19,7 @@ QT_END_NAMESPACE
 
 /** Dialog for editing an address and associated information.
  */
-class EditAddressDialog : public QDialog
+class Bitcredit_EditAddressDialog : public QDialog
 {
     Q_OBJECT
 
@@ -31,10 +31,10 @@ public:
         EditSendingAddress
     };
 
-    explicit EditAddressDialog(Mode mode, QWidget *parent);
-    ~EditAddressDialog();
+    explicit Bitcredit_EditAddressDialog(Mode mode, QWidget *parent);
+    ~Bitcredit_EditAddressDialog();
 
-    void setModel(AddressTableModel *model);
+    void setModel(Bitcredit_AddressTableModel *model);
     void loadRow(int row);
 
     QString getAddress() const;
@@ -46,10 +46,10 @@ public slots:
 private:
     bool saveCurrentRow();
 
-    Ui::EditAddressDialog *ui;
+    Ui::Bitcredit_EditAddressDialog *ui;
     QDataWidgetMapper *mapper;
     Mode mode;
-    AddressTableModel *model;
+    Bitcredit_AddressTableModel *model;
 
     QString address;
 };

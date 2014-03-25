@@ -14,6 +14,8 @@
 #include "util.h"
 #include "walletdb.h"
 
+#include "bitcoin_wallet.h"
+
 #include <algorithm>
 #include <map>
 #include <set>
@@ -24,85 +26,45 @@
 #include <vector>
 
 // Settings
-extern int64_t nTransactionFee;
-extern bool bSpendZeroConfChange;
+extern int64_t bitcredit_nTransactionFee;
+extern bool bitcredit_bSpendZeroConfChange;
 
 // -paytxfee default
-static const int64_t DEFAULT_TRANSACTION_FEE = 0;
+static const int64_t BITCREDIT_DEFAULT_TRANSACTION_FEE = 0;
 // -paytxfee will warn if called with a higher fee than this amount (in satoshis) per KB
-static const int nHighTransactionFeeWarning = 0.01 * COIN;
+static const int bitcredit_nHighTransactionFeeWarning = 0.01 * COIN;
 
 class CAccountingEntry;
 class CCoinControl;
-class COutput;
-class CReserveKey;
+class Bitcredit_COutput;
+class Bitcredit_CReserveKey;
 class CScript;
-class CWalletTx;
+class Bitcredit_CWalletTx;
+class Bitcoin_COutput;
 
 /** (client) version numbers for particular wallet features */
-enum WalletFeature
+enum Bitcredit_WalletFeature
 {
-    FEATURE_BASE = 10500, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
+    BITCREDIT_FEATURE_BASE = 10500, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
 
-    FEATURE_WALLETCRYPT = 40000, // wallet encryption
-    FEATURE_COMPRPUBKEY = 60000, // compressed public keys
+    BITCREDIT_FEATURE_WALLETCRYPT = 40000, // wallet encryption
+    BITCREDIT_FEATURE_COMPRPUBKEY = 60000, // compressed public keys
 
-    FEATURE_LATEST = 60000
+    BITCREDIT_FEATURE_LATEST = 60000
 };
 
-
-/** A key pool entry */
-class CKeyPool
-{
-public:
-    int64_t nTime;
-    CPubKey vchPubKey;
-
-    CKeyPool()
-    {
-        nTime = GetTime();
-    }
-
-    CKeyPool(const CPubKey& vchPubKeyIn)
-    {
-        nTime = GetTime();
-        vchPubKey = vchPubKeyIn;
-    }
-
-    IMPLEMENT_SERIALIZE
-    (
-        if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(nTime);
-        READWRITE(vchPubKey);
-    )
-};
-
-/** Address book data */
-class CAddressBookData
-{
-public:
-    std::string name;
-    std::string purpose;
-
-    CAddressBookData()
-    {
-        purpose = "unknown";
-    }
-
-    typedef std::map<std::string, std::string> StringMap;
-    StringMap destdata;
-};
 
 /** A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
-class CWallet : public CCryptoKeyStore, public CWalletInterface
+class Bitcredit_CWallet : public CCryptoKeyStore, public Bitcredit_CWalletInterface
 {
 private:
-    bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl *coinControl = NULL) const;
+	bool ImportKeyFromBitcoinWallet (CTxDestination &address, Bitcoin_CWallet * bitcoinWallet);
+//	bool ImportKeyFromBitcreditWallet (CTxDestination &address, Bitcredit_CWallet * bitcreditWallet);
+    bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const Bitcredit_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
 
-    CWalletDB *pwalletdbEncryption;
+    Bitcredit_CWalletDB *pwalletdbEncryption;
 
     // the current wallet version: clients below this version are not able to load the wallet
     int nWalletVersion;
@@ -123,7 +85,11 @@ private:
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 
+    void NotifyTxPrevInsBitcoin(Bitcoin_CWallet *bitcoin_wallet, Bitcredit_CWalletTx &wtx);
+    void NotifyTxPrevInsBitcredit(Bitcredit_CWallet *bitcredit_wallet, Bitcredit_CWalletTx &wtx);
+
 public:
+    Bitcredit_CDBEnv *pbitDb;
     /// Main wallet lock.
     /// This lock protects all the fields added by CWallet
     ///   except for:
@@ -135,27 +101,27 @@ public:
     std::string strWalletFile;
 
     std::set<int64_t> setKeyPool;
-    std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
+    std::map<CKeyID, Bitcredit_CKeyMetadata> mapKeyMetadata;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
-    CWallet()
+    Bitcredit_CWallet(Bitcredit_CDBEnv *pbitDbIn)
     {
-        SetNull();
+        SetNull(pbitDbIn);
     }
-    CWallet(std::string strWalletFileIn)
+    Bitcredit_CWallet(std::string strWalletFileIn, Bitcredit_CDBEnv *pbitDbIn)
     {
-        SetNull();
+        SetNull(pbitDbIn);
 
         strWalletFile = strWalletFileIn;
         fFileBacked = true;
     }
-    void SetNull()
+    void SetNull(Bitcredit_CDBEnv *pbitDbIn)
     {
-        nWalletVersion = FEATURE_BASE;
-        nWalletMaxVersion = FEATURE_BASE;
+        nWalletVersion = BITCREDIT_FEATURE_BASE;
+        nWalletMaxVersion = BITCREDIT_FEATURE_BASE;
         fFileBacked = false;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
@@ -163,9 +129,10 @@ public:
         nNextResend = 0;
         nLastResend = 0;
         nTimeFirstKey = 0;
+    	pbitDb = pbitDbIn;
     }
 
-    std::map<uint256, CWalletTx> mapWallet;
+    std::map<uint256, Bitcredit_CWalletTx> mapWallet;
 
     int64_t nOrderPosNext;
     std::map<uint256, int> mapRequestCount;
@@ -178,13 +145,16 @@ public:
 
     int64_t nTimeFirstKey;
 
-    const CWalletTx* GetWalletTx(const uint256& hash) const;
+    const Bitcredit_CWalletTx* GetWalletTx(const uint256& hash) const;
+    void GetAllWalletTxs(vector<const Bitcredit_CWalletTx*> &vWalletTxs) const;
 
     // check whether we are allowed to upgrade (or already support) to the named feature
-    bool CanSupportFeature(enum WalletFeature wf) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
+    bool CanSupportFeature(enum Bitcredit_WalletFeature wf) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
 
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL) const;
-    bool SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
+    void AvailableCoins(std::vector<Bitcredit_COutput>& vCoins, map<uint256, set<int> >& mapFilterTxInPoints, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL) const;
+    void ClaimTxInPoints(map<uint256, set<int> >& mapClaimTxPoints) const;
+    void PreparedDepositTxInPoints(map<uint256, set<int> >& mapDepositTxPoints) const;
+    bool SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfTheirs, std::vector<Bitcredit_COutput> vCoins, std::set<std::pair<const Bitcredit_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const;
 
@@ -202,7 +172,7 @@ public:
     // Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key, const CPubKey &pubkey) { return CCryptoKeyStore::AddKeyPubKey(key, pubkey); }
     // Load metadata (used by LoadWallet)
-    bool LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &metadata);
+    bool LoadKeyMetadata(const CPubKey &pubkey, const Bitcredit_CKeyMetadata &metadata);
 
     bool LoadMinVersion(int nVersion) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion); return true; }
 
@@ -231,9 +201,9 @@ public:
     /** Increment the next transaction order id
         @return next transaction order id
      */
-    int64_t IncOrderPosNext(CWalletDB *pwalletdb = NULL);
+    int64_t IncOrderPosNext(Bitcredit_CWalletDB *pwalletdb = NULL);
 
-    typedef std::pair<CWalletTx*, CAccountingEntry*> TxPair;
+    typedef std::pair<Bitcredit_CWalletTx*, CAccountingEntry*> TxPair;
     typedef std::multimap<int64_t, TxPair > TxItems;
 
     /** Get the wallet's activity log
@@ -243,23 +213,30 @@ public:
     TxItems OrderedTxItems(std::list<CAccountingEntry>& acentries, std::string strAccount = "");
 
     void MarkDirty();
-    bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet=false);
-    void SyncTransaction(const uint256 &hash, const CTransaction& tx, const CBlock* pblock);
-    bool AddToWalletIfInvolvingMe(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate);
-    void EraseFromWallet(const uint256 &hash);
-    int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
+    bool AddToWallet(const Bitcredit_CWalletTx& wtxIn, bool fFromLoadWallet=false);
+    void SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock);
+    bool AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock, bool fUpdate);
+    void EraseFromWallet(Bitcredit_CWallet *bitcredit_wallet, const uint256 &hash);
+    int ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, Bitcredit_CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
-    int64_t GetBalance() const;
-    int64_t GetUnconfirmedBalance() const;
-    int64_t GetImmatureBalance() const;
-    bool CreateTransaction(const std::vector<std::pair<CScript, int64_t> >& vecSend,
-                           CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
-    bool CreateTransaction(CScript scriptPubKey, int64_t nValue,
-                           CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
-    bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
-    std::string SendMoney(CScript scriptPubKey, int64_t nValue, CWalletTx& wtxNew);
-    std::string SendMoneyToDestination(const CTxDestination &address, int64_t nValue, CWalletTx& wtxNew);
+    int64_t GetBalance(map<uint256, set<int> >& mapFilterTxInPoints) const;
+    int64_t GetUnconfirmedBalance(map<uint256, set<int> >& mapFilterTxInPoints) const;
+    int64_t GetImmatureBalance(map<uint256, set<int> >& mapFilterTxInPoints) const;
+    int64_t GetPreparedDepositBalance() const;
+    int64_t GetInDepositBalance() const;
+    bool CreateTransaction(Bitcredit_CWallet *deposit_wallet, const std::vector<std::pair<CScript, int64_t> >& vecSend,
+                           Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
+    bool CreateTransaction(Bitcredit_CWallet *deposit_wallet, CScript scriptPubKey, int64_t nValue,
+                           Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
+    bool CreateDepositTransaction(Bitcredit_CWallet *deposit_wallet, const std::pair<CScript, int64_t>& vecSend,
+                           Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, const int64_t & nTotalIn, std::string& strFailReason, const Bitcredit_COutput& coin, Bitcredit_CCoinsViewCache &bitcredit_view, Bitcoin_CClaimCoinsViewCache &claim_view);
+    bool CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const std::vector<std::pair<CScript, int64_t> >& vecSend,
+                           Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
+    bool CommitTransaction(Bitcoin_CWallet *bitcoin_wallet, Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, std::vector<Bitcredit_CReserveKey *> &keyRecipients);
+    bool CommitDepositTransaction(Bitcredit_CWallet *bitcredit_wallet, Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, std::vector<Bitcredit_CReserveKey *> &keyRecipients);
+    std::string SendMoney(Bitcoin_CWallet *bitcoin_wallet, Bitcredit_CWallet *deposit_wallet, CScript scriptPubKey, int64_t nValue, Bitcredit_CWalletTx& wtxNew);
+    std::string SendMoneyToDestination(Bitcoin_CWallet *bitcoin_wallet, Bitcredit_CWallet *deposit_wallet, const CTxDestination &address, int64_t nValue, Bitcredit_CWalletTx& wtxNew);
 
     bool NewKeyPool();
     bool TopUpKeyPool(unsigned int kpSize = 0);
@@ -275,73 +252,71 @@ public:
 
     std::set<CTxDestination> GetAccountAddresses(std::string strAccount) const;
 
-    bool IsMine(const CTxIn& txin) const;
-    int64_t GetDebit(const CTxIn& txin) const;
+    bool IsMine(const Bitcredit_CTxIn& txin) const;
+    int64_t GetDebit(const Bitcredit_CTxIn& txin) const;
     bool IsMine(const CTxOut& txout) const
     {
         return ::IsMine(*this, txout.scriptPubKey);
     }
     int64_t GetCredit(const CTxOut& txout) const
     {
-        if (!MoneyRange(txout.nValue))
-            throw std::runtime_error("CWallet::GetCredit() : value out of range");
+    	assert_with_stacktrace(Bitcredit_MoneyRange(txout.nValue), "Bitcredit: CWallet::GetCredit() : value out of range");
         return (IsMine(txout) ? txout.nValue : 0);
     }
     bool IsChange(const CTxOut& txout) const;
     int64_t GetChange(const CTxOut& txout) const
     {
-        if (!MoneyRange(txout.nValue))
-            throw std::runtime_error("CWallet::GetChange() : value out of range");
+    	assert_with_stacktrace(Bitcredit_MoneyRange(txout.nValue), "Bitcredit: CWallet::GetChange() : value out of range");
         return (IsChange(txout) ? txout.nValue : 0);
     }
-    bool IsMine(const CTransaction& tx) const
+    bool IsMine(const Bitcredit_CTransaction& tx) const
     {
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
             if (IsMine(txout))
                 return true;
         return false;
     }
-    bool IsFromMe(const CTransaction& tx) const
+    bool IsFromMe(const Bitcredit_CTransaction& tx) const
     {
         return (GetDebit(tx) > 0);
     }
-    int64_t GetDebit(const CTransaction& tx) const
+    int64_t GetDebit(const Bitcredit_CTransaction& tx) const
     {
         int64_t nDebit = 0;
-        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
         {
             nDebit += GetDebit(txin);
-            if (!MoneyRange(nDebit))
-                throw std::runtime_error("CWallet::GetDebit() : value out of range");
+            assert_with_stacktrace(Bitcredit_MoneyRange(nDebit), "Bitcredit: CWallet::GetDebit() : value out of range");
         }
         return nDebit;
     }
-    int64_t GetCredit(const CTransaction& tx) const
+    int64_t GetCredit(const Bitcredit_CTransaction& tx, map<uint256, set<int> >& mapFilterTxInPoints) const
     {
+    	const uint256 &hashTx = tx.GetHash();
         int64_t nCredit = 0;
-        BOOST_FOREACH(const CTxOut& txout, tx.vout)
-        {
-            nCredit += GetCredit(txout);
-            if (!MoneyRange(nCredit))
-                throw std::runtime_error("CWallet::GetCredit() : value out of range");
+		for(unsigned int i = 0; i < tx.vout.size(); i++) {
+			if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
+				const CTxOut& txout = tx.vout[i];
+				nCredit += GetCredit(txout);
+				assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Bitcredit: CWallet::GetCredit() : value out of range");
+			}
         }
         return nCredit;
     }
-    int64_t GetChange(const CTransaction& tx) const
+    int64_t GetChange(const Bitcredit_CTransaction& tx) const
     {
         int64_t nChange = 0;
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
         {
             nChange += GetChange(txout);
-            if (!MoneyRange(nChange))
-                throw std::runtime_error("CWallet::GetChange() : value out of range");
+            assert_with_stacktrace(Bitcredit_MoneyRange(nChange), "Bitcredit: CWallet::GetChange() : value out of range");
         }
         return nChange;
     }
     void SetBestChain(const CBlockLocator& loc);
 
-    DBErrors LoadWallet(bool& fFirstRunRet);
-    DBErrors ZapWalletTx();
+    Bitcredit_DBErrors LoadWallet(bool& fFirstRunRet, uint64_t &nAccountingEntryNumber);
+    Bitcredit_DBErrors ZapWalletTx();
 
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
@@ -368,7 +343,7 @@ public:
     bool SetDefaultKey(const CPubKey &vchPubKey);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
-    bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
+    bool SetMinVersion(enum Bitcredit_WalletFeature, Bitcredit_CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
 
     // change which version we're allowed to upgrade to (note that this does not immediately imply upgrading to that format)
     bool SetMaxVersion(int nVersion);
@@ -382,7 +357,7 @@ public:
     /** Address book entry changed.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const CTxDestination
+    boost::signals2::signal<void (Bitcredit_CWallet *wallet, const CTxDestination
             &address, const std::string &label, bool isMine,
             const std::string &purpose,
             ChangeType status)> NotifyAddressBookChanged;
@@ -390,7 +365,7 @@ public:
     /** Wallet transaction added, removed or updated.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx,
+    boost::signals2::signal<void (Bitcredit_CWallet *wallet, const uint256 &hashTx,
             ChangeType status)> NotifyTransactionChanged;
 
     /** Show progress e.g. for rescan */
@@ -398,20 +373,20 @@ public:
 };
 
 /** A key allocated from the key pool. */
-class CReserveKey
+class Bitcredit_CReserveKey
 {
 protected:
-    CWallet* pwallet;
+    Bitcredit_CWallet* pwallet;
     int64_t nIndex;
     CPubKey vchPubKey;
 public:
-    CReserveKey(CWallet* pwalletIn)
+    Bitcredit_CReserveKey(Bitcredit_CWallet* pwalletIn)
     {
         nIndex = -1;
         pwallet = pwalletIn;
     }
 
-    ~CReserveKey()
+    ~Bitcredit_CReserveKey()
     {
         ReturnKey();
     }
@@ -422,35 +397,13 @@ public:
 };
 
 
-typedef std::map<std::string, std::string> mapValue_t;
-
-
-static void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
-{
-    if (!mapValue.count("n"))
-    {
-        nOrderPos = -1; // TODO: calculate elsewhere
-        return;
-    }
-    nOrderPos = atoi64(mapValue["n"].c_str());
-}
-
-
-static void WriteOrderPos(const int64_t& nOrderPos, mapValue_t& mapValue)
-{
-    if (nOrderPos == -1)
-        return;
-    mapValue["n"] = i64tostr(nOrderPos);
-}
-
-
 /** A transaction with a bunch of additional info that only the owner cares about.
  * It includes any unrecorded transactions needed to link it back to the block chain.
  */
-class CWalletTx : public CMerkleTx
+class Bitcredit_CWalletTx : public Bitcredit_CMerkleTx
 {
 private:
-    const CWallet* pwallet;
+    const Bitcredit_CWallet* pwallet;
 
 public:
     mapValue_t mapValue;
@@ -467,34 +420,38 @@ public:
     mutable bool fCreditCached;
     mutable bool fImmatureCreditCached;
     mutable bool fAvailableCreditCached;
+    mutable bool fPreparedDepositCreditCached;
+    mutable bool fInDepositCreditCached;
     mutable bool fChangeCached;
     mutable int64_t nDebitCached;
     mutable int64_t nCreditCached;
     mutable int64_t nImmatureCreditCached;
     mutable int64_t nAvailableCreditCached;
+    mutable int64_t nPreparedDepositCreditCached;
+    mutable int64_t nInDepositCreditCached;
     mutable int64_t nChangeCached;
 
-    CWalletTx()
+    Bitcredit_CWalletTx()
     {
         Init(NULL);
     }
 
-    CWalletTx(const CWallet* pwalletIn)
+    Bitcredit_CWalletTx(const Bitcredit_CWallet* pwalletIn)
     {
         Init(pwalletIn);
     }
 
-    CWalletTx(const CWallet* pwalletIn, const CMerkleTx& txIn) : CMerkleTx(txIn)
+    Bitcredit_CWalletTx(const Bitcredit_CWallet* pwalletIn, const Bitcredit_CMerkleTx& txIn) : Bitcredit_CMerkleTx(txIn)
     {
         Init(pwalletIn);
     }
 
-    CWalletTx(const CWallet* pwalletIn, const CTransaction& txIn) : CMerkleTx(txIn)
+    Bitcredit_CWalletTx(const Bitcredit_CWallet* pwalletIn, const Bitcredit_CTransaction& txIn) : Bitcredit_CMerkleTx(txIn)
     {
         Init(pwalletIn);
     }
 
-    void Init(const CWallet* pwalletIn)
+    void Init(const Bitcredit_CWallet* pwalletIn)
     {
         pwallet = pwalletIn;
         mapValue.clear();
@@ -508,18 +465,22 @@ public:
         fCreditCached = false;
         fImmatureCreditCached = false;
         fAvailableCreditCached = false;
+        fPreparedDepositCreditCached = false;
+        fInDepositCreditCached = false;
         fChangeCached = false;
         nDebitCached = 0;
         nCreditCached = 0;
         nImmatureCreditCached = 0;
         nAvailableCreditCached = 0;
+        nPreparedDepositCreditCached = 0;
+        nInDepositCreditCached = 0;
         nChangeCached = 0;
         nOrderPos = -1;
     }
 
     IMPLEMENT_SERIALIZE
     (
-        CWalletTx* pthis = const_cast<CWalletTx*>(this);
+        Bitcredit_CWalletTx* pthis = const_cast<Bitcredit_CWalletTx*>(this);
         if (fRead)
             pthis->Init(NULL);
         char fSpent = false;
@@ -534,8 +495,8 @@ public:
                 pthis->mapValue["timesmart"] = strprintf("%u", nTimeSmart);
         }
 
-        nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion,ser_action);
-        std::vector<CMerkleTx> vUnused; // Used to be vtxPrev
+        nSerSize += SerReadWrite(s, *(Bitcredit_CMerkleTx*)this, nType, nVersion,ser_action);
+        std::vector<Bitcredit_CMerkleTx> vUnused; // Used to be vtxPrev
         READWRITE(vUnused);
         READWRITE(mapValue);
         READWRITE(vOrderForm);
@@ -565,48 +526,90 @@ public:
     {
         fCreditCached = false;
         fAvailableCreditCached = false;
+        fPreparedDepositCreditCached = false;
+        fInDepositCreditCached = false;
         fDebitCached = false;
         fChangeCached = false;
     }
 
-    void BindWallet(CWallet *pwalletIn)
+    void BindWallet(Bitcredit_CWallet *pwalletIn)
     {
         pwallet = pwalletIn;
         MarkDirty();
     }
 
-    int64_t GetDebit() const
+    int64_t GetDebit(const Bitcredit_CWallet *keyholder_wallet = NULL) const
     {
         if (vin.empty())
             return 0;
         if (fDebitCached)
             return nDebitCached;
-        nDebitCached = pwallet->GetDebit(*this);
+        if(keyholder_wallet) {
+        	nDebitCached = keyholder_wallet->GetDebit(*this);
+        } else {
+        	nDebitCached = pwallet->GetDebit(*this);
+        }
         fDebitCached = true;
         return nDebitCached;
     }
 
-    int64_t GetCredit(bool fUseCache=true) const
+    int64_t GetCredit(map<uint256, set<int> >& mapFilterTxInPoints, const Bitcredit_CWallet *keyholder_wallet = NULL, bool fUseCache=true) const
     {
-        // Must wait until coinbase is safely deep enough in the chain before valuing it
-        if (IsCoinBase() && GetBlocksToMaturity() > 0)
-            return 0;
+//        // Must wait until coinbase is safely deep enough in the chain before valuing it
+//        if (IsCoinBase() && GetBlocksToMaturity() > 0)
+//            return 0;
+//        //...and deposits are also blocked for a certain period
+//		if (IsDeposit() && vout.size() == 1 && GetFirstDepositOutBlocksToMaturity() > 0) {
+//			return 0;
+//		}
+//		if (IsDeposit() && vout.size() == 2 && GetSecondDepositOutBlocksToMaturity() > 0) {
+//			return 0;
+//		}
 
         // GetBalance can assume transactions in mapWallet won't change
         if (fUseCache && fCreditCached)
             return nCreditCached;
-        nCreditCached = pwallet->GetCredit(*this);
+        if(keyholder_wallet) {
+        	nCreditCached = keyholder_wallet->GetCredit(*this, mapFilterTxInPoints);
+        } else {
+        	nCreditCached = pwallet->GetCredit(*this, mapFilterTxInPoints);
+        }
         fCreditCached = true;
         return nCreditCached;
     }
 
-    int64_t GetImmatureCredit(bool fUseCache=true) const
+	void AddTxOutValue(int64_t &nCredit, const uint256 &hashTx, const unsigned int &n) const {
+		const CTxOut &txout = vout[n];
+		if (!pwallet->IsSpent(hashTx, n)) {
+			nCredit += pwallet->GetCredit(txout);
+			assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Bitcredit: CWalletTx::AddTxOutValue() : value out of range");
+		}
+	}
+
+    int64_t GetImmatureCredit(map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
     {
-        if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
+        if ( ((IsCoinBase() && GetBlocksToMaturity() > 0) || (IsDeposit() && vout.size() == 2 && GetSecondDepositOutBlocksToMaturity() > 0)) && IsInMainChain())
         {
             if (fUseCache && fImmatureCreditCached)
                 return nImmatureCreditCached;
-            nImmatureCreditCached = pwallet->GetCredit(*this);
+
+            //This loop is neccessary since coinbases CAN be spent by deposit in same block
+            //This has been copied from pwallet->GetCredit()
+            int64_t nCredit = 0;
+			const uint256 &hashTx = GetHash();
+			unsigned int start = 0;
+            if(IsDeposit()) {
+				start = 1;
+            }
+
+			for (unsigned int i = start; i < vout.size(); i++) {
+				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
+					AddTxOutValue(nCredit, hashTx, i);
+				}
+			}
+
+            nImmatureCreditCached = nCredit;
+
             fImmatureCreditCached = true;
             return nImmatureCreditCached;
         }
@@ -614,7 +617,7 @@ public:
         return 0;
     }
 
-    int64_t GetAvailableCredit(bool fUseCache=true) const
+    int64_t GetAvailableCredit(map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
     {
         if (pwallet == 0)
             return 0;
@@ -622,20 +625,26 @@ public:
         // Must wait until coinbase is safely deep enough in the chain before valuing it
         if (IsCoinBase() && GetBlocksToMaturity() > 0)
             return 0;
+        //...and deposits are also blocked for a certain period
+		if (IsDeposit() && vout.size() == 1 && GetFirstDepositOutBlocksToMaturity() > 0) {
+			return 0;
+		}
+		if (IsDeposit() && vout.size() == 2 && GetSecondDepositOutBlocksToMaturity() > 0) {
+			return 0;
+		}
 
         if (fUseCache && fAvailableCreditCached)
             return nAvailableCreditCached;
 
         int64_t nCredit = 0;
-        uint256 hashTx = GetHash();
-        for (unsigned int i = 0; i < vout.size(); i++)
-        {
-            if (!pwallet->IsSpent(hashTx, i))
-            {
-                const CTxOut &txout = vout[i];
-                nCredit += pwallet->GetCredit(txout);
-                if (!MoneyRange(nCredit))
-                    throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+        const uint256 &hashTx = GetHash();
+		unsigned int start = 0;
+        if(IsDeposit() && GetFirstDepositOutBlocksToMaturity() > 0) {
+			start = 1;
+        }
+        for (unsigned int i = start; i < vout.size(); i++) {
+    		if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
+    			AddTxOutValue(nCredit, hashTx, i);
             }
         }
 
@@ -644,12 +653,68 @@ public:
         return nCredit;
     }
 
-
-    int64_t GetChange() const
+    int64_t GetPreparedDepositCredit(bool fUseCache=true) const
     {
+        if (pwallet == 0)
+            return 0;
+
+		int64_t nCredit = 0;
+
+		if (IsDeposit()) {
+			if (fUseCache && fPreparedDepositCreditCached)
+				return nPreparedDepositCreditCached;
+
+			uint256 hashTx = GetHash();
+			for (unsigned int i = 0; i < vout.size(); i++) {
+				const CTxOut &txout = vout[i];
+				if (!pwallet->IsSpent(hashTx, i)) {
+					nCredit += txout.nValue;
+					assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Bitcredit: CWalletTx::GetImmatureCredit() : value out of range");
+				}
+			}
+
+			nPreparedDepositCreditCached = nCredit;
+			fPreparedDepositCreditCached = true;
+        }
+
+        return nCredit;
+    }
+
+    int64_t GetInDepositCredit(bool fUseCache=true) const
+    {
+        if (pwallet == 0)
+            return 0;
+
+		int64_t nCredit = 0;
+
+		if (IsDeposit() && GetFirstDepositOutBlocksToMaturity() > 0 && IsInMainChain()) {
+			if (fUseCache && fInDepositCreditCached)
+				return nInDepositCreditCached;
+
+			//Only first vout is deposit
+    		AddTxOutValue(nCredit, GetHash(), 0);
+
+			nInDepositCreditCached = nCredit;
+			fInDepositCreditCached = true;
+        }
+
+        return nCredit;
+    }
+
+
+    int64_t GetChange(const Bitcredit_CWallet *keyholder_wallet = NULL) const
+    {
+        // Deposits can never have change
+        if (IsDeposit())
+            return 0;
+
         if (fChangeCached)
             return nChangeCached;
-        nChangeCached = pwallet->GetChange(*this);
+        if(keyholder_wallet) {
+        	nChangeCached = keyholder_wallet->GetChange(*this);
+        } else {
+        	nChangeCached = pwallet->GetChange(*this);
+        }
         fChangeCached = true;
         return nChangeCached;
     }
@@ -668,21 +733,21 @@ public:
     bool IsTrusted() const
     {
         // Quick answer in most cases
-        if (!IsFinalTx(*this))
+        if (!Bitcredit_IsFinalTx(*this))
             return false;
         int nDepth = GetDepthInMainChain();
         if (nDepth >= 1)
             return true;
         if (nDepth < 0)
             return false;
-        if (!bSpendZeroConfChange || !IsFromMe()) // using wtx's cached debit
+        if (!bitcredit_bSpendZeroConfChange || !IsFromMe()) // using wtx's cached debit
             return false;
 
         // Trusted if all inputs are from us and are in the mempool:
-        BOOST_FOREACH(const CTxIn& txin, vin)
+        BOOST_FOREACH(const Bitcredit_CTxIn& txin, vin)
         {
             // Transactions not sent by us: not trusted
-            const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
+            const Bitcredit_CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
             if (parent == NULL)
                 return false;
             const CTxOut& parentOut = parent->vout[txin.prevout.n];
@@ -705,14 +770,14 @@ public:
 
 
 
-class COutput
+class Bitcredit_COutput
 {
 public:
-    const CWalletTx *tx;
+    const Bitcredit_CWalletTx *tx;
     int i;
     int nDepth;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn)
+    Bitcredit_COutput(const Bitcredit_CWalletTx *txIn, int iIn, int nDepthIn)
     {
         tx = txIn; i = iIn; nDepth = nDepthIn;
     }
@@ -729,145 +794,5 @@ public:
 };
 
 
-
-
-/** Private key that includes an expiration date in case it never gets used. */
-class CWalletKey
-{
-public:
-    CPrivKey vchPrivKey;
-    int64_t nTimeCreated;
-    int64_t nTimeExpires;
-    std::string strComment;
-    //// todo: add something to note what created it (user, getnewaddress, change)
-    ////   maybe should have a map<string, string> property map
-
-    CWalletKey(int64_t nExpires=0)
-    {
-        nTimeCreated = (nExpires ? GetTime() : 0);
-        nTimeExpires = nExpires;
-    }
-
-    IMPLEMENT_SERIALIZE
-    (
-        if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(vchPrivKey);
-        READWRITE(nTimeCreated);
-        READWRITE(nTimeExpires);
-        READWRITE(strComment);
-    )
-};
-
-
-
-
-
-
-/** Account information.
- * Stored in wallet with key "acc"+string account name.
- */
-class CAccount
-{
-public:
-    CPubKey vchPubKey;
-
-    CAccount()
-    {
-        SetNull();
-    }
-
-    void SetNull()
-    {
-        vchPubKey = CPubKey();
-    }
-
-    IMPLEMENT_SERIALIZE
-    (
-        if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(vchPubKey);
-    )
-};
-
-
-
-/** Internal transfers.
- * Database key is acentry<account><counter>.
- */
-class CAccountingEntry
-{
-public:
-    std::string strAccount;
-    int64_t nCreditDebit;
-    int64_t nTime;
-    std::string strOtherAccount;
-    std::string strComment;
-    mapValue_t mapValue;
-    int64_t nOrderPos;  // position in ordered transaction list
-    uint64_t nEntryNo;
-
-    CAccountingEntry()
-    {
-        SetNull();
-    }
-
-    void SetNull()
-    {
-        nCreditDebit = 0;
-        nTime = 0;
-        strAccount.clear();
-        strOtherAccount.clear();
-        strComment.clear();
-        nOrderPos = -1;
-    }
-
-    IMPLEMENT_SERIALIZE
-    (
-        CAccountingEntry& me = *const_cast<CAccountingEntry*>(this);
-        if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
-        // Note: strAccount is serialized as part of the key, not here.
-        READWRITE(nCreditDebit);
-        READWRITE(nTime);
-        READWRITE(strOtherAccount);
-
-        if (!fRead)
-        {
-            WriteOrderPos(nOrderPos, me.mapValue);
-
-            if (!(mapValue.empty() && _ssExtra.empty()))
-            {
-                CDataStream ss(nType, nVersion);
-                ss.insert(ss.begin(), '\0');
-                ss << mapValue;
-                ss.insert(ss.end(), _ssExtra.begin(), _ssExtra.end());
-                me.strComment.append(ss.str());
-            }
-        }
-
-        READWRITE(strComment);
-
-        size_t nSepPos = strComment.find("\0", 0, 1);
-        if (fRead)
-        {
-            me.mapValue.clear();
-            if (std::string::npos != nSepPos)
-            {
-                CDataStream ss(std::vector<char>(strComment.begin() + nSepPos + 1, strComment.end()), nType, nVersion);
-                ss >> me.mapValue;
-                me._ssExtra = std::vector<char>(ss.begin(), ss.end());
-            }
-            ReadOrderPos(me.nOrderPos, me.mapValue);
-        }
-        if (std::string::npos != nSepPos)
-            me.strComment.erase(nSepPos);
-
-        me.mapValue.erase("n");
-    )
-
-private:
-    std::vector<char> _ssExtra;
-};
 
 #endif

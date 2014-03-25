@@ -8,26 +8,26 @@
 
 using namespace std;
 
-CTxMemPoolEntry::CTxMemPoolEntry()
+Bitcredit_CTxMemPoolEntry::Bitcredit_CTxMemPoolEntry()
 {
-    nHeight = MEMPOOL_HEIGHT;
+    nHeight = BITCREDIT_MEMPOOL_HEIGHT;
 }
 
-CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, int64_t _nFee,
+Bitcredit_CTxMemPoolEntry::Bitcredit_CTxMemPoolEntry(const Bitcredit_CTransaction& _tx, int64_t _nFee,
                                  int64_t _nTime, double _dPriority,
                                  unsigned int _nHeight):
     tx(_tx), nFee(_nFee), nTime(_nTime), dPriority(_dPriority), nHeight(_nHeight)
 {
-    nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+    nTxSize = ::GetSerializeSize(tx, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
 }
 
-CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
+Bitcredit_CTxMemPoolEntry::Bitcredit_CTxMemPoolEntry(const Bitcredit_CTxMemPoolEntry& other)
 {
     *this = other;
 }
 
 double
-CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
+Bitcredit_CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 {
     int64_t nValueIn = tx.GetValueOut()+nFee;
     double deltaPriority = ((double)(currentHeight-nHeight)*nValueIn)/nTxSize;
@@ -35,7 +35,7 @@ CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
     return dResult;
 }
 
-CTxMemPool::CTxMemPool()
+Bitcredit_CTxMemPool::Bitcredit_CTxMemPool()
 {
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number
@@ -43,11 +43,11 @@ CTxMemPool::CTxMemPool()
     fSanityCheck = false;
 }
 
-void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
+void Bitcredit_CTxMemPool::pruneSpent(const uint256 &hashTx, Bitcredit_CCoins &coins)
 {
     LOCK(cs);
 
-    std::map<COutPoint, CInPoint>::iterator it = mapNextTx.lower_bound(COutPoint(hashTx, 0));
+    std::map<COutPoint, Bitcredit_CInPoint>::iterator it = mapNextTx.lower_bound(COutPoint(hashTx, 0));
 
     // iterate over all COutPoints in mapNextTx whose hash equals the provided hashTx
     while (it != mapNextTx.end() && it->first.hash == hashTx) {
@@ -56,20 +56,20 @@ void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
     }
 }
 
-unsigned int CTxMemPool::GetTransactionsUpdated() const
+unsigned int Bitcredit_CTxMemPool::GetTransactionsUpdated() const
 {
     LOCK(cs);
     return nTransactionsUpdated;
 }
 
-void CTxMemPool::AddTransactionsUpdated(unsigned int n)
+void Bitcredit_CTxMemPool::AddTransactionsUpdated(unsigned int n)
 {
     LOCK(cs);
     nTransactionsUpdated += n;
 }
 
 
-bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
+bool Bitcredit_CTxMemPool::addUnchecked(const uint256& hash, const Bitcredit_CTxMemPoolEntry &entry)
 {
     // Add to memory pool without checking anything.
     // Used by main.cpp AcceptToMemoryPool(), which DOES do
@@ -77,16 +77,16 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
     LOCK(cs);
     {
         mapTx[hash] = entry;
-        const CTransaction& tx = mapTx[hash].GetTx();
+        const Bitcredit_CTransaction& tx = mapTx[hash].GetTx();
         for (unsigned int i = 0; i < tx.vin.size(); i++)
-            mapNextTx[tx.vin[i].prevout] = CInPoint(&tx, i);
+            mapNextTx[tx.vin[i].prevout] = Bitcredit_CInPoint(&tx, i);
         nTransactionsUpdated++;
     }
     return true;
 }
 
 
-void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive)
+void Bitcredit_CTxMemPool::remove(const Bitcredit_CTransaction &tx, std::list<Bitcredit_CTransaction>& removed, bool fRecursive)
 {
     // Remove transaction from memory pool
     {
@@ -94,7 +94,7 @@ void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed
         uint256 hash = tx.GetHash();
         if (fRecursive) {
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
-                std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
+                std::map<COutPoint, Bitcredit_CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
                 if (it == mapNextTx.end())
                     continue;
                 remove(*it->second.ptx, removed, true);
@@ -103,7 +103,7 @@ void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed
         if (mapTx.count(hash))
         {
             removed.push_front(tx);
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
+            BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
                 mapNextTx.erase(txin.prevout);
             mapTx.erase(hash);
             nTransactionsUpdated++;
@@ -111,15 +111,15 @@ void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed
     }
 }
 
-void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed)
+void Bitcredit_CTxMemPool::removeConflicts(const Bitcredit_CTransaction &tx, std::list<Bitcredit_CTransaction>& removed)
 {
     // Remove transactions which depend on inputs of tx, recursively
-    list<CTransaction> result;
+    list<Bitcredit_CTransaction> result;
     LOCK(cs);
-    BOOST_FOREACH(const CTxIn &txin, tx.vin) {
-        std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(txin.prevout);
+    BOOST_FOREACH(const Bitcredit_CTxIn &txin, tx.vin) {
+        std::map<COutPoint, Bitcredit_CInPoint>::iterator it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
-            const CTransaction &txConflict = *it->second.ptx;
+            const Bitcredit_CTransaction &txConflict = *it->second.ptx;
             if (txConflict != tx)
             {
                 remove(txConflict, removed, true);
@@ -128,7 +128,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>
     }
 }
 
-void CTxMemPool::clear()
+void Bitcredit_CTxMemPool::clear()
 {
     LOCK(cs);
     mapTx.clear();
@@ -136,7 +136,7 @@ void CTxMemPool::clear()
     ++nTransactionsUpdated;
 }
 
-void CTxMemPool::check(CCoinsViewCache *pcoins) const
+void Bitcredit_CTxMemPool::check(Bitcredit_CCoinsViewCache *pcoins, Bitcoin_CClaimCoinsViewCache *pclaimcoins) const
 {
     if (!fSanityCheck)
         return;
@@ -144,31 +144,36 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
     LogPrint("mempool", "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
 
     LOCK(cs);
-    for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
+    for (std::map<uint256, Bitcredit_CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
-        const CTransaction& tx = it->second.GetTx();
-        BOOST_FOREACH(const CTxIn &txin, tx.vin) {
+        const Bitcredit_CTransaction& tx = it->second.GetTx();
+        BOOST_FOREACH(const Bitcredit_CTxIn &txin, tx.vin) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
-            std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
+            std::map<uint256, Bitcredit_CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end()) {
-                const CTransaction& tx2 = it2->second.GetTx();
+                const Bitcredit_CTransaction& tx2 = it2->second.GetTx();
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
             } else {
-                CCoins &coins = pcoins->GetCoins(txin.prevout.hash);
-                assert(coins.IsAvailable(txin.prevout.n));
+            	if(tx.IsClaim()) {
+            		Bitcoin_CClaimCoins &coins = pclaimcoins->GetCoins(txin.prevout.hash);
+            		assert(coins.HasClaimable(txin.prevout.n));
+            	} else {
+            		Bitcredit_CCoins &coins = pcoins->GetCoins(txin.prevout.hash);
+            		assert(coins.IsAvailable(txin.prevout.n));
+                }
             }
             // Check whether its inputs are marked in mapNextTx.
-            std::map<COutPoint, CInPoint>::const_iterator it3 = mapNextTx.find(txin.prevout);
+            std::map<COutPoint, Bitcredit_CInPoint>::const_iterator it3 = mapNextTx.find(txin.prevout);
             assert(it3 != mapNextTx.end());
             assert(it3->second.ptx == &tx);
             assert(it3->second.n == i);
             i++;
         }
     }
-    for (std::map<COutPoint, CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); it++) {
+    for (std::map<COutPoint, Bitcredit_CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); it++) {
         uint256 hash = it->second.ptx->GetHash();
-        map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(hash);
-        const CTransaction& tx = it2->second.GetTx();
+        map<uint256, Bitcredit_CTxMemPoolEntry>::const_iterator it2 = mapTx.find(hash);
+        const Bitcredit_CTransaction& tx = it2->second.GetTx();
         assert(it2 != mapTx.end());
         assert(&tx == it->second.ptx);
         assert(tx.vin.size() > it->second.n);
@@ -176,39 +181,39 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
     }
 }
 
-void CTxMemPool::queryHashes(vector<uint256>& vtxid)
+void Bitcredit_CTxMemPool::queryHashes(vector<uint256>& vtxid)
 {
     vtxid.clear();
 
     LOCK(cs);
     vtxid.reserve(mapTx.size());
-    for (map<uint256, CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
+    for (map<uint256, Bitcredit_CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
         vtxid.push_back((*mi).first);
 }
 
-bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
+bool Bitcredit_CTxMemPool::lookup(uint256 hash, Bitcredit_CTransaction& result) const
 {
     LOCK(cs);
-    map<uint256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
+    map<uint256, Bitcredit_CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
     if (i == mapTx.end()) return false;
     result = i->second.GetTx();
     return true;
 }
 
-CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView &baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
+Bitcredit_CCoinsViewMemPool::Bitcredit_CCoinsViewMemPool(Bitcredit_CCoinsView &baseIn, Bitcredit_CTxMemPool &mempoolIn) : Bitcredit_CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
-bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) {
+bool Bitcredit_CCoinsViewMemPool::GetCoins(const uint256 &txid, Bitcredit_CCoins &coins) {
     if (base->GetCoins(txid, coins))
         return true;
-    CTransaction tx;
+    Bitcredit_CTransaction tx;
     if (mempool.lookup(txid, tx)) {
-        coins = CCoins(tx, MEMPOOL_HEIGHT);
+        coins = Bitcredit_CCoins(tx, BITCREDIT_MEMPOOL_HEIGHT);
         return true;
     }
     return false;
 }
 
-bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) {
+bool Bitcredit_CCoinsViewMemPool::HaveCoins(const uint256 &txid) {
     return mempool.exists(txid) || base->HaveCoins(txid);
 }
 

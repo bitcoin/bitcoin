@@ -6,15 +6,20 @@
 #define WALLETVIEW_H
 
 #include <QStackedWidget>
+#include <QPushButton>
 
-class BitcoinGUI;
+class BitcreditGUI;
 class ClientModel;
 class OverviewPage;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
-class SendCoinsRecipient;
+class ClaimCoinsDialog;
+class MinerCoinsDialog;
+class Bitcredit_SendCoinsRecipient;
 class TransactionView;
-class WalletModel;
+class MinerDepositsView;
+class Bitcredit_WalletModel;
+class Bitcoin_WalletModel;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -35,7 +40,7 @@ public:
     explicit WalletView(QWidget *parent);
     ~WalletView();
 
-    void setBitcoinGUI(BitcoinGUI *gui);
+    void setBitcreditGUI(BitcreditGUI *gui);
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
@@ -44,34 +49,49 @@ public:
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
-    void setWalletModel(WalletModel *walletModel);
+    void setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcoin_WalletModel *bitcoin_model, Bitcredit_WalletModel *deposit_model);
 
-    bool handlePaymentRequest(const SendCoinsRecipient& recipient);
+    bool handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient);
 
     void showOutOfSyncWarning(bool fShow);
 
 private:
     ClientModel *clientModel;
-    WalletModel *walletModel;
+    Bitcredit_WalletModel *bitcredit_model;
+    Bitcoin_WalletModel *bitcoin_model;
+    Bitcredit_WalletModel *deposit_model;
 
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
+    QWidget *minerDepositsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
+    ClaimCoinsDialog *claimCoinsPage;
+    MinerCoinsDialog *minerCoinsPage;
 
     TransactionView *transactionView;
+    MinerDepositsView *minerDepositsView;
 
     QProgressDialog *progressDialog;
+
+    QPushButton * CreateButton(QWidget * view, QWidget * page);
+    void CreateLowerLayout(QWidget * view, QWidget * page);
 
 public slots:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
+    /** Switch to new claim  coins page */
+    void gotoClaimCoinsPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch to miner deposits page */
+    void gotoMinerDepositsPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+    /** Switch to miner coins page */
+    void gotoMinerCoinsPage(QString addr = "");
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
@@ -84,18 +104,28 @@ public slots:
     */
     void processNewTransaction(const QModelIndex& parent, int start, int /*end*/);
     /** Encrypt the wallet */
-    void encryptWallet(bool status);
+    void bitcredit_encryptWallet(bool status);
+    void bitcoin_encryptWallet(bool status);
+    void deposit_encryptWallet(bool status);
     /** Backup the wallet */
-    void backupWallet();
+    void bitcredit_backupWallet();
+    void bitcoin_backupWallet();
+    void deposit_backupWallet();
     /** Change encrypted wallet passphrase */
-    void changePassphrase();
+    void bitcredit_changePassphrase();
+    void bitcoin_changePassphrase();
+    void deposit_changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
-    void unlockWallet();
+    void bitcredit_unlockWallet();
+    void bitcoin_unlockWallet();
+    void deposit_unlockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();
     /** Show used receiving addresses */
     void usedReceivingAddresses();
+
+    void bitcredit_setNumBlocks(int count);
 
     /** Re-emit encryption status signal */
     void updateEncryptionStatus();
@@ -109,7 +139,9 @@ signals:
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
     /** Encryption status of wallet changed */
-    void encryptionStatusChanged(int status);
+    void bitcredit_encryptionStatusChanged(int status);
+    void bitcoin_encryptionStatusChanged(int status);
+    void deposit_encryptionStatusChanged(int status);
     /** Notify that a new transaction appeared */
     void incomingTransaction(const QString& date, int unit, qint64 amount, const QString& type, const QString& address);
 };

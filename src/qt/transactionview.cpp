@@ -5,7 +5,7 @@
 #include "transactionview.h"
 
 #include "addresstablemodel.h"
-#include "bitcoinunits.h"
+#include "bitcreditunits.h"
 #include "csvmodelwriter.h"
 #include "editaddressdialog.h"
 #include "guiutil.h"
@@ -73,14 +73,16 @@ TransactionView::TransactionView(QWidget *parent) :
     typeWidget->setFixedWidth(120);
 #endif
 
-    typeWidget->addItem(tr("All"), TransactionFilterProxy::ALL_TYPES);
-    typeWidget->addItem(tr("Received with"), TransactionFilterProxy::TYPE(TransactionRecord::RecvWithAddress) |
-                                        TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther));
-    typeWidget->addItem(tr("Sent to"), TransactionFilterProxy::TYPE(TransactionRecord::SendToAddress) |
-                                  TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
-    typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
-    typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
-    typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
+    typeWidget->addItem(tr("All"), Bitcredit_TransactionFilterProxy::ALL_TYPES);
+    typeWidget->addItem(tr("Received with"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::RecvWithAddress) |
+                                        Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::RecvFromOther));
+    typeWidget->addItem(tr("Sent to"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::SendToAddress) |
+                                  Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::SendToOther));
+    typeWidget->addItem(tr("To yourself"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::SendToSelf));
+    typeWidget->addItem(tr("Mined"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::Generated));
+    typeWidget->addItem(tr("Deposit"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::Deposit));
+    typeWidget->addItem(tr("Deposit change"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::DepositChange));
+    typeWidget->addItem(tr("Other"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::Other));
 
     hlayout->addWidget(typeWidget);
 
@@ -162,12 +164,12 @@ TransactionView::TransactionView(QWidget *parent) :
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
 }
 
-void TransactionView::setModel(WalletModel *model)
+void TransactionView::setModel(Bitcredit_WalletModel *model)
 {
     this->model = model;
     if(model)
     {
-        transactionProxyModel = new TransactionFilterProxy(this);
+        transactionProxyModel = new Bitcredit_TransactionFilterProxy(this);
         transactionProxyModel->setSourceModel(model->getTransactionTableModel());
         transactionProxyModel->setDynamicSortFilter(true);
         transactionProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
@@ -181,13 +183,13 @@ void TransactionView::setModel(WalletModel *model)
         transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
         transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
         transactionView->setSortingEnabled(true);
-        transactionView->sortByColumn(TransactionTableModel::Status, Qt::DescendingOrder);
+        transactionView->sortByColumn(Bitcredit_TransactionTableModel::Status, Qt::DescendingOrder);
         transactionView->verticalHeader()->hide();
 
-        transactionView->setColumnWidth(TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
+        transactionView->setColumnWidth(Bitcredit_TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
+        transactionView->setColumnWidth(Bitcredit_TransactionTableModel::Date, DATE_COLUMN_WIDTH);
+        transactionView->setColumnWidth(Bitcredit_TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
+        transactionView->setColumnWidth(Bitcredit_TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
 
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH);
 
@@ -222,26 +224,26 @@ void TransactionView::chooseDate(int idx)
     {
     case All:
         transactionProxyModel->setDateRange(
-                TransactionFilterProxy::MIN_DATE,
-                TransactionFilterProxy::MAX_DATE);
+                Bitcredit_TransactionFilterProxy::MIN_DATE,
+                Bitcredit_TransactionFilterProxy::MAX_DATE);
         break;
     case Today:
         transactionProxyModel->setDateRange(
                 QDateTime(current),
-                TransactionFilterProxy::MAX_DATE);
+                Bitcredit_TransactionFilterProxy::MAX_DATE);
         break;
     case ThisWeek: {
         // Find last Monday
         QDate startOfWeek = current.addDays(-(current.dayOfWeek()-1));
         transactionProxyModel->setDateRange(
                 QDateTime(startOfWeek),
-                TransactionFilterProxy::MAX_DATE);
+                Bitcredit_TransactionFilterProxy::MAX_DATE);
 
         } break;
     case ThisMonth:
         transactionProxyModel->setDateRange(
                 QDateTime(QDate(current.year(), current.month(), 1)),
-                TransactionFilterProxy::MAX_DATE);
+                Bitcredit_TransactionFilterProxy::MAX_DATE);
         break;
     case LastMonth:
         transactionProxyModel->setDateRange(
@@ -251,7 +253,7 @@ void TransactionView::chooseDate(int idx)
     case ThisYear:
         transactionProxyModel->setDateRange(
                 QDateTime(QDate(current.year(), 1, 1)),
-                TransactionFilterProxy::MAX_DATE);
+                Bitcredit_TransactionFilterProxy::MAX_DATE);
         break;
     case Range:
         dateRangeWidget->setVisible(true);
@@ -280,7 +282,7 @@ void TransactionView::changedAmount(const QString &amount)
     if(!transactionProxyModel)
         return;
     qint64 amount_parsed = 0;
-    if(BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), amount, &amount_parsed))
+    if(BitcreditUnits::parse(model->getOptionsModel()->getDisplayUnit(), amount, &amount_parsed))
     {
         transactionProxyModel->setMinAmount(amount_parsed);
     }
@@ -304,13 +306,13 @@ void TransactionView::exportClicked()
 
     // name, column, role
     writer.setModel(transactionProxyModel);
-    writer.addColumn(tr("Confirmed"), 0, TransactionTableModel::ConfirmedRole);
-    writer.addColumn(tr("Date"), 0, TransactionTableModel::DateRole);
-    writer.addColumn(tr("Type"), TransactionTableModel::Type, Qt::EditRole);
-    writer.addColumn(tr("Label"), 0, TransactionTableModel::LabelRole);
-    writer.addColumn(tr("Address"), 0, TransactionTableModel::AddressRole);
-    writer.addColumn(tr("Amount"), 0, TransactionTableModel::FormattedAmountRole);
-    writer.addColumn(tr("ID"), 0, TransactionTableModel::TxIDRole);
+    writer.addColumn(tr("Confirmed"), 0, Bitcredit_TransactionTableModel::ConfirmedRole);
+    writer.addColumn(tr("Date"), 0, Bitcredit_TransactionTableModel::DateRole);
+    writer.addColumn(tr("Type"), Bitcredit_TransactionTableModel::Type, Qt::EditRole);
+    writer.addColumn(tr("Label"), 0, Bitcredit_TransactionTableModel::LabelRole);
+    writer.addColumn(tr("Address"), 0, Bitcredit_TransactionTableModel::AddressRole);
+    writer.addColumn(tr("Amount"), 0, Bitcredit_TransactionTableModel::FormattedAmountRole);
+    writer.addColumn(tr("ID"), 0, Bitcredit_TransactionTableModel::TxIDRole);
 
     if(!writer.write()) {
         emit message(tr("Exporting Failed"), tr("There was an error trying to save the transaction history to %1.").arg(filename),
@@ -333,22 +335,22 @@ void TransactionView::contextualMenu(const QPoint &point)
 
 void TransactionView::copyAddress()
 {
-    GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::AddressRole);
+    GUIUtil::copyEntryData(transactionView, 0, Bitcredit_TransactionTableModel::AddressRole);
 }
 
 void TransactionView::copyLabel()
 {
-    GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::LabelRole);
+    GUIUtil::copyEntryData(transactionView, 0, Bitcredit_TransactionTableModel::LabelRole);
 }
 
 void TransactionView::copyAmount()
 {
-    GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::FormattedAmountRole);
+    GUIUtil::copyEntryData(transactionView, 0, Bitcredit_TransactionTableModel::FormattedAmountRole);
 }
 
 void TransactionView::copyTxID()
 {
-    GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxIDRole);
+    GUIUtil::copyEntryData(transactionView, 0, Bitcredit_TransactionTableModel::TxIDRole);
 }
 
 void TransactionView::editLabel()
@@ -358,10 +360,10 @@ void TransactionView::editLabel()
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
-        AddressTableModel *addressBook = model->getAddressTableModel();
+        Bitcredit_AddressTableModel *addressBook = model->getAddressTableModel();
         if(!addressBook)
             return;
-        QString address = selection.at(0).data(TransactionTableModel::AddressRole).toString();
+        QString address = selection.at(0).data(Bitcredit_TransactionTableModel::AddressRole).toString();
         if(address.isEmpty())
         {
             // If this transaction has no associated address, exit
@@ -375,12 +377,12 @@ void TransactionView::editLabel()
             // Edit sending / receiving address
             QModelIndex modelIdx = addressBook->index(idx, 0, QModelIndex());
             // Determine type of address, launch appropriate editor dialog type
-            QString type = modelIdx.data(AddressTableModel::TypeRole).toString();
+            QString type = modelIdx.data(Bitcredit_AddressTableModel::TypeRole).toString();
 
-            EditAddressDialog dlg(
-                type == AddressTableModel::Receive
-                ? EditAddressDialog::EditReceivingAddress
-                : EditAddressDialog::EditSendingAddress, this);
+            Bitcredit_EditAddressDialog dlg(
+                type == Bitcredit_AddressTableModel::Receive
+                ? Bitcredit_EditAddressDialog::EditReceivingAddress
+                : Bitcredit_EditAddressDialog::EditSendingAddress, this);
             dlg.setModel(addressBook);
             dlg.loadRow(idx);
             dlg.exec();
@@ -388,7 +390,7 @@ void TransactionView::editLabel()
         else
         {
             // Add sending address
-            EditAddressDialog dlg(EditAddressDialog::NewSendingAddress,
+            Bitcredit_EditAddressDialog dlg(Bitcredit_EditAddressDialog::NewSendingAddress,
                 this);
             dlg.setModel(addressBook);
             dlg.setAddress(address);
@@ -415,7 +417,7 @@ void TransactionView::openThirdPartyTxUrl(QString url)
         return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows(0);
     if(!selection.isEmpty())
-         QDesktopServices::openUrl(QUrl::fromUserInput(url.replace("%s", selection.at(0).data(TransactionTableModel::TxHashRole).toString())));
+         QDesktopServices::openUrl(QUrl::fromUserInput(url.replace("%s", selection.at(0).data(Bitcredit_TransactionTableModel::TxHashRole).toString())));
 }
 
 QWidget *TransactionView::createDateRangeWidget()
@@ -478,5 +480,5 @@ void TransactionView::focusTransaction(const QModelIndex &idx)
 void TransactionView::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
+    columnResizingFixer->stretchColumnWidth(Bitcredit_TransactionTableModel::ToAddress);
 }

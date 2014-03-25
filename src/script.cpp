@@ -29,7 +29,7 @@ static const CScriptNum bnOne(1);
 static const CScriptNum bnFalse(0);
 static const CScriptNum bnTrue(1);
 
-bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubKey, const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, int flags);
+bool Bitcredit_CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubKey, const CScript &scriptCode, const Bitcredit_CTransaction& txTo, unsigned int nIn, int nHashType, int flags);
 
 bool CastToBool(const valtype& vch)
 {
@@ -296,7 +296,7 @@ bool IsCanonicalSignature(const valtype &vchSig, unsigned int flags) {
     return true;
 }
 
-bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
+bool Bitcredit_EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const Bitcredit_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
 {
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
@@ -849,7 +849,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     scriptCode.FindAndDelete(CScript(vchSig));
 
                     bool fSuccess = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                        CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags);
+                        Bitcredit_CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags);
 
                     popstack(stack);
                     popstack(stack);
@@ -910,7 +910,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 
                         // Check signature
                         bool fOk = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                            CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags);
+                            Bitcredit_CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags);
 
                         if (fOk) {
                             isig++;
@@ -981,12 +981,12 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 
 
 namespace {
-/** Wrapper that serializes like CTransaction, but with the modifications
+/** Wrapper that serializes like Bitcredit_CTransaction, but with the modifications
  *  required for the signature hash done in-place
  */
-class CTransactionSignatureSerializer {
+class Bitcredit_CTransactionSignatureSerializer {
 private:
-    const CTransaction &txTo;  // reference to the spending transaction (the one being serialized)
+    const Bitcredit_CTransaction &txTo;  // reference to the spending transaction (the one being serialized)
     const CScript &scriptCode; // output script being consumed
     const unsigned int nIn;    // input index of txTo being signed
     const bool fAnyoneCanPay;  // whether the hashtype has the SIGHASH_ANYONECANPAY flag set
@@ -994,7 +994,7 @@ private:
     const bool fHashNone;      // whether the hashtype is SIGHASH_NONE
 
 public:
-    CTransactionSignatureSerializer(const CTransaction &txToIn, const CScript &scriptCodeIn, unsigned int nInIn, int nHashTypeIn) :
+    Bitcredit_CTransactionSignatureSerializer(const Bitcredit_CTransaction &txToIn, const CScript &scriptCodeIn, unsigned int nInIn, int nHashTypeIn) :
         txTo(txToIn), scriptCode(scriptCodeIn), nIn(nInIn),
         fAnyoneCanPay(!!(nHashTypeIn & SIGHASH_ANYONECANPAY)),
         fHashSingle((nHashTypeIn & 0x1f) == SIGHASH_SINGLE),
@@ -1036,12 +1036,6 @@ public:
             ::Serialize(s, CScript(), nType, nVersion);
         else
             SerializeScriptCode(s, nType, nVersion);
-        // Serialize the nSequence
-        if (nInput != nIn && (fHashSingle || fHashNone))
-            // let the others update at will
-            ::Serialize(s, (int)0, nType, nVersion);
-        else
-            ::Serialize(s, txTo.vin[nInput].nSequence, nType, nVersion);
     }
 
     /** Serialize an output of txTo */
@@ -1069,13 +1063,18 @@ public:
         ::WriteCompactSize(s, nOutputs);
         for (unsigned int nOutput = 0; nOutput < nOutputs; nOutput++)
              SerializeOutput(s, nOutput, nType, nVersion);
+        // Serialie signingKeyId
+        if(txTo.IsDeposit()) {
+        	assert(txTo.signingKeyId != CKeyID(0));
+        	::Serialize(s, txTo.signingKeyId, nType, nVersion);
+        }
         // Serialie nLockTime
         ::Serialize(s, txTo.nLockTime, nType, nVersion);
     }
 };
 }
 
-uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+uint256 Bitcredit_SignatureHash(const CScript &scriptCode, const Bitcredit_CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     if (nIn >= txTo.vin.size()) {
         LogPrintf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
@@ -1091,7 +1090,7 @@ uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsig
     }
 
     // Wrapper to serialize only the necessary parts of the transaction being signed
-    CTransactionSignatureSerializer txTmp(txTo, scriptCode, nIn, nHashType);
+    Bitcredit_CTransactionSignatureSerializer txTmp(txTo, scriptCode, nIn, nHashType);
 
     // Serialize and hash
     CHashWriter ss(SER_GETHASH, 0);
@@ -1156,8 +1155,8 @@ public:
     }
 };
 
-bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubKey, const CScript &scriptCode,
-              const CTransaction& txTo, unsigned int nIn, int nHashType, int flags)
+bool Bitcredit_CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubKey, const CScript &scriptCode,
+              const Bitcredit_CTransaction& txTo, unsigned int nIn, int nHashType, int flags)
 {
     static CSignatureCache signatureCache;
 
@@ -1174,7 +1173,7 @@ bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubK
         return false;
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
+    uint256 sighash = Bitcredit_SignatureHash(scriptCode, txTo, nIn, nHashType);
 
     if (signatureCache.Get(sighash, vchSig, pubkey))
         return true;
@@ -1601,15 +1600,15 @@ void ExtractAffectedKeys(const CKeyStore &keystore, const CScript& scriptPubKey,
     CAffectedKeysVisitor(keystore, vKeys).Process(scriptPubKey);
 }
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
+bool Bitcredit_VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const Bitcredit_CTransaction& txTo, unsigned int nIn,
                   unsigned int flags, int nHashType)
 {
     vector<vector<unsigned char> > stack, stackCopy;
-    if (!EvalScript(stack, scriptSig, txTo, nIn, flags, nHashType))
+    if (!Bitcredit_EvalScript(stack, scriptSig, txTo, nIn, flags, nHashType))
         return false;
     if (flags & SCRIPT_VERIFY_P2SH)
         stackCopy = stack;
-    if (!EvalScript(stack, scriptPubKey, txTo, nIn, flags, nHashType))
+    if (!Bitcredit_EvalScript(stack, scriptPubKey, txTo, nIn, flags, nHashType))
         return false;
     if (stack.empty())
         return false;
@@ -1632,7 +1631,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
         popstack(stackCopy);
 
-        if (!EvalScript(stackCopy, pubKey2, txTo, nIn, flags, nHashType))
+        if (!Bitcredit_EvalScript(stackCopy, pubKey2, txTo, nIn, flags, nHashType))
             return false;
         if (stackCopy.empty())
             return false;
@@ -1643,14 +1642,14 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
 }
 
 
-bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CTransaction& txTo, unsigned int nIn, int nHashType)
+bool Bitcredit_SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, Bitcredit_CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     assert(nIn < txTo.vin.size());
-    CTxIn& txin = txTo.vin[nIn];
+    Bitcredit_CTxIn& txin = txTo.vin[nIn];
 
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
-    uint256 hash = SignatureHash(fromPubKey, txTo, nIn, nHashType);
+    uint256 hash = Bitcredit_SignatureHash(fromPubKey, txTo, nIn, nHashType);
 
     txnouttype whichType;
     if (!Solver(keystore, fromPubKey, hash, nHashType, txin.scriptSig, whichType))
@@ -1664,7 +1663,7 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CTransa
         CScript subscript = txin.scriptSig;
 
         // Recompute txn hash using subscript in place of scriptPubKey:
-        uint256 hash2 = SignatureHash(subscript, txTo, nIn, nHashType);
+        uint256 hash2 = Bitcredit_SignatureHash(subscript, txTo, nIn, nHashType);
 
         txnouttype subType;
         bool fSolved =
@@ -1675,17 +1674,17 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CTransa
     }
 
     // Test solution
-    return VerifyScript(txin.scriptSig, fromPubKey, txTo, nIn, STANDARD_SCRIPT_VERIFY_FLAGS, 0);
+    return Bitcredit_VerifyScript(txin.scriptSig, fromPubKey, txTo, nIn, STANDARD_SCRIPT_VERIFY_FLAGS, 0);
 }
 
-bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType)
+bool Bitcredit_SignSignature(const CKeyStore &keystore, const Bitcredit_CTransaction& txFrom, Bitcredit_CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     assert(nIn < txTo.vin.size());
-    CTxIn& txin = txTo.vin[nIn];
+    Bitcredit_CTxIn& txin = txTo.vin[nIn];
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
-    return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, nHashType);
+    return Bitcredit_SignSignature(keystore, txout.scriptPubKey, txTo, nIn, nHashType);
 }
 
 static CScript PushAll(const vector<valtype>& values)
@@ -1696,7 +1695,7 @@ static CScript PushAll(const vector<valtype>& values)
     return result;
 }
 
-static CScript CombineMultisig(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn,
+static CScript Bitcredit_CombineMultisig(CScript scriptPubKey, const Bitcredit_CTransaction& txTo, unsigned int nIn,
                                const vector<valtype>& vSolutions,
                                vector<valtype>& sigs1, vector<valtype>& sigs2)
 {
@@ -1726,7 +1725,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CTransaction& txTo, u
             if (sigs.count(pubkey))
                 continue; // Already got a sig for this pubkey
 
-            if (CheckSig(sig, pubkey, scriptPubKey, txTo, nIn, 0, 0))
+            if (Bitcredit_CheckSig(sig, pubkey, scriptPubKey, txTo, nIn, 0, 0))
             {
                 sigs[pubkey] = sig;
                 break;
@@ -1751,7 +1750,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CTransaction& txTo, u
     return result;
 }
 
-static CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn,
+static CScript Bitcredit_CombineSignatures(CScript scriptPubKey, const Bitcredit_CTransaction& txTo, unsigned int nIn,
                                  const txnouttype txType, const vector<valtype>& vSolutions,
                                  vector<valtype>& sigs1, vector<valtype>& sigs2)
 {
@@ -1785,18 +1784,18 @@ static CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo,
             Solver(pubKey2, txType2, vSolutions2);
             sigs1.pop_back();
             sigs2.pop_back();
-            CScript result = CombineSignatures(pubKey2, txTo, nIn, txType2, vSolutions2, sigs1, sigs2);
+            CScript result = Bitcredit_CombineSignatures(pubKey2, txTo, nIn, txType2, vSolutions2, sigs1, sigs2);
             result << spk;
             return result;
         }
     case TX_MULTISIG:
-        return CombineMultisig(scriptPubKey, txTo, nIn, vSolutions, sigs1, sigs2);
+        return Bitcredit_CombineMultisig(scriptPubKey, txTo, nIn, vSolutions, sigs1, sigs2);
     }
 
     return CScript();
 }
 
-CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn,
+CScript Bitcredit_CombineSignatures(CScript scriptPubKey, const Bitcredit_CTransaction& txTo, unsigned int nIn,
                           const CScript& scriptSig1, const CScript& scriptSig2)
 {
     txnouttype txType;
@@ -1804,11 +1803,11 @@ CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsign
     Solver(scriptPubKey, txType, vSolutions);
 
     vector<valtype> stack1;
-    EvalScript(stack1, scriptSig1, CTransaction(), 0, SCRIPT_VERIFY_STRICTENC, 0);
+    Bitcredit_EvalScript(stack1, scriptSig1, Bitcredit_CTransaction(), 0, SCRIPT_VERIFY_STRICTENC, 0);
     vector<valtype> stack2;
-    EvalScript(stack2, scriptSig2, CTransaction(), 0, SCRIPT_VERIFY_STRICTENC, 0);
+    Bitcredit_EvalScript(stack2, scriptSig2, Bitcredit_CTransaction(), 0, SCRIPT_VERIFY_STRICTENC, 0);
 
-    return CombineSignatures(scriptPubKey, txTo, nIn, txType, vSolutions, stack1, stack2);
+    return Bitcredit_CombineSignatures(scriptPubKey, txTo, nIn, txType, vSolutions, stack1, stack2);
 }
 
 unsigned int CScript::GetSigOpCount(bool fAccurate) const

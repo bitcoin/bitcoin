@@ -499,6 +499,10 @@ public:
             Check();
         }
     }
+    void AddressCurrentlyConnected(const CService& addr)
+    {
+        Connected(addr);
+    }
 };
 
 #endif

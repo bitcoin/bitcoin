@@ -7,6 +7,7 @@
 #include "main.h"
 #include "sync.h"
 #include "checkpoints.h"
+#include "bitcoin_checkpoints.h"
 
 #include <stdint.h>
 
@@ -17,16 +18,47 @@ using namespace std;
 
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex);
 
-double GetDifficulty(const CBlockIndex* blockindex)
+double Bitcredit_GetDifficulty(const CBlockIndexBase* blockindex)
 {
     // Floating point number that is a multiple of the minimum difficulty,
     // minimum difficulty = 1.0.
     if (blockindex == NULL)
     {
-        if (chainActive.Tip() == NULL)
+        if (bitcredit_chainActive.Tip() == NULL)
             return 1.0;
         else
-            blockindex = chainActive.Tip();
+            blockindex = bitcredit_chainActive.Tip();
+    }
+
+    int nShift = (blockindex->nBits >> 24) & 0xff;
+
+    double dDiff =
+        (double)0x0000ffff / (double)(blockindex->nBits & 0x00ffffff);
+
+    while (nShift < 29)
+    {
+        dDiff *= 256.0;
+        nShift++;
+    }
+    while (nShift > 29)
+    {
+        dDiff /= 256.0;
+        nShift--;
+    }
+
+    return dDiff;
+}
+
+double Bitcoin_GetDifficulty(const CBlockIndexBase* blockindex)
+{
+    // Floating point number that is a multiple of the minimum difficulty,
+    // minimum difficulty = 1.0.
+    if (blockindex == NULL)
+    {
+        if (bitcoin_chainActive.Tip() == NULL)
+            return 1.0;
+        else
+            blockindex = bitcoin_chainActive.Tip();
     }
 
     int nShift = (blockindex->nBits >> 24) & 0xff;
@@ -49,42 +81,47 @@ double GetDifficulty(const CBlockIndex* blockindex)
 }
 
 
-Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
+Object blockToJSON(const Bitcredit_CBlock& block, const CBlockIndexBase* blockindex)
 {
     Object result;
     result.push_back(Pair("hash", block.GetHash().GetHex()));
-    CMerkleTx txGen(block.vtx[0]);
+    Bitcredit_CMerkleTx txGen(block.vtx[0]);
     txGen.SetMerkleBranch(&block);
     result.push_back(Pair("confirmations", (int)txGen.GetDepthInMainChain()));
-    result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
+    result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION)));
     result.push_back(Pair("height", blockindex->nHeight));
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
     Array txs;
-    BOOST_FOREACH(const CTransaction&tx, block.vtx)
+    BOOST_FOREACH(const Bitcredit_CTransaction&tx, block.vtx)
         txs.push_back(tx.GetHash().GetHex());
     result.push_back(Pair("tx", txs));
+    result.push_back(Pair("hashlinkedbitcoinblock", block.hashLinkedBitcoinBlock.GetHex()));
+    result.push_back(Pair("hashsigmerkleroot", block.hashSigMerkleRoot.GetHex()));
     result.push_back(Pair("time", block.GetBlockTime()));
     result.push_back(Pair("nonce", (uint64_t)block.nNonce));
+    result.push_back(Pair("totalmonetarybase", block.nTotalMonetaryBase));
+    result.push_back(Pair("totaldepositbase", block.nTotalDepositBase));
+    result.push_back(Pair("deposit", block.nDepositAmount));
     result.push_back(Pair("bits", HexBits(block.nBits)));
-    result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
+    result.push_back(Pair("difficulty", Bitcredit_GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
-    CBlockIndex *pnext = chainActive.Next(blockindex);
+    Bitcredit_CBlockIndex *pnext = bitcredit_chainActive.Next((Bitcredit_CBlockIndex*)blockindex);
     if (pnext)
         result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
     return result;
 }
 
 
-Value getblockcount(const Array& params, bool fHelp)
+Value bitcredit_getblockcount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getblockcount\n"
-            "\nReturns the number of blocks in the longest block chain.\n"
+            "\nReturns the number of blocks in the longest bitcredit block chain.\n"
             "\nResult:\n"
             "n    (numeric) The current block count\n"
             "\nExamples:\n"
@@ -92,10 +129,26 @@ Value getblockcount(const Array& params, bool fHelp)
             + HelpExampleRpc("getblockcount", "")
         );
 
-    return chainActive.Height();
+    return bitcredit_chainActive.Height();
 }
 
-Value getbestblockhash(const Array& params, bool fHelp)
+Value bitcoin_getblockcount(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "bitcoin_getblockcount\n"
+            "\nReturns the number of blocks in the longest bitcoin block chain.\n"
+            "\nResult:\n"
+            "n    (numeric) The current block count\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bitcoin_getblockcount", "")
+            + HelpExampleRpc("bitcoin_getblockcount", "")
+        );
+
+    return bitcoin_chainActive.Height();
+}
+
+Value bitcredit_getbestblockhash(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -108,10 +161,26 @@ Value getbestblockhash(const Array& params, bool fHelp)
             + HelpExampleRpc("getbestblockhash", "")
         );
 
-    return chainActive.Tip()->GetBlockHash().GetHex();
+    return bitcredit_chainActive.Tip()->GetBlockHash().GetHex();
 }
 
-Value getdifficulty(const Array& params, bool fHelp)
+Value bitcoin_getbestblockhash(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "bitcoin_getbestblockhash\n"
+            "\nReturns the hash of the best (tip) block in the longest block chain.\n"
+            "\nResult\n"
+            "\"hex\"      (string) the block hash hex encoded\n"
+            "\nExamples\n"
+            + HelpExampleCli("bitcoin_getbestblockhash", "")
+            + HelpExampleRpc("bitcoin_getbestblockhash", "")
+        );
+
+    return bitcoin_chainActive.Tip()->GetBlockHash().GetHex();
+}
+
+Value bitcredit_getdifficulty(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -124,7 +193,23 @@ Value getdifficulty(const Array& params, bool fHelp)
             + HelpExampleRpc("getdifficulty", "")
         );
 
-    return GetDifficulty();
+    return Bitcredit_GetDifficulty();
+}
+
+Value bitcoin_getdifficulty(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "bitcoin_getdifficulty\n"
+            "\nReturns the proof-of-work difficulty as a multiple of the minimum difficulty.\n"
+            "\nResult:\n"
+            "n.nnn       (numeric) the proof-of-work difficulty as a multiple of the minimum difficulty.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bitcoin_getdifficulty", "")
+            + HelpExampleRpc("bitcoin_getdifficulty", "")
+        );
+
+    return Bitcoin_GetDifficulty();
 }
 
 
@@ -166,24 +251,24 @@ Value getrawmempool(const Array& params, bool fHelp)
 
     if (fVerbose)
     {
-        LOCK(mempool.cs);
+        LOCK(bitcredit_mempool.cs);
         Object o;
-        BOOST_FOREACH(const PAIRTYPE(uint256, CTxMemPoolEntry)& entry, mempool.mapTx)
+        BOOST_FOREACH(const PAIRTYPE(uint256, Bitcredit_CTxMemPoolEntry)& entry, bitcredit_mempool.mapTx)
         {
             const uint256& hash = entry.first;
-            const CTxMemPoolEntry& e = entry.second;
+            const Bitcredit_CTxMemPoolEntry& e = entry.second;
             Object info;
             info.push_back(Pair("size", (int)e.GetTxSize()));
             info.push_back(Pair("fee", ValueFromAmount(e.GetFee())));
             info.push_back(Pair("time", e.GetTime()));
             info.push_back(Pair("height", (int)e.GetHeight()));
             info.push_back(Pair("startingpriority", e.GetPriority(e.GetHeight())));
-            info.push_back(Pair("currentpriority", e.GetPriority(chainActive.Height())));
-            const CTransaction& tx = e.GetTx();
+            info.push_back(Pair("currentpriority", e.GetPriority(bitcredit_chainActive.Height())));
+            const Bitcredit_CTransaction& tx = e.GetTx();
             set<string> setDepends;
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
+            BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
             {
-                if (mempool.exists(txin.prevout.hash))
+                if (bitcredit_mempool.exists(txin.prevout.hash))
                     setDepends.insert(txin.prevout.hash.ToString());
             }
             Array depends(setDepends.begin(), setDepends.end());
@@ -195,7 +280,7 @@ Value getrawmempool(const Array& params, bool fHelp)
     else
     {
         vector<uint256> vtxid;
-        mempool.queryHashes(vtxid);
+        bitcredit_mempool.queryHashes(vtxid);
 
         Array a;
         BOOST_FOREACH(const uint256& hash, vtxid)
@@ -221,10 +306,10 @@ Value getblockhash(const Array& params, bool fHelp)
         );
 
     int nHeight = params[0].get_int();
-    if (nHeight < 0 || nHeight > chainActive.Height())
+    if (nHeight < 0 || nHeight > bitcredit_chainActive.Height())
         throw runtime_error("Block number out of range.");
 
-    CBlockIndex* pblockindex = chainActive[nHeight];
+    Bitcredit_CBlockIndex* pblockindex = bitcredit_chainActive[nHeight];
     return pblockindex->GetBlockHash().GetHex();
 }
 
@@ -252,6 +337,9 @@ Value getblock(const Array& params, bool fHelp)
             "  ],\n"
             "  \"time\" : ttt,          (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"nonce\" : n,           (numeric) The nonce\n"
+            "  \"hashlinkedbitcoinblock\" : n,           (string) The hash of the bitcoin block that is linked from this block. \n"
+            "  \"totalmonetarybase\" : n,           (numeric) The total monetary base up until and including all outputs from this block\n"
+            "  \"totaldepositbase\" : n,           (numeric) The total deposit base up until and including all outputs from this block\n"
             "  \"bits\" : \"1d00ffff\", (string) The bits\n"
             "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
             "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
@@ -271,16 +359,16 @@ Value getblock(const Array& params, bool fHelp)
     if (params.size() > 1)
         fVerbose = params[1].get_bool();
 
-    if (mapBlockIndex.count(hash) == 0)
+    if (bitcredit_mapBlockIndex.count(hash) == 0)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
-    CBlock block;
-    CBlockIndex* pblockindex = mapBlockIndex[hash];
-    ReadBlockFromDisk(block, pblockindex);
+    Bitcredit_CBlock block;
+    Bitcredit_CBlockIndex* pblockindex = bitcredit_mapBlockIndex[hash];
+    Bitcredit_ReadBlockFromDisk(block, pblockindex);
 
     if (!fVerbose)
     {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssBlock(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
         ssBlock << block;
         std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
         return strHex;
@@ -313,8 +401,8 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
 
     Object ret;
 
-    CCoinsStats stats;
-    if (pcoinsTip->GetStats(stats)) {
+    Bitcredit_CCoinsStats stats;
+    if (bitcredit_pcoinsTip->GetStats(stats)) {
         ret.push_back(Pair("height", (int64_t)stats.nHeight));
         ret.push_back(Pair("bestblock", stats.hashBlock.GetHex()));
         ret.push_back(Pair("transactions", (int64_t)stats.nTransactions));
@@ -373,24 +461,24 @@ Value gettxout(const Array& params, bool fHelp)
     if (params.size() > 2)
         fMempool = params[2].get_bool();
 
-    CCoins coins;
+    Bitcredit_CCoins coins;
     if (fMempool) {
-        LOCK(mempool.cs);
-        CCoinsViewMemPool view(*pcoinsTip, mempool);
+        LOCK(bitcredit_mempool.cs);
+        Bitcredit_CCoinsViewMemPool view(*bitcredit_pcoinsTip, bitcredit_mempool);
         if (!view.GetCoins(hash, coins))
             return Value::null;
-        mempool.pruneSpent(hash, coins); // TODO: this should be done by the CCoinsViewMemPool
+        bitcredit_mempool.pruneSpent(hash, coins); // TODO: this should be done by the Bitcredit_CCoinsViewMemPool
     } else {
-        if (!pcoinsTip->GetCoins(hash, coins))
+        if (!bitcredit_pcoinsTip->GetCoins(hash, coins))
             return Value::null;
     }
     if (n<0 || (unsigned int)n>=coins.vout.size() || coins.vout[n].IsNull())
         return Value::null;
 
-    std::map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
-    CBlockIndex *pindex = it->second;
+    std::map<uint256, Bitcredit_CBlockIndex*>::iterator it = bitcredit_mapBlockIndex.find(bitcredit_pcoinsTip->GetBestBlock());
+    Bitcredit_CBlockIndex *pindex = it->second;
     ret.push_back(Pair("bestblock", pindex->GetBlockHash().GetHex()));
-    if ((unsigned int)coins.nHeight == MEMPOOL_HEIGHT)
+    if ((unsigned int)coins.nHeight == BITCREDIT_MEMPOOL_HEIGHT)
         ret.push_back(Pair("confirmations", 0));
     else
         ret.push_back(Pair("confirmations", pindex->nHeight - coins.nHeight + 1));
@@ -398,6 +486,7 @@ Value gettxout(const Array& params, bool fHelp)
     Object o;
     ScriptPubKeyToJSON(coins.vout[n].scriptPubKey, o, true);
     ret.push_back(Pair("scriptPubKey", o));
+    ret.push_back(Pair("metadata", coins.nMetaData));
     ret.push_back(Pair("version", coins.nVersion));
     ret.push_back(Pair("coinbase", coins.fCoinBase));
 
@@ -427,10 +516,10 @@ Value verifychain(const Array& params, bool fHelp)
     if (params.size() > 1)
         nCheckDepth = params[1].get_int();
 
-    return CVerifyDB().VerifyDB(nCheckLevel, nCheckDepth);
+    return Bitcredit_CVerifyDB().VerifyDB(nCheckLevel, nCheckDepth);
 }
 
-Value getblockchaininfo(const Array& params, bool fHelp)
+Value bitcredit_getblockchaininfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -454,14 +543,50 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     GetProxy(NET_IPV4, proxy);
 
     Object obj;
-    std::string chain = Params().DataDir();
+    std::string chain = Bitcredit_Params().DataDir();
     if(chain.empty())
         chain = "main";
     obj.push_back(Pair("chain",         chain));
-    obj.push_back(Pair("blocks",        (int)chainActive.Height()));
-    obj.push_back(Pair("bestblockhash", chainActive.Tip()->GetBlockHash().GetHex()));
-    obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("verificationprogress", Checkpoints::GuessVerificationProgress(chainActive.Tip())));
-    obj.push_back(Pair("chainwork",     chainActive.Tip()->nChainWork.GetHex()));
+    obj.push_back(Pair("blocks",        (int)bitcredit_chainActive.Height()));
+    obj.push_back(Pair("bestblockhash", bitcredit_chainActive.Tip()->GetBlockHash().GetHex()));
+    obj.push_back(Pair("difficulty",    (double)Bitcredit_GetDifficulty()));
+    obj.push_back(Pair("verificationprogress", Checkpoints::Bitcredit_GuessVerificationProgress((Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip())));
+    obj.push_back(Pair("chainwork",     bitcredit_chainActive.Tip()->nChainWork.GetHex()));
+    return obj;
+}
+
+Value bitcoin_getblockchaininfo(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "bitcoin_getblockchaininfo\n"
+            "Returns an object containing various state info regarding block chain processing.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"chain\": \"xxxx\",        (string) current chain (main, testnet3, regtest)\n"
+            "  \"blocks\": xxxxxx,         (numeric) the current number of blocks processed in the server\n"
+            "  \"bestblockhash\": \"...\", (string) the hash of the currently best block\n"
+            "  \"difficulty\": xxxxxx,     (numeric) the current difficulty\n"
+            "  \"verificationprogress\": xxxx, (numeric) estimate of verification progress [0..1]\n"
+            "  \"chainwork\": \"xxxx\"     (string) total amount of work in active chain, in hexadecimal\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bitcoin_getblockchaininfo", "")
+            + HelpExampleRpc("bitcoin_getblockchaininfo", "")
+        );
+
+    proxyType proxy;
+    GetProxy(NET_IPV4, proxy);
+
+    Object obj;
+    std::string chain = Bitcoin_Params().DataDir();
+    if(chain.empty())
+        chain = "main";
+    obj.push_back(Pair("chain",         chain));
+    obj.push_back(Pair("blocks",        (int)bitcoin_chainActive.Height()));
+    obj.push_back(Pair("bestblockhash", bitcoin_chainActive.Tip()->GetBlockHash().GetHex()));
+    obj.push_back(Pair("difficulty",    (double)Bitcoin_GetDifficulty()));
+    obj.push_back(Pair("verificationprogress", Checkpoints::Bitcoin_GuessVerificationProgress((Bitcoin_CBlockIndex*)bitcoin_chainActive.Tip())));
+    obj.push_back(Pair("chainwork",     bitcoin_chainActive.Tip()->nChainWork.GetHex()));
     return obj;
 }

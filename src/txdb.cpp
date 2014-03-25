@@ -12,52 +12,51 @@
 
 using namespace std;
 
-void static BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const CCoins &coins) {
+const unsigned char Bitcredit_CCoinsViewDB::COIN_KEY = 'c';
+const unsigned char Bitcredit_CCoinsViewDB::BEST_CHAIN_KEY = 'B';
+
+void Bitcredit_CCoinsViewDB::BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcredit_CCoins &coins) {
     if (coins.IsPruned())
-        batch.Erase(make_pair('c', hash));
+        batch.Erase(make_pair(COIN_KEY, hash));
     else
-        batch.Write(make_pair('c', hash), coins);
+        batch.Write(make_pair(COIN_KEY, hash), coins);
+}
+void Bitcredit_CCoinsViewDB::BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
+    batch.Write(BEST_CHAIN_KEY, hash);
 }
 
-void static BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
-    batch.Write('B', hash);
+bool Bitcredit_CCoinsViewDB::GetCoins(const uint256 &txid, Bitcredit_CCoins &coins) {
+    return db.Read(make_pair(COIN_KEY, txid), coins);
 }
 
-CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe) {
-}
-
-bool CCoinsViewDB::GetCoins(const uint256 &txid, CCoins &coins) {
-    return db.Read(make_pair('c', txid), coins);
-}
-
-bool CCoinsViewDB::SetCoins(const uint256 &txid, const CCoins &coins) {
+bool Bitcredit_CCoinsViewDB::SetCoins(const uint256 &txid, const Bitcredit_CCoins &coins) {
     CLevelDBBatch batch;
     BatchWriteCoins(batch, txid, coins);
     return db.WriteBatch(batch);
 }
 
-bool CCoinsViewDB::HaveCoins(const uint256 &txid) {
-    return db.Exists(make_pair('c', txid));
+bool Bitcredit_CCoinsViewDB::HaveCoins(const uint256 &txid) {
+    return db.Exists(make_pair(COIN_KEY, txid));
 }
 
-uint256 CCoinsViewDB::GetBestBlock() {
+uint256 Bitcredit_CCoinsViewDB::GetBestBlock() {
     uint256 hashBestChain;
-    if (!db.Read('B', hashBestChain))
+    if (!db.Read(BEST_CHAIN_KEY, hashBestChain))
         return uint256(0);
     return hashBestChain;
 }
 
-bool CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
+bool Bitcredit_CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
     CLevelDBBatch batch;
     BatchWriteHashBestChain(batch, hashBlock);
     return db.WriteBatch(batch);
 }
 
-bool CCoinsViewDB::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock) {
+bool Bitcredit_CCoinsViewDB::BatchWrite(const std::map<uint256, Bitcredit_CCoins> &mapCoins, const uint256 &hashBlock) {
     LogPrint("coindb", "Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
 
     CLevelDBBatch batch;
-    for (std::map<uint256, CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
+    for (std::map<uint256, Bitcredit_CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
         BatchWriteCoins(batch, it->first, it->second);
     if (hashBlock != uint256(0))
         BatchWriteHashBestChain(batch, hashBlock);
@@ -65,47 +64,11 @@ bool CCoinsViewDB::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const u
     return db.WriteBatch(batch);
 }
 
-CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDBWrapper(GetDataDir() / "blocks" / "index", nCacheSize, fMemory, fWipe) {
-}
-
-bool CBlockTreeDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
-{
-    return Write(make_pair('b', blockindex.GetBlockHash()), blockindex);
-}
-
-bool CBlockTreeDB::WriteBlockFileInfo(int nFile, const CBlockFileInfo &info) {
-    return Write(make_pair('f', nFile), info);
-}
-
-bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
-    return Read(make_pair('f', nFile), info);
-}
-
-bool CBlockTreeDB::WriteLastBlockFile(int nFile) {
-    return Write('l', nFile);
-}
-
-bool CBlockTreeDB::WriteReindexing(bool fReindexing) {
-    if (fReindexing)
-        return Write('R', '1');
-    else
-        return Erase('R');
-}
-
-bool CBlockTreeDB::ReadReindexing(bool &fReindexing) {
-    fReindexing = Exists('R');
-    return true;
-}
-
-bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {
-    return Read('l', nFile);
-}
-
-bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
+bool Bitcredit_CCoinsViewDB::GetStats(Bitcredit_CCoinsStats &stats) {
     leveldb::Iterator *pcursor = db.NewIterator();
     pcursor->SeekToFirst();
 
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    CHashWriter ss(SER_GETHASH, BITCREDIT_PROTOCOL_VERSION);
     stats.hashBlock = GetBestBlock();
     ss << stats.hashBlock;
     int64_t nTotalAmount = 0;
@@ -113,17 +76,18 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
         boost::this_thread::interruption_point();
         try {
             leveldb::Slice slKey = pcursor->key();
-            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, CLIENT_VERSION);
+            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
             char chType;
             ssKey >> chType;
             if (chType == 'c') {
                 leveldb::Slice slValue = pcursor->value();
-                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CLIENT_VERSION);
-                CCoins coins;
+                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
+                Bitcredit_CCoins coins;
                 ssValue >> coins;
                 uint256 txhash;
                 ssKey >> txhash;
                 ss << txhash;
+                ss << VARINT(coins.nMetaData);
                 ss << VARINT(coins.nVersion);
                 ss << (coins.fCoinBase ? 'c' : 'n');
                 ss << VARINT(coins.nHeight);
@@ -146,41 +110,90 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
         }
     }
     delete pcursor;
-    stats.nHeight = mapBlockIndex.find(GetBestBlock())->second->nHeight;
+    stats.nHeight = bitcredit_mapBlockIndex.find(GetBestBlock())->second->nHeight;
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
     return true;
 }
 
-bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
-    return Read(make_pair('t', txid), pos);
+Bitcredit_CCoinsViewDB::Bitcredit_CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "bitcredit_chainstate", nCacheSize, fMemory, fWipe) { }
+
+//-----------------------------------------------
+
+const unsigned char Bitcredit_CBlockTreeDB::BLOCKINDEX_KEY = 'b';
+const unsigned char Bitcredit_CBlockTreeDB::REINDEX_KEY = 'R';
+const unsigned char Bitcredit_CBlockTreeDB::FILE_KEY = 'f';
+const unsigned char Bitcredit_CBlockTreeDB::FLAG_KEY = 'F';
+const unsigned char Bitcredit_CBlockTreeDB::LAST_BLOCK_KEY = 'l';
+const unsigned char Bitcredit_CBlockTreeDB::TX_KEY = 't';
+const unsigned char Bitcredit_CBlockTreeDB::ONE = '1';
+const unsigned char Bitcredit_CBlockTreeDB::ZERO = '0';
+
+Bitcredit_CBlockTreeDB::Bitcredit_CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDBWrapper(GetDataDir() / "bitcredit_blocks" / "index", nCacheSize, fMemory, fWipe) {
 }
 
-bool CBlockTreeDB::WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> >&vect) {
-    CLevelDBBatch batch;
-    for (std::vector<std::pair<uint256,CDiskTxPos> >::const_iterator it=vect.begin(); it!=vect.end(); it++)
-        batch.Write(make_pair('t', it->first), it->second);
-    return WriteBatch(batch);
+bool Bitcredit_CBlockTreeDB::WriteBlockIndex(const Bitcredit_CDiskBlockIndex& blockindex)
+{
+    return Write(make_pair(BLOCKINDEX_KEY, blockindex.GetBlockHash()), blockindex);
 }
 
-bool CBlockTreeDB::WriteFlag(const std::string &name, bool fValue) {
-    return Write(std::make_pair('F', name), fValue ? '1' : '0');
+bool Bitcredit_CBlockTreeDB::WriteBlockFileInfo(int nFile, const CBlockFileInfo &info) {
+    return Write(make_pair(FILE_KEY, nFile), info);
 }
 
-bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
-    char ch;
-    if (!Read(std::make_pair('F', name), ch))
-        return false;
-    fValue = ch == '1';
+bool Bitcredit_CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
+    return Read(make_pair(FILE_KEY, nFile), info);
+}
+
+bool Bitcredit_CBlockTreeDB::WriteLastBlockFile(int nFile) {
+    return Write(LAST_BLOCK_KEY, nFile);
+}
+
+bool Bitcredit_CBlockTreeDB::ReadLastBlockFile(int &nFile) {
+    return Read(LAST_BLOCK_KEY, nFile);
+}
+
+bool Bitcredit_CBlockTreeDB::WriteReindexing(bool fReindexing) {
+    if (fReindexing)
+        return Write(REINDEX_KEY, ONE);
+    else
+        return Erase(REINDEX_KEY);
+}
+
+bool Bitcredit_CBlockTreeDB::ReadReindexing(bool &fReindexing) {
+    fReindexing = Exists(REINDEX_KEY);
     return true;
 }
 
-bool CBlockTreeDB::LoadBlockIndexGuts()
+bool Bitcredit_CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
+    return Read(make_pair(TX_KEY, txid), pos);
+}
+
+bool Bitcredit_CBlockTreeDB::WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> >&vect) {
+    CLevelDBBatch batch;
+    for (std::vector<std::pair<uint256,CDiskTxPos> >::const_iterator it=vect.begin(); it!=vect.end(); it++)
+        batch.Write(make_pair(TX_KEY, it->first), it->second);
+    return WriteBatch(batch);
+}
+
+bool Bitcredit_CBlockTreeDB::WriteFlag(const std::string &name, bool fValue) {
+    return Write(std::make_pair(FLAG_KEY, name), fValue ? ONE : ZERO);
+}
+
+bool Bitcredit_CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
+    char ch;
+    if (!Read(std::make_pair(FLAG_KEY, name), ch))
+        return false;
+    fValue = ch == ONE;
+    return true;
+}
+
+bool Bitcredit_CBlockTreeDB::LoadBlockIndexGuts()
 {
     leveldb::Iterator *pcursor = NewIterator();
 
-    CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-    ssKeySet << make_pair('b', uint256(0));
+    CDataStream ssKeySet(SER_DISK, BITCREDIT_CLIENT_VERSION);
+    ssKeySet << make_pair(BLOCKINDEX_KEY, uint256(0));
     pcursor->Seek(ssKeySet.str());
 
     // Load mapBlockIndex
@@ -188,27 +201,32 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
         boost::this_thread::interruption_point();
         try {
             leveldb::Slice slKey = pcursor->key();
-            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, CLIENT_VERSION);
+            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
             char chType;
             ssKey >> chType;
-            if (chType == 'b') {
+            if (chType == BLOCKINDEX_KEY) {
                 leveldb::Slice slValue = pcursor->value();
-                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CLIENT_VERSION);
-                CDiskBlockIndex diskindex;
+                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
+                Bitcredit_CDiskBlockIndex diskindex;
                 ssValue >> diskindex;
 
                 // Construct block index object
-                CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
-                pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
+                Bitcredit_CBlockIndex* pindexNew = Bitcredit_InsertBlockIndex(diskindex.GetBlockHash());
+                pindexNew->pprev          = Bitcredit_InsertBlockIndex(diskindex.hashPrev);
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;
                 pindexNew->nDataPos       = diskindex.nDataPos;
                 pindexNew->nUndoPos       = diskindex.nUndoPos;
                 pindexNew->nVersion       = diskindex.nVersion;
                 pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
+                pindexNew->hashLinkedBitcoinBlock         = diskindex.hashLinkedBitcoinBlock;
+                pindexNew->hashSigMerkleRoot        = diskindex.hashSigMerkleRoot;
                 pindexNew->nTime          = diskindex.nTime;
                 pindexNew->nBits          = diskindex.nBits;
                 pindexNew->nNonce         = diskindex.nNonce;
+                pindexNew->nTotalMonetaryBase         = diskindex.nTotalMonetaryBase;
+                pindexNew->nTotalDepositBase         = diskindex.nTotalDepositBase;
+                pindexNew->nDepositAmount         = diskindex.nDepositAmount;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 

@@ -101,7 +101,7 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end,
 }
 
 template<typename T>
-uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
+uint256 SerializeHash(const T& obj, int nType, int nVersion)
 {
     CHashWriter ss(nType, nVersion);
     ss << obj;

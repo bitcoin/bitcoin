@@ -5,7 +5,7 @@
 #include "guiutil.h"
 
 #include "bitcoinaddressvalidator.h"
-#include "bitcoinunits.h"
+#include "bitcreditunits.h"
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
 
@@ -91,7 +91,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 
     widget->setFont(bitcoinAddressFont());
 #if QT_VERSION >= 0x040700
-    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
+    widget->setPlaceholderText(QObject::tr("Enter a Bitcredit address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
 #endif
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
@@ -106,13 +106,13 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
     widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
 }
 
-bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
+bool parseBitcreditURI(const QUrl &uri, Bitcredit_SendCoinsRecipient *out)
 {
-    // return if URI is not valid or is no bitcoin: URI
-    if(!uri.isValid() || uri.scheme() != QString("bitcoin"))
+    // return if URI is not valid or is no bitcredit: URI
+    if(!uri.isValid() || uri.scheme() != QString("bitcredit"))
         return false;
 
-    SendCoinsRecipient rv;
+    Bitcredit_SendCoinsRecipient rv;
     rv.address = uri.path();
     rv.amount = 0;
 
@@ -145,7 +145,7 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
-                if(!BitcoinUnits::parse(BitcoinUnits::BTC, i->second, &rv.amount))
+                if(!BitcreditUnits::parse(BitcreditUnits::CRE, i->second, &rv.amount))
                 {
                     return false;
                 }
@@ -163,28 +163,28 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
     return true;
 }
 
-bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
+bool parseBitcreditURI(QString uri, Bitcredit_SendCoinsRecipient *out)
 {
-    // Convert bitcoin:// to bitcoin:
+    // Convert bitcredit:// to bitcredit:
     //
-    //    Cannot handle this later, because bitcoin:// will cause Qt to see the part after // as host,
+    //    Cannot handle this later, because bitcredit:// will cause Qt to see the part after // as host,
     //    which will lower-case it (and thus invalidate the address).
-    if(uri.startsWith("bitcoin://", Qt::CaseInsensitive))
+    if(uri.startsWith("bitcredit://", Qt::CaseInsensitive))
     {
-        uri.replace(0, 10, "bitcoin:");
+        uri.replace(0, 12, "bitcredit:");
     }
     QUrl uriInstance(uri);
-    return parseBitcoinURI(uriInstance, out);
+    return parseBitcreditURI(uriInstance, out);
 }
 
-QString formatBitcoinURI(const SendCoinsRecipient &info)
+QString formatBitcreditURI(const Bitcredit_SendCoinsRecipient &info)
 {
-    QString ret = QString("bitcoin:%1").arg(info.address);
+    QString ret = QString("bitcredit:%1").arg(info.address);
     int paramCount = 0;
 
     if (info.amount)
     {
-        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, info.amount));
+        ret += QString("?amount=%1").arg(BitcreditUnits::format(BitcreditUnits::CRE, info.amount));
         paramCount++;
     }
 
@@ -210,7 +210,15 @@ bool isDust(const QString& address, qint64 amount)
     CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
     CScript script; script.SetDestination(dest);
     CTxOut txOut(amount, script);
-    return txOut.IsDust(CTransaction::nMinRelayTxFee);
+    return txOut.IsDust(Bitcredit_CTransaction::nMinRelayTxFee);
+}
+
+bool isDust(qint64 amount)
+{
+    CTxDestination dest = CBitcoinAddress().Get();
+    CScript script; script.SetDestination(dest);
+    CTxOut txOut(amount, script);
+    return txOut.IsDust(Bitcredit_CTransaction::nMinRelayTxFee);
 }
 
 QString HtmlEscape(const QString& str, bool fMultiLine)
@@ -511,12 +519,12 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
 #ifdef WIN32
 boost::filesystem::path static StartupShortcutPath()
 {
-    return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcredit.lnk";
 }
 
 bool GetStartOnSystemStartup()
 {
-    // check for Bitcoin.lnk
+    // check for Bitcredit.lnk
     return boost::filesystem::exists(StartupShortcutPath());
 }
 
@@ -634,7 +642,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         // Write a bitcoin.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
-        optionFile << "Name=Bitcoin\n";
+        optionFile << "Name=Bitcredit\n";
         optionFile << "Exec=" << pszExePath << " -min\n";
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";

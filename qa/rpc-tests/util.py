@@ -56,32 +56,32 @@ def sync_mempools(rpc_connections):
         time.sleep(1)
         
 
-bitcoind_processes = []
+bitcreditd_processes = []
 
 def initialize_chain(test_dir):
     """
     Create (or copy from cache) a 200-block-long chain and
     4 wallets.
-    bitcoind and bitcoin-cli must be in search path.
+    bitcreditd and bitcredit-cli must be in search path.
     """
 
     if not os.path.isdir(os.path.join("cache", "node0")):
         devnull = open("/dev/null", "w+")
-        # Create cache directories, run bitcoinds:
+        # Create cache directories, run bitcreditds:
         for i in range(4):
             datadir = os.path.join("cache", "node"+str(i))
             os.makedirs(datadir)
-            with open(os.path.join(datadir, "bitcoin.conf"), 'w') as f:
+            with open(os.path.join(datadir, "bitcredit.conf"), 'w') as f:
                 f.write("regtest=1\n");
                 f.write("rpcuser=rt\n");
                 f.write("rpcpassword=rt\n");
                 f.write("port="+str(START_P2P_PORT+i)+"\n");
                 f.write("rpcport="+str(START_RPC_PORT+i)+"\n");
-            args = [ "bitcoind", "-keypool=1", "-datadir="+datadir ]
+            args = [ "bitcreditd", "-keypool=1", "-datadir="+datadir ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(START_P2P_PORT))
-            bitcoind_processes.append(subprocess.Popen(args))
-            subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir,
+            bitcreditd_processes.append(subprocess.Popen(args))
+            subprocess.check_call([ "bitcredit-cli", "-datadir="+datadir,
                                     "-rpcwait", "getblockcount"], stdout=devnull)
         devnull.close()
         rpcs = []
@@ -104,7 +104,7 @@ def initialize_chain(test_dir):
 
         # Shut them down, and remove debug.logs:
         stop_nodes(rpcs)
-        wait_bitcoinds()
+        wait_bitcreditds()
         for i in range(4):
             os.remove(debug_log("cache", i))
 
@@ -134,15 +134,15 @@ def _rpchost_to_args(rpchost):
     return rv
 
 def start_nodes(num_nodes, dir, extra_args=None, rpchost=None):
-    # Start bitcoinds, and wait for RPC interface to be up and running:
+    # Start bitcreditds, and wait for RPC interface to be up and running:
     devnull = open("/dev/null", "w+")
     for i in range(num_nodes):
         datadir = os.path.join(dir, "node"+str(i))
-        args = [ "bitcoind", "-datadir="+datadir ]
+        args = [ "bitcreditd", "-datadir="+datadir ]
         if extra_args is not None:
             args += extra_args[i]
-        bitcoind_processes.append(subprocess.Popen(args))
-        subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir] +
+        bitcreditd_processes.append(subprocess.Popen(args))
+        subprocess.check_call([ "bitcredit-cli", "-datadir="+datadir] +
                                   _rpchost_to_args(rpchost)  +
                                   ["-rpcwait", "getblockcount"], stdout=devnull)
     devnull.close()
@@ -161,11 +161,11 @@ def stop_nodes(nodes):
         nodes[i].stop()
     del nodes[:] # Emptying array closes connections as a side effect
 
-def wait_bitcoinds():
-    # Wait for all bitcoinds to cleanly exit
-    for bitcoind in bitcoind_processes:
-        bitcoind.wait()
-    del bitcoind_processes[:]
+def wait_bitcreditds():
+    # Wait for all bitcreditds to cleanly exit
+    for bitcreditd in bitcreditd_processes:
+        bitcreditd.wait()
+    del bitcreditd_processes[:]
 
 def connect_nodes(from_connection, node_num):
     ip_port = "127.0.0.1:"+str(START_P2P_PORT+node_num)

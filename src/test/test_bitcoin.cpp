@@ -7,25 +7,43 @@
 
 
 #include "main.h"
+#include "bitcoin_main.h"
 #include "txdb.h"
+#include "bitcoin_txdb.h"
+#include "bitcoin_claimtxdb.h"
 #include "ui_interface.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
+#include "bitcoin_db.h"
 #include "wallet.h"
+#include "bitcoin_wallet.h"
 #endif
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
+#ifdef ENABLE_WALLET
+uint64_t bitcoin_nAccountingEntryNumber = 0;
+//Bitcoin_CDBEnv bitcoin_bitdb;
 
-CWallet* pwalletMain;
+uint64_t bitcredit_nAccountingEntryNumber = 0;
+Bitcredit_CDBEnv bitcredit_bitdb("bitcredit_database", "bitcredit_db.log");
 
-extern bool fPrintToConsole;
+uint64_t deposit_nAccountingEntryNumber = 0;
+Bitcredit_CDBEnv deposit_bitdb("deposit_database", "deposit_db.log");
+#endif
+
+Bitcoin_CWallet* bitcoin_pwalletMain;
+Bitcredit_CWallet* bitcredit_pwalletMain;
+Bitcredit_CWallet* deposit_pwalletMain;
+
 extern void noui_connect();
 
 struct TestingSetup {
-    CCoinsViewDB *pcoinsdbview;
+    Bitcredit_CCoinsViewDB *bitcredit_pcoinsdbview;
+    Bitcoin_CCoinsViewDB *bitcoin_pcoinsdbview;
+    Bitcoin_CClaimCoinsViewDB *bitcoin_pclaimcoinsdbview;
     boost::filesystem::path pathTemp;
     boost::thread_group threadGroup;
 
@@ -33,40 +51,72 @@ struct TestingSetup {
         fPrintToDebugLog = false; // don't want to write to debug.log file
         noui_connect();
 #ifdef ENABLE_WALLET
-        bitdb.MakeMock();
+        bitcoin_bitdb.MakeMock();
+        bitcredit_bitdb.MakeMock();
+        deposit_bitdb.MakeMock();
 #endif
-        pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
+        pathTemp = GetTempPath() / strprintf("test_bitcredit_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
         boost::filesystem::create_directories(pathTemp);
         mapArgs["-datadir"] = pathTemp.string();
-        pblocktree = new CBlockTreeDB(1 << 20, true);
-        pcoinsdbview = new CCoinsViewDB(1 << 23, true);
-        pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
-        InitBlockIndex();
+
+        bitcredit_pblocktree = new Bitcredit_CBlockTreeDB(1 << 20, true);
+        bitcredit_pcoinsdbview = new Bitcredit_CCoinsViewDB(1 << 23, true);
+        bitcredit_pcoinsTip = new Bitcredit_CCoinsViewCache(*bitcredit_pcoinsdbview);
+
+        bitcoin_pblocktree = new Bitcoin_CBlockTreeDB(1 << 20, true);
+        bitcoin_pcoinsdbview = new Bitcoin_CCoinsViewDB(1 << 23, true);
+        bitcoin_pcoinsTip = new Bitcoin_CCoinsViewCache(*bitcoin_pcoinsdbview);
+        bitcoin_pclaimcoinsdbview = new Bitcoin_CClaimCoinsViewDB(GetDataDir() / "bitcoin_chainstatecla", 1 << 23, false, false, true);
+        bitcoin_pclaimCoinsTip = new Bitcoin_CClaimCoinsViewCache(*bitcoin_pclaimcoinsdbview, bitcoin_nClaimCoinCacheFlushSize);
+
+        Bitcoin_InitBlockIndex();
+        Bitcredit_InitBlockIndex();
+
 #ifdef ENABLE_WALLET
         bool fFirstRun;
-        pwalletMain = new CWallet("wallet.dat");
-        pwalletMain->LoadWallet(fFirstRun);
-        RegisterWallet(pwalletMain);
+        bitcoin_pwalletMain = new Bitcoin_CWallet("bitcoin_wallet.dat");
+        bitcoin_pwalletMain->LoadWallet(fFirstRun);
+        Bitcoin_RegisterWallet(bitcoin_pwalletMain);
+
+        bitcredit_pwalletMain = new Bitcredit_CWallet("bitcredit_wallet.dat", &bitcredit_bitdb);
+        bitcredit_pwalletMain->LoadWallet(fFirstRun, bitcredit_nAccountingEntryNumber);
+        Bitcredit_RegisterWallet(bitcredit_pwalletMain);
+
+        deposit_pwalletMain = new Bitcredit_CWallet("deposit_wallet.dat", &deposit_bitdb);
+        deposit_pwalletMain->LoadWallet(fFirstRun, deposit_nAccountingEntryNumber);
+        Bitcredit_RegisterWallet(deposit_pwalletMain);
 #endif
-        nScriptCheckThreads = 3;
-        for (int i=0; i < nScriptCheckThreads-1; i++)
-            threadGroup.create_thread(&ThreadScriptCheck);
-        RegisterNodeSignals(GetNodeSignals());
+        bitcredit_nScriptCheckThreads = 3;
+        for (int i=0; i < bitcredit_nScriptCheckThreads-1; i++)
+            threadGroup.create_thread(&Bitcredit_ThreadScriptCheck);
+        Bitcredit_RegisterNodeSignals(Bitcredit_NetParams()->GetNodeSignals());
     }
     ~TestingSetup()
     {
         threadGroup.interrupt_all();
         threadGroup.join_all();
-        UnregisterNodeSignals(GetNodeSignals());
+        Bitcredit_UnregisterNodeSignals(Bitcredit_NetParams()->GetNodeSignals());
 #ifdef ENABLE_WALLET
-        delete pwalletMain;
-        pwalletMain = NULL;
+        delete bitcoin_pwalletMain;
+        bitcoin_pwalletMain = NULL;
+        delete bitcredit_pwalletMain;
+        bitcredit_pwalletMain = NULL;
+        delete deposit_pwalletMain;
+        deposit_pwalletMain = NULL;
 #endif
-        delete pcoinsTip;
-        delete pcoinsdbview;
-        delete pblocktree;
+        delete bitcredit_pcoinsTip;
+        delete bitcredit_pcoinsdbview;
+        delete bitcredit_pblocktree;
+
+        delete bitcoin_pcoinsTip;
+        delete bitcoin_pcoinsdbview;
+        delete bitcoin_pclaimCoinsTip;
+        delete bitcoin_pclaimcoinsdbview;
+        delete bitcoin_pblocktree;
 #ifdef ENABLE_WALLET
-        bitdb.Flush(true);
+        bitcoin_bitdb.Flush(true);
+        bitcredit_bitdb.Flush(true);
+        deposit_bitdb.Flush(true);
 #endif
         boost::filesystem::remove_all(pathTemp);
     }

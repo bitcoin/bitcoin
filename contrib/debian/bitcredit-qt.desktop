@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Bitcredit
+Comment=Bitcredit P2P Cryptocurrency
+Comment[fr]=Bitcredit P2P Cryptocurrency
+Comment[tr]=Bitcredit P2P Cryptocurrency
+Exec=bitcredit-qt %u
+Terminal=false
+Type=Application
+Icon=bitcoin128
+MimeType=x-scheme-handler/bitcredit;
+Categories=Office;Finance;

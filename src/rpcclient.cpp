@@ -8,7 +8,7 @@
 #include "rpcprotocol.h"
 #include "util.h"
 #include "ui_interface.h"
-#include "chainparams.h" // for Params().RPCPort()
+#include "chainparams.h" // for Bitcredit_Params().RPCPort()
 
 #include <stdint.h>
 
@@ -28,7 +28,7 @@ using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
 
-Object CallRPC(const string& strMethod, const Array& params)
+Object CallRPC(const string& strMethod, const Array& params, unsigned int port)
 {
     if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
         throw runtime_error(strprintf(
@@ -47,7 +47,7 @@ Object CallRPC(const string& strMethod, const Array& params)
 
     bool fWait = GetBoolArg("-rpcwait", false); // -rpcwait means try until server has started
     do {
-        bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", itostr(Params().RPCPort())));
+        bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", itostr(port)));
         if (fConnected) break;
         if (fWait)
             MilliSleep(1000);
@@ -127,8 +127,10 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     //
     if (strMethod == "stop"                   && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "getaddednodeinfo"       && n > 0) ConvertTo<bool>(params[0]);
+    if (strMethod == "bitcoin_getaddednodeinfo"       && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "setgenerate"            && n > 1) ConvertTo<int64_t>(params[1]);
+    if (strMethod == "setgenerate"            && n > 2) ConvertTo<bool>(params[2]);
     if (strMethod == "getnetworkhashps"       && n > 0) ConvertTo<int64_t>(params[0]);
     if (strMethod == "getnetworkhashps"       && n > 1) ConvertTo<int64_t>(params[1]);
     if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
@@ -149,6 +151,8 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "listtransactions"       && n > 2) ConvertTo<int64_t>(params[2]);
     if (strMethod == "listaccounts"           && n > 0) ConvertTo<int64_t>(params[0]);
     if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<int64_t>(params[1]);
+    if (strMethod == "deposit_walletpassphrase"       && n > 1) ConvertTo<int64_t>(params[1]);
+    if (strMethod == "bitcoin_walletpassphrase"       && n > 1) ConvertTo<int64_t>(params[1]);
     if (strMethod == "getblocktemplate"       && n > 0) ConvertTo<Object>(params[0]);
     if (strMethod == "listsinceblock"         && n > 1) ConvertTo<int64_t>(params[1]);
     if (strMethod == "sendmany"               && n > 1) ConvertTo<Object>(params[1]);
@@ -172,6 +176,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "lockunspent"            && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "lockunspent"            && n > 1) ConvertTo<Array>(params[1]);
     if (strMethod == "importprivkey"          && n > 2) ConvertTo<bool>(params[2]);
+    if (strMethod == "bitcoin_importprivkey"          && n > 2) ConvertTo<bool>(params[2]);
     if (strMethod == "verifychain"            && n > 0) ConvertTo<int64_t>(params[0]);
     if (strMethod == "verifychain"            && n > 1) ConvertTo<int64_t>(params[1]);
     if (strMethod == "keypoolrefill"          && n > 0) ConvertTo<int64_t>(params[0]);
@@ -203,7 +208,7 @@ int CommandLineRPC(int argc, char *argv[])
         Array params = RPCConvertValues(strMethod, strParams);
 
         // Execute
-        Object reply = CallRPC(strMethod, params);
+        Object reply = CallRPC(strMethod, params, Bitcredit_Params().RPCPort());
 
         // Parse reply
         const Value& result = find_value(reply, "result");
@@ -253,7 +258,7 @@ std::string HelpMessageCli(bool mainProgram)
     {
         strUsage += _("Options:") + "\n";
         strUsage += "  -?                     " + _("This help message") + "\n";
-        strUsage += "  -conf=<file>           " + _("Specify configuration file (default: bitcoin.conf)") + "\n";
+        strUsage += "  -conf=<file>           " + _("Specify configuration file (default: bitcredit.conf)") + "\n";
         strUsage += "  -datadir=<dir>         " + _("Specify data directory") + "\n";
         strUsage += "  -testnet               " + _("Use the test network") + "\n";
         strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be "
@@ -263,7 +268,7 @@ std::string HelpMessageCli(bool mainProgram)
     }
 
     strUsage += "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n";
-    strUsage += "  -rpcport=<port>        " + _("Connect to JSON-RPC on <port> (default: 8332 or testnet: 18332)") + "\n";
+    strUsage += "  -rpcport=<port>        " + _("Connect to JSON-RPC on <port> (default: 9332 or testnet: 19332)") + "\n";
     strUsage += "  -rpcwait               " + _("Wait for RPC server to start") + "\n";
 
     if(mainProgram)
@@ -271,7 +276,7 @@ std::string HelpMessageCli(bool mainProgram)
         strUsage += "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n";
         strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
 
-        strUsage += "\n" + _("SSL options: (see the Bitcoin Wiki for SSL setup instructions)") + "\n";
+        strUsage += "\n" + _("SSL options: (see the Bitcredit Wiki for SSL setup instructions)") + "\n";
         strUsage += "  -rpcssl                " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n";
     }
 

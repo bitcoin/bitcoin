@@ -7,7 +7,7 @@
 
 #include <QDialog>
 
-class AddressTableModel;
+class Bitcredit_AddressTableModel;
 class OptionsModel;
 
 namespace Ui {
@@ -42,7 +42,7 @@ public:
     explicit AddressBookPage(Mode mode, Tabs tab, QWidget *parent);
     ~AddressBookPage();
 
-    void setModel(AddressTableModel *model);
+    void setModel(Bitcredit_AddressTableModel *model);
     const QString &getReturnValue() const { return returnValue; }
 
 public slots:
@@ -50,7 +50,7 @@ public slots:
 
 private:
     Ui::AddressBookPage *ui;
-    AddressTableModel *model;
+    Bitcredit_AddressTableModel *model;
     Mode mode;
     Tabs tab;
     QString returnValue;

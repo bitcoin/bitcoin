@@ -7,15 +7,15 @@
 
 #include <QDialog>
 
-class WalletModel;
+class Bitcredit_WalletModel;
 
 namespace Ui {
-    class AskPassphraseDialog;
+    class Bitcredit_AskPassphraseDialog;
 }
 
 /** Multifunctional dialog to ask for passphrases. Used for encryption, unlocking, and changing the passphrase.
  */
-class AskPassphraseDialog : public QDialog
+class Bitcredit_AskPassphraseDialog : public QDialog
 {
     Q_OBJECT
 
@@ -27,17 +27,17 @@ public:
         Decrypt     /**< Ask passphrase and decrypt wallet */
     };
 
-    explicit AskPassphraseDialog(Mode mode, QWidget *parent);
-    ~AskPassphraseDialog();
+    explicit Bitcredit_AskPassphraseDialog(Mode mode, QWidget *parent);
+    ~Bitcredit_AskPassphraseDialog();
 
     void accept();
 
-    void setModel(WalletModel *model);
+    void setModel(Bitcredit_WalletModel *model);
 
 private:
-    Ui::AskPassphraseDialog *ui;
+    Ui::Bitcredit_AskPassphraseDialog *ui;
     Mode mode;
-    WalletModel *model;
+    Bitcredit_WalletModel *model;
     bool fCapsLock;
 
 private slots:

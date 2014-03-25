@@ -32,7 +32,7 @@ using namespace std;
 using namespace json_spirit;
 using namespace boost::algorithm;
 
-extern uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
+extern uint256 Bitcredit_SignatureHash(const CScript &scriptCode, const Bitcredit_CTransaction& txTo, unsigned int nIn, int nHashType);
 
 static const unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
@@ -144,8 +144,8 @@ BOOST_AUTO_TEST_CASE(script_valid)
         string scriptPubKeyString = test[1].get_str();
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
 
-        CTransaction tx;
-        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, tx, 0, flags, SIGHASH_NONE), strTest);
+        Bitcredit_CTransaction tx;
+        BOOST_CHECK_MESSAGE(Bitcredit_VerifyScript(scriptSig, scriptPubKey, tx, 0, flags, SIGHASH_NONE), strTest);
     }
 }
 
@@ -168,8 +168,8 @@ BOOST_AUTO_TEST_CASE(script_invalid)
         string scriptPubKeyString = test[1].get_str();
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
 
-        CTransaction tx;
-        BOOST_CHECK_MESSAGE(!VerifyScript(scriptSig, scriptPubKey, tx, 0, flags, SIGHASH_NONE), strTest);
+        Bitcredit_CTransaction tx;
+        BOOST_CHECK_MESSAGE(!Bitcredit_VerifyScript(scriptSig, scriptPubKey, tx, 0, flags, SIGHASH_NONE), strTest);
     }
 }
 
@@ -183,25 +183,25 @@ BOOST_AUTO_TEST_CASE(script_PushData)
     static const unsigned char pushdata4[] = { OP_PUSHDATA4, 1, 0, 0, 0, 0x5a };
 
     vector<vector<unsigned char> > directStack;
-    BOOST_CHECK(EvalScript(directStack, CScript(&direct[0], &direct[sizeof(direct)]), CTransaction(), 0, true, 0));
+    BOOST_CHECK(Bitcredit_EvalScript(directStack, CScript(&direct[0], &direct[sizeof(direct)]), Bitcredit_CTransaction(), 0, true, 0));
 
     vector<vector<unsigned char> > pushdata1Stack;
-    BOOST_CHECK(EvalScript(pushdata1Stack, CScript(&pushdata1[0], &pushdata1[sizeof(pushdata1)]), CTransaction(), 0, true, 0));
+    BOOST_CHECK(Bitcredit_EvalScript(pushdata1Stack, CScript(&pushdata1[0], &pushdata1[sizeof(pushdata1)]), Bitcredit_CTransaction(), 0, true, 0));
     BOOST_CHECK(pushdata1Stack == directStack);
 
     vector<vector<unsigned char> > pushdata2Stack;
-    BOOST_CHECK(EvalScript(pushdata2Stack, CScript(&pushdata2[0], &pushdata2[sizeof(pushdata2)]), CTransaction(), 0, true, 0));
+    BOOST_CHECK(Bitcredit_EvalScript(pushdata2Stack, CScript(&pushdata2[0], &pushdata2[sizeof(pushdata2)]), Bitcredit_CTransaction(), 0, true, 0));
     BOOST_CHECK(pushdata2Stack == directStack);
 
     vector<vector<unsigned char> > pushdata4Stack;
-    BOOST_CHECK(EvalScript(pushdata4Stack, CScript(&pushdata4[0], &pushdata4[sizeof(pushdata4)]), CTransaction(), 0, true, 0));
+    BOOST_CHECK(Bitcredit_EvalScript(pushdata4Stack, CScript(&pushdata4[0], &pushdata4[sizeof(pushdata4)]), Bitcredit_CTransaction(), 0, true, 0));
     BOOST_CHECK(pushdata4Stack == directStack);
 }
 
 CScript
-sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transaction)
+sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, Bitcredit_CTransaction transaction)
 {
-    uint256 hash = SignatureHash(scriptPubKey, transaction, 0, SIGHASH_ALL);
+    uint256 hash = Bitcredit_SignatureHash(scriptPubKey, transaction, 0, SIGHASH_ALL);
 
     CScript result;
     //
@@ -223,7 +223,7 @@ sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transac
     return result;
 }
 CScript
-sign_multisig(CScript scriptPubKey, const CKey &key, CTransaction transaction)
+sign_multisig(CScript scriptPubKey, const CKey &key, Bitcredit_CTransaction transaction)
 {
     std::vector<CKey> keys;
     keys.push_back(key);
@@ -240,11 +240,11 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     CScript scriptPubKey12;
     scriptPubKey12 << OP_1 << key1.GetPubKey() << key2.GetPubKey() << OP_2 << OP_CHECKMULTISIG;
 
-    CTransaction txFrom12;
+    Bitcredit_CTransaction txFrom12;
     txFrom12.vout.resize(1);
     txFrom12.vout[0].scriptPubKey = scriptPubKey12;
 
-    CTransaction txTo12;
+    Bitcredit_CTransaction txTo12;
     txTo12.vin.resize(1);
     txTo12.vout.resize(1);
     txTo12.vin[0].prevout.n = 0;
@@ -252,15 +252,15 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     txTo12.vout[0].nValue = 1;
 
     CScript goodsig1 = sign_multisig(scriptPubKey12, key1, txTo12);
-    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey12, txTo12, 0, flags, 0));
+    BOOST_CHECK(Bitcredit_VerifyScript(goodsig1, scriptPubKey12, txTo12, 0, flags, 0));
     txTo12.vout[0].nValue = 2;
-    BOOST_CHECK(!VerifyScript(goodsig1, scriptPubKey12, txTo12, 0, flags, 0));
+    BOOST_CHECK(!Bitcredit_VerifyScript(goodsig1, scriptPubKey12, txTo12, 0, flags, 0));
 
     CScript goodsig2 = sign_multisig(scriptPubKey12, key2, txTo12);
-    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey12, txTo12, 0, flags, 0));
+    BOOST_CHECK(Bitcredit_VerifyScript(goodsig2, scriptPubKey12, txTo12, 0, flags, 0));
 
     CScript badsig1 = sign_multisig(scriptPubKey12, key3, txTo12);
-    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey12, txTo12, 0, flags, 0));
+    BOOST_CHECK(!Bitcredit_VerifyScript(badsig1, scriptPubKey12, txTo12, 0, flags, 0));
 }
 
 BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
@@ -274,11 +274,11 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     CScript scriptPubKey23;
     scriptPubKey23 << OP_2 << key1.GetPubKey() << key2.GetPubKey() << key3.GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 
-    CTransaction txFrom23;
+    Bitcredit_CTransaction txFrom23;
     txFrom23.vout.resize(1);
     txFrom23.vout[0].scriptPubKey = scriptPubKey23;
 
-    CTransaction txTo23;
+    Bitcredit_CTransaction txTo23;
     txTo23.vin.resize(1);
     txTo23.vout.resize(1);
     txTo23.vin[0].prevout.n = 0;
@@ -288,46 +288,46 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     std::vector<CKey> keys;
     keys.push_back(key1); keys.push_back(key2);
     CScript goodsig1 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(Bitcredit_VerifyScript(goodsig1, scriptPubKey23, txTo23, 0, flags, 0));
 
     keys.clear();
     keys.push_back(key1); keys.push_back(key3);
     CScript goodsig2 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(Bitcredit_VerifyScript(goodsig2, scriptPubKey23, txTo23, 0, flags, 0));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key3);
     CScript goodsig3 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig3, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(Bitcredit_VerifyScript(goodsig3, scriptPubKey23, txTo23, 0, flags, 0));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key2); // Can't re-use sig
     CScript badsig1 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!Bitcredit_VerifyScript(badsig1, scriptPubKey23, txTo23, 0, flags, 0));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key1); // sigs must be in correct order
     CScript badsig2 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig2, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!Bitcredit_VerifyScript(badsig2, scriptPubKey23, txTo23, 0, flags, 0));
 
     keys.clear();
     keys.push_back(key3); keys.push_back(key2); // sigs must be in correct order
     CScript badsig3 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig3, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!Bitcredit_VerifyScript(badsig3, scriptPubKey23, txTo23, 0, flags, 0));
 
     keys.clear();
     keys.push_back(key4); keys.push_back(key2); // sigs must match pubkeys
     CScript badsig4 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig4, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!Bitcredit_VerifyScript(badsig4, scriptPubKey23, txTo23, 0, flags, 0));
 
     keys.clear();
     keys.push_back(key1); keys.push_back(key4); // sigs must match pubkeys
     CScript badsig5 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig5, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!Bitcredit_VerifyScript(badsig5, scriptPubKey23, txTo23, 0, flags, 0));
 
     keys.clear(); // Must have signatures
     CScript badsig6 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig6, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!Bitcredit_VerifyScript(badsig6, scriptPubKey23, txTo23, 0, flags, 0));
 }    
 
 BOOST_AUTO_TEST_CASE(script_combineSigs)
@@ -345,11 +345,11 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
         keystore.AddKey(key);
     }
 
-    CTransaction txFrom;
+    Bitcredit_CTransaction txFrom;
     txFrom.vout.resize(1);
     txFrom.vout[0].scriptPubKey.SetDestination(keys[0].GetPubKey().GetID());
     CScript& scriptPubKey = txFrom.vout[0].scriptPubKey;
-    CTransaction txTo;
+    Bitcredit_CTransaction txTo;
     txTo.vin.resize(1);
     txTo.vout.resize(1);
     txTo.vin[0].prevout.n = 0;
@@ -358,61 +358,61 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     txTo.vout[0].nValue = 1;
 
     CScript empty;
-    CScript combined = CombineSignatures(scriptPubKey, txTo, 0, empty, empty);
+    CScript combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, empty, empty);
     BOOST_CHECK(combined.empty());
 
     // Single signature case:
-    SignSignature(keystore, txFrom, txTo, 0); // changes scriptSig
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
+    Bitcredit_SignSignature(keystore, txFrom, txTo, 0); // changes scriptSig
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
     BOOST_CHECK(combined == scriptSig);
     CScript scriptSigCopy = scriptSig;
     // Signing again will give a different, valid signature:
-    SignSignature(keystore, txFrom, txTo, 0);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
+    Bitcredit_SignSignature(keystore, txFrom, txTo, 0);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSigCopy || combined == scriptSig);
 
     // P2SH, single-signature case:
     CScript pkSingle; pkSingle << keys[0].GetPubKey() << OP_CHECKSIG;
     keystore.AddCScript(pkSingle);
     scriptPubKey.SetDestination(pkSingle.GetID());
-    SignSignature(keystore, txFrom, txTo, 0);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
+    Bitcredit_SignSignature(keystore, txFrom, txTo, 0);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
     BOOST_CHECK(combined == scriptSig);
     scriptSigCopy = scriptSig;
-    SignSignature(keystore, txFrom, txTo, 0);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
+    Bitcredit_SignSignature(keystore, txFrom, txTo, 0);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSigCopy || combined == scriptSig);
     // dummy scriptSigCopy with placeholder, should always choose non-placeholder:
     scriptSigCopy = CScript() << OP_0 << static_cast<vector<unsigned char> >(pkSingle);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSig);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, scriptSigCopy);
+    combined =Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSig, scriptSigCopy);
     BOOST_CHECK(combined == scriptSig);
 
     // Hardest case:  Multisig 2-of-3
     scriptPubKey.SetMultisig(2, pubkeys);
     keystore.AddCScript(scriptPubKey);
-    SignSignature(keystore, txFrom, txTo, 0);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
+    Bitcredit_SignSignature(keystore, txFrom, txTo, 0);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
     BOOST_CHECK(combined == scriptSig);
 
     // A couple of partially-signed versions:
     vector<unsigned char> sig1;
-    uint256 hash1 = SignatureHash(scriptPubKey, txTo, 0, SIGHASH_ALL);
+    uint256 hash1 = Bitcredit_SignatureHash(scriptPubKey, txTo, 0, SIGHASH_ALL);
     BOOST_CHECK(keys[0].Sign(hash1, sig1));
     sig1.push_back(SIGHASH_ALL);
     vector<unsigned char> sig2;
-    uint256 hash2 = SignatureHash(scriptPubKey, txTo, 0, SIGHASH_NONE);
+    uint256 hash2 = Bitcredit_SignatureHash(scriptPubKey, txTo, 0, SIGHASH_NONE);
     BOOST_CHECK(keys[1].Sign(hash2, sig2));
     sig2.push_back(SIGHASH_NONE);
     vector<unsigned char> sig3;
-    uint256 hash3 = SignatureHash(scriptPubKey, txTo, 0, SIGHASH_SINGLE);
+    uint256 hash3 = Bitcredit_SignatureHash(scriptPubKey, txTo, 0, SIGHASH_SINGLE);
     BOOST_CHECK(keys[2].Sign(hash3, sig3));
     sig3.push_back(SIGHASH_SINGLE);
 
@@ -428,21 +428,21 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     CScript complete13 = CScript() << OP_0 << sig1 << sig3;
     CScript complete23 = CScript() << OP_0 << sig2 << sig3;
 
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial1a, partial1b);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, partial1a, partial1b);
     BOOST_CHECK(combined == partial1a);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial1a, partial2a);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, partial1a, partial2a);
     BOOST_CHECK(combined == complete12);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial2a, partial1a);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, partial2a, partial1a);
     BOOST_CHECK(combined == complete12);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial1b, partial2b);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, partial1b, partial2b);
     BOOST_CHECK(combined == complete12);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial1b);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial1b);
     BOOST_CHECK(combined == complete13);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial2a, partial3a);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, partial2a, partial3a);
     BOOST_CHECK(combined == complete23);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial2b);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial2b);
     BOOST_CHECK(combined == complete23);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial3a);
+    combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial3a);
     BOOST_CHECK(combined == partial3c);
 }
 

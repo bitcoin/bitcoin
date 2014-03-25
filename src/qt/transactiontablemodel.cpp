@@ -5,7 +5,7 @@
 #include "transactiontablemodel.h"
 
 #include "addresstablemodel.h"
-#include "bitcoinunits.h"
+#include "bitcreditunits.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
@@ -35,40 +35,42 @@ static int column_alignments[] = {
     };
 
 // Comparison operator for sort/binary search of model tx list
-struct TxLessThan
+struct Bitcredit_TxLessThan
 {
-    bool operator()(const TransactionRecord &a, const TransactionRecord &b) const
+    bool operator()(const Bitcredit_TransactionRecord &a, const Bitcredit_TransactionRecord &b) const
     {
         return a.hash < b.hash;
     }
-    bool operator()(const TransactionRecord &a, const uint256 &b) const
+    bool operator()(const Bitcredit_TransactionRecord &a, const uint256 &b) const
     {
         return a.hash < b;
     }
-    bool operator()(const uint256 &a, const TransactionRecord &b) const
+    bool operator()(const uint256 &a, const Bitcredit_TransactionRecord &b) const
     {
         return a < b.hash;
     }
 };
 
 // Private implementation
-class TransactionTablePriv
+class Bitcredit_TransactionTablePriv
 {
 public:
-    TransactionTablePriv(CWallet *wallet, TransactionTableModel *parent) :
-        wallet(wallet),
+    Bitcredit_TransactionTablePriv(Bitcredit_CWallet *bitcredit_wallet, Bitcredit_CWallet *keyholder_wallet, Bitcredit_TransactionTableModel *parent) :
+        bitcredit_wallet(bitcredit_wallet),
+		keyholder_wallet(keyholder_wallet),
         parent(parent)
     {
     }
 
-    CWallet *wallet;
-    TransactionTableModel *parent;
+    Bitcredit_CWallet *bitcredit_wallet;
+    Bitcredit_CWallet *keyholder_wallet;
+    Bitcredit_TransactionTableModel *parent;
 
     /* Local cache of wallet.
      * As it is in the same order as the CWallet, by definition
      * this is sorted by sha256.
      */
-    QList<TransactionRecord> cachedWallet;
+    QList<Bitcredit_TransactionRecord> cachedWallet;
 
     /* Query entire wallet anew from core.
      */
@@ -77,11 +79,11 @@ public:
         qDebug() << "TransactionTablePriv::refreshWallet";
         cachedWallet.clear();
         {
-            LOCK2(cs_main, wallet->cs_wallet);
-            for(std::map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
+            LOCK2(bitcredit_mainState.cs_main, bitcredit_wallet->cs_wallet);
+            for(std::map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_wallet->mapWallet.begin(); it != bitcredit_wallet->mapWallet.end(); ++it)
             {
-                if(TransactionRecord::showTransaction(it->second))
-                    cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
+                if(Bitcredit_TransactionRecord::showTransaction(it->second))
+                    cachedWallet.append(Bitcredit_TransactionRecord::decomposeTransaction(keyholder_wallet, it->second));
             }
         }
     }
@@ -95,23 +97,23 @@ public:
     {
         qDebug() << "TransactionTablePriv::updateWallet : " + QString::fromStdString(hash.ToString()) + " " + QString::number(status);
         {
-            LOCK2(cs_main, wallet->cs_wallet);
+            LOCK2(bitcredit_mainState.cs_main, bitcredit_wallet->cs_wallet);
 
             // Find transaction in wallet
-            std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
-            bool inWallet = mi != wallet->mapWallet.end();
+            std::map<uint256, Bitcredit_CWalletTx>::iterator mi = bitcredit_wallet->mapWallet.find(hash);
+            bool inWallet = mi != bitcredit_wallet->mapWallet.end();
 
             // Find bounds of this transaction in model
-            QList<TransactionRecord>::iterator lower = qLowerBound(
-                cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
-            QList<TransactionRecord>::iterator upper = qUpperBound(
-                cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
+            QList<Bitcredit_TransactionRecord>::iterator lower = qLowerBound(
+                cachedWallet.begin(), cachedWallet.end(), hash, Bitcredit_TxLessThan());
+            QList<Bitcredit_TransactionRecord>::iterator upper = qUpperBound(
+                cachedWallet.begin(), cachedWallet.end(), hash, Bitcredit_TxLessThan());
             int lowerIndex = (lower - cachedWallet.begin());
             int upperIndex = (upper - cachedWallet.begin());
             bool inModel = (lower != upper);
 
             // Determine whether to show transaction or not
-            bool showTransaction = (inWallet && TransactionRecord::showTransaction(mi->second));
+            bool showTransaction = (inWallet && Bitcredit_TransactionRecord::showTransaction(mi->second));
 
             if(status == CT_UPDATED)
             {
@@ -141,13 +143,13 @@ public:
                 if(showTransaction)
                 {
                     // Added -- insert at the right position
-                    QList<TransactionRecord> toInsert =
-                            TransactionRecord::decomposeTransaction(wallet, mi->second);
+                    QList<Bitcredit_TransactionRecord> toInsert =
+                            Bitcredit_TransactionRecord::decomposeTransaction(keyholder_wallet, mi->second);
                     if(!toInsert.isEmpty()) /* only if something to insert */
                     {
                         parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex+toInsert.size()-1);
                         int insert_idx = lowerIndex;
-                        foreach(const TransactionRecord &rec, toInsert)
+                        foreach(const Bitcredit_TransactionRecord &rec, toInsert)
                         {
                             cachedWallet.insert(insert_idx, rec);
                             insert_idx += 1;
@@ -180,11 +182,11 @@ public:
         return cachedWallet.size();
     }
 
-    TransactionRecord *index(int idx)
+    Bitcredit_TransactionRecord *index(int idx)
     {
         if(idx >= 0 && idx < cachedWallet.size())
         {
-            TransactionRecord *rec = &cachedWallet[idx];
+            Bitcredit_TransactionRecord *rec = &cachedWallet[idx];
 
             // Get required locks upfront. This avoids the GUI from getting
             // stuck if the core is holding the locks for a longer time - for
@@ -193,15 +195,15 @@ public:
             // If a status update is needed (blocks came in since last check),
             //  update the status of this transaction from the wallet. Otherwise,
             // simply re-use the cached status.
-            TRY_LOCK(cs_main, lockMain);
+            TRY_LOCK(bitcredit_mainState.cs_main, lockMain);
             if(lockMain)
             {
-                TRY_LOCK(wallet->cs_wallet, lockWallet);
+                TRY_LOCK(bitcredit_wallet->cs_wallet, lockWallet);
                 if(lockWallet && rec->statusUpdateNeeded())
                 {
-                    std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
+                    std::map<uint256, Bitcredit_CWalletTx>::iterator mi = bitcredit_wallet->mapWallet.find(rec->hash);
 
-                    if(mi != wallet->mapWallet.end())
+                    if(mi != bitcredit_wallet->mapWallet.end())
                     {
                         rec->updateStatus(mi->second);
                     }
@@ -215,39 +217,45 @@ public:
         }
     }
 
-    QString describe(TransactionRecord *rec, int unit)
+    QString describe(Bitcredit_TransactionRecord *rec, int unit)
     {
         {
-            LOCK2(cs_main, wallet->cs_wallet);
-            std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
-            if(mi != wallet->mapWallet.end())
+            LOCK2(bitcredit_mainState.cs_main, bitcredit_wallet->cs_wallet);
+            std::map<uint256, Bitcredit_CWalletTx>::iterator mi = bitcredit_wallet->mapWallet.find(rec->hash);
+            if(mi != bitcredit_wallet->mapWallet.end())
             {
-                return TransactionDesc::toHTML(wallet, mi->second, rec, unit);
+                return Bitcredit_TransactionDesc::toHTML(keyholder_wallet, mi->second, rec, unit);
             }
         }
         return QString("");
     }
 };
 
-TransactionTableModel::TransactionTableModel(CWallet* wallet, WalletModel *parent):
+Bitcredit_TransactionTableModel::Bitcredit_TransactionTableModel(Bitcredit_CWallet* bitcredit_wallet, Bitcredit_CWallet *keyholder_wallet, bool isForDepositWalletIn, Bitcredit_WalletModel *parent):
         QAbstractTableModel(parent),
-        wallet(wallet),
+        wallet(bitcredit_wallet),
+        keyholder_wallet(keyholder_wallet),
         walletModel(parent),
-        priv(new TransactionTablePriv(wallet, this))
+        priv(new Bitcredit_TransactionTablePriv(bitcredit_wallet, keyholder_wallet, this))
 {
-    columns << QString() << tr("Date") << tr("Type") << tr("Address") << tr("Amount");
-
+	//This means we are in the normal bitcredit_wallet, otherwise in the deposit_wallet
+	isForDepositWallet = isForDepositWalletIn;
+	if(isForDepositWallet) {
+		columns << QString() << tr("Date") << tr("Type") << tr("Address") << tr("Deposit");
+	} else {
+		columns << QString() << tr("Date") << tr("Type") << tr("Address") << tr("Amount");
+	}
     priv->refreshWallet();
 
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 }
 
-TransactionTableModel::~TransactionTableModel()
+Bitcredit_TransactionTableModel::~Bitcredit_TransactionTableModel()
 {
     delete priv;
 }
 
-void TransactionTableModel::updateTransaction(const QString &hash, int status)
+void Bitcredit_TransactionTableModel::updateTransaction(const QString &hash, int status)
 {
     uint256 updated;
     updated.SetHex(hash.toStdString());
@@ -255,7 +263,7 @@ void TransactionTableModel::updateTransaction(const QString &hash, int status)
     priv->updateWallet(updated, status);
 }
 
-void TransactionTableModel::updateConfirmations()
+void Bitcredit_TransactionTableModel::updateConfirmations()
 {
     // Blocks came in since last poll.
     // Invalidate status (number of confirmations) and (possibly) description
@@ -265,52 +273,58 @@ void TransactionTableModel::updateConfirmations()
     emit dataChanged(index(0, ToAddress), index(priv->size()-1, ToAddress));
 }
 
-int TransactionTableModel::rowCount(const QModelIndex &parent) const
+int Bitcredit_TransactionTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
     return priv->size();
 }
 
-int TransactionTableModel::columnCount(const QModelIndex &parent) const
+int Bitcredit_TransactionTableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
     return columns.length();
 }
 
-QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) const
+QString Bitcredit_TransactionTableModel::formatTxStatus(const Bitcredit_TransactionRecord *wtx) const
 {
     QString status;
 
     switch(wtx->status.status)
     {
-    case TransactionStatus::OpenUntilBlock:
+    case Bitcredit_TransactionStatus::OpenUntilBlock:
         status = tr("Open for %n more block(s)","",wtx->status.open_for);
         break;
-    case TransactionStatus::OpenUntilDate:
+    case Bitcredit_TransactionStatus::OpenUntilDate:
         status = tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx->status.open_for));
         break;
-    case TransactionStatus::Offline:
+    case Bitcredit_TransactionStatus::Offline:
         status = tr("Offline");
         break;
-    case TransactionStatus::Unconfirmed:
+    case Bitcredit_TransactionStatus::Unconfirmed:
         status = tr("Unconfirmed");
         break;
-    case TransactionStatus::Confirming:
-        status = tr("Confirming (%1 of %2 recommended confirmations)").arg(wtx->status.depth).arg(TransactionRecord::RecommendedNumConfirmations);
+    case Bitcredit_TransactionStatus::Confirming:
+        status = tr("Confirming (%1 of %2 recommended confirmations)").arg(wtx->status.depth).arg(Bitcredit_TransactionRecord::RecommendedNumConfirmations);
         break;
-    case TransactionStatus::Confirmed:
+    case Bitcredit_TransactionStatus::Confirmed:
         status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
         break;
-    case TransactionStatus::Conflicted:
+    case Bitcredit_TransactionStatus::Conflicted:
         status = tr("Conflicted");
         break;
-    case TransactionStatus::Immature:
+    case Bitcredit_TransactionStatus::Immature:
         status = tr("Immature (%1 confirmations, will be available after %2)").arg(wtx->status.depth).arg(wtx->status.depth + wtx->status.matures_in);
         break;
-    case TransactionStatus::MaturesWarning:
+    case Bitcredit_TransactionStatus::ImmatureDeposit:
+        status = tr("In deposit (%1 confirmations, will be available after %2)").arg(wtx->status.depth).arg(wtx->status.depth + wtx->status.matures_in);
+        break;
+    case Bitcredit_TransactionStatus::ImmatureDepositChange:
+        status = tr("Deposit change (%1 confirmations, will be available after %2)").arg(wtx->status.depth).arg(wtx->status.depth + wtx->status.matures_in);
+        break;
+    case Bitcredit_TransactionStatus::MaturesWarning:
         status = tr("This block was not received by any other nodes and will probably not be accepted!");
         break;
-    case TransactionStatus::NotAccepted:
+    case Bitcredit_TransactionStatus::NotAccepted:
         status = tr("Generated but not accepted");
         break;
     }
@@ -318,7 +332,7 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
     return status;
 }
 
-QString TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
+QString Bitcredit_TransactionTableModel::formatTxDate(const Bitcredit_TransactionRecord *wtx) const
 {
     if(wtx->time)
     {
@@ -333,7 +347,7 @@ QString TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
 /* Look up address in address book, if found return label (address)
    otherwise just return (address)
  */
-QString TransactionTableModel::lookupAddress(const std::string &address, bool tooltip) const
+QString Bitcredit_TransactionTableModel::lookupAddress(const std::string &address, bool tooltip) const
 {
     QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(address));
     QString description;
@@ -348,37 +362,45 @@ QString TransactionTableModel::lookupAddress(const std::string &address, bool to
     return description;
 }
 
-QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
+QString Bitcredit_TransactionTableModel::formatTxType(const Bitcredit_TransactionRecord *wtx) const
 {
     switch(wtx->type)
     {
-    case TransactionRecord::RecvWithAddress:
+    case Bitcredit_TransactionRecord::RecvWithAddress:
         return tr("Received with");
-    case TransactionRecord::RecvFromOther:
+    case Bitcredit_TransactionRecord::RecvFromOther:
         return tr("Received from");
-    case TransactionRecord::SendToAddress:
-    case TransactionRecord::SendToOther:
+    case Bitcredit_TransactionRecord::SendToAddress:
+    case Bitcredit_TransactionRecord::SendToOther:
         return tr("Sent to");
-    case TransactionRecord::SendToSelf:
+    case Bitcredit_TransactionRecord::SendToSelf:
         return tr("Payment to yourself");
-    case TransactionRecord::Generated:
+    case Bitcredit_TransactionRecord::Generated:
         return tr("Mined");
+    case Bitcredit_TransactionRecord::Deposit:
+        return tr("Deposit");
+    case Bitcredit_TransactionRecord::DepositChange:
+        return tr("Deposit change");
     default:
         return QString();
     }
 }
 
-QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx) const
+QVariant Bitcredit_TransactionTableModel::txAddressDecoration(const Bitcredit_TransactionRecord *wtx) const
 {
     switch(wtx->type)
     {
-    case TransactionRecord::Generated:
+    case Bitcredit_TransactionRecord::Generated:
         return QIcon(":/icons/tx_mined");
-    case TransactionRecord::RecvWithAddress:
-    case TransactionRecord::RecvFromOther:
+    case Bitcredit_TransactionRecord::Deposit:
+        return QIcon(":/icons/tx_deposit");
+    case Bitcredit_TransactionRecord::DepositChange:
+        return QIcon(":/icons/tx_deposit");
+    case Bitcredit_TransactionRecord::RecvWithAddress:
+    case Bitcredit_TransactionRecord::RecvFromOther:
         return QIcon(":/icons/tx_input");
-    case TransactionRecord::SendToAddress:
-    case TransactionRecord::SendToOther:
+    case Bitcredit_TransactionRecord::SendToAddress:
+    case Bitcredit_TransactionRecord::SendToOther:
         return QIcon(":/icons/tx_output");
     default:
         return QIcon(":/icons/tx_inout");
@@ -386,38 +408,54 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     return QVariant();
 }
 
-QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const
+QString Bitcredit_TransactionTableModel::formatTxToAddress(const Bitcredit_TransactionRecord *wtx, bool tooltip) const
 {
     switch(wtx->type)
     {
-    case TransactionRecord::RecvFromOther:
+    case Bitcredit_TransactionRecord::RecvFromOther:
         return QString::fromStdString(wtx->address);
-    case TransactionRecord::RecvWithAddress:
-    case TransactionRecord::SendToAddress:
-    case TransactionRecord::Generated:
+    case Bitcredit_TransactionRecord::RecvWithAddress:
+    case Bitcredit_TransactionRecord::SendToAddress:
+    case Bitcredit_TransactionRecord::Generated:
         return lookupAddress(wtx->address, tooltip);
-    case TransactionRecord::SendToOther:
+    case Bitcredit_TransactionRecord::Deposit:
+        return lookupAddress(wtx->address, tooltip);
+    case Bitcredit_TransactionRecord::DepositChange:
+        return lookupAddress(wtx->address, tooltip);
+    case Bitcredit_TransactionRecord::SendToOther:
         return QString::fromStdString(wtx->address);
-    case TransactionRecord::SendToSelf:
+    case Bitcredit_TransactionRecord::SendToSelf:
     default:
         return tr("(n/a)");
     }
 }
 
-QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
+QVariant Bitcredit_TransactionTableModel::addressColor(const Bitcredit_TransactionRecord *wtx) const
 {
     // Show addresses without label in a less visible color
     switch(wtx->type)
     {
-    case TransactionRecord::RecvWithAddress:
-    case TransactionRecord::SendToAddress:
-    case TransactionRecord::Generated:
+    case Bitcredit_TransactionRecord::RecvWithAddress:
+    case Bitcredit_TransactionRecord::SendToAddress:
+    case Bitcredit_TransactionRecord::Generated:
         {
         QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
         if(label.isEmpty())
             return COLOR_BAREADDRESS;
         } break;
-    case TransactionRecord::SendToSelf:
+    case Bitcredit_TransactionRecord::Deposit:
+        {
+        QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
+        if(label.isEmpty())
+            return COLOR_BAREADDRESS;
+        } break;
+    case Bitcredit_TransactionRecord::DepositChange:
+        {
+        QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
+        if(label.isEmpty())
+            return COLOR_BAREADDRESS;
+        } break;
+    case Bitcredit_TransactionRecord::SendToSelf:
         return COLOR_BAREADDRESS;
     default:
         break;
@@ -425,9 +463,9 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     return QVariant();
 }
 
-QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed) const
+QString Bitcredit_TransactionTableModel::formatTxAmount(const Bitcredit_TransactionRecord *wtx, bool showUnconfirmed) const
 {
-    QString str = BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit);
+    QString str = BitcreditUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit);
     if(showUnconfirmed)
     {
         if(!wtx->status.countsForBalance)
@@ -437,19 +475,38 @@ QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool
     }
     return QString(str);
 }
+QString Bitcredit_TransactionTableModel::formatTxAmountWithDeposit(const Bitcredit_TransactionRecord *wtx, bool showUnconfirmed) const
+{
+    QString str = BitcreditUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit);
+    QString strCredit = BitcreditUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit);
+    if(showUnconfirmed)
+    {
+        if(!wtx->status.countsForBalance)
+        {
+            str = QString("[") + str + QString("]");
+        }
+    }
+    return QString(QString("(") + strCredit + QString(") ") + str);
+}
+QString Bitcredit_TransactionTableModel::formatTxDepositAmount(const Bitcredit_TransactionRecord *wtx) const
+{
+    QString str = BitcreditUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit);
+	str = QString("[") + str + QString("]");
+    return QString(str);
+}
 
-QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx) const
+QVariant Bitcredit_TransactionTableModel::txStatusDecoration(const Bitcredit_TransactionRecord *wtx) const
 {
     switch(wtx->status.status)
     {
-    case TransactionStatus::OpenUntilBlock:
-    case TransactionStatus::OpenUntilDate:
+    case Bitcredit_TransactionStatus::OpenUntilBlock:
+    case Bitcredit_TransactionStatus::OpenUntilDate:
         return QColor(64,64,255);
-    case TransactionStatus::Offline:
+    case Bitcredit_TransactionStatus::Offline:
         return QColor(192,192,192);
-    case TransactionStatus::Unconfirmed:
+    case Bitcredit_TransactionStatus::Unconfirmed:
         return QIcon(":/icons/transaction_0");
-    case TransactionStatus::Confirming:
+    case Bitcredit_TransactionStatus::Confirming:
         switch(wtx->status.depth)
         {
         case 1: return QIcon(":/icons/transaction_1");
@@ -458,38 +515,48 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
         case 4: return QIcon(":/icons/transaction_4");
         default: return QIcon(":/icons/transaction_5");
         };
-    case TransactionStatus::Confirmed:
+    case Bitcredit_TransactionStatus::Confirmed:
         return QIcon(":/icons/transaction_confirmed");
-    case TransactionStatus::Conflicted:
+    case Bitcredit_TransactionStatus::Conflicted:
         return QIcon(":/icons/transaction_conflicted");
-    case TransactionStatus::Immature: {
+    case Bitcredit_TransactionStatus::Immature: {
         int total = wtx->status.depth + wtx->status.matures_in;
         int part = (wtx->status.depth * 4 / total) + 1;
         return QIcon(QString(":/icons/transaction_%1").arg(part));
         }
-    case TransactionStatus::MaturesWarning:
-    case TransactionStatus::NotAccepted:
+    case Bitcredit_TransactionStatus::ImmatureDeposit: {
+        int total = wtx->status.depth + wtx->status.matures_in;
+        int part = (wtx->status.depth * 4 / total) + 1;
+        return QIcon(QString(":/icons/transaction_%1").arg(part));
+        }
+    case Bitcredit_TransactionStatus::ImmatureDepositChange: {
+        int total = wtx->status.depth + wtx->status.matures_in;
+        int part = (wtx->status.depth * 4 / total) + 1;
+        return QIcon(QString(":/icons/transaction_%1").arg(part));
+        }
+    case Bitcredit_TransactionStatus::MaturesWarning:
+    case Bitcredit_TransactionStatus::NotAccepted:
         return QIcon(":/icons/transaction_0");
     }
     return QColor(0,0,0);
 }
 
-QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
+QString Bitcredit_TransactionTableModel::formatTooltip(const Bitcredit_TransactionRecord *rec) const
 {
     QString tooltip = formatTxStatus(rec) + QString("\n") + formatTxType(rec);
-    if(rec->type==TransactionRecord::RecvFromOther || rec->type==TransactionRecord::SendToOther ||
-       rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress)
+    if(rec->type==Bitcredit_TransactionRecord::RecvFromOther || rec->type==Bitcredit_TransactionRecord::SendToOther ||
+       rec->type==Bitcredit_TransactionRecord::SendToAddress || rec->type==Bitcredit_TransactionRecord::RecvWithAddress)
     {
         tooltip += QString(" ") + formatTxToAddress(rec, true);
     }
     return tooltip;
 }
 
-QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
+QVariant Bitcredit_TransactionTableModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid())
         return QVariant();
-    TransactionRecord *rec = static_cast<TransactionRecord*>(index.internalPointer());
+    Bitcredit_TransactionRecord *rec = static_cast<Bitcredit_TransactionRecord*>(index.internalPointer());
 
     switch(role)
     {
@@ -512,7 +579,15 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case ToAddress:
             return formatTxToAddress(rec, false);
         case Amount:
-            return formatTxAmount(rec);
+        	if(isForDepositWallet) {
+        		return formatTxDepositAmount(rec);
+        	} else {
+        		if(rec->type == Bitcredit_TransactionRecord::Deposit || rec->type == Bitcredit_TransactionRecord::DepositChange) {
+					return formatTxAmountWithDeposit(rec);
+        		} else {
+					return formatTxAmount(rec);
+        		}
+        	}
         }
         break;
     case Qt::EditRole:
@@ -528,7 +603,11 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case ToAddress:
             return formatTxToAddress(rec, true);
         case Amount:
-            return rec->credit + rec->debit;
+        	if(isForDepositWallet) {
+				return rec->credit;
+        	} else {
+				return rec->credit + rec->debit;
+        	}
         }
         break;
     case Qt::ToolTipRole:
@@ -537,7 +616,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return column_alignments[index.column()];
     case Qt::ForegroundRole:
         // Non-confirmed (but not immature) as transactions are grey
-        if(!rec->status.countsForBalance && rec->status.status != TransactionStatus::Immature)
+        if(!rec->status.countsForBalance && rec->status.status != Bitcredit_TransactionStatus::Immature)
         {
             return COLOR_UNCONFIRMED;
         }
@@ -570,13 +649,15 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return rec->status.countsForBalance;
     case FormattedAmountRole:
         return formatTxAmount(rec, false);
+    case FormattedDepositAmountRole:
+        return formatTxDepositAmount(rec);
     case StatusRole:
         return rec->status.status;
     }
     return QVariant();
 }
 
-QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant Bitcredit_TransactionTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if(orientation == Qt::Horizontal)
     {
@@ -600,17 +681,21 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
             case ToAddress:
                 return tr("Destination address of transaction.");
             case Amount:
-                return tr("Amount removed from or added to balance.");
+            	if(isForDepositWallet) {
+					return tr("Amount added as deposit.");
+            	} else {
+            		return tr("Amount removed from or added to balance.");
+            	}
             }
         }
     }
     return QVariant();
 }
 
-QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex Bitcredit_TransactionTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    TransactionRecord *data = priv->index(row);
+    Bitcredit_TransactionRecord *data = priv->index(row);
     if(data)
     {
         return createIndex(row, column, priv->index(row));
@@ -621,7 +706,7 @@ QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex 
     }
 }
 
-void TransactionTableModel::updateDisplayUnit()
+void Bitcredit_TransactionTableModel::updateDisplayUnit()
 {
     // emit dataChanged to update Amount column with the current unit
     emit dataChanged(index(0, Amount), index(priv->size()-1, Amount));

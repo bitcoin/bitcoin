@@ -5,99 +5,36 @@ AM_CPPFLAGS += -I$(top_srcdir)/src \
   -I$(top_builddir)/src/qt/forms \
   $(PROTOBUF_CFLAGS) \
   $(QR_CFLAGS)
-bin_PROGRAMS = bitcoin-qt
-noinst_LIBRARIES = libbitcoinqt.a
+bin_PROGRAMS = bitcredit-qt
+noinst_LIBRARIES = libbitcreditqt.a
 SUBDIRS = . $(BUILD_TEST_QT)
 DIST_SUBDIRS = . test
 
 # bitcoin qt core #
 QT_TS = \
-  locale/bitcoin_ach.ts \
-  locale/bitcoin_af_ZA.ts \
-  locale/bitcoin_ar.ts \
-  locale/bitcoin_be_BY.ts \
-  locale/bitcoin_bg.ts \
-  locale/bitcoin_bs.ts \
-  locale/bitcoin_ca_ES.ts \
-  locale/bitcoin_ca.ts \
-  locale/bitcoin_ca@valencia.ts \
-  locale/bitcoin_cmn.ts \
-  locale/bitcoin_cs.ts \
-  locale/bitcoin_cy.ts \
-  locale/bitcoin_da.ts \
-  locale/bitcoin_de.ts \
-  locale/bitcoin_el_GR.ts \
-  locale/bitcoin_en.ts \
-  locale/bitcoin_eo.ts \
-  locale/bitcoin_es_CL.ts \
-  locale/bitcoin_es_DO.ts \
-  locale/bitcoin_es_MX.ts \
-  locale/bitcoin_es.ts \
-  locale/bitcoin_es_UY.ts \
-  locale/bitcoin_et.ts \
-  locale/bitcoin_eu_ES.ts \
-  locale/bitcoin_fa_IR.ts \
-  locale/bitcoin_fa.ts \
-  locale/bitcoin_fi.ts \
-  locale/bitcoin_fr_CA.ts \
-  locale/bitcoin_fr.ts \
-  locale/bitcoin_gl.ts \
-  locale/bitcoin_gu_IN.ts \
-  locale/bitcoin_he.ts \
-  locale/bitcoin_hi_IN.ts \
-  locale/bitcoin_hr.ts \
-  locale/bitcoin_hu.ts \
-  locale/bitcoin_id_ID.ts \
-  locale/bitcoin_it.ts \
-  locale/bitcoin_ja.ts \
-  locale/bitcoin_ka.ts \
-  locale/bitcoin_kk_KZ.ts \
-  locale/bitcoin_ko_KR.ts \
-  locale/bitcoin_ky.ts \
-  locale/bitcoin_la.ts \
-  locale/bitcoin_lt.ts \
-  locale/bitcoin_lv_LV.ts \
-  locale/bitcoin_mn.ts \
-  locale/bitcoin_ms_MY.ts \
-  locale/bitcoin_nb.ts \
-  locale/bitcoin_nl.ts \
-  locale/bitcoin_pam.ts \
-  locale/bitcoin_pl.ts \
-  locale/bitcoin_pt_BR.ts \
-  locale/bitcoin_pt_PT.ts \
-  locale/bitcoin_ro_RO.ts \
-  locale/bitcoin_ru.ts \
-  locale/bitcoin_sah.ts \
-  locale/bitcoin_sk.ts \
-  locale/bitcoin_sl_SI.ts \
-  locale/bitcoin_sq.ts \
-  locale/bitcoin_sr.ts \
-  locale/bitcoin_sv.ts \
-  locale/bitcoin_th_TH.ts \
-  locale/bitcoin_tr.ts \
-  locale/bitcoin_uk.ts \
-  locale/bitcoin_ur_PK.ts \
-  locale/bitcoin_uz@Cyrl.ts \
-  locale/bitcoin_vi.ts \
-  locale/bitcoin_vi_VN.ts \
-  locale/bitcoin_zh_CN.ts \
-  locale/bitcoin_zh_HK.ts \
-  locale/bitcoin_zh_TW.ts
+  locale/bitcoin_en.ts
 
 QT_FORMS_UI = \
   forms/aboutdialog.ui \
   forms/addressbookpage.ui \
   forms/askpassphrasedialog.ui \
+  forms/bitcoin_askpassphrasedialog.ui \
+  forms/claimcoinsdialog.ui \
   forms/coincontroldialog.ui \
+  forms/bitcoin_coincontroldialog.ui \
+  forms/miner_coincontroldialog.ui \
   forms/editaddressdialog.ui \
   forms/helpmessagedialog.ui \
   forms/intro.ui \
+  forms/minercoinsdialog.ui \
+  forms/uneditablecoinsentry.ui \
   forms/openuridialog.ui \
   forms/optionsdialog.ui \
   forms/overviewpage.ui \
   forms/receivecoinsdialog.ui \
   forms/receiverequestdialog.ui \
   forms/rpcconsole.ui \
+  forms/bitcoin_rpcconsole.ui \
   forms/sendcoinsdialog.ui \
   forms/sendcoinsentry.ui \
   forms/signverifymessagedialog.ui \
@@ -106,20 +43,31 @@ QT_FORMS_UI = \
 QT_MOC_CPP = \
   moc_addressbookpage.cpp \
   moc_addresstablemodel.cpp \
+  moc_bitcoin_addresstablemodel.cpp \
   moc_askpassphrasedialog.cpp \
+  moc_bitcoin_askpassphrasedialog.cpp \
   moc_bitcoinaddressvalidator.cpp \
   moc_bitcoinamountfield.cpp \
   moc_bitcoingui.cpp \
+  moc_bitcreditunits.cpp \
   moc_bitcoinunits.cpp \
+  moc_claimcoinsdialog.cpp \
   moc_clientmodel.cpp \
   moc_coincontroldialog.cpp \
+  moc_bitcoin_coincontroldialog.cpp \
+  moc_miner_coincontroldialog.cpp \
   moc_coincontroltreewidget.cpp \
+  moc_bitcoin_coincontroltreewidget.cpp \
+  moc_miner_coincontroltreewidget.cpp \
+  moc_uneditablecoinsentry.cpp \
   moc_csvmodelwriter.cpp \
   moc_editaddressdialog.cpp \
   moc_guiutil.cpp \
   moc_intro.cpp \
   moc_macdockiconhandler.cpp \
   moc_macnotificationhandler.cpp \
+  moc_minercoinsdialog.cpp \
+  moc_minerdepositsview.cpp \
   moc_monitoreddatamapper.cpp \
   moc_notificator.cpp \
   moc_openuridialog.cpp \
@@ -134,6 +82,7 @@ QT_MOC_CPP = \
   moc_receiverequestdialog.cpp \
   moc_recentrequeststablemodel.cpp \
   moc_rpcconsole.cpp \
+  moc_bitcoin_rpcconsole.cpp \
   moc_sendcoinsdialog.cpp \
   moc_sendcoinsentry.cpp \
   moc_signverifymessagedialog.cpp \
@@ -147,6 +96,7 @@ QT_MOC_CPP = \
   moc_utilitydialog.cpp \
   moc_walletframe.cpp \
   moc_walletmodel.cpp \
+  moc_bitcoin_walletmodel.cpp \
   moc_walletview.cpp
 
 BITCOIN_MM = \
@@ -157,7 +107,8 @@ QT_MOC = \
   bitcoin.moc \
   intro.moc \
   overviewpage.moc \
-  rpcconsole.moc
+  rpcconsole.moc  \
+  bitcoin_rpcconsole.moc
 
 QT_QRC_CPP = qrc_bitcoin.cpp
 QT_QRC = bitcoin.qrc
@@ -169,14 +120,23 @@ PROTOBUF_PROTO = paymentrequest.proto
 BITCOIN_QT_H = \
   addressbookpage.h \
   addresstablemodel.h \
+  bitcoin_addresstablemodel.h \
   askpassphrasedialog.h \
+  bitcoin_askpassphrasedialog.h \
   bitcoinaddressvalidator.h \
   bitcoinamountfield.h \
   bitcoingui.h \
+  bitcreditunits.h \
   bitcoinunits.h \
+  claimcoinsdialog.h \
   clientmodel.h \
   coincontroldialog.h \
+  bitcoin_coincontroldialog.h \
+  miner_coincontroldialog.h \
   coincontroltreewidget.h \
+  bitcoin_coincontroltreewidget.h \
+  miner_coincontroltreewidget.h \
+  uneditablecoinsentry.h \
   csvmodelwriter.h \
   editaddressdialog.h \
   guiconstants.h \
@@ -184,6 +144,8 @@ BITCOIN_QT_H = \
   intro.h \
   macdockiconhandler.h \
   macnotificationhandler.h \
+  minercoinsdialog.h \
+  minerdepositsview.h \
   monitoreddatamapper.h \
   notificator.h \
   openuridialog.h \
@@ -199,6 +161,7 @@ BITCOIN_QT_H = \
   receiverequestdialog.h \
   recentrequeststablemodel.h \
   rpcconsole.h \
+  bitcoin_rpcconsole.h \
   sendcoinsdialog.h \
   sendcoinsentry.h \
   signverifymessagedialog.h \
@@ -213,17 +176,20 @@ BITCOIN_QT_H = \
   utilitydialog.h \
   walletframe.h \
   walletmodel.h \
+  bitcoin_walletmodel.h \
   walletmodeltransaction.h \
+  bitcoin_walletmodeltransaction.h \
   walletview.h \
   winshutdownmonitor.h
 
 RES_ICONS = \
   res/icons/add.png \
   res/icons/address-book.png \
-  res/icons/bitcoin.ico \
-  res/icons/bitcoin.png \
-  res/icons/bitcoin_testnet.ico \
-  res/icons/bitcoin_testnet.png \
+  res/icons/bitcredit.ico \
+  res/icons/bitcredit.png \
+  res/icons/bitcredit_testnet.ico \
+  res/icons/bitcredit_testnet.png \
+  res/icons/claim.png \
   res/icons/clock1.png \
   res/icons/clock2.png \
   res/icons/clock3.png \
@@ -245,6 +211,8 @@ RES_ICONS = \
   res/icons/key.png \
   res/icons/lock_closed.png \
   res/icons/lock_open.png \
+  res/icons/mining.png \
+  res/icons/mining_deposits.png \
   res/icons/overview.png \
   res/icons/qrcode.png \
   res/icons/quit.png \
@@ -260,6 +228,7 @@ RES_ICONS = \
   res/icons/tx_inout.png \
   res/icons/tx_input.png \
   res/icons/tx_output.png \
+  res/icons/tx_deposit.png \
   res/icons/tx_mined.png
 
 BITCOIN_QT_CPP = \
@@ -267,6 +236,7 @@ BITCOIN_QT_CPP = \
   bitcoinaddressvalidator.cpp \
   bitcoinamountfield.cpp \
   bitcoingui.cpp \
+  bitcreditunits.cpp \
   bitcoinunits.cpp \
   clientmodel.cpp \
   csvmodelwriter.cpp \
@@ -279,6 +249,7 @@ BITCOIN_QT_CPP = \
   qvalidatedlineedit.cpp \
   qvaluecombobox.cpp \
   rpcconsole.cpp \
+  bitcoin_rpcconsole.cpp \
   splashscreen.cpp \
   trafficgraphwidget.cpp \
   utilitydialog.cpp \
@@ -288,10 +259,20 @@ if ENABLE_WALLET
 BITCOIN_QT_CPP += \
   addressbookpage.cpp \
   addresstablemodel.cpp \
+  bitcoin_addresstablemodel.cpp \
   askpassphrasedialog.cpp \
+  bitcoin_askpassphrasedialog.cpp \
+  claimcoinsdialog.cpp \
   coincontroldialog.cpp \
+  bitcoin_coincontroldialog.cpp \
+  miner_coincontroldialog.cpp \
   coincontroltreewidget.cpp \
+  bitcoin_coincontroltreewidget.cpp \
+  miner_coincontroltreewidget.cpp \
   editaddressdialog.cpp \
+  minercoinsdialog.cpp \
+  uneditablecoinsentry.cpp \
+  minerdepositsview.cpp \
   openuridialog.cpp \
   overviewpage.cpp \
   paymentrequestplus.cpp \
@@ -311,7 +292,9 @@ BITCOIN_QT_CPP += \
   transactionview.cpp \
   walletframe.cpp \
   walletmodel.cpp \
+  bitcoin_walletmodel.cpp \
   walletmodeltransaction.cpp \
+  bitcoin_walletmodeltransaction.cpp \
   walletview.cpp
 endif
 
@@ -322,40 +305,40 @@ RES_IMAGES = \
 
 RES_MOVIES = $(wildcard res/movies/spinner-*.png)
 
-BITCOIN_RC = res/bitcoin-qt-res.rc
+BITCOIN_RC = res/bitcredit-qt-res.rc
 
-libbitcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
+libbitcreditqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
-libbitcoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
+libbitcreditqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
-nodist_libbitcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
+nodist_libbitcreditqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP)
 
-BUILT_SOURCES = $(nodist_libbitcoinqt_a_SOURCES)
+BUILT_SOURCES = $(nodist_libbitcreditqt_a_SOURCES)
 
 #Generating these with a half-written protobuf header leads to wacky results.
 #This makes sure it's done.
 $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
-# bitcoin-qt binary #
-bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
+# bitcredit-qt binary #
+bitcredit_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms
-bitcoin_qt_SOURCES = bitcoin.cpp
+bitcredit_qt_SOURCES = bitcoin.cpp
 if TARGET_DARWIN
-  bitcoin_qt_SOURCES += $(BITCOIN_MM)
+  bitcredit_qt_SOURCES += $(BITCOIN_MM)
 endif
 if TARGET_WINDOWS
-  bitcoin_qt_SOURCES += $(BITCOIN_RC)
+  bitcredit_qt_SOURCES += $(BITCOIN_RC)
 endif
-bitcoin_qt_LDADD = libbitcoinqt.a $(LIBBITCOIN_SERVER)
+bitcredit_qt_LDADD = libbitcreditqt.a $(LIBBITCREDIT_SERVER)
 if ENABLE_WALLET
-bitcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
+bitcredit_qt_LDADD += $(LIBBITCREDIT_WALLET)
 endif
-bitcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
+bitcredit_qt_LDADD += $(LIBBITCREDIT_CLI) $(LIBBITCREDIT_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS)
-bitcoin_qt_LDFLAGS = $(QT_LDFLAGS)
+bitcredit_qt_LDFLAGS = $(QT_LDFLAGS)
 
 # forms/foo.h -> forms/ui_foo.h
 QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:.ui=.h))))

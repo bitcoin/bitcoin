@@ -9,8 +9,8 @@
 
 #include <QWidget>
 
-class TransactionFilterProxy;
-class WalletModel;
+class Bitcredit_TransactionFilterProxy;
+class Bitcredit_WalletModel;
 
 QT_BEGIN_NAMESPACE
 class QComboBox;
@@ -33,7 +33,7 @@ class TransactionView : public QWidget
 public:
     explicit TransactionView(QWidget *parent = 0);
 
-    void setModel(WalletModel *model);
+    void setModel(Bitcredit_WalletModel *model);
 
     // Date ranges for filter
     enum DateEnum
@@ -56,8 +56,8 @@ public:
     };
 
 private:
-    WalletModel *model;
-    TransactionFilterProxy *transactionProxyModel;
+    Bitcredit_WalletModel *model;
+    Bitcredit_TransactionFilterProxy *transactionProxyModel;
     QTableView *transactionView;
 
     QComboBox *dateWidget;

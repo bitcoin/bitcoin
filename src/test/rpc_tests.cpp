@@ -68,10 +68,12 @@ BOOST_AUTO_TEST_CASE(rpc_rawparams)
     BOOST_CHECK_THROW(CallRPC("decoderawtransaction"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("decoderawtransaction null"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("decoderawtransaction DEADBEEF"), runtime_error);
-    string rawtx = "0100000001a15d57094aa7a21a28cb20b59aab8fc7d1149a3bdbcddba9c622e4f5f6a99ece010000006c493046022100f93bb0e7d8db7bd46e40132d1f8242026e045f03a0efe71bbb8e3f475e970d790221009337cd7f1f929f00cc6ff01f03729b069a7c21b59b1736ddfee5db5946c5da8c0121033b9b137ee87d5a812d6f506efdd37f0affa7ffc310711c06c7f3e097c9447c52ffffffff0100e1f505000000001976a9140389035a9225b3839e2bbf32d826a1e222031fd888ac00000000";
+    string rawtx = "010000000100000001c969cecfc6bea1d7a9f7060b72ce59ac648f79c272b5a8e3e014a8e18a305674000000006a473044022030ac469b3064ccb146e3da9787e48d56a0ccf0aa157f20e1baecedb73338728302206a81dafc03f5acd134d02d63e75db52c0b7c1f56d563f364d6451928aa00c9be012102052e416f53891f7f843dbbda5024a1f4eab78be488bc9449320d3e71c270e4ae026ee27f05000000001976a914b070b6cc7475c5d5a4062ec4bd0a25674d4f6bde88ac20c1dd13000000001976a914bcb91f52e69ccfc49cee91b09d46b392b124d08c88ac00000000";
     BOOST_CHECK_NO_THROW(r = CallRPC(string("decoderawtransaction ")+rawtx));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "version").get_int(), 1);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "type").get_int(), 1);
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "locktime").get_int(), 0);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "signingkeyid").get_str(), "0000000000000000000000000000000000000000");
     BOOST_CHECK_THROW(r = CallRPC(string("decoderawtransaction ")+rawtx+" extra"), runtime_error);
 
     BOOST_CHECK_THROW(CallRPC("signrawtransaction"), runtime_error);

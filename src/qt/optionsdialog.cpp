@@ -3,18 +3,18 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "bitcredit-config.h"
 #endif
 
 #include "optionsdialog.h"
 #include "ui_optionsdialog.h"
 
-#include "bitcoinunits.h"
+#include "bitcreditunits.h"
 #include "guiutil.h"
 #include "monitoreddatamapper.h"
 #include "optionsmodel.h"
 
-#include "main.h" // for CTransaction::nMinTxFee and MAX_SCRIPTCHECK_THREADS
+#include "main.h" // for Bitcredit_CTransaction::nMinTxFee and MAX_SCRIPTCHECK_THREADS
 #include "netbase.h"
 #include "txdb.h" // for -dbcache defaults
 
@@ -35,10 +35,10 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     GUIUtil::restoreWindowGeometry("nOptionsDialogWindow", this->size(), this);
 
     /* Main elements init */
-    ui->databaseCache->setMinimum(nMinDbCache);
-    ui->databaseCache->setMaximum(nMaxDbCache);
+    ui->databaseCache->setMinimum(bitcredit_nMinDbCache);
+    ui->databaseCache->setMaximum(bitcredit_nMaxDbCache);
     ui->threadsScriptVerif->setMinimum(-(int)boost::thread::hardware_concurrency());
-    ui->threadsScriptVerif->setMaximum(MAX_SCRIPTCHECK_THREADS);
+    ui->threadsScriptVerif->setMaximum(BITCREDIT_MAX_SCRIPTCHECK_THREADS);
 
     /* Network elements init */
 #ifndef USE_UPNP
@@ -100,8 +100,8 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     ui->thirdPartyTxUrls->setPlaceholderText("https://example.com/tx/%s");
 #endif
 
-    ui->unit->setModel(new BitcoinUnits(this));
-    ui->transactionFee->setSingleStep(CTransaction::nMinTxFee);
+    ui->unit->setModel(new BitcreditUnits(this));
+    ui->transactionFee->setSingleStep(Bitcredit_CTransaction::nMinTxFee);
 
     /* Widget-to-option mapper */
     mapper = new MonitoredDataMapper(this);
@@ -140,7 +140,7 @@ void OptionsDialog::setModel(OptionsModel *model)
         mapper->toFirst();
     }
 
-    /* update the display unit, to not use the default ("BTC") */
+    /* update the display unit, to not use the default ("CRE") */
     updateDisplayUnit();
 
     /* warn when one of the following settings changes by user action (placed here so init via mapper doesn't trigger them) */

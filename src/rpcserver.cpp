@@ -87,7 +87,7 @@ int64_t AmountFromValue(const Value& value)
     if (dAmount <= 0.0 || dAmount > 21000000.0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     int64_t nAmount = roundint64(dAmount * COIN);
-    if (!MoneyRange(nAmount))
+    if (!Bitcredit_MoneyRange(nAmount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     return nAmount;
 }
@@ -155,7 +155,7 @@ string CRPCTable::help(string strCommand) const
         if (strCommand != "" && strMethod != strCommand)
             continue;
 #ifdef ENABLE_WALLET
-        if (pcmd->reqWallet && !pwalletMain)
+        if (pcmd->reqWallet && !bitcredit_pwalletMain)
             continue;
 #endif
 
@@ -208,10 +208,10 @@ Value stop(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "stop\n"
-            "\nStop Bitcoin server.");
+            "\nStop Bitcredit server.");
     // Shutdown will take long enough that the response should get back
     StartShutdown();
-    return "Bitcoin server stopping";
+    return "Bitcredit server stopping";
 }
 
 
@@ -225,26 +225,38 @@ static const CRPCCommand vRPCCommands[] =
 { //  name                      actor (function)         okSafeMode threadSafe reqWallet
   //  ------------------------  -----------------------  ---------- ---------- ---------
     /* Overall control/query calls */
-    { "getinfo",                &getinfo,                true,      false,      false }, /* uses wallet if enabled */
+    { "getinfo",                &bitcredit_getinfo,                true,      false,      false }, /* uses wallet if enabled */
+    { "bitcoin_getinfo",                &bitcoin_getinfo,                true,      false,      false }, /* uses wallet if enabled */
     { "help",                   &help,                   true,      true,       false },
     { "stop",                   &stop,                   true,      true,       false },
 
     /* P2P networking */
-    { "getnetworkinfo",         &getnetworkinfo,         true,      false,      false },
-    { "addnode",                &addnode,                true,      true,       false },
-    { "getaddednodeinfo",       &getaddednodeinfo,       true,      true,       false },
-    { "getconnectioncount",     &getconnectioncount,     true,      false,      false },
-    { "getnettotals",           &getnettotals,           true,      true,       false },
-    { "getpeerinfo",            &getpeerinfo,            true,      false,      false },
-    { "ping",                   &ping,                   true,      false,      false },
+    { "getnetworkinfo",         &bitcredit_getnetworkinfo,         true,      false,      false },
+    { "bitcoin_getnetworkinfo",         &bitcoin_getnetworkinfo,         true,      false,      false },
+    { "addnode",                &bitcredit_addnode,                true,      true,       false },
+    { "bitcoin_addnode",                &bitcoin_addnode,                true,      true,       false },
+    { "getaddednodeinfo",       &bitcredit_getaddednodeinfo,       true,      true,       false },
+    { "bitcoin_getaddednodeinfo",       &bitcoin_getaddednodeinfo,       true,      true,       false },
+    { "getconnectioncount",     &bitcredit_getconnectioncount,     true,      false,      false },
+    { "bitcoin_getconnectioncount",     &bitcoin_getconnectioncount,     true,      false,      false },
+    { "getnettotals",           &bitcredit_getnettotals,           true,      true,       false },
+    { "bitcoin_getnettotals",           &bitcoin_getnettotals,           true,      true,       false },
+    { "getpeerinfo",            &bitcredit_getpeerinfo,            true,      false,      false },
+    { "bitcoin_getpeerinfo",            &bitcoin_getpeerinfo,            true,      false,      false },
+    { "ping",                   &bitcredit_ping,                   true,      false,      false },
+    { "bitcoin_ping",                   &bitcoin_ping,                   true,      false,      false },
 
     /* Block chain and UTXO */
-    { "getblockchaininfo",      &getblockchaininfo,      true,      false,      false },
-    { "getbestblockhash",       &getbestblockhash,       true,      false,      false },
-    { "getblockcount",          &getblockcount,          true,      false,      false },
+    { "getblockchaininfo",      &bitcredit_getblockchaininfo,      true,      false,      false },
+    { "bitcoin_getblockchaininfo",      &bitcoin_getblockchaininfo,      true,      false,      false },
+    { "getbestblockhash",       &bitcredit_getbestblockhash,       true,      false,      false },
+    { "bitcoin_getbestblockhash",       &bitcoin_getbestblockhash,       true,      false,      false },
+    { "getblockcount",          &bitcredit_getblockcount,          true,      false,      false },
+    { "bitcoin_getblockcount",          &bitcoin_getblockcount,          true,      false,      false },
     { "getblock",               &getblock,               false,     false,      false },
     { "getblockhash",           &getblockhash,           false,     false,      false },
-    { "getdifficulty",          &getdifficulty,          true,      false,      false },
+    { "getdifficulty",          &bitcredit_getdifficulty,          true,      false,      false },
+    { "bitcoin_getdifficulty",          &bitcoin_getdifficulty,          true,      false,      false },
     { "getrawmempool",          &getrawmempool,          true,      false,      false },
     { "gettxout",               &gettxout,               true,      false,      false },
     { "gettxoutsetinfo",        &gettxoutsetinfo,        true,      false,      false },
@@ -273,9 +285,13 @@ static const CRPCCommand vRPCCommands[] =
     /* Wallet */
     { "addmultisigaddress",     &addmultisigaddress,     false,     false,      true },
     { "backupwallet",           &backupwallet,           true,      false,      true },
-    { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
-    { "dumpwallet",             &dumpwallet,             true,      false,      true },
-    { "encryptwallet",          &encryptwallet,          false,     false,      true },
+    { "dumpprivkey",            &bitcredit_dumpprivkey,            true,      false,      true },
+    { "bitcoin_dumpprivkey",            &bitcoin_dumpprivkey,            true,      false,      true },
+    { "dumpwallet",             &bitcredit_dumpwallet,             true,      false,      true },
+    { "bitcoin_dumpwallet",             &bitcoin_dumpwallet,             true,      false,      true },
+    { "encryptwallet",          &bitcredit_encryptwallet,          false,     false,      true },
+    { "deposit_encryptwallet",          &deposit_encryptwallet,          false,     false,      true },
+    { "bitcoin_encryptwallet",          &bitcoin_encryptwallet,          false,     false,      true },
     { "getaccountaddress",      &getaccountaddress,      true,      false,      true },
     { "getaccount",             &getaccount,             false,     false,      true },
     { "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false,      true },
@@ -286,9 +302,12 @@ static const CRPCCommand vRPCCommands[] =
     { "getreceivedbyaddress",   &getreceivedbyaddress,   false,     false,      true },
     { "gettransaction",         &gettransaction,         false,     false,      true },
     { "getunconfirmedbalance",  &getunconfirmedbalance,  false,     false,      true },
-    { "getwalletinfo",          &getwalletinfo,          true,      false,      true },
-    { "importprivkey",          &importprivkey,          false,     false,      true },
-    { "importwallet",           &importwallet,           false,     false,      true },
+    { "getwalletinfo",          &bitcredit_getwalletinfo,          true,      false,      true },
+    { "bitcoin_getwalletinfo",          &bitcoin_getwalletinfo,          true,      false,      true },
+    { "importprivkey",          &bitcredit_importprivkey,          false,     false,      true },
+    { "bitcoin_importprivkey",          &bitcoin_importprivkey,          false,     false,      true },
+    { "importwallet",           &bitcredit_importwallet,           false,     false,      true },
+    { "bitcoin_importwallet",           &bitcoin_importwallet,           false,     false,      true },
     { "keypoolrefill",          &keypoolrefill,          true,      false,      true },
     { "listaccounts",           &listaccounts,           false,     false,      true },
     { "listaddressgroupings",   &listaddressgroupings,   false,     false,      true },
@@ -306,9 +325,15 @@ static const CRPCCommand vRPCCommands[] =
     { "setaccount",             &setaccount,             true,      false,      true },
     { "settxfee",               &settxfee,               false,     false,      true },
     { "signmessage",            &signmessage,            false,     false,      true },
-    { "walletlock",             &walletlock,             true,      false,      true },
-    { "walletpassphrasechange", &walletpassphrasechange, false,     false,      true },
-    { "walletpassphrase",       &walletpassphrase,       true,      false,      true },
+    { "walletlock",             &bitcredit_walletlock,             true,      false,      true },
+    { "deposit_walletlock",             &deposit_walletlock,             true,      false,      true },
+    { "bitcoin_walletlock",             &bitcoin_walletlock,             true,      false,      true },
+    { "walletpassphrasechange", &bitcredit_walletpassphrasechange, false,     false,      true },
+    { "deposit_walletpassphrasechange", &deposit_walletpassphrasechange, false,     false,      true },
+    { "bitcoin_walletpassphrasechange", &bitcoin_walletpassphrasechange, false,     false,      true },
+    { "walletpassphrase",       &bitcredit_walletpassphrase,       true,      false,      true },
+    { "deposit_walletpassphrase",       &deposit_walletpassphrase,       true,      false,      true },
+    { "bitcoin_walletpassphrase",       &bitcoin_walletpassphrase,       true,      false,      true },
 
     /* Wallet-enabled mining */
     { "getgenerate",            &getgenerate,            true,      false,      false },
@@ -545,11 +570,11 @@ void StartRPCThreads()
 
     strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
     if (((mapArgs["-rpcpassword"] == "") ||
-         (mapArgs["-rpcuser"] == mapArgs["-rpcpassword"])) && Params().RequireRPCPassword())
+         (mapArgs["-rpcuser"] == mapArgs["-rpcpassword"])) && Bitcredit_Params().RequireRPCPassword())
     {
         unsigned char rand_pwd[32];
         RAND_bytes(rand_pwd, 32);
-        string strWhatAmI = "To use bitcoind";
+        string strWhatAmI = "To use bitcreditd";
         if (mapArgs.count("-server"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
         else if (mapArgs.count("-daemon"))
@@ -564,7 +589,7 @@ void StartRPCThreads()
               "The username and password MUST NOT be the same.\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"
               "It is also recommended to set alertnotify so you are notified of problems;\n"
-              "for example: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com\n"),
+              "for example: alertnotify=echo %%s | mail -s \"Bitcredit Alert\" admin@foo.com\n"),
                 strWhatAmI,
                 GetConfigFile().string(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32)),
@@ -599,7 +624,7 @@ void StartRPCThreads()
 
     std::vector<ip::tcp::endpoint> vEndpoints;
     bool bBindAny = false;
-    int defaultPort = GetArg("-rpcport", Params().RPCPort());
+    int defaultPort = GetArg("-rpcport", Bitcredit_Params().RPCPort());
     if (!mapArgs.count("-rpcallowip")) // Default to loopback if not allowing external IPs
     {
         vEndpoints.push_back(ip::tcp::endpoint(asio::ip::address_v6::loopback(), defaultPort));
@@ -897,12 +922,12 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
     if (!pcmd)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
 #ifdef ENABLE_WALLET
-    if (pcmd->reqWallet && !pwalletMain)
+    if (pcmd->reqWallet && !bitcredit_pwalletMain)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
 #endif
 
     // Observe safe mode
-    string strWarning = GetWarnings("rpc");
+    string strWarning = Bitcredit_GetWarnings("rpc");
     if (strWarning != "" && !GetBoolArg("-disablesafemode", false) &&
         !pcmd->okSafeMode)
         throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, string("Safe mode: ") + strWarning);
@@ -915,11 +940,11 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
             if (pcmd->threadSafe)
                 result = pcmd->actor(params, false);
 #ifdef ENABLE_WALLET
-            else if (!pwalletMain) {
-                LOCK(cs_main);
+            else if (!bitcredit_pwalletMain) {
+                LOCK(bitcredit_mainState.cs_main);
                 result = pcmd->actor(params, false);
             } else {
-                LOCK2(cs_main, pwalletMain->cs_wallet);
+                LOCK2(bitcredit_mainState.cs_main, bitcredit_pwalletMain->cs_wallet);
                 result = pcmd->actor(params, false);
             }
 #else // ENABLE_WALLET
@@ -938,12 +963,12 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
 }
 
 std::string HelpExampleCli(string methodname, string args){
-    return "> bitcoin-cli " + methodname + " " + args + "\n";
+    return "> bitcredit-cli " + methodname + " " + args + "\n";
 }
 
 std::string HelpExampleRpc(string methodname, string args){
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
-        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:9332/\n";
 }
 
 const CRPCTable tableRPC;

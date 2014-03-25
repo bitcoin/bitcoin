@@ -31,12 +31,12 @@ private:
 
 public:
     template<typename K, typename V> void Write(const K& key, const V& value) {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
         leveldb::Slice slKey(&ssKey[0], ssKey.size());
 
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        CDataStream ssValue(SER_DISK, BITCREDIT_CLIENT_VERSION);
         ssValue.reserve(ssValue.GetSerializeSize(value));
         ssValue << value;
         leveldb::Slice slValue(&ssValue[0], ssValue.size());
@@ -45,7 +45,7 @@ public:
     }
 
     template<typename K> void Erase(const K& key) {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
         leveldb::Slice slKey(&ssKey[0], ssKey.size());
@@ -78,12 +78,16 @@ private:
     // the database itself
     leveldb::DB *pdb;
 
+    boost::filesystem::path path;
+
 public:
-    CLevelDBWrapper(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    CLevelDBWrapper(const boost::filesystem::path &pathIn, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     ~CLevelDBWrapper();
 
+    void DestroyDB();
+
     template<typename K, typename V> bool Read(const K& key, V& value) throw(leveldb_error) {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
         leveldb::Slice slKey(&ssKey[0], ssKey.size());
@@ -97,7 +101,26 @@ public:
             HandleError(status);
         }
         try {
-            CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
+            ssValue >> value;
+        } catch(std::exception &e) {
+            return false;
+        }
+        return true;
+    }
+
+    template<typename K, typename V> bool Fill(const leveldb::Slice slKey, K& key, const leveldb::Slice slValue, V& value) throw(leveldb_error) {
+	    std::string strKey = slKey.ToString();
+        try {
+            CDataStream ssKey(strKey.data(), strKey.data() + strKey.size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
+            ssKey >> key;
+        } catch(std::exception &e) {
+            return false;
+        }
+
+	    std::string strValue = slValue.ToString();
+        try {
+            CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
             ssValue >> value;
         } catch(std::exception &e) {
             return false;
@@ -112,7 +135,7 @@ public:
     }
 
     template<typename K> bool Exists(const K& key) throw(leveldb_error) {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
         leveldb::Slice slKey(&ssKey[0], ssKey.size());

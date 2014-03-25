@@ -12,11 +12,11 @@
 #include <QDateTime>
 
 // Earliest date that can be represented (far in the past)
-const QDateTime TransactionFilterProxy::MIN_DATE = QDateTime::fromTime_t(0);
+const QDateTime Bitcredit_TransactionFilterProxy::MIN_DATE = QDateTime::fromTime_t(0);
 // Last date that can be represented (far in the future)
-const QDateTime TransactionFilterProxy::MAX_DATE = QDateTime::fromTime_t(0xFFFFFFFF);
+const QDateTime Bitcredit_TransactionFilterProxy::MAX_DATE = QDateTime::fromTime_t(0xFFFFFFFF);
 
-TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
+Bitcredit_TransactionFilterProxy::Bitcredit_TransactionFilterProxy(QObject *parent) :
     QSortFilterProxyModel(parent),
     dateFrom(MIN_DATE),
     dateTo(MAX_DATE),
@@ -28,18 +28,18 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
 {
 }
 
-bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
+bool Bitcredit_TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
 {
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
 
-    int type = index.data(TransactionTableModel::TypeRole).toInt();
-    QDateTime datetime = index.data(TransactionTableModel::DateRole).toDateTime();
-    QString address = index.data(TransactionTableModel::AddressRole).toString();
-    QString label = index.data(TransactionTableModel::LabelRole).toString();
-    qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
-    int status = index.data(TransactionTableModel::StatusRole).toInt();
+    int type = index.data(Bitcredit_TransactionTableModel::TypeRole).toInt();
+    QDateTime datetime = index.data(Bitcredit_TransactionTableModel::DateRole).toDateTime();
+    QString address = index.data(Bitcredit_TransactionTableModel::AddressRole).toString();
+    QString label = index.data(Bitcredit_TransactionTableModel::LabelRole).toString();
+    qint64 amount = llabs(index.data(Bitcredit_TransactionTableModel::AmountRole).toLongLong());
+    int status = index.data(Bitcredit_TransactionTableModel::StatusRole).toInt();
 
-    if(!showInactive && status == TransactionStatus::Conflicted)
+    if(!showInactive && status == Bitcredit_TransactionStatus::Conflicted)
         return false;
     if(!(TYPE(type) & typeFilter))
         return false;
@@ -53,43 +53,43 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     return true;
 }
 
-void TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime &to)
+void Bitcredit_TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime &to)
 {
     this->dateFrom = from;
     this->dateTo = to;
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setAddressPrefix(const QString &addrPrefix)
+void Bitcredit_TransactionFilterProxy::setAddressPrefix(const QString &addrPrefix)
 {
     this->addrPrefix = addrPrefix;
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setTypeFilter(quint32 modes)
+void Bitcredit_TransactionFilterProxy::setTypeFilter(quint32 modes)
 {
     this->typeFilter = modes;
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setMinAmount(qint64 minimum)
+void Bitcredit_TransactionFilterProxy::setMinAmount(qint64 minimum)
 {
     this->minAmount = minimum;
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setLimit(int limit)
+void Bitcredit_TransactionFilterProxy::setLimit(int limit)
 {
     this->limitRows = limit;
 }
 
-void TransactionFilterProxy::setShowInactive(bool showInactive)
+void Bitcredit_TransactionFilterProxy::setShowInactive(bool showInactive)
 {
     this->showInactive = showInactive;
     invalidateFilter();
 }
 
-int TransactionFilterProxy::rowCount(const QModelIndex &parent) const
+int Bitcredit_TransactionFilterProxy::rowCount(const QModelIndex &parent) const
 {
     if(limitRows != -1)
     {

@@ -26,7 +26,7 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
-Value getinfo(const Array& params, bool fHelp)
+Value bitcredit_getinfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -37,7 +37,7 @@ Value getinfo(const Array& params, bool fHelp)
             "  \"version\": xxxxx,           (numeric) the server version\n"
             "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
-            "  \"balance\": xxxxxxx,         (numeric) the total bitcoin balance of the wallet\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total bitcredit balance of the wallet\n"
             "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
             "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
             "  \"connections\": xxxxx,       (numeric) the number of connections\n"
@@ -60,31 +60,101 @@ Value getinfo(const Array& params, bool fHelp)
     GetProxy(NET_IPV4, proxy);
 
     Object obj;
-    obj.push_back(Pair("version",       (int)CLIENT_VERSION));
-    obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
+    obj.push_back(Pair("version",       (int)BITCREDIT_CLIENT_VERSION));
+    obj.push_back(Pair("protocolversion",(int)BITCREDIT_PROTOCOL_VERSION));
 #ifdef ENABLE_WALLET
-    if (pwalletMain) {
-        obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
-        obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
+    if (bitcredit_pwalletMain) {
+        //Find all prepared deposit transactions
+        map<uint256, set<int> > mapPreparedDepositTxInPoints;
+        deposit_pwalletMain->PreparedDepositTxInPoints(mapPreparedDepositTxInPoints);
+
+        obj.push_back(Pair("walletversion", bitcredit_pwalletMain->GetVersion()));
+        obj.push_back(Pair("balance",       ValueFromAmount(bitcredit_pwalletMain->GetBalance(mapPreparedDepositTxInPoints))));
     }
 #endif
-    obj.push_back(Pair("blocks",        (int)chainActive.Height()));
+    obj.push_back(Pair("blocks",        (int)bitcredit_chainActive.Height()));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
-    obj.push_back(Pair("connections",   (int)vNodes.size()));
+    obj.push_back(Pair("connections",   (int)Bitcredit_NetParams()->vNodes.size()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
-    obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("testnet",       TestNet()));
+    obj.push_back(Pair("difficulty",    (double)Bitcredit_GetDifficulty()));
+    obj.push_back(Pair("testnet",       Bitcredit_TestNet()));
 #ifdef ENABLE_WALLET
-    if (pwalletMain) {
-        obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
-        obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
+    if (bitcredit_pwalletMain) {
+        obj.push_back(Pair("keypoololdest", bitcredit_pwalletMain->GetOldestKeyPoolTime()));
+        obj.push_back(Pair("keypoolsize",   (int)bitcredit_pwalletMain->GetKeyPoolSize()));
     }
-    if (pwalletMain && pwalletMain->IsCrypted())
-        obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
-    obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
+    if (bitcredit_pwalletMain && bitcredit_pwalletMain->IsCrypted())
+        obj.push_back(Pair("unlocked_until", bitcredit_nWalletUnlockTime));
+    obj.push_back(Pair("paytxfee",      ValueFromAmount(bitcredit_nTransactionFee)));
 #endif
-    obj.push_back(Pair("relayfee",      ValueFromAmount(CTransaction::nMinRelayTxFee)));
-    obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    obj.push_back(Pair("relayfee",      ValueFromAmount(Bitcredit_CTransaction::nMinRelayTxFee)));
+    obj.push_back(Pair("errors",        Bitcredit_GetWarnings("statusbar")));
+    return obj;
+}
+
+Value bitcoin_getinfo(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "bitcoin_getinfo\n"
+            "Returns an object containing various state info.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"version\": xxxxx,           (numeric) the server version\n"
+            "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
+            "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total bitcoin balance of the wallet\n"
+            "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
+            "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
+            "  \"connections\": xxxxx,       (numeric) the number of connections\n"
+            "  \"proxy\": \"host:port\",     (string, optional) the proxy used by the server\n"
+            "  \"difficulty\": xxxxxx,       (numeric) the current difficulty\n"
+            "  \"testnet\": true|false,      (boolean) if the server is using testnet or not\n"
+            "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since GMT epoch) of the oldest pre-generated key in the key pool\n"
+            "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
+            "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
+            "  \"paytxfee\": x.xxxx,         (numeric) the transaction fee set in btc/kb\n"
+            "  \"relayfee\": x.xxxx,         (numeric) minimum relay fee for non-free transactions in btc/kb\n"
+            "  \"errors\": \"...\"           (string) any error messages\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bitcoin_getinfo", "")
+            + HelpExampleRpc("bitcoin_getinfo", "")
+        );
+
+    proxyType proxy;
+    GetProxy(NET_IPV4, proxy);
+
+    Object obj;
+    obj.push_back(Pair("version",       (int)Bitcoin_Params().ClientVersion()));
+    obj.push_back(Pair("protocolversion",(int)BITCOIN_PROTOCOL_VERSION));
+#ifdef ENABLE_WALLET
+    if (bitcoin_pwalletMain) {
+        //Find all claimed  transactions
+        map<uint256, set<int> > mapClaimTxInPoints;
+        bitcredit_pwalletMain->ClaimTxInPoints(mapClaimTxInPoints);
+
+        obj.push_back(Pair("walletversion", bitcoin_pwalletMain->GetVersion()));
+        obj.push_back(Pair("balance",       ValueFromAmount(bitcoin_pwalletMain->GetBalance(*bitcoin_pclaimCoinsTip, mapClaimTxInPoints))));
+    }
+#endif
+    obj.push_back(Pair("blocks",        (int)bitcoin_chainActive.Height()));
+    obj.push_back(Pair("timeoffset",    GetTimeOffset()));
+    obj.push_back(Pair("connections",   (int)Bitcoin_NetParams()->vNodes.size()));
+    obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
+    obj.push_back(Pair("difficulty",    (double)Bitcoin_GetDifficulty()));
+    obj.push_back(Pair("testnet",       Bitcoin_TestNet()));
+#ifdef ENABLE_WALLET
+    if (bitcoin_pwalletMain) {
+        obj.push_back(Pair("keypoololdest", bitcoin_pwalletMain->GetOldestKeyPoolTime()));
+        obj.push_back(Pair("keypoolsize",   (int)bitcoin_pwalletMain->GetKeyPoolSize()));
+    }
+    if (bitcoin_pwalletMain && bitcoin_pwalletMain->IsCrypted())
+        obj.push_back(Pair("unlocked_until", bitcoin_nWalletUnlockTime));
+    obj.push_back(Pair("paytxfee",      ValueFromAmount(bitcoin_nTransactionFee)));
+#endif
+    obj.push_back(Pair("relayfee",      ValueFromAmount(Bitcoin_CTransaction::nMinRelayTxFee)));
+    obj.push_back(Pair("errors",        Bitcoin_GetWarnings("statusbar")));
     return obj;
 }
 
@@ -97,7 +167,7 @@ public:
     Object operator()(const CKeyID &keyID) const {
         Object obj;
         CPubKey vchPubKey;
-        pwalletMain->GetPubKey(keyID, vchPubKey);
+        bitcredit_pwalletMain->GetPubKey(keyID, vchPubKey);
         obj.push_back(Pair("isscript", false));
         obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
         obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
@@ -108,7 +178,7 @@ public:
         Object obj;
         obj.push_back(Pair("isscript", true));
         CScript subscript;
-        pwalletMain->GetCScript(scriptID, subscript);
+        bitcredit_pwalletMain->GetCScript(scriptID, subscript);
         std::vector<CTxDestination> addresses;
         txnouttype whichType;
         int nRequired;
@@ -160,14 +230,14 @@ Value validateaddress(const Array& params, bool fHelp)
         string currentAddress = address.ToString();
         ret.push_back(Pair("address", currentAddress));
 #ifdef ENABLE_WALLET
-        bool fMine = pwalletMain ? IsMine(*pwalletMain, dest) : false;
+        bool fMine = bitcredit_pwalletMain ? IsMine(*bitcredit_pwalletMain, dest) : false;
         ret.push_back(Pair("ismine", fMine));
         if (fMine) {
             Object detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
             ret.insert(ret.end(), detail.begin(), detail.end());
         }
-        if (pwalletMain && pwalletMain->mapAddressBook.count(dest))
-            ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest].name));
+        if (bitcredit_pwalletMain && bitcredit_pwalletMain->mapAddressBook.count(dest))
+            ret.push_back(Pair("account", bitcredit_pwalletMain->mapAddressBook[dest].name));
 #endif
     }
     return ret;
@@ -196,14 +266,14 @@ CScript _createmultisig_redeemScript(const Array& params)
 #ifdef ENABLE_WALLET
         // Case 1: Bitcoin address and we have full public key:
         CBitcoinAddress address(ks);
-        if (pwalletMain && address.IsValid())
+        if (bitcredit_pwalletMain && address.IsValid())
         {
             CKeyID keyID;
             if (!address.GetKeyID(keyID))
                 throw runtime_error(
                     strprintf("%s does not refer to a key",ks));
             CPubKey vchPubKey;
-            if (!pwalletMain->GetPubKey(keyID, vchPubKey))
+            if (!bitcredit_pwalletMain->GetPubKey(keyID, vchPubKey))
                 throw runtime_error(
                     strprintf("no full public key for address %s",ks));
             if (!vchPubKey.IsFullyValid())
@@ -321,7 +391,7 @@ Value verifymessage(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
 
     CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
+    ss << bitcredit_strMessageMagic;
     ss << strMessage;
 
     CPubKey pubkey;

@@ -304,14 +304,14 @@ bool static Socks5(string strDest, int port, SOCKET& hSocket)
     return true;
 }
 
-bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int nTimeout)
+bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int nTimeout, std::string logPrefix, const char * debugCategory)
 {
     hSocketRet = INVALID_SOCKET;
 
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     if (!addrConnect.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
-        LogPrintf("Cannot connect to %s: unsupported network\n", addrConnect.ToString());
+        LogPrintf("%s Cannot connect to %s: unsupported network\n", logPrefix, addrConnect.ToString());
         return false;
     }
 
@@ -350,13 +350,13 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
             int nRet = select(hSocket + 1, NULL, &fdset, NULL, &timeout);
             if (nRet == 0)
             {
-                LogPrint("net", "connection to %s timeout\n", addrConnect.ToString());
+                LogPrint(debugCategory, "%s connection to %s timeout\n", logPrefix, addrConnect.ToString());
                 closesocket(hSocket);
                 return false;
             }
             if (nRet == SOCKET_ERROR)
             {
-                LogPrintf("select() for %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
+                LogPrintf("%s select() for %s failed: %s\n", logPrefix, addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
                 closesocket(hSocket);
                 return false;
             }
@@ -367,13 +367,13 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
             if (getsockopt(hSocket, SOL_SOCKET, SO_ERROR, &nRet, &nRetSize) == SOCKET_ERROR)
 #endif
             {
-                LogPrintf("getsockopt() for %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
+                LogPrintf("%s getsockopt() for %s failed: %s\n", logPrefix, addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
                 closesocket(hSocket);
                 return false;
             }
             if (nRet != 0)
             {
-                LogPrintf("connect() to %s failed after select(): %s\n", addrConnect.ToString(), NetworkErrorString(nRet));
+                LogPrintf("%s connect() to %s failed after select(): %s\n", logPrefix, addrConnect.ToString(), NetworkErrorString(nRet));
                 closesocket(hSocket);
                 return false;
             }
@@ -384,7 +384,7 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
         else
 #endif
         {
-            LogPrintf("connect() to %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
+            LogPrintf("%s connect() to %s failed: %s\n", logPrefix, addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
             closesocket(hSocket);
             return false;
         }
@@ -461,18 +461,18 @@ bool IsProxy(const CNetAddr &addr) {
     return false;
 }
 
-bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
+bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, std::string logPrefix, const char * debugCategory, int nTimeout)
 {
     proxyType proxy;
 
     // no proxy needed
     if (!GetProxy(addrDest.GetNetwork(), proxy))
-        return ConnectSocketDirectly(addrDest, hSocketRet, nTimeout);
+        return ConnectSocketDirectly(addrDest, hSocketRet, nTimeout, logPrefix, debugCategory);
 
     SOCKET hSocket = INVALID_SOCKET;
 
     // first connect to proxy server
-    if (!ConnectSocketDirectly(proxy.first, hSocket, nTimeout))
+    if (!ConnectSocketDirectly(proxy.first, hSocket, nTimeout, logPrefix, debugCategory))
         return false;
 
     // do socks negotiation
@@ -494,7 +494,7 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
     return true;
 }
 
-bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout)
+bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, std::string logPrefix, const char * debugCategory, int portDefault, int nTimeout)
 {
     string strDest;
     int port = portDefault;
@@ -508,12 +508,12 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
     CService addrResolved(CNetAddr(strDest, fNameLookup && !nameproxy.second), port);
     if (addrResolved.IsValid()) {
         addr = addrResolved;
-        return ConnectSocket(addr, hSocketRet, nTimeout);
+        return ConnectSocket(addr, hSocketRet, logPrefix, debugCategory, nTimeout);
     }
     addr = CService("0.0.0.0:0");
     if (!nameproxy.second)
         return false;
-    if (!ConnectSocketDirectly(nameproxy.first, hSocket, nTimeout))
+    if (!ConnectSocketDirectly(nameproxy.first, hSocket, nTimeout, logPrefix, debugCategory))
         return false;
 
     switch(nameproxy.second) {

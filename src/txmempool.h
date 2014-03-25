@@ -11,16 +11,18 @@
 #include "core.h"
 #include "sync.h"
 
+#include "bitcoin_claimcoins.h"
+
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
-static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
+static const unsigned int BITCREDIT_MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
 /*
  * CTxMemPool stores these:
  */
-class CTxMemPoolEntry
+class Bitcredit_CTxMemPoolEntry
 {
 private:
-    CTransaction tx;
+    Bitcredit_CTransaction tx;
     int64_t nFee; // Cached to avoid expensive parent-transaction lookups
     size_t nTxSize; // ... and avoid recomputing tx size
     int64_t nTime; // Local time when entering the mempool
@@ -28,12 +30,12 @@ private:
     unsigned int nHeight; // Chain height when entering the mempool
 
 public:
-    CTxMemPoolEntry(const CTransaction& _tx, int64_t _nFee,
+    Bitcredit_CTxMemPoolEntry(const Bitcredit_CTransaction& _tx, int64_t _nFee,
                     int64_t _nTime, double _dPriority, unsigned int _nHeight);
-    CTxMemPoolEntry();
-    CTxMemPoolEntry(const CTxMemPoolEntry& other);
+    Bitcredit_CTxMemPoolEntry();
+    Bitcredit_CTxMemPoolEntry(const Bitcredit_CTxMemPoolEntry& other);
 
-    const CTransaction& GetTx() const { return this->tx; }
+    const Bitcredit_CTransaction& GetTx() const { return this->tx; }
     double GetPriority(unsigned int currentHeight) const;
     int64_t GetFee() const { return nFee; }
     size_t GetTxSize() const { return nTxSize; }
@@ -51,7 +53,7 @@ public:
  * an input of a transaction in the pool, it is dropped,
  * as are non-standard transactions.
  */
-class CTxMemPool
+class Bitcredit_CTxMemPool
 {
 private:
     bool fSanityCheck; // Normally false, true if -checkmempool or -regtest
@@ -59,10 +61,10 @@ private:
 
 public:
     mutable CCriticalSection cs;
-    std::map<uint256, CTxMemPoolEntry> mapTx;
-    std::map<COutPoint, CInPoint> mapNextTx;
+    std::map<uint256, Bitcredit_CTxMemPoolEntry> mapTx;
+    std::map<COutPoint, Bitcredit_CInPoint> mapNextTx;
 
-    CTxMemPool();
+    Bitcredit_CTxMemPool();
 
     /*
      * If sanity-checking is turned on, check makes sure the pool is
@@ -70,15 +72,15 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(CCoinsViewCache *pcoins) const;
+    void check(Bitcredit_CCoinsViewCache *pcoins, Bitcoin_CClaimCoinsViewCache *pclaimcoins) const;
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
-    bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
-    void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
-    void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
+    bool addUnchecked(const uint256& hash, const Bitcredit_CTxMemPoolEntry &entry);
+    void remove(const Bitcredit_CTransaction &tx, std::list<Bitcredit_CTransaction>& removed, bool fRecursive = false);
+    void removeConflicts(const Bitcredit_CTransaction &tx, std::list<Bitcredit_CTransaction>& removed);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
-    void pruneSpent(const uint256& hash, CCoins &coins);
+    void pruneSpent(const uint256& hash, Bitcredit_CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
 
@@ -94,19 +96,19 @@ public:
         return (mapTx.count(hash) != 0);
     }
 
-    bool lookup(uint256 hash, CTransaction& result) const;
+    bool lookup(uint256 hash, Bitcredit_CTransaction& result) const;
 };
 
 /** CCoinsView that brings transactions from a memorypool into view.
     It does not check for spendings by memory pool transactions. */
-class CCoinsViewMemPool : public CCoinsViewBacked
+class Bitcredit_CCoinsViewMemPool : public Bitcredit_CCoinsViewBacked
 {
 protected:
-    CTxMemPool &mempool;
+    Bitcredit_CTxMemPool &mempool;
 
 public:
-    CCoinsViewMemPool(CCoinsView &baseIn, CTxMemPool &mempoolIn);
-    bool GetCoins(const uint256 &txid, CCoins &coins);
+    Bitcredit_CCoinsViewMemPool(Bitcredit_CCoinsView &baseIn, Bitcredit_CTxMemPool &mempoolIn);
+    bool GetCoins(const uint256 &txid, Bitcredit_CCoins &coins);
     bool HaveCoins(const uint256 &txid);
 };
 

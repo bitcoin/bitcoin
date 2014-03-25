@@ -11,22 +11,22 @@
 #include <QStringList>
 #include <QDateTime>
 
-class CWallet;
+class Bitcredit_CWallet;
 
-class RecentRequestEntry
+class Bitcredit_RecentRequestEntry
 {
 public:
-    RecentRequestEntry() : nVersion(RecentRequestEntry::CURRENT_VERSION), id(0) { }
+    Bitcredit_RecentRequestEntry() : nVersion(Bitcredit_RecentRequestEntry::CURRENT_VERSION), id(0) { }
 
     static const int CURRENT_VERSION = 1;
     int nVersion;
     int64_t id;
     QDateTime date;
-    SendCoinsRecipient recipient;
+    Bitcredit_SendCoinsRecipient recipient;
 
     IMPLEMENT_SERIALIZE
     (
-        RecentRequestEntry* pthis = const_cast<RecentRequestEntry*>(this);
+        Bitcredit_RecentRequestEntry* pthis = const_cast<Bitcredit_RecentRequestEntry*>(this);
 
         unsigned int nDate = date.toTime_t();
 
@@ -41,28 +41,28 @@ public:
     )
 };
 
-class RecentRequestEntryLessThan
+class Bitcredit_RecentRequestEntryLessThan
 {
 public:
-    RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder):
+    Bitcredit_RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder):
         column(nColumn), order(fOrder) {}
-    bool operator()(RecentRequestEntry &left, RecentRequestEntry &right) const;
+    bool operator()(Bitcredit_RecentRequestEntry &left, Bitcredit_RecentRequestEntry &right) const;
 
 private:
     int column;
     Qt::SortOrder order;
 };
 
-/** Model for list of recently generated payment requests / bitcoin: URIs.
+/** Model for list of recently generated payment requests / bitcredit: URIs.
  * Part of wallet model.
  */
-class RecentRequestsTableModel: public QAbstractTableModel
+class Bitcredit_RecentRequestsTableModel: public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    explicit RecentRequestsTableModel(CWallet *wallet, WalletModel *parent);
-    ~RecentRequestsTableModel();
+    explicit Bitcredit_RecentRequestsTableModel(Bitcredit_CWallet *wallet, Bitcredit_WalletModel *parent);
+    ~Bitcredit_RecentRequestsTableModel();
 
     enum ColumnIndex {
         Date = 0,
@@ -84,18 +84,18 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const;
     /*@}*/
 
-    const RecentRequestEntry &entry(int row) const { return list[row]; }
-    void addNewRequest(const SendCoinsRecipient &recipient);
+    const Bitcredit_RecentRequestEntry &entry(int row) const { return list[row]; }
+    void addNewRequest(const Bitcredit_SendCoinsRecipient &recipient);
     void addNewRequest(const std::string &recipient);
-    void addNewRequest(RecentRequestEntry &recipient);
+    void addNewRequest(Bitcredit_RecentRequestEntry &recipient);
 
 public slots:
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
 
 private:
-    WalletModel *walletModel;
+    Bitcredit_WalletModel *walletModel;
     QStringList columns;
-    QList<RecentRequestEntry> list;
+    QList<Bitcredit_RecentRequestEntry> list;
     int64_t nReceiveRequestsMaxId;
 };
 

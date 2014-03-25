@@ -4,7 +4,7 @@
 
 #include "paymentserver.h"
 
-#include "bitcoinunits.h"
+#include "bitcreditunits.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
@@ -47,10 +47,10 @@
 using namespace boost;
 
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
-const QString BITCOIN_IPC_PREFIX("bitcoin:");
-const char* BITCOIN_REQUEST_MIMETYPE = "application/bitcoin-paymentrequest";
-const char* BITCOIN_PAYMENTACK_MIMETYPE = "application/bitcoin-paymentack";
-const char* BITCOIN_PAYMENTACK_CONTENTTYPE = "application/bitcoin-payment";
+const QString BITCOIN_IPC_PREFIX("bitcredit:");
+const char* BITCOIN_REQUEST_MIMETYPE = "application/bitcredit-paymentrequest";
+const char* BITCOIN_PAYMENTACK_MIMETYPE = "application/bitcredit-paymentack";
+const char* BITCOIN_PAYMENTACK_CONTENTTYPE = "application/bitcredit-payment";
 
 X509_STORE* PaymentServer::certStore = NULL;
 void PaymentServer::freeCertStore()
@@ -69,7 +69,7 @@ void PaymentServer::freeCertStore()
 //
 static QString ipcServerName()
 {
-    QString name("BitcoinQt");
+    QString name("BitcreditQt");
 
     // Append a simple hash of the datadir
     // Note that GetDataDir(true) returns a different path
@@ -189,12 +189,12 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
         if (arg.startsWith("-"))
             continue;
 
-        if (arg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcoin: URI
+        if (arg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcredit: URI
         {
             savedPaymentRequests.append(arg);
 
-            SendCoinsRecipient r;
-            if (GUIUtil::parseBitcoinURI(arg, &r))
+            Bitcredit_SendCoinsRecipient r;
+            if (GUIUtil::parseBitcreditURI(arg, &r))
             {
                 CBitcoinAddress address(r.address.toStdString());
 
@@ -276,7 +276,7 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     // Install global event filter to catch QFileOpenEvents
-    // on Mac: sent when you click bitcoin: links
+    // on Mac: sent when you click bitcredit: links
     // other OSes: helpful when dealing with payment request files (in the future)
     if (parent)
         parent->installEventFilter(this);
@@ -293,7 +293,7 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
         if (!uriServer->listen(name)) {
             // constructor is called early in init, so don't use "emit message()" here
             QMessageBox::critical(0, tr("Payment request error"),
-                tr("Cannot start bitcoin: click-to-pay handler"));
+                tr("Cannot start bitcredit: click-to-pay handler"));
         }
         else {
             connect(uriServer, SIGNAL(newConnection()), this, SLOT(handleURIConnection()));
@@ -308,12 +308,12 @@ PaymentServer::~PaymentServer()
 }
 
 //
-// OSX-specific way of handling bitcoin: URIs and
+// OSX-specific way of handling bitcredit: URIs and
 // PaymentRequest mime types
 //
 bool PaymentServer::eventFilter(QObject *object, QEvent *event)
 {
-    // clicking on bitcoin: URIs creates FileOpen events on the Mac
+    // clicking on bitcredit: URIs creates FileOpen events on the Mac
     if (event->type() == QEvent::FileOpen)
     {
         QFileOpenEvent *fileEvent = static_cast<QFileOpenEvent*>(event);
@@ -335,7 +335,7 @@ void PaymentServer::initNetManager()
     if (netManager != NULL)
         delete netManager;
 
-    // netManager is used to fetch paymentrequests given in bitcoin: URIs
+    // netManager is used to fetch paymentrequests given in bitcredit: URIs
     netManager = new QNetworkAccessManager(this);
 
     QNetworkProxy proxy;
@@ -381,7 +381,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
         return;
     }
 
-    if (s.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcoin: URI
+    if (s.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcredit: URI
     {
 #if QT_VERSION < 0x050000
         QUrl uri(s);
@@ -412,8 +412,8 @@ void PaymentServer::handleURIOrFile(const QString& s)
         }
         else // normal URI
         {
-            SendCoinsRecipient recipient;
-            if (GUIUtil::parseBitcoinURI(s, &recipient))
+            Bitcredit_SendCoinsRecipient recipient;
+            if (GUIUtil::parseBitcreditURI(s, &recipient))
             {
                 CBitcoinAddress address(recipient.address.toStdString());
                 if (!address.IsValid()) {
@@ -425,7 +425,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
             }
             else
                 emit message(tr("URI handling"),
-                    tr("URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters."),
+                    tr("URI can not be parsed! This can be caused by an invalid Bitcredit address or malformed URI parameters."),
                     CClientUIInterface::ICON_WARNING);
 
             return;
@@ -435,7 +435,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
     if (QFile::exists(s)) // payment request file
     {
         PaymentRequestPlus request;
-        SendCoinsRecipient recipient;
+        Bitcredit_SendCoinsRecipient recipient;
         if (!readPaymentRequest(s, request))
         {
             emit message(tr("Payment request file handling"),
@@ -490,7 +490,7 @@ bool PaymentServer::readPaymentRequest(const QString& filename, PaymentRequestPl
     return request.parse(data);
 }
 
-bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoinsRecipient& recipient)
+bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, Bitcredit_SendCoinsRecipient& recipient)
 {
     if (!optionsModel)
         return false;
@@ -499,8 +499,8 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
         const payments::PaymentDetails& details = request.getDetails();
 
         // Payment request network matches client network?
-        if ((details.network() == "main" && TestNet()) ||
-            (details.network() == "test" && !TestNet()))
+        if ((details.network() == "main" && Bitcredit_TestNet()) ||
+            (details.network() == "test" && !Bitcredit_TestNet()))
         {
             emit message(tr("Payment request rejected"), tr("Payment request network doesn't match client network."),
                 CClientUIInterface::MSG_ERROR);
@@ -551,9 +551,9 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
 
         // Extract and check amounts
         CTxOut txOut(sendingTo.second, sendingTo.first);
-        if (txOut.IsDust(CTransaction::nMinRelayTxFee)) {
+        if (txOut.IsDust(Bitcredit_CTransaction::nMinRelayTxFee)) {
             emit message(tr("Payment request error"), tr("Requested payment amount of %1 is too small (considered dust).")
-                .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second)),
+                .arg(BitcreditUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second)),
                 CClientUIInterface::MSG_ERROR);
 
             return false;
@@ -579,12 +579,12 @@ void PaymentServer::fetchRequest(const QUrl& url)
     QNetworkRequest netRequest;
     netRequest.setAttribute(QNetworkRequest::User, "PaymentRequest");
     netRequest.setUrl(url);
-    netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
+    netRequest.setRawHeader("User-Agent", BITCREDIT_CLIENT_NAME.c_str());
     netRequest.setRawHeader("Accept", BITCOIN_REQUEST_MIMETYPE);
     netManager->get(netRequest);
 }
 
-void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction)
+void PaymentServer::fetchPaymentACK(Bitcredit_CWallet* wallet, Bitcredit_SendCoinsRecipient recipient, QByteArray transaction)
 {
     const payments::PaymentDetails& details = recipient.paymentRequest.getDetails();
     if (!details.has_payment_url())
@@ -594,7 +594,7 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
     netRequest.setAttribute(QNetworkRequest::User, "PaymentACK");
     netRequest.setUrl(QString::fromStdString(details.payment_url()));
     netRequest.setHeader(QNetworkRequest::ContentTypeHeader, BITCOIN_PAYMENTACK_CONTENTTYPE);
-    netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
+    netRequest.setRawHeader("User-Agent", BITCREDIT_CLIENT_NAME.c_str());
     netRequest.setRawHeader("Accept", BITCOIN_PAYMENTACK_MIMETYPE);
 
     payments::Payment payment;
@@ -660,7 +660,7 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
     if (requestType == "PaymentRequest")
     {
         PaymentRequestPlus request;
-        SendCoinsRecipient recipient;
+        Bitcredit_SendCoinsRecipient recipient;
         if (!request.parse(data))
         {
             qDebug() << "PaymentServer::netRequestFinished : Error parsing payment request";

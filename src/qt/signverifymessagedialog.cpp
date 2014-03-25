@@ -27,7 +27,7 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget *parent) :
 
 #if QT_VERSION >= 0x040700
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
-    ui->addressIn_VM->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
+    ui->addressIn_VM->setPlaceholderText(tr("Enter a Bitcredit address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
 #endif
 
     GUIUtil::setupAddressWidget(ui->addressIn_SM, this);
@@ -49,7 +49,7 @@ SignVerifyMessageDialog::~SignVerifyMessageDialog()
     delete ui;
 }
 
-void SignVerifyMessageDialog::setModel(WalletModel *model)
+void SignVerifyMessageDialog::setModel(Bitcredit_WalletModel *model)
 {
     this->model = model;
 }
@@ -122,7 +122,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
         return;
     }
 
-    WalletModel::UnlockContext ctx(model->requestUnlock());
+    Bitcredit_WalletModel::UnlockContext ctx(model->requestUnlock());
     if (!ctx.isValid())
     {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
@@ -131,7 +131,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     }
 
     CKey key;
-    if (!pwalletMain->GetKey(keyID, key))
+    if (!bitcredit_pwalletMain->GetKey(keyID, key))
     {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel_SM->setText(tr("Private key for the entered address is not available."));
@@ -139,7 +139,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     }
 
     CDataStream ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
+    ss << bitcredit_strMessageMagic;
     ss << ui->messageIn_SM->document()->toPlainText().toStdString();
 
     std::vector<unsigned char> vchSig;
@@ -214,7 +214,7 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
     }
 
     CDataStream ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
+    ss << bitcredit_strMessageMagic;
     ss << ui->messageIn_VM->document()->toPlainText().toStdString();
 
     CPubKey pubkey;

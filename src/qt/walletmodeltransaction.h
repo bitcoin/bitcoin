@@ -9,35 +9,44 @@
 
 #include <QObject>
 
-class SendCoinsRecipient;
+class Bitcredit_SendCoinsRecipient;
 
-class CReserveKey;
-class CWallet;
-class CWalletTx;
+class Bitcredit_CReserveKey;
+class Bitcredit_CWallet;
+class Bitcredit_CWalletTx;
 
 /** Data model for a walletmodel transaction. */
-class WalletModelTransaction
+class Bitcredit_WalletModelTransaction
 {
 public:
-    explicit WalletModelTransaction(const QList<SendCoinsRecipient> &recipients);
-    ~WalletModelTransaction();
+    explicit Bitcredit_WalletModelTransaction(const QList<Bitcredit_SendCoinsRecipient> &recipients);
+    ~Bitcredit_WalletModelTransaction();
 
-    QList<SendCoinsRecipient> getRecipients();
+    QList<Bitcredit_SendCoinsRecipient> getRecipients();
 
-    CWalletTx *getTransaction();
+    Bitcredit_CWalletTx *getTransaction();
 
     void setTransactionFee(qint64 newFee);
     qint64 getTransactionFee();
 
     qint64 getTotalTransactionAmount();
 
-    void newPossibleKeyChange(CWallet *wallet);
-    CReserveKey *getPossibleKeyChange();
+    void newPossibleKeyChange(Bitcredit_CWallet *wallet);
+    Bitcredit_CReserveKey *getPossibleKeyChange();
+
+    //Deposit wallet must be used here. Signing can not occur with locked bitcredit_wallet otherwise.
+    void newKeyDepositSignature(Bitcredit_CWallet *deposit_wallet);
+    Bitcredit_CReserveKey *getKeyDepositSignature();
+
+    void newKeyRecipient(Bitcredit_CWallet *wallet);
+    std::vector<Bitcredit_CReserveKey *> & getKeyRecipients();
 
 private:
-    const QList<SendCoinsRecipient> recipients;
-    CWalletTx *walletTransaction;
-    CReserveKey *keyChange;
+    const QList<Bitcredit_SendCoinsRecipient> recipients;
+    Bitcredit_CWalletTx *walletTransaction;
+    Bitcredit_CReserveKey *keyChange;
+    Bitcredit_CReserveKey *keyDepositSignature;
+    std::vector<Bitcredit_CReserveKey *> keyRecipients;
     qint64 fee;
 };
 

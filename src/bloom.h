@@ -10,7 +10,8 @@
 #include <vector>
 
 class COutPoint;
-class CTransaction;
+class Bitcredit_CTransaction;
+class Bitcoin_CTransaction;
 class uint256;
 
 // 20,000 items with fp rate < 0.1% or 10,000 items and <0.0001%
@@ -71,11 +72,11 @@ public:
     )
 
     void insert(const std::vector<unsigned char>& vKey);
-    void insert(const COutPoint& outpoint);
+    void insert(const COutPoint& outpoint, const int protocolVersion);
     void insert(const uint256& hash);
 
     bool contains(const std::vector<unsigned char>& vKey) const;
-    bool contains(const COutPoint& outpoint) const;
+    bool contains(const COutPoint& outpoint, const int protocolVersion) const;
     bool contains(const uint256& hash) const;
 
     // True if the size is <= MAX_BLOOM_FILTER_SIZE and the number of hash functions is <= MAX_HASH_FUNCS
@@ -83,7 +84,8 @@ public:
     bool IsWithinSizeConstraints() const;
 
     // Also adds any outputs which match the filter to the filter (to match their spending txes)
-    bool IsRelevantAndUpdate(const CTransaction& tx, const uint256& hash);
+    bool bitcredit_IsRelevantAndUpdate(const Bitcredit_CTransaction& tx, const uint256& hash);
+    bool bitcoin_IsRelevantAndUpdate(const Bitcoin_CTransaction& tx, const uint256& hash);
 
     // Checks for empty and full filters to avoid wasting cpu
     void UpdateEmptyFull();

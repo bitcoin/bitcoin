@@ -11,9 +11,9 @@
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 
-EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
+Bitcredit_EditAddressDialog::Bitcredit_EditAddressDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::EditAddressDialog),
+    ui(new Ui::Bitcredit_EditAddressDialog),
     mapper(0),
     mode(mode),
     model(0)
@@ -44,28 +44,28 @@ EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
 
-EditAddressDialog::~EditAddressDialog()
+Bitcredit_EditAddressDialog::~Bitcredit_EditAddressDialog()
 {
     delete ui;
 }
 
-void EditAddressDialog::setModel(AddressTableModel *model)
+void Bitcredit_EditAddressDialog::setModel(Bitcredit_AddressTableModel *model)
 {
     this->model = model;
     if(!model)
         return;
 
     mapper->setModel(model);
-    mapper->addMapping(ui->labelEdit, AddressTableModel::Label);
-    mapper->addMapping(ui->addressEdit, AddressTableModel::Address);
+    mapper->addMapping(ui->labelEdit, Bitcredit_AddressTableModel::Label);
+    mapper->addMapping(ui->addressEdit, Bitcredit_AddressTableModel::Address);
 }
 
-void EditAddressDialog::loadRow(int row)
+void Bitcredit_EditAddressDialog::loadRow(int row)
 {
     mapper->setCurrentIndex(row);
 }
 
-bool EditAddressDialog::saveCurrentRow()
+bool Bitcredit_EditAddressDialog::saveCurrentRow()
 {
     if(!model)
         return false;
@@ -75,7 +75,7 @@ bool EditAddressDialog::saveCurrentRow()
     case NewReceivingAddress:
     case NewSendingAddress:
         address = model->addRow(
-                mode == NewSendingAddress ? AddressTableModel::Send : AddressTableModel::Receive,
+                mode == NewSendingAddress ? Bitcredit_AddressTableModel::Send : Bitcredit_AddressTableModel::Receive,
                 ui->labelEdit->text(),
                 ui->addressEdit->text());
         break;
@@ -90,7 +90,7 @@ bool EditAddressDialog::saveCurrentRow()
     return !address.isEmpty();
 }
 
-void EditAddressDialog::accept()
+void Bitcredit_EditAddressDialog::accept()
 {
     if(!model)
         return;
@@ -99,28 +99,28 @@ void EditAddressDialog::accept()
     {
         switch(model->getEditStatus())
         {
-        case AddressTableModel::OK:
+        case Bitcredit_AddressTableModel::OK:
             // Failed with unknown reason. Just reject.
             break;
-        case AddressTableModel::NO_CHANGES:
+        case Bitcredit_AddressTableModel::NO_CHANGES:
             // No changes were made during edit operation. Just reject.
             break;
-        case AddressTableModel::INVALID_ADDRESS:
+        case Bitcredit_AddressTableModel::INVALID_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered address \"%1\" is not a valid Bitcoin address.").arg(ui->addressEdit->text()),
+                tr("The entered address \"%1\" is not a valid Bitcredit address.").arg(ui->addressEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
-        case AddressTableModel::DUPLICATE_ADDRESS:
+        case Bitcredit_AddressTableModel::DUPLICATE_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
                 tr("The entered address \"%1\" is already in the address book.").arg(ui->addressEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
-        case AddressTableModel::WALLET_UNLOCK_FAILURE:
+        case Bitcredit_AddressTableModel::WALLET_UNLOCK_FAILURE:
             QMessageBox::critical(this, windowTitle(),
                 tr("Could not unlock wallet."),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
-        case AddressTableModel::KEY_GENERATION_FAILURE:
+        case Bitcredit_AddressTableModel::KEY_GENERATION_FAILURE:
             QMessageBox::critical(this, windowTitle(),
                 tr("New key generation failed."),
                 QMessageBox::Ok, QMessageBox::Ok);
@@ -132,12 +132,12 @@ void EditAddressDialog::accept()
     QDialog::accept();
 }
 
-QString EditAddressDialog::getAddress() const
+QString Bitcredit_EditAddressDialog::getAddress() const
 {
     return address;
 }
 
-void EditAddressDialog::setAddress(const QString &address)
+void Bitcredit_EditAddressDialog::setAddress(const QString &address)
 {
     this->address = address;
     ui->addressEdit->setText(address);

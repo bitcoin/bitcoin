@@ -3,6 +3,8 @@
 #include "optionsmodel.h"
 #include "paymentrequestdata.h"
 
+#include "net.h"
+
 #include "util.h"
 
 #include <openssl/x509.h>
@@ -26,11 +28,11 @@ X509 *parse_b64der_cert(const char* cert_data)
 // Test payment request handling
 //
 
-static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsigned char>& data)
+static Bitcredit_SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsigned char>& data)
 {
     RecipientCatcher sigCatcher;
-    QObject::connect(server, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
-                     &sigCatcher, SLOT(getRecipient(SendCoinsRecipient)));
+    QObject::connect(server, SIGNAL(receivedPaymentRequest(Bitcredit_SendCoinsRecipient)),
+                     &sigCatcher, SLOT(getRecipient(Bitcredit_SendCoinsRecipient)));
 
     // Write data to a temp file:
     QTemporaryFile f;
@@ -47,8 +49,8 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
     // which will lead to a test failure anyway.
     QCoreApplication::sendEvent(&object, &event);
 
-    QObject::disconnect(server, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
-                        &sigCatcher, SLOT(getRecipient(SendCoinsRecipient)));
+    QObject::disconnect(server, SIGNAL(receivedPaymentRequest(Bitcredit_SendCoinsRecipient)),
+                        &sigCatcher, SLOT(getRecipient(Bitcredit_SendCoinsRecipient)));
 
     // Return results from sigCatcher
     return sigCatcher.recipient;
@@ -56,7 +58,7 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
 
 void PaymentServerTests::paymentServerTests()
 {
-    OptionsModel optionsModel;
+    OptionsModel optionsModel(0, Bitcredit_NetParams());
     PaymentServer* server = new PaymentServer(NULL, false);
     X509_STORE* caStore = X509_STORE_new();
     X509_STORE_add_cert(caStore, parse_b64der_cert(caCert_BASE64));
@@ -66,7 +68,7 @@ void PaymentServerTests::paymentServerTests()
 
     // Now feed PaymentRequests to server, and observe signals it produces:
     std::vector<unsigned char> data = DecodeBase64(paymentrequest1_BASE64);
-    SendCoinsRecipient r = handleRequest(server, data);
+    Bitcredit_SendCoinsRecipient r = handleRequest(server, data);
     QString merchant;
     r.paymentRequest.getMerchant(caStore, merchant);
     QCOMPARE(merchant, QString("testmerchant.org"));
@@ -106,7 +108,7 @@ void PaymentServerTests::paymentServerTests()
     delete server;
 }
 
-void RecipientCatcher::getRecipient(SendCoinsRecipient r)
+void RecipientCatcher::getRecipient(Bitcredit_SendCoinsRecipient r)
 {
     recipient = r;
 }

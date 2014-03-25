@@ -5,6 +5,7 @@
 #include "bloom.h"
 
 #include "core.h"
+#include "bitcoin_core.h"
 #include "script.h"
 
 #include <math.h>
@@ -50,9 +51,9 @@ void CBloomFilter::insert(const vector<unsigned char>& vKey)
     isEmpty = false;
 }
 
-void CBloomFilter::insert(const COutPoint& outpoint)
+void CBloomFilter::insert(const COutPoint& outpoint, const int protocolVersion)
 {
-    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream stream(SER_NETWORK, protocolVersion);
     stream << outpoint;
     vector<unsigned char> data(stream.begin(), stream.end());
     insert(data);
@@ -80,9 +81,9 @@ bool CBloomFilter::contains(const vector<unsigned char>& vKey) const
     return true;
 }
 
-bool CBloomFilter::contains(const COutPoint& outpoint) const
+bool CBloomFilter::contains(const COutPoint& outpoint, const int protocolVersion) const
 {
-    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream stream(SER_NETWORK, protocolVersion);
     stream << outpoint;
     vector<unsigned char> data(stream.begin(), stream.end());
     return contains(data);
@@ -99,7 +100,7 @@ bool CBloomFilter::IsWithinSizeConstraints() const
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
 }
 
-bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx, const uint256& hash)
+bool CBloomFilter::bitcredit_IsRelevantAndUpdate(const Bitcredit_CTransaction& tx, const uint256& hash)
 {
     bool fFound = false;
     // Match if the filter contains the hash of tx
@@ -129,14 +130,14 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx, const uint256& ha
             {
                 fFound = true;
                 if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
-                    insert(COutPoint(hash, i));
+                    insert(COutPoint(hash, i), BITCREDIT_PROTOCOL_VERSION);
                 else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
                 {
                     txnouttype type;
                     vector<vector<unsigned char> > vSolutions;
                     if (Solver(txout.scriptPubKey, type, vSolutions) &&
                             (type == TX_PUBKEY || type == TX_MULTISIG))
-                        insert(COutPoint(hash, i));
+                        insert(COutPoint(hash, i), BITCREDIT_PROTOCOL_VERSION);
                 }
                 break;
             }
@@ -146,10 +147,79 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx, const uint256& ha
     if (fFound)
         return true;
 
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
     {
         // Match if the filter contains an outpoint tx spends
-        if (contains(txin.prevout))
+        if (contains(txin.prevout, BITCREDIT_PROTOCOL_VERSION))
+            return true;
+
+        // Match if the filter contains any arbitrary script data element in any scriptSig in tx
+        CScript::const_iterator pc = txin.scriptSig.begin();
+        vector<unsigned char> data;
+        while (pc < txin.scriptSig.end())
+        {
+            opcodetype opcode;
+            if (!txin.scriptSig.GetOp(pc, opcode, data))
+                break;
+            if (data.size() != 0 && contains(data))
+                return true;
+        }
+    }
+
+    return false;
+}
+
+bool CBloomFilter::bitcoin_IsRelevantAndUpdate(const Bitcoin_CTransaction& tx, const uint256& hash)
+{
+    bool fFound = false;
+    // Match if the filter contains the hash of tx
+    //  for finding tx when they appear in a block
+    if (isFull)
+        return true;
+    if (isEmpty)
+        return false;
+    if (contains(hash))
+        fFound = true;
+
+    for (unsigned int i = 0; i < tx.vout.size(); i++)
+    {
+        const CTxOut& txout = tx.vout[i];
+        // Match if the filter contains any arbitrary script data element in any scriptPubKey in tx
+        // If this matches, also add the specific output that was matched.
+        // This means clients don't have to update the filter themselves when a new relevant tx
+        // is discovered in order to find spending transactions, which avoids round-tripping and race conditions.
+        CScript::const_iterator pc = txout.scriptPubKey.begin();
+        vector<unsigned char> data;
+        while (pc < txout.scriptPubKey.end())
+        {
+            opcodetype opcode;
+            if (!txout.scriptPubKey.GetOp(pc, opcode, data))
+                break;
+            if (data.size() != 0 && contains(data))
+            {
+                fFound = true;
+                if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
+                    insert(COutPoint(hash, i), BITCOIN_PROTOCOL_VERSION);
+                else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
+                {
+                    txnouttype type;
+                    vector<vector<unsigned char> > vSolutions;
+                    if (Solver(txout.scriptPubKey, type, vSolutions) &&
+                            (type == TX_PUBKEY || type == TX_MULTISIG))
+                        insert(COutPoint(hash, i), BITCOIN_PROTOCOL_VERSION);
+                }
+                break;
+            }
+        }
+    }
+
+    if (fFound)
+        return true;
+
+    BOOST_FOREACH(const Bitcoin_CTxIn& txin, tx.vin)
+    {
+        // Match if the filter contains an outpoint tx spends
+        if (contains(txin.prevout, BITCOIN_PROTOCOL_VERSION))
             return true;
 
         // Match if the filter contains any arbitrary script data element in any scriptSig in tx

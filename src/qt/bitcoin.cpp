@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "bitcredit-config.h"
 #endif
 
 #include "bitcoingui.h"
@@ -19,6 +19,7 @@
 #ifdef ENABLE_WALLET
 #include "paymentserver.h"
 #include "walletmodel.h"
+#include "bitcoin_walletmodel.h"
 #endif
 
 #include "init.h"
@@ -41,6 +42,7 @@
 #include <QTimer>
 #include <QTranslator>
 #include <QThread>
+#include <QDebug>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -63,6 +65,20 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 // Declare meta types used for QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(bool*)
 
+// Handlers for core signals
+static void NotifyBlocksChanged(ClientModel *clientmodel)
+{
+    // This notification is too frequent. Don't trigger a signal.
+    // Don't remove it, though, as it might be useful later.
+}
+static void NotifyAlertChanged(ClientModel *clientmodel, const uint256 &hash, ChangeType status)
+{
+    qDebug() << "NotifyAlertChanged : " + QString::fromStdString(hash.GetHex()) + " status=" + QString::number(status);
+    QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromStdString(hash.GetHex())),
+                              Q_ARG(int, status));
+}
+
 static void InitMessage(const std::string &message)
 {
     LogPrintf("init message: %s\n", message);
@@ -73,7 +89,7 @@ static void InitMessage(const std::string &message)
  */
 static std::string Translate(const char* psz)
 {
-    return QCoreApplication::translate("bitcoin-core", psz).toStdString();
+    return QCoreApplication::translate("bitcredit-core", psz).toStdString();
 }
 
 /** Set up translations */
@@ -138,14 +154,14 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 }
 #endif
 
-/** Class encapsulating Bitcoin Core startup and shutdown.
+/** Class encapsulating Bitcredit Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
-class BitcoinCore: public QObject
+class BitcreditCore: public QObject
 {
     Q_OBJECT
 public:
-    explicit BitcoinCore();
+    explicit BitcreditCore();
 
 public slots:
     void initialize();
@@ -163,20 +179,22 @@ private:
     void handleRunawayException(std::exception *e);
 };
 
-/** Main Bitcoin application object */
-class BitcoinApplication: public QApplication
+/** Main Bitcredit application object */
+class BitcreditApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit BitcoinApplication(int &argc, char **argv);
-    ~BitcoinApplication();
+    explicit BitcreditApplication(int &argc, char **argv);
+    ~BitcreditApplication();
 
 #ifdef ENABLE_WALLET
     /// Create payment server
     void createPaymentServer();
 #endif
     /// Create options model
-    void createOptionsModel();
+    void bitcredit_createOptionsModel();
+    /// Create options model
+    void bitcoin_createOptionsModel();
     /// Create main window
     void createWindow(bool isaTestNet);
     /// Create splash screen
@@ -190,7 +208,7 @@ public:
     /// Get process return value
     int getReturnValue() { return returnValue; }
 
-    /// Get window identifier of QMainWindow (BitcoinGUI)
+    /// Get window identifier of QMainWindow (BitcreditGUI)
     WId getMainWinId() const;
 
 public slots:
@@ -207,13 +225,17 @@ signals:
 
 private:
     QThread *coreThread;
-    OptionsModel *optionsModel;
-    ClientModel *clientModel;
-    BitcoinGUI *window;
+    OptionsModel *bitcredit_optionsModel;
+    OptionsModel *bitcoin_optionsModel;
+    ClientModel *bitcredit_clientModel;
+    ClientModel *bitcoin_clientModel;
+    BitcreditGUI *window;
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer;
-    WalletModel *walletModel;
+    Bitcredit_WalletModel *bitcredit_model;
+    Bitcoin_WalletModel *bitcoin_model;
+    Bitcredit_WalletModel *deposit_model;
 #endif
     int returnValue;
 
@@ -222,18 +244,18 @@ private:
 
 #include "bitcoin.moc"
 
-BitcoinCore::BitcoinCore():
+BitcreditCore::BitcreditCore():
     QObject()
 {
 }
 
-void BitcoinCore::handleRunawayException(std::exception *e)
+void BitcreditCore::handleRunawayException(std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
     emit runawayException(QString::fromStdString(strMiscWarning));
 }
 
-void BitcoinCore::initialize()
+void BitcreditCore::initialize()
 {
     try
     {
@@ -254,7 +276,7 @@ void BitcoinCore::initialize()
     }
 }
 
-void BitcoinCore::shutdown()
+void BitcreditCore::shutdown()
 {
     try
     {
@@ -271,16 +293,20 @@ void BitcoinCore::shutdown()
     }
 }
 
-BitcoinApplication::BitcoinApplication(int &argc, char **argv):
+BitcreditApplication::BitcreditApplication(int &argc, char **argv):
     QApplication(argc, argv),
     coreThread(0),
-    optionsModel(0),
-    clientModel(0),
+    bitcredit_optionsModel(0),
+    bitcoin_optionsModel(0),
+    bitcredit_clientModel(0),
+    bitcoin_clientModel(0),
     window(0),
     pollShutdownTimer(0),
 #ifdef ENABLE_WALLET
     paymentServer(0),
-    walletModel(0),
+    bitcredit_model(0),
+    bitcoin_model(0),
+    deposit_model(0),
 #endif
     returnValue(0)
 {
@@ -288,7 +314,7 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     startThread();
 }
 
-BitcoinApplication::~BitcoinApplication()
+BitcreditApplication::~BitcreditApplication()
 {
     LogPrintf("Stopping thread\n");
     emit stopThread();
@@ -301,32 +327,39 @@ BitcoinApplication::~BitcoinApplication()
     delete paymentServer;
     paymentServer = 0;
 #endif
-    delete optionsModel;
-    optionsModel = 0;
+    delete bitcredit_optionsModel;
+    bitcredit_optionsModel = 0;
+
+    delete bitcoin_optionsModel;
+    bitcoin_optionsModel = 0;
 }
 
 #ifdef ENABLE_WALLET
-void BitcoinApplication::createPaymentServer()
+void BitcreditApplication::createPaymentServer()
 {
     paymentServer = new PaymentServer(this);
 }
 #endif
 
-void BitcoinApplication::createOptionsModel()
+void BitcreditApplication::bitcredit_createOptionsModel()
 {
-    optionsModel = new OptionsModel();
+    bitcredit_optionsModel = new OptionsModel(0, Bitcredit_NetParams());
+}
+void BitcreditApplication::bitcoin_createOptionsModel()
+{
+    bitcoin_optionsModel = new OptionsModel(0, Bitcoin_NetParams());
 }
 
-void BitcoinApplication::createWindow(bool isaTestNet)
+void BitcreditApplication::createWindow(bool isaTestNet)
 {
-    window = new BitcoinGUI(isaTestNet, 0);
+    window = new BitcreditGUI(isaTestNet, 0);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
     pollShutdownTimer->start(200);
 }
 
-void BitcoinApplication::createSplashScreen(bool isaTestNet)
+void BitcreditApplication::createSplashScreen(bool isaTestNet)
 {
     SplashScreen *splash = new SplashScreen(QPixmap(), 0, isaTestNet);
     splash->setAttribute(Qt::WA_DeleteOnClose);
@@ -334,10 +367,10 @@ void BitcoinApplication::createSplashScreen(bool isaTestNet)
     connect(this, SIGNAL(splashFinished(QWidget*)), splash, SLOT(slotFinish(QWidget*)));
 }
 
-void BitcoinApplication::startThread()
+void BitcreditApplication::startThread()
 {
     coreThread = new QThread(this);
-    BitcoinCore *executor = new BitcoinCore();
+    BitcreditCore *executor = new BitcreditCore();
     executor->moveToThread(coreThread);
 
     /*  communication to and from thread */
@@ -353,26 +386,38 @@ void BitcoinApplication::startThread()
     coreThread->start();
 }
 
-void BitcoinApplication::requestInitialize()
+void BitcreditApplication::requestInitialize()
 {
     LogPrintf("Requesting initialize\n");
     emit requestedInitialize();
 }
 
-void BitcoinApplication::requestShutdown()
+void BitcreditApplication::requestShutdown()
 {
     LogPrintf("Requesting shutdown\n");
     window->hide();
-    window->setClientModel(0);
+    window->bitcredit_setClientModel(0);
+    window->bitcoin_setClientModel(0);
     pollShutdownTimer->stop();
 
 #ifdef ENABLE_WALLET
     window->removeAllWallets();
-    delete walletModel;
-    walletModel = 0;
+    delete bitcredit_model;
+    bitcredit_model = 0;
+    delete bitcoin_model;
+    bitcoin_model = 0;
+    delete deposit_model;
+    deposit_model = 0;
 #endif
-    delete clientModel;
-    clientModel = 0;
+
+    // Disconnect signals from client
+    uiInterface.NotifyBlocksChanged.disconnect(boost::bind(NotifyBlocksChanged, bitcredit_clientModel));
+    uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, bitcredit_clientModel, _1, _2));
+
+    delete bitcredit_clientModel;
+    bitcredit_clientModel = 0;
+    delete bitcoin_clientModel;
+    bitcoin_clientModel = 0;
 
     // Show a simple window indicating shutdown status
     ShutdownWindow::showShutdownWindow(window);
@@ -381,7 +426,7 @@ void BitcoinApplication::requestShutdown()
     emit requestedShutdown();
 }
 
-void BitcoinApplication::initializeResult(int retval)
+void BitcreditApplication::initializeResult(int retval)
 {
     LogPrintf("Initialization result: %i\n", retval);
     // Set exit result: 0 if successful, 1 if failure
@@ -390,24 +435,33 @@ void BitcoinApplication::initializeResult(int retval)
     {
 #ifdef ENABLE_WALLET
         PaymentServer::LoadRootCAs();
-        paymentServer->setOptionsModel(optionsModel);
+        paymentServer->setOptionsModel(bitcredit_optionsModel);
 #endif
 
         emit splashFinished(window);
 
-        clientModel = new ClientModel(optionsModel);
-        window->setClientModel(clientModel);
+        bitcredit_clientModel = new ClientModel(bitcredit_optionsModel, 0, Bitcredit_NetParams(), bitcredit_mainState, bitcredit_chainActive);
+        window->bitcredit_setClientModel(bitcredit_clientModel);
+
+        bitcoin_clientModel = new ClientModel(bitcoin_optionsModel, 0, Bitcoin_NetParams(), bitcoin_mainState, bitcoin_chainActive);
+        window->bitcoin_setClientModel(bitcoin_clientModel);
+
+        // Connect signals to client
+        uiInterface.NotifyBlocksChanged.connect(boost::bind(NotifyBlocksChanged, bitcredit_clientModel));
+        uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, bitcredit_clientModel, _1, _2));
 
 #ifdef ENABLE_WALLET
-        if(pwalletMain)
+        if(bitcredit_pwalletMain && bitcoin_pwalletMain && deposit_pwalletMain)
         {
-            walletModel = new WalletModel(pwalletMain, optionsModel);
+            bitcredit_model = new Bitcredit_WalletModel(bitcredit_pwalletMain, deposit_pwalletMain, bitcoin_pwalletMain, bitcredit_optionsModel, bitcredit_pwalletMain, false);
+            bitcoin_model = new Bitcoin_WalletModel(bitcoin_pwalletMain, bitcredit_pwalletMain, bitcoin_optionsModel);
+            deposit_model = new Bitcredit_WalletModel(deposit_pwalletMain, deposit_pwalletMain, bitcoin_pwalletMain, bitcredit_optionsModel, bitcredit_pwalletMain, true);
 
-            window->addWallet("~Default", walletModel);
+            window->addWallet("~Default", bitcredit_model, bitcoin_model, deposit_model);
             window->setCurrentWallet("~Default");
 
-            connect(walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
-                             paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
+            connect(bitcredit_model, SIGNAL(coinsSent(CWallet*,Bitcredit_SendCoinsRecipient,QByteArray)),
+                             paymentServer, SLOT(fetchPaymentACK(CWallet*,const Bitcredit_SendCoinsRecipient&,QByteArray)));
         }
 #endif
 
@@ -422,9 +476,9 @@ void BitcoinApplication::initializeResult(int retval)
         }
 #ifdef ENABLE_WALLET
         // Now that initialization/startup is done, process any command-line
-        // bitcoin: URIs or payment requests:
-        connect(paymentServer, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
-                         window, SLOT(handlePaymentRequest(SendCoinsRecipient)));
+        // bitcredit: URIs or payment requests:
+        connect(paymentServer, SIGNAL(receivedPaymentRequest(Bitcredit_SendCoinsRecipient)),
+                         window, SLOT(handlePaymentRequest(Bitcredit_SendCoinsRecipient)));
         connect(window, SIGNAL(receivedURI(QString)),
                          paymentServer, SLOT(handleURIOrFile(QString)));
         connect(paymentServer, SIGNAL(message(QString,QString,unsigned int)),
@@ -436,19 +490,19 @@ void BitcoinApplication::initializeResult(int retval)
     }
 }
 
-void BitcoinApplication::shutdownResult(int retval)
+void BitcreditApplication::shutdownResult(int retval)
 {
     LogPrintf("Shutdown result: %i\n", retval);
     quit(); // Exit main loop after shutdown finished
 }
 
-void BitcoinApplication::handleRunawayException(const QString &message)
+void BitcreditApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Bitcoin can no longer continue safely and will quit.") + QString("\n\n") + message);
+    QMessageBox::critical(0, "Runaway exception", BitcreditGUI::tr("A fatal error occurred. Bitcredit can no longer continue safely and will quit.") + QString("\n\n") + message);
     ::exit(1);
 }
 
-WId BitcoinApplication::getMainWinId() const
+WId BitcreditApplication::getMainWinId() const
 {
     if (!window)
         return 0;
@@ -475,7 +529,7 @@ int main(int argc, char *argv[])
 #endif
 
     Q_INIT_RESOURCE(bitcoin);
-    BitcoinApplication app(argc, argv);
+    BitcreditApplication app(argc, argv);
 #if QT_VERSION > 0x050100
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
@@ -513,31 +567,31 @@ int main(int argc, char *argv[])
     // User language is set up: pick a data directory
     Intro::pickDataDirectory();
 
-    /// 6. Determine availability of data directory and parse bitcoin.conf
+    /// 6. Determine availability of data directory and parse bitcredit.conf
     /// - Do not call GetDataDir(true) before this step finishes
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
-        QMessageBox::critical(0, QObject::tr("Bitcoin"),
+        QMessageBox::critical(0, QObject::tr("Bitcredit"),
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
         return 1;
     }
     try {
         ReadConfigFile(mapArgs, mapMultiArgs);
     } catch(std::exception &e) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin"),
+        QMessageBox::critical(0, QObject::tr("Bitcredit"),
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
         return false;
     }
 
     /// 7. Determine network (and switch to network specific options)
-    // - Do not call Params() before this step
+    // - Do not call Bitcredit_Params() before this step
     // - Do this after parsing the configuration file, as the network can be switched there
     // - QSettings() will use the new application name after this, resulting in network-specific settings
     // - Needs to be done before createOptionsModel
 
-    // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+    // Check for -testnet or -regtest parameter (Bitcredit_Params() calls are only valid after this clause)
     if (!SelectParamsFromCommandLine()) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
+        QMessageBox::critical(0, QObject::tr("Bitcredit"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
         return 1;
     }
 #ifdef ENABLE_WALLET
@@ -545,7 +599,7 @@ int main(int argc, char *argv[])
     if (!PaymentServer::ipcParseCommandLine(argc, argv))
         exit(0);
 #endif
-    bool isaTestNet = Params().NetworkID() != CChainParams::MAIN;
+    bool isaTestNet = Bitcredit_Params().NetworkID() != CChainParams::MAIN;
     // Allow for separate UI settings for testnets
     if (isaTestNet)
         QApplication::setApplicationName(QAPP_APP_NAME_TESTNET);
@@ -565,7 +619,7 @@ int main(int argc, char *argv[])
         exit(0);
 
     // Start up the payment server early, too, so impatient users that click on
-    // bitcoin: links repeatedly have their payment requests routed to this process:
+    // bitcredit: links repeatedly have their payment requests routed to this process:
     app.createPaymentServer();
 #endif
 
@@ -584,7 +638,8 @@ int main(int argc, char *argv[])
     qInstallMessageHandler(DebugMessageHandler);
 #endif
     // Load GUI settings from QSettings
-    app.createOptionsModel();
+    app.bitcredit_createOptionsModel();
+    app.bitcoin_createOptionsModel();
 
     // Subscribe to global signals from core
     uiInterface.InitMessage.connect(InitMessage);
@@ -597,7 +652,7 @@ int main(int argc, char *argv[])
         app.createWindow(isaTestNet);
         app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
-        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Bitcoin Core didn't yet exit safely..."), (HWND)app.getMainWinId());
+        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Bitcredit Core didn't yet exit safely..."), (HWND)app.getMainWinId());
 #endif
         app.exec();
         app.requestShutdown();

@@ -38,6 +38,11 @@ bool NodeLessThan::operator()(const CNodeCombinedStats &left, const CNodeCombine
 class PeerTablePriv
 {
 public:
+	PeerTablePriv(CNetParams * netParamsIn) {
+		netParams = netParamsIn;
+	}
+
+	CNetParams * netParams;
     /** Local cache of peer information */
     QList<CNodeCombinedStats> cachedNodeStats;
     /** Column to sort nodes by */
@@ -49,7 +54,7 @@ public:
 
     /** Pull a full list of peers from vNodes into our cache */
     void refreshPeers() {
-        TRY_LOCK(cs_vNodes, lockNodes);
+        TRY_LOCK(netParams->cs_vNodes, lockNodes);
         {
             if (!lockNodes)
             {
@@ -58,9 +63,9 @@ public:
             }
             cachedNodeStats.clear();
 #if QT_VERSION >= 0x040700
-            cachedNodeStats.reserve(vNodes.size());
+            cachedNodeStats.reserve(netParams->vNodes.size());
 #endif
-            BOOST_FOREACH(CNode* pnode, vNodes)
+            BOOST_FOREACH(CNode* pnode, netParams->vNodes)
             {
                 CNodeCombinedStats stats;
                 stats.statestats.nMisbehavior = -1;
@@ -70,13 +75,18 @@ public:
         }
 
         // if we can, retrieve the CNodeStateStats for each node.
-        TRY_LOCK(cs_main, lockMain);
+        TRY_LOCK(bitcredit_mainState.cs_main, lockMain);
         {
             if (lockMain)
             {
                 BOOST_FOREACH(CNodeCombinedStats &stats, cachedNodeStats)
                 {
-                    GetNodeStateStats(stats.nodestats.nodeid, stats.statestats);
+                	if(netParams == Bitcredit_NetParams()) {
+						Bitcredit_GetNodeStateStats(stats.nodestats.nodeid, stats.statestats);
+                	} else {
+						Bitcoin_GetNodeStateStats(stats.nodestats.nodeid, stats.statestats);
+                	}
+
                 }
             }
         }
@@ -115,7 +125,7 @@ PeerTableModel::PeerTableModel(ClientModel *parent) :
     QAbstractTableModel(parent),clientModel(parent),timer(0)
 {
     columns << tr("Address") << tr("User Agent") << tr("Start Height");
-    priv = new PeerTablePriv();
+    priv = new PeerTablePriv(parent->NetParams());
     // default to unsorted
     priv->sortColumn = -1;
 

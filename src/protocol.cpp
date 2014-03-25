@@ -21,16 +21,17 @@ static const char* ppszTypeName[] =
 
 CMessageHeader::CMessageHeader()
 {
-    memcpy(pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE);
+	//Setting message header to invalid values
+    memset(pchMessageStart, 0, MESSAGE_START_SIZE);
     memset(pchCommand, 0, sizeof(pchCommand));
     pchCommand[1] = 1;
     nMessageSize = -1;
     nChecksum = 0;
 }
 
-CMessageHeader::CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn)
+CMessageHeader::CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn, const unsigned char * messageStartChars)
 {
-    memcpy(pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE);
+    memcpy(pchMessageStart, messageStartChars, MESSAGE_START_SIZE);
     strncpy(pchCommand, pszCommand, COMMAND_SIZE);
     nMessageSize = nMessageSizeIn;
     nChecksum = 0;
@@ -44,10 +45,18 @@ std::string CMessageHeader::GetCommand() const
         return std::string(pchCommand, pchCommand + COMMAND_SIZE);
 }
 
+bool CMessageHeader::IsBitcoinMessage() const {
+	return memcmp(pchMessageStart, Bitcoin_Params().MessageStart(), MESSAGE_START_SIZE) == 0;
+}
+
+bool CMessageHeader::IsBitcreditMessage() const {
+	return memcmp(pchMessageStart, Bitcredit_Params().MessageStart(), MESSAGE_START_SIZE) == 0;
+}
+
 bool CMessageHeader::IsValid() const
 {
     // Check start string
-    if (memcmp(pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE) != 0)
+    if (!IsBitcoinMessage() && !IsBitcreditMessage())
         return false;
 
     // Check the command string for errors

@@ -8,25 +8,25 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
-class AddressTablePriv;
-class WalletModel;
+class Bitcredit_AddressTablePriv;
+class Bitcredit_WalletModel;
 
-class CWallet;
+class Bitcredit_CWallet;
 
 /**
    Qt model of the address book in the core. This allows views to access and modify the address book.
  */
-class AddressTableModel : public QAbstractTableModel
+class Bitcredit_AddressTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    explicit AddressTableModel(CWallet *wallet, WalletModel *parent = 0);
-    ~AddressTableModel();
+    explicit Bitcredit_AddressTableModel(Bitcredit_CWallet *wallet, Bitcredit_WalletModel *parent = 0);
+    ~Bitcredit_AddressTableModel();
 
     enum ColumnIndex {
         Label = 0,   /**< User specified label */
-        Address = 1  /**< Bitcoin address */
+        Address = 1  /**< Bitcredit address */
     };
 
     enum RoleIndex {
@@ -75,9 +75,9 @@ public:
     EditStatus getEditStatus() const { return editStatus; }
 
 private:
-    WalletModel *walletModel;
-    CWallet *wallet;
-    AddressTablePriv *priv;
+    Bitcredit_WalletModel *walletModel;
+    Bitcredit_CWallet *wallet;
+    Bitcredit_AddressTablePriv *priv;
     QStringList columns;
     EditStatus editStatus;
 
@@ -89,7 +89,7 @@ public slots:
      */
     void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
 
-    friend class AddressTablePriv;
+    friend class Bitcredit_AddressTablePriv;
 };
 
 #endif // ADDRESSTABLEMODEL_H

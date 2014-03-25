@@ -6,7 +6,7 @@
 #include "ui_sendcoinsdialog.h"
 
 #include "addresstablemodel.h"
-#include "bitcoinunits.h"
+#include "bitcreditunits.h"
 #include "coincontroldialog.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
@@ -24,7 +24,8 @@
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
-    model(0)
+    bitcredit_model(0),
+    deposit_model(0)
 {
     ui->setupUi(this);
 
@@ -75,30 +76,35 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     fNewRecipientAllowed = true;
 }
 
-void SendCoinsDialog::setModel(WalletModel *model)
+void SendCoinsDialog::setModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModel *deposit_model)
 {
-    this->model = model;
+    this->bitcredit_model = bitcredit_model;
+    this->deposit_model = deposit_model;
 
-    if(model && model->getOptionsModel())
+    if(bitcredit_model && bitcredit_model->getOptionsModel())
     {
         for(int i = 0; i < ui->entries->count(); ++i)
         {
             SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
             if(entry)
             {
-                entry->setModel(model);
+                entry->setModel(bitcredit_model);
             }
         }
 
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        //Find all prepared deposit transactions
+        map<uint256, set<int> > mapPreparedDepositTxInPoints;
+        deposit_model->wallet->PreparedDepositTxInPoints(mapPreparedDepositTxInPoints);
+
+        setBalance(bitcredit_model->getBalance(mapPreparedDepositTxInPoints), bitcredit_model->getUnconfirmedBalance(mapPreparedDepositTxInPoints), bitcredit_model->getImmatureBalance(mapPreparedDepositTxInPoints), bitcredit_model->getPreparedDepositBalance(), bitcredit_model->getInDepositBalance());
+        connect(bitcredit_model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64, qint64, qint64)));
+        connect(bitcredit_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
         // Coin Control
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(coinControlUpdateLabels()));
-        connect(model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(coinControlFeatureChanged(bool)));
-        connect(model->getOptionsModel(), SIGNAL(transactionFeeChanged(qint64)), this, SLOT(coinControlUpdateLabels()));
-        ui->frameCoinControl->setVisible(model->getOptionsModel()->getCoinControlFeatures());
+        connect(bitcredit_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(coinControlUpdateLabels()));
+        connect(bitcredit_model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(coinControlFeatureChanged(bool)));
+        connect(bitcredit_model->getOptionsModel(), SIGNAL(transactionFeeChanged(qint64)), this, SLOT(coinControlUpdateLabels()));
+        ui->frameCoinControl->setVisible(bitcredit_model->getOptionsModel()->getCoinControlFeatures());
         coinControlUpdateLabels();
     }
 }
@@ -110,10 +116,10 @@ SendCoinsDialog::~SendCoinsDialog()
 
 void SendCoinsDialog::on_sendButton_clicked()
 {
-    if(!model || !model->getOptionsModel())
+    if(!bitcredit_model || !bitcredit_model->getOptionsModel())
         return;
 
-    QList<SendCoinsRecipient> recipients;
+    QList<Bitcredit_SendCoinsRecipient> recipients;
     bool valid = true;
 
     for(int i = 0; i < ui->entries->count(); ++i)
@@ -139,10 +145,10 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     // Format confirmation message
     QStringList formatted;
-    foreach(const SendCoinsRecipient &rcp, recipients)
+    foreach(const Bitcredit_SendCoinsRecipient &rcp, recipients)
     {
         // generate bold amount string
-        QString amount = "<b>" + BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+        QString amount = "<b>" + BitcreditUnits::formatWithUnit(bitcredit_model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         amount.append("</b>");
         // generate monospace address string
         QString address = "<span style='font-family: monospace;'>" + rcp.address;
@@ -177,7 +183,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     fNewRecipientAllowed = false;
 
 
-    WalletModel::UnlockContext ctx(model->requestUnlock());
+    Bitcredit_WalletModel::UnlockContext ctx(bitcredit_model->requestUnlock());
     if(!ctx.isValid())
     {
         // Unlock wallet was cancelled
@@ -186,18 +192,18 @@ void SendCoinsDialog::on_sendButton_clicked()
     }
 
     // prepare transaction for getting txFee earlier
-    WalletModelTransaction currentTransaction(recipients);
-    WalletModel::SendCoinsReturn prepareStatus;
-    if (model->getOptionsModel()->getCoinControlFeatures()) // coin control enabled
-        prepareStatus = model->prepareTransaction(currentTransaction, CoinControlDialog::coinControl);
+    Bitcredit_WalletModelTransaction currentTransaction(recipients);
+    Bitcredit_WalletModel::SendCoinsReturn prepareStatus;
+    if (bitcredit_model->getOptionsModel()->getCoinControlFeatures()) // coin control enabled
+        prepareStatus = bitcredit_model->prepareTransaction(deposit_model, currentTransaction, Bitcredit_CoinControlDialog::coinControl);
     else
-        prepareStatus = model->prepareTransaction(currentTransaction);
+        prepareStatus = bitcredit_model->prepareTransaction(deposit_model, currentTransaction);
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
-        BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
+        BitcreditUnits::formatWithUnit(bitcredit_model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
 
-    if(prepareStatus.status != WalletModel::OK) {
+    if(prepareStatus.status != Bitcredit_WalletModel::OK) {
         fNewRecipientAllowed = true;
         return;
     }
@@ -210,7 +216,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     {
         // append fee string if a fee is required
         questionString.append("<hr /><span style='color:#aa0000;'>");
-        questionString.append(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+        questionString.append(BitcreditUnits::formatWithUnit(bitcredit_model->getOptionsModel()->getDisplayUnit(), txFee));
         questionString.append("</span> ");
         questionString.append(tr("added as transaction fee"));
     }
@@ -219,13 +225,13 @@ void SendCoinsDialog::on_sendButton_clicked()
     questionString.append("<hr />");
     qint64 totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
     QStringList alternativeUnits;
-    foreach(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
+    foreach(BitcreditUnits::Unit u, BitcreditUnits::availableUnits())
     {
-        if(u != model->getOptionsModel()->getDisplayUnit())
-            alternativeUnits.append(BitcoinUnits::formatWithUnit(u, totalAmount));
+        if(u != bitcredit_model->getOptionsModel()->getDisplayUnit())
+            alternativeUnits.append(BitcreditUnits::formatWithUnit(u, totalAmount));
     }
     questionString.append(tr("Total Amount %1 (= %2)")
-        .arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
+        .arg(BitcreditUnits::formatWithUnit(bitcredit_model->getOptionsModel()->getDisplayUnit(), totalAmount))
         .arg(alternativeUnits.join(" " + tr("or") + " ")));
 
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
@@ -240,14 +246,14 @@ void SendCoinsDialog::on_sendButton_clicked()
     }
 
     // now send the prepared transaction
-    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction);
+    Bitcredit_WalletModel::SendCoinsReturn sendStatus = bitcredit_model->sendCoins(currentTransaction);
     // process sendStatus and on error generate message shown to user
     processSendCoinsReturn(sendStatus);
 
-    if (sendStatus.status == WalletModel::OK)
+    if (sendStatus.status == Bitcredit_WalletModel::OK)
     {
         accept();
-        CoinControlDialog::coinControl->UnSelectAll();
+        Bitcredit_CoinControlDialog::coinControl->UnSelectAll();
         coinControlUpdateLabels();
     }
     fNewRecipientAllowed = true;
@@ -278,7 +284,7 @@ void SendCoinsDialog::accept()
 SendCoinsEntry *SendCoinsDialog::addEntry()
 {
     SendCoinsEntry *entry = new SendCoinsEntry(this);
-    entry->setModel(model);
+    entry->setModel(bitcredit_model);
     ui->entries->addWidget(entry);
     connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
     connect(entry, SIGNAL(payAmountChanged()), this, SLOT(coinControlUpdateLabels()));
@@ -351,7 +357,7 @@ void SendCoinsDialog::setAddress(const QString &address)
     entry->setAddress(address);
 }
 
-void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
+void SendCoinsDialog::pasteEntry(const Bitcredit_SendCoinsRecipient &rv)
 {
     if(!fNewRecipientAllowed)
         return;
@@ -375,7 +381,7 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
     updateTabsAndLabels();
 }
 
-bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
+bool SendCoinsDialog::handlePaymentRequest(const Bitcredit_SendCoinsRecipient &rv)
 {
     // Just paste the entry, all pre-checks
     // are done in paymentserver.cpp.
@@ -383,23 +389,29 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     return true;
 }
 
-void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance)
+void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 preparedDepositBalance, qint64 inDepositBalance)
 {
     Q_UNUSED(unconfirmedBalance);
     Q_UNUSED(immatureBalance);
+    Q_UNUSED(preparedDepositBalance);
+    Q_UNUSED(inDepositBalance);
 
-    if(model && model->getOptionsModel())
+    if(bitcredit_model && bitcredit_model->getOptionsModel())
     {
-        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
+        ui->labelBalance->setText(BitcreditUnits::formatWithUnit(bitcredit_model->getOptionsModel()->getDisplayUnit(), balance));
     }
 }
 
 void SendCoinsDialog::updateDisplayUnit()
 {
-    setBalance(model->getBalance(), 0, 0);
+    //Find all prepared deposit transactions
+    map<uint256, set<int> > mapPreparedDepositTxInPoints;
+    deposit_model->wallet->PreparedDepositTxInPoints(mapPreparedDepositTxInPoints);
+
+    setBalance(bitcredit_model->getBalance(mapPreparedDepositTxInPoints), 0, 0, 0, 0);
 }
 
-void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
+void SendCoinsDialog::processSendCoinsReturn(const Bitcredit_WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
 {
     QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
     // Default to a warning message, override if error message is needed
@@ -410,31 +422,31 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
     // all others are used only in WalletModel::prepareTransaction()
     switch(sendCoinsReturn.status)
     {
-    case WalletModel::InvalidAddress:
+    case Bitcredit_WalletModel::InvalidAddress:
         msgParams.first = tr("The recipient address is not valid, please recheck.");
         break;
-    case WalletModel::InvalidAmount:
+    case Bitcredit_WalletModel::InvalidAmount:
         msgParams.first = tr("The amount to pay must be larger than 0.");
         break;
-    case WalletModel::AmountExceedsBalance:
+    case Bitcredit_WalletModel::AmountExceedsBalance:
         msgParams.first = tr("The amount exceeds your balance.");
         break;
-    case WalletModel::AmountWithFeeExceedsBalance:
+    case Bitcredit_WalletModel::AmountWithFeeExceedsBalance:
         msgParams.first = tr("The total exceeds your balance when the %1 transaction fee is included.").arg(msgArg);
         break;
-    case WalletModel::DuplicateAddress:
+    case Bitcredit_WalletModel::DuplicateAddress:
         msgParams.first = tr("Duplicate address found, can only send to each address once per send operation.");
         break;
-    case WalletModel::TransactionCreationFailed:
+    case Bitcredit_WalletModel::TransactionCreationFailed:
         msgParams.first = tr("Transaction creation failed!");
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
-    case WalletModel::TransactionCommitFailed:
+    case Bitcredit_WalletModel::TransactionCommitFailed:
         msgParams.first = tr("The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
     // included to prevent a compiler warning.
-    case WalletModel::OK:
+    case Bitcredit_WalletModel::OK:
     default:
         return;
     }
@@ -495,8 +507,8 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 {
     ui->frameCoinControl->setVisible(checked);
 
-    if (!checked && model) // coin control features disabled
-        CoinControlDialog::coinControl->SetNull();
+    if (!checked && bitcredit_model) // coin control features disabled
+        Bitcredit_CoinControlDialog::coinControl->SetNull();
 
     if (checked)
         coinControlUpdateLabels();
@@ -505,8 +517,8 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 // Coin Control: button inputs -> show actual coin control dialog
 void SendCoinsDialog::coinControlButtonClicked()
 {
-    CoinControlDialog dlg;
-    dlg.setModel(model);
+    Bitcredit_CoinControlDialog dlg;
+    dlg.setModel(bitcredit_model, deposit_model);
     dlg.exec();
     coinControlUpdateLabels();
 }
@@ -516,7 +528,7 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
 {
     if (state == Qt::Unchecked)
     {
-        CoinControlDialog::coinControl->destChange = CNoDestination();
+        Bitcredit_CoinControlDialog::coinControl->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->clear();
     }
     else
@@ -529,10 +541,10 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
 // Coin Control: custom change address changed
 void SendCoinsDialog::coinControlChangeEdited(const QString& text)
 {
-    if (model && model->getAddressTableModel())
+    if (bitcredit_model && bitcredit_model->getAddressTableModel())
     {
         // Default to no change address until verified
-        CoinControlDialog::coinControl->destChange = CNoDestination();
+        Bitcredit_CoinControlDialog::coinControl->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:red;}");
 
         CBitcoinAddress addr = CBitcoinAddress(text.toStdString());
@@ -543,14 +555,14 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else if (!addr.IsValid()) // Invalid address
         {
-            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Bitcoin address"));
+            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Bitcredit address"));
         }
         else // Valid address
         {
             CPubKey pubkey;
             CKeyID keyid;
             addr.GetKeyID(keyid);
-            if (!model->getPubKey(keyid, pubkey)) // Unknown change address
+            if (!bitcredit_model->getPubKey(keyid, pubkey)) // Unknown change address
             {
                 ui->labelCoinControlChangeLabel->setText(tr("Warning: Unknown change address"));
             }
@@ -559,13 +571,13 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
                 ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:black;}");
 
                 // Query label
-                QString associatedLabel = model->getAddressTableModel()->labelForAddress(text);
+                QString associatedLabel = bitcredit_model->getAddressTableModel()->labelForAddress(text);
                 if (!associatedLabel.isEmpty())
                     ui->labelCoinControlChangeLabel->setText(associatedLabel);
                 else
                     ui->labelCoinControlChangeLabel->setText(tr("(no label)"));
 
-                CoinControlDialog::coinControl->destChange = addr.Get();
+                Bitcredit_CoinControlDialog::coinControl->destChange = addr.Get();
             }
         }
     }
@@ -574,22 +586,22 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
 // Coin Control: update labels
 void SendCoinsDialog::coinControlUpdateLabels()
 {
-    if (!model || !model->getOptionsModel() || !model->getOptionsModel()->getCoinControlFeatures())
+    if (!bitcredit_model || !bitcredit_model->getOptionsModel() || !bitcredit_model->getOptionsModel()->getCoinControlFeatures())
         return;
 
     // set pay amounts
-    CoinControlDialog::payAmounts.clear();
+    Bitcredit_CoinControlDialog::payAmounts.clear();
     for(int i = 0; i < ui->entries->count(); ++i)
     {
         SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry)
-            CoinControlDialog::payAmounts.append(entry->getValue().amount);
+            Bitcredit_CoinControlDialog::payAmounts.append(entry->getValue().amount);
     }
 
-    if (CoinControlDialog::coinControl->HasSelected())
+    if (Bitcredit_CoinControlDialog::coinControl->HasSelected())
     {
         // actual coin control calculation
-        CoinControlDialog::updateLabels(model, this);
+        Bitcredit_CoinControlDialog::updateLabels(bitcredit_model, this);
 
         // show coin control stats
         ui->labelCoinControlAutomaticallySelected->hide();

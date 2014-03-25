@@ -13,10 +13,10 @@
 #include <QFont>
 #include <QDebug>
 
-const QString AddressTableModel::Send = "S";
-const QString AddressTableModel::Receive = "R";
+const QString Bitcredit_AddressTableModel::Send = "S";
+const QString Bitcredit_AddressTableModel::Receive = "R";
 
-struct AddressTableEntry
+struct Bitcredit_AddressTableEntry
 {
     enum Type {
         Sending,
@@ -28,50 +28,50 @@ struct AddressTableEntry
     QString label;
     QString address;
 
-    AddressTableEntry() {}
-    AddressTableEntry(Type type, const QString &label, const QString &address):
+    Bitcredit_AddressTableEntry() {}
+    Bitcredit_AddressTableEntry(Type type, const QString &label, const QString &address):
         type(type), label(label), address(address) {}
 };
 
-struct AddressTableEntryLessThan
+struct Bitcredit_AddressTableEntryLessThan
 {
-    bool operator()(const AddressTableEntry &a, const AddressTableEntry &b) const
+    bool operator()(const Bitcredit_AddressTableEntry &a, const Bitcredit_AddressTableEntry &b) const
     {
         return a.address < b.address;
     }
-    bool operator()(const AddressTableEntry &a, const QString &b) const
+    bool operator()(const Bitcredit_AddressTableEntry &a, const QString &b) const
     {
         return a.address < b;
     }
-    bool operator()(const QString &a, const AddressTableEntry &b) const
+    bool operator()(const QString &a, const Bitcredit_AddressTableEntry &b) const
     {
         return a < b.address;
     }
 };
 
 /* Determine address type from address purpose */
-static AddressTableEntry::Type translateTransactionType(const QString &strPurpose, bool isMine)
+static Bitcredit_AddressTableEntry::Type translateTransactionType(const QString &strPurpose, bool isMine)
 {
-    AddressTableEntry::Type addressType = AddressTableEntry::Hidden;
+    Bitcredit_AddressTableEntry::Type addressType = Bitcredit_AddressTableEntry::Hidden;
     // "refund" addresses aren't shown, and change addresses aren't in mapAddressBook at all.
     if (strPurpose == "send")
-        addressType = AddressTableEntry::Sending;
+        addressType = Bitcredit_AddressTableEntry::Sending;
     else if (strPurpose == "receive")
-        addressType = AddressTableEntry::Receiving;
+        addressType = Bitcredit_AddressTableEntry::Receiving;
     else if (strPurpose == "unknown" || strPurpose == "") // if purpose not set, guess
-        addressType = (isMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending);
+        addressType = (isMine ? Bitcredit_AddressTableEntry::Receiving : Bitcredit_AddressTableEntry::Sending);
     return addressType;
 }
 
 // Private implementation
-class AddressTablePriv
+class Bitcredit_AddressTablePriv
 {
 public:
-    CWallet *wallet;
-    QList<AddressTableEntry> cachedAddressTable;
-    AddressTableModel *parent;
+    Bitcredit_CWallet *wallet;
+    QList<Bitcredit_AddressTableEntry> cachedAddressTable;
+    Bitcredit_AddressTableModel *parent;
 
-    AddressTablePriv(CWallet *wallet, AddressTableModel *parent):
+    Bitcredit_AddressTablePriv(Bitcredit_CWallet *wallet, Bitcredit_AddressTableModel *parent):
         wallet(wallet), parent(parent) {}
 
     void refreshAddressTable()
@@ -83,10 +83,10 @@ public:
             {
                 const CBitcoinAddress& address = item.first;
                 bool fMine = IsMine(*wallet, address.Get());
-                AddressTableEntry::Type addressType = translateTransactionType(
+                Bitcredit_AddressTableEntry::Type addressType = translateTransactionType(
                         QString::fromStdString(item.second.purpose), fMine);
                 const std::string& strName = item.second.name;
-                cachedAddressTable.append(AddressTableEntry(addressType,
+                cachedAddressTable.append(Bitcredit_AddressTableEntry(addressType,
                                   QString::fromStdString(strName),
                                   QString::fromStdString(address.ToString())));
             }
@@ -94,37 +94,37 @@ public:
         // qLowerBound() and qUpperBound() require our cachedAddressTable list to be sorted in asc order
         // Even though the map is already sorted this re-sorting step is needed because the originating map
         // is sorted by binary address, not by base58() address.
-        qSort(cachedAddressTable.begin(), cachedAddressTable.end(), AddressTableEntryLessThan());
+        qSort(cachedAddressTable.begin(), cachedAddressTable.end(), Bitcredit_AddressTableEntryLessThan());
     }
 
     void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status)
     {
         // Find address / label in model
-        QList<AddressTableEntry>::iterator lower = qLowerBound(
-            cachedAddressTable.begin(), cachedAddressTable.end(), address, AddressTableEntryLessThan());
-        QList<AddressTableEntry>::iterator upper = qUpperBound(
-            cachedAddressTable.begin(), cachedAddressTable.end(), address, AddressTableEntryLessThan());
+        QList<Bitcredit_AddressTableEntry>::iterator lower = qLowerBound(
+            cachedAddressTable.begin(), cachedAddressTable.end(), address, Bitcredit_AddressTableEntryLessThan());
+        QList<Bitcredit_AddressTableEntry>::iterator upper = qUpperBound(
+            cachedAddressTable.begin(), cachedAddressTable.end(), address, Bitcredit_AddressTableEntryLessThan());
         int lowerIndex = (lower - cachedAddressTable.begin());
         int upperIndex = (upper - cachedAddressTable.begin());
         bool inModel = (lower != upper);
-        AddressTableEntry::Type newEntryType = translateTransactionType(purpose, isMine);
+        Bitcredit_AddressTableEntry::Type newEntryType = translateTransactionType(purpose, isMine);
 
         switch(status)
         {
         case CT_NEW:
             if(inModel)
             {
-                qDebug() << "AddressTablePriv::updateEntry : Warning: Got CT_NEW, but entry is already in model";
+                qDebug() << "Bitcredit_AddressTablePriv::updateEntry : Warning: Got CT_NEW, but entry is already in model";
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedAddressTable.insert(lowerIndex, AddressTableEntry(newEntryType, label, address));
+            cachedAddressTable.insert(lowerIndex, Bitcredit_AddressTableEntry(newEntryType, label, address));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
             if(!inModel)
             {
-                qDebug() << "AddressTablePriv::updateEntry : Warning: Got CT_UPDATED, but entry is not in model";
+                qDebug() << "Bitcredit_AddressTablePriv::updateEntry : Warning: Got CT_UPDATED, but entry is not in model";
                 break;
             }
             lower->type = newEntryType;
@@ -134,7 +134,7 @@ public:
         case CT_DELETED:
             if(!inModel)
             {
-                qDebug() << "AddressTablePriv::updateEntry : Warning: Got CT_DELETED, but entry is not in model";
+                qDebug() << "Bitcredit_AddressTablePriv::updateEntry : Warning: Got CT_DELETED, but entry is not in model";
                 break;
             }
             parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
@@ -149,7 +149,7 @@ public:
         return cachedAddressTable.size();
     }
 
-    AddressTableEntry *index(int idx)
+    Bitcredit_AddressTableEntry *index(int idx)
     {
         if(idx >= 0 && idx < cachedAddressTable.size())
         {
@@ -162,37 +162,37 @@ public:
     }
 };
 
-AddressTableModel::AddressTableModel(CWallet *wallet, WalletModel *parent) :
+Bitcredit_AddressTableModel::Bitcredit_AddressTableModel(Bitcredit_CWallet *wallet, Bitcredit_WalletModel *parent) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
     columns << tr("Label") << tr("Address");
-    priv = new AddressTablePriv(wallet, this);
+    priv = new Bitcredit_AddressTablePriv(wallet, this);
     priv->refreshAddressTable();
 }
 
-AddressTableModel::~AddressTableModel()
+Bitcredit_AddressTableModel::~Bitcredit_AddressTableModel()
 {
     delete priv;
 }
 
-int AddressTableModel::rowCount(const QModelIndex &parent) const
+int Bitcredit_AddressTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
     return priv->size();
 }
 
-int AddressTableModel::columnCount(const QModelIndex &parent) const
+int Bitcredit_AddressTableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
     return columns.length();
 }
 
-QVariant AddressTableModel::data(const QModelIndex &index, int role) const
+QVariant Bitcredit_AddressTableModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid())
         return QVariant();
 
-    AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
+    Bitcredit_AddressTableEntry *rec = static_cast<Bitcredit_AddressTableEntry*>(index.internalPointer());
 
     if(role == Qt::DisplayRole || role == Qt::EditRole)
     {
@@ -224,9 +224,9 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
     {
         switch(rec->type)
         {
-        case AddressTableEntry::Sending:
+        case Bitcredit_AddressTableEntry::Sending:
             return Send;
-        case AddressTableEntry::Receiving:
+        case Bitcredit_AddressTableEntry::Receiving:
             return Receive;
         default: break;
         }
@@ -234,12 +234,12 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool Bitcredit_AddressTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if(!index.isValid())
         return false;
-    AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
-    std::string strPurpose = (rec->type == AddressTableEntry::Sending ? "send" : "receive");
+    Bitcredit_AddressTableEntry *rec = static_cast<Bitcredit_AddressTableEntry*>(index.internalPointer());
+    std::string strPurpose = (rec->type == Bitcredit_AddressTableEntry::Sending ? "send" : "receive");
     editStatus = OK;
 
     if(role == Qt::EditRole)
@@ -277,7 +277,7 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
                 return false;
             }
             // Double-check that we're not overwriting a receiving address
-            else if(rec->type == AddressTableEntry::Sending)
+            else if(rec->type == Bitcredit_AddressTableEntry::Sending)
             {
                 // Remove old entry
                 wallet->DelAddressBook(curAddress);
@@ -290,7 +290,7 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
     return false;
 }
 
-QVariant AddressTableModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant Bitcredit_AddressTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if(orientation == Qt::Horizontal)
     {
@@ -302,27 +302,27 @@ QVariant AddressTableModel::headerData(int section, Qt::Orientation orientation,
     return QVariant();
 }
 
-Qt::ItemFlags AddressTableModel::flags(const QModelIndex &index) const
+Qt::ItemFlags Bitcredit_AddressTableModel::flags(const QModelIndex &index) const
 {
     if(!index.isValid())
         return 0;
-    AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
+    Bitcredit_AddressTableEntry *rec = static_cast<Bitcredit_AddressTableEntry*>(index.internalPointer());
 
     Qt::ItemFlags retval = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
     // Can edit address and label for sending addresses,
     // and only label for receiving addresses.
-    if(rec->type == AddressTableEntry::Sending ||
-      (rec->type == AddressTableEntry::Receiving && index.column()==Label))
+    if(rec->type == Bitcredit_AddressTableEntry::Sending ||
+      (rec->type == Bitcredit_AddressTableEntry::Receiving && index.column()==Label))
     {
         retval |= Qt::ItemIsEditable;
     }
     return retval;
 }
 
-QModelIndex AddressTableModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex Bitcredit_AddressTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    AddressTableEntry *data = priv->index(row);
+    Bitcredit_AddressTableEntry *data = priv->index(row);
     if(data)
     {
         return createIndex(row, column, priv->index(row));
@@ -333,14 +333,14 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex &par
     }
 }
 
-void AddressTableModel::updateEntry(const QString &address,
+void Bitcredit_AddressTableModel::updateEntry(const QString &address,
         const QString &label, bool isMine, const QString &purpose, int status)
 {
-    // Update address book model from Bitcoin core
+    // Update address book model from Bitcredit Core
     priv->updateEntry(address, label, isMine, purpose, status);
 }
 
-QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
+QString Bitcredit_AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
 {
     std::string strLabel = label.toStdString();
     std::string strAddress = address.toStdString();
@@ -370,7 +370,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         CPubKey newKey;
         if(!wallet->GetKeyFromPool(newKey))
         {
-            WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+            Bitcredit_WalletModel::UnlockContext ctx(walletModel->requestUnlock());
             if(!ctx.isValid())
             {
                 // Unlock wallet failed or was cancelled
@@ -399,11 +399,11 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     return QString::fromStdString(strAddress);
 }
 
-bool AddressTableModel::removeRows(int row, int count, const QModelIndex &parent)
+bool Bitcredit_AddressTableModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     Q_UNUSED(parent);
-    AddressTableEntry *rec = priv->index(row);
-    if(count != 1 || !rec || rec->type == AddressTableEntry::Receiving)
+    Bitcredit_AddressTableEntry *rec = priv->index(row);
+    if(count != 1 || !rec || rec->type == Bitcredit_AddressTableEntry::Receiving)
     {
         // Can only remove one row at a time, and cannot remove rows not in model.
         // Also refuse to remove receiving addresses.
@@ -418,7 +418,7 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex &parent
 
 /* Look up label for address in address book, if not found return empty string.
  */
-QString AddressTableModel::labelForAddress(const QString &address) const
+QString Bitcredit_AddressTableModel::labelForAddress(const QString &address) const
 {
     {
         LOCK(wallet->cs_wallet);
@@ -432,7 +432,7 @@ QString AddressTableModel::labelForAddress(const QString &address) const
     return QString();
 }
 
-int AddressTableModel::lookupAddress(const QString &address) const
+int Bitcredit_AddressTableModel::lookupAddress(const QString &address) const
 {
     QModelIndexList lst = match(index(0, Address, QModelIndex()),
                                 Qt::EditRole, address, 1, Qt::MatchExactly);
@@ -446,7 +446,7 @@ int AddressTableModel::lookupAddress(const QString &address) const
     }
 }
 
-void AddressTableModel::emitDataChanged(int idx)
+void Bitcredit_AddressTableModel::emitDataChanged(int idx)
 {
     emit dataChanged(index(idx, 0, QModelIndex()), index(idx, columns.length()-1, QModelIndex()));
 }

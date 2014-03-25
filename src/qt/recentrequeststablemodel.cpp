@@ -4,11 +4,11 @@
 
 #include "recentrequeststablemodel.h"
 
-#include "bitcoinunits.h"
+#include "bitcreditunits.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
 
-RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel *parent) :
+Bitcredit_RecentRequestsTableModel::Bitcredit_RecentRequestsTableModel(Bitcredit_CWallet *wallet, Bitcredit_WalletModel *parent) :
     walletModel(parent)
 {
     Q_UNUSED(wallet);
@@ -24,31 +24,31 @@ RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel 
     columns << tr("Date") << tr("Label") << tr("Message") << tr("Amount");
 }
 
-RecentRequestsTableModel::~RecentRequestsTableModel()
+Bitcredit_RecentRequestsTableModel::~Bitcredit_RecentRequestsTableModel()
 {
     /* Intentionally left empty */
 }
 
-int RecentRequestsTableModel::rowCount(const QModelIndex &parent) const
+int Bitcredit_RecentRequestsTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
 
     return list.length();
 }
 
-int RecentRequestsTableModel::columnCount(const QModelIndex &parent) const
+int Bitcredit_RecentRequestsTableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
 
     return columns.length();
 }
 
-QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) const
+QVariant Bitcredit_RecentRequestsTableModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid() || index.row() >= list.length())
         return QVariant();
 
-    const RecentRequestEntry *rec = &list[index.row()];
+    const Bitcredit_RecentRequestEntry *rec = &list[index.row()];
 
     if(role == Qt::DisplayRole || role == Qt::EditRole)
     {
@@ -78,18 +78,18 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
             if (rec->recipient.amount == 0 && role == Qt::DisplayRole)
                 return tr("(no amount)");
             else
-                return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
+                return BitcreditUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
         }
     }
     return QVariant();
 }
 
-bool RecentRequestsTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool Bitcredit_RecentRequestsTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     return true;
 }
 
-QVariant RecentRequestsTableModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant Bitcredit_RecentRequestsTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if(orientation == Qt::Horizontal)
     {
@@ -101,20 +101,20 @@ QVariant RecentRequestsTableModel::headerData(int section, Qt::Orientation orien
     return QVariant();
 }
 
-QModelIndex RecentRequestsTableModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex Bitcredit_RecentRequestsTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
 
     return createIndex(row, column);
 }
 
-bool RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex &parent)
+bool Bitcredit_RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     Q_UNUSED(parent);
 
     if(count > 0 && row >= 0 && (row+count) <= list.size())
     {
-        const RecentRequestEntry *rec;
+        const Bitcredit_RecentRequestEntry *rec;
         for (int i = 0; i < count; ++i)
         {
             rec = &list[row+i];
@@ -131,20 +131,20 @@ bool RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex 
     }
 }
 
-Qt::ItemFlags RecentRequestsTableModel::flags(const QModelIndex &index) const
+Qt::ItemFlags Bitcredit_RecentRequestsTableModel::flags(const QModelIndex &index) const
 {
     return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
 
 // called when adding a request from the GUI
-void RecentRequestsTableModel::addNewRequest(const SendCoinsRecipient &recipient)
+void Bitcredit_RecentRequestsTableModel::addNewRequest(const Bitcredit_SendCoinsRecipient &recipient)
 {
-    RecentRequestEntry newEntry;
+    Bitcredit_RecentRequestEntry newEntry;
     newEntry.id = ++nReceiveRequestsMaxId;
     newEntry.date = QDateTime::currentDateTime();
     newEntry.recipient = recipient;
 
-    CDataStream ss(SER_DISK, CLIENT_VERSION);
+    CDataStream ss(SER_DISK, BITCREDIT_CLIENT_VERSION);
     ss << newEntry;
 
     if (!walletModel->saveReceiveRequest(recipient.address.toStdString(), newEntry.id, ss.str()))
@@ -154,12 +154,12 @@ void RecentRequestsTableModel::addNewRequest(const SendCoinsRecipient &recipient
 }
 
 // called from ctor when loading from wallet
-void RecentRequestsTableModel::addNewRequest(const std::string &recipient)
+void Bitcredit_RecentRequestsTableModel::addNewRequest(const std::string &recipient)
 {
     std::vector<char> data(recipient.begin(), recipient.end());
-    CDataStream ss(data, SER_DISK, CLIENT_VERSION);
+    CDataStream ss(data, SER_DISK, BITCREDIT_CLIENT_VERSION);
 
-    RecentRequestEntry entry;
+    Bitcredit_RecentRequestEntry entry;
     ss >> entry;
 
     if (entry.id == 0) // should not happen
@@ -172,35 +172,35 @@ void RecentRequestsTableModel::addNewRequest(const std::string &recipient)
 }
 
 // actually add to table in GUI
-void RecentRequestsTableModel::addNewRequest(RecentRequestEntry &recipient)
+void Bitcredit_RecentRequestsTableModel::addNewRequest(Bitcredit_RecentRequestEntry &recipient)
 {
     beginInsertRows(QModelIndex(), 0, 0);
     list.prepend(recipient);
     endInsertRows();
 }
 
-void RecentRequestsTableModel::sort(int column, Qt::SortOrder order)
+void Bitcredit_RecentRequestsTableModel::sort(int column, Qt::SortOrder order)
 {
-    qSort(list.begin(), list.end(), RecentRequestEntryLessThan(column, order));
+    qSort(list.begin(), list.end(), Bitcredit_RecentRequestEntryLessThan(column, order));
     emit dataChanged(index(0, 0, QModelIndex()), index(list.size() - 1, NUMBER_OF_COLUMNS - 1, QModelIndex()));
 }
 
-bool RecentRequestEntryLessThan::operator()(RecentRequestEntry &left, RecentRequestEntry &right) const
+bool Bitcredit_RecentRequestEntryLessThan::operator()(Bitcredit_RecentRequestEntry &left, Bitcredit_RecentRequestEntry &right) const
 {
-    RecentRequestEntry *pLeft = &left;
-    RecentRequestEntry *pRight = &right;
+    Bitcredit_RecentRequestEntry *pLeft = &left;
+    Bitcredit_RecentRequestEntry *pRight = &right;
     if (order == Qt::DescendingOrder)
         std::swap(pLeft, pRight);
 
     switch(column)
     {
-    case RecentRequestsTableModel::Date:
+    case Bitcredit_RecentRequestsTableModel::Date:
         return pLeft->date.toTime_t() < pRight->date.toTime_t();
-    case RecentRequestsTableModel::Label:
+    case Bitcredit_RecentRequestsTableModel::Label:
         return pLeft->recipient.label < pRight->recipient.label;
-    case RecentRequestsTableModel::Message:
+    case Bitcredit_RecentRequestsTableModel::Message:
         return pLeft->recipient.message < pRight->recipient.message;
-    case RecentRequestsTableModel::Amount:
+    case Bitcredit_RecentRequestsTableModel::Amount:
         return pLeft->recipient.amount < pRight->recipient.amount;
     default:
         return pLeft->id < pRight->id;

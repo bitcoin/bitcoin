@@ -11,7 +11,7 @@
 
 /* Return positive answer if transaction should be shown in list.
  */
-bool TransactionRecord::showTransaction(const CWalletTx &wtx)
+bool Bitcredit_TransactionRecord::showTransaction(const Bitcredit_CWalletTx &wtx)
 {
     if (wtx.IsCoinBase())
     {
@@ -24,15 +24,86 @@ bool TransactionRecord::showTransaction(const CWalletTx &wtx)
     return true;
 }
 
+void SetupNoneFromMeDepositSub(const Bitcredit_CWalletTx &wtx, const unsigned int& nOut, Bitcredit_TransactionRecord &sub, const Bitcredit_CWallet *keyholder_wallet) {
+    if(wtx.IsDeposit()) {
+    	if(nOut == 0) {
+    		sub.type = Bitcredit_TransactionRecord::Deposit;
+    	} else {
+    		sub.type = Bitcredit_TransactionRecord::DepositChange;
+    	}
+
+    	const int64_t nValue = wtx.vout[nOut].nValue;
+
+		if(keyholder_wallet->IsMine(wtx.vout[nOut]))
+		{
+	    	sub.debit = 0;
+	    	sub.credit = nValue;
+		} else {
+	    	sub.debit = 0;
+	    	sub.credit = 0;
+		}
+    }
+}
+
+void SetupAllFromMeDepositSub(const Bitcredit_CWalletTx &wtx, const unsigned int& nOut, Bitcredit_TransactionRecord &sub, const Bitcredit_CWallet *keyholder_wallet) {
+    if(wtx.IsDeposit()) {
+    	if(nOut == 0) {
+    		sub.type = Bitcredit_TransactionRecord::Deposit;
+    	} else {
+    		sub.type = Bitcredit_TransactionRecord::DepositChange;
+    	}
+
+    	const int64_t nValue = wtx.vout[nOut].nValue;
+
+		if(keyholder_wallet->IsMine(wtx.vout[nOut]))
+		{
+	    	sub.debit = -nValue;
+	    	sub.credit = nValue;
+		} else {
+	    	sub.debit = -nValue;
+	    	sub.credit = 0;
+		}
+    }
+}
+
+void SetupAllFromMeAllToMeDepositSub(const Bitcredit_CWalletTx &wtx, const unsigned int& nOut, Bitcredit_TransactionRecord &sub) {
+    if(wtx.IsDeposit()) {
+    	if(nOut == 0) {
+    		sub.type = Bitcredit_TransactionRecord::Deposit;
+    	} else {
+    		sub.type = Bitcredit_TransactionRecord::DepositChange;
+    	}
+
+    	const int64_t nValue = wtx.vout[nOut].nValue;
+    	sub.debit = -nValue;
+    	sub.credit = nValue;
+
+        CTxDestination address;
+        if (ExtractDestination(wtx.vout[nOut].scriptPubKey, address))
+        {
+            // Sent to Bitcredit Address
+            sub.address = CBitcoinAddress(address).ToString();
+        }
+        else
+        {
+            std::map<std::string, std::string> mapValue = wtx.mapValue;
+            // Sent to IP, or other non-address transaction like OP_EVAL
+            sub.address = mapValue["to"];
+        }
+    }
+}
 /*
  * Decompose CWallet transaction to model transaction records.
  */
-QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx)
+QList<Bitcredit_TransactionRecord> Bitcredit_TransactionRecord::decomposeTransaction(const Bitcredit_CWallet *keyholder_wallet, const Bitcredit_CWalletTx &wtx)
 {
-    QList<TransactionRecord> parts;
+    //The decomposed transactions should not be affected by prepared deposits. Passing in empty list.
+    map<uint256, set<int> > mapPreparedDepositTxInPoints;
+
+    QList<Bitcredit_TransactionRecord> parts;
     int64_t nTime = wtx.GetTxTime();
-    int64_t nCredit = wtx.GetCredit(true);
-    int64_t nDebit = wtx.GetDebit();
+    int64_t nCredit = wtx.GetCredit(mapPreparedDepositTxInPoints, keyholder_wallet);
+    int64_t nDebit = wtx.GetDebit(keyholder_wallet);
     int64_t nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
@@ -42,32 +113,41 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         //
         // Credit
         //
-        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-        {
-            if(wallet->IsMine(txout))
+		for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
+		{
+			const CTxOut& txout = wtx.vout[nOut];
+
+            if(keyholder_wallet->IsMine(txout))
             {
-                TransactionRecord sub(hash, nTime);
+                Bitcredit_TransactionRecord sub(hash, nTime);
                 CTxDestination address;
                 sub.idx = parts.size(); // sequence number
                 sub.credit = txout.nValue;
-                if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
+                if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*keyholder_wallet, address))
                 {
-                    // Received by Bitcoin Address
-                    sub.type = TransactionRecord::RecvWithAddress;
+                    // Received by Bitcredit Address
+                    sub.type = Bitcredit_TransactionRecord::RecvWithAddress;
                     sub.address = CBitcoinAddress(address).ToString();
                 }
                 else
                 {
                     // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
-                    sub.type = TransactionRecord::RecvFromOther;
+                    sub.type = Bitcredit_TransactionRecord::RecvFromOther;
                     sub.address = mapValue["from"];
                 }
                 if (wtx.IsCoinBase())
                 {
                     // Generated
-                    sub.type = TransactionRecord::Generated;
+                    sub.type = Bitcredit_TransactionRecord::Generated;
                 }
-
+                else if (wtx.IsDeposit())
+                {
+                	if(nOut == 0) {
+                		sub.type = Bitcredit_TransactionRecord::Deposit;
+                	} else {
+                		sub.type = Bitcredit_TransactionRecord::DepositChange;
+                	}
+                }
                 parts.append(sub);
             }
         }
@@ -75,20 +155,27 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     else
     {
         bool fAllFromMe = true;
-        BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-            fAllFromMe = fAllFromMe && wallet->IsMine(txin);
+        BOOST_FOREACH(const Bitcredit_CTxIn& txin, wtx.vin)
+            fAllFromMe = fAllFromMe && keyholder_wallet->IsMine(txin);
 
         bool fAllToMe = true;
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-            fAllToMe = fAllToMe && wallet->IsMine(txout);
+            fAllToMe = fAllToMe && keyholder_wallet->IsMine(txout);
 
         if (fAllFromMe && fAllToMe)
         {
             // Payment to self
-            int64_t nChange = wtx.GetChange();
+            int64_t nChange = wtx.GetChange(keyholder_wallet);
+            Bitcredit_TransactionRecord sub(hash, nTime, Bitcredit_TransactionRecord::SendToSelf, "", -(nDebit - nChange), nCredit - nChange);
+            SetupAllFromMeAllToMeDepositSub(wtx, 0, sub);
+            parts.append(sub);
 
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
-                            -(nDebit - nChange), nCredit - nChange));
+            if(wtx.IsDeposit() && wtx.vout.size() == 2) {
+                Bitcredit_TransactionRecord sub(hash, nTime, Bitcredit_TransactionRecord::SendToSelf, "", -(nDebit - nChange), nCredit - nChange);
+                SetupAllFromMeAllToMeDepositSub(wtx, 1, sub);
+                parts.append(sub);
+            }
+
         }
         else if (fAllFromMe)
         {
@@ -100,27 +187,29 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
             {
                 const CTxOut& txout = wtx.vout[nOut];
-                TransactionRecord sub(hash, nTime);
+                Bitcredit_TransactionRecord sub(hash, nTime);
                 sub.idx = parts.size();
 
-                if(wallet->IsMine(txout))
-                {
-                    // Ignore parts sent to self, as this is usually the change
-                    // from a transaction sent back to our own address.
-                    continue;
+                if(!wtx.IsDeposit()) {
+					if(keyholder_wallet->IsMine(txout))
+					{
+						// Ignore parts sent to self, as this is usually the change
+						// from a transaction sent back to our own address.
+						continue;
+					}
                 }
 
                 CTxDestination address;
                 if (ExtractDestination(txout.scriptPubKey, address))
                 {
-                    // Sent to Bitcoin Address
-                    sub.type = TransactionRecord::SendToAddress;
+                    // Sent to Bitcredit Address
+                    sub.type = Bitcredit_TransactionRecord::SendToAddress;
                     sub.address = CBitcoinAddress(address).ToString();
                 }
                 else
                 {
                     // Sent to IP, or other non-address transaction like OP_EVAL
-                    sub.type = TransactionRecord::SendToOther;
+                    sub.type = Bitcredit_TransactionRecord::SendToOther;
                     sub.address = mapValue["to"];
                 }
 
@@ -133,7 +222,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 }
                 sub.debit = -nValue;
 
+                SetupAllFromMeDepositSub(wtx, nOut, sub, keyholder_wallet);
                 parts.append(sub);
+
             }
         }
         else
@@ -141,22 +232,41 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             //
             // Mixed debit transaction, can't break down payees
             //
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+        	if(wtx.IsDeposit()) {
+				if(keyholder_wallet->IsMine(wtx.vout[0]))
+				{
+					Bitcredit_TransactionRecord sub(hash, nTime, Bitcredit_TransactionRecord::Other, "", nNet, 0);
+					SetupNoneFromMeDepositSub(wtx, 0, sub, keyholder_wallet);
+					parts.append(sub);
+				}
+				if(wtx.vout.size() == 2) {
+					if(keyholder_wallet->IsMine(wtx.vout[1]))
+					{
+						Bitcredit_TransactionRecord sub(hash, nTime, Bitcredit_TransactionRecord::Other, "", nNet, 0);
+						SetupNoneFromMeDepositSub(wtx, 1, sub, keyholder_wallet);
+						parts.append(sub);
+					}
+				}
+        	} else {
+				Bitcredit_TransactionRecord sub(hash, nTime, Bitcredit_TransactionRecord::Other, "", nNet, 0);
+				parts.append(sub);
+        	}
+
         }
     }
 
     return parts;
 }
 
-void TransactionRecord::updateStatus(const CWalletTx &wtx)
+void Bitcredit_TransactionRecord::updateStatus(const Bitcredit_CWalletTx &wtx)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(bitcredit_mainState.cs_main);
     // Determine transaction status
 
     // Find the block the tx is in
-    CBlockIndex* pindex = NULL;
-    std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(wtx.hashBlock);
-    if (mi != mapBlockIndex.end())
+    Bitcredit_CBlockIndex* pindex = NULL;
+    std::map<uint256, Bitcredit_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.find(wtx.hashBlock);
+    if (mi != bitcredit_mapBlockIndex.end())
         pindex = (*mi).second;
 
     // Sort order, unrecorded transactions sort to the top
@@ -167,27 +277,27 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         idx);
     status.countsForBalance = wtx.IsTrusted() && !(wtx.GetBlocksToMaturity() > 0);
     status.depth = wtx.GetDepthInMainChain();
-    status.cur_num_blocks = chainActive.Height();
+    status.cur_num_blocks = bitcredit_chainActive.Height();
 
-    if (!IsFinalTx(wtx, chainActive.Height() + 1))
+    if (!Bitcredit_IsFinalTx(wtx, bitcredit_chainActive.Height() + 1))
     {
-        if (wtx.nLockTime < LOCKTIME_THRESHOLD)
+        if (wtx.nLockTime < BITCREDIT_LOCKTIME_THRESHOLD)
         {
-            status.status = TransactionStatus::OpenUntilBlock;
-            status.open_for = wtx.nLockTime - chainActive.Height();
+            status.status = Bitcredit_TransactionStatus::OpenUntilBlock;
+            status.open_for = wtx.nLockTime - bitcredit_chainActive.Height();
         }
         else
         {
-            status.status = TransactionStatus::OpenUntilDate;
+            status.status = Bitcredit_TransactionStatus::OpenUntilDate;
             status.open_for = wtx.nLockTime;
         }
     }
     // For generated transactions, determine maturity
-    else if(type == TransactionRecord::Generated)
+    else if(type == Bitcredit_TransactionRecord::Generated)
     {
         if (wtx.GetBlocksToMaturity() > 0)
         {
-            status.status = TransactionStatus::Immature;
+            status.status = Bitcredit_TransactionStatus::Immature;
 
             if (wtx.IsInMainChain())
             {
@@ -195,56 +305,106 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
 
                 // Check if the block was requested by anyone
                 if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-                    status.status = TransactionStatus::MaturesWarning;
+                    status.status = Bitcredit_TransactionStatus::MaturesWarning;
             }
             else
             {
-                status.status = TransactionStatus::NotAccepted;
+                status.status = Bitcredit_TransactionStatus::NotAccepted;
             }
         }
         else
         {
-            status.status = TransactionStatus::Confirmed;
+            status.status = Bitcredit_TransactionStatus::Confirmed;
+        }
+    }
+    else if(type == Bitcredit_TransactionRecord::Deposit)
+    {
+
+        if (wtx.GetFirstDepositOutBlocksToMaturity() > 0)
+        {
+            status.status = Bitcredit_TransactionStatus::ImmatureDeposit;
+
+            if (wtx.IsInMainChain())
+            {
+                status.matures_in = wtx.GetFirstDepositOutBlocksToMaturity();
+
+                // Check if the block was requested by anyone
+                if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                    status.status = Bitcredit_TransactionStatus::MaturesWarning;
+            }
+            else
+            {
+                status.status = Bitcredit_TransactionStatus::NotAccepted;
+            }
+        }
+        else
+        {
+            status.status = Bitcredit_TransactionStatus::Confirmed;
+        }
+    }
+    else if(type == Bitcredit_TransactionRecord::DepositChange)
+    {
+
+        if (wtx.GetSecondDepositOutBlocksToMaturity() > 0)
+        {
+            status.status = Bitcredit_TransactionStatus::ImmatureDepositChange;
+
+            if (wtx.IsInMainChain())
+            {
+                status.matures_in = wtx.GetSecondDepositOutBlocksToMaturity();
+
+                // Check if the block was requested by anyone
+                if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                    status.status = Bitcredit_TransactionStatus::MaturesWarning;
+            }
+            else
+            {
+                status.status = Bitcredit_TransactionStatus::NotAccepted;
+            }
+        }
+        else
+        {
+            status.status = Bitcredit_TransactionStatus::Confirmed;
         }
     }
     else
     {
         if (status.depth < 0)
         {
-            status.status = TransactionStatus::Conflicted;
+            status.status = Bitcredit_TransactionStatus::Conflicted;
         }
         else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
         {
-            status.status = TransactionStatus::Offline;
+            status.status = Bitcredit_TransactionStatus::Offline;
         }
         else if (status.depth == 0)
         {
-            status.status = TransactionStatus::Unconfirmed;
+            status.status = Bitcredit_TransactionStatus::Unconfirmed;
         }
         else if (status.depth < RecommendedNumConfirmations)
         {
-            status.status = TransactionStatus::Confirming;
+            status.status = Bitcredit_TransactionStatus::Confirming;
         }
         else
         {
-            status.status = TransactionStatus::Confirmed;
+            status.status = Bitcredit_TransactionStatus::Confirmed;
         }
     }
 
 }
 
-bool TransactionRecord::statusUpdateNeeded()
+bool Bitcredit_TransactionRecord::statusUpdateNeeded()
 {
-    AssertLockHeld(cs_main);
-    return status.cur_num_blocks != chainActive.Height();
+    AssertLockHeld(bitcredit_mainState.cs_main);
+    return status.cur_num_blocks != bitcredit_chainActive.Height();
 }
 
-QString TransactionRecord::getTxID() const
+QString Bitcredit_TransactionRecord::getTxID() const
 {
     return formatSubTxId(hash, idx);
 }
 
-QString TransactionRecord::formatSubTxId(const uint256 &hash, int vout)
+QString Bitcredit_TransactionRecord::formatSubTxId(const uint256 &hash, int vout)
 {
     return QString::fromStdString(hash.ToString() + strprintf("-%03d", vout));
 }

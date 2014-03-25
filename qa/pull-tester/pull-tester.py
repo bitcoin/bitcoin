@@ -122,7 +122,7 @@ def testpull(number, comment_url, clone_url, commit):
     run("chown -R ${BUILD_USER}:${BUILD_GROUP} ${CHROOT_COPY}/${OUT_DIR}", fail_hard=False)
 
     script = os.environ["BUILD_PATH"]+"/qa/pull-tester/pull-tester.sh"
-    script += " ${BUILD_PATH} ${MINGW_DEPS_DIR} ${SCRIPTS_DIR}/BitcoindComparisonTool_jar/BitcoindComparisonTool.jar 0 6 ${OUT_DIR}"
+    script += " ${BUILD_PATH} ${MINGW_DEPS_DIR} ${SCRIPTS_DIR}/BitcreditdComparisonTool_jar/BitcreditdComparisonTool.jar 0 6 ${OUT_DIR}"
     returncode = run("chroot ${CHROOT_COPY} sudo -u ${BUILD_USER} -H timeout ${TEST_TIMEOUT} "+script,
                      fail_hard=False, stdout=out, stderr=out)
 

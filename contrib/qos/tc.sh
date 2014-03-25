@@ -32,10 +32,10 @@ tc filter add dev ${IF} parent 1: protocol ip prio 2 handle 2 fw classid 1:11
 #	ret=$?
 #done
 
-#limit outgoing traffic to and from port 8333. but not when dealing with a host on the local network
+#limit outgoing traffic to and from port 9333. but not when dealing with a host on the local network
 #	(defined by $LOCALNET)
 #	--set-mark marks packages matching these criteria with the number "2"
 #	these packages are filtered by the tc filter with "handle 2"
 #	this filter sends the packages into the 1:11 class, and this class is limited to ${LIMIT}
-iptables -t mangle -A OUTPUT -p tcp -m tcp --dport 8333 ! -d ${LOCALNET} -j MARK --set-mark 0x2
-iptables -t mangle -A OUTPUT -p tcp -m tcp --sport 8333 ! -d ${LOCALNET} -j MARK --set-mark 0x2
+iptables -t mangle -A OUTPUT -p tcp -m tcp --dport 9333 ! -d ${LOCALNET} -j MARK --set-mark 0x2
+iptables -t mangle -A OUTPUT -p tcp -m tcp --sport 9333 ! -d ${LOCALNET} -j MARK --set-mark 0x2

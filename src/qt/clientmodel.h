@@ -7,12 +7,15 @@
 
 #include <QObject>
 
-class AddressTableModel;
+class CChain;
+class MainState;
+class CNetParams;
+class Bitcredit_AddressTableModel;
 class OptionsModel;
 class PeerTableModel;
-class TransactionTableModel;
+class Bitcredit_TransactionTableModel;
 
-class CWallet;
+class Bitcredit_CWallet;
 
 QT_BEGIN_NAMESPACE
 class QDateTime;
@@ -33,13 +36,13 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-/** Model for Bitcoin network client. */
+/** Model for Bitcredit network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ClientModel(OptionsModel *optionsModel, QObject *parent = 0);
+    explicit ClientModel(OptionsModel *optionsModel, QObject *parent, CNetParams * netParams, MainState& mainStateIn, CChain& chainActiveIn);
     ~ClientModel();
 
     OptionsModel *getOptionsModel();
@@ -58,20 +61,25 @@ public:
 
     //! Return network (main, testnet3, regtest)
     QString getNetworkName() const;
-    //! Return true if core is doing initial block download
-    bool inInitialBlockDownload() const;
     //! Return true if core is importing blocks
     enum BlockSource getBlockSource() const;
     //! Return warnings to be displayed in status bar
     QString getStatusBarWarnings() const;
 
     QString formatFullVersion() const;
+    QString bitcoin_formatVersion() const;
     QString formatBuildDate() const;
     bool isReleaseVersion() const;
-    QString clientName() const;
+    QString bitcredit_clientName() const;
+    QString bitcoin_clientName() const;
     QString formatClientStartupTime() const;
 
+    CNetParams * NetParams() {
+    	return netParams;
+    }
+
 private:
+    CNetParams * netParams;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
 
@@ -82,6 +90,13 @@ private:
     int numBlocksAtStartup;
 
     QTimer *pollTimer;
+
+    MainState& mainState;
+    CChain& chainActive;
+
+    unsigned int nPrevNodeCount;
+
+    bool isForBitcredit;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -100,7 +115,6 @@ signals:
 
 public slots:
     void updateTimer();
-    void updateNumConnections(int numConnections);
     void updateAlert(const QString &hash, int status);
 };
 

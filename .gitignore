@@ -1,11 +1,11 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/test/test_bitcoin
-src/qt/test/test_bitcoin-qt
+src/bitcredit
+src/bitcreditd
+src/bitcredit-cli
+src/test/test_bitcredit
+src/qt/test/test_bitcredit-qt
 
 Makefile.in
 aclocal.m4
@@ -13,8 +13,8 @@ autom4te.cache/
 config.log
 config.status
 configure
-src/bitcoin-config.h
-src/bitcoin-config.h.in
+src/bitcredit-config.h
+src/bitcredit-config.h.in
 src/build-aux/
 src/stamp-h1
 share/setup.nsi
@@ -36,7 +36,7 @@ src/qt/test/moc*.cpp
 *.o
 *.o-*
 *.patch
-.bitcoin
+.bitcredit
 *.a
 *.pb.cc
 *.pb.h
@@ -51,12 +51,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+bitcredit-qt
+Bitcredit-Qt.app
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+bitcredit-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -71,7 +71,7 @@ build
 #lcov
 *.gcno
 /*.info
-test_bitcoin.coverage/
+test_bitcredit.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -79,7 +79,10 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-qa/pull-tester/run-bitcoind-for-test.sh
+qa/pull-tester/run-bitcreditd-for-test.sh
 qa/pull-tester/build-tests.sh
 
 !src/leveldb*/Makefile
+/.settings
+.cproject
+.project

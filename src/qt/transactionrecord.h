@@ -10,15 +10,15 @@
 #include <QList>
 #include <QString>
 
-class CWallet;
-class CWalletTx;
+class Bitcredit_CWallet;
+class Bitcredit_CWalletTx;
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
-class TransactionStatus
+class Bitcredit_TransactionStatus
 {
 public:
-    TransactionStatus():
+    Bitcredit_TransactionStatus():
         countsForBalance(false), sortKey(""),
         matures_in(0), status(Offline), depth(0), open_for(0), cur_num_blocks(-1)
     { }
@@ -34,6 +34,8 @@ public:
         Conflicted,         /**< Conflicts with other transaction or mempool **/
         /// Generated (mined) transactions
         Immature,           /**< Mined but waiting for maturity */
+        ImmatureDeposit,           /**< Added as deposit but waiting for maturity */
+        ImmatureDepositChange,           /**< Added as deposit change but waiting for maturity */
         MaturesWarning,     /**< Transaction will likely not mature because no nodes have confirmed */
         NotAccepted         /**< Mined but not accepted */
     };
@@ -64,13 +66,15 @@ public:
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
     multiple outputs.
  */
-class TransactionRecord
+class Bitcredit_TransactionRecord
 {
 public:
     enum Type
     {
         Other,
         Generated,
+        Deposit,
+        DepositChange,
         SendToAddress,
         SendToOther,
         RecvWithAddress,
@@ -81,18 +85,18 @@ public:
     /** Number of confirmation recommended for accepting a transaction */
     static const int RecommendedNumConfirmations = 6;
 
-    TransactionRecord():
+    Bitcredit_TransactionRecord():
             hash(), time(0), type(Other), address(""), debit(0), credit(0), idx(0)
     {
     }
 
-    TransactionRecord(uint256 hash, qint64 time):
+    Bitcredit_TransactionRecord(uint256 hash, qint64 time):
             hash(hash), time(time), type(Other), address(""), debit(0),
             credit(0), idx(0)
     {
     }
 
-    TransactionRecord(uint256 hash, qint64 time,
+    Bitcredit_TransactionRecord(uint256 hash, qint64 time,
                 Type type, const std::string &address,
                 qint64 debit, qint64 credit):
             hash(hash), time(time), type(type), address(address), debit(debit), credit(credit),
@@ -102,8 +106,8 @@ public:
 
     /** Decompose CWallet transaction to model transaction records.
      */
-    static bool showTransaction(const CWalletTx &wtx);
-    static QList<TransactionRecord> decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx);
+    static bool showTransaction(const Bitcredit_CWalletTx &wtx);
+    static QList<Bitcredit_TransactionRecord> decomposeTransaction(const Bitcredit_CWallet *keyholder_wallet, const Bitcredit_CWalletTx &wtx);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -119,7 +123,7 @@ public:
     int idx;
 
     /** Status: can change with block chain update */
-    TransactionStatus status;
+    Bitcredit_TransactionStatus status;
 
     /** Return the unique identifier for this transaction (part) */
     QString getTxID() const;
@@ -129,7 +133,7 @@ public:
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const CWalletTx &wtx);
+    void updateStatus(const Bitcredit_CWalletTx &wtx);
 
     /** Return whether a status update is needed.
      */

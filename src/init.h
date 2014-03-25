@@ -7,15 +7,30 @@
 #define BITCOIN_INIT_H
 
 #include <string>
+#include <stdint.h>
 
-class CWallet;
+class Bitcredit_CDBEnv;
+class Bitcredit_CWallet;
+class Bitcoin_CDBEnv;
+class Bitcoin_CWallet;
 
 namespace boost {
     class thread_group;
 };
 
-extern std::string strWalletFile;
-extern CWallet* pwalletMain;
+//extern uint64_t bitcoin_nAccountingEntryNumber;
+//extern Bitcoin_CDBEnv bitcoin_bitdb;
+//extern Bitcoin_CWallet* bitcoin_pwalletMain;
+
+extern uint64_t bitcredit_nAccountingEntryNumber;
+extern Bitcredit_CDBEnv bitcredit_bitdb;
+extern Bitcredit_CWallet* bitcredit_pwalletMain;
+
+extern uint64_t deposit_nAccountingEntryNumber;
+extern Bitcredit_CDBEnv deposit_bitdb;
+extern Bitcredit_CWallet* deposit_pwalletMain;
+
+extern Bitcoin_CWallet* bitcoin_pwalletMain;
 
 void StartShutdown();
 bool ShutdownRequested();

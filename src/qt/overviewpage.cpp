@@ -5,7 +5,7 @@
 #include "overviewpage.h"
 #include "ui_overviewpage.h"
 
-#include "bitcoinunits.h"
+#include "bitcreditunits.h"
 #include "clientmodel.h"
 #include "guiconstants.h"
 #include "guiutil.h"
@@ -24,7 +24,7 @@ class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(): QAbstractItemDelegate(), unit(BitcoinUnits::BTC)
+    TxViewDelegate(): QAbstractItemDelegate(), unit(BitcreditUnits::CRE)
     {
 
     }
@@ -44,10 +44,10 @@ public:
         QRect addressRect(mainRect.left() + xspace, mainRect.top()+ypad+halfheight, mainRect.width() - xspace, halfheight);
         icon.paint(painter, decorationRect);
 
-        QDateTime date = index.data(TransactionTableModel::DateRole).toDateTime();
+        QDateTime date = index.data(Bitcredit_TransactionTableModel::DateRole).toDateTime();
         QString address = index.data(Qt::DisplayRole).toString();
-        qint64 amount = index.data(TransactionTableModel::AmountRole).toLongLong();
-        bool confirmed = index.data(TransactionTableModel::ConfirmedRole).toBool();
+        qint64 amount = index.data(Bitcredit_TransactionTableModel::AmountRole).toLongLong();
+        bool confirmed = index.data(Bitcredit_TransactionTableModel::ConfirmedRole).toBool();
         QVariant value = index.data(Qt::ForegroundRole);
         QColor foreground = option.palette.color(QPalette::Text);
         if(value.canConvert<QBrush>())
@@ -72,7 +72,7 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true);
+        QString amountText = BitcreditUnits::formatWithUnit(unit, amount, true);
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
@@ -99,10 +99,13 @@ OverviewPage::OverviewPage(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
     clientModel(0),
-    walletModel(0),
+    bitcredit_model(0),
+    deposit_model(0),
     currentBalance(-1),
     currentUnconfirmedBalance(-1),
     currentImmatureBalance(-1),
+    currentPreparedDepositBalance(-1),
+    currentInDepositBalance(-1),
     txdelegate(new TxViewDelegate()),
     filter(0)
 {
@@ -135,22 +138,47 @@ OverviewPage::~OverviewPage()
     delete ui;
 }
 
-void OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance)
+void OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 preparedDepositBalance, qint64 inDepositBalance)
 {
-    int unit = walletModel->getOptionsModel()->getDisplayUnit();
+    int unit = bitcredit_model->getOptionsModel()->getDisplayUnit();
     currentBalance = balance;
     currentUnconfirmedBalance = unconfirmedBalance;
     currentImmatureBalance = immatureBalance;
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
-    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance));
-    ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immatureBalance));
-    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balance + unconfirmedBalance + immatureBalance));
+    currentPreparedDepositBalance = preparedDepositBalance;
+    currentInDepositBalance = inDepositBalance;
+    ui->labelBalance->setText(BitcreditUnits::formatWithUnit(unit, balance));
+    ui->labelUnconfirmed->setText(BitcreditUnits::formatWithUnit(unit, unconfirmedBalance));
+    ui->labelImmature->setText(BitcreditUnits::formatWithUnit(unit, immatureBalance));
+    ui->labelPreparedDeposit->setText(BitcreditUnits::formatWithUnit(unit, preparedDepositBalance));
+    ui->labelInDeposit->setText(BitcreditUnits::formatWithUnit(unit, inDepositBalance));
+    ui->labelTotal->setText(BitcreditUnits::formatWithUnit(unit, balance + unconfirmedBalance + immatureBalance + preparedDepositBalance + inDepositBalance));
 
-    // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
-    // for the non-mining users
-    bool showImmature = immatureBalance != 0;
-    ui->labelImmature->setVisible(showImmature);
-    ui->labelImmatureText->setVisible(showImmature);
+//    // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
+//    // for the non-mining users
+//    bool showImmature = immatureBalance != 0;
+//    ui->labelImmature->setVisible(showImmature);
+//    ui->labelImmatureText->setVisible(showImmature);
+//
+//    // only show deposit balance if it's non-zero, so as not to complicate things
+//    // for the non-mining users
+//    bool showPreparedDeposit = preparedDepositBalance != 0;
+//    ui->labelPreparedDeposit->setVisible(showPreparedDeposit);
+//    ui->labelPreparedDepositText->setVisible(showPreparedDeposit);
+//
+//    // only show deposit balance if it's non-zero, so as not to complicate things
+//    // for the non-mining users
+//    bool showInDeposit = inDepositBalance != 0;
+//    ui->labelInDeposit->setVisible(showInDeposit);
+//    ui->labelInDepositText->setVisible(showInDeposit);
+}
+
+void OverviewPage::refreshBalance()
+{
+    //Find all prepared deposit transactions
+    map<uint256, set<int> > mapPreparedDepositTxInPoints;
+    deposit_model->wallet->PreparedDepositTxInPoints(mapPreparedDepositTxInPoints);
+
+    setBalance(bitcredit_model->getBalance(mapPreparedDepositTxInPoints), bitcredit_model->getUnconfirmedBalance(mapPreparedDepositTxInPoints), bitcredit_model->getImmatureBalance(mapPreparedDepositTxInPoints), bitcredit_model->getPreparedDepositBalance(), bitcredit_model->getInDepositBalance());
 }
 
 void OverviewPage::setClientModel(ClientModel *model)
@@ -164,43 +192,47 @@ void OverviewPage::setClientModel(ClientModel *model)
     }
 }
 
-void OverviewPage::setWalletModel(WalletModel *model)
+void OverviewPage::setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModel *deposit_model)
 {
-    this->walletModel = model;
-    if(model && model->getOptionsModel())
+    this->bitcredit_model = bitcredit_model;
+    this->deposit_model = deposit_model;
+
+    if(bitcredit_model && bitcredit_model->getOptionsModel())
     {
         // Set up transaction list
-        filter = new TransactionFilterProxy();
-        filter->setSourceModel(model->getTransactionTableModel());
+        filter = new Bitcredit_TransactionFilterProxy();
+        filter->setSourceModel(bitcredit_model->getTransactionTableModel());
         filter->setLimit(NUM_ITEMS);
         filter->setDynamicSortFilter(true);
         filter->setSortRole(Qt::EditRole);
         filter->setShowInactive(false);
-        filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
+        filter->sort(Bitcredit_TransactionTableModel::Status, Qt::DescendingOrder);
 
         ui->listTransactions->setModel(filter);
-        ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
+        ui->listTransactions->setModelColumn(Bitcredit_TransactionTableModel::ToAddress);
 
-        // Keep up to date with wallet
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
+        refreshBalance();
 
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        // Keep up to date with  wallets
+        connect(bitcredit_model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64, qint64, qint64)));
+        connect(deposit_model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64, qint64)), this, SLOT(refreshBalance()));
+
+        connect(bitcredit_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
     }
 
-    // update the display unit, to not use the default ("BTC")
+    // update the display unit, to not use the default ("CRE")
     updateDisplayUnit();
 }
 
 void OverviewPage::updateDisplayUnit()
 {
-    if(walletModel && walletModel->getOptionsModel())
+    if(bitcredit_model && bitcredit_model->getOptionsModel())
     {
         if(currentBalance != -1)
-            setBalance(currentBalance, currentUnconfirmedBalance, currentImmatureBalance);
+            setBalance(currentBalance, currentUnconfirmedBalance, currentImmatureBalance, currentPreparedDepositBalance, currentInDepositBalance);
 
         // Update txdelegate->unit with the current unit
-        txdelegate->unit = walletModel->getOptionsModel()->getDisplayUnit();
+        txdelegate->unit = bitcredit_model->getOptionsModel()->getDisplayUnit();
 
         ui->listTransactions->update();
     }

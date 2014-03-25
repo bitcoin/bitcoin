@@ -9,12 +9,12 @@
 #include <QSortFilterProxyModel>
 
 /** Filter the transaction list according to pre-specified rules. */
-class TransactionFilterProxy : public QSortFilterProxyModel
+class Bitcredit_TransactionFilterProxy : public QSortFilterProxyModel
 {
     Q_OBJECT
 
 public:
-    explicit TransactionFilterProxy(QObject *parent = 0);
+    explicit Bitcredit_TransactionFilterProxy(QObject *parent = 0);
 
     /** Earliest date that can be represented (far in the past) */
     static const QDateTime MIN_DATE;

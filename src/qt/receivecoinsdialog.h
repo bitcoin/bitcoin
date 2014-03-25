@@ -19,13 +19,13 @@ namespace Ui {
     class ReceiveCoinsDialog;
 }
 class OptionsModel;
-class WalletModel;
+class Bitcredit_WalletModel;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
 
-/** Dialog for requesting payment of bitcoins */
+/** Dialog for requesting payment of bitcredits */
 class ReceiveCoinsDialog : public QDialog
 {
     Q_OBJECT
@@ -41,7 +41,7 @@ public:
     explicit ReceiveCoinsDialog(QWidget *parent = 0);
     ~ReceiveCoinsDialog();
 
-    void setModel(WalletModel *model);
+    void setModel(Bitcredit_WalletModel *model);
 
 public slots:
     void clear();
@@ -54,7 +54,7 @@ protected:
 private:
     Ui::ReceiveCoinsDialog *ui;
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
-    WalletModel *model;
+    Bitcredit_WalletModel *model;
     QMenu *contextMenu;
     void copyColumnToClipboard(int column);
     virtual void resizeEvent(QResizeEvent *event);

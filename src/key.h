@@ -45,15 +45,6 @@ private:
     // Its length can very cheaply be computed from the first byte.
     unsigned char vch[65];
 
-    // Compute the length of a pubkey with a given first byte.
-    unsigned int static GetLen(unsigned char chHeader) {
-        if (chHeader == 2 || chHeader == 3)
-            return 33;
-        if (chHeader == 4 || chHeader == 6 || chHeader == 7)
-            return 65;
-        return 0;
-    }
-
     // Set this key data to be invalid
     void Invalidate() {
         vch[0] = 0xFF;
@@ -63,6 +54,15 @@ public:
     // Construct an invalid public key.
     CPubKey() {
         Invalidate();
+    }
+
+    // Compute the length of a pubkey with a given first byte.
+    unsigned int static GetLen(unsigned char chHeader) {
+        if (chHeader == 2 || chHeader == 3)
+            return 33;
+        if (chHeader == 4 || chHeader == 6 || chHeader == 7)
+            return 65;
+        return 0;
     }
 
     // Initialize a public key using begin/end iterators to byte data.
@@ -136,6 +136,16 @@ public:
     uint256 GetHash() const {
         return Hash(vch, vch+size());
     }
+    // Get the key as a hex string
+    std::string GetAsHex() const {
+    	const unsigned int nSize = size();
+
+        char result[nSize*2 + 1];
+        for (unsigned int i = 0; i < nSize; i++) {
+            sprintf(result + i*2, "%02x", ((unsigned char*)vch)[i]);
+        }
+        return std::string(result, result + nSize*2);
+    }
 
     // Check syntactic correctness.
     //
@@ -164,6 +174,107 @@ public:
 
     // Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const;
+};
+
+/** An encapsulated compact signature. */
+class CCompactSignature {
+private:
+    // Store the serialized data.
+    unsigned char vch[65];
+
+    // Set this signature data to be invalid
+    void Invalidate() {
+        vch[0] = 0xFF;
+    }
+
+public:
+    // Construct an invalid signature.
+    CCompactSignature() {
+        Invalidate();
+    }
+
+    // Get the length of the signature
+    unsigned int static GetLen() {
+        return 65;
+    }
+
+    // Initialize a signature with begin/end iterators to byte data.
+    template<typename T>
+    void Set(const T pbegin, const T pend) {
+        int len = pend == pbegin ? 0 : GetLen();
+        if (len && len == (pend-pbegin))
+            memcpy(vch, (unsigned char*)&pbegin[0], len);
+        else
+            Invalidate();
+    }
+
+    // Construct a signature using begin/end iterators to byte data.
+    template<typename T>
+    CCompactSignature(const T pbegin, const T pend) {
+        Set(pbegin, pend);
+    }
+
+    // Construct a signature from a byte vector.
+    CCompactSignature(const std::vector<unsigned char> &vch) {
+        Set(vch.begin(), vch.end());
+    }
+
+    // Simple read-only vector-like interface to the pubkey data.
+    unsigned int size() const { return GetLen(); }
+    const unsigned char *begin() const { return vch; }
+    const unsigned char *end() const { return vch+size(); }
+    const unsigned char &operator[](unsigned int pos) const { return vch[pos]; }
+
+    // Comparator implementation.
+    friend bool operator==(const CCompactSignature &a, const CCompactSignature &b) {
+        return a.vch[0] == b.vch[0] &&
+               memcmp(a.vch, b.vch, a.size()) == 0;
+    }
+    friend bool operator!=(const CCompactSignature &a, const CCompactSignature &b) {
+        return !(a == b);
+    }
+    friend bool operator<(const CCompactSignature &a, const CCompactSignature &b) {
+        return a.vch[0] < b.vch[0] ||
+               (a.vch[0] == b.vch[0] && memcmp(a.vch, b.vch, a.size()) < 0);
+    }
+
+    // Implement serialization, as if this was a byte vector.
+    unsigned int GetSerializeSize(int nType, int nVersion) const {
+        return size() + 1;
+    }
+    template<typename Stream> void Serialize(Stream &s, int nType, int nVersion) const {
+        unsigned int len = size();
+        ::WriteCompactSize(s, len);
+        s.write((char*)vch, len);
+    }
+    template<typename Stream> void Unserialize(Stream &s, int nType, int nVersion) {
+        unsigned int len = ::ReadCompactSize(s);
+        if (len == GetLen()) {
+            s.read((char*)vch, len);
+        } else {
+            // invalid signature, skip available data
+            char dummy;
+            while (len--)
+                s.read(&dummy, 1);
+            Invalidate();
+        }
+    }
+
+    // Get the 256-bit hash of this public key.
+    uint256 GetHash() const {
+        return Hash(vch, vch+size());
+    }
+
+    // Get as a hex string
+    std::string GetAsHex() const {
+    	const unsigned int nSize = size();
+
+        char result[nSize*2 + 1];
+        for (unsigned int i = 0; i < nSize; i++) {
+            sprintf(result + i*2, "%02x", ((unsigned char*)vch)[i]);
+        }
+        return std::string(result, result + nSize*2);
+    }
 };
 
 
@@ -268,6 +379,17 @@ public:
 
     // Check whether an element of a signature (r or s) is valid.
     static bool CheckSignatureElement(const unsigned char *vch, int len, bool half);
+
+    // Get the key as a hex string
+    std::string GetAsHex() const {
+    	const unsigned int nSize = size();
+
+        char result[nSize*2 + 1];
+        for (unsigned int i = 0; i < nSize; i++) {
+            sprintf(result + i*2, "%02x", ((unsigned char*)vch)[i]);
+        }
+        return std::string(result, result + nSize*2);
+    }
 };
 
 struct CExtPubKey {

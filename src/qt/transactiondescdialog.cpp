@@ -14,7 +14,7 @@ TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *pa
     ui(new Ui::TransactionDescDialog)
 {
     ui->setupUi(this);
-    QString desc = idx.data(TransactionTableModel::LongDescriptionRole).toString();
+    QString desc = idx.data(Bitcredit_TransactionTableModel::LongDescriptionRole).toString();
     ui->detailText->setHtml(desc);
 }
 

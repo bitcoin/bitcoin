@@ -11,7 +11,7 @@ function echoerr {
 
 # Usage: ExtractKey <key> "<json_object_string>"
 # Warning: this will only work for the very-well-behaved
-# JSON produced by bitcoind, do NOT use it to try to
+# JSON produced by bitcreditd, do NOT use it to try to
 # parse arbitrary/nested/etc JSON.
 function ExtractKey {
     echo $2 | tr -d ' "{}\n' | awk -v RS=',' -F: "\$1 ~ /$1/ { print \$2}"
@@ -20,7 +20,7 @@ function ExtractKey {
 function CreateDataDir {
   DIR=$1
   mkdir -p $DIR
-  CONF=$DIR/bitcoin.conf
+  CONF=$DIR/bitcredit.conf
   echo "regtest=1" >> $CONF
   echo "keypool=2" >> $CONF
   echo "rpcuser=rt" >> $CONF
@@ -88,8 +88,8 @@ function SendRawTxn {
   ${SENDANDWAIT} $CLI $1 sendrawtransaction $2
 }
 
-# Use: GetBlocks <datadir>
+# Use: Bitcoin_GetBlocks <datadir>
 # returns number of blocks from getinfo
-function GetBlocks {
-    $CLI $1 getblockcount
+function Bitcoin_GetBlocks {
+    $CLI $1 bitcoin_getblockcount
 }
