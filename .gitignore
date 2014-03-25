@@ -40,6 +40,11 @@ src/qt/test/moc*.cpp
 *.pb.cc
 *.pb.h
 
+# libtool
+*.lo
+*.la
+.libs
+
 *.log
 *.trs
 *.dmg
