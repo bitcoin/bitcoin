@@ -10,10 +10,6 @@
 #include "protocol.h"
 #include "sync.h"
 #include "util.h"
-#ifdef ENABLE_WALLET
-#include "init.h" // for getinfo
-#include "wallet.h" // for getinfo
-#endif
 
 #include <boost/foreach.hpp>
 #include "json/json_spirit_value.h"
