@@ -5,7 +5,6 @@
 
 #include "script.h"
 
-#include "bignum.h"
 #include "core.h"
 #include "hash.h"
 #include "key.h"
