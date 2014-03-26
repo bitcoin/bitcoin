@@ -70,7 +70,7 @@ We are using https://transifex.com as a frontend for translating the client.
 
 https://www.transifex.com/projects/p/bitcoin/resource/tx/
 
-The "Transifex client" (see: http://help.transifex.com/features/client/)
+The "Transifex client" (see: http://support.transifex.com/customer/portal/topics/440187-transifex-client/articles)
 will help with fetching new translations from Transifex. Use the following
 config to be able to connect with the client:
 
