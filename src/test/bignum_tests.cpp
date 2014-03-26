@@ -39,11 +39,8 @@ BOOST_AUTO_TEST_SUITE(bignum_tests)
 // stack buffer overruns.
 //
 // For more accurate diagnostics, you can use an undefined arithmetic operation
-// detector such as the clang-based tool:
-//
-// "IOC: An Integer Overflow Checker for C/C++"
-//
-// Available at: http://embed.cs.utah.edu/ioc/
+// detector such as the clang's undefined behaviour checker.
+// See also: http://clang.llvm.org/docs/UsersManual.html#controlling-code-generation
 //
 // It might also be useful to use Google's AddressSanitizer to detect
 // stack buffer overruns, which valgrind can't currently detect.
