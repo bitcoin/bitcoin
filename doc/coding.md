@@ -92,3 +92,10 @@ Threads
 - BitcoinMiner : Generates bitcoins (if wallet is enabled).
 
 - Shutdown : Does an orderly shutdown of everything.
+
+-----------------
+Copyright headers
+
+Resist the urge to fix copyright years in all the files in the source tree.
+If you can't resist, then run contrib/devtools/fix_copyright_headers.py
+inside of src/ to update them properly.
