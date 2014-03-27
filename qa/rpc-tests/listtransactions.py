@@ -9,58 +9,55 @@
 from util import *
 from skeleton import Skeleton as baseclass
 
-class ListtransactionsTest(baseclass):
-    
-    def run(self):
-        super(ListtransactionsTest, self).main()
-    
-    def check_array_result(self,object_array, to_match, expected):
-        """
+def check_array_result(object_array, to_match, expected):
+    """
         Pass in array of JSON objects, a dictionary with key/value pairs
         to match against, and another dictionary with expected key/value
         pairs.
         """
-        num_matched = 0
-        for item in object_array:
-            all_match = True
-            for key,value in to_match.items():
-                if item[key] != value:
-                    all_match = False
-            if not all_match:
-                continue
-            for key,value in expected.items():
-                if item[key] != value:
-                    raise AssertionError("%s : expected %s=%s"%(str(item), str(key), str(value)))
-                num_matched = num_matched+1
-        if num_matched == 0:
-            raise AssertionError("No objects matched %s"%(str(to_match)))
+    num_matched = 0
+    for item in object_array:
+        all_match = True
+        for key,value in to_match.items():
+            if item[key] != value:
+                all_match = False
+        if not all_match:
+            continue
+        for key,value in expected.items():
+            if item[key] != value:
+                raise AssertionError("%s : expected %s=%s"%(str(item), str(key), str(value)))
+            num_matched = num_matched+1
+    if num_matched == 0:
+        raise AssertionError("No objects matched %s"%(str(to_match)))
+
+class ListtransactionsTest(baseclass):
 
     def run_test(self,nodes):
         # Simple send, 0 to 1:
         txid = nodes[0].sendtoaddress(nodes[1].getnewaddress(), 0.1)
         sync_mempools(nodes)
-        self.check_array_result(nodes[0].listtransactions(),
+        check_array_result(nodes[0].listtransactions(),
                            {"txid":txid},
                            {"category":"send","account":"","amount":Decimal("-0.1"),"confirmations":0})
-        self.check_array_result(nodes[1].listtransactions(),
+        check_array_result(nodes[1].listtransactions(),
                            {"txid":txid},
                            {"category":"receive","account":"","amount":Decimal("0.1"),"confirmations":0})
         # mine a block, confirmations should change:
         nodes[0].setgenerate(True, 1)
         sync_blocks(nodes)
-        self.check_array_result(nodes[0].listtransactions(),
+        check_array_result(nodes[0].listtransactions(),
                            {"txid":txid},
                            {"category":"send","account":"","amount":Decimal("-0.1"),"confirmations":1})
-        self.check_array_result(nodes[1].listtransactions(),
+        check_array_result(nodes[1].listtransactions(),
                            {"txid":txid},
                            {"category":"receive","account":"","amount":Decimal("0.1"),"confirmations":1})
 
         # send-to-self:
         txid = nodes[0].sendtoaddress(nodes[0].getnewaddress(), 0.2)
-        self.check_array_result(nodes[0].listtransactions(),
+        check_array_result(nodes[0].listtransactions(),
                            {"txid":txid, "category":"send"},
                            {"amount":Decimal("-0.2")})
-        self.check_array_result(nodes[0].listtransactions(),
+        check_array_result(nodes[0].listtransactions(),
                            {"txid":txid, "category":"receive"},
                            {"amount":Decimal("0.2")})
 
@@ -69,30 +66,30 @@ class ListtransactionsTest(baseclass):
                     nodes[0].getaccountaddress("from1") : 0.33, nodes[1].getaccountaddress("toself") : 0.44 }
         txid = nodes[1].sendmany("", send_to)
         sync_mempools(nodes)
-        self.check_array_result(nodes[1].listtransactions(),
+        check_array_result(nodes[1].listtransactions(),
                            {"category":"send","amount":Decimal("-0.11")},
                            {"txid":txid} )
-        self.check_array_result(nodes[0].listtransactions(),
+        check_array_result(nodes[0].listtransactions(),
                            {"category":"receive","amount":Decimal("0.11")},
                            {"txid":txid} )
-        self.check_array_result(nodes[1].listtransactions(),
+        check_array_result(nodes[1].listtransactions(),
                            {"category":"send","amount":Decimal("-0.22")},
                            {"txid":txid} )
-        self.check_array_result(nodes[1].listtransactions(),
+        check_array_result(nodes[1].listtransactions(),
                            {"category":"receive","amount":Decimal("0.22")},
                            {"txid":txid} )
-        self.check_array_result(nodes[1].listtransactions(),
+        check_array_result(nodes[1].listtransactions(),
                            {"category":"send","amount":Decimal("-0.33")},
                            {"txid":txid} )
-        self.check_array_result(nodes[0].listtransactions(),
+        check_array_result(nodes[0].listtransactions(),
                            {"category":"receive","amount":Decimal("0.33")},
                            {"txid":txid, "account" : "from1"} )
-        self.check_array_result(nodes[1].listtransactions(),
+        check_array_result(nodes[1].listtransactions(),
                            {"category":"send","amount":Decimal("-0.44")},
                            {"txid":txid, "account" : ""} )
-        self.check_array_result(nodes[1].listtransactions(),
+        check_array_result(nodes[1].listtransactions(),
                            {"category":"receive","amount":Decimal("0.44")},
                            {"txid":txid, "account" : "toself"} )
 
 if __name__ == '__main__':
-    ListtransactionsTest().run()
+    ListtransactionsTest().main()

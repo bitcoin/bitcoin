@@ -11,15 +11,11 @@ from skeleton import Skeleton as baseclass
 
 # 1) Change class name to your test
 class MyTest(baseclass):
-    
-    # 2) Change 'MyTest' to class name
-    def run(self):
-        super(MyTest, self).main()
   
-    # 3) Implement tests
+    # 2) Implement tests
     def run_test(self,nodes):
         ''' '''
 
-# 4) Change 'MyTest' to class name
+# 3) Change 'MyTest' to class name
 if __name__ == '__main__':
-    MyTest().run()
+    MyTest().main()
