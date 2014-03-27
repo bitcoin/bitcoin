@@ -98,13 +98,7 @@
          <item>
           <widget class="QSpinBox" name="threadsScriptVerif">
            <property name="toolTip">
-            <string>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</string>
-           </property>
-           <property name="minimum">
-            <number>-16</number>
-           </property>
-           <property name="maximum">
-            <number>16</number>
+            <string>(0 = auto, &lt;0 = leave that many cores free)</string>
            </property>
           </widget>
          </item>
