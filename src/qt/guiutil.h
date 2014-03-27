@@ -5,11 +5,11 @@
 #ifndef GUIUTIL_H
 #define GUIUTIL_H
 
+#include <QHeaderView>
 #include <QMessageBox>
 #include <QObject>
 #include <QString>
 #include <QTableView>
-#include <QHeaderView>
 
 #include <boost/filesystem.hpp>
 
@@ -132,30 +132,31 @@ namespace GUIUtil
      */
     class TableViewLastColumnResizingFixer: public QObject
     {
-    Q_OBJECT
-    public:
-        TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth);
-        void stretchColumnWidth(int column);
+        Q_OBJECT
 
-    private:
-        QTableView* tableView;
-        int lastColumnMinimumWidth;
-        int allColumnsMinimumWidth;
-        int lastColumnIndex;
-        int columnCount;
-        int secondToLastColumnIndex;
+        public:
+            TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth);
+            void stretchColumnWidth(int column);
 
-        void adjustTableColumnsWidth();
-        int getAvailableWidthForColumn(int column);
-        int getColumnsWidth();
-        void connectViewHeadersSignals();
-        void disconnectViewHeadersSignals();
-        void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
-        void resizeColumn(int nColumnIndex, int width);
+        private:
+            QTableView* tableView;
+            int lastColumnMinimumWidth;
+            int allColumnsMinimumWidth;
+            int lastColumnIndex;
+            int columnCount;
+            int secondToLastColumnIndex;
 
-    private slots:
-        void on_sectionResized(int logicalIndex, int oldSize, int newSize);
-        void on_geometriesChanged();
+            void adjustTableColumnsWidth();
+            int getAvailableWidthForColumn(int column);
+            int getColumnsWidth();
+            void connectViewHeadersSignals();
+            void disconnectViewHeadersSignals();
+            void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
+            void resizeColumn(int nColumnIndex, int width);
+
+        private slots:
+            void on_sectionResized(int logicalIndex, int oldSize, int newSize);
+            void on_geometriesChanged();
     };
 
     bool GetStartOnSystemStartup();
