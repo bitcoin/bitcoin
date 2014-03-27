@@ -6,12 +6,13 @@
 #define RECEIVECOINSDIALOG_H
 
 #include <QDialog>
+#include <QHeaderView>
+#include <QItemSelection>
 #include <QKeyEvent>
 #include <QMenu>
 #include <QPoint>
 #include <QVariant>
-#include <QHeaderView>
-#include <QItemSelection>
+
 #include "guiutil.h"
 
 namespace Ui {
@@ -31,16 +32,16 @@ class ReceiveCoinsDialog : public QDialog
 
 public:
     enum ColumnWidths {
-      DATE_COLUMN_WIDTH = 130,
-      LABEL_COLUMN_WIDTH = 120,
-      AMOUNT_MINIMUM_COLUMN_WIDTH = 160,
-      MINIMUM_COLUMN_WIDTH = 130
+        DATE_COLUMN_WIDTH = 130,
+        LABEL_COLUMN_WIDTH = 120,
+        AMOUNT_MINIMUM_COLUMN_WIDTH = 160,
+        MINIMUM_COLUMN_WIDTH = 130
     };
 
     explicit ReceiveCoinsDialog(QWidget *parent = 0);
     ~ReceiveCoinsDialog();
-    void setModel(WalletModel *model);
 
+    void setModel(WalletModel *model);
 
 public slots:
     void clear();
