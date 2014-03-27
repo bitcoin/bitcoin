@@ -76,6 +76,17 @@ void OptionsModel::Init()
     // by command-line and show this in the UI.
 
     // Main
+    if (!settings.contains("nDatabaseCache"))
+        settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
+    if (!SoftSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
+        addOverriddenOption("-dbcache");
+
+    if (!settings.contains("nThreadsScriptVerif"))
+        settings.setValue("nThreadsScriptVerif", DEFAULT_SCRIPTCHECK_THREADS);
+    if (!SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
+        addOverriddenOption("-par");
+
+    // Wallet
 #ifdef ENABLE_WALLET
     if (!settings.contains("nTransactionFee"))
         settings.setValue("nTransactionFee", 0);
@@ -88,16 +99,6 @@ void OptionsModel::Init()
     if (!SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
 #endif
-
-    if (!settings.contains("nDatabaseCache"))
-        settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
-    if (!SoftSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
-        addOverriddenOption("-dbcache");
-
-    if (!settings.contains("nThreadsScriptVerif"))
-        settings.setValue("nThreadsScriptVerif", 0);
-    if (!SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
-        addOverriddenOption("-par");
 
     // Network
     if (!settings.contains("fUseUPnP"))
