@@ -1502,9 +1502,19 @@ Adresse: %4</translation>
         <translation>Bestätigt:</translation>
     </message>
     <message>
+        <location line="+51"/>
+        <source>Available:</source>
+        <translation>Verfügbar:</translation>
+    </message>
+    <message>
         <location line="+16"/>
         <source>Your current spendable balance</source>
         <translation>Ihr aktuell verfügbarer Kontostand</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Pending:</source>
+        <translation>Anstehend:</translation>
     </message>
     <message>
         <location line="+32"/>
