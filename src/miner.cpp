@@ -126,6 +126,37 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         CBlockIndex* pindexPrev = chainActive.Tip();
         CCoinsViewCache view(pcoinsTip);
 
+        set<vector<unsigned char> > setRequiredCommitments;
+        if (pblock->nVersion >= 3 &&
+            CBlockIndex::IsSuperMajority(3, pindexPrev, Params().EnforceBlockUpgradeMajority()))
+        {
+            setRequiredCommitments.insert(vector<unsigned char>());
+        }
+
+        // Insert coinbase commitment outputs
+        txNew.vout.reserve(txNew.vout.size() + setRequiredCommitments.size());
+        BOOST_FOREACH(const vector<unsigned char>& pushdata, setRequiredCommitments)
+            txNew.vout.push_back(CTxOut(0, CScript() << pushdata << OP_EQUAL));
+
+        CTransaction txMature;
+        map<vector<unsigned char>, COutPoint> mapCommitmentOutPoints;
+        if (FetchMaturedCoinbase(pindexPrev, txMature, COINBASE_MATURITY-1))
+            FilterRequiredCommitments(txMature, setRequiredCommitments, mapCommitmentOutPoints);
+
+        // Insert data commitment transaction
+        if (mapCommitmentOutPoints.count(vector<unsigned char>()))
+        {
+            CMutableTransaction tx;
+            tx.vin.resize(1);
+            tx.vin[0].prevout = mapCommitmentOutPoints[vector<unsigned char>()];
+            tx.vin[0].scriptSig = CScript() << vector<unsigned char>();
+            tx.vout.resize(1);
+            tx.vout[0].nValue = 0;
+            tx.vout[0].scriptPubKey = CScript() << OP_RETURN;
+            tx.nLockTime = pindexPrev->nHeight + 1;
+            pblock->vtx.push_back(tx);
+        }
+
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
         map<uint256, vector<COrphan*> > mapDependers;

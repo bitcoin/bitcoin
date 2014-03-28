@@ -468,6 +468,17 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = t
 bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex **pindex, CDiskBlockPos* dbp = NULL);
 bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex **ppindex= NULL);
 
+// Identify outputs of the passed in transaction which meet the
+// commitment protocol, and fill an STL map identifying the OutPoints
+// for a given commitment type.
+void ExtractCommitmentOutPoints(const CTransaction& tx, std::map<std::vector<unsigned char>, COutPoint>& mapCommitmentOutPoints);
+// Fetch the coinbase of a block nMaturityPeriod blocks back.
+bool FetchMaturedCoinbase(const CBlockIndex* pindex, CTransaction& tx, int nMaturityPeriod = COINBASE_MATURITY);
+// Prune a list of commitment types based on the the availability of
+// spendable outputs in the transaction passed in (typically the
+// transaction returned by FetchMaturedCoinbase).
+void FilterRequiredCommitments(const CTransaction& tx, std::set<std::vector<unsigned char> >& setRequiredCommitments, std::map<std::vector<unsigned char>, COutPoint>& mapCommitmentOutPoints);
+
 
 
 class CBlockFileInfo
