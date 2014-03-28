@@ -580,7 +580,9 @@ Value sendrawtransaction(const Array& params, bool fHelp)
 Value getnormalizedtxid(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
-        throw runtime_error("blah");
+        throw runtime_error(
+            "getnormalizedtxid <hex string>\n"
+            "Return the normalized transaction ID.");
 
     // parse hex string from parameter
     vector<unsigned char> txData(ParseHexV(params[0], "parameter"));
