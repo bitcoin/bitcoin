@@ -90,8 +90,9 @@ void SendCoinsDialog::setModel(WalletModel *model)
             }
         }
 
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
+        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
+                   model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
+        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64, qint64, qint64, qint64)));
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
         // Coin Control
@@ -383,10 +384,14 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     return true;
 }
 
-void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance)
+void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, 
+                                 qint64 watchBalance, qint64 watchUnconfirmedBalance, qint64 watchImmatureBalance)
 {
     Q_UNUSED(unconfirmedBalance);
     Q_UNUSED(immatureBalance);
+    Q_UNUSED(watchBalance);
+    Q_UNUSED(watchUnconfirmedBalance);
+    Q_UNUSED(watchImmatureBalance);
 
     if(model && model->getOptionsModel())
     {
@@ -396,7 +401,7 @@ void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint
 
 void SendCoinsDialog::updateDisplayUnit()
 {
-    setBalance(model->getBalance(), 0, 0);
+    setBalance(model->getBalance(), 0, 0, 0, 0, 0);
 }
 
 void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
