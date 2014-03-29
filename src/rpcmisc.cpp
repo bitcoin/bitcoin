@@ -171,7 +171,7 @@ Value validateaddress(const Array& params, bool fHelp)
         ret.push_back(Pair("address", currentAddress));
 #ifdef ENABLE_WALLET
         isminetype mine = pwalletMain ? IsMine(*pwalletMain, dest) : MINE_NO;
-        ret.push_back(Pair("ismine", mine != MINE_NO));
+        ret.push_back(Pair("ismine", mine == MINE_SPENDABLE));
         if (mine != MINE_NO) {
             ret.push_back(Pair("watchonly", mine == MINE_WATCH_ONLY));
             Object detail = boost::apply_visitor(DescribeAddressVisitor(mine), dest);
