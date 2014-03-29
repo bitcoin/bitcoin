@@ -28,6 +28,8 @@
 using namespace json_spirit;
 using namespace std;
 
+extern void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex);
+
 // Return average network hashes per second based on the last 'lookup' blocks,
 // or from the last difficulty change if 'lookup' is nonpositive.
 // If 'height' is nonnegative, compute the estimate at the time when a given block was found.
@@ -326,6 +328,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "  },\n"
             "  \"coinbasevalue\" : n,               (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in Satoshis)\n"
             "  \"coinbasetxn\" : { ... },           (json object) information for coinbase transaction\n"
+            "  \"budget\" : { ... }                 (json object) required outputs of the coinbase transaction\n"
             "  \"target\" : \"xxxx\",               (string) The hash target\n"
             "  \"mintime\" : xxx,                   (numeric) The minimum timestamp appropriate for next block time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"mutable\" : [                      (array of string) list of ways the block template may be changed \n"
@@ -513,6 +516,16 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("transactions", transactions));
     result.push_back(Pair("coinbaseaux", aux));
     result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue));
+    Array aBudget;
+    BOOST_FOREACH(const CTxOut& txout, pblock->vtx[0].vout)
+    {
+        Object entry, script;
+        ScriptPubKeyToJSON(txout.scriptPubKey, script, true);
+        entry.push_back(Pair("scriptPubKey", script));
+        entry.push_back(Pair("value", (int64_t)txout.nValue));
+        aBudget.push_back(entry);
+    }
+    result.push_back(Pair("budget", aBudget));
     result.push_back(Pair("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast)));
     result.push_back(Pair("target", hashTarget.GetHex()));
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
