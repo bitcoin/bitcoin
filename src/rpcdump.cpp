@@ -158,12 +158,14 @@ Value importaddress(const Array& params, bool fHelp)
     {
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
+        // add to address book or update label
+        pwalletMain->SetAddressBook(dest, strLabel, "receive");
+
         // Don't throw error in case an address is already there
         if (pwalletMain->HaveWatchOnly(dest))
             return Value::null;
 
         pwalletMain->MarkDirty();
-        pwalletMain->SetAddressBook(dest, strLabel, "receive");
 
         if (!pwalletMain->AddWatchOnly(dest))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
