@@ -3387,7 +3387,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (pfrom->nVersion == 10300)
             pfrom->nVersion = 300;
         if (!vRecv.empty())
-            vRecv >> addrFrom >> nNonce;
+            vRecv >> addrFrom;
+        if (!vRecv.empty())
+            vRecv >> nNonce;
         if (!vRecv.empty()) {
             vRecv >> pfrom->strSubVer;
             pfrom->cleanSubVer = SanitizeString(pfrom->strSubVer);
