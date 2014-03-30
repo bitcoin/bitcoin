@@ -1,9 +1,16 @@
 libsecp256k1
 ============
 
-Optimized C library for EC operations on curve secp256k1
+Optimized C library for EC operations on curve secp256k1.
 
 This library is experimental, so use at your own risk.
+
+Features:
+* Low-level field and group operations on secp256k1.
+* ECDSA signing/verification and key generation.
+* Adding/multiplying private/public keys.
+* Serialization/parsing of private keys, public keys, signatures.
+* Very efficient implementation.
 
 Implementation details
 ----------------------
@@ -27,3 +34,4 @@ Implementation details
 * Point multiplication for signing
   * Use a precomputed table of multiples of powers of 16 multiplied with the generator, so general multiplication becomes a series of additions.
   * Slice the precomputed table in memory per byte, so memory access to the table becomes uniform.
+  * Not fully constant-time.
