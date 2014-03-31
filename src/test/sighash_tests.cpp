@@ -177,27 +177,36 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
         }
         if (test.size() == 1) continue; // comment
 
-        std::string raw_tx = test[0].get_str();
-        std::string raw_script = test[1].get_str();
-        int nIn = test[2].get_int();
-        int nHashType = test[3].get_int();
-        std::string sigHashHex = test[4].get_str();
-
+        std::string raw_tx, raw_script, sigHashHex;
+        int nIn, nHashType;
         uint256 sh;
-        CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);
         CTransaction tx;
-        stream >> tx;
-
-        CValidationState state;
-        BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
-        BOOST_CHECK(state.IsValid());
-
         CScript scriptCode = CScript();
-        std::vector<unsigned char> raw = ParseHex(raw_script);
-        scriptCode.insert(scriptCode.end(), raw.begin(), raw.end());
 
+        try {
+          // deserialize test data
+          raw_tx = test[0].get_str();
+          raw_script = test[1].get_str();
+          nIn = test[2].get_int();
+          nHashType = test[3].get_int();
+          sigHashHex = test[4].get_str();
+
+          uint256 sh;
+          CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);
+          stream >> tx;
+
+          CValidationState state;
+          BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
+          BOOST_CHECK(state.IsValid());
+
+          std::vector<unsigned char> raw = ParseHex(raw_script);
+          scriptCode.insert(scriptCode.end(), raw.begin(), raw.end());
+        } catch (...) {
+          BOOST_ERROR("Bad test, couldn't deserialize data: " << strTest);
+          continue;
+        }
+        
         sh = SignatureHash(scriptCode, tx, nIn, nHashType);
-
         BOOST_CHECK_MESSAGE(sh.GetHex() == sigHashHex, strTest);
     }
 }
