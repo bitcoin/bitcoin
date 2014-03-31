@@ -175,6 +175,33 @@ Value getaccountaddress(const Array& params, bool fHelp)
     return ret;
 }
 
+Value listsendingaddresses(const Array& params, bool fHelp)
+{
+    if (fHelp)
+        throw runtime_error(
+            "getsendingaddresses\n"
+            "\nReturns the list of sending addresses.\n"
+            "\nResult:\n"
+            "\"addresses\"    (object) The addresses by label\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listsendingaddresses", "")
+            + HelpExampleRpc("listsendingaddresses", "")
+        );
+
+    // Find all sending addresses and labels
+    Object ret;
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
+    {
+        const CBitcoinAddress& address = item.first;
+        const string& strName = item.second.name;
+        if (!IsMine(*pwalletMain, address.Get()))
+        {
+            ret.push_back(Pair(strName, address.ToString()));
+        }
+    }
+
+    return ret;
+}
 
 Value getrawchangeaddress(const Array& params, bool fHelp)
 {
