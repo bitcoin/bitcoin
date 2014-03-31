@@ -84,7 +84,7 @@ bool AppInit(int argc, char* argv[])
                 _("Usage:") + "\n" +
                   "  bitcoind [options]                     " + _("Start Bitcoin Core Daemon") + "\n" +
                 _("Usage (deprecated, use bitcoin-cli):") + "\n" +
-                  "  bitcoind [options] <command> [params]  " + _("Send command to Bitcoin Core Daemon") + "\n" +
+                  "  bitcoind [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n" +
                   "  bitcoind [options] help                " + _("List commands") + "\n" +
                   "  bitcoind [options] help <command>      " + _("Get help for a command") + "\n";
 
