@@ -13,6 +13,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
+#include <queue>
 
 using namespace std;
 using namespace boost;
@@ -682,7 +683,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     return result;
 }
 
-DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, vector<uint256>& vTxHash)
+DBErrors CWalletDB::FindWalletTxes(CWallet* pwallet, vector<uint256>& vTxHash)
 {
     pwallet->vchDefaultKey = CPubKey();
     CWalletScanState wss;
@@ -745,11 +746,11 @@ DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, vector<uint256>& vTxHash)
     return result;
 }
 
-DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet)
+DBErrors CWalletDB::ZapWalletTxes(CWallet* pwallet)
 {
     // build list of wallet TXs
     vector<uint256> vTxHash;
-    DBErrors err = FindWalletTx(pwallet, vTxHash);
+    DBErrors err = FindWalletTxes(pwallet, vTxHash);
     if (err != DB_LOAD_OK)
         return err;
 
@@ -759,6 +760,48 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet)
             return DB_CORRUPT;
     }
 
+    return DB_LOAD_OK;
+}
+
+DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, const CWalletTx& wtx, vector<CWalletTx>& vErasedTxes)
+{
+    LogPrintf("ZapWalletTx %s\n", wtx.GetHash().GetHex());
+
+    // insert initial tx into queue
+    queue<CWalletTx> txesToErase;
+    txesToErase.push(wtx);
+
+    while (txesToErase.size() > 0)
+    {
+        // get first tx from queue
+        CWalletTx wtx = txesToErase.front();
+        txesToErase.pop();
+
+        // add child tx's to queue
+        for (unsigned int nVoutIndex = 0; nVoutIndex < wtx.vout.size(); nVoutIndex++)
+        {
+            BOOST_FOREACH(PAIRTYPE(uint256, CWalletTx) walletEntry, pwallet->mapWallet)
+            {
+                const CWalletTx& wtxPotentialChild = walletEntry.second;
+                BOOST_FOREACH(const CTxIn& txin, wtxPotentialChild.vin)
+                {
+                    if (txin.prevout.hash == wtx.GetHash() && txin.prevout.n == nVoutIndex)
+                    {
+                        LogPrintf("ZapWalletTx found child tx %s\n", wtxPotentialChild.GetHash().GetHex());
+                        txesToErase.push(wtxPotentialChild);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // erase current tx
+        if (!EraseTx(wtx.GetHash()))
+            return DB_CORRUPT;
+        // add to list of erased tx to be cleaned up from pwallet->mapWallet
+        vErasedTxes.push_back(wtx);
+    }
+    
     return DB_LOAD_OK;
 }
 

@@ -64,7 +64,7 @@ function Send {
   to=$2
   amount=$3
   address=$(Address $to)
-  txid=$( ${SENDANDWAIT} $CLI $from sendtoaddress $address $amount )
+  ${SENDANDWAIT} $CLI $from sendtoaddress $address $amount
 }
 
 # Use: Unspent <datadir> <n'th-last-unspent> <var>

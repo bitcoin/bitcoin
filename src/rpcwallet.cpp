@@ -727,6 +727,47 @@ Value movecmd(const Array& params, bool fHelp)
     return true;
 }
 
+Value zapwallettx(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "zapwallettx txid [rescan=true]\n"
+            "\nRemove a wallet transaction.\n"
+            "\nArguments:\n"
+            "1. txid           (string) The transaction id.\n"
+            "2. rescan         (boolean) If true rescan the blockchain for missing transactions.\n"
+            "\nResult\n"
+            "true|false        (boolean) Returns true if successful\n"
+            "\nExamples:\n"
+            + HelpExampleCli("zapwallettx", "00e3c3ec61422aa4e597beceac7f06c771a8024dee38c5ffa413336341befa72")
+            + HelpExampleRpc("zapwallettx", "00e3c3ec61422aa4e597beceac7f06c771a8024dee38c5ffa413336341befa72")
+        );
+
+    // txid
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    // Whether to perform rescan after tx removal
+    bool fRescan = true;
+    if (params.size() > 1)
+        fRescan = params[1].get_bool();
+
+    if (!pwalletMain->mapWallet.count(hash))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    const CWalletTx& wtx = pwalletMain->mapWallet[hash];
+
+    if (pwalletMain->ZapWalletTx(wtx) != DB_LOAD_OK)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error zapping tx from wallet");
+
+    if (fRescan)
+    {
+        pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+        pwalletMain->ReacceptWalletTransactions();
+    }
+
+    return true;
+}
+
 
 Value sendfrom(const Array& params, bool fHelp)
 {
