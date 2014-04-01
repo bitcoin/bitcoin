@@ -81,6 +81,7 @@ AC_DEFUN([AX_BOOST_CHRONO],
 
 			LDFLAGS_SAVE=$LDFLAGS
             if test "x$ax_boost_user_chrono_lib" = "x"; then
+                ax_lib=
                 for libextension in `ls $BOOSTLIBDIR/libboost_chrono*.so* $BOOSTLIBDIR/libboost_chrono*.dylib* $BOOSTLIBDIR/libboost_chrono*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_chrono.*\)\.so.*$;\1;' -e 's;^lib\(boost_chrono.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_chrono.*\)\.a.*$;\1;'` ; do
                      ax_lib=${libextension}
 				    AC_CHECK_LIB($ax_lib, exit,
@@ -105,7 +106,7 @@ AC_DEFUN([AX_BOOST_CHRONO],
 
             fi
             if test "x$ax_lib" = "x"; then
-                AC_MSG_ERROR(Could not find a version of the library!)
+                AC_MSG_ERROR(Could not find a version of the boost_chrono library!)
             fi
 			if test "x$link_chrono" = "xno"; then
 				AC_MSG_ERROR(Could not link against $ax_lib !)
