@@ -3652,7 +3652,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (pindex)
             pindex = chainActive.Next(pindex);
         int nLimit = 500;
-        LogPrint("net", "getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), nLimit);
+        LogPrint("net", "getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop==uint256(0) ? "end" : hashStop.ToString(), nLimit);
         for (; pindex; pindex = chainActive.Next(pindex))
         {
             if (pindex->GetBlockHash() == hashStop)
