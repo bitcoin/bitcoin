@@ -10,10 +10,6 @@
 #include "protocol.h"
 #include "sync.h"
 #include "util.h"
-#ifdef ENABLE_WALLET
-#include "init.h" // for getinfo
-#include "wallet.h" // for getinfo
-#endif
 
 #include <boost/foreach.hpp>
 #include "json/json_spirit_value.h"
@@ -138,8 +134,7 @@ Value getpeerinfo(const Array& params, bool fHelp)
         if (fStateStats) {
             obj.push_back(Pair("banscore", statestats.nMisbehavior));
         }
-        if (stats.fSyncNode)
-            obj.push_back(Pair("syncnode", true));
+        obj.push_back(Pair("syncnode", stats.fSyncNode));
 
         ret.push_back(obj);
     }

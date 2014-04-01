@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2013-2014 The Bitcoin Core developers
+# Distributed under the MIT/X11 software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Test block generation and basic wallet sending
 

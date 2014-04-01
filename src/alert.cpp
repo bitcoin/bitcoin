@@ -10,6 +10,7 @@
 #include "ui_interface.h"
 #include "util.h"
 
+#include <stdint.h>
 #include <algorithm>
 #include <map>
 

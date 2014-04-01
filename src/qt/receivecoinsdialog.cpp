@@ -19,6 +19,7 @@
 #include <QMessageBox>
 #include <QTextDocument>
 #include <QScrollBar>
+#include <QItemSelection>
 
 ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
     QDialog(parent),
@@ -60,23 +61,26 @@ void ReceiveCoinsDialog::setModel(WalletModel *model)
 
     if(model && model->getOptionsModel())
     {
+        model->getRecentRequestsTableModel()->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
-        ui->recentRequestsView->setModel(model->getRecentRequestsTableModel());
-        ui->recentRequestsView->setAlternatingRowColors(true);
-        ui->recentRequestsView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        ui->recentRequestsView->setSelectionMode(QAbstractItemView::ContiguousSelection);
-        ui->recentRequestsView->horizontalHeader()->resizeSection(RecentRequestsTableModel::Date, 130);
-        ui->recentRequestsView->horizontalHeader()->resizeSection(RecentRequestsTableModel::Label, 120);
-#if QT_VERSION < 0x050000
-        ui->recentRequestsView->horizontalHeader()->setResizeMode(RecentRequestsTableModel::Message, QHeaderView::Stretch);
-#else
-        ui->recentRequestsView->horizontalHeader()->setSectionResizeMode(RecentRequestsTableModel::Message, QHeaderView::Stretch);
-#endif
-        ui->recentRequestsView->horizontalHeader()->resizeSection(RecentRequestsTableModel::Amount, 100);
+        QTableView* tableView = ui->recentRequestsView;
 
-        model->getRecentRequestsTableModel()->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
+        tableView->verticalHeader()->hide();
+        tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tableView->setModel(model->getRecentRequestsTableModel());
+        tableView->setAlternatingRowColors(true);
+        tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        tableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
+        tableView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
+        tableView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
+
+        connect(tableView->selectionModel(),
+            SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this,
+            SLOT(on_recentRequestsView_selectionChanged(QItemSelection, QItemSelection)));
+        // Last 2 columns are set by the columnResizingFixer, when the table geometry is ready.
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH);
     }
 }
 
@@ -161,6 +165,15 @@ void ReceiveCoinsDialog::on_recentRequestsView_doubleClicked(const QModelIndex &
     dialog->show();
 }
 
+void ReceiveCoinsDialog::on_recentRequestsView_selectionChanged(const QItemSelection &selected,
+                                                                const QItemSelection &deselected)
+{
+    // Enable Show/Remove buttons only if anything is selected.
+    bool enable = !ui->recentRequestsView->selectionModel()->selectedRows().isEmpty();
+    ui->showRequestButton->setEnabled(enable);
+    ui->removeRequestButton->setEnabled(enable);
+}
+
 void ReceiveCoinsDialog::on_showRequestButton_clicked()
 {
     if(!model || !model->getRecentRequestsTableModel() || !ui->recentRequestsView->selectionModel())
@@ -183,6 +196,14 @@ void ReceiveCoinsDialog::on_removeRequestButton_clicked()
     // correct for selection mode ContiguousSelection
     QModelIndex firstIndex = selection.at(0);
     model->getRecentRequestsTableModel()->removeRows(firstIndex.row(), selection.length(), firstIndex.parent());
+}
+
+// We override the virtual resizeEvent of the QWidget to adjust tables column
+// sizes as the tables width is proportional to the dialogs width.
+void ReceiveCoinsDialog::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    columnResizingFixer->stretchColumnWidth(RecentRequestsTableModel::Message);
 }
 
 void ReceiveCoinsDialog::keyPressEvent(QKeyEvent *event)

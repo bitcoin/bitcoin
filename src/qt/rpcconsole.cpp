@@ -331,6 +331,13 @@ void RPCConsole::clear()
                         tr("Type <b>help</b> for an overview of available commands.")), true);
 }
 
+void RPCConsole::reject()
+{
+    // Ignore escape keypress if this is not a seperate window
+    if(windowType() != Qt::Widget)
+        QDialog::reject();
+}
+
 void RPCConsole::message(int category, const QString &message, bool html)
 {
     QTime time = QTime::currentTime();
@@ -349,7 +356,14 @@ void RPCConsole::message(int category, const QString &message, bool html)
 
 void RPCConsole::setNumConnections(int count)
 {
-    ui->numberOfConnections->setText(QString::number(count));
+    if (!clientModel)
+        return;
+
+    QString connections = QString::number(count) + " (";
+    connections += tr("In:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_IN)) + " / ";
+    connections += tr("Out:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_OUT)) + ")";
+
+    ui->numberOfConnections->setText(connections);
 }
 
 void RPCConsole::setNumBlocks(int count, int countOfPeers)
