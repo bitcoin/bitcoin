@@ -15,7 +15,8 @@ JSON_TEST_FILES = \
   data/base58_keys_invalid.json \
   data/script_invalid.json \
   data/tx_invalid.json \
-  data/tx_valid.json
+  data/tx_valid.json \
+  data/sighash.json
 
 RAW_TEST_FILES = data/alertTests.raw
 
