@@ -21,6 +21,7 @@ static bool AppInitRPC(int argc, char* argv[])
     //
     // Parameters
     //
+    ParseEnvironment();
     ParseParameters(argc, argv);
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
