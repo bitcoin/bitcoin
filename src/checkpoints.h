@@ -27,6 +27,10 @@ namespace Checkpoints
     double GuessVerificationProgress(CBlockIndex *pindex, bool fSigchecks = true);
 
     extern bool fEnabled;
+
+    /** Check whether we are doing an initial block download (synchronizing from disk or network) */
+    bool IsInitialBlockDownload();
 }
+
 
 #endif

@@ -161,4 +161,20 @@ namespace Checkpoints
         }
         return NULL;
     }
+
+    bool IsInitialBlockDownload()
+    {
+        if (fImporting || fReindex || chainActive.Height() < GetTotalBlocksEstimate())
+            return true;
+        static int64_t nLastUpdate;
+        static CBlockIndex* pindexLastBest;
+        if (chainActive.Tip() != pindexLastBest)
+        {
+            pindexLastBest = chainActive.Tip();
+            nLastUpdate = GetTime();
+        }
+        return (GetTime() - nLastUpdate < 10 &&
+                chainActive.Tip()->GetBlockTime() < GetTime() - 24 * 60 * 60);
+    }
+
 }

@@ -1094,7 +1094,7 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
 
     // Flush stdio buffers and commit to disk before returning
     fflush(fileout);
-    if (!IsInitialBlockDownload())
+    if (!Checkpoints::IsInitialBlockDownload())
         FileCommit(fileout);
 
     return true;
@@ -1302,21 +1302,6 @@ int GetNumBlocksOfPeers()
     return std::max(cPeerBlockCounts.median(), Checkpoints::GetTotalBlocksEstimate());
 }
 
-bool IsInitialBlockDownload()
-{
-    if (fImporting || fReindex || chainActive.Height() < Checkpoints::GetTotalBlocksEstimate())
-        return true;
-    static int64_t nLastUpdate;
-    static CBlockIndex* pindexLastBest;
-    if (chainActive.Tip() != pindexLastBest)
-    {
-        pindexLastBest = chainActive.Tip();
-        nLastUpdate = GetTime();
-    }
-    return (GetTime() - nLastUpdate < 10 &&
-            chainActive.Tip()->GetBlockTime() < GetTime() - 24 * 60 * 60);
-}
-
 bool fLargeWorkForkFound = false;
 bool fLargeWorkInvalidChainFound = false;
 CBlockIndex *pindexBestForkTip = NULL, *pindexBestForkBase = NULL;
@@ -1325,7 +1310,7 @@ void CheckForkWarningConditions()
 {
     // Before we get past initial download, we cannot reliably alert about forks
     // (we assume we don't get stuck on a fork before the last checkpoint)
-    if (IsInitialBlockDownload())
+    if (Checkpoints::IsInitialBlockDownload())
         return;
 
     // If our best fork is no longer within 72 blocks (+/- 12 hours if no one mines it)
@@ -1880,7 +1865,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 // Update the on-disk chain state.
 bool static WriteChainState(CValidationState &state) {
     static int64_t nLastWrite = 0;
-    if (!IsInitialBlockDownload() || pcoinsTip->GetCacheSize() > nCoinCacheSize || GetTimeMicros() > nLastWrite + 600*1000000) {
+    if (!Checkpoints::IsInitialBlockDownload() || pcoinsTip->GetCacheSize() > nCoinCacheSize || GetTimeMicros() > nLastWrite + 600*1000000) {
         // Typical CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
@@ -1902,7 +1887,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
     chainActive.SetTip(pindexNew);
 
     // Update best block in wallet (so we can detect restored wallets)
-    bool fIsInitialDownload = IsInitialBlockDownload();
+    bool fIsInitialDownload = Checkpoints::IsInitialBlockDownload();
     if ((chainActive.Height() % 20160) == 0 || (!fIsInitialDownload && (chainActive.Height() % 144) == 0))
         g_signals.SetBestChain(chainActive.GetLocator());
 
@@ -2114,7 +2099,7 @@ bool ActivateBestChain(CValidationState &state) {
 
     if (chainActive.Tip() != pindexOldTip) {
         std::string strCmd = GetArg("-blocknotify", "");
-        if (!IsInitialBlockDownload() && !strCmd.empty())
+        if (!Checkpoints::IsInitialBlockDownload() && !strCmd.empty())
         {
             boost::replace_all(strCmd, "%s", chainActive.Tip()->GetBlockHash().GetHex());
             boost::thread t(runCommand, strCmd); // thread runs free
@@ -3432,7 +3417,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (!pfrom->fInbound)
         {
             // Advertise our address
-            if (!fNoListen && !IsInitialBlockDownload())
+            if (!fNoListen && !Checkpoints::IsInitialBlockDownload())
             {
                 CAddress addr = GetLocalAddress(&pfrom->addr);
                 if (addr.IsRoutable())
@@ -4188,7 +4173,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
         // Address refresh broadcast
         static int64_t nLastRebroadcast;
-        if (!IsInitialBlockDownload() && (GetTime() - nLastRebroadcast > 24 * 60 * 60))
+        if (!Checkpoints::IsInitialBlockDownload() && (GetTime() - nLastRebroadcast > 24 * 60 * 60))
         {
             {
                 LOCK(cs_vNodes);
@@ -4264,7 +4249,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Resend wallet transactions that haven't gotten in a block yet
         // Except during reindex, importing and IBD, when old wallet
         // transactions become unconfirmed and spams other nodes.
-        if (!fReindex && !fImporting && !IsInitialBlockDownload())
+        if (!fReindex && !fImporting && !Checkpoints::IsInitialBlockDownload())
         {
             g_signals.Broadcast();
         }
