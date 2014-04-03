@@ -65,6 +65,7 @@ def initialize_chain(test_dir):
     """
 
     if not os.path.isdir(os.path.join("cache", "node0")):
+        devnull = open("/dev/null", "w+")
         # Create cache directories, run bitcoinds:
         for i in range(4):
             datadir = os.path.join("cache", "node"+str(i))
@@ -79,9 +80,9 @@ def initialize_chain(test_dir):
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(START_P2P_PORT))
             bitcoind_processes.append(subprocess.Popen(args))
-            subprocess.check_output([ "bitcoin-cli", "-datadir="+datadir,
-                                      "-rpcwait", "getblockcount"])
-
+            subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir,
+                                    "-rpcwait", "getblockcount"], stdout=devnull)
+        devnull.close()
         rpcs = []
         for i in range(4):
             try:
@@ -113,12 +114,14 @@ def initialize_chain(test_dir):
 
 def start_nodes(num_nodes, dir):
     # Start bitcoinds, and wait for RPC interface to be up and running:
+    devnull = open("/dev/null", "w+")
     for i in range(num_nodes):
         datadir = os.path.join(dir, "node"+str(i))
         args = [ "bitcoind", "-datadir="+datadir ]
         bitcoind_processes.append(subprocess.Popen(args))
-        subprocess.check_output([ "bitcoin-cli", "-datadir="+datadir,
-                                  "-rpcwait", "getblockcount"])
+        subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir,
+                                  "-rpcwait", "getblockcount"], stdout=devnull)
+    devnull.close()
     # Create&return JSON-RPC connections
     rpc_connections = []
     for i in range(num_nodes):
