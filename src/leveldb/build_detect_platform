@@ -44,6 +44,10 @@ if test -z "$CXX"; then
     CXX=g++
 fi
 
+if test -z "$TMPDIR"; then
+    TMPDIR=/tmp
+fi
+
 # Detect OS
 if test -z "$TARGET_OS"; then
     TARGET_OS=`uname -s`
@@ -94,6 +98,12 @@ case "$TARGET_OS" in
         PLATFORM_LIBS="-lpthread"
         PORT_FILE=port/port_posix.cc
         ;;
+    GNU/kFreeBSD)
+        PLATFORM=OS_KFREEBSD
+        COMMON_FLAGS="$MEMCMP_FLAG -D_REENTRANT -DOS_KFREEBSD"
+        PLATFORM_LIBS="-lpthread"
+        PORT_FILE=port/port_posix.cc
+        ;;
     NetBSD)
         PLATFORM=OS_NETBSD
         COMMON_FLAGS="$MEMCMP_FLAG -D_REENTRANT -DOS_NETBSD"
@@ -126,6 +136,16 @@ case "$TARGET_OS" in
         PORT_FILE=port/port_posix.cc
         # man ld: +h internal_name
         PLATFORM_SHARED_LDFLAGS="-shared -Wl,+h -Wl,"
+        ;;
+    IOS)
+        PLATFORM=IOS
+        COMMON_FLAGS="$MEMCMP_FLAG -DOS_MACOSX"
+        [ -z "$INSTALL_PATH" ] && INSTALL_PATH=`pwd`
+        PORT_FILE=port/port_posix.cc
+        PLATFORM_SHARED_EXT=
+        PLATFORM_SHARED_LDFLAGS=
+        PLATFORM_SHARED_CFLAGS=
+        PLATFORM_SHARED_VERSIONED=
         ;;
     OS_WINDOWS_CROSSCOMPILE | NATIVE_WINDOWS)
         PLATFORM=OS_WINDOWS
@@ -163,8 +183,10 @@ if [ "$CROSS_COMPILE" = "true" ]; then
     # Cross-compiling; do not try any compilation tests.
     true
 else
+    CXXOUTPUT="${TMPDIR}/leveldb_build_detect_platform-cxx.$$"
+
     # If -std=c++0x works, use <cstdatomic>.  Otherwise use port_posix.h.
-    $CXX $CXXFLAGS -std=c++0x -x c++ - -o /dev/null 2>/dev/null  <<EOF
+    $CXX $CXXFLAGS -std=c++0x -x c++ - -o $CXXOUTPUT 2>/dev/null  <<EOF
       #include <cstdatomic>
       int main() {}
 EOF
@@ -176,12 +198,14 @@ EOF
     fi
 
     # Test whether tcmalloc is available
-    $CXX $CXXFLAGS -x c++ - -o /dev/null -ltcmalloc 2>/dev/null  <<EOF
+    $CXX $CXXFLAGS -x c++ - -o $CXXOUTPUT -ltcmalloc 2>/dev/null  <<EOF
       int main() {}
 EOF
     if [ "$?" = 0 ]; then
         PLATFORM_LIBS="$PLATFORM_LIBS -ltcmalloc"
     fi
+
+    rm -f $CXXOUTPUT 2>/dev/null
 fi
 
 PLATFORM_CCFLAGS="$PLATFORM_CCFLAGS $COMMON_FLAGS"

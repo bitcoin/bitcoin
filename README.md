@@ -1,9 +1,9 @@
-Bitcoin integration/staging tree
-================================
+Bitcoin Core integration/staging tree
+=====================================
 
 http://www.bitcoin.org
 
-Copyright (c) 2009-2013 Bitcoin Developers
+Copyright (c) 2009-2013 Bitcoin Core Developers
 
 What is Bitcoin?
 ----------------
@@ -11,16 +11,16 @@ What is Bitcoin?
 Bitcoin is an experimental new digital currency that enables instant payments to
 anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin is also the name of the open source
+out collectively by the network. Bitcoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Bitcoin client sofware, see http://www.bitcoin.org.
+the Bitcoin Core software, see http://www.bitcoin.org/en/download.
 
 License
 -------
 
-Bitcoin is released under the terms of the MIT license. See `COPYING` for more
+Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see http://opensource.org/licenses/MIT.
 
 Development process
@@ -38,7 +38,7 @@ submitter will be asked to start a discussion (if they haven't already) on the
 
 The patch will be accepted if there is broad consensus that it is a good thing.
 Developers should expect to rework and resubmit patches if the code doesn't
-match the project's coding conventions (see `doc/coding.txt`) or are
+match the project's coding conventions (see [doc/coding.md](doc/coding.md)) or are
 controversial.
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
@@ -56,17 +56,7 @@ lots of money.
 ### Automated Testing
 
 Developers are strongly encouraged to write unit tests for new code, and to
-submit new unit tests for old code.
-
-Unit tests for the core code are in `src/test/`. To compile and run them:
-
-    cd src; make -f makefile.unix test
-
-Unit tests for the GUI code are in `src/qt/test/`. To compile and run them:
-
-    qmake BITCOIN_QT_TEST=1 -o Makefile.test bitcoin-qt.pro
-    make -f Makefile.test
-    ./bitcoin-qt_test
+submit new unit tests for old code. Unit tests can be compiled and run (assuming they weren't disabled in configure) with: `make check`
 
 Every pull request is built for both Windows and Linux on a dedicated server,
 and unit and sanity tests are automatically run. The binaries produced may be
@@ -78,5 +68,4 @@ for the build/test scripts.
 
 Large changes should have a test plan, and should be tested by somebody other
 than the developer who wrote the code.
-
 See https://github.com/bitcoin/QA/ for how to create a test plan.

@@ -1,11 +1,12 @@
 // Copyright (c) 2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_LIMITEDMAP_H
 #define BITCOIN_LIMITEDMAP_H
 
+#include <assert.h> // TODO: remove
 #include <map>
-#include <deque>
 
 /** STL-like map container that only keeps the N elements with the highest value. */
 template <typename K, typename V> class limitedmap

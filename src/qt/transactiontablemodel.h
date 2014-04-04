@@ -1,13 +1,18 @@
+// Copyright (c) 2011-2013 The Bitcoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef TRANSACTIONTABLEMODEL_H
 #define TRANSACTIONTABLEMODEL_H
 
 #include <QAbstractTableModel>
 #include <QStringList>
 
-class CWallet;
-class TransactionTablePriv;
 class TransactionRecord;
+class TransactionTablePriv;
 class WalletModel;
+
+class CWallet;
 
 /** UI model for the transaction table of a wallet.
  */
@@ -48,7 +53,9 @@ public:
         /** Is transaction confirmed? */
         ConfirmedRole,
         /** Formatted amount, without brackets when unconfirmed */
-        FormattedAmountRole
+        FormattedAmountRole,
+        /** Transaction status (TransactionRecord::Status) */
+        StatusRole
     };
 
     int rowCount(const QModelIndex &parent) const;

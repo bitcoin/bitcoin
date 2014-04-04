@@ -1,10 +1,13 @@
-#include <boost/test/unit_test.hpp>
+// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "init.h"
 #include "main.h"
+#include "miner.h"
 #include "uint256.h"
 #include "util.h"
-#include "wallet.h"
+
+#include <boost/test/unit_test.hpp>
 
 extern void SHA256Transform(void* pstate, void* pinput, const void* pinit);
 
@@ -48,14 +51,16 @@ struct {
 // NOTE: These tests rely on CreateNewBlock doing its own self-validation!
 BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
-    CReserveKey reservekey(pwalletMain);
+    CScript scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     CBlockTemplate *pblocktemplate;
-    CTransaction tx;
+    CTransaction tx,tx2;
     CScript script;
     uint256 hash;
 
+    LOCK(cs_main);
+
     // Simple block creation, nothing special yet:
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
 
     // We can't make transactions until we have inputs
     // Therefore, load 100 blocks :)
@@ -64,10 +69,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     {
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         pblock->nVersion = 1;
-        pblock->nTime = pindexBest->GetMedianTimePast()+1;
+        pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
         pblock->vtx[0].vin[0].scriptSig = CScript();
         pblock->vtx[0].vin[0].scriptSig.push_back(blockinfo[i].extranonce);
-        pblock->vtx[0].vin[0].scriptSig.push_back(pindexBest->nHeight);
+        pblock->vtx[0].vin[0].scriptSig.push_back(chainActive.Height());
         pblock->vtx[0].vout[0].scriptPubKey = CScript();
         if (txFirst.size() < 2)
             txFirst.push_back(new CTransaction(pblock->vtx[0]));
@@ -81,7 +86,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     delete pblocktemplate;
 
     // Just to make sure we can still make simple blocks
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
+    delete pblocktemplate;
 
     // block sigops > limit: 1000 CHECKMULTISIG + 1
     tx.vin.resize(1);
@@ -95,10 +101,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     {
         tx.vout[0].nValue -= 1000000;
         hash = tx.GetHash();
-        mempool.addUnchecked(hash, tx);
+        mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
         tx.vin[0].prevout.hash = hash;
     }
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
     mempool.clear();
 
@@ -115,17 +121,17 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     {
         tx.vout[0].nValue -= 10000000;
         hash = tx.GetHash();
-        mempool.addUnchecked(hash, tx);
+        mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
         tx.vin[0].prevout.hash = hash;
     }
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
     mempool.clear();
 
     // orphan in mempool
     hash = tx.GetHash();
-    mempool.addUnchecked(hash, tx);
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
     mempool.clear();
 
@@ -134,7 +140,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vout[0].nValue = 4900000000LL;
     hash = tx.GetHash();
-    mempool.addUnchecked(hash, tx);
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
     tx.vin[0].prevout.hash = hash;
     tx.vin.resize(2);
     tx.vin[1].scriptSig = CScript() << OP_1;
@@ -142,8 +148,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vin[1].prevout.n = 0;
     tx.vout[0].nValue = 5900000000LL;
     hash = tx.GetHash();
-    mempool.addUnchecked(hash, tx);
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
     mempool.clear();
 
@@ -153,8 +159,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vin[0].scriptSig = CScript() << OP_0 << OP_1;
     tx.vout[0].nValue = 0;
     hash = tx.GetHash();
-    mempool.addUnchecked(hash, tx);
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
     mempool.clear();
 
@@ -166,13 +172,13 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     script = CScript() << OP_0;
     tx.vout[0].scriptPubKey.SetDestination(script.GetID());
     hash = tx.GetHash();
-    mempool.addUnchecked(hash, tx);
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
     tx.vin[0].prevout.hash = hash;
     tx.vin[0].scriptSig = CScript() << (std::vector<unsigned char>)script;
     tx.vout[0].nValue -= 1000000;
     hash = tx.GetHash();
-    mempool.addUnchecked(hash,tx);
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
     mempool.clear();
 
@@ -182,23 +188,75 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vout[0].nValue = 4900000000LL;
     tx.vout[0].scriptPubKey = CScript() << OP_1;
     hash = tx.GetHash();
-    mempool.addUnchecked(hash, tx);
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
     tx.vout[0].scriptPubKey = CScript() << OP_2;
     hash = tx.GetHash();
-    mempool.addUnchecked(hash, tx);
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
     mempool.clear();
 
     // subsidy changing
-    int nHeight = pindexBest->nHeight;
-    pindexBest->nHeight = 209999;
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    int nHeight = chainActive.Height();
+    chainActive.Tip()->nHeight = 209999;
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
-    pindexBest->nHeight = 210000;
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(reservekey));
+    chainActive.Tip()->nHeight = 210000;
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
-    pindexBest->nHeight = nHeight;
+    chainActive.Tip()->nHeight = nHeight;
+
+    // non-final txs in mempool
+    SetMockTime(chainActive.Tip()->GetMedianTimePast()+1);
+
+    // height locked
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vin[0].nSequence = 0;
+    tx.vout[0].nValue = 4900000000LL;
+    tx.vout[0].scriptPubKey = CScript() << OP_1;
+    tx.nLockTime = chainActive.Tip()->nHeight+1;
+    hash = tx.GetHash();
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(!IsFinalTx(tx, chainActive.Tip()->nHeight + 1));
+
+    // time locked
+    tx2.vin.resize(1);
+    tx2.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx2.vin[0].prevout.n = 0;
+    tx2.vin[0].scriptSig = CScript() << OP_1;
+    tx2.vin[0].nSequence = 0;
+    tx2.vout.resize(1);
+    tx2.vout[0].nValue = 4900000000LL;
+    tx2.vout[0].scriptPubKey = CScript() << OP_1;
+    tx2.nLockTime = chainActive.Tip()->GetMedianTimePast()+1;
+    hash = tx2.GetHash();
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(!IsFinalTx(tx2));
+
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
+
+    // Neither tx should have make it into the template.
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 1);
+    delete pblocktemplate;
+
+    // However if we advance height and time by one, both will.
+    chainActive.Tip()->nHeight++;
+    SetMockTime(chainActive.Tip()->GetMedianTimePast()+2);
+
+    BOOST_CHECK(IsFinalTx(tx, chainActive.Tip()->nHeight + 1));
+    BOOST_CHECK(IsFinalTx(tx2));
+
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
+    delete pblocktemplate;
+
+    chainActive.Tip()->nHeight--;
+    SetMockTime(0);
+
+    BOOST_FOREACH(CTransaction *tx, txFirst)
+        delete tx;
+
 }
 
 BOOST_AUTO_TEST_CASE(sha256transform_equality)

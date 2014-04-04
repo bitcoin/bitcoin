@@ -1,8 +1,10 @@
-#include <boost/test/unit_test.hpp>
+// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "main.h"
-#include "wallet.h"
 #include "util.h"
+
+#include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(base64_tests)
 

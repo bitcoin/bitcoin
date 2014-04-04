@@ -1,12 +1,19 @@
-#include <boost/test/unit_test.hpp>
-
-using namespace std;
+// Copyright (c) 2012-2013 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "mruset.h"
+
 #include "util.h"
+
+#include <set>
+
+#include <boost/test/unit_test.hpp>
 
 #define NUM_TESTS 16
 #define MAX_SIZE 100
+
+using namespace std;
 
 class mrutester
 {

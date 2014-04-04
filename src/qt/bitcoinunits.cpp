@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2013 The Bitcoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "bitcoinunits.h"
 
 #include <QStringList>
@@ -60,6 +64,17 @@ qint64 BitcoinUnits::factor(int unit)
     case mBTC: return 100000;
     case uBTC: return 100;
     default:   return 100000000;
+    }
+}
+
+qint64 BitcoinUnits::maxAmount(int unit)
+{
+    switch(unit)
+    {
+    case BTC:  return Q_INT64_C(21000000);
+    case mBTC: return Q_INT64_C(21000000000);
+    case uBTC: return Q_INT64_C(21000000000000);
+    default:   return 0;
     }
 }
 

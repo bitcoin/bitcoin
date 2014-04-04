@@ -1,0 +1,97 @@
+---
+name: "bitcoin"
+suites:
+- "precise"
+architectures:
+- "amd64"
+packages:
+- "mingw-w64"
+- "g++-mingw-w64"
+- "git-core"
+- "unzip"
+- "nsis"
+- "faketime"
+- "autoconf2.13"
+- "libtool"
+- "automake"
+- "pkg-config"
+- "bsdmainutils"
+
+reference_datetime: "2013-06-01 00:00:00"
+remotes:
+- "url": "https://github.com/bitcoin/bitcoin.git"
+  "dir": "bitcoin"
+files:
+- "qt-win32-5.2.0-gitian-r2.zip"
+- "qt-win64-5.2.0-gitian-r2.zip"
+- "boost-win32-1.55.0-gitian-r6.zip"
+- "boost-win64-1.55.0-gitian-r6.zip"
+- "bitcoin-deps-win32-gitian-r10.zip"
+- "bitcoin-deps-win64-gitian-r10.zip"
+- "protobuf-win32-2.5.0-gitian-r4.zip"
+- "protobuf-win64-2.5.0-gitian-r4.zip"
+script: |
+  # Defines
+  export TZ=UTC
+  INDIR=$HOME/build
+  OPTFLAGS='-O2'
+  TEMPDIR="$HOME/tempdir"
+  NEEDDIST=1
+  # Qt: workaround for determinism in resource ordering
+  #  Qt5's rcc uses a QHash to store the files for the resource.
+  #  A security fix in QHash makes the ordering of keys to be different on every run
+  #  (https://qt.gitorious.org/qt/qtbase/commit/c01eaa438200edc9a3bbcd8ae1e8ded058bea268).
+  #  This is good in general but qrc shouldn't be doing a traversal over a randomized container.
+  #  The thorough solution would be to use QMap instead of QHash, but this requires patching Qt.
+  #  For now luckily there is a test mode that forces a fixed seed.
+  export QT_RCC_TEST=1
+  for BITS in 32 64; do # for architectures
+    #
+    STAGING=$HOME/staging${BITS}
+    BUILDDIR=$HOME/build${BITS}
+    BINDIR=$OUTDIR/$BITS
+    if [ "$BITS" == "32" ]; then
+      HOST=i686-w64-mingw32
+    else
+      HOST=x86_64-w64-mingw32
+    fi
+    export PATH=$STAGING/host/bin:$PATH
+    mkdir -p $STAGING $BUILDDIR $BINDIR
+    #
+    cd $STAGING
+    unzip $INDIR/qt-win${BITS}-5.2.0-gitian-r2.zip
+    unzip $INDIR/boost-win${BITS}-1.55.0-gitian-r6.zip
+    unzip $INDIR/bitcoin-deps-win${BITS}-gitian-r10.zip
+    unzip $INDIR/protobuf-win${BITS}-2.5.0-gitian-r4.zip
+    if [ "$NEEDDIST" == "1" ]; then
+      # Make source code archive which is architecture independent so it only needs to be done once
+      cd $HOME/build/bitcoin
+      ./autogen.sh
+      ./configure --bindir=$OUTDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}"
+      make dist
+      DISTNAME=`echo bitcoin-*.tar.gz`
+      NEEDDIST=0
+    fi
+    # Build platform-dependent executables from source archive
+    cd $BUILDDIR
+    mkdir -p distsrc
+    cd distsrc
+    tar --strip-components=1 -xf $HOME/build/bitcoin/$DISTNAME
+    ./configure --enable-upnp-default --bindir=$BINDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}"
+    export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+    export FAKETIME=$REFERENCE_DATETIME
+    make $MAKEOPTS
+    make deploy
+    make install-strip
+    cp -f bitcoin-*setup*.exe $BINDIR/
+    unset LD_PRELOAD
+    unset FAKETIME
+  done # for BITS in
+
+  # sort distribution tar file and normalize user/group/mtime information for deterministic output
+  mkdir -p $OUTDIR/src
+  rm -rf $TEMPDIR
+  mkdir -p $TEMPDIR
+  cd $TEMPDIR
+  tar -xvf $HOME/build/bitcoin/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
+

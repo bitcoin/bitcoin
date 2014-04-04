@@ -32,14 +32,13 @@ This directory contains all translations. Filenames must adhere to this format:
 
 `src/qt/locale/bitcoin_en.ts` is treated in a special way. It is used as the
 source for all other translations. Whenever a string in the code is changed
-this file must be updated to reflect those changes. This can be accomplished
-by running `lupdate` (included in the Qt SDK). Also, a custom script is used
+this file must be updated to reflect those changes. A  custom script is used
 to extract strings from the non-Qt parts. This script makes use of `gettext`,
 so make sure that utility is installed (ie, `apt-get install gettext` on 
-Ubuntu/Debian):
-
-    python share/qt/extract_strings_qt.py
-    lupdate bitcoin-qt.pro -no-obsolete -locations relative -ts src/qt/locale/bitcoin_en.ts
+Ubuntu/Debian). Once this has been updated, lupdate (included in the Qt SDK)
+is used to update bitcoin_en.ts. This process has been automated, from src/qt,
+simply run:
+    make translate
     
 ##### Handling of plurals in the source file
 
@@ -71,7 +70,7 @@ We are using https://transifex.com as a frontend for translating the client.
 
 https://www.transifex.com/projects/p/bitcoin/resource/tx/
 
-The "Transifex client" (see: http://help.transifex.com/features/client/)
+The "Transifex client" (see: http://support.transifex.com/customer/portal/topics/440187-transifex-client/articles)
 will help with fetching new translations from Transifex. Use the following
 config to be able to connect with the client:
 
@@ -101,5 +100,7 @@ It is also possible to directly download new translations one by one from the Tr
 
 1. `tx pull -a`
 2. update `src/qt/bitcoin.qrc` manually or via
-   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/<file alias="\2">locale/\1.qm<\/file>/'`
-3. `git add` new translations from `src/qt/locale/`
+   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'`
+3. update `src/qt/Makefile.am` manually or via
+   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/  locale\/\1.ts \\/'`
+4. `git add` new translations from `src/qt/locale/`

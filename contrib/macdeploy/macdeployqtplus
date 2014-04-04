@@ -196,7 +196,8 @@ class DeploymentInfo(object):
 def getFrameworks(binaryPath, verbose):
     if verbose >= 3:
         print "Inspecting with otool: " + binaryPath
-    otool = subprocess.Popen(["otool", "-L", binaryPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    otoolbin=os.getenv("OTOOL", "otool")
+    otool = subprocess.Popen([otoolbin, "-L", binaryPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     o_stdout, o_stderr = otool.communicate()
     if otool.returncode != 0:
         if verbose >= 1:
@@ -221,7 +222,8 @@ def getFrameworks(binaryPath, verbose):
     return libraries
 
 def runInstallNameTool(action, *args):
-    subprocess.check_call(["install_name_tool", "-"+action] + list(args))
+    installnametoolbin=os.getenv("INSTALLNAMETOOL", "install_name_tool")
+    subprocess.check_call([installnametoolbin, "-"+action] + list(args))
 
 def changeInstallName(oldName, newName, binaryPath, verbose):
     if verbose >= 3:
@@ -239,10 +241,11 @@ def changeIdentification(id, binaryPath, verbose):
     runInstallNameTool("id", id, binaryPath)
 
 def runStrip(binaryPath, verbose):
+    stripbin=os.getenv("STRIP", "strip")
     if verbose >= 3:
         print "Using strip:"
         print " stripped", binaryPath
-    subprocess.check_call(["strip", "-x", binaryPath])
+    subprocess.check_call([stripbin, "-x", binaryPath])
 
 def copyFramework(framework, path, verbose):
     if framework.sourceFilePath.startswith("Qt"):
@@ -347,6 +350,8 @@ def deployFrameworksForAppBundle(applicationBundle, strip, verbose):
 def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
     # Lookup available plugins, exclude unneeded
     plugins = []
+    if deploymentInfo.pluginPath is None:
+        return
     for dirpath, dirnames, filenames in os.walk(deploymentInfo.pluginPath):
         pluginDirectory = os.path.relpath(dirpath, deploymentInfo.pluginPath)
         if pluginDirectory == "designer":
@@ -421,8 +426,8 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
                 deployFrameworks([dependency], appBundleInfo.path, destinationPath, strip, verbose, deploymentInfo)
 
 qt_conf="""[Paths]
-translations=Resources
-plugins=PlugIns
+Translations=Resources
+Plugins=PlugIns
 """
 
 ap = ArgumentParser(description="""Improved version of macdeployqt.
@@ -651,6 +656,23 @@ elif config.sign:
 # ------------------------------------------------
 
 if config.dmg is not None:
+
+    #Patch in check_output for Python 2.6
+    if "check_output" not in dir( subprocess ):
+        def f(*popenargs, **kwargs):
+            if 'stdout' in kwargs:
+                raise ValueError('stdout argument not allowed, it will be overridden.')
+            process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+            output, unused_err = process.communicate()
+            retcode = process.poll()
+            if retcode:
+                cmd = kwargs.get("args")
+                if cmd is None:
+                    cmd = popenargs[0]
+                raise CalledProcessError(retcode, cmd)
+            return output
+        subprocess.check_output = f
+
     def runHDIUtil(verb, image_basename, **kwargs):
         hdiutil_args = ["hdiutil", verb, image_basename + ".dmg"]
         if kwargs.has_key("capture_stdout"):

@@ -1,14 +1,20 @@
-// Copyright (c) 2009-2012 The Bitcoin developers
+// Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_NETBASE_H
 #define BITCOIN_NETBASE_H
 
+#if defined(HAVE_CONFIG_H)
+#include "bitcoin-config.h"
+#endif
+
+#include "compat.h"
+#include "serialize.h"
+
+#include <stdint.h>
 #include <string>
 #include <vector>
-
-#include "serialize.h"
-#include "compat.h"
 
 extern int nConnectTimeout;
 
@@ -50,7 +56,7 @@ class CNetAddr
         bool IsRFC3849() const; // IPv6 documentation address (2001:0DB8::/32)
         bool IsRFC3927() const; // IPv4 autoconfig (169.254.0.0/16)
         bool IsRFC3964() const; // IPv6 6to4 tunnelling (2002::/16)
-        bool IsRFC4193() const; // IPv6 unique local (FC00::/15)
+        bool IsRFC4193() const; // IPv6 unique local (FC00::/7)
         bool IsRFC4380() const; // IPv6 Teredo tunnelling (2001::/32)
         bool IsRFC4843() const; // IPv6 ORCHID (2001:10::/28)
         bool IsRFC4862() const; // IPv6 autoconfig (FE80::/64)
@@ -65,7 +71,7 @@ class CNetAddr
         std::string ToString() const;
         std::string ToStringIP() const;
         unsigned int GetByte(int n) const;
-        uint64 GetHash() const;
+        uint64_t GetHash() const;
         bool GetInAddr(struct in_addr* pipv4Addr) const;
         std::vector<unsigned char> GetGroup() const;
         int GetReachabilityFrom(const CNetAddr *paddrPartner = NULL) const;

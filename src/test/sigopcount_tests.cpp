@@ -1,9 +1,15 @@
-#include <vector>
-#include <boost/test/unit_test.hpp>
-#include <boost/foreach.hpp>
+// Copyright (c) 2012-2013 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "script.h"
 #include "key.h"
+#include "script.h"
+#include "uint256.h"
+
+#include <vector>
+
+#include <boost/foreach.hpp>
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 
@@ -37,12 +43,12 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     scriptSig << OP_0 << Serialize(s1);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig), 3U);
 
-    std::vector<CKey> keys;
+    std::vector<CPubKey> keys;
     for (int i = 0; i < 3; i++)
     {
         CKey k;
         k.MakeNewKey(true);
-        keys.push_back(k);
+        keys.push_back(k.GetPubKey());
     }
     CScript s2;
     s2.SetMultisig(1, keys);

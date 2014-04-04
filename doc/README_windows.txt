@@ -1,6 +1,7 @@
-Bitcoin 0.8.0 BETA
+Bitcoin 0.9.0rc1 BETA
 
-Copyright (c) 2009-2013 Bitcoin Developers
+Copyright (c) 2009-2014 Bitcoin Core Developers
+
 Distributed under the MIT/X11 software license, see the accompanying
 file COPYING or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
@@ -20,15 +21,10 @@ Setup
 -----
 Unpack the files into a directory and run bitcoin-qt.exe.
 
-If you have Microsoft Security Essentials, you need to add bitcoin.exe to its
-"Excluded processes" list.  Microsoft Security Essentials->Settings tab,
-select Excluded processes, press Add, select bitcoin.exe, OK, Save changes.
-
-The software automatically finds other nodes to connect to.  You can
-enable Universal Plug and Play using a menu entry or set your firewall
-to forward port 8333 (TCP) to your computer so you can receive
-incoming connections.  Bitcoin works without incoming connections,
-but allowing incoming connections helps the Bitcoin network.
+Bitcoin Core is the original Bitcoin client and it builds the backbone of the network.
+However, it downloads and stores the entire history of Bitcoin transactions;
+depending on the speed of your computer and network connection, the synchronization
+process can take anywhere from a few hours to a day or more.
 
 See the bitcoin wiki at:
   https://en.bitcoin.it/wiki/Main_Page

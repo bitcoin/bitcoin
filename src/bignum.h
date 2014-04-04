@@ -1,15 +1,20 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2012 The Bitcoin developers
+// Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_BIGNUM_H
 #define BITCOIN_BIGNUM_H
 
-#include <stdexcept>
-#include <vector>
-#include <openssl/bn.h>
+#include "serialize.h"
+#include "uint256.h"
+#include "version.h"
 
-#include "util.h" // for uint64
+#include <stdexcept>
+#include <stdint.h>
+#include <vector>
+
+#include <openssl/bn.h>
 
 /** Errors thrown by the bignum class */
 class bignum_error : public std::runtime_error
@@ -79,17 +84,17 @@ public:
     }
 
     //CBigNum(char n) is not portable.  Use 'signed char' or 'unsigned char'.
-    CBigNum(signed char n)      { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
-    CBigNum(short n)            { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
-    CBigNum(int n)              { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
-    CBigNum(long n)             { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
-    CBigNum(int64 n)            { BN_init(this); setint64(n); }
-    CBigNum(unsigned char n)    { BN_init(this); setulong(n); }
-    CBigNum(unsigned short n)   { BN_init(this); setulong(n); }
-    CBigNum(unsigned int n)     { BN_init(this); setulong(n); }
-    CBigNum(unsigned long n)    { BN_init(this); setulong(n); }
-    CBigNum(uint64 n)           { BN_init(this); setuint64(n); }
-    explicit CBigNum(uint256 n) { BN_init(this); setuint256(n); }
+    CBigNum(signed char n)        { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
+    CBigNum(short n)              { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
+    CBigNum(int n)                { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
+    CBigNum(long n)               { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
+    CBigNum(long long n)          { BN_init(this); setint64(n); }
+    CBigNum(unsigned char n)      { BN_init(this); setulong(n); }
+    CBigNum(unsigned short n)     { BN_init(this); setulong(n); }
+    CBigNum(unsigned int n)       { BN_init(this); setulong(n); }
+    CBigNum(unsigned long n)      { BN_init(this); setulong(n); }
+    CBigNum(unsigned long long n) { BN_init(this); setuint64(n); }
+    explicit CBigNum(uint256 n)   { BN_init(this); setuint256(n); }
 
     explicit CBigNum(const std::vector<unsigned char>& vch)
     {
@@ -122,14 +127,14 @@ public:
             return (n > (unsigned long)std::numeric_limits<int>::max() ? std::numeric_limits<int>::min() : -(int)n);
     }
 
-    void setint64(int64 sn)
+    void setint64(int64_t sn)
     {
         unsigned char pch[sizeof(sn) + 6];
         unsigned char* p = pch + 4;
         bool fNegative;
-        uint64 n;
+        uint64_t n;
 
-        if (sn < (int64)0)
+        if (sn < (int64_t)0)
         {
             // Since the minimum signed integer cannot be represented as positive so long as its type is signed, 
             // and it's not well-defined what happens if you make it unsigned before negating it,
@@ -167,7 +172,7 @@ public:
         BN_mpi2bn(pch, p - pch, this);
     }
 
-    void setuint64(uint64 n)
+    void setuint64(uint64_t n)
     {
         unsigned char pch[sizeof(n) + 6];
         unsigned char* p = pch + 4;
@@ -347,13 +352,13 @@ public:
             psz++;
 
         // hex string to bignum
-        static const signed char phexdigit[256] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0 };
         *this = 0;
-        while (isxdigit(*psz))
+        int n;
+        while ((n = HexDigit(*psz)) != -1)
         {
             *this <<= 4;
-            int n = phexdigit[(unsigned char)*psz++];
             *this += n;
+            ++psz;
         }
         if (fNegative)
             *this = 0 - *this;

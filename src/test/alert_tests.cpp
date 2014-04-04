@@ -1,14 +1,23 @@
+// Copyright (c) 2013 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 //
 // Unit tests for alert system
 //
 
-#include <boost/foreach.hpp>
-#include <boost/test/unit_test.hpp>
-#include <fstream>
-
 #include "alert.h"
+#include "data/alertTests.raw.h"
+
 #include "serialize.h"
 #include "util.h"
+#include "version.h"
+
+#include <fstream>
+
+#include <boost/filesystem/operations.hpp>
+#include <boost/foreach.hpp>
+#include <boost/test/unit_test.hpp>
 
 #if 0
 //
@@ -22,7 +31,7 @@
     alert.nID           = 1;
     alert.nCancel       = 0;   // cancels previous messages up to this ID number
     alert.nMinVer       = 0;  // These versions are protocol versions
-    alert.nMaxVer       = 70001;
+    alert.nMaxVer       = 999001;
     alert.nPriority     = 1;
     alert.strComment    = "Alert comment";
     alert.strStatusBar  = "Alert 1";
@@ -71,27 +80,13 @@ struct ReadAlerts
 {
     ReadAlerts()
     {
-        std::string filename("alertTests");
-        namespace fs = boost::filesystem;
-        fs::path testFile = fs::current_path() / "test" / "data" / filename;
-#ifdef TEST_DATA_DIR
-        if (!fs::exists(testFile))
-        {
-            testFile = fs::path(BOOST_PP_STRINGIZE(TEST_DATA_DIR)) / filename;
-        }
-#endif
-        FILE* fp = fopen(testFile.string().c_str(), "rb");
-        if (!fp) return;
-
-
-        CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
-        if (!filein) return;
-
+        std::vector<unsigned char> vch(alert_tests::alertTests, alert_tests::alertTests + sizeof(alert_tests::alertTests));
+        CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
         try {
-            while (!feof(filein))
+            while (stream.good())
             {
                 CAlert alert;
-                filein >> alert;
+                stream >> alert;
                 alerts.push_back(alert);
             }
         }
@@ -125,27 +120,30 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
     {
         BOOST_CHECK(alert.CheckSignature());
     }
+
+    BOOST_CHECK(alerts.size() >= 3);
+
     // Matches:
     BOOST_CHECK(alerts[0].AppliesTo(1, ""));
-    BOOST_CHECK(alerts[0].AppliesTo(70001, ""));
+    BOOST_CHECK(alerts[0].AppliesTo(999001, ""));
     BOOST_CHECK(alerts[0].AppliesTo(1, "/Satoshi:11.11.11/"));
 
     BOOST_CHECK(alerts[1].AppliesTo(1, "/Satoshi:0.1.0/"));
-    BOOST_CHECK(alerts[1].AppliesTo(70001, "/Satoshi:0.1.0/"));
+    BOOST_CHECK(alerts[1].AppliesTo(999001, "/Satoshi:0.1.0/"));
 
     BOOST_CHECK(alerts[2].AppliesTo(1, "/Satoshi:0.1.0/"));
     BOOST_CHECK(alerts[2].AppliesTo(1, "/Satoshi:0.2.0/"));
 
     // Don't match:
     BOOST_CHECK(!alerts[0].AppliesTo(-1, ""));
-    BOOST_CHECK(!alerts[0].AppliesTo(70002, ""));
+    BOOST_CHECK(!alerts[0].AppliesTo(999002, ""));
 
     BOOST_CHECK(!alerts[1].AppliesTo(1, ""));
     BOOST_CHECK(!alerts[1].AppliesTo(1, "Satoshi:0.1.0"));
     BOOST_CHECK(!alerts[1].AppliesTo(1, "/Satoshi:0.1.0"));
     BOOST_CHECK(!alerts[1].AppliesTo(1, "Satoshi:0.1.0/"));
     BOOST_CHECK(!alerts[1].AppliesTo(-1, "/Satoshi:0.1.0/"));
-    BOOST_CHECK(!alerts[1].AppliesTo(70002, "/Satoshi:0.1.0/"));
+    BOOST_CHECK(!alerts[1].AppliesTo(999002, "/Satoshi:0.1.0/"));
     BOOST_CHECK(!alerts[1].AppliesTo(1, "/Satoshi:0.2.0/"));
 
     BOOST_CHECK(!alerts[2].AppliesTo(1, "/Satoshi:0.3.0/"));

@@ -1,6 +1,7 @@
 #include "uritests.h"
-#include "../guiutil.h"
-#include "../walletmodel.h"
+
+#include "guiutil.h"
+#include "walletmodel.h"
 
 #include <QUrl>
 
@@ -50,9 +51,8 @@ void URITests::uriTests()
     QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
     QVERIFY(rv.label == QString());
 
-    // We currently don't implement the message parameter (ok, yea, we break spec...)
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?req-message=Wikipedia Example Address"));
-    QVERIFY(!GUIUtil::parseBitcoinURI(uri, &rv));
+    QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
 
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000&label=Wikipedia Example"));
     QVERIFY(!GUIUtil::parseBitcoinURI(uri, &rv));

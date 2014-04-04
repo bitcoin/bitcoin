@@ -1,16 +1,26 @@
+// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include "data/tx_invalid.json.h"
+#include "data/tx_valid.json.h"
+
+#include "key.h"
+#include "keystore.h"
+#include "main.h"
+#include "script.h"
+
 #include <map>
 #include <string>
+
 #include <boost/test/unit_test.hpp>
 #include "json/json_spirit_writer_template.h"
-
-#include "main.h"
-#include "wallet.h"
 
 using namespace std;
 using namespace json_spirit;
 
 // In script_tests.cpp
-extern Array read_json(const std::string& filename);
+extern Array read_json(const std::string& jsondata);
 extern CScript ParseScript(string s);
 
 BOOST_AUTO_TEST_SUITE(transaction_tests)
@@ -22,7 +32,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
     // Inner arrays are either [ "comment" ]
     // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, enforceP2SH
     // ... where all scripts are stringified scripts.
-    Array tests = read_json("tx_valid.json");
+    Array tests = read_json(std::string(json_tests::tx_valid, json_tests::tx_valid + sizeof(json_tests::tx_valid)));
 
     BOOST_FOREACH(Value& tv, tests)
     {
@@ -67,7 +77,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             stream >> tx;
 
             CValidationState state;
-            BOOST_CHECK_MESSAGE(tx.CheckTransaction(state), strTest);
+            BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
             BOOST_CHECK(state.IsValid());
 
             for (unsigned int i = 0; i < tx.vin.size(); i++)
@@ -91,7 +101,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
     // Inner arrays are either [ "comment" ]
     // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, enforceP2SH
     // ... where all scripts are stringified scripts.
-    Array tests = read_json("tx_invalid.json");
+    Array tests = read_json(std::string(json_tests::tx_invalid, json_tests::tx_invalid + sizeof(json_tests::tx_invalid)));
 
     BOOST_FOREACH(Value& tv, tests)
     {
@@ -136,7 +146,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             stream >> tx;
 
             CValidationState state;
-            fValid = tx.CheckTransaction(state) && state.IsValid();
+            fValid = CheckTransaction(tx, state) && state.IsValid();
 
             for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
             {
@@ -163,11 +173,11 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     CTransaction tx;
     stream >> tx;
     CValidationState state;
-    BOOST_CHECK_MESSAGE(tx.CheckTransaction(state) && state.IsValid(), "Simple deserialized transaction should be valid.");
+    BOOST_CHECK_MESSAGE(CheckTransaction(tx, state) && state.IsValid(), "Simple deserialized transaction should be valid.");
 
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);
-    BOOST_CHECK_MESSAGE(!tx.CheckTransaction(state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
+    BOOST_CHECK_MESSAGE(!CheckTransaction(tx, state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
 }
 
 //
@@ -230,16 +240,16 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].nValue = 90*CENT;
     t1.vout[0].scriptPubKey << OP_1;
 
-    BOOST_CHECK(t1.AreInputsStandard(coins));
-    BOOST_CHECK_EQUAL(t1.GetValueIn(coins), (50+21+22)*CENT);
+    BOOST_CHECK(AreInputsStandard(t1, coins));
+    BOOST_CHECK_EQUAL(coins.GetValueIn(t1), (50+21+22)*CENT);
 
     // Adding extra junk to the scriptSig should make it non-standard:
     t1.vin[0].scriptSig << OP_11;
-    BOOST_CHECK(!t1.AreInputsStandard(coins));
+    BOOST_CHECK(!AreInputsStandard(t1, coins));
 
     // ... as should not having enough:
     t1.vin[0].scriptSig = CScript();
-    BOOST_CHECK(!t1.AreInputsStandard(coins));
+    BOOST_CHECK(!AreInputsStandard(t1, coins));
 }
 
 BOOST_AUTO_TEST_CASE(test_IsStandard)
@@ -260,16 +270,44 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     key.MakeNewKey(true);
     t.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
 
-    BOOST_CHECK(t.IsStandard());
+    string reason;
+    BOOST_CHECK(IsStandardTx(t, reason));
 
-    t.vout[0].nValue = 5011; // dust
-    BOOST_CHECK(!t.IsStandard());
+    t.vout[0].nValue = 501; // dust
+    BOOST_CHECK(!IsStandardTx(t, reason));
 
-    t.vout[0].nValue = 6011; // not dust
-    BOOST_CHECK(t.IsStandard());
+    t.vout[0].nValue = 601; // not dust
+    BOOST_CHECK(IsStandardTx(t, reason));
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
-    BOOST_CHECK(!t.IsStandard());
+    BOOST_CHECK(!IsStandardTx(t, reason));
+
+    // 40-byte TX_NULL_DATA (standard)
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
+    BOOST_CHECK(IsStandardTx(t, reason));
+
+    // 41-byte TX_NULL_DATA (non-standard)
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800");
+    BOOST_CHECK(!IsStandardTx(t, reason));
+
+    // TX_NULL_DATA w/o PUSHDATA
+    t.vout.resize(1);
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN;
+    BOOST_CHECK(IsStandardTx(t, reason));
+
+    // Only one TX_NULL_DATA permitted in all cases
+    t.vout.resize(2);
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
+    t.vout[1].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
+    BOOST_CHECK(!IsStandardTx(t, reason));
+
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
+    t.vout[1].scriptPubKey = CScript() << OP_RETURN;
+    BOOST_CHECK(!IsStandardTx(t, reason));
+
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN;
+    t.vout[1].scriptPubKey = CScript() << OP_RETURN;
+    BOOST_CHECK(!IsStandardTx(t, reason));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

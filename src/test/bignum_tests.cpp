@@ -1,8 +1,13 @@
-#include <boost/test/unit_test.hpp>
-#include <limits>
+// Copyright (c) 2012-2014 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bignum.h"
-#include "util.h"
+
+#include <limits>
+#include <stdint.h>
+
+#include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(bignum_tests)
 
@@ -34,11 +39,8 @@ BOOST_AUTO_TEST_SUITE(bignum_tests)
 // stack buffer overruns.
 //
 // For more accurate diagnostics, you can use an undefined arithmetic operation
-// detector such as the clang-based tool:
-//
-// "IOC: An Integer Overflow Checker for C/C++"
-//
-// Available at: http://embed.cs.utah.edu/ioc/
+// detector such as the clang's undefined behaviour checker.
+// See also: http://clang.llvm.org/docs/UsersManual.html#controlling-code-generation
 //
 // It might also be useful to use Google's AddressSanitizer to detect
 // stack buffer overruns, which valgrind can't currently detect.
@@ -46,7 +48,7 @@ BOOST_AUTO_TEST_SUITE(bignum_tests)
 // Let's force this code not to be inlined, in order to actually
 // test a generic version of the function. This increases the chance
 // that -ftrapv will detect overflows.
-NOINLINE void mysetint64(CBigNum& num, int64 n)
+NOINLINE void mysetint64(CBigNum& num, int64_t n)
 {
     num.setint64(n);
 }
@@ -55,7 +57,7 @@ NOINLINE void mysetint64(CBigNum& num, int64 n)
 // value to 0, then the second one with a non-inlined function.
 BOOST_AUTO_TEST_CASE(bignum_setint64)
 {
-    int64 n;
+    int64_t n;
 
     {
         n = 0;
@@ -103,7 +105,7 @@ BOOST_AUTO_TEST_CASE(bignum_setint64)
         BOOST_CHECK(num.ToString() == "-5");
     }
     {
-        n = std::numeric_limits<int64>::min();
+        n = std::numeric_limits<int64_t>::min();
         CBigNum num(n);
         BOOST_CHECK(num.ToString() == "-9223372036854775808");
         num.setulong(0);
@@ -112,7 +114,7 @@ BOOST_AUTO_TEST_CASE(bignum_setint64)
         BOOST_CHECK(num.ToString() == "-9223372036854775808");
     }
     {
-        n = std::numeric_limits<int64>::max();
+        n = std::numeric_limits<int64_t>::max();
         CBigNum num(n);
         BOOST_CHECK(num.ToString() == "9223372036854775807");
         num.setulong(0);
@@ -131,6 +133,42 @@ BOOST_AUTO_TEST_CASE(bignum_SetCompact)
     BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
 
     num.SetCompact(0x00123456);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x01003456);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x02000056);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x03000000);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x04000000);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x00923456);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x01803456);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x02800056);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+
+    num.SetCompact(0x03800000);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    
+    num.SetCompact(0x04800000);
     BOOST_CHECK_EQUAL(num.GetHex(), "0");
     BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
 
@@ -173,6 +211,14 @@ BOOST_AUTO_TEST_CASE(bignum_SetCompact)
     num.SetCompact(0xff123456);
     BOOST_CHECK_EQUAL(num.GetHex(), "123456000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
     BOOST_CHECK_EQUAL(num.GetCompact(), 0xff123456U);
+}
+
+BOOST_AUTO_TEST_CASE(bignum_SetHex)
+{
+    std::string hexStr = "deecf97fd890808b9cc0f1b6a3e7a60b400f52710e6ad075b1340755bfa58cc9";
+    CBigNum num;
+    num.SetHex(hexStr);
+    BOOST_CHECK_EQUAL(num.GetHex(), hexStr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
