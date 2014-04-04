@@ -1085,7 +1085,9 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 
 bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
 {
-    // Open history file to append
+    int64_t nStart = GetTimeMicros();
+
+    // Open block file to append
     CAutoFile fileout = CAutoFile(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
     if (!fileout)
         return error("WriteBlockToDisk : OpenBlockFile failed");
@@ -1106,14 +1108,19 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
     if (!IsInitialBlockDownload())
         FileCommit(fileout);
 
+    if (fBenchmark)
+        LogPrintf("WriteBlockToDisk : Function executed in %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
+
     return true;
 }
 
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
 {
+    int64_t nStart = GetTimeMicros();
+
     block.SetNull();
 
-    // Open history file to read
+    // Open block file to read
     CAutoFile filein = CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
     if (!filein)
         return error("ReadBlockFromDisk : OpenBlockFile failed");
@@ -1129,6 +1136,9 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
     // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits))
         return error("ReadBlockFromDisk : Errors in block header");
+
+    if (fBenchmark)
+        LogPrintf("ReadBlockFromDisk : Function executed in %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
     return true;
 }
@@ -2533,7 +2543,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
         }
     }
 
-    // Write block to history file
+    // Write block to block file
     try {
         unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
         CDiskBlockPos blockPos;

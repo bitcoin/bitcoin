@@ -334,7 +334,9 @@ public:
 
     bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock)
     {
-        // Open history file to append
+        int64_t nStart = GetTimeMicros();
+
+        // Open undo file to append
         CAutoFile fileout = CAutoFile(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
         if (!fileout)
             return error("CBlockUndo::WriteToDisk : OpenUndoFile failed");
@@ -361,12 +363,17 @@ public:
         if (!IsInitialBlockDownload())
             FileCommit(fileout);
 
+        if (fBenchmark)
+            LogPrintf("CBlockUndo::WriteToDisk : Function executed in %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
+
         return true;
     }
 
     bool ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock)
     {
-        // Open history file to read
+        int64_t nStart = GetTimeMicros();
+
+        // Open undo file to read
         CAutoFile filein = CAutoFile(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
         if (!filein)
             return error("CBlockUndo::ReadFromDisk : OpenBlockFile failed");
@@ -387,6 +394,9 @@ public:
         hasher << *this;
         if (hashChecksum != hasher.GetHash())
             return error("CBlockUndo::ReadFromDisk : Checksum mismatch");
+
+        if (fBenchmark)
+            LogPrintf("CBlockUndo::ReadFromDisk : Function executed in %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
         return true;
     }
