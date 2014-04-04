@@ -13,6 +13,8 @@ JSON_TEST_FILES = \
   data/sig_noncanonical.json \
   data/base58_encode_decode.json \
   data/base58_keys_invalid.json \
+  data/ecc32_encode_decode.json \
+  data/ecc32_recover.json \
   data/script_invalid.json \
   data/tx_invalid.json \
   data/tx_valid.json \
@@ -44,6 +46,7 @@ test_bitcoin_SOURCES = \
   Checkpoints_tests.cpp \
   compress_tests.cpp \
   DoS_tests.cpp \
+  ecc32_tests.cpp \
   getarg_tests.cpp \
   key_tests.cpp \
   main_tests.cpp \

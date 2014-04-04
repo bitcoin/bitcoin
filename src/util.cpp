@@ -13,6 +13,7 @@
 #include "version.h"
 
 #include <stdarg.h>
+#include <stdexcept> // for runtime_error
 
 #ifndef WIN32
 // for posix_fallocate
@@ -63,6 +64,7 @@
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
+#include <boost/crc.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/foreach.hpp>
@@ -702,10 +704,27 @@ string DecodeBase64(const string& str)
     return string((const char*)&vchRet[0], vchRet.size());
 }
 
+const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
+const int decode32_table[256] =
+    { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, 26, 27, 28, 29, 30, 31, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+      15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,
+      -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+      15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+
 string EncodeBase32(const unsigned char* pch, size_t len)
 {
-    static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
-
     string strRet="";
     strRet.reserve((len+4)/5*8);
 
@@ -768,23 +787,6 @@ string EncodeBase32(const string& str)
 
 vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid)
 {
-    static const int decode32_table[256] =
-    {
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
-        15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1,  0,  1,  2,
-         3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
-        23, 24, 25, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
-    };
-
     if (pfInvalid)
         *pfInvalid = false;
 
@@ -887,6 +889,299 @@ string DecodeBase32(const string& str)
 {
     vector<unsigned char> vchRet = DecodeBase32(str.c_str());
     return string((const char*)&vchRet[0], vchRet.size());
+}
+
+
+int ilog2(int value)
+{
+    int l = 0;
+    while ((value >> l) > 1)
+        ++l;
+    return l;
+}
+
+const char *pzbase32 = "ybndrfg8ejkmcpqxot1uwisza345h769";
+const int decode_zbase32_table[256] =
+    { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, 18, -1, 25, 26, 27, 30, 29,  7, 31, -1, -1, -1, -1, -1, -1,
+      -1, 24,  1, 12,  3,  8,  5,  6, 28, 21,  9, 10, -1, 11,  2, 16,
+      13, 14,  4, 22, 17, 19, -1, 20, 15,  0, 23, -1, -1, -1, -1, -1,
+      -1, 24,  1, 12,  3,  8,  5,  6, 28, 21,  9, 10, -1, 11,  2, 16,
+      13, 14,  4, 22, 17, 19, -1, 20, 15,  0, 23, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+
+const unsigned char EC[31] =
+    {  4,  3, 17,  2, 30, 16, 24,  1,
+       6, 29,  8, 15, 27, 23, 12,  0,
+      25,  5, 18, 28, 13,  7,  9, 14,
+      10, 26, 19, 22, 21, 11, 20 };
+
+// Transpose the input, creating 5 integer values each 31 bits long.
+// The first integer contains the 1st bits of each input code point.
+// The second integer contains the 2nd bits of each input code point.
+// Etc. This allows for correctable burst errors of up to 5 bits on
+// a code point boundary (e.g. an incorrect base32 digit).
+inline void _transpose_pkt_to_msg(
+    const vector<boost::uint_t<5>::fast> &pkt,
+    boost::uint_t<31>::fast* msg)
+{
+    fill_n(msg, 5, 0);
+
+    int r, c;
+    for (r=0; r < 31; ++r)
+        for (c=0; c < 5; ++c)
+            msg[c] |= ((pkt[r] >> (4-c)) & 1) << r;
+}
+
+inline void _transpose_msg_to_pkt(
+    const boost::uint_t<31>::fast* msg,
+    vector<boost::uint_t<5>::fast> &pkt)
+{
+    fill(pkt.begin(), pkt.end(), 0);
+
+    int r, c;
+    for (c=0; c < 5; ++c)
+        for (r=0; r < 31; ++r)
+            if (msg[c] & 1<<r)
+                pkt[r] |= 1 << (4-c);
+}
+
+string AddErrorCorrectionCode32(const char *pch, size_t len)
+{
+    int gp = (0x12<<1) + 1; // CRC-5-USB
+    boost::crc_basic<5> code(gp & 0x1f);
+    int n = (len+25)/26;
+
+    // The error correcting encoder take input in batches of 26 digits.
+    // We zero-extend the input if necessary to be a multiple of 26.
+    string input(pch, len);
+    input.resize(26*n, pbase32[0]);
+
+    // We will build the output string one batch at a time, appending
+    // the 26 input digits + 5 digit checksum.
+    string strRet;
+    strRet.resize(31*n);
+
+    int i, r, c;
+    for (i=0; i < n; ++i) {
+        // The packet will be where the 26 digits of input +
+        // 5 checksum digits are stored
+        vector<boost::uint_t<5>::fast> pkt(31);
+
+        // Copy over the 26 input digits, converting from rfc-3548
+        transform(input.begin()+26*i,
+                  input.begin()+26*(i+1),
+                  pkt.begin(),
+                  Rfc3548Digit);
+
+        // Transpose the input such that each CRC will
+        // cover exactly one bit from each input digit.
+        boost::uint_t<31>::fast msg[5] = {};
+        _transpose_pkt_to_msg(pkt, msg);
+
+        // Calculate the checksum of the first 26 bits.
+        boost::uint_t<5>::fast cs[5];
+        for (c=0; c < 5; ++c) {
+            code.reset();
+            for (r=0; r < 26; ++r)
+                code.process_bit(msg[c] & (1<<r));
+            cs[c] = code.checksum();
+        }
+
+        // Transpose the checksum and insert back into the
+        // last five digits of the packet structure, MSB-first.
+        // Loop is unrolled for clarity and speed.
+        pkt[26]   = (cs[0]&0x10)
+                  | (cs[1]&0x10)>>1
+                  | (cs[2]&0x10)>>2
+                  | (cs[3]&0x10)>>3
+                  | (cs[4]&0x10)>>4;
+        pkt[26+1] = (cs[0]&0x08)<<1
+                  | (cs[1]&0x08)
+                  | (cs[2]&0x08)>>1
+                  | (cs[3]&0x08)>>2
+                  | (cs[4]&0x08)>>3;
+        pkt[26+2] = (cs[0]&0x04)<<2
+                  | (cs[1]&0x04)<<1
+                  | (cs[2]&0x04)
+                  | (cs[3]&0x04)>>1
+                  | (cs[4]&0x04)>>2;
+        pkt[26+3] = (cs[0]&0x02)<<3
+                  | (cs[1]&0x02)<<2
+                  | (cs[2]&0x02)<<1
+                  | (cs[3]&0x02)
+                  | (cs[4]&0x02)>>1;
+        pkt[26+4] = (cs[0]&0x01)<<4
+                  | (cs[1]&0x01)<<3
+                  | (cs[2]&0x01)<<2
+                  | (cs[3]&0x01)<<1
+                  | (cs[4]&0x01);
+
+        // Transform into z-base-32 encoding.
+        transform(pkt.begin(), pkt.end(),
+                  strRet.begin()+31*i,
+                  ZBase32Code);
+    }
+
+    // Remove padded zero bytes
+    if (len%26) {
+        copy(strRet.begin() + 31*(n-1) + 26,
+             strRet.begin() + 31*(n-1) + 31,
+             strRet.begin() + 31*(n-1) + len%26);
+        strRet.resize(31*(n-1) + len%26 + 5);
+    }
+
+    return strRet;
+}
+
+string AddErrorCorrectionCode32(const string& str)
+{
+    return AddErrorCorrectionCode32(str.c_str(), str.size());
+}
+
+bool _is_ecc32_separator_char(char c)
+{
+    if (c=='-' || c=='_' || isspace(c))
+        return true;
+    else
+        return false;
+}
+
+string RemoveErrorCorrectionCode32(
+    const char *pch, size_t len,
+    bool* pfInvalid, map<size_t, char> *pMapErrors)
+{
+    int gp = (0x12<<1) + 1; // CRC-5-USB
+    boost::crc_basic<5> code(gp & 0x1f);
+
+    // Remove group separators from the input
+    string input(pch, len);
+    input.erase(remove_if(input.begin(),
+                          input.end(),
+                          &_is_ecc32_separator_char),
+                input.end());
+    len = input.size();
+    int n = (len+30)/31;
+
+    // The error correcting decoder takes input in batches of 31 codes,
+    // although implicit padding allows zeroes to be inserted when the
+    // original input string is not a multiple of 26 codes in length.
+    // However there must always be 5 error correction codes per group.
+    assert(len%31 == 0 || len%31 > 5);
+    if (len%31) {
+        input.resize(31*n);
+        copy_backward(input.begin() + 31*(n-1) + len%31 - 5,
+                      input.begin() + 31*(n-1) + len%31,
+                      input.end());
+        fill(input.begin() + 31*(n-1) + len%31 - 5,
+             input.end() - 5,
+             pzbase32[0]);
+    }
+
+    // We will reconstruct the output string one batch at a time,
+    // appending the 26 decoded digits from each 31 digit input.
+    string strRet;
+    strRet.resize(26*n);
+
+    // pMapErrors will be filled with pairings of error
+    // locations and the corrected z-base-32 digits.
+    if (pMapErrors)
+        pMapErrors->clear();
+
+    int i, b, f, r, c;
+    for (i=0; i < n; ++i) {
+        // The packet is the 26 digits of payload + 5 checksum digits.
+        vector<boost::uint_t<5>::fast> pkt(31);
+
+        // Copy over the 31 input digits, converting from z-base-32
+        transform(input.begin()+31*i,
+                  input.begin()+31*(i+1),
+                  pkt.begin(),
+                  ZBase32Digit);
+
+        // Transpose the input so that each CRC will cover
+        // exactly one digit from each input code point.
+        boost::uint_t<31>::fast msg[5] = {};
+        _transpose_pkt_to_msg(pkt, msg);
+
+        // Calculate checksums
+        boost::uint_t<5>::fast cs[5];
+        for (c=0; c < 5; ++c) {
+            code.reset();
+            for (r=0; r < 31; ++r)
+                code.process_bit(msg[c] & (1<<r));
+            cs[c] = code.checksum();
+        }
+
+        // Detect errors in input and perform single-digit
+        // correction (if possible, otherwise terminate).
+        for (f=0, c=0; c < 5; ++c)
+            if (cs[c])
+                f |= 1 << EC[cs[c]-1];
+        // f now contains the digit position(s) indicated as erroneous by the CRC checksums.
+        // If it is zero, then the message is correct.
+        // If one bit is set, then that digit can be corrected.
+        // If more than one bit is set, an unrecoverable error occured.
+        if (f) {
+            // position of the (first) invalid digit
+            b = ilog2(f);
+
+            // check if there is more than one invalid digit
+            if (f != 1<<ilog2(f)) {
+                if (pfInvalid) {
+                    *pfInvalid = true;
+                    strRet.resize(i*26);
+                    return strRet;
+                } else {
+                    throw runtime_error("multiple uncorrectable errors encountered");
+                }
+            }
+
+            // perform message reconstruction
+            for (c=0; c < 5; ++c)
+                if (cs[c])
+                    msg[c] ^= f;
+
+            // record the error
+            if (pMapErrors)
+                pMapErrors->insert(pair<size_t, char>(31*i+b,
+                    ZBase32Code((msg[0]&f) >> b << 4 |
+                                (msg[1]&f) >> b << 3 |
+                                (msg[2]&f) >> b << 2 |
+                                (msg[3]&f) >> b << 1 |
+                                (msg[4]&f) >> b)));
+        }
+
+        // Transpose back to a sequence of 5-bit digits.
+        _transpose_msg_to_pkt(msg, pkt);
+
+        // Transform into rfc-3548 encoding.
+        transform(pkt.begin(), pkt.begin()+26,
+                  strRet.begin()+26*i,
+                  Rfc3548Code);
+    }
+
+    // Remove padding bytes
+    if (len%31)
+        strRet.resize(26*(n-1) + len%31 - 5);
+
+    return strRet;
+}
+
+string RemoveErrorCorrectionCode32(
+    const string& str,
+    bool* pfInvalid, map<size_t, char> *pMapErrors)
+{
+    return RemoveErrorCorrectionCode32(str.c_str(), str.size(), pfInvalid, pMapErrors);
 }
 
 
