@@ -58,16 +58,15 @@ namespace Checkpoints
         8000.0     // * estimated number of transactions per day after checkpoint
     };
 
-    static MapCheckpoints mapCheckpointsTestnet = 
+    static MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
-        (   546, uint256("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70"))
-        ( 35000, uint256("2af959ab4f12111ce947479bfcef16702485f04afd95210aa90fde7d1e4a64ad"))
+        (   546, uint256("0xa0fea99a6897f531600c8ae53367b126824fd6a847b2b2b73817a95b8e27e602"))
         ;
     static const CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
-        1369685559,
-        37581,
-        300
+        1365458829,
+        547,
+        576
     };
 
     const CCheckpointData &Checkpoints() {
@@ -79,7 +78,6 @@ namespace Checkpoints
 
     bool CheckBlock(int nHeight, const uint256& hash)
     {
-        if (fTestNet) return true; // Testnet has no checkpoints
         if (!GetBoolArg("-checkpoints", true))
             return true;
 
@@ -123,7 +121,6 @@ namespace Checkpoints
 
     int GetTotalBlocksEstimate()
     {
-        if (fTestNet) return 0; // Testnet has no checkpoints
         if (!GetBoolArg("-checkpoints", true))
             return 0;
 
@@ -134,7 +131,6 @@ namespace Checkpoints
 
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex)
     {
-        if (fTestNet) return NULL; // Testnet has no checkpoints
         if (!GetBoolArg("-checkpoints", true))
             return NULL;
 
