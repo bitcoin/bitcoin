@@ -88,7 +88,7 @@
      <item>
       <widget class="QLabel" name="label_ppcoin_copyright">
        <property name="text">
-        <string>Copyright © 2011-2013 PPCoin Developers</string>
+        <string>Copyright © 2011-2014 PPCoin Developers</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
