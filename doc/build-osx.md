@@ -86,7 +86,9 @@ If not, you can ensure that the Homebrew OpenSSL is correctly linked by running
 
         brew link openssl --force
 
-Rerunning "openssl version" should now return the correct version.
+Rerunning "openssl version" should now return the correct version. If it
+doesn't, make sure `/usr/local/bin` comes before `/usr/bin` in your
+PATH. 
 
 ### Building `bitcoind`
 
