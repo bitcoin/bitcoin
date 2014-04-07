@@ -43,8 +43,61 @@ Common types:
 	set     set or multiset
 	bn      CBigNum
 
--------------------------
+Doxygen comments
+-----------------
+
+To facilitate the generation of documentation, use doxygen-compatible comment blocks for functions, methods and fields.
+
+For example, to describe a function use:
+```c++
+/**
+ * ... text ...
+ * @param[in] arg1    A description
+ * @param[in] arg2    Another argument description
+ * @pre Precondition for function...
+ */
+bool function(int arg1, const char *arg2)
+```
+A complete list of `@xxx` commands can be found at http://www.stack.nl/~dimitri/doxygen/manual/commands.html.
+As Doxygen recognizes the comments by the delimiters (`/**` and `*/` in this case), you don't
+*need* to provide any commands for a comment to be valid, just a description text is fine. 
+
+To describe a class use the same construct above the class definition:
+```c++
+/** 
+ * Alerts are for notifying old versions if they become too obsolete and
+ * need to upgrade. The message is displayed in the status bar.
+ * @see GetWarnings()
+ */
+class CAlert
+{
+```
+
+To describe a member or variable use:
+```c++
+int var; //!< Detailed description after the member
+```
+
+Also OK:
+```c++
+///
+/// ... text ...
+///
+bool function2(int arg1, const char *arg2)
+```
+
+Not OK (used plenty in the current source, but not picked up):
+```c++
+//
+// ... text ...
+//
+```
+
+A full list of comment syntaxes picked up by doxygen can be found at http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html,
+but if possible use one of the above styles.
+
 Locking/mutex usage notes
+-------------------------
 
 The code is multi-threaded, and uses mutexes and the
 LOCK/TRY_LOCK macros to protect data structures.
@@ -60,8 +113,8 @@ between the various components is a goal, with any necessary locking
 done by the components (e.g. see the self-contained CKeyStore class
 and its cs_KeyStore lock for example).
 
--------
 Threads
+-------
 
 - ThreadScriptCheck : Verifies block scripts.
 
