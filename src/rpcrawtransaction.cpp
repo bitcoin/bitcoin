@@ -536,7 +536,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             "      \"privatekey\"   (string) private key in base58-encoding\n"
             "      ,...\n"
             "    ]\n"
-            "4. \"sighashtype\"     (string, optional, default=ALL) The signature has type. Must be one of\n"
+            "4. \"sighashtype\"     (string, optional, default=ALL) The signature hash type. Must be one of\n"
             "       \"ALL\"\n"
             "       \"NONE\"\n"
             "       \"SINGLE\"\n"
