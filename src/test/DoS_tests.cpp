@@ -17,7 +17,6 @@
 
 #include <stdint.h>
 
-#include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
@@ -115,16 +114,13 @@ static bool CheckNBits(unsigned int nbits1, int64_t time1, unsigned int nbits2, 
 
 BOOST_AUTO_TEST_CASE(DoS_checknbits)
 {
-    using namespace boost::assign; // for 'map_list_of()'
-
     // Timestamps,nBits from the bitcoin block chain.
     // These are the block-chain checkpoint blocks
     typedef std::map<int64_t, unsigned int> BlockData;
-    BlockData chainData =
-        map_list_of(1239852051,486604799)(1262749024,486594666)
-        (1279305360,469854461)(1280200847,469830746)(1281678674,469809688)
-        (1296207707,453179945)(1302624061,453036989)(1309640330,437004818)
-        (1313172719,436789733);
+    BlockData chainData ={
+        {1239852051,486604799},{1262749024,486594666},{1279305360,469854461},
+        {1280200847,469830746},{1281678674,469809688},{1296207707,453179945},
+        {1302624061,453036989},{1309640330,437004818},{1313172719,436789733}};
 
     // Make sure CheckNBits considers every combination of block-chain-lock-in-points
     // "sane":
