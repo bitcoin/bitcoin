@@ -86,7 +86,7 @@ script: |
     export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
     export FAKETIME=$REFERENCE_DATETIME
     find -print0 | xargs -r0 touch # fix up timestamps before packaging
-    find | sort | zip -X@ $OUTDIR/qt-win${BITS}-5.2.0-gitian-r2.zip
+    find | sort | zip -X@ $OUTDIR/qt-win${BITS}-5.2.0-gitian-r3.zip
     unset LD_PRELOAD
     unset FAKETIME
   done # for BITS in
