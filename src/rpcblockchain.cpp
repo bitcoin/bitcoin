@@ -167,7 +167,7 @@ Value getrawmempool(const Array& params, bool fHelp)
     {
         LOCK(mempool.cs);
         Object o;
-        for (const PAIRTYPE(uint256, CTxMemPoolEntry)& entry : mempool.mapTx)
+        for (const std::pair<uint256, CTxMemPoolEntry>& entry : mempool.mapTx)
         {
             const uint256& hash = entry.first;
             const CTxMemPoolEntry& e = entry.second;

@@ -63,7 +63,7 @@ void RPCTypeCheck(const Object& o,
                   const map<string, Value_type>& typesExpected,
                   bool fAllowNull)
 {
-    for (const PAIRTYPE(string, Value_type)& t : typesExpected)
+    for (const std::pair<string, Value_type>& t : typesExpected)
     {
         const Value& v = find_value(o, t.first);
         if (!fAllowNull && v.type() == null_type)

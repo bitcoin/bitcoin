@@ -56,9 +56,6 @@ static const int64_t CENT = 1000000;
 #define PRIpdu    "u"
 #define PRIpdd    "d"
 
-// This is needed because the foreach macro can't get over the comma in pair<t1, t2>
-#define PAIRTYPE(t1, t2)    std::pair<t1, t2>
-
 // Align by increasing pointer, must have extra space at end of buffer
 template <size_t nBytes, typename T>
 T* alignup(T* p)

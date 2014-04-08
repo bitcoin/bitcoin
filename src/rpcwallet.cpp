@@ -57,7 +57,7 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
     entry.push_back(Pair("walletconflicts", conflicts));
     entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
     entry.push_back(Pair("timereceived", (boost::int64_t)wtx.nTimeReceived));
-    for (const PAIRTYPE(string,string)& item : wtx.mapValue)
+    for (const std::pair<string,string>& item : wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
 }
 
@@ -290,7 +290,7 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 
     // Find all addresses that have the given account
     Array ret;
-    for (const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item : pwalletMain->mapAddressBook)
+    for (const std::pair<CBitcoinAddress, CAddressBookData>& item : pwalletMain->mapAddressBook)
     {
         const CBitcoinAddress& address = item.first;
         const string& strName = item.second.name;
@@ -634,10 +634,10 @@ Value getbalance(const Array& params, bool fHelp)
             wtx.GetAmounts(listReceived, listSent, allFee, strSentAccount);
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
-                for (const PAIRTYPE(CTxDestination,int64_t)& r : listReceived)
+                for (const std::pair<CTxDestination,int64_t>& r : listReceived)
                     nBalance += r.second;
             }
-            for (const PAIRTYPE(CTxDestination,int64_t)& r : listSent)
+            for (const std::pair<CTxDestination,int64_t>& r : listSent)
                 nBalance -= r.second;
             nBalance -= allFee;
         }
@@ -968,7 +968,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
     // Reply
     Array ret;
     map<string, tallyitem> mapAccountTally;
-    for (const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item : pwalletMain->mapAddressBook)
+    for (const std::pair<CBitcoinAddress, CAddressBookData>& item : pwalletMain->mapAddressBook)
     {
         const CBitcoinAddress& address = item.first;
         const string& strAccount = item.second.name;
@@ -1107,7 +1107,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
-        for (const PAIRTYPE(CTxDestination, int64_t)& s : listSent)
+        for (const std::pair<CTxDestination, int64_t>& s : listSent)
         {
             Object entry;
             entry.push_back(Pair("account", strSentAccount));
@@ -1124,7 +1124,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     // Received
     if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
     {
-        for (const PAIRTYPE(CTxDestination, int64_t)& r : listReceived)
+        for (const std::pair<CTxDestination, int64_t>& r : listReceived)
         {
             string account;
             if (pwalletMain->mapAddressBook.count(r.first))
@@ -1310,7 +1310,7 @@ Value listaccounts(const Array& params, bool fHelp)
         nMinDepth = params[0].get_int();
 
     map<string, int64_t> mapAccountBalances;
-    for (const PAIRTYPE(CTxDestination, CAddressBookData)& entry : pwalletMain->mapAddressBook) {
+    for (const std::pair<CTxDestination, CAddressBookData>& entry : pwalletMain->mapAddressBook) {
         if (IsMine(*pwalletMain, entry.first)) // This address belongs to me
             mapAccountBalances[entry.second.name] = 0;
     }
@@ -1327,11 +1327,11 @@ Value listaccounts(const Array& params, bool fHelp)
             continue;
         wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount);
         mapAccountBalances[strSentAccount] -= nFee;
-        for (const PAIRTYPE(CTxDestination, int64_t)& s : listSent)
+        for (const std::pair<CTxDestination, int64_t>& s : listSent)
             mapAccountBalances[strSentAccount] -= s.second;
         if (nDepth >= nMinDepth)
         {
-            for (const PAIRTYPE(CTxDestination, int64_t)& r : listReceived)
+            for (const std::pair<CTxDestination, int64_t>& r : listReceived)
                 if (pwalletMain->mapAddressBook.count(r.first))
                     mapAccountBalances[pwalletMain->mapAddressBook[r.first].name] += r.second;
                 else
@@ -1345,7 +1345,7 @@ Value listaccounts(const Array& params, bool fHelp)
         mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
 
     Object ret;
-    for (const PAIRTYPE(string, int64_t)& accountBalance : mapAccountBalances) {
+    for (const std::pair<string, int64_t>& accountBalance : mapAccountBalances) {
         ret.push_back(Pair(accountBalance.first, ValueFromAmount(accountBalance.second)));
     }
     return ret;
