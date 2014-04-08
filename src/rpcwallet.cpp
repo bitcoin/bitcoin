@@ -1302,12 +1302,13 @@ Value listtransactions(const Array& params, bool fHelp)
 
 Value listaccounts(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
-            "listaccounts ( minconf )\n"
+            "listaccounts ( minconf includeWatchonly)\n"
             "\nReturns Object that has account names as keys, account balances as values.\n"
             "\nArguments:\n"
-            "1. minconf     (numeric, optional, default=1) Only onclude transactions with at least this many confirmations\n"
+            "1. minconf          (numeric, optional, default=1) Only onclude transactions with at least this many confirmations\n"
+            "2. includeWatchonly (bool, optional, default=false) Include balances in watchonly addresses (see 'importaddress')\n"
             "\nResult:\n"
             "{                      (json object where keys are account names, and values are numeric balances\n"
             "  \"account\": x.xxx,  (numeric) The property name is the account name, and the value is the total balance for the account.\n"
@@ -1325,12 +1326,18 @@ Value listaccounts(const Array& params, bool fHelp)
         );
 
     int nMinDepth = 1;
+    isminefilter includeWatchonly = MINE_SPENDABLE;
     if (params.size() > 0)
+    {
         nMinDepth = params[0].get_int();
+        if(params.size() > 1)
+            if(params[1].get_bool())
+                includeWatchonly = includeWatchonly | MINE_WATCH_ONLY;
+    }
 
     map<string, int64_t> mapAccountBalances;
     BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& entry, pwalletMain->mapAddressBook) {
-        if (IsMine(*pwalletMain, entry.first)) // This address belongs to me
+        if (IsMine(*pwalletMain, entry.first) & includeWatchonly) // This address belongs to me
             mapAccountBalances[entry.second.name] = 0;
     }
 
@@ -1344,7 +1351,7 @@ Value listaccounts(const Array& params, bool fHelp)
         int nDepth = wtx.GetDepthInMainChain();
         if (wtx.GetBlocksToMaturity() > 0 || nDepth < 0)
             continue;
-        wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount);
+        wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, includeWatchonly);
         mapAccountBalances[strSentAccount] -= nFee;
         BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64_t)& s, listSent)
             mapAccountBalances[strSentAccount] -= s.second;
