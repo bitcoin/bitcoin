@@ -49,7 +49,7 @@ on actual hardware instead of using a VM, in this case you can skip this section
 
 In the VirtualBox GUI click "Create" and choose the following parameters in the wizard:
 
-![](gitian-building/create_vm_page1.png =100x20)
+![](gitian-building/create_vm_page1.png)
 
 - Type: Linux, Debian (64 bit)
 
