@@ -18,7 +18,6 @@
 #include <stdint.h>
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 // Tests this internal-to-main.cpp method:
@@ -124,9 +123,9 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits)
 
     // Make sure CheckNBits considers every combination of block-chain-lock-in-points
     // "sane":
-    BOOST_FOREACH(const BlockData::value_type& i, chainData)
+    for (const BlockData::value_type& i : chainData)
     {
-        BOOST_FOREACH(const BlockData::value_type& j, chainData)
+        for (const BlockData::value_type& j : chainData)
         {
             BOOST_CHECK(CheckNBits(i.second, i.first, j.second, j.first));
         }

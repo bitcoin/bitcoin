@@ -44,7 +44,7 @@ void WalletModelTransaction::setTransactionFee(qint64 newFee)
 qint64 WalletModelTransaction::getTotalTransactionAmount()
 {
     qint64 totalTransactionAmount = 0;
-    foreach(const SendCoinsRecipient &rcp, recipients)
+    for (const SendCoinsRecipient &rcp : recipients)
     {
         totalTransactionAmount += rcp.amount;
     }

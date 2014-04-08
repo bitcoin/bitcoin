@@ -9,8 +9,6 @@
 
 #include <stdint.h>
 
-#include <boost/foreach.hpp>
-
 namespace Checkpoints
 {
     typedef std::map<int, uint256> MapCheckpoints;
@@ -148,9 +146,9 @@ namespace Checkpoints
 
         const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
 
-        BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, checkpoints)
+        for (auto i = checkpoints.rbegin(); i != checkpoints.rend(); i++)
         {
-            const uint256& hash = i.second;
+            const uint256& hash = (*i).second;
             std::map<uint256, CBlockIndex*>::const_iterator t = mapBlockIndex.find(hash);
             if (t != mapBlockIndex.end())
                 return t->second;

@@ -13,7 +13,6 @@
 #include "uint256.h"
 #include "util.h"
 
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_utils.h"
@@ -28,7 +27,7 @@ BOOST_AUTO_TEST_SUITE(base58_tests)
 BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
 {
     Array tests = read_json(std::string(json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
-    BOOST_FOREACH(Value& tv, tests)
+    for (Value& tv : tests)
     {
         Array test = tv.get_array();
         std::string strTest = write_string(tv, false);
@@ -51,7 +50,7 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     Array tests = read_json(std::string(json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
     std::vector<unsigned char> result;
 
-    BOOST_FOREACH(Value& tv, tests)
+    for (Value& tv : tests)
     {
         Array test = tv.get_array();
         std::string strTest = write_string(tv, false);
@@ -127,7 +126,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
     CBitcoinSecret secret;
     CBitcoinAddress addr;
 
-    BOOST_FOREACH(Value& tv, tests)
+    for (Value& tv : tests)
     {
         Array test = tv.get_array();
         std::string strTest = write_string(tv, false);
@@ -183,7 +182,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
 {
     Array tests = read_json(std::string(json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
     std::vector<unsigned char> result;
-    BOOST_FOREACH(Value& tv, tests)
+    for (Value& tv : tests)
     {
         Array test = tv.get_array();
         std::string strTest = write_string(tv, false);
@@ -254,7 +253,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_invalid)
     CBitcoinSecret secret;
     CBitcoinAddress addr;
 
-    BOOST_FOREACH(Value& tv, tests)
+    for (Value& tv : tests)
     {
         Array test = tv.get_array();
         std::string strTest = write_string(tv, false);
