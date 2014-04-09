@@ -16,9 +16,9 @@ remotes:
 - "url": "https://github.com/litecoin-project/litecoin.git"
   "dir": "litecoin"
 files:
-- "qt-win32-4.8.3-gitian-r4.zip"
+- "qt-win32-4.8.5-gitian-r5.zip"
 - "boost-win32-1.55.0-gitian-r6.zip"
-- "bitcoin-deps-win32-gitian-r9.zip"
+- "bitcoin08-deps-win32-gitian-r10.zip"
 script: |
   #
   STAGING=$HOME/staging
@@ -26,9 +26,9 @@ script: |
   #
   mkdir -p $STAGING
   cd $STAGING
-  unzip ../build/qt-win32-4.8.3-gitian-r4.zip
+  unzip ../build/qt-win32-4.8.5-gitian-r5.zip
   unzip ../build/boost-win32-1.55.0-gitian-r6.zip
-  unzip ../build/bitcoin-deps-win32-gitian-r9.zip
+  unzip ../build/bitcoin08-deps-win32-gitian-r10.zip
   cd $HOME/build/
   #
   cd litecoin

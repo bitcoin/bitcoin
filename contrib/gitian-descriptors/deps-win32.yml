@@ -14,12 +14,12 @@ packages:
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
-- "openssl-1.0.1c.tar.gz"
+- "openssl-1.0.1g.tar.gz"
 - "db-4.8.30.NC.tar.gz"
-- "miniupnpc-1.6.tar.gz"
-- "zlib-1.2.6.tar.gz"
-- "libpng-1.5.9.tar.gz"
-- "qrencode-3.2.0.tar.bz2"
+- "miniupnpc-1.9.20140401.tar.gz"
+- "zlib-1.2.8.tar.gz"
+- "libpng-1.6.8.tar.gz"
+- "qrencode-3.4.3.tar.bz2"
 script: |
   #
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
@@ -27,11 +27,19 @@ script: |
   export TZ=UTC
   export INSTALLPREFIX=$OUTDIR/staging/deps
   export HOST=i686-w64-mingw32
+  # Integrity Check
+  echo "53cb818c3b90e507a8348f4f5eaedb05d8bfe5358aabb508b7263cc670c3e028  openssl-1.0.1g.tar.gz"  | sha256sum -c
+  echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"    | sha256sum -c
+  echo "d02670112125300f7a3d61421714d99105edd90190bf12542d16785f16f017aa  miniupnpc-1.9.20140401.tar.gz"   | sha256sum -c
+  echo "36658cb768a54c1d4dec43c3116c27ed893e88b02ecfcb44f2166f9c0b7f2a0d  zlib-1.2.8.tar.gz"      | sha256sum -c
+  echo "32c7acf1608b9c8b71b743b9780adb7a7b347563dbfb4a5263761056da44cc96  libpng-1.6.8.tar.gz"    | sha256sum -c
+  echo "dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98  qrencode-3.4.3.tar.bz2" | sha256sum -c
+
   #
   mkdir -p $INSTALLPREFIX
 
-  tar xzf openssl-1.0.1c.tar.gz
-  cd openssl-1.0.1c
+  tar xzf openssl-1.0.1g.tar.gz
+  cd openssl-1.0.1g
   ./Configure --cross-compile-prefix=$HOST- mingw --openssldir=$INSTALLPREFIX
   make
   make install_sw
@@ -44,8 +52,8 @@ script: |
   make install_lib install_include
   cd ../..
   #
-  tar xzf miniupnpc-1.6.tar.gz
-  cd miniupnpc-1.6
+  tar xzf miniupnpc-1.9.20140401.tar.gz
+  cd miniupnpc-1.9.20140401
   echo "
   --- miniupnpc-1.6/Makefile.mingw.orig   2013-09-29 18:52:51.014087958 -1000
   +++ miniupnpc-1.6/Makefile.mingw        2013-09-29 19:09:29.663318691 -1000
@@ -68,26 +76,26 @@ script: |
   install libminiupnpc.a  $INSTALLPREFIX/lib
   cd ..
   #
-  tar xzf zlib-1.2.6.tar.gz
-  cd zlib-1.2.6
+  tar xzf zlib-1.2.8.tar.gz
+  cd zlib-1.2.8
   CROSS_PREFIX=$HOST- ./configure --prefix=$INSTALLPREFIX --static
   make
   make install
   cd ..
   #
-  tar xzf libpng-1.5.9.tar.gz
-  cd libpng-1.5.9
-  CFLAGS="-I$INSTALLPREFIX/include" LDFLAGS="-L$INSTALLPREFIX/lib" ./configure --disable-shared --prefix=$INSTALLPREFIX --host=$HOST
+  tar xzf libpng-1.6.8.tar.gz
+  cd libpng-1.6.8
+  CPPFLAGS="-I$INSTALLPREFIX/include" LDFLAGS="-L$INSTALLPREFIX/lib" ./configure --disable-shared --prefix=$INSTALLPREFIX --host=$HOST
   make $MAKEOPTS
   make install
   cd ..
   #
-  tar xjf qrencode-3.2.0.tar.bz2
-  cd qrencode-3.2.0
+  tar xjf qrencode-3.4.3.tar.bz2
+  cd qrencode-3.4.3
   png_CFLAGS="-I$INSTALLPREFIX/include" png_LIBS="-L$INSTALLPREFIX/lib -lpng" ./configure --prefix=$INSTALLPREFIX --host=$HOST
   make
   make install
   cd ..
   #
   cd $INSTALLPREFIX
-  zip -r $OUTDIR/bitcoin-deps-win32-gitian-r9.zip include lib
+  zip -r $OUTDIR/bitcoin08-deps-win32-gitian-r10.zip include lib

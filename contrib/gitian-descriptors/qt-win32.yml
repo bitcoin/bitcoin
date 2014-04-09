@@ -13,22 +13,24 @@ packages:
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
-- "qt-everywhere-opensource-src-4.8.3.tar.gz"
-- "bitcoin-deps-win32-gitian-r9.zip"
+- "qt-everywhere-opensource-src-4.8.5.tar.gz"
+- "bitcoin08-deps-win32-gitian-r10.zip"
 script: |
   #
   HOST=i686-w64-mingw32
   INSTDIR="$HOME/qt/"
+  # Integrity Check
+  echo "eb728f8268831dc4373be6403b7dd5d5dde03c169ad6882f9a8cb560df6aa138  qt-everywhere-opensource-src-4.8.5.tar.gz"  | sha256sum -c
   #
   mkdir $INSTDIR
   mkdir -p $INSTDIR/host/bin
   #
   # Need mingw-compiled openssl from bitcoin-deps:
-  unzip bitcoin-deps-win32-gitian-r9.zip
+  unzip bitcoin08-deps-win32-gitian-r10.zip
   DEPSDIR=`pwd`
   #
-  tar xzf qt-everywhere-opensource-src-4.8.3.tar.gz
-  cd qt-everywhere-opensource-src-4.8.3
+  tar xzf qt-everywhere-opensource-src-4.8.5.tar.gz
+  cd qt-everywhere-opensource-src-4.8.5
   sed 's/$TODAY/2011-01-30/' -i configure
   sed "s/i686-pc-mingw32-/$HOST-/" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
   sed --posix "s|QMAKE_CFLAGS\t\t= -pipe|QMAKE_CFLAGS\t\t= -pipe -isystem /usr/$HOST/include/ -frandom-seed=qtbuild|" -i mkspecs/unsupported/win32-g++-cross/qmake.conf
@@ -59,4 +61,4 @@ script: |
 
   # as zip stores file timestamps, use faketime to intercept stat calls to set dates for all files to reference date
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-  zip -r $OUTDIR/qt-win32-4.8.3-gitian-r4.zip *
+  zip -r $OUTDIR/qt-win32-4.8.5-gitian-r5.zip *
