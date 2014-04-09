@@ -346,25 +346,6 @@ tail -f var/install.log
 tail -f var/build.log
 ```
 
-To make sure that the output is exactly the same, and that the time, date, locale and
-even the ordering of files in the file system doesn't influence the result,
-some special precautions are taken. This means that the result is expected to
-be the same every time. The expected SHA256 hashes of the intermediate
-inputs (at the time of release 0.9.0) are:
-
-    05fe8e9aef00d295f24a94deef7d3a918af5aeef371ba57fdd5a6acd8c51f6cb  bitcoin-deps-linux32-gitian-r3.zip
-    4227aa9d9fedbb4265b8d10a4f78b7435f34b00a54eb4d662bf78f59c6e70c27  bitcoin-deps-linux64-gitian-r3.zip
-    f29b7d9577417333fb56e023c2977f5726a7c297f320b175a4108cf7cd4c2d29  boost-linux32-1.55.0-gitian-r1.zip
-    88232451c4104f7eb16e469ac6474fd1231bd485687253f7b2bdf46c0781d535  boost-linux64-1.55.0-gitian-r1.zip
-    60dc2d3b61e9c7d5dbe2f90d5955772ad748a47918ff2d8b74e8db9b1b91c909  boost-win32-1.55.0-gitian-r6.zip
-    f65fcaf346bc7b73bc8db3a8614f4f6bee2f61fcbe495e9881133a7c2612a167  boost-win64-1.55.0-gitian-r6.zip
-    0ba0855e1084132d05fd8687c19d8430b91f6c410a9ab7938e4fea650c2b22c8  bitcoin-deps-win32-gitian-r10.zip
-    5f9ffba0c13ddefc1d339f66ab973ea64623c9cc1f9078cb2b145bce86bd28e2  bitcoin-deps-win64-gitian-r10.zip
-    963e3e5e85879010a91143c90a711a5d1d5aba992e38672cdf7b54e42c56b2f1  qt-win32-5.2.0-gitian-r2.zip
-    751c579830d173ef3e6f194e83d18b92ebef6df03289db13ab77a52b6bc86ef0  qt-win64-5.2.0-gitian-r2.zip
-    e2e403e1a08869c7eed4d4293bce13d51ec6a63592918b90ae215a0eceb44cb4  protobuf-win32-2.5.0-gitian-r4.zip
-    a0999037e8b0ef9ade13efd88fee261ba401f5ca910068b7e0cd3262ba667db0  protobuf-win64-2.5.0-gitian-r4.zip
-
 Building Bitcoin
 ----------------
 
