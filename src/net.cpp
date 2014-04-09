@@ -946,11 +946,7 @@ void ThreadSocketHandler()
             }
             else if (nInbound >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS)
             {
-                {
-                    LOCK(cs_setservAddNodeAddresses);
-                    if (!setservAddNodeAddresses.count(addr))
-                        closesocket(hSocket);
-                }
+                closesocket(hSocket);
             }
             else if (CNode::IsBanned(addr))
             {
