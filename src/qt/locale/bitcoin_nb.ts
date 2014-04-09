@@ -163,7 +163,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     <message>
         <location line="+1"/>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Det skjedde en feil under lagring av adresselisten til %1</translation>
     </message>
 </context>
 <context>
@@ -270,7 +270,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <location line="+100"/>
         <location line="+24"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Advarsel: Caps Lock er på !</translation>
+        <translation>Advarsel: Caps Lock er på!</translation>
     </message>
     <message>
         <location line="-130"/>
@@ -411,12 +411,12 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     <message>
         <location line="+10"/>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Utsendingsadresser</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Mottaksadresser</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -446,7 +446,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     <message>
         <location line="+12"/>
         <source>Backup wallet to another location</source>
-        <translation>Sikkerhetskopiér lommebok til annet sted</translation>
+        <translation>Sikkerhetskopier lommebok til annet sted</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -492,7 +492,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <location line="+46"/>
         <location line="+2"/>
         <source>&amp;Show / Hide</source>
-        <translation>&amp;Gjem / vis</translation>
+        <translation>&amp;Vis / Skjul</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -507,7 +507,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     <message>
         <location line="+7"/>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Signér en melding for å bevise at du eier denne adressen</translation>
+        <translation>Signer en melding for å bevise at du eier denne adressen</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -543,12 +543,12 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     <message>
         <location line="-401"/>
         <source>Bitcoin Core</source>
-        <translation>Bitcoin Kjerne</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <location line="+163"/>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Forespør betalinger (genererer QR koder og bitcoin: URIs)</translation>
+        <translation>Forespør betalinger (genererer QR-koder og bitcoin: URIs)</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -579,7 +579,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     <message>
         <location line="+1"/>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Vis Bitcoin Core hjelp for å få en liste med mulige kommandolinjevalg</translation>
     </message>
     <message>
         <location line="+159"/>
@@ -625,12 +625,12 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     <message>
         <location line="+0"/>
         <source>%1 and %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 og %2</translation>
     </message>
     <message numerus="yes">
         <location line="+0"/>
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n år</numerusform><numerusform>%n år</numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
@@ -835,12 +835,12 @@ Adresse: %4
     <message>
         <location line="+1"/>
         <source>Lock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Lås ubrukte</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unlock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Lås opp ubrukte</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -855,27 +855,27 @@ Adresse: %4
     <message>
         <location line="+1"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Kopier etter gebyr</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Kopier bytes</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Kopier prioritet</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>Kopier lav utdata</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Kopier veksel</translation>
     </message>
     <message>
         <location line="+323"/>
@@ -971,7 +971,7 @@ Adresse: %4
     <message>
         <location line="+1"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
+        <translation>Denne merkelappen blir rød, hvis prioriteten er mindre enn &quot;medium&quot;.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1104,7 +1104,7 @@ Adresse: %4
     <message>
         <location line="+7"/>
         <source>Cannot create data directory here.</source>
-        <translation>Kan ikke laget data mappe her.</translation>
+        <translation>Kan ikke lage datamappe her.</translation>
     </message>
 </context>
 <context>
@@ -1112,12 +1112,12 @@ Adresse: %4
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="+19"/>
         <source>Bitcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core - Kommandolinjevalg</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="+24"/>
         <source>Bitcoin Core</source>
-        <translation>Bitcoin Kjerne</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1181,17 +1181,17 @@ Adresse: %4
     <message>
         <location line="+10"/>
         <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin Core vil laste ned og lagre en kopi av Bitcoins blokk kjede. Minst %1GB av data vil bli lagret i denne mappen, og det vil vokse over tid. Lommeboken vil også bli lagret i denne mappen.</translation>
+        <translation>Bitcoin Core vil laste ned og lagre en kopi av Bitcoin sin blokkjede. Minst %1GB av data vil bli lagret i denne mappen, og det vil vokse over tid. Lommeboken vil også bli lagret i denne mappen.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Use the default data directory</source>
-        <translation>Bruk standard data mappe</translation>
+        <translation>Bruk standard datamappe</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Use a custom data directory:</source>
-        <translation>Bruk en egendefinert data mappe:</translation>
+        <translation>Bruk en egendefinert datamappe:</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="+85"/>
@@ -1201,7 +1201,7 @@ Adresse: %4
     <message>
         <location line="+1"/>
         <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation>Feil: Spesifisert data mappe &quot;%1&quot; kan ikke opprettes.</translation>
+        <translation>Feil: Spesifisert datamappe &quot;%1&quot; kan ikke opprettes.</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -1211,7 +1211,7 @@ Adresse: %4
     <message>
         <location line="+9"/>
         <source>GB of free space available</source>
-        <translation>GB av ledig lagringsplass</translation>
+        <translation>GB ledig lagringsplass</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1244,7 +1244,7 @@ Adresse: %4
     <message>
         <location filename="../openuridialog.cpp" line="+47"/>
         <source>Select payment request file to open</source>
-        <translation>Velg betalingsetterspørrings fil å åpne</translation>
+        <translation>Velg fil for betalingsetterspørring å åpne</translation>
     </message>
 </context>
 <context>
@@ -1282,7 +1282,7 @@ Adresse: %4
     <message>
         <location line="+9"/>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished"/>
+        <translation>Størrelse på &amp;database cache</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1292,17 +1292,17 @@ Adresse: %4
     <message>
         <location line="+27"/>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished"/>
+        <translation>Antall &amp;verifikasjonstråder for kode</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Sett antall verifikasjonstråder for kode (opp til 16, 0 = automatisk, &lt;0 = la så mange kjerner være ledig, standardvalg: 0)</translation>
     </message>
     <message>
         <location line="+107"/>
         <source>&amp;Spend unconfirmed change (experts only)</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Bruk ubekreftet veksel (kun for eksperter)</translation>
     </message>
     <message>
         <location line="+37"/>
@@ -1317,17 +1317,17 @@ Adresse: %4
     <message>
         <location line="+34"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished"/>
+        <translation>IP-adressen til proxyen (f.eks. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <location line="+224"/>
         <source>Active command-line options that override above options:</source>
-        <translation type="unfinished"/>
+        <translation>Aktive kommandolinjevalg som overstyrer valgene ovenfor:</translation>
     </message>
     <message>
         <location line="+43"/>
         <source>Reset all client options to default.</source>
-        <translation>Tilbakestill alle klient valg til standard</translation>
+        <translation>Tilbakestill alle valg i klienten til standard</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1342,12 +1342,12 @@ Adresse: %4
     <message>
         <location line="-86"/>
         <source>W&amp;allet</source>
-        <translation type="unfinished"/>
+        <translation>L&amp;ommebok</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation type="unfinished"/>
+        <translation>Hvis du sperrer for bruk av ubekreftet veksel, kan ikke vekselen fra transaksjonen bli brukt før transaksjonen har minimum en bekreftelse. Dette påvirker også hvordan balansen din blir beregnet.</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -1417,7 +1417,7 @@ Adresse: %4
     <message>
         <location line="+8"/>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;Språk for brukergrensesnitt</translation>
+        <translation>&amp;Språk for brukergrensesnitt:</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1488,7 +1488,7 @@ Adresse: %4
     <message>
         <location line="-29"/>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>Klienten vil bli lukket, vil du fortsette?</translation>
     </message>
     <message>
         <location line="+33"/>
@@ -1522,7 +1522,7 @@ Adresse: %4
     <message>
         <location line="+51"/>
         <source>Available:</source>
-        <translation type="unfinished"/>
+        <translation>Tilgjengelig:</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1532,7 +1532,7 @@ Adresse: %4
     <message>
         <location line="+16"/>
         <source>Pending:</source>
-        <translation type="unfinished"/>
+        <translation>Venter:</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1607,32 +1607,32 @@ Adresse: %4
     <message>
         <location line="+58"/>
         <source>Net manager warning</source>
-        <translation type="unfinished"/>
+        <translation>Nettleder advarsel</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Din aktive proxy har ikke støtte for SOCKS5, som er påkrevd for betalingsforespørsler via proxy.</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation type="unfinished"/>
+        <translation>Hente URL for betalingsforespørsel er ugyldig: %1</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Payment request file handling</source>
-        <translation type="unfinished"/>
+        <translation>Filhåndtering for betalingsforespørsel</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
-        <translation type="unfinished"/>
+        <translation>Fil for betalingsforespørsel kan ikke leses eller behandles! Dette kan skyldes en ugyldig fil for betalingsforespørsel.</translation>
     </message>
     <message>
         <location line="+73"/>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation type="unfinished"/>
+        <translation>Uverifiserte betalingsforespørsler til egentilpasset betalingskode er ikke støttet.</translation>
     </message>
     <message>
         <location line="+59"/>
@@ -1647,7 +1647,7 @@ Adresse: %4
     <message>
         <location line="+24"/>
         <source>Payment request can not be parsed or processed!</source>
-        <translation type="unfinished"/>
+        <translation>Betalingsforespørsler kan ikke analyseres eller behandles!</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1686,7 +1686,7 @@ Adresse: %4
     <message>
         <location filename="../guiutil.cpp" line="+82"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Skriv inn en Bitcoin adresse (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Skriv inn en Bitcoin-adresse (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1694,7 +1694,7 @@ Adresse: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="+36"/>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Lagre bilde...</translation>
+        <translation>&amp;Lagre Bilde...</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1704,7 +1704,7 @@ Adresse: %4
     <message>
         <location line="+28"/>
         <source>Save QR Code</source>
-        <translation>Lagre QR Kode</translation>
+        <translation>Lagre QR-kode</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1747,7 +1747,7 @@ Adresse: %4
     <message>
         <location line="-10"/>
         <source>Debug window</source>
-        <translation>Debug vindu</translation>
+        <translation>Vindu for feilsøk</translation>
     </message>
     <message>
         <location line="+25"/>
@@ -1857,7 +1857,7 @@ Adresse: %4
     <message>
         <location filename="../rpcconsole.cpp" line="-30"/>
         <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Velkommen til Bitcoin RPC konsoll.</translation>
+        <translation>Velkommen til Bitcoin sin RPC-konsoll.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1936,29 +1936,29 @@ Adresse: %4
         <location line="+14"/>
         <location line="+23"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>En valgfri melding å tilknytte betalingsforespørselen, som vil bli vist når forespørselen er åpnet. Meldingen vil ikke bli sendt med betalingen over Bitcoin-nettverket.</translation>
     </message>
     <message>
         <location line="-7"/>
         <location line="+21"/>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished"/>
+        <translation>En valgfri merkelapp å tilknytte den nye mottakeradressen.</translation>
     </message>
     <message>
         <location line="-7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Bruk dette skjemaet til betalingsforespørsler. Alle felt er &lt;b&gt;valgfrie&lt;/b&gt;.</translation>
     </message>
     <message>
         <location line="+23"/>
         <location line="+22"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation type="unfinished"/>
+        <translation>Et valgfritt beløp å etterspørre. La stå tomt eller null for ikke å etterspørre et spesifikt beløp.</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Clear all fields of the form.</source>
-        <translation>Fjern alle felter fra formen.</translation>
+        <translation>Fjern alle felter fra skjemaet.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1968,7 +1968,7 @@ Adresse: %4
     <message>
         <location line="+78"/>
         <source>Requested payments history</source>
-        <translation type="unfinished"/>
+        <translation>Etterspurt betalingshistorikk</translation>
     </message>
     <message>
         <location line="-98"/>
@@ -2008,7 +2008,7 @@ Adresse: %4
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation>Kopiér beløp</translation>
+        <translation>Kopier beløp</translation>
     </message>
 </context>
 <context>
@@ -2016,7 +2016,7 @@ Adresse: %4
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="+29"/>
         <source>QR Code</source>
-        <translation>QR Kode</translation>
+        <translation>QR-kode</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -2031,7 +2031,7 @@ Adresse: %4
     <message>
         <location line="+7"/>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Lagre bilde...</translation>
+        <translation>&amp;Lagre Bilde...</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="+56"/>
@@ -2076,7 +2076,7 @@ Adresse: %4
     <message>
         <location line="+5"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation>Feil ved koding av URI i QR kode.</translation>
+        <translation>Feil ved koding av URI i QR-kode.</translation>
     </message>
 </context>
 <context>
@@ -2114,7 +2114,7 @@ Adresse: %4
     <message>
         <location line="+8"/>
         <source>(no amount)</source>
-        <translation>(inget beløp)</translation>
+        <translation>(intet beløp)</translation>
     </message>
 </context>
 <context>
@@ -2129,7 +2129,7 @@ Adresse: %4
     <message>
         <location line="+76"/>
         <source>Coin Control Features</source>
-        <translation>Mynt Kontroll Funksjoner</translation>
+        <translation>Myntkontroll Funksjoner</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -2184,32 +2184,32 @@ Adresse: %4
     <message>
         <location line="+32"/>
         <source>Change:</source>
-        <translation>Endring:</translation>
+        <translation>Veksel:</translation>
     </message>
     <message>
         <location line="+44"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation type="unfinished"/>
+        <translation>Hvis dette er aktivert, men adressen for veksel er tom eller ugyldig, vil veksel bli sendt til en nylig generert adresse.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Custom change address</source>
-        <translation type="unfinished"/>
+        <translation>Egendefinert adresse for veksel</translation>
     </message>
     <message>
         <location line="+164"/>
         <source>Send to multiple recipients at once</source>
-        <translation>Send til flere enn én mottaker</translation>
+        <translation>Send til flere enn en mottaker</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Add &amp;Recipient</source>
-        <translation>&amp;Legg til Mottaker</translation>
+        <translation>Legg til &amp;Mottaker</translation>
     </message>
     <message>
         <location line="-23"/>
         <source>Clear all fields of the form.</source>
-        <translation>Fjern alle felter fra formen.</translation>
+        <translation>Fjern alle felter fra skjemaet.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2252,7 +2252,7 @@ Adresse: %4
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation>Kopiér beløp</translation>
+        <translation>Kopier beløp</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2262,27 +2262,27 @@ Adresse: %4
     <message>
         <location line="+1"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Kopier etter gebyr</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Kopier bytes</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Kopier prioritet</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>Kopier lav utdata</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Kopier veksel</translation>
     </message>
     <message>
         <location line="+170"/>
@@ -2302,7 +2302,7 @@ Adresse: %4
     <message>
         <location line="+3"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>Beløpen som skal betales må være over 0.</translation>
+        <translation>Beløpet som skal betales må være over 0.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2317,7 +2317,7 @@ Adresse: %4
     <message>
         <location line="+3"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Duplikate adresser funnet. Kan bare sende én gang til hver adresse per operasjon.</translation>
+        <translation>Doble antall adresser funnet. Kan bare sende en gang til hver adresse per operasjon.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2332,7 +2332,7 @@ Adresse: %4
     <message>
         <location line="+113"/>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation>Advarsel: Ugyldig Bitcoin adresse</translation>
+        <translation>Advarsel: Ugyldig Bitcoin-adresse</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -2444,7 +2444,7 @@ Adresse: %4
     <message>
         <location line="+33"/>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>En melding som var tilknyttet bitcoinen: URI som vil bli lagret med transaksjonen for din oversikt. Denne meldingen vil ikke bli sendt over Bitcoin-nettverket.</translation>
     </message>
     <message>
         <location line="+426"/>
@@ -2469,7 +2469,7 @@ Adresse: %4
     <message>
         <location filename="../utilitydialog.cpp" line="+48"/>
         <source>Bitcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core stenges ned...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2487,12 +2487,12 @@ Adresse: %4
     <message>
         <location line="+10"/>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Signér Melding</translation>
+        <translation>&amp;Signer Melding</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Du kan signere meldinger med dine adresser for å bevise at du eier dem. Ikke signér vage meldinger da phishing-angrep kan prøve å lure deg til å signere din identitet over til andre. Signér kun fullt detaljerte utsagn som du er enig i.</translation>
+        <translation>Du kan signere meldinger med dine adresser for å bevise at du eier dem. Ikke signer vage meldinger da phishing-angrep kan prøve å lure deg til å signere din identitet over til andre. Signer kun fullt detaljerte utsagn som du er enig i.</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -2544,7 +2544,7 @@ Adresse: %4
     <message>
         <location line="+3"/>
         <source>Sign &amp;Message</source>
-        <translation>Signér &amp;Melding</translation>
+        <translation>Signer &amp;Melding</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -2590,7 +2590,7 @@ Adresse: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+30"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Skriv inn en Bitcoin adresse (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Skriv inn en Bitcoin-adresse (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="-1"/>
@@ -2669,7 +2669,7 @@ Adresse: %4
     <message>
         <location filename="../splashscreen.cpp" line="+28"/>
         <source>Bitcoin Core</source>
-        <translation>Bitcoin Kjerne</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2700,7 +2700,7 @@ Adresse: %4
     <message>
         <location line="+6"/>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>konflikt</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2827,7 +2827,7 @@ Adresse: %4
     <message>
         <location line="+7"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation>Genererte mynter må modne %1 blokker før de kan bli brukt. Da du genererte denne blokken ble den kringkastet til nettverket for å bli lagt til i blokkjeden. Hvis den ikke kommer inn i blokkjeden, vil statusen endres til &quot;not accepted&quot; og den vil ikke være mulig å bruke. Dette kan noen ganger skje hvis andre noder genererer en blokk noen sekunder fra din.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2913,7 +2913,7 @@ Adresse: %4
     <message>
         <location line="+78"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished"/>
+        <translation>Umodne (%1 bekreftelser, vil bli tilgjengelig etter %2)</translation>
     </message>
     <message numerus="yes">
         <location line="-21"/>
@@ -2943,22 +2943,22 @@ Adresse: %4
     <message>
         <location line="-21"/>
         <source>Offline</source>
-        <translation type="unfinished"/>
+        <translation>Frakoblet</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>Ubekreftet</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Bekrefter (%1 av %2 anbefalte bekreftelser)</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Conflicted</source>
-        <translation type="unfinished"/>
+        <translation>Konflikt</translation>
     </message>
     <message>
         <location line="+51"/>
@@ -2988,7 +2988,7 @@ Adresse: %4
     <message>
         <location line="+38"/>
         <source>(n/a)</source>
-        <translation>-</translation>
+        <translation>(ikke tilgjengelig)</translation>
     </message>
     <message>
         <location line="+190"/>
@@ -3102,7 +3102,7 @@ Adresse: %4
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation>Kopiér beløp</translation>
+        <translation>Kopier beløp</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3398,17 +3398,17 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+3"/>
         <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
-        <translation>Kan ikke skaffe lås på denne datamappen %s. Bitcoin kjører sansynlig alerede.</translation>
+        <translation>Kan ikke skaffe lås på denne datamappen %s. Bitcoin kjører sannsynligvis allerede.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>Gå til regresjon testemodus, som bruker en spesiell blokkjede der blokker kan bli løst momentant. Dette er tenkt til regresjon testingsverktøy og apputvikling.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation type="unfinished"/>
+        <translation>Gå til regresjon testemodus, som bruker en spesiell blokkjede der blokker kan bli løst momentant.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3458,7 +3458,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+3"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Advarsel: Feil ved lesing av wallet.dat! Alle taster lest riktig, men transaksjon dataene eller adresse innlegg er kanskje manglende eller feil.</translation>
+        <translation>Advarsel: Feil ved lesing av wallet.dat! Alle nøkler lest riktig, men transaksjonsdataene eller oppføringer i adresseboken er kanskje manglende eller feil.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3478,7 +3478,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+1"/>
         <source>Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core Daemon</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3493,7 +3493,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+5"/>
         <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
-        <translation type="unfinished"/>
+        <translation>Tøm listen for lommebok-transaksjoner (diagnoseverktøy; impliserer -rescan)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3523,7 +3523,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+1"/>
         <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation type="unfinished"/>
+        <translation>Ikke last inn lommeboken og deaktiver RPC-kall i lommeboken</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3633,7 +3633,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+1"/>
         <source>Generate coins (default: 0)</source>
-        <translation>Generér bitcoins (standardverdi: 0)</translation>
+        <translation>Generer bitcoins (standardverdi: 0)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3648,7 +3648,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+1"/>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation type="unfinished"/>
+        <translation>Hvis &lt;category&gt; ikke er oppgitt, ta ut all informasjon om feilsøking.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3668,7 +3668,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+5"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Sett inn tidsstempel i starten av feilsøkingsdata (standardverdi: 1)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3688,7 +3688,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+1"/>
         <source>Send command to Bitcoin server</source>
-        <translation>Send kommando til Bitcoin tjener</translation>
+        <translation>Send kommando til Bitcoin-tjener</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3703,22 +3703,22 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+7"/>
         <source>Specify wallet file (within data directory)</source>
-        <translation>Angi lommebok fil (inne i data mappe)</translation>
+        <translation>Angi lommebok fil (inne i datamappe)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Bruk ubekreftet veksel ved sending av transaksjoner (standardverdi: 1)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Start Bitcoin server</source>
-        <translation>Start Bitcoin tjener</translation>
+        <translation>Start Bitcoin-tjener</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>Dette er tenkt til regresjon testingsverktøy og apputvikling.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -3738,7 +3738,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+1"/>
         <source>Wait for RPC server to start</source>
-        <translation>Vent på start av RPV tjeneren</translation>
+        <translation>Vent på start av RPC-tjeneren</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3753,7 +3753,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+2"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation type="unfinished"/>
+        <translation>Advarsel: Utløpt argument -debugnet ignorert, bruk -debug=net</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3768,22 +3768,22 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="-106"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation type="unfinished"/>
+        <translation>Utfør kommando når et relevant varsel er mottatt eller vi ser en veldig lang gaffel (%s i kommando er erstattet med melding)</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation type="unfinished"/>
+        <translation>Ta ut feilsøkingsinformasjon (standardverdi: 0, bruk av &lt;category&gt; er valgfritt)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Sett maksimum størrelse av transaksjoner med høy-prioritet/lavt-gebyr i bytes (standardverdi: %d)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Sett antall verifikasjonstråder for kode (opp til 16, 0 = automatisk, &lt;0 = la så mange kjerner være ledig, standardvalg: 0)</translation>
     </message>
     <message>
         <location line="+90"/>
@@ -3903,7 +3903,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="+2"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Zapper alle transaksjoner fra lommeboken...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3933,12 +3933,12 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="-133"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Eksekvér kommando når beste blokk endrer seg (%s i kommandoen erstattes med blokkens hash)</translation>
+        <translation>Utfør kommando når beste blokk endrer seg (%s i kommandoen erstattes med blokkens hash)</translation>
     </message>
     <message>
         <location line="+163"/>
         <source>Upgrade wallet to latest format</source>
-        <translation>Oppgradér lommebok til nyeste format</translation>
+        <translation>Oppgrader lommebok til nyeste format</translation>
     </message>
     <message>
         <location line="-25"/>
@@ -3948,7 +3948,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin varsel&quot; admin@
     <message>
         <location line="-11"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Se gjennom blokk-kjeden etter manglende lommeboktransaksjoner</translation>
+        <translation>Se gjennom blokkjeden etter manglende lommeboktransaksjoner</translation>
     </message>
     <message>
         <location line="+39"/>
