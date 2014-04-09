@@ -16,7 +16,7 @@ remotes: []
 files:
 - "openssl-1.0.1g.tar.gz"
 - "db-4.8.30.NC.tar.gz"
-- "miniupnpc-1.8.tar.gz"
+- "miniupnpc-1.9.tar.gz"
 - "zlib-1.2.8.tar.gz"
 - "libpng-1.6.8.tar.gz"
 - "qrencode-3.4.3.tar.bz2"
@@ -30,7 +30,7 @@ script: |
   # Input Integrity Check
   echo "53cb818c3b90e507a8348f4f5eaedb05d8bfe5358aabb508b7263cc670c3e028  openssl-1.0.1g.tar.gz"  | sha256sum -c
   echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"    | sha256sum -c
-  echo "bc5f73c7b0056252c1888a80e6075787a1e1e9112b808f863a245483ff79859c  miniupnpc-1.8.tar.gz"   | sha256sum -c
+  echo "2923e453e880bb949e3d4da9f83dd3cb6f08946d35de0b864d0339cf70934464  miniupnpc-1.9.tar.gz"   | sha256sum -c
   echo "36658cb768a54c1d4dec43c3116c27ed893e88b02ecfcb44f2166f9c0b7f2a0d  zlib-1.2.8.tar.gz"      | sha256sum -c
   echo "32c7acf1608b9c8b71b743b9780adb7a7b347563dbfb4a5263761056da44cc96  libpng-1.6.8.tar.gz"    | sha256sum -c
   echo "dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98  qrencode-3.4.3.tar.bz2" | sha256sum -c
@@ -67,11 +67,11 @@ script: |
     make install_lib install_include
     cd ../..
     #
-    tar xzf $INDIR/miniupnpc-1.8.tar.gz
-    cd miniupnpc-1.8
+    tar xzf $INDIR/miniupnpc-1.9.tar.gz
+    cd miniupnpc-1.9
     echo "
-  --- miniupnpc-1.8/Makefile.mingw.orig   2013-09-29 18:52:51.014087958 -1000
-  +++ miniupnpc-1.8/Makefile.mingw        2013-09-29 19:09:29.663318691 -1000
+  --- miniupnpc-1.9/Makefile.mingw.orig   2013-09-29 18:52:51.014087958 -1000
+  +++ miniupnpc-1.9/Makefile.mingw        2013-09-29 19:09:29.663318691 -1000
   @@ -67,8 +67,8 @@
    
    wingenminiupnpcstrings.o:	wingenminiupnpcstrings.c
@@ -124,5 +124,5 @@ script: |
     done
     #
     cd $INSTALLPREFIX
-    find include lib | sort | zip -X@ $OUTDIR/bitcoin-deps-win$BITS-gitian-r11.zip
+    find include lib | sort | zip -X@ $OUTDIR/bitcoin-deps-win$BITS-gitian-r12.zip
   done # for BITS in
