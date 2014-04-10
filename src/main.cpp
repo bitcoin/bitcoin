@@ -2180,8 +2180,8 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
         CheckForkWarningConditions();
         // Notify UI to display prev block's coinbase if it was ours
         static uint256 hashPrevBestCoinBase;
-        g_signals.UpdatedTransaction(hashPrevBestCoinBase);
         hashPrevBestCoinBase = block.GetTxHash(0);
+        g_signals.UpdatedTransaction(hashPrevBestCoinBase);
     } else
         CheckForkWarningConditionsOnNewFork(pindexNew);
 
