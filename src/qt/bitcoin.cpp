@@ -15,6 +15,7 @@
 #include "optionsmodel.h"
 #include "splashscreen.h"
 #include "utilitydialog.h"
+#include "winshutdownmonitor.h"
 #ifdef ENABLE_WALLET
 #include "paymentserver.h"
 #include "walletmodel.h"
@@ -188,6 +189,9 @@ public:
 
     /// Get process return value
     int getReturnValue() { return returnValue; }
+
+    /// Get window identifier of QMainWindow (BitcoinGUI)
+    WId getMainWinId() const;
 
 public slots:
     void initializeResult(int retval);
@@ -444,6 +448,14 @@ void BitcoinApplication::handleRunawayException(const QString &message)
     ::exit(1);
 }
 
+WId BitcoinApplication::getMainWinId() const
+{
+    if (!window)
+        return 0;
+
+    return window->winId();
+}
+
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
@@ -558,10 +570,15 @@ int main(int argc, char *argv[])
     /// 9. Main GUI initialization
     // Install global event filter that makes sure that long tooltips can be word-wrapped
     app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
-    // Install qDebug() message handler to route to debug.log
 #if QT_VERSION < 0x050000
+    // Install qDebug() message handler to route to debug.log
     qInstallMsgHandler(DebugMessageHandler);
 #else
+#if defined(Q_OS_WIN)
+    // Install global event filter for processing Windows session related Windows messages (WM_QUERYENDSESSION and WM_ENDSESSION)
+    qApp->installNativeEventFilter(new WinShutdownMonitor());
+#endif
+    // Install qDebug() message handler to route to debug.log
     qInstallMessageHandler(DebugMessageHandler);
 #endif
     // Load GUI settings from QSettings
@@ -577,6 +594,9 @@ int main(int argc, char *argv[])
     {
         app.createWindow(isaTestNet);
         app.requestInitialize();
+#if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
+        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Bitcoin Core did't yet exit safely..."), (HWND)app.getMainWinId());
+#endif
         app.exec();
         app.requestShutdown();
         app.exec();
