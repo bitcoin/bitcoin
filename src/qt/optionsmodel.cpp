@@ -94,7 +94,7 @@ void OptionsModel::Init()
 #ifdef ENABLE_WALLET
     if (!settings.contains("nTransactionFee"))
         settings.setValue("nTransactionFee", (qint64)DEFAULT_TRANSACTION_FEE);
-    nTransactionFee = settings.value("nTransactionFee").toLongLong(); // if -paytxfee is set, this will be overridden later in init.cpp
+    payTxFee = CFeeRate(settings.value("nTransactionFee").toLongLong()); // if -paytxfee is set, this will be overridden later in init.cpp
     if (mapArgs.count("-paytxfee"))
         addOverriddenOption("-paytxfee");
 
@@ -187,15 +187,16 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nSocksVersion", 5);
 
 #ifdef ENABLE_WALLET
-        case Fee:
-            // Attention: Init() is called before nTransactionFee is set in AppInit2()!
+        case Fee: {
+            // Attention: Init() is called before payTxFee is set in AppInit2()!
             // To ensure we can change the fee on-the-fly update our QSetting when
             // opening OptionsDialog, which queries Fee via the mapper.
-            if (nTransactionFee != settings.value("nTransactionFee").toLongLong())
-                settings.setValue("nTransactionFee", (qint64)nTransactionFee);
-            // Todo: Consider to revert back to use just nTransactionFee here, if we don't want
+            if (!(payTxFee == CFeeRate(settings.value("nTransactionFee").toLongLong(), 1000)))
+                settings.setValue("nTransactionFee", (qint64)payTxFee.GetFeePerK());
+            // Todo: Consider to revert back to use just payTxFee here, if we don't want
             // -paytxfee to update our QSettings!
             return settings.value("nTransactionFee");
+        }
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
 #endif
@@ -284,12 +285,14 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         }
         break;
 #ifdef ENABLE_WALLET
-        case Fee: // core option - can be changed on-the-fly
+        case Fee: { // core option - can be changed on-the-fly
             // Todo: Add is valid check  and warn via message, if not
-            nTransactionFee = value.toLongLong();
-            settings.setValue("nTransactionFee", (qint64)nTransactionFee);
+            qint64 nTransactionFee = value.toLongLong();
+            payTxFee = CFeeRate(nTransactionFee, 1000);
+            settings.setValue("nTransactionFee", nTransactionFee);
             emit transactionFeeChanged(nTransactionFee);
             break;
+        }
         case SpendZeroConfChange:
             if (settings.value("bSpendZeroConfChange") != value) {
                 settings.setValue("bSpendZeroConfChange", value);
