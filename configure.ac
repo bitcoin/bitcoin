@@ -73,7 +73,23 @@ if test x$YASM = x; then
   fi
   has_64bit_asm=no
 else
-  has_64bit_asm=yes
+  case x"$host_os" in
+  x*-gnux32)
+    YASM_BINFMT=elfx32
+    ;;
+  *)
+    YASM_BINFMT=elf64
+    ;;
+  esac
+  if $YASM -f help | grep -q $YASM_BINFMT; then
+    has_64bit_asm=yes
+  else
+    if test x"$set_field" = x"64bit_asm"; then
+      AC_MSG_ERROR([$set_field field support explicitly requested but yasm doesn't support $YASM_BINFMT format])
+    fi
+    AC_MSG_WARN([yasm too old for $YASM_BINFMT format])
+    has_64bit_asm=no
+  fi
 fi
 ])
 
@@ -273,6 +289,7 @@ AC_SUBST(SECP_INCLUDES)
 AC_SUBST(SECP_LIBS)
 AC_SUBST(SECP_TEST_LIBS)
 AC_SUBST(SECP_TEST_INCLUDES)
+AC_SUBST(YASM_BINFMT)
 AM_CONDITIONAL([USE_ASM], [test x"$set_field" == x"64bit_asm"])
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" != x"no"])
