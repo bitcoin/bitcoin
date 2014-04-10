@@ -24,7 +24,7 @@
 #include <vector>
 
 // Settings
-extern int64_t nTransactionFee;
+extern CFeeRate payTxFee;
 extern bool bSpendZeroConfChange;
 
 // -paytxfee default
