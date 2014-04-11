@@ -59,5 +59,5 @@ EXTRA_DIST = nasm_lt.sh
 #x86_64 only
 if USE_ASM
 .asm.lo:
-	$(LIBTOOL) --mode=compile --tag YASM $(srcdir)/nasm_lt.sh $(YASM) -f elf64 $(YAFLAGS) -I$(srcdir) -I. $< -o $@
+	$(LIBTOOL) --mode=compile --tag YASM $(srcdir)/nasm_lt.sh $(YASM) -f $(YASM_BINFMT) $(YAFLAGS) -I$(srcdir) -I. $< -o $@
 endif
