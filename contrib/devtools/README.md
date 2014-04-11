@@ -47,3 +47,9 @@ For example a file changed in 2014 (with 2014 being the current year):
 
 would be changed to:
 ```// Copyright (c) 2009-2014 The Bitcoin developers```
+
+## qt_translations.py
+Tool/process for including correct qt translations in mac .App	
+
+## tidy_datadir.sh
+Bash script to clean up data directories. 
