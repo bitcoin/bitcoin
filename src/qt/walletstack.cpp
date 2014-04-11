@@ -136,6 +136,12 @@ void WalletStack::encryptWallet(bool status)
     if (walletView) walletView->encryptWallet(status);
 }
 
+void WalletStack::decryptForMinting(bool status)
+{
+    WalletView *walletView = (WalletView*)currentWidget();
+    if (walletView) walletView->decryptForMinting(status);
+}
+
 void WalletStack::backupWallet()
 {
     WalletView *walletView = (WalletView*)currentWidget();
