@@ -111,6 +111,12 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
     rv.address = uri.path();
     rv.amount = 0;
 
+    QSet<QString> knownSeen;
+    QSet<QString> known;
+    known.insert("label");
+    known.insert("message");
+    known.insert("amount");
+
 #if QT_VERSION < 0x050000
     QList<QPair<QString, QString> > items = uri.queryItems();
 #else
@@ -119,22 +125,34 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 #endif
     for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
     {
-        bool fShouldReturnFalse = false;
+        bool fRequired = false;
         if (i->first.startsWith("req-"))
         {
             i->first.remove(0, 4);
-            fShouldReturnFalse = true;
+            fRequired = true;
+        }
+
+        // defend against potential parameter pollution attacks
+        // by only allowing single instances of each known parameter.
+        if (known.contains(i->first))
+        {
+            if (knownSeen.contains(i->first))
+                return false;
+
+            knownSeen.insert(i->first);
+        }
+        else if (fRequired)
+        {
+            return false;
         }
 
         if (i->first == "label")
         {
             rv.label = i->second;
-            fShouldReturnFalse = false;
         }
         if (i->first == "message")
         {
             rv.message = i->second;
-            fShouldReturnFalse = false;
         }
         else if (i->first == "amount")
         {
@@ -145,11 +163,7 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
                     return false;
                 }
             }
-            fShouldReturnFalse = false;
         }
-
-        if (fShouldReturnFalse)
-            return false;
     }
     if(out)
     {
