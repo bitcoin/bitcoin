@@ -98,7 +98,6 @@
         <file alias="cs">locale/bitcoin_cs.qm</file>
         <file alias="cy">locale/bitcoin_cy.qm</file>
         <file alias="da">locale/bitcoin_da.qm</file>
-        <file alias="de_AT">locale/bitcoin_de_AT.qm</file>
         <file alias="de">locale/bitcoin_de.qm</file>
         <file alias="el_GR">locale/bitcoin_el_GR.qm</file>
         <file alias="en">locale/bitcoin_en.qm</file>
