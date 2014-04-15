@@ -20,6 +20,7 @@
 
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 {
+    AssertLockHeld(cs_main);
     if (!IsFinalTx(wtx, chainActive.Height() + 1))
     {
         if (wtx.nLockTime < LOCKTIME_THRESHOLD)
