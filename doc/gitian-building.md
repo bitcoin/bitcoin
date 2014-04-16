@@ -227,7 +227,6 @@ In this section we will be setting up the Debian installation for Gitian buildin
 First we need to log in as `root` to set up dependencies and make sure that our
 user can use the sudo command. Type/paste the following in the terminal:
 
-
 ```bash
 apt-get install git ruby sudo apt-cacher-ng qemu-utils debootstrap lxc python-cheetah parted kpartx bridge-utils
 adduser debian sudo
@@ -249,15 +248,16 @@ echo '#!/bin/sh -e' > /etc/rc.local
 echo 'brctl addbr br0' >> /etc/rc.local
 echo 'ifconfig br0 10.0.3.2/24 up' >> /etc/rc.local
 echo 'exit 0' >> /etc/rc.local
-# make sure that USE_LXC is always set when logging in as debian
+# make sure that USE_LXC is always set when logging in as debian,
+# and configure LXC IP addresses
 echo 'export USE_LXC=1' >> /home/debian/.profile
+echo 'export GITIAN_HOST_IP=10.0.3.2' >> /home/debian/.profile
+echo 'export LXC_GUEST_IP=10.0.3.5' >> /home/debian/.profile
 reboot
 ```
 
-At the end the VM is rebooted to make sure that the changes take effect.
-
-**Note**: If you're following this guide on a physical system instead of a VirtualBox VM you could use `10.0.2.2` instead
-of `10.0.3.2` in the above `ifconfig` line. This avoids having to patch gitian-builder in next section.
+At the end the VM is rebooted to make sure that the changes take effect. The steps in this
+section need only to be performed once.
 
 Installing gitian
 ------------------
@@ -285,20 +285,6 @@ Clone the git repositories for bitcoin and gitian,
 git clone https://github.com/devrandom/gitian-builder.git
 git clone https://github.com/bitcoin/bitcoin
 ```
-
-We need to change the guest IP range for the gitian builder because otherwise it will
-collide with VirtualBox its NAT IP range. Gitian does not have a way yet to configure
-this, so we need to patch the IPs using `sed`. This is not nice but it will
-have to do for now... (a [pull request
-(#52)](https://github.com/devrandom/gitian-builder/pull/52) to make this
-configurable without patching has been submitted):
-
-```bash
-sed -i 's/10.0.2.2/10.0.3.2/g' gitian-builder/target-bin/bootstrap-fixup
-sed -i 's/10.0.2.5/10.0.3.5/g' gitian-builder/etc/lxc.config.in
-```
-
-*note* After you update the gitian-builder repository, you may need to repeat these manual changes.
 
 Setting up gitian images
 -------------------------
