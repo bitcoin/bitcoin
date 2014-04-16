@@ -137,8 +137,10 @@ miniupnpc
 
 Berkeley DB
 -----------
-You need Berkeley DB 4.8.  If you have to build Berkeley DB yourself:
+You need Berkeley DB 4.8.  If you have to build it yourself:
 
+	wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
+	tar -xzvf db-4.8.30.NC.tar.gz
 	cd build_unix/
 	../dist/configure --enable-cxx
 	make
