@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="es_DO" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="es_DO" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -39,6 +39,12 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <source>The Bitcoin Core developers</source>
         <translation>Los desarrolladores del Núcleo de Bitcoin</translation>
     </message>
+    <message>
+        <location line="+12"/>
+        <location line="+2"/>
+        <source> (%1-bit)</source>
+        <translation type="unfinished"/>
+    </message>
 </context>
 <context>
     <name>AddressBookPage</name>
@@ -68,7 +74,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>&amp;Copiar</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+58"/>
         <source>C&amp;lose</source>
         <translation>&amp;Cerrar</translation>
     </message>
@@ -78,7 +84,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>&amp;Copiar dirección</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="-41"/>
+        <location filename="../forms/addressbookpage.ui" line="-47"/>
         <source>Delete the currently selected address from the list</source>
         <translation>Borrar de la lista la dirección seleccionada</translation>
     </message>
@@ -325,7 +331,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+295"/>
+        <location filename="../bitcoingui.cpp" line="+294"/>
         <source>Sign &amp;message...</source>
         <translation>Firmar &amp;mensaje...</translation>
     </message>
@@ -340,12 +346,12 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>&amp;Vista general</translation>
     </message>
     <message>
-        <location line="-137"/>
+        <location line="-136"/>
         <source>Node</source>
         <translation>Nodo</translation>
     </message>
     <message>
-        <location line="+138"/>
+        <location line="+137"/>
         <source>Show general overview of wallet</source>
         <translation>Mostrar vista general del monedero</translation>
     </message>
@@ -466,17 +472,17 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>&amp;Verificar mensaje...</translation>
     </message>
     <message>
-        <location line="+430"/>
+        <location line="+440"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-643"/>
+        <location line="-652"/>
         <source>Wallet</source>
         <translation>Monedero</translation>
     </message>
     <message>
-        <location line="+146"/>
+        <location line="+145"/>
         <source>&amp;Send</source>
         <translation>&amp;Enviar</translation>
     </message>
@@ -532,18 +538,18 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Barra de pestañas</translation>
     </message>
     <message>
-        <location line="-284"/>
-        <location line="+376"/>
+        <location line="-283"/>
+        <location line="+375"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location line="-401"/>
+        <location line="-400"/>
         <source>Bitcoin Core</source>
         <translation>Núcleo de Bitcoin</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+162"/>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation>Solicitar pagos (genera codigo QR y URL&apos;s de Bitcoin)</translation>
     </message>
@@ -571,7 +577,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="+2"/>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Opciones de linea de comando</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -605,7 +611,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Procesados %1 bloques del historial de transacciones.</translation>
     </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+27"/>
         <source>%n hour(s)</source>
         <translation><numerusform>%n hora</numerusform><numerusform>%n horas</numerusform></translation>
     </message>
@@ -616,8 +622,19 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     </message>
     <message numerus="yes">
         <location line="+4"/>
+        <location line="+6"/>
         <source>%n week(s)</source>
         <translation><numerusform>%n semana</numerusform><numerusform>%n semanas</numerusform></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1 and %2</source>
+        <translation type="unfinished"/>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n year(s)</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
@@ -650,12 +667,12 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Información</translation>
     </message>
     <message>
-        <location line="-85"/>
+        <location line="-95"/>
         <source>Up to date</source>
         <translation>Actualizado</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+44"/>
         <source>Catching up...</source>
         <translation>Actualizando...</translation>
     </message>
@@ -693,7 +710,7 @@ Dirección: %4
         <translation>El monedero está &lt;b&gt;cifrado&lt;/b&gt; y actualmente &lt;b&gt;bloqueado&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+438"/>
+        <location filename="../bitcoin.cpp" line="+441"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Ha ocurrido un error crítico. Bitcoin ya no puede continuar con seguridad y se cerrará.</translation>
     </message>
@@ -701,7 +718,7 @@ Dirección: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+119"/>
+        <location filename="../clientmodel.cpp" line="+128"/>
         <source>Network Alert</source>
         <translation>Alerta de red</translation>
     </message>
@@ -754,7 +771,7 @@ Dirección: %4
         <translation>Cambio:</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+56"/>
         <source>(un)select all</source>
         <translation>(des)selecciona todos</translation>
     </message>
@@ -769,7 +786,7 @@ Dirección: %4
         <translation>Modo lista</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+53"/>
         <source>Amount</source>
         <translation>Cantidad</translation>
     </message>
@@ -799,7 +816,7 @@ Dirección: %4
         <translation>Prioridad</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="+42"/>
+        <location filename="../coincontroldialog.cpp" line="+41"/>
         <source>Copy address</source>
         <translation>Copiar dirección</translation>
     </message>
@@ -865,7 +882,7 @@ Dirección: %4
         <translation>Copiar cambio</translation>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+332"/>
         <source>highest</source>
         <translation>lo más alto</translation>
     </message>
@@ -917,10 +934,10 @@ Dirección: %4
     <message>
         <location line="+31"/>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>ninguno</translation>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+141"/>
         <source>Dust</source>
         <translation>Basura</translation>
     </message>
@@ -958,7 +975,7 @@ Dirección: %4
     <message>
         <location line="+1"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
+        <translation>Esta etiqueta se convierte en rojo, si la prioridad es menor que &quot;medio&quot;.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -983,7 +1000,7 @@ Dirección: %4
     </message>
     <message>
         <location line="+43"/>
-        <location line="+66"/>
+        <location line="+63"/>
         <source>(no label)</source>
         <translation>(sin etiqueta)</translation>
     </message>
@@ -1102,7 +1119,7 @@ Dirección: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="+38"/>
+        <location filename="../utilitydialog.cpp" line="+24"/>
         <source>Bitcoin Core</source>
         <translation>Núcleo de Bitcoin</translation>
     </message>
@@ -1180,7 +1197,7 @@ Dirección: %4
         <translation>Utilice un directorio de datos personalizado:</translation>
     </message>
     <message>
-        <location filename="../intro.cpp" line="+85"/>
+        <location filename="../intro.cpp" line="+82"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
@@ -1246,7 +1263,7 @@ Dirección: %4
         <translation>&amp;Principal</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+122"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
         <translation>Tarifa de transacción opcional por kB que ayuda a asegurar que sus transacciones sean procesadas rápidamente. La mayoría de transacciones son de 1kB.</translation>
     </message>
@@ -1256,7 +1273,7 @@ Dirección: %4
         <translation>Comisión de &amp;transacciones</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="-131"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Iniciar Bitcoin automáticamente al encender el sistema.</translation>
     </message>
@@ -1271,14 +1288,9 @@ Dirección: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+13"/>
-        <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>Establecer el tamaño de caché de la base de datos en megabytes (predeterminado: 25)</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>MB</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -1291,9 +1303,9 @@ Dirección: %4
         <translation>Configura el número de hilos para el script de verificación (hasta 16, 0 = auto, &lt;0 = leave that many cores free, por fecto: 0)</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+153"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Conéctese a la red Bitcoin través de un proxy SOCKS.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1303,10 +1315,10 @@ Dirección: %4
     <message>
         <location line="+34"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished"/>
+        <translation>Dirección IP del proxy (ej. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
-        <location line="+224"/>
+        <location line="+214"/>
         <source>Active command-line options that override above options:</source>
         <translation type="unfinished"/>
     </message>
@@ -1321,12 +1333,37 @@ Dirección: %4
         <translation>&amp;Restablecer opciones</translation>
     </message>
     <message>
-        <location line="-323"/>
+        <location line="-313"/>
         <source>&amp;Network</source>
         <translation>&amp;Red</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-95"/>
+        <source>W&amp;allet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+65"/>
+        <source>Expert</source>
+        <translation>Experto</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Enable coin &amp;control features</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Abrir automáticamente el puerto del cliente Bitcoin en el router. Esta opción solo funciona si el router admite UPnP y está activado.</translation>
     </message>
@@ -1421,17 +1458,12 @@ Dirección: %4
         <translation>&amp;Mostrar las direcciones en la lista de transacciones</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-262"/>
         <source>Whether to show coin control features or not.</source>
         <translation>Mostrar o no características de control de moneda</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Display coin &amp;control features (experts only)</source>
-        <translation>Mostrar moneda y características de control (Avanzado)</translation>
-    </message>
-    <message>
-        <location line="+136"/>
+        <location line="+398"/>
         <source>&amp;OK</source>
         <translation>&amp;Aceptar</translation>
     </message>
@@ -1441,17 +1473,17 @@ Dirección: %4
         <translation>&amp;Cancelar</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+67"/>
+        <location filename="../optionsdialog.cpp" line="+70"/>
         <source>default</source>
         <translation>predeterminado</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+58"/>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>Ninguna</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+78"/>
         <source>Confirm options reset</source>
         <translation>Confirme el restablecimiento de las opciones</translation>
     </message>
@@ -1459,7 +1491,7 @@ Dirección: %4
         <location line="+1"/>
         <location line="+29"/>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Reinicio del cliente para activar cambios.</translation>
     </message>
     <message>
         <location line="-29"/>
@@ -1469,7 +1501,7 @@ Dirección: %4
     <message>
         <location line="+33"/>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>Este cambio requiere reinicio por parte del cliente.</translation>
     </message>
     <message>
         <location line="+34"/>
@@ -1491,19 +1523,14 @@ Dirección: %4
         <translation>La información mostrada puede estar desactualizada. Su monedero se sincroniza automáticamente con la red Bitcoin después de que se haya establecido una conexión, pero este proceso aún no se ha completado.</translation>
     </message>
     <message>
-        <location line="-155"/>
-        <source>Unconfirmed:</source>
-        <translation>No confirmado(s):</translation>
-    </message>
-    <message>
-        <location line="-83"/>
+        <location line="-238"/>
         <source>Wallet</source>
         <translation>Monedero</translation>
     </message>
     <message>
         <location line="+51"/>
-        <source>Confirmed:</source>
-        <translation>Confirmado:</translation>
+        <source>Available:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+16"/>
@@ -1511,7 +1538,12 @@ Dirección: %4
         <translation>Su balance actual gastable</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+16"/>
+        <source>Pending:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>Total de transacciones que deben ser confirmadas, y que no cuentan con el balance gastable necesario</translation>
     </message>
@@ -1644,18 +1676,18 @@ Dirección: %4
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoin.cpp" line="+71"/>
-        <location line="+11"/>
+        <location filename="../bitcoin.cpp" line="+63"/>
+        <location line="+14"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-13"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation>Error: El directorio de datos especificado &quot;%1&quot; no existe.</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="+13"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>Error: Combinación no válida de -regtest y -testnet.</translation>
     </message>
@@ -1706,7 +1738,7 @@ Dirección: %4
         <location line="+36"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+359"/>
+        <location filename="../rpcconsole.cpp" line="+373"/>
         <source>N/A</source>
         <translation>N/D</translation>
     </message>
@@ -1728,7 +1760,7 @@ Dirección: %4
     <message>
         <location line="+25"/>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>General</translation>
     </message>
     <message>
         <location line="+53"/>
@@ -1748,7 +1780,7 @@ Dirección: %4
     <message>
         <location line="+7"/>
         <source>Name</source>
-        <translation type="unfinished"/>
+        <translation>Nombre</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -1802,11 +1834,13 @@ Dirección: %4
     </message>
     <message>
         <location line="+64"/>
+        <location filename="../rpcconsole.cpp" line="-10"/>
         <source>In:</source>
         <translation>Dentro:</translation>
     </message>
     <message>
         <location line="+80"/>
+        <location filename="../rpcconsole.cpp" line="+1"/>
         <source>Out:</source>
         <translation>Fuera:</translation>
     </message>
@@ -1831,7 +1865,7 @@ Dirección: %4
         <translation>Borrar consola</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-30"/>
+        <location filename="../rpcconsole.cpp" line="-35"/>
         <source>Welcome to the Bitcoin RPC console.</source>
         <translation>Bienvenido a la consola RPC de Bitcoin</translation>
     </message>
@@ -1846,7 +1880,7 @@ Dirección: %4
         <translation>Escriba &lt;b&gt;help&lt;/b&gt; para ver un resumen de los comandos disponibles.</translation>
     </message>
     <message>
-        <location line="+122"/>
+        <location line="+136"/>
         <source>%1 B</source>
         <translation>%1 B</translation>
     </message>
@@ -1962,7 +1996,7 @@ Dirección: %4
         <translation>Mostrar</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+14"/>
         <source>Remove the selected entries from the list</source>
         <translation>Borrar de la lista las direcciónes actualmente seleccionadas</translation>
     </message>
@@ -1972,7 +2006,7 @@ Dirección: %4
         <translation>Eliminar</translation>
     </message>
     <message>
-        <location filename="../receivecoinsdialog.cpp" line="+38"/>
+        <location filename="../receivecoinsdialog.cpp" line="+39"/>
         <source>Copy label</source>
         <translation>Copiar etiqueta</translation>
     </message>
@@ -2193,12 +2227,12 @@ Dirección: %4
         <translation>Limpiar &amp;todo</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+58"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="-78"/>
+        <location line="-84"/>
         <source>Confirm the send action</source>
         <translation>Confirmar el envío</translation>
     </message>
@@ -2675,6 +2709,11 @@ Dirección: %4
     </message>
     <message>
         <location line="+6"/>
+        <source>conflicted</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>%1/offline</source>
         <translation>%1/fuera de línea</translation>
     </message>
@@ -2836,12 +2875,12 @@ Dirección: %4
         <translation>, todavía no se ha sido difundido satisfactoriamente</translation>
     </message>
     <message numerus="yes">
-        <location line="-35"/>
+        <location line="-37"/>
         <source>Open for %n more block(s)</source>
         <translation><numerusform>Abrir para %n bloque más</numerusform><numerusform>Abrir para %n bloques más</numerusform></translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+72"/>
         <source>unknown</source>
         <translation>desconocido</translation>
     </message>
@@ -2882,12 +2921,12 @@ Dirección: %4
         <translation>Cantidad</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+78"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation type="unfinished"/>
     </message>
     <message numerus="yes">
-        <location line="+16"/>
+        <location line="-21"/>
         <source>Open for %n more block(s)</source>
         <translation><numerusform>Abrir para %n bloque más</numerusform><numerusform>Abrir para %n bloques más</numerusform></translation>
     </message>
@@ -2897,23 +2936,12 @@ Dirección: %4
         <translation>Abierto hasta %1</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Offline (%1 confirmations)</source>
-        <translation>Fuera de línea (%1 confirmaciones)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation>No confirmado (%1 de %2 confirmaciones)</translation>
-    </message>
-    <message>
-        <location line="-22"/>
-        <location line="+25"/>
+        <location line="+12"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Confirmado (%1 confirmaciones)</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="+9"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Este bloque no ha sido recibido por otros nodos y probablemente no sea aceptado!</translation>
     </message>
@@ -2923,7 +2951,27 @@ Dirección: %4
         <translation>Generado pero no aceptado</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="-21"/>
+        <source>Offline</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Conflicted</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+51"/>
         <source>Received with</source>
         <translation>Recibido con</translation>
     </message>
@@ -2953,7 +3001,7 @@ Dirección: %4
         <translation>(nd)</translation>
     </message>
     <message>
-        <location line="+199"/>
+        <location line="+190"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Estado de transacción. Pasa el ratón sobre este campo para ver el número de confirmaciones.</translation>
     </message>
@@ -3082,7 +3130,7 @@ Dirección: %4
         <translation>Mostrar detalles de la transacción</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+140"/>
         <source>Export Transaction History</source>
         <translation>Exportar historial de transacciones</translation>
     </message>
@@ -3219,12 +3267,12 @@ Dirección: %4
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+221"/>
+        <location filename="../bitcoinstrings.cpp" line="+226"/>
         <source>Usage:</source>
         <translation>Uso:</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-55"/>
         <source>List commands</source>
         <translation>Muestra comandos
 </translation>
@@ -3259,12 +3307,7 @@ Dirección: %4
         <translation>Especificar directorio para los datos</translation>
     </message>
     <message>
-        <location line="-9"/>
-        <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>Establecer el tamaño de caché de la base de datos en megabytes (predeterminado: 25)</translation>
-    </message>
-    <message>
-        <location line="-26"/>
+        <location line="-35"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Escuchar conexiones en &lt;puerto&gt; (predeterminado: 8333 o testnet: 18333)</translation>
     </message>
@@ -3284,50 +3327,50 @@ Dirección: %4
         <translation>Especifique su propia dirección pública</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Umbral para la desconexión de pares con mal comportamiento (predeterminado: 100)</translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-151"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Número de segundos en que se evita la reconexión de pares con mal comportamiento (predeterminado: 86400)</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-38"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation>Ha ocurrido un error al configurar el puerto RPC %u para escucha en IPv4: %s</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Escuchar conexiones JSON-RPC en &lt;puerto&gt; (predeterminado: 8332 o testnet:18332)</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Aceptar comandos consola y JSON-RPC
 </translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+81"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Ejecutar en segundo plano como daemon y aceptar comandos
 </translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+40"/>
         <source>Use the test network</source>
         <translation>Usar la red de pruebas
 </translation>
     </message>
     <message>
-        <location line="-118"/>
+        <location line="-120"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Aceptar conexiones desde el exterior (predeterminado: 1 si no -proxy o -connect)</translation>
     </message>
     <message>
-        <location line="-95"/>
+        <location line="-98"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -3367,12 +3410,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Vincular a la dirección dada y escuchar siempre en ella. Utilice la notación [host]:port para IPv6</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
-        <translation>No se puede bloquear el directorio de datos %s. Probablemente Bitcoin ya se está ejecutando.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
         <translation>Iniciar modo de prueba de regresión, el cuál utiliza una cadena especial en la cual los bloques pueden ser resueltos instantáneamente. Se utiliza para herramientas de prueba de regresión y desarrollo de aplicaciones.</translation>
     </message>
@@ -3383,6 +3421,11 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+3"/>
+        <source>Error: Listening for incoming connections failed (listen returned error %d)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>¡Error: se ha rechazado la transacción! Esto puede ocurrir si ya se han gastado algunas de las monedas del monedero, como ocurriría si hubiera hecho una copia de wallet.dat y se hubieran gastado monedas a partir de la copia, con lo que no se habrían marcado aquí como gastadas.</translation>
     </message>
@@ -3402,7 +3445,12 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Esta es una versión de pre-prueba - utilícela bajo su propio riesgo. No la utilice para usos comerciales o de minería.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+3"/>
+        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
         <translation>Usar distintos proxys SOCKS5 para comunicarse vía Tor de forma anónima (Por defecto: -proxy)</translation>
     </message>
@@ -3463,6 +3511,11 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+5"/>
+        <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Connect only to the specified node(s)</source>
         <translation>Conectar sólo a los nodos (o nodo) especificados</translation>
     </message>
@@ -3657,7 +3710,12 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Enviar comando a servidor Bitcoin</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+5"/>
+        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>Establecer tamaño máximo de bloque en bytes (por defecto: %d)</translation>
     </message>
@@ -3673,6 +3731,11 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+2"/>
+        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Start Bitcoin server</source>
         <translation>Iniciar servidor Bitcoin</translation>
     </message>
@@ -3722,12 +3785,17 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Usted necesita reconstruir la base de datos utilizando -reindex para cambiar -txindex</translation>
     </message>
     <message>
-        <location line="-79"/>
+        <location line="-80"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importa los bloques desde un archivo blk000??.dat externo</translation>
     </message>
     <message>
-        <location line="-105"/>
+        <location line="-126"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Ejecutar un comando cuando se reciba una alerta importante o cuando veamos un fork demasiado largo (%s en cmd se reemplazará por el mensaje)</translation>
     </message>
@@ -3747,7 +3815,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Configura el número de hilos para el script de verificación (hasta 16, 0 = auto, &lt;0 = leave that many cores free, por fecto: 0)</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+91"/>
         <source>Information</source>
         <translation>Información</translation>
     </message>
@@ -3817,7 +3885,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Especificar el tiempo máximo de conexión en milisegundos (predeterminado: 5000)</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>System error: </source>
         <translation>Error de sistema: </translation>
     </message>
@@ -3864,6 +3932,11 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>version</source>
         <translation>versión</translation>
     </message>
@@ -3873,35 +3946,35 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>wallet.dat corrupto. Ha fallado la recuperación.</translation>
     </message>
     <message>
-        <location line="-58"/>
+        <location line="-60"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Contraseña para las conexiones JSON-RPC
 </translation>
     </message>
     <message>
-        <location line="-70"/>
+        <location line="-71"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Permitir conexiones JSON-RPC desde la dirección IP especificada
 </translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+81"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Enviar comando al nodo situado en &lt;ip&gt; (predeterminado: 127.0.0.1)
 </translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-134"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Ejecutar un comando cuando cambia el mejor bloque (%s en cmd se sustituye por el hash de bloque)</translation>
     </message>
     <message>
-        <location line="+161"/>
+        <location line="+164"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Actualizar el monedero al último formato</translation>
     </message>
     <message>
-        <location line="-24"/>
+        <location line="-25"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Ajustar el número de claves en reserva &lt;n&gt; (predeterminado: 100)
 </translation>
@@ -3912,13 +3985,13 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Volver a examinar la cadena de bloques en busca de transacciones del monedero perdidas</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+39"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Usar OpenSSL (https) para las conexiones JSON-RPC
 </translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-31"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Certificado del servidor (predeterminado: server.cert)
 </translation>
@@ -3930,7 +4003,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
 </translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+17"/>
         <source>This help message</source>
         <translation>Este mensaje de ayuda
 </translation>
@@ -3941,12 +4014,12 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>No es posible conectar con %s en este sistema (bind ha dado el error %d, %s)</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-109"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Permitir búsquedas DNS para -addnode, -seednode y -connect</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Loading addresses...</source>
         <translation>Cargando direcciones...</translation>
     </message>
@@ -3961,12 +4034,12 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Error al cargar wallet.dat: El monedero requiere una versión más reciente de Bitcoin</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+99"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>El monedero ha necesitado ser reescrito. Reinicie Bitcoin para completar el proceso</translation>
     </message>
     <message>
-        <location line="-100"/>
+        <location line="-101"/>
         <source>Error loading wallet.dat</source>
         <translation>Error al cargar wallet.dat</translation>
     </message>
@@ -3976,7 +4049,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Dirección -proxy inválida: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+57"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>La red especificada en -onlynet &apos;%s&apos; es desconocida</translation>
     </message>
@@ -3986,7 +4059,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Solicitada versión de proxy -socks desconocida: %i</translation>
     </message>
     <message>
-        <location line="-101"/>
+        <location line="-103"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>No se puede resolver la dirección de -bind: &apos;%s&apos;</translation>
     </message>
@@ -3996,7 +4069,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>No se puede resolver la dirección de -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+49"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Cantidad inválida para -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
@@ -4016,22 +4089,17 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Cargando el índice de bloques...</translation>
     </message>
     <message>
-        <location line="-62"/>
+        <location line="-63"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Añadir un nodo al que conectarse y tratar de mantener la conexión abierta</translation>
     </message>
     <message>
-        <location line="-32"/>
-        <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
-        <translation>No es posible conectar con %s en este sistema. Probablemente Bitcoin ya está ejecutándose.</translation>
-    </message>
-    <message>
-        <location line="+95"/>
+        <location line="+64"/>
         <source>Loading wallet...</source>
         <translation>Cargando monedero...</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>Cannot downgrade wallet</source>
         <translation>No se puede rebajar el monedero</translation>
     </message>
@@ -4041,7 +4109,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>No se puede escribir la dirección predeterminada</translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+68"/>
         <source>Rescanning...</source>
         <translation>Reexplorando...</translation>
     </message>
@@ -4051,17 +4119,17 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Generado pero no aceptado</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+86"/>
         <source>To use the %s option</source>
         <translation>Para utilizar la opción %s</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-78"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-36"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
