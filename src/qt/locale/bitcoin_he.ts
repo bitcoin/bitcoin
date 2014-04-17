@@ -1,10 +1,10 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="he" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="he" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>על אודות ליבת ביטקוין</translation>
     </message>
     <message>
         <location line="+39"/>
@@ -71,7 +71,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+58"/>
         <source>C&amp;lose</source>
         <translation type="unfinished"/>
     </message>
@@ -81,7 +81,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>העתק כתובת</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="-41"/>
+        <location filename="../forms/addressbookpage.ui" line="-47"/>
         <source>Delete the currently selected address from the list</source>
         <translation>מחק את הכתובת שנבחרה מהרשימה</translation>
     </message>
@@ -328,7 +328,7 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+295"/>
+        <location filename="../bitcoingui.cpp" line="+294"/>
         <source>Sign &amp;message...</source>
         <translation>חתום על הודעה</translation>
     </message>
@@ -343,12 +343,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;סקירה</translation>
     </message>
     <message>
-        <location line="-137"/>
+        <location line="-136"/>
         <source>Node</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+138"/>
+        <location line="+137"/>
         <source>Show general overview of wallet</source>
         <translation>הצג סקירה כללית של הארנק</translation>
     </message>
@@ -469,17 +469,17 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>אמת הודעה...</translation>
     </message>
     <message>
-        <location line="+430"/>
+        <location line="+440"/>
         <source>Bitcoin</source>
         <translation>ביטקוין</translation>
     </message>
     <message>
-        <location line="-643"/>
+        <location line="-652"/>
         <source>Wallet</source>
         <translation>ארנק</translation>
     </message>
     <message>
-        <location line="+146"/>
+        <location line="+145"/>
         <source>&amp;Send</source>
         <translation>&amp;שלח</translation>
     </message>
@@ -535,20 +535,20 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>סרגל כלים טאבים</translation>
     </message>
     <message>
-        <location line="-284"/>
-        <location line="+376"/>
+        <location line="-283"/>
+        <location line="+375"/>
         <source>[testnet]</source>
         <translation>[רשת-בדיקה]</translation>
     </message>
     <message>
-        <location line="-401"/>
+        <location line="-400"/>
         <source>Bitcoin Core</source>
         <translation>ליבת ביטקוין</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+162"/>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished"/>
+        <translation>בקש תשלומים (מייצר קודיי QR וסכימות URI של :bitcoin)</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -608,7 +608,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>הושלם עיבוד של %1 בלוקים של היסטוריית פעולות.</translation>
     </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+27"/>
         <source>%n hour(s)</source>
         <translation><numerusform>%n שעה</numerusform><numerusform>%n שעות</numerusform></translation>
     </message>
@@ -619,6 +619,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message numerus="yes">
         <location line="+4"/>
+        <location line="+6"/>
         <source>%n week(s)</source>
         <translation><numerusform>%n שבוע</numerusform><numerusform>%n שבועות</numerusform></translation>
     </message>
@@ -663,12 +664,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>מידע</translation>
     </message>
     <message>
-        <location line="-85"/>
+        <location line="-95"/>
         <source>Up to date</source>
         <translation>עדכני</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+44"/>
         <source>Catching up...</source>
         <translation>מתעדכן...</translation>
     </message>
@@ -705,7 +706,7 @@ Address: %4
         <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt; וכרגע &lt;b&gt;נעול&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+435"/>
+        <location filename="../bitcoin.cpp" line="+441"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>שגיאה סופנית אירעה. ביטקוין אינו יכול להמשיך לפעול בבטחה ולכן ייסגר.</translation>
     </message>
@@ -713,7 +714,7 @@ Address: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+119"/>
+        <location filename="../clientmodel.cpp" line="+128"/>
         <source>Network Alert</source>
         <translation>אזעקת רשת</translation>
     </message>
@@ -811,7 +812,7 @@ Address: %4
         <translation>קדימות</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="+42"/>
+        <location filename="../coincontroldialog.cpp" line="+41"/>
         <source>Copy address</source>
         <translation>העתק כתובת</translation>
     </message>
@@ -877,7 +878,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+332"/>
         <source>highest</source>
         <translation>הכי גבוה</translation>
     </message>
@@ -995,7 +996,7 @@ Address: %4
     </message>
     <message>
         <location line="+43"/>
-        <location line="+66"/>
+        <location line="+63"/>
         <source>(no label)</source>
         <translation>(ללא תוית)</translation>
     </message>
@@ -1083,7 +1084,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="+65"/>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
+        <translation>ספריית מידע חדשה תיווצר.</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -1093,17 +1094,17 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished"/>
+        <translation>הספריה כבר קיימת. הוסף %1 אם ברצונך ליצור ספריה חדשה כאן.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Path already exists, and is not a directory.</source>
-        <translation type="unfinished"/>
+        <translation>הנתיב כבר קיים ואינו מצביע על ספרייה.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
+        <translation>לא ניתן ליצור ספריית מידע כאן.</translation>
     </message>
 </context>
 <context>
@@ -1184,15 +1185,15 @@ Address: %4
     <message>
         <location line="+10"/>
         <source>Use the default data directory</source>
-        <translation type="unfinished"/>
+        <translation>השתמש בברירת המחדל עבור ספריית המידע.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Use a custom data directory:</source>
-        <translation type="unfinished"/>
+        <translation>השתמש בספריית מידע מותאמת אישית:</translation>
     </message>
     <message>
-        <location filename="../intro.cpp" line="+85"/>
+        <location filename="../intro.cpp" line="+82"/>
         <source>Bitcoin</source>
         <translation>ביטקוין</translation>
     </message>
@@ -1209,12 +1210,12 @@ Address: %4
     <message>
         <location line="+9"/>
         <source>GB of free space available</source>
-        <translation type="unfinished"/>
+        <translation>ג&quot;ב של שטח אחסון פנוי</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>(of %1GB needed)</source>
-        <translation type="unfinished"/>
+        <translation>(מתוך %1 ג&quot;ב נחוצים)</translation>
     </message>
 </context>
 <context>
@@ -1260,7 +1261,7 @@ Address: %4
     <message>
         <location line="+122"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>עמלת פעולה אופציונלית לכל kB תבטיח שהפעולה שלך תעובד בזריזות. רוב הפעולות הן 1 kB. מומלצת עמלה בסך 0.01.</translation>
+        <translation>עמלת פעולה אופציונלית לכל kB תבטיח שהפעולה שלך תעובד בזריזות. רוב הפעולות הן 1 kB.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1298,12 +1299,7 @@ Address: %4
         <translation>קבע את מספר תהליכוני אימות הסקריפטים (1-16, 0 = אוטומטי, ברירת מחדל: 0)</translation>
     </message>
     <message>
-        <location line="+107"/>
-        <source>&amp;Spend unconfirmed change (experts only)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+37"/>
+        <location line="+153"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
         <translation type="unfinished"/>
     </message>
@@ -1318,7 +1314,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+224"/>
+        <location line="+214"/>
         <source>Active command-line options that override above options:</source>
         <translation type="unfinished"/>
     </message>
@@ -1333,22 +1329,37 @@ Address: %4
         <translation>איפוס אפשרויות</translation>
     </message>
     <message>
-        <location line="-323"/>
+        <location line="-313"/>
         <source>&amp;Network</source>
         <translation>רשת</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-95"/>
         <source>W&amp;allet</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+65"/>
+        <source>Expert</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Enable coin &amp;control features</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+3"/>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>פתח את פורט ביטקוין בנתב באופן אוטומטי. עובד רק אם UPnP מאופשר ונתמך ע&quot;י הנתב.</translation>
     </message>
@@ -1443,17 +1454,12 @@ Address: %4
         <translation>הצג כתובות ברשימת הפעולות</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-262"/>
         <source>Whether to show coin control features or not.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Display coin &amp;control features (experts only)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+136"/>
+        <location line="+398"/>
         <source>&amp;OK</source>
         <translation>אישור</translation>
     </message>
@@ -1585,7 +1591,7 @@ Address: %4
     <message>
         <location line="+96"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation type="unfinished"/>
+        <translation>הסכום הנדרש לתשלום %1 קטן מדי (נחשב לאבק)</translation>
     </message>
     <message>
         <location line="-221"/>
@@ -1630,7 +1636,7 @@ Address: %4
     <message>
         <location line="+73"/>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation type="unfinished"/>
+        <translation>בקשות לתשלום לסקריפטיי תשלום מותאמים אישית אינן נתמכות.</translation>
     </message>
     <message>
         <location line="+59"/>
@@ -1640,7 +1646,7 @@ Address: %4
     <message>
         <location line="+43"/>
         <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"/>
+        <translation>שגיאה בתקשורת עם %1: %2</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -1650,7 +1656,7 @@ Address: %4
     <message>
         <location line="+11"/>
         <source>Bad response from server %1</source>
-        <translation type="unfinished"/>
+        <translation>מענה שגוי משרת %1</translation>
     </message>
     <message>
         <location line="+33"/>
@@ -1666,20 +1672,20 @@ Address: %4
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoin.cpp" line="+71"/>
-        <location line="+11"/>
+        <location filename="../bitcoin.cpp" line="+63"/>
+        <location line="+14"/>
         <source>Bitcoin</source>
         <translation>ביטקוין</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-13"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation type="unfinished"/>
+        <translation>שגיאה: הספריה &quot;%1&quot; לא קיימת.</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="+13"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"/>
+        <translation>שגיאה: שילוב בלתי חוקי של regtest- ו testnet-.</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="+82"/>
@@ -1728,7 +1734,7 @@ Address: %4
         <location line="+36"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+359"/>
+        <location filename="../rpcconsole.cpp" line="+373"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
@@ -1824,11 +1830,13 @@ Address: %4
     </message>
     <message>
         <location line="+64"/>
+        <location filename="../rpcconsole.cpp" line="-10"/>
         <source>In:</source>
         <translation>נכנס:</translation>
     </message>
     <message>
         <location line="+80"/>
+        <location filename="../rpcconsole.cpp" line="+1"/>
         <source>Out:</source>
         <translation>יוצא:</translation>
     </message>
@@ -1853,7 +1861,7 @@ Address: %4
         <translation>נקה לוח בקרה</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-30"/>
+        <location filename="../rpcconsole.cpp" line="-35"/>
         <source>Welcome to the Bitcoin RPC console.</source>
         <translation>ברוכים הבאים ללוח בקרת RPC של ביטקוין</translation>
     </message>
@@ -1868,7 +1876,7 @@ Address: %4
         <translation>הקלד &lt;b&gt;help&lt;/b&gt; בשביל סקירה של הפקודות הזמינות.</translation>
     </message>
     <message>
-        <location line="+122"/>
+        <location line="+136"/>
         <source>%1 B</source>
         <translation>%1 בייט</translation>
     </message>
@@ -1923,7 +1931,7 @@ Address: %4
     <message>
         <location line="-20"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation type="unfinished"/>
+        <translation>השתמש שוב באחת מכתובות הקבלה שכבר נעשה בהן שימוש. לשימוש חוזר בכתובות ישהן השלכות אבטחה ופרטיות. השתמש בזה רק אם אתה מייצר מחדש בקשת תשלום שכבר נעשתה.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1984,7 +1992,7 @@ Address: %4
         <translation>הצג</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+14"/>
         <source>Remove the selected entries from the list</source>
         <translation type="unfinished"/>
     </message>
@@ -1994,7 +2002,7 @@ Address: %4
         <translation>הסר</translation>
     </message>
     <message>
-        <location filename="../receivecoinsdialog.cpp" line="+38"/>
+        <location filename="../receivecoinsdialog.cpp" line="+39"/>
         <source>Copy label</source>
         <translation>העתק תוית</translation>
     </message>
@@ -2044,7 +2052,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>URI</source>
-        <translation type="unfinished"/>
+        <translation>כתובת (אתר או משאב)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2215,12 +2223,12 @@ Address: %4
         <translation>נקה הכל</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+58"/>
         <source>Balance:</source>
         <translation>יתרה:</translation>
     </message>
     <message>
-        <location line="-78"/>
+        <location line="-84"/>
         <source>Confirm the send action</source>
         <translation>אשר את פעולת השליחה</translation>
     </message>
@@ -2240,7 +2248,7 @@ Address: %4
         <location line="+5"/>
         <location line="+4"/>
         <source>%1 to %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 אל %2</translation>
     </message>
     <message>
         <location line="-121"/>
@@ -2360,7 +2368,7 @@ Address: %4
     <message>
         <location line="+8"/>
         <source>Invalid payment address %1</source>
-        <translation type="unfinished"/>
+        <translation>כתובת תשלום שגויה %1</translation>
     </message>
 </context>
 <context>
@@ -2437,7 +2445,7 @@ Address: %4
     <message>
         <location line="-991"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished"/>
+        <translation>הקלד תווית עבור כתובת זו בכדי להוסיף אותה לרשימת הכתובות בשימוש</translation>
     </message>
     <message>
         <location line="+33"/>
@@ -2820,12 +2828,12 @@ Address: %4
     <message>
         <location line="+18"/>
         <source>Merchant</source>
-        <translation type="unfinished"/>
+        <translation>סוחר</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation>מטבעות חדשים שנוצרו חייבים להבשיל במשך %1 בלוקים לפני שניתן לנצל אותם. כשבלוק זה נוצר הוא שודר ברשת על מנת שייכנס לשרשרת הבלוקים. במקרה והוא לא ייכנס לשרשרת, מצבו ישתנה ל&quot;לא התקבל&quot; ולא ניתן יהיה לנצלו. זה יכול לקרות מדי פעם אם במקרה צומת אחרת ייצרה בלוק בהבדל של שניות בודדות ממך.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -3118,7 +3126,7 @@ Address: %4
         <translation>הצג פרטי פעולה</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+140"/>
         <source>Export Transaction History</source>
         <translation>יצוא היסטוריית פעולות</translation>
     </message>
@@ -3255,7 +3263,7 @@ Address: %4
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+223"/>
+        <location filename="../bitcoinstrings.cpp" line="+226"/>
         <source>Usage:</source>
         <translation>שימוש:</translation>
     </message>
@@ -3290,12 +3298,7 @@ Address: %4
         <translation>ציין תיקיית נתונים</translation>
     </message>
     <message>
-        <location line="-9"/>
-        <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>קבע את גודל המטמון של מסד הנתונים במגהבייט (ברירת מחדל: 25)</translation>
-    </message>
-    <message>
-        <location line="-26"/>
+        <location line="-35"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>האזן לחיבורים ב&lt;פורט&gt; (ברירת מחדל: 8333 או ברשת הבדיקה: 18333)</translation>
     </message>
@@ -3320,22 +3323,22 @@ Address: %4
         <translation>סף להתנתקות מעמיתים הנוהגים שלא כהלכה (ברירת מחדל: 100)</translation>
     </message>
     <message>
-        <location line="-150"/>
+        <location line="-151"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>מספר שניות למנוע מעמיתים הנוהגים שלא כהלכה מלהתחבר מחדש (ברירת מחדל: 86400)</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-38"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation>אירעה שגיאה בעת הגדרת פורט RPC %u להאזנה ב-IPv4: %s</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>האזן לחיבורי JSON-RPC ב- &lt;port&gt; (ברירת מחדל: 8332 או רשת בדיקה: 18332)</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>קבל פקודות משורת הפקודה ו- JSON-RPC</translation>
     </message>
@@ -3355,7 +3358,7 @@ Address: %4
         <translation>קבל חיבורים מבחוץ (ברירת מחדל: 1 ללא -proxy או -connect)</translation>
     </message>
     <message>
-        <location line="-95"/>
+        <location line="-98"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -3382,7 +3385,7 @@ rpcpassword=%s
     <message>
         <location line="+12"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation type="unfinished"/>
+        <translation>צפנים קבילים (ברירת מחדל: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -3395,14 +3398,9 @@ rpcpassword=%s
         <translation>קשור עם כתובת נתונה והאזן לה תמיד. השתמש בסימון [host]:port עבוד IPv6.</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Cannot obtain a lock on data directory %s. Bitcoin is probably already running.</source>
-        <translation>לא מסוגל להשיג נעילה על תיקיית הנתונים %s. כנראה שביטקוין כבר רץ.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>כניסה למצב בדיקת רגרסיה, בה נעשה שימוש בשרשרת מיוחדת המאפשרת פתרון מיידי של בלוקים. מצב זה מיועד לכלי בדיקת רגרסיה ופיתוח תוכנה.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -3411,6 +3409,11 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+3"/>
+        <source>Error: Listening for incoming connections failed (listen returned error %d)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>שגיאה: הפעולה נדחתה! זה עלול לקרות אם כמה מהמטבעות בארנק שלך כבר נוצלו, למשל אם השתמשת בעותק של wallet.dat ומטבעות נשלחו בעותק אך לא סומנו כמנוצלות כאן.</translation>
     </message>
@@ -3430,7 +3433,12 @@ rpcpassword=%s
         <translation>זוהי בניית ניסיון טרום-שחרור - השימוש בה על אחריותך - אין להשתמש לצורך כריה או יישומי מסחר</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+3"/>
+        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
         <translation type="unfinished"/>
     </message>
@@ -3447,12 +3455,12 @@ rpcpassword=%s
     <message>
         <location line="+3"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation type="unfinished"/>
+        <translation>אזהרה: נראה שלא כל הרשת מסכימה! נראה שישנם כורים אשר נתקלים בבעיות.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"/>
+        <translation>אזהרה: נראה שאנחנו לא מסכימים לחלוטין עם העמיתים שלנו! ייתכן ואנחנו צריכים לשדרג, או שצמתים אחרות צריכות לשדרג.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3482,7 +3490,7 @@ rpcpassword=%s
     <message>
         <location line="+1"/>
         <source>Bitcoin RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>גרסת לקוח RPC של ביטקוין</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3507,7 +3515,7 @@ rpcpassword=%s
     <message>
         <location line="+1"/>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation type="unfinished"/>
+        <translation>התחבר ל JSON-RPC ב &lt;port&gt; (ברירת מחדל: 8332 או ברשת בדיקה: 18332)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3652,12 +3660,12 @@ rpcpassword=%s
     <message>
         <location line="+2"/>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished"/>
+        <translation>בלוק בראשית הינו שגוי או לא נמצא. ספריית מידע לא נכונה עבור הרשת?</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>כתובת onion- שגויה: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -3690,7 +3698,12 @@ rpcpassword=%s
         <translation>שליחת פקודה לשרת הביטקוין</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+5"/>
+        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation type="unfinished"/>
     </message>
@@ -3702,7 +3715,7 @@ rpcpassword=%s
     <message>
         <location line="+7"/>
         <source>Specify wallet file (within data directory)</source>
-        <translation type="unfinished"/>
+        <translation>ציין קובץ ארנק (בתוך ספריית המידע)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3722,7 +3735,7 @@ rpcpassword=%s
     <message>
         <location line="+10"/>
         <source>Usage (deprecated, use bitcoin-cli):</source>
-        <translation type="unfinished"/>
+        <translation>שימוש (מיושן, השתמש ב bitcoin-cli):</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3742,7 +3755,7 @@ rpcpassword=%s
     <message>
         <location line="+1"/>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
+        <translation>הארנק %s יושב מחוץ לספריית המידע %s</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3765,9 +3778,14 @@ rpcpassword=%s
         <translation>מייבא בלוקים מקובצי blk000??.dat חיצוניים</translation>
     </message>
     <message>
-        <location line="-106"/>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
+        <location line="-126"/>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
         <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
+        <translation>הרץ פקודה כאשר ההתראה הרלוונטית מתקבלת או כשאנחנו עדים לפיצול ארוך מאוד (%s בשורת הפקודה יוחלף ע&quot;י ההודעה)</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -3785,7 +3803,7 @@ rpcpassword=%s
         <translation>קבע את מספר תהליכוני אימות הסקריפטים (1-16, 0 = אוטומטי, ברירת מחדל: 0)</translation>
     </message>
     <message>
-        <location line="+90"/>
+        <location line="+91"/>
         <source>Information</source>
         <translation>מידע</translation>
     </message>
@@ -3930,12 +3948,12 @@ rpcpassword=%s
         <translation>שלח פקודות לצומת ב-&lt;ip&gt; (ברירת מחדל: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-133"/>
+        <location line="-134"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>בצע פקודה זו כשהבלוק הטוב ביותר משתנה (%s בפקודה יוחלף בגיבוב הבלוק)</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+164"/>
         <source>Upgrade wallet to latest format</source>
         <translation>שדרג את הארנק לפורמט העדכני</translation>
     </message>
@@ -4055,12 +4073,7 @@ rpcpassword=%s
         <translation>הוסף צומת להתחברות ונסה לשמור את החיבור פתוח</translation>
     </message>
     <message>
-        <location line="-32"/>
-        <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
-        <translation>לא ניתן לקשור ל-%s במחשב זה. ביטקוין כנראה עדיין רץ.</translation>
-    </message>
-    <message>
-        <location line="+96"/>
+        <location line="+64"/>
         <source>Loading wallet...</source>
         <translation>טוען ארנק...</translation>
     </message>
