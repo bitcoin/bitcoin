@@ -18,6 +18,7 @@ QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
     unitlist.append(BTC);
     unitlist.append(mBTC);
     unitlist.append(uBTC);
+    unitlist.append(bits);
     return unitlist;
 }
 
@@ -28,6 +29,7 @@ bool BitcoinUnits::valid(int unit)
     case BTC:
     case mBTC:
     case uBTC:
+    case bits:
         return true;
     default:
         return false;
@@ -41,6 +43,7 @@ QString BitcoinUnits::name(int unit)
     case BTC: return QString("BTC");
     case mBTC: return QString("mBTC");
     case uBTC: return QString::fromUtf8("μBTC");
+    case bits: return QString::fromUtf8("bits");
     default: return QString("???");
     }
 }
@@ -52,6 +55,7 @@ QString BitcoinUnits::description(int unit)
     case BTC: return QString("Bitcoins");
     case mBTC: return QString("Milli-Bitcoins (1 / 1,000)");
     case uBTC: return QString("Micro-Bitcoins (1 / 1,000,000)");
+    case bits: return QString("1,000,000 bits / Bitcoin");
     default: return QString("???");
     }
 }
@@ -62,7 +66,8 @@ qint64 BitcoinUnits::factor(int unit)
     {
     case BTC:  return 100000000;
     case mBTC: return 100000;
-    case uBTC: return 100;
+    case uBTC:
+    case bits: return 100;
     default:   return 100000000;
     }
 }
@@ -73,7 +78,8 @@ qint64 BitcoinUnits::maxAmount(int unit)
     {
     case BTC:  return Q_INT64_C(21000000);
     case mBTC: return Q_INT64_C(21000000000);
-    case uBTC: return Q_INT64_C(21000000000000);
+    case uBTC:
+    case bits: return Q_INT64_C(21000000000000);
     default:   return 0;
     }
 }
@@ -84,7 +90,8 @@ int BitcoinUnits::amountDigits(int unit)
     {
     case BTC: return 8; // 21,000,000 (# digits, without commas)
     case mBTC: return 11; // 21,000,000,000
-    case uBTC: return 14; // 21,000,000,000,000
+    case uBTC:
+    case bits: return 14; // 21,000,000,000,000
     default: return 0;
     }
 }
@@ -95,7 +102,8 @@ int BitcoinUnits::decimals(int unit)
     {
     case BTC: return 8;
     case mBTC: return 5;
-    case uBTC: return 2;
+    case uBTC:
+    case bits: return 2;
     default: return 0;
     }
 }
