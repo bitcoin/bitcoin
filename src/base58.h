@@ -27,17 +27,20 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
+/* All alphanumeric characters except for "0", "I", "O", and "l" */
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-// Encode a byte sequence as a base58-encoded string
+/**
+ * Encode a byte sequence as a base58-encoded string
+ */
 inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
 {
     CAutoBN_CTX pctx;
     CBigNum bn58 = 58;
     CBigNum bn0 = 0;
 
-    // Convert big endian data to little endian
-    // Extra zero at the end make sure bignum will interpret as a positive number
+    // Convert big endian data to little endian - the extra zero at the end will
+    // ensure bignum interprets it as a positive number */
     std::vector<unsigned char> vchTmp(pend-pbegin+1, 0);
     reverse_copy(pbegin, pend, vchTmp.begin());
 
@@ -47,8 +50,8 @@ inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char
 
     // Convert bignum to std::string
     std::string str;
-    // Expected size increase from base58 conversion is approximately 137%
-    // use 138% to be safe
+    // The expected size increase from base58 conversion is approximately 137%,
+    // but use 138% to be safe
     str.reserve((pend - pbegin) * 138 / 100 + 1);
     CBigNum dv;
     CBigNum rem;
@@ -70,14 +73,18 @@ inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char
     return str;
 }
 
-// Encode a byte vector as a base58-encoded string
+/**
+ * Encode a byte vector as a base58-encoded string
+ */
 inline std::string EncodeBase58(const std::vector<unsigned char>& vch)
 {
     return EncodeBase58(&vch[0], &vch[0] + vch.size());
 }
 
-// Decode a base58-encoded string psz into byte vector vchRet
-// returns true if decoding is successful
+/**
+ * Decode a base58-encoded string (psz) into a byte vector (vchRet)
+ * return true if decoding is successful
+ */
 inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
 {
     CAutoBN_CTX pctx;
@@ -109,7 +116,7 @@ inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
     // Get bignum as little endian data
     std::vector<unsigned char> vchTmp = bn.getvch();
 
-    // Trim off sign byte if present
+    // Trim off the sign byte if present
     if (vchTmp.size() >= 2 && vchTmp.end()[-1] == 0 && vchTmp.end()[-2] >= 0x80)
         vchTmp.erase(vchTmp.end()-1);
 
@@ -124,17 +131,18 @@ inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
     return true;
 }
 
-// Decode a base58-encoded string str into byte vector vchRet
-// returns true if decoding is successful
+/**
+ * Decode a base58-encoded string (str) into a byte vector (vchRet)
+ * return true if decoding is successful
+ */
 inline bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet)
 {
     return DecodeBase58(str.c_str(), vchRet);
 }
 
-
-
-
-// Encode a byte vector to a base58-encoded string, including checksum
+/**
+ * Encode a byte vector into a base58-encoded string, including checksum
+ */
 inline std::string EncodeBase58Check(const std::vector<unsigned char>& vchIn)
 {
     // add 4-byte hash check to the end
@@ -144,8 +152,10 @@ inline std::string EncodeBase58Check(const std::vector<unsigned char>& vchIn)
     return EncodeBase58(vch);
 }
 
-// Decode a base58-encoded string psz that includes a checksum, into byte vector vchRet
-// returns true if decoding is successful
+/**
+ * Decode a base58-encoded string (psz) that includes a checksum into a byte
+ * vector (vchRet), return true if decoding is successful
+ */
 inline bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRet)
 {
     if (!DecodeBase58(psz, vchRet))
@@ -155,6 +165,7 @@ inline bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRe
         vchRet.clear();
         return false;
     }
+    // re-calculate the checksum, insure it matches the included 4-byte checksum
     uint256 hash = Hash(vchRet.begin(), vchRet.end()-4);
     if (memcmp(&hash, &vchRet.end()[-4], 4) != 0)
     {
@@ -165,18 +176,18 @@ inline bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRe
     return true;
 }
 
-// Decode a base58-encoded string str that includes a checksum, into byte vector vchRet
-// returns true if decoding is successful
+/**
+ * Decode a base58-encoded string (str) that includes a checksum into a byte
+ * vector (vchRet), return true if decoding is successful
+ */
 inline bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet)
 {
     return DecodeBase58Check(str.c_str(), vchRet);
 }
 
-
-
-
-
-/** Base class for all base58-encoded data */
+/**
+ * Base class for all base58-encoded data
+ */
 class CBase58Data
 {
 protected:
@@ -347,7 +358,9 @@ bool inline CBitcoinAddressVisitor::operator()(const CKeyID &id) const         {
 bool inline CBitcoinAddressVisitor::operator()(const CScriptID &id) const      { return addr->Set(id); }
 bool inline CBitcoinAddressVisitor::operator()(const CNoDestination &id) const { return false; }
 
-/** A base58-encoded secret key */
+/**
+ * A base58-encoded secret key
+ */
 class CBitcoinSecret : public CBase58Data
 {
 public:
@@ -392,7 +405,6 @@ public:
     {
     }
 };
-
 
 template<typename K, int Size, CChainParams::Base58Type Type> class CBitcoinExtKeyBase : public CBase58Data
 {
