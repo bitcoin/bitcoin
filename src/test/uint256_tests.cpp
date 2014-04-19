@@ -160,11 +160,11 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     tmpS = ~R2S; BOOST_CHECK(tmpS == ~R2S);
     tmpS = ~MaxS; BOOST_CHECK(tmpS == ~MaxS);
 
-    // Wrong length must give 0
-    BOOST_CHECK(uint256(std::vector<unsigned char>(OneArray,OneArray+31)) == 0);
-    BOOST_CHECK(uint256(std::vector<unsigned char>(OneArray,OneArray+20)) == 0);
-    BOOST_CHECK(uint160(std::vector<unsigned char>(OneArray,OneArray+32)) == 0);
-    BOOST_CHECK(uint160(std::vector<unsigned char>(OneArray,OneArray+19)) == 0);
+    // Wrong length must throw exception.
+    BOOST_CHECK_THROW(uint256(std::vector<unsigned char>(OneArray,OneArray+31)), uint_error);
+    BOOST_CHECK_THROW(uint256(std::vector<unsigned char>(OneArray,OneArray+20)), uint_error);
+    BOOST_CHECK_THROW(uint160(std::vector<unsigned char>(OneArray,OneArray+32)), uint_error);
+    BOOST_CHECK_THROW(uint160(std::vector<unsigned char>(OneArray,OneArray+19)), uint_error);
 }
 
 void shiftArrayRight(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift) 
