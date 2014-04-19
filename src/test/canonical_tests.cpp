@@ -13,7 +13,6 @@
 #include "data/sig_noncanonical.json.h"
 #include "data/sig_canonical.json.h"
 
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 #include "json/json_spirit_writer_template.h"
 #include <openssl/ecdsa.h>
@@ -69,7 +68,7 @@ BOOST_AUTO_TEST_CASE(script_canon)
 {
     Array tests = read_json(std::string(json_tests::sig_canonical, json_tests::sig_canonical + sizeof(json_tests::sig_canonical)));
 
-    BOOST_FOREACH(Value &tv, tests) {
+    for (Value &tv : tests) {
         string test = tv.get_str();
         if (IsHex(test)) {
             std::vector<unsigned char> sig = ParseHex(test);
@@ -83,7 +82,7 @@ BOOST_AUTO_TEST_CASE(script_noncanon)
 {
     Array tests = read_json(std::string(json_tests::sig_noncanonical, json_tests::sig_noncanonical + sizeof(json_tests::sig_noncanonical)));
 
-    BOOST_FOREACH(Value &tv, tests) {
+    for (Value &tv : tests) {
         string test = tv.get_str();
         if (IsHex(test)) {
             std::vector<unsigned char> sig = ParseHex(test);

@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
 {
     Array tests = read_json(std::string(json_tests::sighash, json_tests::sighash + sizeof(json_tests::sighash)));
 
-    BOOST_FOREACH(Value& tv, tests)
+    for (Value& tv : tests)
     {
         Array test = tv.get_array();
         std::string strTest = write_string(tv, false);

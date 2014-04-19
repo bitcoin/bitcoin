@@ -148,7 +148,7 @@ public:
                     {
                         parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex+toInsert.size()-1);
                         int insert_idx = lowerIndex;
-                        foreach(const TransactionRecord &rec, toInsert)
+                        for (const TransactionRecord &rec : toInsert)
                         {
                             cachedWallet.insert(insert_idx, rec);
                             insert_idx += 1;
