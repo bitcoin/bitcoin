@@ -3,8 +3,8 @@ Litecoin integration/staging tree
 
 http://www.litecoin.org
 
-Copyright (c) 2009-2013 Bitcoin Developers
-Copyright (c) 2011-2013 Litecoin Developers
+Copyright (c) 2009-2014 Bitcoin Developers
+Copyright (c) 2011-2014 Litecoin Developers
 
 What is Litecoin?
 ----------------
