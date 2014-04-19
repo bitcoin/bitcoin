@@ -482,6 +482,77 @@ BOOST_AUTO_TEST_CASE( plusMinus )
 
 }
 
+BOOST_AUTO_TEST_CASE( multiply )
+{
+    BOOST_CHECK((R1L * R1L).ToString() == "62a38c0486f01e45879d7910a7761bf30d5237e9873f9bff3642a732c4d84f10");
+    BOOST_CHECK((R1L * R2L).ToString() == "de37805e9986996cfba76ff6ba51c008df851987d9dd323f0e5de07760529c40");
+    BOOST_CHECK((R1L * ZeroL) == ZeroL);
+    BOOST_CHECK((R1L * OneL) == R1L);
+    BOOST_CHECK((R1L * MaxL) == -R1L);
+    BOOST_CHECK((R2L * R1L) == (R1L * R2L));
+    BOOST_CHECK((R2L * R2L).ToString() == "ac8c010096767d3cae5005dec28bb2b45a1d85ab7996ccd3e102a650f74ff100");
+    BOOST_CHECK((R2L * ZeroL) == ZeroL);
+    BOOST_CHECK((R2L * OneL) == R2L);
+    BOOST_CHECK((R2L * MaxL) == -R2L);
+
+    BOOST_CHECK((R1S * R1S).ToString() == "a7761bf30d5237e9873f9bff3642a732c4d84f10");
+    BOOST_CHECK((R1S * R2S).ToString() == "ba51c008df851987d9dd323f0e5de07760529c40");
+    BOOST_CHECK((R1S * ZeroS) == ZeroS);
+    BOOST_CHECK((R1S * OneS) == R1S);
+    BOOST_CHECK((R1S * MaxS) == -R1S);
+    BOOST_CHECK((R2S * R1S) == (R1S * R2S));
+    BOOST_CHECK((R2S * R2S).ToString() == "c28bb2b45a1d85ab7996ccd3e102a650f74ff100");
+    BOOST_CHECK((R2S * ZeroS) == ZeroS);
+    BOOST_CHECK((R2S * OneS) == R2S);
+    BOOST_CHECK((R2S * MaxS) == -R2S);
+
+    BOOST_CHECK(MaxL * MaxL == OneL);
+    BOOST_CHECK(MaxS * MaxS == OneS);
+
+    BOOST_CHECK((R1L * 0) == 0);
+    BOOST_CHECK((R1L * 1) == R1L);
+    BOOST_CHECK((R1L * 3).ToString() == "7759b1c0ed14047f961ad09b20ff83687876a0181a367b813634046f91def7d4");
+    BOOST_CHECK((R2L * 0x87654321UL).ToString() == "23f7816e30c4ae2017257b7a0fa64d60402f5234d46e746b61c960d09a26d070");
+    BOOST_CHECK((R1S * 0) == 0);
+    BOOST_CHECK((R1S * 1) == R1S);
+    BOOST_CHECK((R1S * 7).ToString() == "f7a987f3c3bf758d927f202d7e795faeff084244");
+    BOOST_CHECK((R2S * 0xFFFFFFFFUL).ToString() == "1c6f6c930353e17f7d6127213bb18d2883e2cd90");
+}
+
+BOOST_AUTO_TEST_CASE( divide )
+{
+    uint256 D1L("AD7133AC1977FA2B7");
+    uint256 D2L("ECD751716");
+    BOOST_CHECK((R1L / D1L).ToString() == "00000000000000000b8ac01106981635d9ed112290f8895545a7654dde28fb3a");
+    BOOST_CHECK((R1L / D2L).ToString() == "000000000873ce8efec5b67150bad3aa8c5fcb70e947586153bf2cec7c37c57a");
+    BOOST_CHECK(R1L / OneL == R1L);
+    BOOST_CHECK(R1L / MaxL == ZeroL);
+    BOOST_CHECK(MaxL / R1L == 2);
+    BOOST_CHECK_THROW(R1L / ZeroL, uint_error);
+    BOOST_CHECK((R2L / D1L).ToString() == "000000000000000013e1665895a1cc981de6d93670105a6b3ec3b73141b3a3c5");
+    BOOST_CHECK((R2L / D2L).ToString() == "000000000e8f0abe753bb0afe2e9437ee85d280be60882cf0bd1aaf7fa3cc2c4");
+    BOOST_CHECK(R2L / OneL == R2L);
+    BOOST_CHECK(R2L / MaxL == ZeroL);
+    BOOST_CHECK(MaxL / R2L == 1);
+    BOOST_CHECK_THROW(R2L / ZeroL, uint_error);
+
+    uint160 D1S("D3C5EDCDEA54EB92679F0A4B4");
+    uint160 D2S("13037");
+    BOOST_CHECK((R1S / D1S).ToString() == "0000000000000000000000000db9af3beade6c02");
+    BOOST_CHECK((R1S / D2S).ToString() == "000098dfb6cc40ca592bf74366794f298ada205c");
+    BOOST_CHECK(R1S / OneS == R1S);
+    BOOST_CHECK(R1S / MaxS == ZeroS);
+    BOOST_CHECK(MaxS / R1S == 1);
+    BOOST_CHECK_THROW(R1S / ZeroS, uint_error);
+    BOOST_CHECK((R2S / D1S).ToString() == "0000000000000000000000000c5608e781182047");
+    BOOST_CHECK((R2S / D2S).ToString() == "00008966751b7187c3c67c1fda5cea7db2c1c069");
+    BOOST_CHECK(R2S / OneS == R2S);
+    BOOST_CHECK(R2S / MaxS == ZeroS);
+    BOOST_CHECK(MaxS / R2S == 1);
+    BOOST_CHECK_THROW(R2S / ZeroS, uint_error);
+}
+
+
 bool almostEqual(double d1, double d2) 
 {
     return fabs(d1-d2) <= 4*fabs(d1)*std::numeric_limits<double>::epsilon();
