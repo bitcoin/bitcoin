@@ -6,6 +6,8 @@
 #ifndef BITCOIN_UINT256_H
 #define BITCOIN_UINT256_H
 
+#include <assert.h>
+#include <stdexcept>
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
@@ -18,6 +20,11 @@ inline signed char HexDigit(char c)
 {
     return p_util_hexdigit[(unsigned char)c];
 }
+
+class uint_error : public std::runtime_error {
+public:
+    explicit uint_error(const std::string& str) : std::runtime_error(str) {}
+};
 
 /** Template base class for unsigned big integers. */
 template<unsigned int BITS>
@@ -62,11 +69,9 @@ public:
 
     explicit base_uint(const std::vector<unsigned char>& vch)
     {
-        if (vch.size() == sizeof(pn)) {
-            memcpy(pn, &vch[0], sizeof(pn));
-        } else {
-            *this = 0;
-        }
+        if (vch.size() != sizeof(pn))
+            throw uint_error("Converting vector of wrong size to base_uint");
+        memcpy(pn, &vch[0], sizeof(pn));
     }
 
     bool operator!() const
