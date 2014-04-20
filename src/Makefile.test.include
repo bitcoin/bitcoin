@@ -33,6 +33,7 @@ BITCOIN_TESTS =\
   test/compress_tests.cpp \
   test/DoS_tests.cpp \
   test/getarg_tests.cpp \
+  test/hash_tests.cpp \
   test/key_tests.cpp \
   test/main_tests.cpp \
   test/miner_tests.cpp \
@@ -44,6 +45,7 @@ BITCOIN_TESTS =\
   test/script_P2SH_tests.cpp \
   test/script_tests.cpp \
   test/serialize_tests.cpp \
+  test/sha2_tests.cpp \
   test/sigopcount_tests.cpp \
   test/test_bitcoin.cpp \
   test/transaction_tests.cpp \
