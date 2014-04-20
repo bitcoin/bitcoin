@@ -529,6 +529,76 @@ public:
     uint256(uint64_t b) : base_uint<256>(b) {}
     explicit uint256(const std::string& str) : base_uint<256>(str) {}
     explicit uint256(const std::vector<unsigned char>& vch) : base_uint<256>(vch) {}
+
+    // The "compact" format is a representation of a whole
+    // number N using an unsigned 32bit number similar to a
+    // floating point format.
+    // The most significant 8 bits are the unsigned exponent of base 256.
+    // This exponent can be thought of as "number of bytes of N".
+    // The lower 23 bits are the mantissa.
+    // Bit number 24 (0x800000) represents the sign of N.
+    // N = (-1^sign) * mantissa * 256^(exponent-3)
+    //
+    // Satoshi's original implementation used BN_bn2mpi() and BN_mpi2bn().
+    // MPI uses the most significant bit of the first byte as sign.
+    // Thus 0x1234560000 is compact (0x05123456)
+    // and  0xc0de000000 is compact (0x0600c0de)
+    // (0x05c0de00) would be -0x40de000000
+    //
+    // Bitcoin only uses this "compact" format for encoding difficulty
+    // targets, which are unsigned 256bit quantities.  Thus, all the
+    // complexities of the sign bit and using base 256 are probably an
+    // implementation accident.
+    //
+    // This implementation directly uses shifts instead of going
+    // through an intermediate MPI representation.
+    uint256& SetCompact(uint32_t nCompact, bool *pfNegative = NULL, bool *pfOverflow = NULL)
+    {
+        int nSize = nCompact >> 24;
+        uint32_t nWord = nCompact & 0x007fffff;
+        if (nSize <= 3)
+        {
+            nWord >>= 8*(3-nSize);
+            *this = nWord;
+        }
+        else
+        {
+            *this = nWord;
+            *this <<= 8*(nSize-3);
+        }
+        if (pfNegative)
+            *pfNegative = nWord != 0 && (nCompact & 0x00800000) != 0;
+        if (pfOverflow)
+            *pfOverflow = nWord != 0 && ((nSize > 34) ||
+                                         (nWord > 0xff && nSize > 33) ||
+                                         (nWord > 0xffff && nSize > 32));
+        return *this;
+    }
+
+    uint32_t GetCompact(bool fNegative = false) const
+    {
+        int nSize = (bits() + 7) / 8;
+        uint32_t nCompact = 0;
+        if (nSize <= 3)
+            nCompact = GetLow64() << 8*(3-nSize);
+        else
+        {
+            uint256 bn = *this >> 8*(nSize-3);
+            nCompact = bn.GetLow64();
+        }
+        // The 0x00800000 bit denotes the sign.
+        // Thus, if it is already set, divide the mantissa by 256 and increase the exponent.
+        if (nCompact & 0x00800000)
+        {
+            nCompact >>= 8;
+            nSize++;
+        }
+        assert((nCompact & ~0x007fffff) == 0);
+        assert(nSize < 256);
+        nCompact |= nSize << 24;
+        nCompact |= (fNegative && (nCompact & 0x007fffff) ? 0x00800000 : 0);
+        return nCompact;
+    }
 };
 
 #endif
