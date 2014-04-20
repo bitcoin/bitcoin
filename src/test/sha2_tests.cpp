@@ -1,15 +1,49 @@
-// Copyright (c) 2013 The Bitcoin Core developers
+// Copyright (c) 2014 The Bitcoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "hash.h"
+#include "sha2.h"
 #include "util.h"
+
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
+BOOST_AUTO_TEST_SUITE(sha2_tests)
 
-BOOST_AUTO_TEST_SUITE(hmac_tests)
+void SHA256TestVector(const std::string &in, const std::string &out) {
+    std::vector<unsigned char> hash;
+    hash.resize(32);
+    CSHA256().Write((unsigned char*)&in[0], in.size()).Finalize(&hash[0]);
+    BOOST_CHECK_EQUAL(HexStr(hash), out);
+}
+
+void SHA512TestVector(const std::string &in, const std::string &out) {
+    std::vector<unsigned char> hash;
+    hash.resize(64);
+    CSHA512().Write((unsigned char*)&in[0], in.size()).Finalize(&hash[0]);
+    BOOST_CHECK_EQUAL(HexStr(hash), out);
+}
+
+BOOST_AUTO_TEST_CASE(sha256_testvectors) {
+    SHA256TestVector("", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    SHA256TestVector("abc", "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+    SHA256TestVector("message digest", "f7846f55cf23e14eebeab5b4e1550cad5b509e3348fbc4efa3a1413d393cb650");
+    SHA256TestVector("secure hash algorithm", "f30ceb2bb2829e79e4ca9753d35a8ecc00262d164cc077080295381cbd643f0d");
+    SHA256TestVector("SHA256 is considered to be safe", "6819d915c73f4d1e77e4e1b52d1fa0f9cf9beaead3939f15874bd988e2a23630");
+    SHA256TestVector("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1");
+    SHA256TestVector("For this sample, this 63-byte string will be used as input data", "f08a78cbbaee082b052ae0708f32fa1e50c5c421aa772ba5dbb406a2ea6be342");
+    SHA256TestVector("This is exactly 64 bytes long, not counting the terminating byte", "ab64eff7e88e2e46165e29f2bce41826bd4c7b3552f6b382a9e7d3af47c245f8");
+    SHA256TestVector("As Bitcoin relies on 80 byte header hashes, we want to have an example for that.", "7406e8de7d6e4fffc573daef05aefb8806e7790f55eab5576f31349743cca743");
+}
+
+BOOST_AUTO_TEST_CASE(sha512_testvectors) {
+    SHA512TestVector("abc", "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f");
+    SHA512TestVector("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "204a8fc6dda82f0a0ced7beb8e08a41657c16ef468b228a8279be331a703c33596fd15c13b1b07f9aa1d3bea57789ca031ad85c7a71dd70354ec631238ca3445");
+    SHA512TestVector("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu", "8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909");
+    SHA512TestVector(std::string(1000000, 'a'), "e718483d0ce769644e2e42c7bc15b4638e1f98b13b2044285632a803afa973ebde0ff244877ea60a4cb0432ce577c31beb009c5c2c49aa2e4eadb217ad8cc09b");
+    SHA512TestVector("", "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e");
+}
 
 typedef struct {
     const char *pszKey;
@@ -111,18 +145,12 @@ BOOST_AUTO_TEST_CASE(hmacsha512_testvectors)
 {
     for (unsigned int n=0; n<sizeof(vtest)/sizeof(vtest[0]); n++)
     {
-        vector<unsigned char> vchKey  = ParseHex(vtest[n].pszKey);
-        vector<unsigned char> vchData = ParseHex(vtest[n].pszData);
-        vector<unsigned char> vchMAC  = ParseHex(vtest[n].pszMAC);
+        std::vector<unsigned char> vchKey  = ParseHex(vtest[n].pszKey);
+        std::vector<unsigned char> vchData = ParseHex(vtest[n].pszData);
+        std::vector<unsigned char> vchMAC  = ParseHex(vtest[n].pszMAC);
         unsigned char vchTemp[64];
-
-        HMAC_SHA512_CTX ctx;
-        HMAC_SHA512_Init(&ctx, &vchKey[0], vchKey.size());
-        HMAC_SHA512_Update(&ctx, &vchData[0], vchData.size());
-        HMAC_SHA512_Final(&vchTemp[0], &ctx);
-
+        CHMAC_SHA512(&vchKey[0], vchKey.size()).Write(&vchData[0], vchData.size()).Finalize(&vchTemp[0]);
         BOOST_CHECK(memcmp(&vchTemp[0], &vchMAC[0], 64) == 0);
-
     }
 }
 
