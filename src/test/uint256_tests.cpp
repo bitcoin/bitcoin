@@ -675,6 +675,135 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 G
     }
 }
 
+BOOST_AUTO_TEST_CASE(bignum_SetCompact)
+{
+    uint256 num;
+    bool fNegative;
+    bool fOverflow;
+    num.SetCompact(0, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x00123456, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x01003456, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x02000056, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x03000000, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x04000000, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x00923456, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x01803456, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x02800056, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x03800000, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x04800000, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x01123456, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000012");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0x01120000U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    // Make sure that we don't generate compacts with the 0x00800000 bit set
+    num = 0x80;
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0x02008000U);
+
+    num.SetCompact(0x01fedcba, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "000000000000000000000000000000000000000000000000000000000000007e");
+    BOOST_CHECK_EQUAL(num.GetCompact(true), 0x01fe0000U);
+    BOOST_CHECK_EQUAL(fNegative, true);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x02123456, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000001234");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0x02123400U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x03123456, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000123456");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0x03123456U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x04123456, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000012345600");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0x04123456U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x04923456, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000012345600");
+    BOOST_CHECK_EQUAL(num.GetCompact(true), 0x04923456U);
+    BOOST_CHECK_EQUAL(fNegative, true);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x05009234, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000092340000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0x05009234U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0x20123456, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(num.GetHex(), "1234560000000000000000000000000000000000000000000000000000000000");
+    BOOST_CHECK_EQUAL(num.GetCompact(), 0x20123456U);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, false);
+
+    num.SetCompact(0xff123456, &fNegative, &fOverflow);
+    BOOST_CHECK_EQUAL(fNegative, false);
+    BOOST_CHECK_EQUAL(fOverflow, true);
+}
+
+
 BOOST_AUTO_TEST_CASE( getmaxcoverage ) // some more tests just to get 100% coverage
 {
     // ~R1L give a base_uint<256>
