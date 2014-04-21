@@ -308,83 +308,26 @@ public:
         return ret;
     }
 
+    int CompareTo(const base_uint& b) const {
+        for (int i = base_uint::WIDTH-1; i >= 0; i--) {
+            if (pn[i] < b.pn[i])
+                return -1;
+            if (pn[i] > b.pn[i])
+                return 1;
+        }
+        return 0;
+    }
 
-    friend inline bool operator<(const base_uint& a, const base_uint& b)
-    {
-        for (int i = base_uint::WIDTH-1; i >= 0; i--)
-        {
-            if (a.pn[i] < b.pn[i])
-                return true;
-            else if (a.pn[i] > b.pn[i])
+    bool EqualTo(uint64_t b) const {
+        for (int i = base_uint::WIDTH-1; i >= 2; i--) {
+            if (pn[i])
                 return false;
         }
-        return false;
-    }
-
-    friend inline bool operator<=(const base_uint& a, const base_uint& b)
-    {
-        for (int i = base_uint::WIDTH-1; i >= 0; i--)
-        {
-            if (a.pn[i] < b.pn[i])
-                return true;
-            else if (a.pn[i] > b.pn[i])
-                return false;
-        }
-        return true;
-    }
-
-    friend inline bool operator>(const base_uint& a, const base_uint& b)
-    {
-        for (int i = base_uint::WIDTH-1; i >= 0; i--)
-        {
-            if (a.pn[i] > b.pn[i])
-                return true;
-            else if (a.pn[i] < b.pn[i])
-                return false;
-        }
-        return false;
-    }
-
-    friend inline bool operator>=(const base_uint& a, const base_uint& b)
-    {
-        for (int i = base_uint::WIDTH-1; i >= 0; i--)
-        {
-            if (a.pn[i] > b.pn[i])
-                return true;
-            else if (a.pn[i] < b.pn[i])
-                return false;
-        }
-        return true;
-    }
-
-    friend inline bool operator==(const base_uint& a, const base_uint& b)
-    {
-        for (int i = 0; i < base_uint::WIDTH; i++)
-            if (a.pn[i] != b.pn[i])
-                return false;
-        return true;
-    }
-
-    friend inline bool operator==(const base_uint& a, uint64_t b)
-    {
-        if (a.pn[0] != (unsigned int)b)
+        if (pn[1] != (b >> 32))
             return false;
-        if (a.pn[1] != (unsigned int)(b >> 32))
+        if (pn[0] != (b & 0xfffffffful))
             return false;
-        for (int i = 2; i < base_uint::WIDTH; i++)
-            if (a.pn[i] != 0)
-                return false;
         return true;
-    }
-
-    friend inline bool operator!=(const base_uint& a, const base_uint& b)
-    {
-        return (!(a == b));
-    }
-
-    friend inline bool operator!=(const base_uint& a, uint64_t b)
-    {
-        return (!(a == b));
     }
 
     friend inline const base_uint operator+(const base_uint& a, const base_uint& b) { return base_uint(a) += b; }
@@ -397,6 +340,14 @@ public:
     friend inline const base_uint operator>>(const base_uint& a, int shift) { return base_uint(a) >>= shift; }
     friend inline const base_uint operator<<(const base_uint& a, int shift) { return base_uint(a) <<= shift; }
     friend inline const base_uint operator*(const base_uint& a, uint32_t b) { return base_uint(a) *= b; }
+    friend inline bool operator==(const base_uint& a, const base_uint& b) { return a.CompareTo(b) == 0; }
+    friend inline bool operator!=(const base_uint& a, const base_uint& b) { return a.CompareTo(b) != 0; }
+    friend inline bool operator>(const base_uint& a, const base_uint& b) { return a.CompareTo(b) > 0; }
+    friend inline bool operator<(const base_uint& a, const base_uint& b) { return a.CompareTo(b) < 0; }
+    friend inline bool operator>=(const base_uint& a, const base_uint& b) { return a.CompareTo(b) >= 0; }
+    friend inline bool operator<=(const base_uint& a, const base_uint& b) { return a.CompareTo(b) <= 0; }
+    friend inline bool operator==(const base_uint& a, uint64_t b) { return a.EqualTo(b); }
+    friend inline bool operator!=(const base_uint& a, uint64_t b) { return !a.EqualTo(b); }
 
     std::string GetHex() const
     {
