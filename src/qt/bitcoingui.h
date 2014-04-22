@@ -9,6 +9,8 @@
 #include "config/bitcoin-config.h"
 #endif
 
+#include "amount.h"
+
 #include <QLabel>
 #include <QMainWindow>
 #include <QMap>
@@ -159,7 +161,7 @@ public slots:
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
     /** Show incoming transaction notification for new transactions. */
-    void incomingTransaction(const QString& date, int unit, qint64 amount, const QString& type, const QString& address);
+    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
 #endif
 
 private slots:

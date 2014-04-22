@@ -43,7 +43,7 @@ std::string CTxIn::ToString() const
     return str;
 }
 
-CTxOut::CTxOut(int64_t nValueIn, CScript scriptPubKeyIn)
+CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)
 {
     nValue = nValueIn;
     scriptPubKey = scriptPubKeyIn;
@@ -59,7 +59,7 @@ std::string CTxOut::ToString() const
     return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, scriptPubKey.ToString().substr(0,30));
 }
 
-CFeeRate::CFeeRate(int64_t nFeePaid, size_t nSize)
+CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nSize)
 {
     if (nSize > 0)
         nSatoshisPerK = nFeePaid*1000/nSize;
@@ -67,9 +67,9 @@ CFeeRate::CFeeRate(int64_t nFeePaid, size_t nSize)
         nSatoshisPerK = 0;
 }
 
-int64_t CFeeRate::GetFee(size_t nSize) const
+CAmount CFeeRate::GetFee(size_t nSize) const
 {
-    int64_t nFee = nSatoshisPerK*nSize / 1000;
+    CAmount nFee = nSatoshisPerK*nSize / 1000;
 
     if (nFee == 0 && nSatoshisPerK > 0)
         nFee = nSatoshisPerK;
@@ -110,9 +110,9 @@ CTransaction& CTransaction::operator=(const CTransaction &tx) {
     return *this;
 }
 
-int64_t CTransaction::GetValueOut() const
+CAmount CTransaction::GetValueOut() const
 {
-    int64_t nValueOut = 0;
+    CAmount nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
         nValueOut += txout.nValue;
