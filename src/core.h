@@ -6,6 +6,7 @@
 #ifndef BITCOIN_CORE_H
 #define BITCOIN_CORE_H
 
+#include "amount.h"
 #include "script/compressor.h"
 #include "script/script.h"
 #include "serialize.h"
@@ -19,8 +20,8 @@ static const int64_t COIN = 100000000;
 static const int64_t CENT = 1000000;
 
 /** No amount larger than this (in satoshi) is valid */
-static const int64_t MAX_MONEY = 21000000 * COIN;
-inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+static const CAmount MAX_MONEY = 21000000 * COIN;
+inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -129,15 +130,15 @@ public:
 class CFeeRate
 {
 private:
-    int64_t nSatoshisPerK; // unit is satoshis-per-1,000-bytes
+    CAmount nSatoshisPerK; // unit is satoshis-per-1,000-bytes
 public:
     CFeeRate() : nSatoshisPerK(0) { }
-    explicit CFeeRate(int64_t _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) { }
-    CFeeRate(int64_t nFeePaid, size_t nSize);
+    explicit CFeeRate(const CAmount& _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) { }
+    CFeeRate(const CAmount& nFeePaid, size_t nSize);
     CFeeRate(const CFeeRate& other) { nSatoshisPerK = other.nSatoshisPerK; }
 
-    int64_t GetFee(size_t size) const; // unit returned is satoshis
-    int64_t GetFeePerK() const { return GetFee(1000); } // satoshis-per-1000-bytes
+    CAmount GetFee(size_t size) const; // unit returned is satoshis
+    CAmount GetFeePerK() const { return GetFee(1000); } // satoshis-per-1000-bytes
 
     friend bool operator<(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK < b.nSatoshisPerK; }
     friend bool operator>(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK > b.nSatoshisPerK; }
@@ -161,7 +162,7 @@ public:
 class CTxOut
 {
 public:
-    int64_t nValue;
+    CAmount nValue;
     CScript scriptPubKey;
 
     CTxOut()
@@ -169,7 +170,7 @@ public:
         SetNull();
     }
 
-    CTxOut(int64_t nValueIn, CScript scriptPubKeyIn);
+    CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
 
     ADD_SERIALIZE_METHODS;
 
@@ -276,7 +277,7 @@ public:
     }
 
     // Return sum of txouts.
-    int64_t GetValueOut() const;
+    CAmount GetValueOut() const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 

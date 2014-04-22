@@ -12,8 +12,10 @@
 #include <stdint.h>
 #include <string>
 
-std::string FormatMoney(int64_t n, bool fPlus=false);
-bool ParseMoney(const std::string& str, int64_t& nRet);
-bool ParseMoney(const char* pszIn, int64_t& nRet);
+#include "amount.h"
+
+std::string FormatMoney(const CAmount& n, bool fPlus=false);
+bool ParseMoney(const std::string& str, CAmount& nRet);
+bool ParseMoney(const char* pszIn, CAmount& nRet);
 
 #endif // BITCOIN_UTILMONEYSTR_H
