@@ -35,7 +35,7 @@ public:
         ProxyIP,                // QString
         ProxyPort,              // int
         ProxySocksVersion,      // int
-        Fee,                    // qint64
+        Fee,                    // CMoney serialized as QString
         DisplayUnit,            // BitcoinUnits::Unit
         DisplayAddresses,       // bool
         ThirdPartyTxUrls,       // QString

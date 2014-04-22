@@ -131,7 +131,13 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-        READWRITE(nValue);
+        CTxOut& me = *const_cast<CTxOut*>(this);
+        int64_t nValueI64;
+        if (fWrite)
+            nValueI64 = nValue.ToInt64(ROUND_SIGNAL);
+        READWRITE(nValueI64);
+        if (fRead)
+            me.nValue = nValueI64;
         READWRITE(scriptPubKey);
     )
 
@@ -158,7 +164,7 @@ public:
         // need a CTxIn of at least 148 bytes to spend,
         // so dust is a txout less than 546 satoshis 
         // with default nMinRelayTxFee.
-        return ((nValue*1000)/(3*((int)GetSerializeSize(SER_DISK,0)+148)) < nMinRelayTxFee);
+        return nValue.ToDouble() * (1000.0/3.0) / (GetSerializeSize(SER_DISK,0)+148) < nMinRelayTxFee.ToDouble();
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -259,20 +265,11 @@ private:
     CTxOut &txout;
 
 public:
-    static uint64_t CompressAmount(uint64_t nAmount);
-    static uint64_t DecompressAmount(uint64_t nAmount);
-
     CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
 
     IMPLEMENT_SERIALIZE(({
-        if (!fRead) {
-            uint64_t nVal = CompressAmount(txout.nValue);
-            READWRITE(VARINT(nVal));
-        } else {
-            uint64_t nVal = 0;
-            READWRITE(VARINT(nVal));
-            txout.nValue = DecompressAmount(nVal);
-        }
+        CCompressedMoney cvalue(REF(txout.nValue));
+        READWRITE(cvalue);
         CScriptCompressor cscript(REF(txout.scriptPubKey));
         READWRITE(cscript);
     });)

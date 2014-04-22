@@ -528,7 +528,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case ToAddress:
             return formatTxToAddress(rec, true);
         case Amount:
-            return rec->credit + rec->debit;
+            return QString::fromStdString(FormatMoney(rec->credit + rec->debit));
         }
         break;
     case Qt::ToolTipRole:
@@ -561,7 +561,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case LabelRole:
         return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
     case AmountRole:
-        return rec->credit + rec->debit;
+        return QString::fromStdString(FormatMoney(rec->credit + rec->debit));
     case TxIDRole:
         return rec->getTxID();
     case TxHashRole:

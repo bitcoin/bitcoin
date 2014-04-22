@@ -128,6 +128,7 @@ libbitcoin_common_a_SOURCES = \
   core.cpp \
   hash.cpp \
   key.cpp \
+  money.cpp \
   netbase.cpp \
   protocol.cpp \
   rpcprotocol.cpp \

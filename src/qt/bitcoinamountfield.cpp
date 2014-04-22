@@ -159,7 +159,7 @@ void BitcoinAmountField::unitChanged(int idx)
     // Set max length after retrieving the value, to prevent truncation
     amount->setDecimals(BitcoinUnits::decimals(currentUnit));
     amount->setMaximum(qPow(10, BitcoinUnits::amountDigits(currentUnit)) - qPow(10, -amount->decimals()));
-    amount->setSingleStep((double)nSingleStep / (double)BitcoinUnits::factor(currentUnit));
+    amount->setSingleStep(nSingleStep.ToDouble() / (double)BitcoinUnits::factor(currentUnit));
 
     if (valid)
     {

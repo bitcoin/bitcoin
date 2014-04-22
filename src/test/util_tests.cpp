@@ -165,6 +165,47 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     BOOST_CHECK_EQUAL(GetBoolArg("booltest4", false), true);
 }
 
+BOOST_AUTO_TEST_CASE(util_EncodeDouble)
+{
+    for (int i = -8; i <= 8; ++i)
+    for (int j = -8; j <= 8; ++j)
+    {
+        BOOST_CHECK((i==j) == (EncodeDouble(i)==EncodeDouble(j)));
+        BOOST_CHECK((i< j) == (EncodeDouble(i)< EncodeDouble(j)));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(util_DecodeDouble)
+{
+    for (uint64_t i = 0x7ffeffffffffffffLL - 8; i <= 0x7ffeffffffffffffLL; ++i)
+    for (uint64_t j = 0x7ffeffffffffffffLL - 8; j <= 0x7ffeffffffffffffLL; ++j)
+    {
+        BOOST_CHECK((i==j) == (DecodeDouble(i)==DecodeDouble(j)));
+        BOOST_CHECK((i< j) == (DecodeDouble(i)< DecodeDouble(j)));
+    }
+
+    for (uint64_t i = 0x7ffeffffffffffffLL - 8; i <= 0x7ffeffffffffffffLL; ++i)
+    for (uint64_t j = 0x8ffeffffffffffffLL - 8; j <= 0x8ffeffffffffffffLL; ++j)
+    {
+        BOOST_CHECK((i==j) == (DecodeDouble(i)==DecodeDouble(j)));
+        BOOST_CHECK((i< j) == (DecodeDouble(i)< DecodeDouble(j)));
+    }
+
+    for (uint64_t i = 0x8ffeffffffffffffLL - 8; i <= 0x8ffeffffffffffffLL; ++i)
+    for (uint64_t j = 0x7ffeffffffffffffLL - 8; j <= 0x7ffeffffffffffffLL; ++j)
+    {
+        BOOST_CHECK((i==j) == (DecodeDouble(i)==DecodeDouble(j)));
+        BOOST_CHECK((i< j) == (DecodeDouble(i)< DecodeDouble(j)));
+    }
+
+    for (uint64_t i = 0x8ffeffffffffffffLL - 8; i <= 0x8ffeffffffffffffLL; ++i)
+    for (uint64_t j = 0x8ffeffffffffffffLL - 8; j <= 0x8ffeffffffffffffLL; ++j)
+    {
+        BOOST_CHECK((i==j) == (DecodeDouble(i)==DecodeDouble(j)));
+        BOOST_CHECK((i< j) == (DecodeDouble(i)< DecodeDouble(j)));
+    }
+}
+
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
 {
     BOOST_CHECK_EQUAL(FormatMoney(0, false), "0.00");

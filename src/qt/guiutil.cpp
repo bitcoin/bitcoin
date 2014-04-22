@@ -177,7 +177,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
     QString ret = QString("bitcoin:%1").arg(info.address);
     int paramCount = 0;
 
-    if (info.amount)
+    if (info.amount != 0)
     {
         ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, info.amount));
         paramCount++;

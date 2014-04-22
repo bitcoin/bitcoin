@@ -548,7 +548,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
         }
     }
 
-    return (double)nAmount / (double)COIN;
+    return ValueFromAmount(nAmount);
 }
 
 
@@ -612,7 +612,7 @@ Value getbalance(const Array& params, bool fHelp)
         );
 
     if (params.size() == 0)
-        return  ValueFromAmount(pwalletMain->GetBalance());
+        return  ValueFromAmount(pwalletMain->GetBalance(), ROUND_TOWARDS_ZERO);
 
     int nMinDepth = 1;
     if (params.size() > 1)
@@ -643,14 +643,14 @@ Value getbalance(const Array& params, bool fHelp)
                 nBalance -= r.second;
             nBalance -= allFee;
         }
-        return  ValueFromAmount(nBalance);
+        return  ValueFromAmount(nBalance, ROUND_TOWARDS_ZERO);
     }
 
     string strAccount = AccountFromValue(params[0]);
 
     CMoney nBalance = GetAccountBalance(strAccount, nMinDepth);
 
-    return ValueFromAmount(nBalance);
+    return ValueFromAmount(nBalance, ROUND_TOWARDS_ZERO);
 }
 
 Value getunconfirmedbalance(const Array &params, bool fHelp)
@@ -1879,10 +1879,10 @@ Value settxfee(const Array& params, bool fHelp)
             + HelpExampleRpc("settxfee", "0.00001")
         );
 
-    // Amount
-    CMoney nAmount = 0;
-    if (params[0].get_real() != 0.0)
-        nAmount = AmountFromValue(params[0]);        // rejects 0.0 amounts
+    CMoney nAmount = AmountFromValue(params[0]); // rejects !MoneyRange
+    if (nAmount == 0)
+        throw JSONRPCError(RPC_TYPE_ERROR,
+                           "Zero transaction fee not allowed.");
 
     nTransactionFee = nAmount;
     return true;

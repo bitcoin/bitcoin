@@ -75,7 +75,12 @@ public:
         nVersion = pthis->nVersion;
         READWRITE(sAddress);
         READWRITE(sLabel);
-        READWRITE(amount);
+        int64_t amountI64;
+        if (fWrite)
+            amountI64 = amount.ToInt64(ROUND_SIGNAL);
+        READWRITE(amountI64);
+        if (fRead)
+            pthis->amount = amountI64;
         READWRITE(sMessage);
         READWRITE(sPaymentRequest);
         READWRITE(sAuthenticatedMerchant);

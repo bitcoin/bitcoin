@@ -93,8 +93,14 @@ void OptionsModel::Init()
     // Wallet
 #ifdef ENABLE_WALLET
     if (!settings.contains("nTransactionFee"))
-        settings.setValue("nTransactionFee", (qint64)DEFAULT_TRANSACTION_FEE);
-    nTransactionFee = settings.value("nTransactionFee").toLongLong(); // if -paytxfee is set, this will be overridden later in init.cpp
+        settings.setValue("nTransactionFee", QString::fromStdString(FormatMoney(DEFAULT_TRANSACTION_FEE)));
+    ParseMoney(settings.value("nTransactionFee").toString().toStdString(), nTransactionFee); // if -paytxfee is set, this will be overridden later in init.cpp
+    if (nTransactionFee > COIN)
+    {
+        // convert qint64 -> CMoney serialized as QString
+        nTransactionFee = nTransactionFee.ToInt64() / COIN;
+        settings.setValue("nTransactionFee", QString::fromStdString(FormatMoney(nTransactionFee)));
+    }
     if (mapArgs.count("-paytxfee"))
         addOverriddenOption("-paytxfee");
 
@@ -191,15 +197,17 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nSocksVersion", 5);
 
 #ifdef ENABLE_WALLET
-        case Fee:
+        case Fee: {
             // Attention: Init() is called before nTransactionFee is set in AppInit2()!
             // To ensure we can change the fee on-the-fly update our QSetting when
             // opening OptionsDialog, which queries Fee via the mapper.
-            if (nTransactionFee != settings.value("nTransactionFee").toLongLong())
-                settings.setValue("nTransactionFee", (qint64)nTransactionFee);
+            QString strTransactionFee = QString::fromStdString(FormatMoney(nTransactionFee));
+            if (strTransactionFee != settings.value("nTransactionFee").toString())
+                settings.setValue("nTransactionFee", strTransactionFee);
             // Todo: Consider to revert back to use just nTransactionFee here, if we don't want
             // -paytxfee to update our QSettings!
-            return settings.value("nTransactionFee");
+            return QVariant(strTransactionFee);
+        }
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
 #endif
@@ -290,8 +298,8 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
 #ifdef ENABLE_WALLET
         case Fee: // core option - can be changed on-the-fly
             // Todo: Add is valid check  and warn via message, if not
-            nTransactionFee = value.toLongLong();
-            settings.setValue("nTransactionFee", (qint64)nTransactionFee);
+            ParseMoney(value.toString().toStdString(), nTransactionFee);
+            settings.setValue("nTransactionFee", QString::fromStdString(FormatMoney(nTransactionFee)));
             emit transactionFeeChanged(nTransactionFee);
             break;
         case SpendZeroConfChange:

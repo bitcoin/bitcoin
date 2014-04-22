@@ -912,9 +912,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // Don't accept it if it can't get into a block
         CMoney txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
         if (fLimitFree && nFees < txMinFee)
-            return state.DoS(0, error("AcceptToMemoryPool : not enough fees %s, %d < %d",
-                                      hash.ToString(), nFees, txMinFee),
-                             REJECT_INSUFFICIENTFEE, "insufficient fee");
+            return state.DoS(0, error("AcceptToMemoryPool : not enough fees %s, %s < %s",
+                                      hash.ToString(),
+                                      FormatMoney(nFees),
+                                      FormatMoney(txMinFee),
+                             REJECT_INSUFFICIENTFEE, "insufficient fee"));
 
         // Continuously rate-limit free transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
@@ -941,9 +943,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         }
 
         if (fRejectInsaneFee && nFees > CTransaction::nMinRelayTxFee * 10000)
-            return error("AcceptToMemoryPool: : insane fees %s, %d > %d",
+            return error("AcceptToMemoryPool: : insane fees %s, %s > %s",
                          hash.ToString(),
-                         nFees, CTransaction::nMinRelayTxFee * 10000);
+                         FormatMoney(nFees),
+                         FormatMoney(CTransaction::nMinRelayTxFee * 10000));
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -1843,11 +1846,14 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
     if (fBenchmark)
         LogPrintf("- Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin)\n", (unsigned)block.vtx.size(), 0.001 * nTime, 0.001 * nTime / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs-1));
 
-    if (block.vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
+    CMoney nActualCoinbaseValue = block.vtx[0].GetValueOut();
+    CMoney nAllowedCoinbaseValue = GetBlockValue(pindex->nHeight, nFees);
+    if ( nActualCoinbaseValue > nAllowedCoinbaseValue )
         return state.DoS(100,
-                         error("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
-                               block.vtx[0].GetValueOut(), GetBlockValue(pindex->nHeight, nFees)),
-                               REJECT_INVALID, "bad-cb-amount");
+                         error("ConnectBlock() : coinbase pays too much (actual=%s vs limit=%s)",
+                               FormatMoney(nActualCoinbaseValue),
+                               FormatMoney(nAllowedCoinbaseValue)),
+                         REJECT_INVALID, "bad-cb-amount");
 
     if (!control.Wait())
         return state.DoS(100, false);

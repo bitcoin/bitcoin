@@ -155,6 +155,8 @@ static inline bool error(const char* format)
 
 void LogException(std::exception* pex, const char* pszThread);
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
+uint64_t EncodeDouble(double d);
+double DecodeDouble(uint64_t lex);
 std::string FormatMoney(const CMoney& n, bool fPlus=false);
 bool ParseMoney(const std::string& str, CMoney& nRet);
 bool ParseMoney(const char* pszIn, CMoney& nRet);

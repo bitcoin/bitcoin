@@ -829,7 +829,12 @@ public:
         if (!(nType & SER_GETHASH))
             READWRITE(nVersion);
         // Note: strAccount is serialized as part of the key, not here.
-        READWRITE(nCreditDebit);
+        int64_t nCreditDebitI64;
+        if (fWrite)
+            nCreditDebitI64 = nCreditDebit.ToInt64(ROUND_SIGNAL);
+        READWRITE(nCreditDebitI64);
+        if (fRead)
+            me.nCreditDebit = nCreditDebitI64;
         READWRITE(nTime);
         READWRITE(strOtherAccount);
 

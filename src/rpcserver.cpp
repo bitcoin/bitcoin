@@ -83,18 +83,16 @@ void RPCTypeCheck(const Object& o,
 
 CMoney AmountFromValue(const Value& value)
 {
-    double dAmount = value.get_real();
-    if (dAmount <= 0.0 || dAmount > 21000000.0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    CMoney nAmount = roundint64(dAmount * COIN);
-    if (!MoneyRange(nAmount))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+    CMoney nAmount;
+    if (!ParseMoney(write_string(value, false), nAmount) || !nAmount)
+        throw JSONRPCError(RPC_TYPE_ERROR,
+                           strprintf("Invalid amount: %s", write_string(value, false)));
     return nAmount;
 }
 
-Value ValueFromAmount(const CMoney& amount)
+Value ValueFromAmount(const CMoney& amount, RoundingMode mode)
 {
-    return (double)amount / (double)COIN;
+    return amount.ToDouble(mode) / static_cast<double>(COIN);
 }
 
 std::string HexBits(unsigned int nBits)
