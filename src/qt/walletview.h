@@ -5,6 +5,8 @@
 #ifndef WALLETVIEW_H
 #define WALLETVIEW_H
 
+#include "money.h"
+
 #include <QStackedWidget>
 
 class BitcoinGUI;
@@ -111,7 +113,7 @@ signals:
     /** Encryption status of wallet changed */
     void encryptionStatusChanged(int status);
     /** Notify that a new transaction appeared */
-    void incomingTransaction(const QString& date, int unit, qint64 amount, const QString& type, const QString& address);
+    void incomingTransaction(const QString& date, int unit, const CMoney& amount, const QString& type, const QString& address);
 };
 
 #endif // WALLETVIEW_H

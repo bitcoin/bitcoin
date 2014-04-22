@@ -91,7 +91,7 @@ void SendCoinsDialog::setModel(WalletModel *model)
         }
 
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
+        connect(model, SIGNAL(balanceChanged(const CMoney&, const CMoney&, const CMoney&)), this, SLOT(setBalance(const CMoney&, const CMoney&, const CMoney&)));
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
         // Coin Control
@@ -202,7 +202,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    qint64 txFee = currentTransaction.getTransactionFee();
+    CMoney txFee = currentTransaction.getTransactionFee();
     QString questionString = tr("Are you sure you want to send?");
     questionString.append("<br /><br />%1");
 
@@ -217,7 +217,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     // add total amount in all subdivision units
     questionString.append("<hr />");
-    qint64 totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
+    CMoney totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
     QStringList alternativeUnits;
     foreach(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
     {
@@ -401,7 +401,7 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     return true;
 }
 
-void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance)
+void SendCoinsDialog::setBalance(const CMoney& balance, const CMoney& unconfirmedBalance, const CMoney& immatureBalance)
 {
     Q_UNUSED(unconfirmedBalance);
     Q_UNUSED(immatureBalance);

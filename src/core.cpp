@@ -51,7 +51,7 @@ void CTxIn::print() const
     LogPrintf("%s\n", ToString());
 }
 
-CTxOut::CTxOut(int64_t nValueIn, CScript scriptPubKeyIn)
+CTxOut::CTxOut(const CMoney& nValueIn, CScript scriptPubKeyIn)
 {
     nValue = nValueIn;
     scriptPubKey = scriptPubKeyIn;
@@ -106,9 +106,9 @@ bool CTransaction::IsNewerThan(const CTransaction& old) const
     return fNewer;
 }
 
-int64_t CTransaction::GetValueOut() const
+CMoney CTransaction::GetValueOut() const
 {
-    int64_t nValueOut = 0;
+    CMoney nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
         nValueOut += txout.nValue;

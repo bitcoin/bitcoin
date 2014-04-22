@@ -5,6 +5,8 @@
 #ifndef OPTIONSMODEL_H
 #define OPTIONSMODEL_H
 
+#include "money.h"
+
 #include <QAbstractListModel>
 
 QT_BEGIN_NAMESPACE
@@ -83,7 +85,7 @@ private:
 
 signals:
     void displayUnitChanged(int unit);
-    void transactionFeeChanged(qint64);
+    void transactionFeeChanged(const CMoney&);
     void coinControlFeaturesChanged(bool);
 };
 

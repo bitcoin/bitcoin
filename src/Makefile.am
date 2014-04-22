@@ -48,6 +48,7 @@ BITCOIN_CORE_H = \
   limitedmap.h \
   main.h \
   miner.h \
+  money.h \
   mruset.h \
   netbase.h \
   net.h \

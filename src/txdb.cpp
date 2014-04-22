@@ -108,7 +108,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = GetBestBlock();
     ss << stats.hashBlock;
-    int64_t nTotalAmount = 0;
+    CMoney nTotalAmount = 0;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {

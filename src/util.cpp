@@ -303,7 +303,7 @@ int LogPrintStr(const std::string &str)
     return ret;
 }
 
-string FormatMoney(int64_t n, bool fPlus)
+string FormatMoney(const CMoney& n, bool fPlus)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
@@ -327,12 +327,12 @@ string FormatMoney(int64_t n, bool fPlus)
 }
 
 
-bool ParseMoney(const string& str, int64_t& nRet)
+bool ParseMoney(const string& str, CMoney& nRet)
 {
     return ParseMoney(str.c_str(), nRet);
 }
 
-bool ParseMoney(const char* pszIn, int64_t& nRet)
+bool ParseMoney(const char* pszIn, CMoney& nRet)
 {
     string strWhole;
     int64_t nUnits = 0;
@@ -366,7 +366,7 @@ bool ParseMoney(const char* pszIn, int64_t& nRet)
     if (nUnits < 0 || nUnits > COIN)
         return false;
     int64_t nWhole = atoi64(strWhole);
-    int64_t nValue = nWhole*COIN + nUnits;
+    CMoney nValue = nWhole*COIN + nUnits;
 
     nRet = nValue;
     return true;
