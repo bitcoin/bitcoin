@@ -68,6 +68,7 @@ BITCOIN_CORE_H = \
   addrman.h \
   alert.h \
   allocators.h \
+  amount.h \
   base58.h \
   bloom.h \
   chainparams.h \

@@ -15,8 +15,8 @@
 class CTransaction;
 
 /** No amount larger than this (in satoshi) is valid */
-static const int64_t MAX_MONEY = 21000000 * COIN;
-inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+static const Amount MAX_MONEY = 21000000 * COIN;
+inline bool MoneyRange(const Amount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -145,7 +145,7 @@ public:
 class CTxOut
 {
 public:
-    int64_t nValue;
+    Amount nValue;
     CScript scriptPubKey;
 
     CTxOut()
@@ -153,7 +153,7 @@ public:
         SetNull();
     }
 
-    CTxOut(int64_t nValueIn, CScript scriptPubKeyIn);
+    CTxOut(const Amount& nValueIn, CScript scriptPubKeyIn);
 
     IMPLEMENT_SERIALIZE
     (
@@ -256,7 +256,7 @@ public:
     }
 
     // Return sum of txouts.
-    int64_t GetValueOut() const;
+    Amount GetValueOut() const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 

@@ -159,7 +159,7 @@ std::string GetWarnings(std::string strFor);
 bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
 /** Find the best known block, and make it the tip of the block chain */
 bool ActivateBestChain(CValidationState &state);
-int64_t GetBlockValue(int nHeight, int64_t nFees);
+Amount GetBlockValue(int nHeight, const Amount& nFees);
 
 void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev);
 
@@ -245,7 +245,7 @@ struct CDiskTxPos : public CDiskBlockPos
 };
 
 
-int64_t GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree);
+Amount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree);
 
 //
 // Check transaction inputs, and make sure any
@@ -1083,7 +1083,7 @@ extern CBlockTreeDB *pblocktree;
 struct CBlockTemplate
 {
     CBlock block;
-    std::vector<int64_t> vTxFees;
+    std::vector<Amount> vTxFees;
     std::vector<int64_t> vTxSigOps;
 };
 
