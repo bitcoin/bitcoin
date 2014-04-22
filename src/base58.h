@@ -14,7 +14,6 @@
 #ifndef BITCOIN_BASE58_H
 #define BITCOIN_BASE58_H
 
-#include "bignum.h"
 #include "chainparams.h"
 #include "hash.h"
 #include "key.h"
@@ -27,51 +26,11 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
-/* All alphanumeric characters except for "0", "I", "O", and "l" */
-static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-
 /**
- * Encode a byte sequence as a base58-encoded string
+ * Encode a byte sequence as a base58-encoded string.
+ * pbegin and pend cannot be NULL, unless both are.
  */
-inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
-{
-    CAutoBN_CTX pctx;
-    CBigNum bn58 = 58;
-    CBigNum bn0 = 0;
-
-    // Convert big endian data to little endian - the extra zero at the end will
-    // ensure bignum interprets it as a positive number */
-    std::vector<unsigned char> vchTmp(pend-pbegin+1, 0);
-    reverse_copy(pbegin, pend, vchTmp.begin());
-
-    // Convert little endian data to bignum
-    CBigNum bn;
-    bn.setvch(vchTmp);
-
-    // Convert bignum to std::string
-    std::string str;
-    // The expected size increase from base58 conversion is approximately 137%,
-    // but use 138% to be safe
-    str.reserve((pend - pbegin) * 138 / 100 + 1);
-    CBigNum dv;
-    CBigNum rem;
-    while (bn > bn0)
-    {
-        if (!BN_div(&dv, &rem, &bn, &bn58, pctx))
-            throw bignum_error("EncodeBase58 : BN_div failed");
-        bn = dv;
-        unsigned int c = rem.getulong();
-        str += pszBase58[c];
-    }
-
-    // Leading zeroes encoded as base58 zeros
-    for (const unsigned char* p = pbegin; p < pend && *p == 0; p++)
-        str += pszBase58[0];
-
-    // Convert little endian std::string to big endian
-    reverse(str.begin(), str.end());
-    return str;
-}
+std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend);
 
 /**
  * Encode a byte vector as a base58-encoded string
@@ -82,58 +41,15 @@ inline std::string EncodeBase58(const std::vector<unsigned char>& vch)
 }
 
 /**
- * Decode a base58-encoded string (psz) into a byte vector (vchRet)
- * return true if decoding is successful
+ * Decode a base58-encoded string (psz) into a byte vector (vchRet).
+ * return true if decoding is successful.
+ * psz cannot be NULL.
  */
-inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
-{
-    CAutoBN_CTX pctx;
-    vchRet.clear();
-    CBigNum bn58 = 58;
-    CBigNum bn = 0;
-    CBigNum bnChar;
-    while (isspace(*psz))
-        psz++;
-
-    // Convert big endian string to bignum
-    for (const char* p = psz; *p; p++)
-    {
-        const char* p1 = strchr(pszBase58, *p);
-        if (p1 == NULL)
-        {
-            while (isspace(*p))
-                p++;
-            if (*p != '\0')
-                return false;
-            break;
-        }
-        bnChar.setulong(p1 - pszBase58);
-        if (!BN_mul(&bn, &bn, &bn58, pctx))
-            throw bignum_error("DecodeBase58 : BN_mul failed");
-        bn += bnChar;
-    }
-
-    // Get bignum as little endian data
-    std::vector<unsigned char> vchTmp = bn.getvch();
-
-    // Trim off the sign byte if present
-    if (vchTmp.size() >= 2 && vchTmp.end()[-1] == 0 && vchTmp.end()[-2] >= 0x80)
-        vchTmp.erase(vchTmp.end()-1);
-
-    // Restore leading zeros
-    int nLeadingZeros = 0;
-    for (const char* p = psz; *p == pszBase58[0]; p++)
-        nLeadingZeros++;
-    vchRet.assign(nLeadingZeros + vchTmp.size(), 0);
-
-    // Convert little endian data to big endian
-    reverse_copy(vchTmp.begin(), vchTmp.end(), vchRet.end() - vchTmp.size());
-    return true;
-}
+bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet);
 
 /**
- * Decode a base58-encoded string (str) into a byte vector (vchRet)
- * return true if decoding is successful
+ * Decode a base58-encoded string (str) into a byte vector (vchRet).
+ * return true if decoding is successful.
  */
 inline bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet)
 {
