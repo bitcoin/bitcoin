@@ -5,6 +5,8 @@
 #ifndef OVERVIEWPAGE_H
 #define OVERVIEWPAGE_H
 
+#include "amount.h"
+
 #include <QWidget>
 
 class ClientModel;
@@ -34,8 +36,8 @@ public:
     void showOutOfSyncWarning(bool fShow);
 
 public slots:
-    void setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance,
-                    qint64 watchOnlyBalance, qint64 watchUnconfBalance, qint64 watchImmatureBalance);
+    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+                    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
 signals:
     void transactionClicked(const QModelIndex &index);
@@ -44,12 +46,12 @@ private:
     Ui::OverviewPage *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
-    qint64 currentBalance;
-    qint64 currentUnconfirmedBalance;
-    qint64 currentImmatureBalance;
-    qint64 currentWatchOnlyBalance;
-    qint64 currentWatchUnconfBalance;
-    qint64 currentWatchImmatureBalance;
+    CAmount currentBalance;
+    CAmount currentUnconfirmedBalance;
+    CAmount currentImmatureBalance;
+    CAmount currentWatchOnlyBalance;
+    CAmount currentWatchUnconfBalance;
+    CAmount currentWatchImmatureBalance;
 
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;

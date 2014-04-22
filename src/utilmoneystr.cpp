@@ -10,7 +10,7 @@
 
 using namespace std;
 
-string FormatMoney(int64_t n, bool fPlus)
+string FormatMoney(const CAmount& n, bool fPlus)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
@@ -34,12 +34,12 @@ string FormatMoney(int64_t n, bool fPlus)
 }
 
 
-bool ParseMoney(const string& str, int64_t& nRet)
+bool ParseMoney(const string& str, CAmount& nRet)
 {
     return ParseMoney(str.c_str(), nRet);
 }
 
-bool ParseMoney(const char* pszIn, int64_t& nRet)
+bool ParseMoney(const char* pszIn, CAmount& nRet)
 {
     string strWhole;
     int64_t nUnits = 0;
@@ -73,7 +73,7 @@ bool ParseMoney(const char* pszIn, int64_t& nRet)
     if (nUnits < 0 || nUnits > COIN)
         return false;
     int64_t nWhole = atoi64(strWhole);
-    int64_t nValue = nWhole*COIN + nUnits;
+    CAmount nValue = nWhole*COIN + nUnits;
 
     nRet = nValue;
     return true;
