@@ -1,3 +1,4 @@
+# Notes
 The sources in this directory are unit test cases.  Boost includes a
 unit testing framework, and since bitcoin already uses boost, it makes
 sense to simply use this framework rather than require developers to
@@ -17,5 +18,4 @@ uint256_tests.cpp.
 
 For further reading, I found the following website to be helpful in
 explaining how the boost unit test framework works:
-
-http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/
+[http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/](http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/).
