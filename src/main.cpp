@@ -1727,6 +1727,7 @@ void ThreadScriptCheck() {
 
 bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck)
 {
+    AssertLockHeld(cs_main);
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock(block, state, !fJustCheck, !fJustCheck))
         return false;
