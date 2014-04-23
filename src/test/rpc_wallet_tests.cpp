@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     // Test RPC calls for various wallet statistics
     Value r;
 
-    LOCK(pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     BOOST_CHECK_NO_THROW(CallRPC("listunspent"));
     BOOST_CHECK_THROW(CallRPC("listunspent string"), runtime_error);
