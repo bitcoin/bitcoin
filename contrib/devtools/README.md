@@ -3,7 +3,7 @@ Contents
 This directory contains tools for developers working on this repository.
 
 github-merge.sh
-----------------
+==================
 
 A small script to automate merging pull-requests securely and sign them with GPG.
 
@@ -36,7 +36,8 @@ Configuring the github-merge tool for the bitcoin repository is done in the foll
     git config githubmerge.testcmd "make -j4 check" (adapt to whatever you want to use for testing)
     git config --global user.signingkey mykeyid (if you want to GPG sign)
 
-## fix-copyright-headers.py
+fix-copyright-headers.py
+===========================
 
 Every year newly updated files need to have its copyright headers updated to reflect the current year.
 If you run this script from src/ it will automatically update the year on the copyright header for all
@@ -47,3 +48,24 @@ For example a file changed in 2014 (with 2014 being the current year):
 
 would be changed to:
 ```// Copyright (c) 2009-2014 The Bitcoin developers```
+
+symbol-check.py
+==================
+
+A script to check that the (Linux) executables produced by gitian only contain
+allowed gcc, glibc and libstdc++ version symbols.  This makes sure they are
+still compatible with the minimum supported Linux distribution versions.
+
+Example usage after a gitian build:
+
+    find ../gitian-builder/build -type f -executable | xargs python contrib/devtools/symbol-check.py 
+
+If only supported symbols are used the return value will be 0 and the output will be empty.
+
+If there are 'unsupported' symbols, the return value will be 1 a list like this will be printed:
+
+    .../64/test_bitcoin: symbol memcpy from unsupported version GLIBC_2.14
+    .../64/test_bitcoin: symbol __fdelt_chk from unsupported version GLIBC_2.15
+    .../64/test_bitcoin: symbol std::out_of_range::~out_of_range() from unsupported version GLIBCXX_3.4.15
+    .../64/test_bitcoin: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
+
