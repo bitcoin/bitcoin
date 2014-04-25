@@ -10,6 +10,7 @@
 #include "ui_optionsdialog.h"
 
 #include "bitcoinunits.h"
+#include "guiconstants.h"
 #include "guiutil.h"
 #include "monitoreddatamapper.h"
 #include "optionsmodel.h"
@@ -208,15 +209,15 @@ void OptionsDialog::on_resetButton_clicked()
     {
         // confirmation dialog
         QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm options reset"),
-            tr("Client restart required to activate changes.") + "<br><br>" + tr("Client will be shutdown, do you want to proceed?"),
+            tr("Client restart required to activate changes.") + "<br><br>" + tr("Restart now?"),
             QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
         if(btnRetVal == QMessageBox::Cancel)
             return;
 
-        /* reset all options and close GUI */
+        /* reset all options and restart GUI */
         model->Reset();
-        QApplication::quit();
+        qApp->exit(EXIT_CODE_RESTART);
     }
 }
 
@@ -224,6 +225,15 @@ void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
     accept();
+    if (model->isRestartRequired())
+    {
+        QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm restart"),
+            tr("Client restart required to activate changes.") + "<br><br>" + tr("Restart now?"),
+            QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+
+        if(btnRetVal == QMessageBox::Yes)
+            qApp->exit(EXIT_CODE_RESTART);
+    }
 }
 
 void OptionsDialog::on_cancelButton_clicked()

@@ -77,6 +77,7 @@ private:
     QMenuBar *appMenuBar;
     QAction *overviewAction;
     QAction *historyAction;
+    QAction *restartAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *usedSendingAddressesAction;
@@ -191,6 +192,9 @@ private slots:
 
     /** called by a timer to check if fRequestShutdown has been set **/
     void detectShutdown();
+
+    /** Called when the user clicks on "Restart" in the file or tray menu */
+    void restartApplication();
 };
 
 #endif // BITCOINGUI_H

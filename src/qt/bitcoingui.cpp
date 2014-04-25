@@ -189,6 +189,7 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(show()));
 
     // prevents an oben debug window from becoming stuck/unusable on client shutdown
+    connect(restartAction, SIGNAL(triggered()), rpcConsole, SLOT(hide()));
     connect(quitAction, SIGNAL(triggered()), rpcConsole, SLOT(hide()));
 
     // Install event filter to be able to catch status tip events (QEvent::StatusTip)
@@ -258,6 +259,10 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
 
+    restartAction = new QAction(QIcon(":/icons/restart"), tr("R&estart"), this);
+    restartAction->setStatusTip(tr("Restart application"));
+    restartAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
+    restartAction->setMenuRole(QAction::QuitRole);
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
@@ -310,6 +315,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
     showHelpMessageAction->setStatusTip(tr("Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options"));
 
+    connect(restartAction, SIGNAL(triggered()), this, SLOT(restartApplication()));
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
@@ -354,6 +360,7 @@ void BitcoinGUI::createMenuBar()
         file->addAction(usedReceivingAddressesAction);
         file->addSeparator();
     }
+    file->addAction(restartAction);
     file->addAction(quitAction);
 
     QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
@@ -513,8 +520,9 @@ void BitcoinGUI::createTrayIconMenu()
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(optionsAction);
     trayIconMenu->addAction(openRPCConsoleAction);
-#ifndef Q_OS_MAC // This is built-in on Mac
     trayIconMenu->addSeparator();
+    trayIconMenu->addAction(restartAction);
+#ifndef Q_OS_MAC // This is built-in on Mac
     trayIconMenu->addAction(quitAction);
 #endif
 }
@@ -944,6 +952,11 @@ void BitcoinGUI::showNormalIfMinimized(bool fToggleHidden)
 void BitcoinGUI::toggleHidden()
 {
     showNormalIfMinimized(true);
+}
+
+void BitcoinGUI::restartApplication()
+{
+    qApp->exit(EXIT_CODE_RESTART);
 }
 
 void BitcoinGUI::detectShutdown()

@@ -116,7 +116,7 @@ void AskPassphraseDialog::accept()
                 {
                     QMessageBox::warning(this, tr("Wallet encrypted"),
                                          "<qt>" +
-                                         tr("Bitcoin will close now to finish the encryption process. "
+                                         tr("Bitcoin will restart now to finish the encryption process. "
                                          "Remember that encrypting your wallet cannot fully protect "
                                          "your bitcoins from being stolen by malware infecting your computer.") +
                                          "<br><br><b>" +
@@ -125,7 +125,7 @@ void AskPassphraseDialog::accept()
                                          "For security reasons, previous backups of the unencrypted wallet file "
                                          "will become useless as soon as you start using the new, encrypted wallet.") +
                                          "</b></qt>");
-                    QApplication::quit();
+                    qApp->exit(EXIT_CODE_RESTART);
                 }
                 else
                 {

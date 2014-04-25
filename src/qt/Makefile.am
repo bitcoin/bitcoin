@@ -247,6 +247,7 @@ RES_ICONS = \
   res/icons/quit.png \
   res/icons/receive.png \
   res/icons/remove.png \
+  res/icons/restart.png \
   res/icons/send.png \
   res/icons/synced.png \
   res/icons/toolbar.png \
