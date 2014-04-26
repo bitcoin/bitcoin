@@ -9,9 +9,12 @@
 #include "hash.h"
 #include "key.h"
 #include "keystore.h"
+#include "sha2.h"
 #include "sync.h"
 #include "uint256.h"
 #include "util.h"
+
+#include <openssl/sha.h>
 
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -805,17 +808,11 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     else if (opcode == OP_SHA1)
                         SHA1(&vch[0], vch.size(), &vchHash[0]);
                     else if (opcode == OP_SHA256)
-                        SHA256(&vch[0], vch.size(), &vchHash[0]);
+                        CSHA256().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
                     else if (opcode == OP_HASH160)
-                    {
-                        uint160 hash160 = Hash160(vch);
-                        memcpy(&vchHash[0], &hash160, sizeof(hash160));
-                    }
+                        CHash160().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
                     else if (opcode == OP_HASH256)
-                    {
-                        uint256 hash = Hash(vch.begin(), vch.end());
-                        memcpy(&vchHash[0], &hash, sizeof(hash));
-                    }
+                        CHash256().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
                     popstack(stack);
                     stack.push_back(vchHash);
                 }
