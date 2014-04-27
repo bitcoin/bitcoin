@@ -5,6 +5,7 @@ Maintainer: Jonas Smedegaard <dr@jones.dk>
 Uploaders: Micah Anderson <micah@debian.org>
 Build-Depends: debhelper,
  devscripts,
+ automake,
  bash-completion,
  libboost-system-dev (>> 1.35) | libboost-system1.35-dev,
  libdb4.8++-dev,
@@ -17,7 +18,8 @@ Build-Depends: debhelper,
  libboost-test-dev (>> 1.35) | libboost-test1.35-dev,
  qt4-qmake,
  libqt4-dev,
- libqrencode-dev
+ libqrencode-dev,
+ libprotobuf-dev, protobuf-compiler
 Standards-Version: 3.9.2
 Homepage: http://www.bitcoin.org/
 Vcs-Git: git://github.com/bitcoin/bitcoin.git
@@ -34,7 +36,7 @@ Description: peer-to-peer network based digital currency - daemon
  check for double-spending.
  .
  Full transaction history is stored locally at each client.  This
- requires 2+ GB of space, slowly growing.
+ requires 20+ GB of space, slowly growing.
  .
  This package provides bitcoind, a combined daemon and CLI tool to
  interact with the daemon.
@@ -50,6 +52,6 @@ Description: peer-to-peer network based digital currency - Qt GUI
  check for double-spending.
  .
  Full transaction history is stored locally at each client.  This
- requires 2+ GB of space, slowly growing.
+ requires 20+ GB of space, slowly growing.
  .
  This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
