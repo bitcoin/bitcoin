@@ -1,3 +1,16 @@
+bitcoin (0.9.1-precise1) precise; urgency=medium
+
+  * New upstream release.
+  * Backport pull #4019
+
+ -- Matt Corallo <matt@bluematt.me>  Sat, 19 Apr 2014 17:29:00 -0400
+
+bitcoin (0.9.0-precise1) precise; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Thu, 20 Mar 2014 13:10:00 -0400
+
 bitcoin (0.8.6-precise1) precise; urgency=medium
 
   * New upstream release.
