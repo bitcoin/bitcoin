@@ -165,17 +165,6 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     BOOST_CHECK_EQUAL(GetBoolArg("booltest4", false), true);
 }
 
-BOOST_AUTO_TEST_CASE(util_WildcardMatch)
-{
-    BOOST_CHECK(WildcardMatch("127.0.0.1", "*"));
-    BOOST_CHECK(WildcardMatch("127.0.0.1", "127.*"));
-    BOOST_CHECK(WildcardMatch("abcdef", "a?cde?"));
-    BOOST_CHECK(!WildcardMatch("abcdef", "a?cde??"));
-    BOOST_CHECK(WildcardMatch("abcdef", "a*f"));
-    BOOST_CHECK(!WildcardMatch("abcdef", "a*x"));
-    BOOST_CHECK(WildcardMatch("", "*"));
-}
-
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
 {
     BOOST_CHECK_EQUAL(FormatMoney(0, false), "0.00");
