@@ -359,8 +359,7 @@ void ErrorReply(std::ostream& stream, const Object& objError, const Value& id)
     stream << HTTPReply(nStatus, strReply, false) << std::flush;
 }
 
-// Convert boost::asio address to CNetAddr
-static CNetAddr BoostAsioToCNetAddr(boost::asio::ip::address address)
+CNetAddr BoostAsioToCNetAddr(boost::asio::ip::address address)
 {
     CNetAddr netaddr;
     // Make sure that IPv4-compatible and IPv4-mapped IPv6 addresses are treated as IPv4 addresses
