@@ -63,7 +63,7 @@ class ShutdownWindow : public QObject
     Q_OBJECT
 
 public:
-    static void showShutdownWindow(BitcoinGUI *window);
+    static void showShutdownWindow(BitcoinGUI *window, bool fRestart);
 };
 
 #endif // UTILITYDIALOG_H

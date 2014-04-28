@@ -115,7 +115,7 @@ void HelpMessageDialog::on_okButton_accepted()
 
 
 /** "Shutdown" window */
-void ShutdownWindow::showShutdownWindow(BitcoinGUI *window)
+void ShutdownWindow::showShutdownWindow(BitcoinGUI *window, bool fRestart)
 {
     if (!window)
         return;
@@ -124,7 +124,7 @@ void ShutdownWindow::showShutdownWindow(BitcoinGUI *window)
     QWidget *shutdownWindow = new QWidget();
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(new QLabel(
-        tr("Bitcoin Core is shutting down...") + "<br /><br />" +
+        (fRestart ? tr("Bitcoin Core is restarting...") : tr("Bitcoin Core is shutting down...")) + "<br /><br />" +
         tr("Do not shut down the computer until this window disappears.")));
     shutdownWindow->setLayout(layout);
 

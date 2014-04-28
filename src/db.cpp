@@ -80,13 +80,18 @@ bool CDBEnv::Open(const boost::filesystem::path& pathIn)
     if (GetBoolArg("-privdb", true))
         nEnvFlags |= DB_PRIVATE;
 
+    FILE* errorFile = fopen(pathErrorFile.string().c_str(), "a");
+#ifndef WIN32
+    if (errorFile) fcntl(fileno(errorFile), F_SETFD, FD_CLOEXEC);
+#endif
+
     dbenv.set_lg_dir(pathLogDir.string().c_str());
     dbenv.set_cachesize(0, 0x100000, 1); // 1 MiB should be enough for just the wallet
     dbenv.set_lg_bsize(0x10000);
     dbenv.set_lg_max(1048576);
     dbenv.set_lk_max_locks(40000);
     dbenv.set_lk_max_objects(40000);
-    dbenv.set_errfile(fopen(pathErrorFile.string().c_str(), "a")); /// debug
+    dbenv.set_errfile(errorFile); /// debug
     dbenv.set_flags(DB_AUTO_COMMIT, 1);
     dbenv.set_flags(DB_TXN_WRITE_NOSYNC, 1);
     dbenv.log_set_config(DB_LOG_AUTO_REMOVE, 1);

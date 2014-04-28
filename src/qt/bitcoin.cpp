@@ -34,9 +34,11 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <QApplication>
+#include <QDir>
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
+#include <QProcess>
 #include <QSettings>
 #include <QTimer>
 #include <QTranslator>
@@ -185,7 +187,7 @@ public:
     /// Request core initialization
     void requestInitialize();
     /// Request core shutdown
-    void requestShutdown();
+    void requestShutdown(bool fRestart);
 
     /// Get process return value
     int getReturnValue() { return returnValue; }
@@ -359,7 +361,7 @@ void BitcoinApplication::requestInitialize()
     emit requestedInitialize();
 }
 
-void BitcoinApplication::requestShutdown()
+void BitcoinApplication::requestShutdown(bool fRestart)
 {
     LogPrintf("Requesting shutdown\n");
     window->hide();
@@ -375,7 +377,7 @@ void BitcoinApplication::requestShutdown()
     clientModel = 0;
 
     // Show a simple window indicating shutdown status
-    ShutdownWindow::showShutdownWindow(window);
+    ShutdownWindow::showShutdownWindow(window, fRestart);
 
     // Request shutdown from core thread
     emit requestedShutdown();
@@ -590,6 +592,7 @@ int main(int argc, char *argv[])
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
         app.createSplashScreen(isaTestNet);
 
+    int ret = 0;
     try
     {
         app.createWindow(isaTestNet);
@@ -597,8 +600,8 @@ int main(int argc, char *argv[])
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
         WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Bitcoin Core did't yet exit safely..."), (HWND)app.getMainWinId());
 #endif
-        app.exec();
-        app.requestShutdown();
+        ret = app.exec();
+        app.requestShutdown(ret == EXIT_CODE_RESTART);
         app.exec();
     } catch (std::exception& e) {
         PrintExceptionContinue(&e, "Runaway exception");
@@ -607,6 +610,20 @@ int main(int argc, char *argv[])
         PrintExceptionContinue(NULL, "Runaway exception");
         app.handleRunawayException(QString::fromStdString(strMiscWarning));
     }
+
+    // restart requested
+    if (ret == EXIT_CODE_RESTART)
+    {
+        QStringList arguments, skiparguments;
+        skiparguments << "loadblock" << "reindex" << "rescan" << "salvagewallet" << "upgradewallet" << "zapwallettxes";
+        for (int i = 1; i < argc; i++)
+            if (QString::fromLocal8Bit(argv[i]).left(1) == "-" || QString::fromLocal8Bit(argv[i]).lastIndexOf("/") == 0)
+                if (skiparguments.indexOf(QString::fromLocal8Bit(argv[i]).remove(QRegExp("[^a-z]"))) == -1)
+                    arguments += QString::fromLocal8Bit(argv[i]);
+
+        QProcess::startDetached(app.applicationFilePath(), arguments, QDir::currentPath());
+    }
+
     return app.getReturnValue();
 }
 #endif // BITCOIN_QT_TEST

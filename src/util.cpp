@@ -231,6 +231,9 @@ static void DebugPrintInit()
     boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
     fileout = fopen(pathDebug.string().c_str(), "a");
     if (fileout) setbuf(fileout, NULL); // unbuffered
+#ifndef WIN32
+    if (fileout) fcntl(fileno(fileout), F_SETFD, FD_CLOEXEC);
+#endif
 
     mutexDebugLog = new boost::mutex();
 }

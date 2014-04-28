@@ -955,6 +955,9 @@ void ThreadSocketHandler()
             }
             else
             {
+#ifndef WIN32
+                fcntl(hSocket, F_SETFD, FD_CLOEXEC);
+#endif
                 LogPrint("net", "accepted connection %s\n", addr.ToString());
                 CNode* pnode = new CNode(hSocket, addr, "", true);
                 pnode->AddRef();
@@ -1619,6 +1622,11 @@ bool BindListenPort(const CService &addrBind, string& strError)
     // Set to non-blocking, incoming connections will also inherit this
     if (ioctlsocket(hListenSocket, FIONBIO, (u_long*)&nOne) == SOCKET_ERROR)
 #else
+
+    // do not inherit file descriptor to child processes (needed for the restart function in GUI)
+    // on windows this is not an issue, because the GUI calls CreateProcess() with bInheritHandles=false there
+    fcntl(hListenSocket, F_SETFD, FD_CLOEXEC);
+
     if (fcntl(hListenSocket, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
 #endif
     {

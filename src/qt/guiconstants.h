@@ -5,6 +5,9 @@
 #ifndef GUICONSTANTS_H
 #define GUICONSTANTS_H
 
+/* Exit code passed by qApp->exit() to restart the application */
+static const int EXIT_CODE_RESTART = -1234567890;
+
 /* Milliseconds between model updates */
 static const int MODEL_UPDATE_DELAY = 250;
 

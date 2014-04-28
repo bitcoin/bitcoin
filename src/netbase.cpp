@@ -345,6 +345,7 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
     if (ioctlsocket(hSocket, FIONBIO, &fNonblock) == SOCKET_ERROR)
 #else
     int fFlags = fcntl(hSocket, F_GETFL, 0);
+    fcntl(hSocket, F_SETFD, FD_CLOEXEC);
     if (fcntl(hSocket, F_SETFL, fFlags | O_NONBLOCK) == -1)
 #endif
     {
