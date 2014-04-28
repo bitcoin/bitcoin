@@ -4,7 +4,7 @@
 
 #include "key.h"
 
-#include "sha2.h"
+#include "crypto/sha2.h"
 
 #include <openssl/bn.h>
 #include <openssl/ecdsa.h>

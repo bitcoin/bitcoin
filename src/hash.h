@@ -6,7 +6,7 @@
 #ifndef BITCOIN_HASH_H
 #define BITCOIN_HASH_H
 
-#include "sha2.h"
+#include "crypto/sha2.h"
 #include "serialize.h"
 #include "uint256.h"
 #include "version.h"
