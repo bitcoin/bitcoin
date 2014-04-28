@@ -75,8 +75,8 @@ BITCOIN_CORE_H = \
   rpcserver.h \
   script.h \
   serialize.h \
-  sha2.h \
-  sha1.h \
+  crypto/sha2.h \
+  crypto/sha1.h \
   sync.h \
   threadsafety.h \
   tinyformat.h \
@@ -154,8 +154,8 @@ libbitcoin_common_a_SOURCES = \
   protocol.cpp \
   rpcprotocol.cpp \
   script.cpp \
-  sha1.cpp \
-  sha2.cpp \
+  crypto/sha1.cpp \
+  crypto/sha2.cpp \
   sync.cpp \
   util.cpp \
   version.cpp \
