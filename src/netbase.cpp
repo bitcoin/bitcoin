@@ -546,6 +546,22 @@ void CNetAddr::SetIP(const CNetAddr& ipIn)
     memcpy(ip, ipIn.ip, sizeof(ip));
 }
 
+void CNetAddr::SetRaw(Network network, const uint8_t *ip_in)
+{
+    switch(network)
+    {
+        case NET_IPV4:
+            memcpy(ip, pchIPv4, 12);
+            memcpy(ip+12, ip_in, 4);
+            break;
+        case NET_IPV6:
+            memcpy(ip, ip_in, 16);
+            break;
+        default:
+            assert(!"invalid network");
+    }
+}
+
 static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
 
 bool CNetAddr::SetSpecial(const std::string &strName)
@@ -569,13 +585,12 @@ CNetAddr::CNetAddr()
 
 CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
 {
-    memcpy(ip,    pchIPv4, 12);
-    memcpy(ip+12, &ipv4Addr, 4);
+    SetRaw(NET_IPV4, (const uint8_t*)&ipv4Addr);
 }
 
 CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr)
 {
-    memcpy(ip, &ipv6Addr, 16);
+    SetRaw(NET_IPV6, (const uint8_t*)&ipv6Addr);
 }
 
 CNetAddr::CNetAddr(const char *pszIp, bool fAllowLookup)
@@ -1119,4 +1134,106 @@ void CService::print() const
 void CService::SetPort(unsigned short portIn)
 {
     port = portIn;
+}
+
+CSubNet::CSubNet():
+    valid(false)
+{
+    memset(netmask, 0, sizeof(netmask));
+}
+
+CSubNet::CSubNet(const std::string &strSubnet, bool fAllowLookup)
+{
+    size_t slash = strSubnet.find_last_of('/');
+    std::vector<CNetAddr> vIP;
+
+    valid = true;
+    // Default to /32 (IPv4) or /128 (IPv6), i.e. match single address
+    memset(netmask, 255, sizeof(netmask));
+
+    std::string strAddress = strSubnet.substr(0, slash);
+    if (LookupHost(strAddress.c_str(), vIP, 1, fAllowLookup))
+    {
+        network = vIP[0];
+        if (slash != strSubnet.npos)
+        {
+            std::string strNetmask = strSubnet.substr(slash + 1);
+            int32_t n;
+            // IPv4 addresses start at offset 12, and first 12 bytes must match, so just offset n
+            int noffset = network.IsIPv4() ? (12 * 8) : 0;
+            if (ParseInt32(strNetmask, &n)) // If valid number, assume /24 symtex
+            {
+                if(n >= 0 && n <= (128 - noffset)) // Only valid if in range of bits of address
+                {
+                    n += noffset;
+                    // Clear bits [n..127]
+                    for (; n < 128; ++n)
+                        netmask[n>>3] &= ~(1<<(n&7));
+                }
+                else
+                {
+                    valid = false;
+                }
+            }
+            else // If not a valid number, try full netmask syntax
+            {
+                if (LookupHost(strNetmask.c_str(), vIP, 1, false)) // Never allow lookup for netmask
+                {
+                    // Remember: GetByte returns bytes in reversed order
+                    // Copy only the *last* four bytes in case of IPv4, the rest of the mask should stay 1's as
+                    // we don't want pchIPv4 to be part of the mask.
+                    int asize = network.IsIPv4() ? 4 : 16;
+                    for(int x=0; x<asize; ++x)
+                        netmask[15-x] = vIP[0].GetByte(x);
+                }
+                else
+                {
+                    valid = false;
+                }
+            }
+        }
+    }
+    else
+    {
+        valid = false;
+    }
+}
+
+bool CSubNet::Match(const CNetAddr &addr) const
+{
+    if (!valid || !addr.IsValid())
+        return false;
+    for(int x=0; x<16; ++x)
+        if ((addr.GetByte(x) & netmask[15-x]) != network.GetByte(x))
+            return false;
+    return true;
+}
+
+std::string CSubNet::ToString() const
+{
+    std::string strNetmask;
+    if (network.IsIPv4())
+        strNetmask = strprintf("%u.%u.%u.%u", netmask[12], netmask[13], netmask[14], netmask[15]);
+    else
+        strNetmask = strprintf("%x:%x:%x:%x:%x:%x:%x:%x",
+                         netmask[0] << 8 | netmask[1], netmask[2] << 8 | netmask[3],
+                         netmask[4] << 8 | netmask[5], netmask[6] << 8 | netmask[7],
+                         netmask[8] << 8 | netmask[9], netmask[10] << 8 | netmask[11],
+                         netmask[12] << 8 | netmask[13], netmask[14] << 8 | netmask[15]);
+    return network.ToString() + "/" + strNetmask;
+}
+
+bool CSubNet::IsValid() const
+{
+    return valid;
+}
+
+bool operator==(const CSubNet& a, const CSubNet& b)
+{
+    return a.valid == b.valid && a.network == b.network && !memcmp(a.netmask, b.netmask, 16);
+}
+
+bool operator!=(const CSubNet& a, const CSubNet& b)
+{
+    return !(a==b);
 }
