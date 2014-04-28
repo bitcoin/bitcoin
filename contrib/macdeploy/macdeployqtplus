@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import subprocess, sys, re, os, shutil, stat, os.path
+import subprocess, sys, re, os, shutil, stat, os.path, time
 from string import Template
 from time import sleep
 from argparse import ArgumentParser
@@ -814,6 +814,7 @@ if config.dmg is not None:
 
         if verbose >= 2:
             print "+ Finalizing .dmg disk image +"
+            time.sleep(5)
         
         try:
             runHDIUtil("convert", dmg_name + ".temp", format="UDBZ", o=dmg_name + ".dmg", ov=True)
