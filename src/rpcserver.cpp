@@ -315,7 +315,6 @@ static const CRPCCommand vRPCCommands[] =
     /* Wallet-enabled mining */
     { "getgenerate",            &getgenerate,            true,      false,      false },
     { "gethashespersec",        &gethashespersec,        true,      false,      false },
-    { "getwork",                &getwork,                true,      false,      true  },
     { "setgenerate",            &setgenerate,            true,      true,       false },
 #endif // ENABLE_WALLET
 };
@@ -772,7 +771,7 @@ void JSONRequest::parse(const Value& valRequest)
     if (valMethod.type() != str_type)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
     strMethod = valMethod.get_str();
-    if (strMethod != "getwork" && strMethod != "getblocktemplate")
+    if (strMethod != "getblocktemplate")
         LogPrint("rpc", "ThreadRPCServer method=%s\n", strMethod);
 
     // Parse params
