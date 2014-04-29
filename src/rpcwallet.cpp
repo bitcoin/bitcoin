@@ -621,14 +621,12 @@ Value getbalance(const Array& params, bool fHelp)
         return  ValueFromAmount(pwalletMain->GetBalance());
 
     int nMinDepth = 1;
-    isminefilter filter = MINE_SPENDABLE;
     if (params.size() > 1)
-    {
         nMinDepth = params[1].get_int();
-        if(params.size() > 2)
-            if(params[2].get_bool())
-                filter = filter | MINE_WATCH_ONLY;
-    }
+    isminefilter filter = MINE_SPENDABLE;
+    if(params.size() > 2)
+        if(params[2].get_bool())
+            filter = filter | MINE_WATCH_ONLY;
 
     if (params[0].get_str() == "*") {
         // Calculate total balance a different way from GetBalance()
@@ -1255,26 +1253,19 @@ Value listtransactions(const Array& params, bool fHelp)
         );
 
     string strAccount = "*";
-    int nCount = 10;
-    int nFrom = 0;
-    isminefilter filter = MINE_SPENDABLE;
     if (params.size() > 0)
-    {
         strAccount = params[0].get_str();
-        if (params.size() > 1)
-        {
-            nCount = params[1].get_int();
-            if (params.size() > 2)
-            {
-                nFrom = params[2].get_int();
-                if(params.size() > 3)
-                {
-                    if(params[3].get_bool())
-                        filter = filter | MINE_WATCH_ONLY;
-                }
-            }
-        }
-    }
+    int nCount = 10;
+    if (params.size() > 1)
+        nCount = params[1].get_int();
+    int nFrom = 0;
+    if (params.size() > 2)
+        nFrom = params[2].get_int();
+    isminefilter filter = MINE_SPENDABLE;
+    if(params.size() > 3)
+        if(params[3].get_bool())
+            filter = filter | MINE_WATCH_ONLY;
+
     if (nCount < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     if (nFrom < 0)
@@ -1342,14 +1333,12 @@ Value listaccounts(const Array& params, bool fHelp)
         );
 
     int nMinDepth = 1;
-    isminefilter includeWatchonly = MINE_SPENDABLE;
     if (params.size() > 0)
-    {
         nMinDepth = params[0].get_int();
-        if(params.size() > 1)
-            if(params[1].get_bool())
-                includeWatchonly = includeWatchonly | MINE_WATCH_ONLY;
-    }
+    isminefilter includeWatchonly = MINE_SPENDABLE;
+    if(params.size() > 1)
+        if(params[1].get_bool())
+            includeWatchonly = includeWatchonly | MINE_WATCH_ONLY;
 
     map<string, int64_t> mapAccountBalances;
     BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& entry, pwalletMain->mapAddressBook) {
@@ -1439,6 +1428,7 @@ Value listsinceblock(const Array& params, bool fHelp)
     CBlockIndex *pindex = NULL;
     int target_confirms = 1;
     isminefilter filter = MINE_SPENDABLE;
+
     if (params.size() > 0)
     {
         uint256 blockId = 0;
@@ -1447,21 +1437,19 @@ Value listsinceblock(const Array& params, bool fHelp)
         std::map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(blockId);
         if (it != mapBlockIndex.end())
             pindex = it->second;
-
-        if (params.size() > 1)
-        {
-            target_confirms = params[1].get_int();
-
-            if (target_confirms < 1)
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
-
-            if(params.size() > 2)
-            {
-                if(params[2].get_bool())
-                    filter = filter | MINE_WATCH_ONLY;
-            }
-        }
     }
+
+    if (params.size() > 1)
+    {
+        target_confirms = params[1].get_int();
+
+        if (target_confirms < 1)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
+    }
+
+    if(params.size() > 2)
+        if(params[2].get_bool())
+            filter = filter | MINE_WATCH_ONLY;
 
     int depth = pindex ? (1 + chainActive.Height() - pindex->nHeight) : -1;
 
