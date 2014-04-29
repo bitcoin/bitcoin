@@ -101,11 +101,11 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                             strHTML += "<b>" + tr("From") + ":</b> " + tr("unknown") + "<br>";
                             strHTML += "<b>" + tr("To") + ":</b> ";
                             strHTML += GUIUtil::HtmlEscape(rec->address);
-                            std::string addressOwned = wallet->IsMine(txout) == MINE_SPENDABLE ? "own address" : "watch-only";
+                            QString addressOwned = wallet->IsMine(txout) == MINE_SPENDABLE ? tr("own address") : tr("watch-only");
                             if (!wallet->mapAddressBook[address].name.empty())
-                                strHTML += " (" + tr(addressOwned.c_str()) + ", " + tr("label") + ": " + GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + ")";
+                                strHTML += " (" + addressOwned + ", " + tr("label") + ": " + GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + ")";
                             else
-                                strHTML += " (" + tr(addressOwned.c_str()) + ")";
+                                strHTML += " (" + addressOwned + ")";
                             strHTML += "<br>";
                         }
                     }
