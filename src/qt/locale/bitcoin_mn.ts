@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="vi_VN" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="mn" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -43,12 +43,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="+30"/>
         <source>Double-click to edit address or label</source>
-        <translation type="unfinished"/>
+        <translation>Хаяг эсвэл шошгыг ѳѳрчлѳхийн тулд хоёр удаа дар</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Create a new address</source>
-        <translation>Tạo một địa chỉ mới</translation>
+        <translation>Шинэ хаяг нээх</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -58,7 +58,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+11"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Одоогоор сонгогдсон байгаа хаягуудыг сануулах</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -73,7 +73,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="+74"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>Хаягийг &amp;Хуулбарлах</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="-47"/>
@@ -93,7 +93,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-27"/>
         <source>&amp;Delete</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Устгах</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="-30"/>
@@ -133,12 +133,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+7"/>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Шошгыг хуулбарлах</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ѳѳрчлѳх</translation>
     </message>
     <message>
         <location line="+194"/>
@@ -148,7 +148,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -166,17 +166,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="+168"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Шошго</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Хаяг</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(шошго алга)</translation>
     </message>
 </context>
 <context>
@@ -189,62 +189,62 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+21"/>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Нууц үгийг оруул</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Шинэ нууц үг</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Шинэ нууц үгийг давтана уу</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="+40"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн шинэ нууц үгийг оруул. &lt;br/&gt;&lt;b&gt;Дор хаяж 10 дурын үсэг/тоо бүхий&lt;/b&gt; эсвэл &lt;b&gt;дор хаяж 8 дурын үгнээс бүрдсэн&lt;/b&gt; нууц үгийг ашиглана уу. </translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Encrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийг цоожлох</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Энэ үйлдэлийг гүйцэтгэхийн тулд та нууц үгээрээ түрүйвчийн цоожийг тайлах хэрэгтэй</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн цоожийг тайлах</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Энэ үйлдэлийг гүйцэтгэхийн тулд та эхлээд түрүйвчийн нууц үгийг оруулж цоожийг тайлах шаардлагтай.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Decrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн цоожийг устгах</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Change passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Нууц үгийг солих</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн хуучин болоод шинэ нууц үгсийг оруулна уу</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн цоожийг баталгаажуулах</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -271,12 +271,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="-130"/>
         <location line="+58"/>
         <source>Wallet encrypted</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвч цоожлогдлоо</translation>
     </message>
     <message>
         <location line="-56"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"/>
+        <translation>Цоожлолтын процесыг дуусгахын тулд Биткойн одоо хаагдана. Ѳѳрийн түрүйвчийг цоожлох нь таны биткойнуудыг компьютерийн вирус хулгайлахаас бүрэн сэргийлж чадахгүй гэдгийг санаарай.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -284,40 +284,40 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+42"/>
         <location line="+6"/>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн цоожлол амжилттай болсонгүй</translation>
     </message>
     <message>
         <location line="-54"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн цоожлол дотоод алдаанаас үүдэн амжилттай болсонгүй. Түрүйвч цоожлогдоогүй байна.</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+48"/>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished"/>
+        <translation>Таны оруулсан нууц үг таарсангүй</translation>
     </message>
     <message>
         <location line="-37"/>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн цоож тайлагдсангүй</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+11"/>
         <location line="+19"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Таны оруулсан түрүйвчийн цоожийг тайлах нууц үг буруу байна</translation>
     </message>
     <message>
         <location line="-20"/>
         <source>Wallet decryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн цоож амжилттай устгагдсангүй</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн нууц үг амжилттай ѳѳр</translation>
     </message>
 </context>
 <context>
@@ -325,12 +325,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="+294"/>
         <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Зурвас хавсаргах...</translation>
     </message>
     <message>
         <location line="+335"/>
         <source>Synchronizing with network...</source>
-        <translation type="unfinished"/>
+        <translation>Сүлжээтэй тааруулж байна...</translation>
     </message>
     <message>
         <location line="-407"/>
@@ -340,7 +340,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-136"/>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>Нод</translation>
     </message>
     <message>
         <location line="+137"/>
@@ -350,58 +350,58 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+20"/>
         <source>&amp;Transactions</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээнүүд</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээнүүдийн түүхийг харах</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>Гарах</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Quit application</source>
-        <translation type="unfinished"/>
+        <translation>Програмаас Гарах</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Show information about Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Биткойны мэдээллийг харуулах</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+2"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Клиентийн тухай</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"/>
+        <translation>Клиентийн тухай мэдээллийг харуул</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Сонголтууд...</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Түрүйвчийг цоожлох...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Түрүйвчийг Жоорлох...</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Нууц Үгийг Солих...</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -446,7 +446,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+2"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийг цоожлох нууц үгийг солих</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -456,7 +456,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+1"/>
         <source>Open debugging and diagnostic console</source>
-        <translation type="unfinished"/>
+        <translation>Оношилгоо ба засварын консолыг онгойлго</translation>
     </message>
     <message>
         <location line="-4"/>
@@ -466,12 +466,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+440"/>
         <source>Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Биткойн</translation>
     </message>
     <message>
         <location line="-652"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвч</translation>
     </message>
     <message>
         <location line="+145"/>
@@ -487,7 +487,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+46"/>
         <location line="+2"/>
         <source>&amp;Show / Hide</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Харуул / Нуу</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -512,17 +512,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+48"/>
         <source>&amp;File</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Файл</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>&amp;Settings</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Тохиргоо</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>&amp;Help</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Тусламж</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -580,12 +580,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+159"/>
         <location line="+5"/>
         <source>Bitcoin client</source>
-        <translation type="unfinished"/>
+        <translation>Биткойн клиент</translation>
     </message>
     <message numerus="yes">
         <location line="+142"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>Биткойны сүлжээрүү %n идэвхитэй холболт байна </numerusform><numerusform>Биткойны сүлжээрүү %n идэвхитэй холболтууд байна </numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -605,18 +605,18 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location line="+27"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n цаг</numerusform><numerusform>%n цаг</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n ѳдѳр</numerusform><numerusform>%n ѳдрүүд</numerusform></translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <location line="+6"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+0"/>
@@ -626,7 +626,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location line="+0"/>
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
@@ -646,7 +646,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+27"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Алдаа</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -661,7 +661,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-95"/>
         <source>Up to date</source>
-        <translation type="unfinished"/>
+        <translation>Шинэчлэгдсэн</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -671,12 +671,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+130"/>
         <source>Sent transaction</source>
-        <translation type="unfinished"/>
+        <translation>Гадагшаа гүйлгээ</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Incoming transaction</source>
-        <translation type="unfinished"/>
+        <translation>Дотогшоо гүйлгээ</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -685,17 +685,24 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation type="unfinished"/>
+        <translation>Огноо: %1
+
+Хэмжээ: %2 
+
+Тѳрѳл: %3 
+
+Хаяг: %4
+</translation>
     </message>
     <message>
         <location line="+69"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;онгорхой&lt;/b&gt; байна</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;хаалттай&lt;/b&gt; байна</translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="+443"/>
@@ -731,7 +738,7 @@ Address: %4
     <message>
         <location line="+45"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ:</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -741,7 +748,7 @@ Address: %4
     <message>
         <location line="+45"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Тѳлбѳр:</translation>
     </message>
     <message>
         <location line="+32"/>
@@ -776,17 +783,17 @@ Address: %4
     <message>
         <location line="+53"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Хаяг</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Огноо</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -796,7 +803,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>Баталгаажлаа</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -806,18 +813,18 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="+41"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Хаягийг санах</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Шошгыг санах</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+26"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээг санах</translation>
     </message>
     <message>
         <location line="-25"/>
@@ -867,7 +874,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Ѳѳрчлѳлтийг санах</translation>
     </message>
     <message>
         <location line="+332"/>
@@ -990,7 +997,7 @@ Address: %4
         <location line="+43"/>
         <location line="+61"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(шошгогүй)</translation>
     </message>
     <message>
         <location line="-7"/>
@@ -1000,7 +1007,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(ѳѳрчлѳх)</translation>
     </message>
 </context>
 <context>
@@ -1008,12 +1015,12 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>Хаягийг ѳѳрчлѳх</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Шошго</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1028,32 +1035,32 @@ Address: %4
     <message>
         <location line="-10"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Хаяг</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="+28"/>
         <source>New receiving address</source>
-        <translation type="unfinished"/>
+        <translation>Шинэ хүлээн авах хаяг</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>New sending address</source>
-        <translation type="unfinished"/>
+        <translation>Шинэ явуулах хаяг</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Edit receiving address</source>
-        <translation type="unfinished"/>
+        <translation>Хүлээн авах хаягийг ѳѳрчлѳх</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Edit sending address</source>
-        <translation type="unfinished"/>
+        <translation>Явуулах хаягийг ѳѳрчлѳх</translation>
     </message>
     <message>
         <location line="+76"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation type="unfinished"/>
+        <translation>Таны оруулсан хаяг &quot;%1&quot; нь хаягийн бүртгэлд ѳмнѳ нь орсон байна</translation>
     </message>
     <message>
         <location line="-5"/>
@@ -1063,12 +1070,12 @@ Address: %4
     <message>
         <location line="+10"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн цоожийг тайлж чадсангүй</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>New key generation failed.</source>
-        <translation type="unfinished"/>
+        <translation>Шинэ түлхүүр амжилттай гарсангүй</translation>
     </message>
 </context>
 <context>
@@ -1114,12 +1121,12 @@ Address: %4
     <message>
         <location line="+0"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>хувилбар</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>Хэрэглээ:</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1192,7 +1199,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="+82"/>
         <source>Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Биткойн</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1202,7 +1209,7 @@ Address: %4
     <message>
         <location line="+24"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Алдаа</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -1248,7 +1255,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="+14"/>
         <source>Options</source>
-        <translation type="unfinished"/>
+        <translation>Сонголтууд</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1283,7 +1290,7 @@ Address: %4
     <message>
         <location line="+16"/>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>МБ</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -1293,7 +1300,7 @@ Address: %4
     <message>
         <location line="+160"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Биткойны сүлжээрүү SOCKS проксигоор холбогдох.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1303,7 +1310,7 @@ Address: %4
     <message>
         <location line="+34"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished"/>
+        <translation>проксигийн IP хаяг (жишээ нь: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <location line="+214"/>
@@ -1484,17 +1491,17 @@ Address: %4
         <location line="+1"/>
         <location line="+29"/>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Ѳѳрчлѳлтүүдийг идэвхижүүлхийн тулд клиентийг ахин эхлүүлэх шаардлагтай</translation>
     </message>
     <message>
         <location line="-29"/>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>Клиент унтрах гэж байна, яг унтраах уу?</translation>
     </message>
     <message>
         <location line="+33"/>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>Энэ ѳѳрчлѳлтийг оруулахын тулд кли1нт програмыг ахин эхлүүлэх шаардлагтай</translation>
     </message>
     <message>
         <location line="+34"/>
@@ -1518,12 +1525,12 @@ Address: %4
     <message>
         <location line="-238"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвч</translation>
     </message>
     <message>
         <location line="+51"/>
         <source>Available:</source>
-        <translation type="unfinished"/>
+        <translation>Хэрэглэж болох хэмжээ:</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1563,7 +1570,7 @@ Address: %4
     <message>
         <location line="+71"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Сүүлд хийгдсэн гүйлгээнүүд&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="+120"/>
@@ -1673,7 +1680,7 @@ Address: %4
         <location line="+7"/>
         <location line="+13"/>
         <source>Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Биткойн</translation>
     </message>
     <message>
         <location line="-19"/>
@@ -1716,7 +1723,7 @@ Address: %4
     <message>
         <location line="+0"/>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>PNG форматын зураг (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1724,7 +1731,7 @@ Address: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="+46"/>
         <source>Client name</source>
-        <translation type="unfinished"/>
+        <translation>Клиентийн нэр</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1739,17 +1746,17 @@ Address: %4
         <location line="+23"/>
         <location filename="../rpcconsole.cpp" line="+373"/>
         <source>N/A</source>
-        <translation type="unfinished"/>
+        <translation>Алга Байна</translation>
     </message>
     <message>
         <location line="-223"/>
         <source>Client version</source>
-        <translation type="unfinished"/>
+        <translation>Клиентийн хувилбар</translation>
     </message>
     <message>
         <location line="-45"/>
         <source>&amp;Information</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Мэдээллэл</translation>
     </message>
     <message>
         <location line="-10"/>
@@ -1759,7 +1766,7 @@ Address: %4
     <message>
         <location line="+25"/>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>Ерѳнхий</translation>
     </message>
     <message>
         <location line="+53"/>
@@ -1774,47 +1781,47 @@ Address: %4
     <message>
         <location line="+29"/>
         <source>Network</source>
-        <translation type="unfinished"/>
+        <translation>Сүлжээ</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Name</source>
-        <translation type="unfinished"/>
+        <translation>Нэр</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Number of connections</source>
-        <translation type="unfinished"/>
+        <translation>Холболтын тоо</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Block chain</source>
-        <translation type="unfinished"/>
+        <translation>Блокийн цуваа</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Current number of blocks</source>
-        <translation type="unfinished"/>
+        <translation>Одоогийн блокийн тоо</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Estimated total blocks</source>
-        <translation type="unfinished"/>
+        <translation>Нийт блокийн барагцаа</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Last block time</source>
-        <translation type="unfinished"/>
+        <translation>Сүүлийн блокийн хугацаа</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>&amp;Open</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Нээх</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>&amp;Console</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Консол</translation>
     </message>
     <message>
         <location line="+72"/>
@@ -1861,7 +1868,7 @@ Address: %4
     <message>
         <location line="+76"/>
         <source>Clear console</source>
-        <translation type="unfinished"/>
+        <translation>Консолыг цэвэрлэх</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="-35"/>
@@ -1924,7 +1931,7 @@ Address: %4
     <message>
         <location line="-16"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Шошго:</translation>
     </message>
     <message>
         <location line="-37"/>
@@ -1992,32 +1999,32 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Show</source>
-        <translation type="unfinished"/>
+        <translation>Харуул</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Remove the selected entries from the list</source>
-        <translation type="unfinished"/>
+        <translation>Сонгогдсон ѳгѳгдлүүдийг устгах</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Remove</source>
-        <translation type="unfinished"/>
+        <translation>Устгах</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="+39"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Шошгыг санах</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>Зурвасыг санах</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээг санах</translation>
     </message>
 </context>
 <context>
@@ -2060,22 +2067,22 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Хаяг</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Шошго</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Зурвас</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -2093,32 +2100,32 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="+24"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Огноо</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Шошго</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Зурвас</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(шошго алга)</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>(no message)</source>
-        <translation type="unfinished"/>
+        <translation>(зурвас алга)</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2133,7 +2140,7 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="+380"/>
         <location line="+80"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Зоос явуулах</translation>
     </message>
     <message>
         <location line="+76"/>
@@ -2148,12 +2155,12 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>automatically selected</source>
-        <translation type="unfinished"/>
+        <translation>автоматаар сонгогдсон</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
+        <translation>Таны дансны үлдэгдэл хүрэлцэхгүй байна!</translation>
     </message>
     <message>
         <location line="+89"/>
@@ -2168,7 +2175,7 @@ Address: %4
     <message>
         <location line="+48"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ:</translation>
     </message>
     <message>
         <location line="+32"/>
@@ -2178,7 +2185,7 @@ Address: %4
     <message>
         <location line="+48"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Тѳлбѳр:</translation>
     </message>
     <message>
         <location line="+32"/>
@@ -2208,12 +2215,12 @@ Address: %4
     <message>
         <location line="+164"/>
         <source>Send to multiple recipients at once</source>
-        <translation type="unfinished"/>
+        <translation>Нэгэн зэрэг олон хүлээн авагчруу явуулах</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Add &amp;Recipient</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Хүлээн авагчийг Нэмэх</translation>
     </message>
     <message>
         <location line="-23"/>
@@ -2223,27 +2230,27 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Бүгдийг Цэвэрлэ</translation>
     </message>
     <message>
         <location line="+58"/>
         <source>Balance:</source>
-        <translation type="unfinished"/>
+        <translation>Баланс:</translation>
     </message>
     <message>
         <location line="-84"/>
         <source>Confirm the send action</source>
-        <translation type="unfinished"/>
+        <translation>Явуулах үйлдлийг баталгаажуулна уу</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>S&amp;end</source>
-        <translation type="unfinished"/>
+        <translation>Яв&amp;уул</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-229"/>
         <source>Confirm send coins</source>
-        <translation type="unfinished"/>
+        <translation>Зоос явуулахыг баталгаажуулна уу</translation>
     </message>
     <message>
         <location line="-74"/>
@@ -2261,7 +2268,7 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээг санах</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2291,17 +2298,17 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Ѳѳрчлѳлтийг санах</translation>
     </message>
     <message>
         <location line="+170"/>
         <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
+        <translation>Нийт дүн %1 (= %2)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>эсвэл</translation>
     </message>
     <message>
         <location line="+203"/>
@@ -2311,17 +2318,17 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation type="unfinished"/>
+        <translation>Тѳлѳх хэмжээ 0.-оос их байх ёстой</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished"/>
+        <translation>Энэ хэмжээ таны балансаас хэтэрсэн байна.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний тѳлбѳр %1-ийг тооцхоор нийт дүн нь таны балансаас хэтрээд байна.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2341,12 +2348,12 @@ Address: %4
     <message>
         <location line="+113"/>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Анхаар:Буруу Биткойны хаяг байна</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(шошгогүй)</translation>
     </message>
     <message>
         <location line="-11"/>
@@ -2381,12 +2388,12 @@ Address: %4
         <location line="+521"/>
         <location line="+536"/>
         <source>A&amp;mount:</source>
-        <translation type="unfinished"/>
+        <translation>Дүн:</translation>
     </message>
     <message>
         <location line="-1152"/>
         <source>Pay &amp;To:</source>
-        <translation type="unfinished"/>
+        <translation>Тѳлѳх &amp;хаяг:</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -2396,12 +2403,12 @@ Address: %4
     <message>
         <location filename="../sendcoinsentry.cpp" line="+30"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation type="unfinished"/>
+        <translation>Энэ хаягийг ѳѳрийн бүртгэлдээ авахын тулд шошго оруул</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="+57"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Шошго:</translation>
     </message>
     <message>
         <location line="-50"/>
@@ -2416,17 +2423,17 @@ Address: %4
     <message>
         <location line="+50"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Копидсон хаягийг буулгах</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2438,7 +2445,7 @@ Address: %4
     <message>
         <location line="-1008"/>
         <source>Message:</source>
-        <translation type="unfinished"/>
+        <translation>Зурвас:</translation>
     </message>
     <message>
         <location line="+968"/>
@@ -2478,12 +2485,12 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="+52"/>
         <source>Bitcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Биткойны цѳм хаагдаж байна...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>Энэ цонхыг хаагдтал компьютерээ бүү унтраагаарай</translation>
     </message>
 </context>
 <context>
@@ -2518,17 +2525,17 @@ Address: %4
         <location line="-200"/>
         <location line="+210"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location line="-200"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Копидсон хаягийг буулгах</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -2564,7 +2571,7 @@ Address: %4
         <location line="+3"/>
         <location line="+143"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Бүгдийг Цэвэрлэ</translation>
     </message>
     <message>
         <location line="-84"/>
@@ -2704,12 +2711,12 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="+28"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>%1 хүртэл нээлттэй</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>зѳрчилдлѳѳ</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2719,12 +2726,12 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>%1/баталгаажаагүй</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>%1 confirmations</source>
-        <translation type="unfinished"/>
+        <translation>%1 баталгаажилтууд</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -2734,12 +2741,12 @@ Address: %4
     <message numerus="yes">
         <location line="+7"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Огноо</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2787,7 +2794,7 @@ Address: %4
     <message numerus="yes">
         <location line="-125"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2816,7 +2823,7 @@ Address: %4
         <location line="+6"/>
         <location line="+9"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Зурвас</translation>
     </message>
     <message>
         <location line="-7"/>
@@ -2856,7 +2863,7 @@ Address: %4
     <message>
         <location line="+23"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2871,17 +2878,17 @@ Address: %4
     <message>
         <location line="-232"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"/>
+        <translation>, хараахан амжилттай цацагдаагүй байна</translation>
     </message>
     <message numerus="yes">
         <location line="-37"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+72"/>
         <source>unknown</source>
-        <translation type="unfinished"/>
+        <translation>үл мэдэгдэх</translation>
     </message>
 </context>
 <context>
@@ -2889,12 +2896,12 @@ Address: %4
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="+14"/>
         <source>Transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний мэдээллэл</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний дэлгэрэнгүйг энэ бичил цонх харуулж байна</translation>
     </message>
 </context>
 <context>
@@ -2902,22 +2909,22 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="+234"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Огноо</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Тѳрѳл</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Хаяг</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <location line="+78"/>
@@ -2927,27 +2934,27 @@ Address: %4
     <message numerus="yes">
         <location line="-21"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>%1 хүртэл нээлттэй</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Баталгаажлаа (%1 баталгаажилт)</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="unfinished"/>
+        <translation>Энэ блокийг аль ч нод хүлээн авсангүй ба ер нь зѳвшѳѳрѳгдѳхгүй байж мэднэ!</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Generated but not accepted</source>
-        <translation type="unfinished"/>
+        <translation>Үүсгэгдсэн гэхдээ хүлээн авагдаагүй</translation>
     </message>
     <message>
         <location line="-21"/>
@@ -2957,7 +2964,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>Баталгаажаагүй</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2967,62 +2974,62 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>Conflicted</source>
-        <translation type="unfinished"/>
+        <translation>Зѳрчилдлѳѳ</translation>
     </message>
     <message>
         <location line="+51"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Хүлээн авсан хаяг</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Received from</source>
-        <translation type="unfinished"/>
+        <translation>Хүлээн авагдсан хаяг</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Явуулсан хаяг</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Payment to yourself</source>
-        <translation type="unfinished"/>
+        <translation>Ѳѳрлүүгээ хийсэн тѳлбѳр</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Олборлогдсон</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>(n/a)</source>
-        <translation type="unfinished"/>
+        <translation>(алга байна)</translation>
     </message>
     <message>
         <location line="+190"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний байдал. Энд хулганыг авчирч баталгаажуулалтын тоог харна уу.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээг хүлээн авсан огноо ба цаг.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний тѳрѳл</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Destination address of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээг хүлээн авах хаяг</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished"/>
+        <translation>Балансаас авагдсан болон нэмэгдсэн хэмжээ.</translation>
     </message>
 </context>
 <context>
@@ -3031,32 +3038,32 @@ Address: %4
         <location filename="../transactionview.cpp" line="+57"/>
         <location line="+16"/>
         <source>All</source>
-        <translation type="unfinished"/>
+        <translation>Бүгд</translation>
     </message>
     <message>
         <location line="-15"/>
         <source>Today</source>
-        <translation type="unfinished"/>
+        <translation>Ѳнѳѳдѳр</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This week</source>
-        <translation type="unfinished"/>
+        <translation>Энэ долоо хоног</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This month</source>
-        <translation type="unfinished"/>
+        <translation>Энэ сар</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Last month</source>
-        <translation type="unfinished"/>
+        <translation>Ѳнгѳрсѳн сар</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This year</source>
-        <translation type="unfinished"/>
+        <translation>Энэ жил</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3066,52 +3073,52 @@ Address: %4
     <message>
         <location line="+11"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Хүлээн авсан хаяг</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Явуулсан хаяг</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>To yourself</source>
-        <translation type="unfinished"/>
+        <translation>Ѳѳрлүүгээ</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Олборлогдсон</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Other</source>
-        <translation type="unfinished"/>
+        <translation>Бусад</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Enter address or label to search</source>
-        <translation type="unfinished"/>
+        <translation>Хайлт хийхийн тулд хаяг эсвэл шошгыг оруул</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Min amount</source>
-        <translation type="unfinished"/>
+        <translation>Хамгийн бага хэмжээ</translation>
     </message>
     <message>
         <location line="+34"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Хаягийг санах</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Шошгыг санах</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээг санах</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3121,12 +3128,12 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>Edit label</source>
-        <translation type="unfinished"/>
+        <translation>Шошгыг ѳѳрчлѳх</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний дэлгэрэнгүйг харуул</translation>
     </message>
     <message>
         <location line="+140"/>
@@ -3151,47 +3158,47 @@ Address: %4
     <message>
         <location line="+0"/>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээнүй түүхийг %1-д амжилттай хадгаллаа.</translation>
     </message>
     <message>
         <location line="-22"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>Баталгаажлаа</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Огноо</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Тѳрѳл</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Шошго</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Хаяг</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>ID</source>
-        <translation type="unfinished"/>
+        <translation>Тодорхойлолт</translation>
     </message>
     <message>
         <location line="+107"/>
@@ -3201,7 +3208,7 @@ Address: %4
     <message>
         <location line="+8"/>
         <source>to</source>
-        <translation type="unfinished"/>
+        <translation>-рүү/руу</translation>
     </message>
 </context>
 <context>
@@ -3209,7 +3216,7 @@ Address: %4
     <message>
         <location filename="../walletframe.cpp" line="+26"/>
         <source>No wallet has been loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Ямар ч түрүйвч ачааллагдсангүй.</translation>
     </message>
 </context>
 <context>
@@ -3217,7 +3224,7 @@ Address: %4
     <message>
         <location filename="../walletmodel.cpp" line="+245"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Зоос явуулах</translation>
     </message>
 </context>
 <context>
@@ -3268,22 +3275,22 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="+261"/>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>Хэрэглээ:</translation>
     </message>
     <message>
         <location line="-66"/>
         <source>List commands</source>
-        <translation type="unfinished"/>
+        <translation>Үйлдлүүдийг жагсаах</translation>
     </message>
     <message>
         <location line="-14"/>
         <source>Get help for a command</source>
-        <translation type="unfinished"/>
+        <translation>Үйлдэлд туслалцаа авах</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Options:</source>
-        <translation type="unfinished"/>
+        <translation>Сонголтууд:</translation>
     </message>
     <message>
         <location line="+32"/>
@@ -3303,7 +3310,7 @@ Address: %4
     <message>
         <location line="-46"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation type="unfinished"/>
+        <translation>&lt;port&gt; дээрх холболтуудыг чагна (ѳгѳгдмѳл: 8333 эсвэл testnet: 18333)</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -3548,7 +3555,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Connect through SOCKS proxy</source>
-        <translation type="unfinished"/>
+        <translation>SOCKS проксигоор холбогдох</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3798,7 +3805,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
+        <translation>RPC серверийг эхэлтэл хүлээ</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3808,7 +3815,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+2"/>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн сонголтууд:</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -4043,7 +4050,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>хувилбар</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4073,7 +4080,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+196"/>
         <source>Upgrade wallet to latest format</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийг хамгийн сүүлийн үеийн форматруу шинэчлэх</translation>
     </message>
     <message>
         <location line="-28"/>
@@ -4118,17 +4125,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+66"/>
         <source>Loading addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Хаягуудыг ачааллаж байна...</translation>
     </message>
     <message>
         <location line="-39"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat-ыг ачааллахад алдаа гарлаа: Түрүйвч эвдэрсэн байна</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat-ыг ачааллахад алдаа гарлаа: Түрүйвч Биткойны шинэ хувилбарыг шаардаж байна</translation>
     </message>
     <message>
         <location line="+112"/>
@@ -4138,12 +4145,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="-114"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat-ыг ачааллахад алдаа гарлаа</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Эдгээр прокси хаягнууд буруу байна: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+69"/>
@@ -4173,27 +4180,27 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Invalid amount</source>
-        <translation type="unfinished"/>
+        <translation>Буруу хэмжээ</translation>
     </message>
     <message>
         <location line="-6"/>
         <source>Insufficient funds</source>
-        <translation type="unfinished"/>
+        <translation>Таны дансны үлдэгдэл хүрэлцэхгүй байна</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Loading block index...</source>
-        <translation type="unfinished"/>
+        <translation>Блокийн индексүүдийг ачааллаж байна...</translation>
     </message>
     <message>
         <location line="-68"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished"/>
+        <translation>Холболт хийхийн тулд мѳн холболтой онгорхой хадгалхын тулд шинэ нод нэм</translation>
     </message>
     <message>
         <location line="+69"/>
         <source>Loading wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийг ачааллаж байна...</translation>
     </message>
     <message>
         <location line="-62"/>
@@ -4208,22 +4215,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+80"/>
         <source>Rescanning...</source>
-        <translation type="unfinished"/>
+        <translation>Ахин уншиж байна...</translation>
     </message>
     <message>
         <location line="-67"/>
         <source>Done loading</source>
-        <translation type="unfinished"/>
+        <translation>Ачааллаж дууслаа</translation>
     </message>
     <message>
         <location line="+99"/>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>%s сонголтыг ашиглахын тулд</translation>
     </message>
     <message>
         <location line="-91"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Алдаа</translation>
     </message>
     <message>
         <location line="-41"/>

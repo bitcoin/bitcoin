@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="nb" version="2.1">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="nb" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -39,8 +39,8 @@ Dette produktet inneholder programvare utviklet av OpenSSL Project for bruk i Op
     <message>
         <location line="+12"/>
         <location line="+2"/>
-        <source> (%1-bit)</source>
-        <translation>(%1-bit)</translation>
+        <source>(%1-bit)</source>
+        <translation> (%1-bit)</translation>
     </message>
 </context>
 <context>
@@ -48,7 +48,7 @@ Dette produktet inneholder programvare utviklet av OpenSSL Project for bruk i Op
     <message>
         <location filename="../forms/addressbookpage.ui" line="+30"/>
         <source>Double-click to edit address or label</source>
-        <translation>Dobbeltklikk for å redigere adresse eller merkelapp</translation>
+        <translation>Dobbelklikk for å redigere adresse eller merkelapp</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -707,7 +707,7 @@ Adresse: %4
         <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+441"/>
+        <location filename="../bitcoin.cpp" line="+443"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>En fatal feil har inntruffet. Det er ikke trygt å fortsette og Bitcoin må derfor avslutte.</translation>
     </message>
@@ -929,7 +929,7 @@ Adresse: %4
         <translation>(%1 låst)</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
         <source>none</source>
         <translation>ingen</translation>
     </message>
@@ -997,12 +997,12 @@ Adresse: %4
     </message>
     <message>
         <location line="+43"/>
-        <location line="+63"/>
+        <location line="+61"/>
         <source>(no label)</source>
         <translation>(ingen merkelapp)</translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="-7"/>
         <source>change from %1 (%2)</source>
         <translation>veksel fra %1 (%2)</translation>
     </message>
@@ -1083,7 +1083,7 @@ Adresse: %4
 <context>
     <name>FreespaceChecker</name>
     <message>
-        <location filename="../intro.cpp" line="+65"/>
+        <location filename="../intro.cpp" line="+68"/>
         <source>A new data directory will be created.</source>
         <translation>En ny datamappe vil bli laget.</translation>
     </message>
@@ -1141,7 +1141,7 @@ Adresse: %4
         <translation>valg i brukergrensesnitt</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
         <translation>Sett språk, for eksempel &quot;nb_NO&quot; (standardverdi: fra operativsystem)</translation>
     </message>
@@ -1152,11 +1152,16 @@ Adresse: %4
     </message>
     <message>
         <location line="+1"/>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Sett SSL-rotsertifikat for betalingsforespørsel (standard: -system-)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Show splash screen on startup (default: 1)</source>
         <translation>Vis splashskjerm ved oppstart (standardverdi: 1)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-4"/>
         <source>Choose data directory on startup (default: 0)</source>
         <translation>Velg datamappe ved oppstart (standard: 0)</translation>
     </message>
@@ -1204,7 +1209,7 @@ Adresse: %4
         <translation>Feil: Spesifisert datamappe &quot;%1&quot; kan ikke opprettes.</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+24"/>
         <source>Error</source>
         <translation>Feil</translation>
     </message>
@@ -1260,7 +1265,7 @@ Adresse: %4
         <translation>&amp;Hoved</translation>
     </message>
     <message>
-        <location line="+122"/>
+        <location line="+116"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
         <translation>Valgfritt transaksjonsgebyr per kB som sikrer at dine transaksjoner blir raskt prosessert. De fleste transaksjoner er 1 kB.</translation>
     </message>
@@ -1270,7 +1275,7 @@ Adresse: %4
         <translation>Betal &amp;transaksjonsgebyr</translation>
     </message>
     <message>
-        <location line="-131"/>
+        <location line="-125"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Start Bitcoin automatisk etter innlogging.</translation>
     </message>
@@ -1295,12 +1300,7 @@ Adresse: %4
         <translation>Antall script &amp;verifikasjonstråder</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
-        <translation>Sett antall script verifikasjonstråder (opp til 16, 0 = automatisk, &lt;0 = la så mange kjerner være ledig, standardvalg: 0)</translation>
-    </message>
-    <message>
-        <location line="+153"/>
+        <location line="+160"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
         <translation>Koble til Bitcoin-nettverket gjennom en SOCKS proxy.</translation>
     </message>
@@ -1335,7 +1335,12 @@ Adresse: %4
         <translation>&amp;Nettverk</translation>
     </message>
     <message>
-        <location line="-95"/>
+        <location line="-131"/>
+        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
+        <translation>(0 = automatisk, &lt;0 = la så mange kjerner være ledig)</translation>
+    </message>
+    <message>
+        <location line="+36"/>
         <source>W&amp;allet</source>
         <translation>L&amp;ommebok</translation>
     </message>
@@ -1470,7 +1475,7 @@ Adresse: %4
         <translation>&amp;Avbryt</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+70"/>
+        <location filename="../optionsdialog.cpp" line="+72"/>
         <source>default</source>
         <translation>standardverdi</translation>
     </message>
@@ -1480,7 +1485,7 @@ Adresse: %4
         <translation>ingen</translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+80"/>
         <source>Confirm options reset</source>
         <translation>Bekreft tilbakestilling av innstillinger</translation>
     </message>
@@ -1674,22 +1679,28 @@ Adresse: %4
     <name>QObject</name>
     <message>
         <location filename="../bitcoin.cpp" line="+63"/>
-        <location line="+14"/>
+        <location line="+7"/>
+        <location line="+13"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-19"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation>Feil: Spesifisert datamappe &quot;%1&quot; finnes ikke.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+7"/>
+        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
+        <translation>Feil: Kan ikke lese konfigurasjonsfil: %1. Bruk kun syntaksen nøkkel=verdi.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>Feil: Ugyldig kombinasjon av -regtest og -testnet.</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+82"/>
+        <location filename="../guiutil.cpp" line="+89"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Skriv inn en Bitcoin-adresse (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
@@ -2474,7 +2485,7 @@ Adresse: %4
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+48"/>
+        <location filename="../utilitydialog.cpp" line="+52"/>
         <source>Bitcoin Core is shutting down...</source>
         <translation>Bitcoin Core lukker...</translation>
     </message>
@@ -2674,7 +2685,7 @@ Adresse: %4
 <context>
     <name>SplashScreen</name>
     <message>
-        <location filename="../splashscreen.cpp" line="+28"/>
+        <location filename="../splashscreen.cpp" line="+32"/>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
     </message>
@@ -3221,7 +3232,7 @@ Adresse: %4
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+43"/>
+        <location filename="../walletview.cpp" line="+44"/>
         <source>&amp;Export</source>
         <translation>&amp;Eksporter</translation>
     </message>
@@ -3231,7 +3242,7 @@ Adresse: %4
         <translation>Eksporter data fra nåværende fane til fil</translation>
     </message>
     <message>
-        <location line="+181"/>
+        <location line="+184"/>
         <source>Backup Wallet</source>
         <translation>Sikkerhetskopier Lommebok</translation>
     </message>
@@ -3264,12 +3275,12 @@ Adresse: %4
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+226"/>
+        <location filename="../bitcoinstrings.cpp" line="+261"/>
         <source>Usage:</source>
         <translation>Bruk:</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-66"/>
         <source>List commands</source>
         <translation>List opp kommandoer</translation>
     </message>
@@ -3279,12 +3290,12 @@ Adresse: %4
         <translation>Vis hjelpetekst for en kommando</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+27"/>
         <source>Options:</source>
         <translation>Innstillinger:</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+32"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Angi konfigurasjonsfil (standardverdi: bitcoin.conf)</translation>
     </message>
@@ -3299,22 +3310,22 @@ Adresse: %4
         <translation>Angi mappe for datafiler</translation>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-46"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Lytt etter tilkoblinger på &lt;port&gt; (standardverdi: 8333 eller testnett: 18333)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation>Hold maks &lt;n&gt; koblinger åpne til andre noder (standardverdi: 125)</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-57"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Koble til node for å hente adresser til andre noder, koble så fra igjen</translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+100"/>
         <source>Specify your own public address</source>
         <translation>Angi din egen offentlige adresse</translation>
     </message>
@@ -3324,42 +3335,47 @@ Adresse: %4
         <translation>Grenseverdi for å koble fra noder med dårlig oppførsel (standardverdi: 100)</translation>
     </message>
     <message>
-        <location line="-151"/>
+        <location line="-172"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Antall sekunder noder med dårlig oppførsel hindres fra å koble til på nytt (standardverdi: 86400)</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-52"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation>En feil oppstod ved opprettelse av RPC-port %u for IPv4: %s</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+50"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Lytt etter JSON-RPC tilkoblinger på &lt;port&gt; (standardverdi: 8332 eller testnett: 18332)</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+51"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Ta imot kommandolinje- og JSON-RPC-kommandoer</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+7"/>
+        <source>Bitcoin Core RPC client version</source>
+        <translation>Bitcoin Core RPC-klientversjon</translation>
+    </message>
+    <message>
+        <location line="+87"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Kjør i bakgrunnen som daemon og ta imot kommandoer</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+43"/>
         <source>Use the test network</source>
         <translation>Bruk testnettverket</translation>
     </message>
     <message>
-        <location line="-120"/>
+        <location line="-136"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Ta imot tilkoblinger fra utsiden (standardverdi: 1 hvis uten -proxy eller -connect)</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-117"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -3399,6 +3415,11 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
     </message>
     <message>
         <location line="+6"/>
+        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
+        <translation>Ratebegrens gratistransaksjoner kontinuerlig til &lt;n&gt;*1000 bytes per minutt (standard: 15)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
         <translation>Gå til modus for regresjonstesting, som bruker en spesiell blokkjede der blokker kan bli løst momentant. Dette er tenkt til verktøy for regresjonstesting og apputvikling.</translation>
     </message>
@@ -3428,7 +3449,37 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Kjør kommando når en lommeboktransaksjon endres (%s i kommando er erstattet med TxID)</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+6"/>
+        <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
+        <translation>Gebyr mindre enn dette er betraktet som intet gebyr (for laging av transaksjoner) (standardverdi:</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
+        <translation>Overfør aktiviteten i databasen fra minnelageret til loggen på harddisken for hver &lt;n&gt; megabytes (standardverdi: 100)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
+        <translation>Hvor grundig blokkverifiseringen til -checkblocks er (0-4, standard: 3)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
+        <translation>I denne modusen kontrollerer -genproclimit hvor mange blokker som genereres øyeblikkelig.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
+        <translation>Angi antall tråder for skriptverifisering (%u til %d, 0 = auto, &lt;0 = la det antallet kjerner være ledig, standard: %d)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
+        <translation>Sett prosessorgrensen for når blokkutvinning er på (-1 = ubegrenset, standard: -1)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Dette er en forhåndssluppet testversjon - bruk på egen risiko - ikke for bruk til blokkutvinning eller bedriftsapplikasjoner</translation>
     </message>
@@ -3474,6 +3525,16 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
     </message>
     <message>
         <location line="+9"/>
+        <source>(default: 1)</source>
+        <translation>(standardverdi: 1)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>(default: wallet.dat)</source>
+        <translation>(standardverdi: wallet.dat)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; kan være:</translation>
     </message>
@@ -3488,12 +3549,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Bitcoin Core Daemon</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Bitcoin RPC client version</source>
-        <translation>Bitcoin RPC klientversjon</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Block creation options:</source>
         <translation>Valg for opprettelse av blokker:</translation>
     </message>
@@ -3519,8 +3575,23 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
     </message>
     <message>
         <location line="+2"/>
+        <source>Connection options:</source>
+        <translation>Innstillinger for tilkobling:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Corrupted block database detected</source>
         <translation>Oppdaget korrupt blokkdatabase</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Debugging/Testing options:</source>
+        <translation>Valg for feilsøking/testing:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Disable safemode, override a real safe mode event (default: 0)</source>
+        <translation>Slå av sikkerhetsmodus, overstyr en virkelig sikkerhetsmodushendelse (standard: 0)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3634,8 +3705,18 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
     </message>
     <message>
         <location line="+1"/>
+        <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
+        <translation>Gebyrer mindre enn dette vil anses som gebyrfrie (for videresending) (standard:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
         <translation>Finn andre noder gjennom DNS-oppslag (standardverdi: 1 med mindre -connect er oppgitt)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Force safe mode (default: 0)</source>
+        <translation>Tving sikkerhetsmodus (standard: 0)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3646,11 +3727,6 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <location line="+2"/>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
         <translation>Hvor mange blokker skal sjekkes ved oppstart (standardverdi: 288, 0 = alle)</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>How thorough the block verification is (0-4, default: 3)</source>
-        <translation>Hvor grundig verifisering av blokker gjøres (0-4, standardverdi: 3)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3668,7 +3744,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Ugyldig -onion adresse: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>Not enough file descriptors available.</source>
         <translation>For få fildeskriptorer tilgjengelig.</translation>
     </message>
@@ -3678,27 +3754,22 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Sett inn tidsstempel i front av feilsøkingsdata (standardverdi: 1)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>RPC client options:</source>
         <translation>Innstillinger for RPC-klient:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Gjenopprett blokkjedeindeks fra blk000??.dat filer</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
         <translation>Velg versjon av SOCKS -proxy (4 eller 5, standardverdi: 5)</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Send command to Bitcoin server</source>
-        <translation>Send kommando til Bitcoin-tjener</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Sett databasen sin størrelse på hurtigbufferen i megabytes (%d til %d, standardverdi: %d)</translation>
     </message>
@@ -3713,7 +3784,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Sett nummer av tråder til betjening av RPC-kall (standardverdi: 4)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+10"/>
         <source>Specify wallet file (within data directory)</source>
         <translation>Angi lommebokfil (inne i datamappe)</translation>
     </message>
@@ -3723,12 +3794,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Bruk ubekreftet veksel ved sending av transaksjoner (standardverdi: 1)</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Start Bitcoin server</source>
-        <translation>Start Bitcoin-tjener</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>This is intended for regression testing tools and app development.</source>
         <translation>Dette er tiltenkt verktøy for regresjonstesting og apputvikling.</translation>
     </message>
@@ -3773,22 +3839,22 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Du må gjenoppbygge databasen med å bruke -reindex for å endre -txindex</translation>
     </message>
     <message>
-        <location line="-80"/>
+        <location line="-92"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importerer blokker fra ekstern fil blk000??.dat</translation>
     </message>
     <message>
-        <location line="-126"/>
+        <location line="-149"/>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
         <translation>Ute av stand til å låse datamappen %s. Bitcoin Core kjører sannsynligvis allerede.</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+22"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Utfør kommando når et relevant varsel er mottatt eller vi ser en veldig lang gaffel (%s i kommando er erstattet med melding)</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+25"/>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
         <translation>Ta ut feilsøkingsinformasjon (standardverdi: 0, bruk av &lt;category&gt; er valgfritt)</translation>
     </message>
@@ -3798,12 +3864,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Sett maksimum størrelse for transaksjoner med høy prioritet / lavt gebyr, i bytes (standardverdi: %d)</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Set the number of script verification threads (up to 16, 0 = auto, &lt;0 = leave that many cores free, default: 0)</source>
-        <translation>Sett antall script verifikasjonstråder (opp til 16, 0 = automatisk, &lt;0 = la så mange kjerner være ledig, standardvalg: 0)</translation>
-    </message>
-    <message>
-        <location line="+91"/>
+        <location line="+102"/>
         <source>Information</source>
         <translation>Informasjon</translation>
     </message>
@@ -3818,7 +3879,17 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Ugyldig mengde for -mintxfee=&lt;beløp&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+3"/>
+        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
+        <translation>Begrens størrelsen på signatur-hurtigbufferen til &lt;n&gt; oppføringer (standard: 50000)</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
+        <translation>Logg transaksjonsprioritet og gebyr per kB under blokkutvinning (standard: 0)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Maintain a full transaction index (default: 0)</source>
         <translation>Oppretthold en full transaksjonsindeks (standard: 0)</translation>
     </message>
@@ -3843,12 +3914,52 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Koble kun til noder i nettverket &lt;nett&gt; (IPv4, IPv6 eller Tor)</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+4"/>
+        <source>Print block on startup, if found in block index</source>
+        <translation>Skriv ut blokken ved oppstart, hvis funnet i blokkindeksen</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Print block tree on startup (default: 0)</source>
+        <translation>Skriv ut blokktreet ved oppstart (standardverdi: 0)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>RPC SSL-valg: (se Bitcoin Wiki for oppsettsinstruksjoner for SSL)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>RPC server options:</source>
+        <translation>Innstillinger for RPC-server:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
+        <translation>Slumpvis dropp 1 av hver &lt;n&gt; nettverksmeldinger</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
+        <translation>Slumpvis bland 1 av hver &lt;n&gt; nettverksmeldinger</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Run a thread to flush wallet periodically (default: 1)</source>
+        <translation>Kjør en tråd som skriver lommeboken til disk periodisk (standard: 1)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>SSL valg: (se Bitcoin Wiki for instruksjoner for oppsett av SSL)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+2"/>
+        <source>Send command to Bitcoin Core</source>
+        <translation>Send kommando til Bitcoin Core</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Send spor-/feilsøkingsinformasjon til konsollen istedenfor filen debug.log</translation>
     </message>
@@ -3859,6 +3970,21 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
     </message>
     <message>
         <location line="+2"/>
+        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
+        <translation>Setter flagget DB_PRIVATE i miljøet til lommebokdatabasen (standard: 1)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show all debugging options (usage: --help -help-debug)</source>
+        <translation>Vis alle feilsøkingsvalg (bruk: --help -help-debug)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show benchmark information (default: 0)</source>
+        <translation>Vis informasjon om ytelsesmål (standard: 0)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Krymp filen debug.log når klienten starter (standardverdi: 1 hvis uten -debug)</translation>
     </message>
@@ -3873,7 +3999,12 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Angi tidsavbrudd for forbindelse i millisekunder (standardverdi: 5000)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
+        <source>Start Bitcoin Core Daemon</source>
+        <translation>Start Bitcoin Core Daemon</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>System error: </source>
         <translation>Systemfeil:</translation>
     </message>
@@ -3924,6 +4055,11 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
     </message>
     <message>
         <location line="+1"/>
+        <source>on startup</source>
+        <translation>ved oppstart</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>version</source>
         <translation>versjon</translation>
     </message>
@@ -3933,47 +4069,47 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>wallet.dat korrupt, bergning feilet</translation>
     </message>
     <message>
-        <location line="-60"/>
+        <location line="-71"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Passord for JSON-RPC forbindelser</translation>
     </message>
     <message>
-        <location line="-71"/>
+        <location line="-77"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Tillat JSON-RPC tilkoblinger fra angitt IP-adresse</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+94"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Send kommandoer til node på &lt;ip&gt; (standardverdi: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-134"/>
+        <location line="-163"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Utfør kommando når beste blokk endrer seg (%s i kommandoen erstattes med blokkens hash)</translation>
     </message>
     <message>
-        <location line="+164"/>
+        <location line="+196"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Oppgrader lommebok til nyeste format</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-28"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Angi størrelsen på nøkkellageret til &lt;n&gt; (standardverdi: 100)</translation>
     </message>
     <message>
-        <location line="-11"/>
+        <location line="-12"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Se gjennom blokkjeden etter manglende lommeboktransaksjoner</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+43"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Bruk OpenSSL (https) for JSON-RPC forbindelser</translation>
     </message>
     <message>
-        <location line="-31"/>
+        <location line="-34"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Servers sertifikat (standardverdi: server.cert)</translation>
     </message>
@@ -3983,7 +4119,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Servers private nøkkel (standardverdi: server.pem)</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+20"/>
         <source>This help message</source>
         <translation>Denne hjelpemeldingen</translation>
     </message>
@@ -3993,17 +4129,17 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Kan ikke binde til %s på denne datamaskinen (bind returnerte feil %d, %s)</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-125"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Tillat oppslag i DNS for -addnode, -seednode og -connect</translation>
     </message>
     <message>
-        <location line="+61"/>
+        <location line="+66"/>
         <source>Loading addresses...</source>
         <translation>Laster adresser...</translation>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="-39"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Feil ved lasting av wallet.dat: Lommeboken er skadet</translation>
     </message>
@@ -4013,22 +4149,22 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Feil ved lasting av wallet.dat: Lommeboken krever en nyere versjon av Bitcoin</translation>
     </message>
     <message>
-        <location line="+99"/>
+        <location line="+112"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Lommeboken måtte skrives om: start Bitcoin på nytt for å fullføre</translation>
     </message>
     <message>
-        <location line="-101"/>
+        <location line="-114"/>
         <source>Error loading wallet.dat</source>
         <translation>Feil ved lasting av wallet.dat</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Ugyldig -proxy adresse: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+69"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Ukjent nettverk angitt i -onlynet &apos;%s&apos;</translation>
     </message>
@@ -4038,7 +4174,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Ukjent -socks proxyversjon angitt: %i</translation>
     </message>
     <message>
-        <location line="-103"/>
+        <location line="-119"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kunne ikke slå opp -bind adresse: &apos;%s&apos;</translation>
     </message>
@@ -4048,7 +4184,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Kunne ikke slå opp -externalip adresse: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+53"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Ugyldig beløp for -paytxfee=&lt;beløp&gt;: &apos;%s&apos;</translation>
     </message>
@@ -4063,22 +4199,22 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Utilstrekkelige midler</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Loading block index...</source>
         <translation>Laster blokkindeks...</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-68"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Legg til node for tilkobling og hold forbindelsen åpen</translation>
     </message>
     <message>
-        <location line="+64"/>
+        <location line="+69"/>
         <source>Loading wallet...</source>
         <translation>Laster lommebok...</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-62"/>
         <source>Cannot downgrade wallet</source>
         <translation>Kan ikke nedgradere lommebok</translation>
     </message>
@@ -4088,27 +4224,27 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Kan ikke skrive standardadresse</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+80"/>
         <source>Rescanning...</source>
         <translation>Leser gjennom...</translation>
     </message>
     <message>
-        <location line="-58"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Ferdig med lasting</translation>
     </message>
     <message>
-        <location line="+86"/>
+        <location line="+99"/>
         <source>To use the %s option</source>
         <translation>For å bruke %s opsjonen</translation>
     </message>
     <message>
-        <location line="-78"/>
+        <location line="-91"/>
         <source>Error</source>
         <translation>Feil</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-41"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
