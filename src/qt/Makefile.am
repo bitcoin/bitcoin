@@ -39,7 +39,6 @@ QT_TS = \
   locale/bitcoin_fa_IR.ts \
   locale/bitcoin_fa.ts \
   locale/bitcoin_fi.ts \
-  locale/bitcoin_fr_CA.ts \
   locale/bitcoin_fr.ts \
   locale/bitcoin_gl.ts \
   locale/bitcoin_gu_IN.ts \
