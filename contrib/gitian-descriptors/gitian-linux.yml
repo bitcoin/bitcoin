@@ -48,8 +48,18 @@ script: |
   tar -zxf ../build/qt-linux${GBUILD_BITS}-4.6.4-gitian-r1.tar.gz
   cd ../build
 
+  # Avoid exporting *any* symbols from the executable
+  # This avoids conflicts between the libraries statically linked into bitcoin and any
+  # libraries we may link dynamically (such as Qt and OpenSSL, see issue #4094).
+  # It also avoids start-up overhead to not export any unnecessary symbols.
+  # To do this, build a linker script that marks all symbols as local.
+  LINKER_SCRIPT=$HOME/build/linker_version_script
+  echo '
+  {
+    local: *;
+  };' > $LINKER_SCRIPT
   function do_configure {
-    ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
+      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
   }
   #
   cd bitcoin
