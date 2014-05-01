@@ -1,3 +1,7 @@
+// Copyright (c) 2012-2013 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "script.h"
 
 #include "key.h"
@@ -46,6 +50,7 @@ BOOST_AUTO_TEST_SUITE(script_P2SH_tests)
 
 BOOST_AUTO_TEST_CASE(sign)
 {
+    LOCK(cs_main);
     // Pay-to-script-hash looks like this:
     // scriptSig:    <sig> <sig...> <serialized_script>
     // scriptPubKey: HASH160 <hash> EQUAL
@@ -143,6 +148,7 @@ BOOST_AUTO_TEST_CASE(norecurse)
 
 BOOST_AUTO_TEST_CASE(set)
 {
+    LOCK(cs_main);
     // Test the CScript::Set* methods
     CBasicKeyStore keystore;
     CKey key[4];
@@ -246,6 +252,7 @@ BOOST_AUTO_TEST_CASE(switchover)
 
 BOOST_AUTO_TEST_CASE(AreInputsStandard)
 {
+    LOCK(cs_main);
     CCoinsView coinsDummy;
     CCoinsViewCache coins(coinsDummy);
     CBasicKeyStore keystore;

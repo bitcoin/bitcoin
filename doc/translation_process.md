@@ -70,7 +70,7 @@ We are using https://transifex.com as a frontend for translating the client.
 
 https://www.transifex.com/projects/p/bitcoin/resource/tx/
 
-The "Transifex client" (see: http://help.transifex.com/features/client/)
+The "Transifex client" (see: http://support.transifex.com/customer/portal/topics/440187-transifex-client/articles)
 will help with fetching new translations from Transifex. Use the following
 config to be able to connect with the client:
 
@@ -100,5 +100,7 @@ It is also possible to directly download new translations one by one from the Tr
 
 1. `tx pull -a`
 2. update `src/qt/bitcoin.qrc` manually or via
-   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/<file alias="\2">locale/\1.qm<\/file>/'`
-3. `git add` new translations from `src/qt/locale/`
+   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'`
+3. update `src/qt/Makefile.am` manually or via
+   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/  locale\/\1.ts \\/'`
+4. `git add` new translations from `src/qt/locale/`

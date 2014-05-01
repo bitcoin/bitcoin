@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -56,12 +56,16 @@ class PaymentServer : public QObject
     Q_OBJECT
 
 public:
+    // Parse URIs on command line
+    // Returns false on error
+    static bool ipcParseCommandLine(int argc, char *argv[]);
+
     // Returns true if there were URIs on the command line
     // which were successfully sent to an already-running
     // process.
     // Note: if a payment request is given, SelectParams(MAIN/TESTNET)
     // will be called so we startup in the right mode.
-    static bool ipcSendCommandLine(int argc, char *argv[]);
+    static bool ipcSendCommandLine();
 
     // parent should be QApplication object
     PaymentServer(QObject* parent, bool startLocalServer = true);
@@ -98,7 +102,7 @@ public slots:
     // Submit Payment message to a merchant, get back PaymentACK:
     void fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
 
-    // Handle an incoming URI or file
+    // Handle an incoming URI, URI with local file scheme or file
     void handleURIOrFile(const QString& s);
 
 private slots:

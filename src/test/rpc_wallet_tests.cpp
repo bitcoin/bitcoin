@@ -1,7 +1,12 @@
+// Copyright (c) 2013-2014 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "rpcserver.h"
 #include "rpcclient.h"
 
 #include "base58.h"
+#include "wallet.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -12,10 +17,14 @@ using namespace json_spirit;
 extern Array createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL);
 extern Value CallRPC(string args);
 
+extern CWallet* pwalletMain;
+
 BOOST_AUTO_TEST_SUITE(rpc_wallet_tests)
 
 BOOST_AUTO_TEST_CASE(rpc_addmultisig)
 {
+    LOCK(pwalletMain->cs_wallet);
+
     rpcfn_type addmultisig = tableRPC["addmultisigaddress"]->actor;
 
     // old, 65-byte-long:
@@ -55,6 +64,8 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
 {
     // Test RPC calls for various wallet statistics
     Value r;
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     BOOST_CHECK_NO_THROW(CallRPC("listunspent"));
     BOOST_CHECK_THROW(CallRPC("listunspent string"), runtime_error);

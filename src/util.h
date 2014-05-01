@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,10 +12,10 @@
 
 #include "compat.h"
 #include "serialize.h"
+#include "tinyformat.h"
 
 #include <cstdio>
 #include <exception>
-#include <inttypes.h>
 #include <map>
 #include <stdarg.h>
 #include <stdint.h>
@@ -44,13 +44,17 @@ static const int64_t CENT = 1000000;
 #define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 
-/* Format characters for (s)size_t and ptrdiff_t (C99 standard) */
-#define PRIszx    "zx"
-#define PRIszu    "zu"
-#define PRIszd    "zd"
-#define PRIpdx    "tx"
-#define PRIpdu    "tu"
-#define PRIpdd    "td"
+/* Format characters for (s)size_t, ptrdiff_t.
+ *
+ * Define these as empty as the tinyformat-based formatting system is
+ * type-safe, no special format characters are needed to specify sizes.
+ */
+#define PRIszx    "x"
+#define PRIszu    "u"
+#define PRIszd    "d"
+#define PRIpdx    "x"
+#define PRIpdu    "u"
+#define PRIpdd    "d"
 
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
 #define PAIRTYPE(t1, t2)    std::pair<t1, t2>
@@ -99,21 +103,6 @@ inline void MilliSleep(int64_t n)
 #endif
 }
 
-/* This GNU C extension enables the compiler to check the format string against the parameters provided.
- * X is the number of the "format string" parameter, and Y is the number of the first variadic parameter.
- * Parameters count from 1.
- */
-#ifdef __GNUC__
-#define ATTR_WARN_PRINTF(X,Y) __attribute__((format(gnu_printf,X,Y)))
-#else
-#define ATTR_WARN_PRINTF(X,Y)
-#endif
-
-
-
-
-
-
 
 
 extern std::map<std::string, std::string> mapArgs;
@@ -121,7 +110,6 @@ extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
-extern bool fDaemon;
 extern bool fServer;
 extern std::string strMiscWarning;
 extern bool fNoListen;
@@ -131,30 +119,51 @@ extern volatile bool fReopenDebugLog;
 void RandAddSeed();
 void RandAddSeedPerfmon();
 
-// Print to debug.log if -debug=category switch is given OR category is NULL.
-int ATTR_WARN_PRINTF(2,3) LogPrint(const char* category, const char* pszFormat, ...);
+/* Return true if log accepts specified category */
+bool LogAcceptCategory(const char* category);
+/* Send a string to the log output */
+int LogPrintStr(const std::string &str);
+
+#define strprintf tfm::format
 #define LogPrintf(...) LogPrint(NULL, __VA_ARGS__)
 
-/*
-  Rationale for the real_strprintf / strprintf construction:
-    It is not allowed to use va_start with a pass-by-reference argument.
-    (C++ standard, 18.7, paragraph 3). Use a dummy argument to work around this, and use a
-    macro to keep similar semantics.
-*/
-
-/** Overload strprintf for char*, so that GCC format type warnings can be given */
-std::string ATTR_WARN_PRINTF(1,3) real_strprintf(const char *format, int dummy, ...);
-/** Overload strprintf for std::string, to be able to use it with _ (translation).
- * This will not support GCC format type warnings (-Wformat) so be careful.
+/* When we switch to C++11, this can be switched to variadic templates instead
+ * of this macro-based construction (see tinyformat.h).
  */
-std::string real_strprintf(const std::string &format, int dummy, ...);
-#define strprintf(format, ...) real_strprintf(format, 0, __VA_ARGS__)
-std::string vstrprintf(const char *format, va_list ap);
+#define MAKE_ERROR_AND_LOG_FUNC(n)                                        \
+    /*   Print to debug.log if -debug=category switch is given OR category is NULL. */ \
+    template<TINYFORMAT_ARGTYPES(n)>                                          \
+    static inline int LogPrint(const char* category, const char* format, TINYFORMAT_VARARGS(n))  \
+    {                                                                         \
+        if(!LogAcceptCategory(category)) return 0;                            \
+        return LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
+    }                                                                         \
+    /*   Log error and return false */                                        \
+    template<TINYFORMAT_ARGTYPES(n)>                                          \
+    static inline bool error(const char* format, TINYFORMAT_VARARGS(n))                     \
+    {                                                                         \
+        LogPrintStr("ERROR: " + tfm::format(format, TINYFORMAT_PASSARGS(n)) + "\n"); \
+        return false;                                                         \
+    }
 
-bool ATTR_WARN_PRINTF(1,2) error(const char *format, ...);
+TINYFORMAT_FOREACH_ARGNUM(MAKE_ERROR_AND_LOG_FUNC)
+
+/* Zero-arg versions of logging and error, these are not covered by
+ * TINYFORMAT_FOREACH_ARGNUM
+ */
+static inline int LogPrint(const char* category, const char* format)
+{
+    if(!LogAcceptCategory(category)) return 0;
+    return LogPrintStr(format);
+}
+static inline bool error(const char* format)
+{
+    LogPrintStr(std::string("ERROR: ") + format + "\n");
+    return false;
+}
+
 
 void LogException(std::exception* pex, const char* pszThread);
-void PrintException(std::exception* pex, const char* pszThread);
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
 void ParseString(const std::string& str, char c, std::vector<std::string>& v);
 std::string FormatMoney(int64_t n, bool fPlus=false);
@@ -176,11 +185,11 @@ void ParseParameters(int argc, const char*const argv[]);
 bool WildcardMatch(const char* psz, const char* mask);
 bool WildcardMatch(const std::string& str, const std::string& mask);
 void FileCommit(FILE *fileout);
-int GetFilesize(FILE* file);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
 bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
+bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 boost::filesystem::path GetConfigFile();
@@ -216,7 +225,7 @@ void runCommand(std::string strCommand);
 
 inline std::string i64tostr(int64_t n)
 {
-    return strprintf("%"PRId64, n);
+    return strprintf("%d", n);
 }
 
 inline std::string itostr(int n)
@@ -548,10 +557,12 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
         throw;
     }
     catch (std::exception& e) {
-        PrintException(&e, name);
+        PrintExceptionContinue(&e, name);
+        throw;
     }
     catch (...) {
-        PrintException(NULL, name);
+        PrintExceptionContinue(NULL, name);
+        throw;
     }
 }
 // .. and a wrapper that just calls func once
@@ -571,10 +582,12 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         throw;
     }
     catch (std::exception& e) {
-        PrintException(&e, name);
+        PrintExceptionContinue(&e, name);
+        throw;
     }
     catch (...) {
-        PrintException(NULL, name);
+        PrintExceptionContinue(NULL, name);
+        throw;
     }
 }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -36,9 +36,9 @@ QT_END_NAMESPACE
 class SendCoinsRecipient
 {
 public:
-    explicit SendCoinsRecipient() : amount(0) { }
+    explicit SendCoinsRecipient() : amount(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
     explicit SendCoinsRecipient(const QString &addr, const QString &label, quint64 amount, const QString &message):
-        address(addr), label(label), amount(amount), message(message) {}
+        address(addr), label(label), amount(amount), message(message), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
     // If from an insecure payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
@@ -55,6 +55,41 @@ public:
     PaymentRequestPlus paymentRequest;
     // Empty if no authentication or invalid signature/cert/etc.
     QString authenticatedMerchant;
+
+    static const int CURRENT_VERSION = 1;
+    int nVersion;
+
+    IMPLEMENT_SERIALIZE
+    (
+        SendCoinsRecipient* pthis = const_cast<SendCoinsRecipient*>(this);
+
+        std::string sAddress = pthis->address.toStdString();
+        std::string sLabel = pthis->label.toStdString();
+        std::string sMessage = pthis->message.toStdString();
+        std::string sPaymentRequest;
+        if (!fRead && pthis->paymentRequest.IsInitialized())
+            pthis->paymentRequest.SerializeToString(&sPaymentRequest);
+        std::string sAuthenticatedMerchant = pthis->authenticatedMerchant.toStdString();
+
+        READWRITE(pthis->nVersion);
+        nVersion = pthis->nVersion;
+        READWRITE(sAddress);
+        READWRITE(sLabel);
+        READWRITE(amount);
+        READWRITE(sMessage);
+        READWRITE(sPaymentRequest);
+        READWRITE(sAuthenticatedMerchant);
+
+        if (fRead)
+        {
+            pthis->address = QString::fromStdString(sAddress);
+            pthis->label = QString::fromStdString(sLabel);
+            pthis->message = QString::fromStdString(sMessage);
+            if (!sPaymentRequest.empty())
+                pthis->paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size()));
+            pthis->authenticatedMerchant = QString::fromStdString(sAuthenticatedMerchant);
+        }
+    )
 };
 
 /** Interface to Bitcoin wallet from Qt view code. */
@@ -145,12 +180,16 @@ public:
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
+    bool isSpent(const COutPoint& outpoint) const;
     void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;
 
     bool isLockedCoin(uint256 hash, unsigned int n) const;
     void lockCoin(COutPoint& output);
     void unlockCoin(COutPoint& output);
     void listLockedCoins(std::vector<COutPoint>& vOutpts);
+
+    void loadReceiveRequests(std::vector<std::string>& vReceiveRequests);
+    bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
 
 private:
     CWallet *wallet;
@@ -197,6 +236,9 @@ signals:
 
     // Coins sent: from wallet, to recipient, in (serialized) transaction:
     void coinsSent(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
+
+    // Show progress dialog e.g. for rescan
+    void showProgress(const QString &title, int nProgress);
 
 public slots:
     /* Wallet status might have changed */

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2014 The Bitcoin Core developers
+# Distributed under the MIT/X11 software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Functions used by more than one test
 
@@ -23,6 +26,7 @@ function CreateDataDir {
   echo "rpcuser=rt" >> $CONF
   echo "rpcpassword=rt" >> $CONF
   echo "rpcwait=1" >> $CONF
+  echo "walletnotify=${SENDANDWAIT} -STOP" >> $CONF
   shift
   while (( "$#" )); do
       echo $1 >> $CONF
@@ -40,8 +44,9 @@ function AssertEqual {
 
 # CheckBalance -datadir=... amount account minconf
 function CheckBalance {
+  declare -i EXPECT="$2"
   B=$( $CLI $1 getbalance $3 $4 )
-  if (( $( echo "$B == $2" | bc ) == 0 ))
+  if (( $( echo "$B == $EXPECT" | bc ) == 0 ))
   then
     echoerr "bad balance: $B (expected $2)"
     exit 1
@@ -59,7 +64,7 @@ function Send {
   to=$2
   amount=$3
   address=$(Address $to)
-  txid=$( $CLI $from sendtoaddress $address $amount )
+  txid=$( ${SENDANDWAIT} $CLI $from sendtoaddress $address $amount )
 }
 
 # Use: Unspent <datadir> <n'th-last-unspent> <var>
@@ -80,11 +85,11 @@ function CreateTxn1 {
 
 # Use: SendRawTxn <datadir> <hex_txn_data>
 function SendRawTxn {
-  $CLI $1 sendrawtransaction $2
+  ${SENDANDWAIT} $CLI $1 sendrawtransaction $2
 }
 
 # Use: GetBlocks <datadir>
 # returns number of blocks from getinfo
 function GetBlocks {
-    ExtractKey blocks "$( $CLI $1 getinfo )"
+    $CLI $1 getblockcount
 }

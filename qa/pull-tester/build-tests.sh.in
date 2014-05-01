@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) 2013 The Bitcoin Core developers
+# Distributed under the MIT/X11 software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#
 # Param1: The prefix to mingw staging
 # Param2: Path to java comparison tool
 # Param3: Number of make jobs. Defaults to 1.
@@ -70,6 +74,9 @@ make check
 
 # Run RPC integration test on Linux:
 @abs_top_srcdir@/qa/rpc-tests/wallet.sh @abs_top_srcdir@/linux-build/src
+@abs_top_srcdir@/qa/rpc-tests/listtransactions.py --srcdir @abs_top_srcdir@/linux-build/src
+# Clean up cache/ directory that the python regression tests create
+rm -rf cache
 
 if [ $RUN_EXPENSIVE_TESTS = 1 ]; then
   # Run unit tests and blockchain-tester on Windows:

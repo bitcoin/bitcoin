@@ -1,12 +1,12 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
-define(_CLIENT_VERSION_MINOR, 8)
+define(_CLIENT_VERSION_MINOR, 9)
 define(_CLIENT_VERSION_REVISION, 99)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
-define(_COPYRIGHT_YEAR, 2013)
-AC_INIT([Bitcoin],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@bitcoin.org],[bitcoin])
+define(_COPYRIGHT_YEAR, 2014)
+AC_INIT([Bitcoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@bitcoin.org],[bitcoin])
 AC_CONFIG_AUX_DIR([src/build-aux])
 AC_CONFIG_MACRO_DIR([src/m4])
 AC_CANONICAL_HOST
@@ -23,6 +23,12 @@ m4_include([pkg.m4])
 
 dnl faketime breaks configure and is only needed for make. Disable it here.
 unset FAKETIME
+
+if test "x${CXXFLAGS+set}" = "xset"; then
+  CXXFLAGS_overridden=yes
+else
+  CXXFLAGS_overridden=no
+fi
 
 dnl ==============================================================
 dnl Setup for automake
@@ -63,38 +69,6 @@ AC_ARG_ENABLE([ipv6],
   [use_ipv6=$enableval],
   [use_ipv6=yes])
 
-dnl enable qt support
-AC_ARG_WITH([qt],
-  [AS_HELP_STRING([--with-qt],
-  [enable qt (default is yes)])],
-  [use_qt=$withval],
-  [use_qt=auto])
-AC_DEFUN([BITCOIN_QT_FAIL],[
-  if test "x$use_qt" = "xauto"; then
-    AC_MSG_WARN([$1; bitcoin-qt frontend will not be built])
-    use_qt=no
-  else
-    AC_MSG_ERROR([$1])
-  fi
-])
-AC_DEFUN([BITCOIN_QT_CHECK],[
-  if test "x$use_qt" != "xno"; then
-    true
-    $1
-  else
-    true
-    $2
-  fi
-])
-AC_DEFUN([BITCOIN_QT_PATH_PROGS],[
-  BITCOIN_QT_CHECK([
-    AC_PATH_PROGS($1,$2,$3,$4)
-    if test "x$$1" = "x"; then
-      BITCOIN_QT_FAIL([$1 not found])
-    fi
-  ])
-])
-
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
     [use_tests=$enableval],
@@ -116,12 +90,6 @@ AC_ARG_WITH([qrencode],
   [use_qr=$withval],
   [use_qr=auto])
 
-AC_ARG_WITH([qtdbus],
-  [AS_HELP_STRING([--with-qtdbus],
-  [enable DBus support (default is yes if qt is enabled and QtDBus is found)])],
-  [use_dbus=$withval],
-  [use_dbus=auto])
-
 AC_ARG_ENABLE([hardening],
   [AS_HELP_STRING([--enable-hardening],
   [attempt to harden the resulting executables (default is yes)])],
@@ -130,7 +98,7 @@ AC_ARG_ENABLE([hardening],
 
 AC_ARG_ENABLE([ccache],
   [AS_HELP_STRING([--enable-ccache],
-  [enable building with ccache (default is yes if ccache is found)])],
+  [use ccache for building (default is yes if ccache is found)])],
   [use_ccache=$enableval],
   [use_ccache=auto])
 
@@ -140,10 +108,12 @@ AC_ARG_ENABLE([lcov],
   [use_lcov=yes],
   [use_lcov=no])
 
-AC_ARG_WITH([qt-incdir],[AS_HELP_STRING([--with-qt-incdir=INC_DIR],[specify qt include path (overridden by pkgconfig)])], [qt_include_path=$withval], [])
-AC_ARG_WITH([qt-libdir],[AS_HELP_STRING([--with-qt-libdir=LIB_DIR],[specify qt lib path (overridden by pkgconfig)])], [qt_lib_path=$withval], [])
-AC_ARG_WITH([qt-bindir],[AS_HELP_STRING([--with-qt-bindir=BIN_DIR],[specify qt bin path])], [qt_bin_path=$withval], [])
-AC_ARG_WITH([qt-plugindir],[AS_HELP_STRING([--with-qt-plugindir=PLUGIN_DIR],[specify qt plugin path (overridden by pkgconfig)])], [qt_plugin_path=$withval], [])
+AC_ARG_ENABLE([glibc-back-compat],
+  [AS_HELP_STRING([--enable-glibc-back-compat],
+  [enable backwards compatibility with glibc and libstdc++])],
+  [use_glibc_compat=$enableval],
+  [use_glibc_compat=no])
+
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
 
@@ -157,6 +127,7 @@ AC_PROG_CPP
 AC_PROG_CXXCPP
 AC_PROG_INSTALL
 AC_PROG_OBJC
+AC_PROG_LN_S
 m4_ifdef([AC_PROG_OBJCXX],[AC_PROG_OBJCXX])
 AC_PROG_MKDIR_P
 AC_PROG_SED
@@ -168,21 +139,34 @@ AC_PATH_PROG(LCOV, lcov)
 AC_PATH_PROG(JAVA, java)
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
-BITCOIN_QT_PATH_PROGS([MOC], [moc-qt4 moc4 moc],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([UIC], [uic-qt4 uic4 uic],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([RCC], [rcc-qt4 rcc4 rcc],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([LRELEASE], [lrelease-qt4 lrelease4 lrelease],, $qt_bin_path:$PATH)
-BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],, $protoc_bin_path:$PATH)
 AC_PATH_PROG(CCACHE,ccache)
-AC_PATH_PROGS([LUPDATE], [lupdate-qt4 lupdate4 lupdate],, $qt_bin_path:$PATH)
 AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
 PKG_PROG_PKG_CONFIG
 
+# Enable debug 
+AC_ARG_ENABLE([debug],
+    [AS_HELP_STRING([--enable-debug],
+                    [use debug compiler flags and macros (default is no)])],
+    [enable_debug=$enableval],
+    [enable_debug=no])
+
+if test "x$enable_debug" = xyes; then
+    if test "x$GCC" = xyes; then
+        CFLAGS="-g3 -O0 -DDEBUG"
+    fi
+    
+    if test "x$GXX" = xyes; then
+        CXXFLAGS="-g3 -O0 -DDEBUG"
+    fi
+fi 
+
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
 ##
-CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
+if test "x$CXXFLAGS_overridden" = "xno"; then
+  CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
+fi
 CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_LANG_PUSH([C++])
@@ -215,6 +199,7 @@ case $host in
      AC_CHECK_LIB([iphlpapi],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([crypt32],      [main],, AC_MSG_ERROR(lib missing))
 
+     AX_CHECK_LINK_FLAG([[-static]],[LDFLAGS="$LDFLAGS -static"])
      AX_CHECK_LINK_FLAG([[-static-libgcc]],[LDFLAGS="$LDFLAGS -static-libgcc"])
      AX_CHECK_LINK_FLAG([[-static-libstdc++]],[LDFLAGS="$LDFLAGS -static-libstdc++"])
 
@@ -228,18 +213,27 @@ case $host in
        AC_MSG_ERROR("windres not found")
      fi
 
-     CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -D__USE_MINGW_ANSI_STDIO"
+     CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB"
      LEVELDB_TARGET_FLAGS="TARGET_OS=OS_WINDOWS_CROSSCOMPILE"
-     CXXFLAGS="$CXXFLAGS -w"
+     if test "x$CXXFLAGS_overridden" = "xno"; then
+       CXXFLAGS="$CXXFLAGS -w"
+     fi
+     case $host in
+       i?86-*) WINDOWS_BITS=32 ;;
+       x86_64-*) WINDOWS_BITS=64 ;;
+       *) AC_MSG_ERROR("Could not determine win32/win64 for installer") ;;
+     esac
+     AC_SUBST(WINDOWS_BITS)
      ;;
   *darwin*)
      TARGET_OS=darwin
      LEVELDB_TARGET_FLAGS="TARGET_OS=Darwin"
      if  test x$cross_compiling != xyes; then
+       BUILD_OS=darwin
        AC_CHECK_PROG([PORT],port, port)
        if test x$PORT = xport; then
          dnl add default macports paths
-         CPPFLAGS="$CPPFLAGS -I/opt/local/include -I/opt/local/include/db48"
+         CPPFLAGS="$CPPFLAGS -isystem /opt/local/include -I/opt/local/include/db48"
          LIBS="$LIBS -L/opt/local/lib -L/opt/local/lib/db48"
        fi
 
@@ -252,19 +246,22 @@ case $host in
          CPPFLAGS="$CPPFLAGS -I$bdb_prefix/include"
          LIBS="$LIBS -L$bdb_prefix/lib"
        fi
+     else
+       case $build_os in
+         *darwin*)
+           BUILD_OS=darwin
+           ;;
+         *)
+           AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
+           AC_PATH_TOOL([OTOOL], [otool], otool)
+           AC_PATH_PROGS([GENISOIMAGE], [genisoimage mkisofs],genisoimage)
+           ;;
+       esac
      fi
 
-     BITCOIN_QT_CHECK([
-       MOC_DEFS="-DQ_OS_MAC"
-       base_frameworks="-framework Foundation -framework ApplicationServices -framework AppKit"
-       AX_CHECK_LINK_FLAG([[$base_frameworks]],[LIBS="$LIBS $base_frameworks"],[AC_MSG_ERROR(could not find base frameworks)])
-     ])
-
      CPPFLAGS="$CPPFLAGS -DMAC_OSX"
-     TESTDEFS="-DBOOST_TEST_DYN_LINK"
      ;;
    *)
-     TESTDEFS="-DBOOST_TEST_DYN_LINK"
      ;;
 esac
 
@@ -328,22 +325,39 @@ fi
 
 AX_CHECK_LINK_FLAG([[-Wl,--large-address-aware]], [LDFLAGS="$LDFLAGS -Wl,--large-address-aware"])
 
+if test x$use_glibc_compat != xno; then
+
+  #__fdelt_chk's params and return type have changed from long unsigned int to long int.
+  # See which one is present here.
+  AC_MSG_CHECKING(__fdelt_chk type)
+  AC_TRY_COMPILE([#define __USE_FORTIFY_LEVEL 2
+                  #include <sys/select.h>
+     extern "C" long unsigned int __fdelt_warn(long unsigned int);],[],
+    [ fdelt_type="long unsigned int"],
+    [ fdelt_type="long int"])
+  AC_MSG_RESULT($fdelt_type)
+  AC_DEFINE_UNQUOTED(FDELT_TYPE, $fdelt_type,[parameter and return value type for __fdelt_chk])
+
+fi
+
 if test x$use_hardening != xno; then
   AX_CHECK_COMPILE_FLAG([-Wstack-protector],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
+  AX_CHECK_COMPILE_FLAG([-fstack-protector-all],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
   AX_CHECK_COMPILE_FLAG([-fPIE],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fPIE"])
 
-  AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=2],[HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=2"])
+  AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=2],[
+    AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE],[
+      HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"
+    ])
+    HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=2"
+  ])
 
   AX_CHECK_LINK_FLAG([[-Wl,--dynamicbase]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--dynamicbase"])
   AX_CHECK_LINK_FLAG([[-Wl,--nxcompat]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--nxcompat"])
-  AX_CHECK_LINK_FLAG([[-Wl,-z,relro]], [LDFLAGS="-Wl,-z,relro"])
-  AX_CHECK_LINK_FLAG([[-Wl,-z,now]], [LDFLAGS="-Wl,-z,now"])
+  AX_CHECK_LINK_FLAG([[-Wl,-z,relro]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,relro"])
+  AX_CHECK_LINK_FLAG([[-Wl,-z,now]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,now"])
 
   if test x$TARGET_OS != xwindows; then
-    # -fstack-protector-all can produce broken binaries with mingw
-    AX_CHECK_COMPILE_FLAG([-fno-stack-protector],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fno-stack-protector"])
-    AX_CHECK_COMPILE_FLAG([-fstack-protector-all],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
-
     # -pie will link successfully with MinGW, but it's unsupported and leads to undeterministic binaries
     AX_CHECK_LINK_FLAG([[-pie]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"])
   fi
@@ -368,6 +382,14 @@ AC_TRY_COMPILE([#include <sys/socket.h>],
  [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MSG_NOSIGNAL, 1,[Define this symbol if you have MSG_NOSIGNAL]) ],
  [ AC_MSG_RESULT(no)]
 )
+
+LEVELDB_CPPFLAGS=
+LIBLEVELDB=
+LIBMEMENV=
+AM_CONDITIONAL([EMBEDDED_LEVELDB],[true])
+AC_SUBST(LEVELDB_CPPFLAGS)
+AC_SUBST(LIBLEVELDB)
+AC_SUBST(LIBMEMENV)
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
@@ -399,6 +421,24 @@ if test x$use_tests = xyes; then
 
 
   AX_BOOST_UNIT_TEST_FRAMEWORK
+
+  dnl Determine if -DBOOST_TEST_DYN_LINK is needed
+  AC_MSG_CHECKING([for dynamic linked boost test])
+  TEMP_LIBS="$LIBS"
+  LIBS="$LIBS $BOOST_UNIT_TEST_FRAMEWORK_LIB"
+  TEMP_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+  AC_LINK_IFELSE([AC_LANG_SOURCE([
+       #define BOOST_TEST_DYN_LINK
+       #define BOOST_TEST_MAIN
+        #include <boost/test/unit_test.hpp>
+
+       ])],
+    [AC_MSG_RESULT(yes)]
+    [TESTDEFS="$TESTDEFS -DBOOST_TEST_DYN_LINK"],
+    [AC_MSG_RESULT(no)])
+  LIBS="$TEMP_LIBS"
+  CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
 BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB"
@@ -411,8 +451,13 @@ dnl after 1.56.
 dnl If neither is available, abort.
 dnl If sleep_for is used, boost_chrono becomes a requirement.
 if test x$ax_cv_boost_chrono = xyes; then
+dnl Allow passing extra needed dependency libraries for boost-chrono from static gitian build
+BOOST_CHRONO_LIB="$BOOST_CHRONO_LIB $BOOST_CHRONO_EXTRALIBS"
+
 TEMP_LIBS="$LIBS"
 LIBS="$LIBS $BOOST_LIBS $BOOST_CHRONO_LIB"
+TEMP_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
 AC_TRY_LINK([
   #include <boost/thread/thread.hpp>
   #include <boost/version.hpp>
@@ -427,11 +472,14 @@ AC_TRY_LINK([
      AC_DEFINE(HAVE_WORKING_BOOST_SLEEP_FOR, 1, [Define this symbol if boost sleep_for works])],
   [boost_sleep=no])
 LIBS="$TEMP_LIBS"
+CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
 if test x$boost_sleep != xyes; then
 TEMP_LIBS="$LIBS"
 LIBS="$LIBS $BOOST_LIBS"
+TEMP_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
 AC_TRY_LINK([
   #include <boost/version.hpp>
   #include <boost/thread.hpp>
@@ -446,11 +494,26 @@ AC_TRY_LINK([
   [boost_sleep=yes; AC_DEFINE(HAVE_WORKING_BOOST_SLEEP, 1, [Define this symbol if boost sleep works])],
   [boost_sleep=no])
 LIBS="$TEMP_LIBS"
+CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
 if test x$boost_sleep != xyes; then
-  AC_MSG_ERROR(No working boost sleep implementation found)
+  AC_MSG_ERROR(No working boost sleep implementation found. If on ubuntu 13.10 with libboost1.54-all-dev remove libboost.1.54-all-dev and use libboost1.53-all-dev)
 fi
+
+AC_ARG_WITH([cli],
+  [AS_HELP_STRING([--with-cli],
+  [with CLI (default is yes)])],
+  [build_bitcoin_cli=$withval],
+  [build_bitcoin_cli=yes])
+
+AC_ARG_WITH([daemon],
+  [AS_HELP_STRING([--with-daemon],
+  [with daemon (default is yes)])],
+  [build_bitcoind=$withval],
+  [build_bitcoind=yes])
+
+BITCOIN_QT_INIT
 
 if test x$use_pkgconfig = xyes; then
 
@@ -464,23 +527,10 @@ if test x$use_pkgconfig = xyes; then
     [
       PKG_CHECK_MODULES([SSL], [libssl], [INCLUDES="$INCLUDES $SSL_CFLAGS"; LIBS="$LIBS $SSL_LIBS"], [AC_MSG_ERROR(openssl  not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto], [INCLUDES="$INCLUDES $CRYPTO_CFLAGS"; LIBS="$LIBS $CRYPTO_LIBS"], [AC_MSG_ERROR(libcrypto  not found.)])
-
-      BITCOIN_QT_CHECK([
-        PKG_CHECK_MODULES([QT], [QtCore QtGui QtNetwork], [QT_INCLUDES="$QT_CFLAGS"; have_qt=yes],[
-          have_qt=no
-          BITCOIN_QT_FAIL([Qt dependencies not found])
-        ])
-        if test x$use_tests = xyes; then
-          PKG_CHECK_MODULES([QT_TEST], [QtTest], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
-        fi
-        if test x$use_dbus != xno; then
-          PKG_CHECK_MODULES([QT_DBUS], [QtDBus], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
-        fi
-        if test x$use_qr != xno; then
-          PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])
-        fi
-        PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [AC_MSG_ERROR(libprotobuf not found.)])
-      ])
+      BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [BITCOIN_QT_FAIL(libprotobuf not found)])])
+      if test x$use_qr != xno; then
+        BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
+      fi
     ]
   )
 else
@@ -490,85 +540,30 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],, AC_MSG_ERROR(libssl missing))
 
-  BITCOIN_QT_CHECK([
-    TEMP_LIBS="$LIBS"
-    LIBS=
-    if test x$qt_lib_path != x; then
-      QT_LIBS="$QT_LIBS -L$qt_lib_path"
-      LIBS="$QT_LIBS"
-    fi
-    if test x$qt_plugin_path != x; then
-      QT_LIBS="$QT_LIBS -L$qt_plugin_path/codecs"
-      LIBS="$QT_LIBS"
-    fi
-
-    if test x$TARGET_OS == xwindows; then
-      AC_CHECK_LIB([imm32],      [main],, BITCOIN_QT_FAIL(libimm32 not found))
-    fi
-  ])
-
-    #TODO: These are only needed when they're linked directly to parent libs. It really has nothing to do with windows.
-    #Instead, check for missing functions in parent libs and assume static if they're absent.
-    if test x$TARGET_OS == xwindows; then
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qcncodecs],[main],,BITCOIN_QT_FAIL(libqcncodecs not found)))
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qjpcodecs],[main],,BITCOIN_QT_FAIL(libqjpcodecs not found)))
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qkrcodecs],[main],,BITCOIN_QT_FAIL(libqkrcodecs not found)))
-      BITCOIN_QT_CHECK(AC_CHECK_LIB([qtwcodecs],[main],,BITCOIN_QT_FAIL(libqtwcodecs not found)))
-    fi
-
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtCore]   ,[main],,BITCOIN_QT_FAIL(libQtCore not found)))
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtGui]    ,[main],,BITCOIN_QT_FAIL(libQtGui not found)))
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([QtNetwork],[main],,BITCOIN_QT_FAIL(libQtNetwork not found)))
-    BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],,BITCOIN_QT_FAIL(libprotobuf not found)))
-
-  BITCOIN_QT_CHECK([
-    QT_LIBS="$LIBS"
-    LIBS="$TEMP_LIBS"
-
-    TEMP_CPPFLAGS="$CPPFLAGS"
-    if test x$qt_include_path != x; then
-      QT_INCLUDES="-I$qt_include_path -I$qt_include_path/QtCore -I$qt_include_path/QtGui -I$qt_include_path/QtNetwork -I$qt_include_path/QtTest -I$qt_include_path/QtDBus"
-      CPPFLAGS="$CPPFLAGS $QT_INCLUDES"
-    fi
-  ])
-    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QtPlugin],,BITCOIN_QT_FAIL(QtCore headers missing))])
-    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QApplication],, BITCOIN_QT_FAIL(QtGui headers missing))])
-    BITCOIN_QT_CHECK([AC_CHECK_HEADER([QLocalSocket],, BITCOIN_QT_FAIL(QtNetwork headers missing))])
-
-  BITCOIN_QT_CHECK([
-    if test x$use_tests = xyes; then
-      TEMP_LIBS="$LIBS"
-      LIBS=
-      if test x$qt_lib_path != x; then
-        LIBS="-L$qt_lib_path"
-      fi
-      AC_CHECK_LIB([QtTest],      [main],, have_qt_test=no)
-      AC_CHECK_HEADER([QTest],, have_qt_test=no)
-      QT_TEST_LIBS="$LIBS"
-      LIBS="$TEMP_LIBS"
-    fi
-    if test x$use_dbus != xno; then
-      TEMP_LIBS="$LIBS"
-      LIBS=
-      if test x$qt_lib_path != x; then
-        LIBS="-L$qt_lib_path"
-      fi
-      AC_CHECK_LIB([QtDBus],      [main],, have_qt_dbus=no)
-      AC_CHECK_HEADER([QtDBus],, have_qt_dbus=no)
-      QT_DBUS_LIBS="$LIBS"
-      LIBS="$TEMP_LIBS"
-    fi
-    CPPFLAGS="$TEMP_CPPFLAGS"
-    if test x$use_qr != xno; then
-      AC_CHECK_LIB([qrencode], [main],, [have_qrencode=no])
-      AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)
-    fi
-  ])
+  BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],,BITCOIN_QT_FAIL(libprotobuf not found)))
+  if test x$use_qr != xno; then
+    BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],, [have_qrencode=no])])
+    BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
+  fi
 fi
+
+BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
+
+AC_MSG_CHECKING([whether to build bitcoind])
+AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
+AC_MSG_RESULT($build_bitcoind)
+
+AC_MSG_CHECKING([whether to build bitcoin-cli])
+AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_bitcoin_cli = xyes])
+AC_MSG_RESULT($build_bitcoin_cli)
+
+dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
+BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
+
 
 if test x$use_ipv6 = xyes; then
   dnl Check for ipv6 build requirements
-  AC_MSG_CHECKING(for IPV6 build support)
+  AC_MSG_CHECKING(for operating system IPv6 support)
   AC_TRY_LINK([
   #if defined(_WINDOWS)
   #include <winsock2.h>
@@ -583,18 +578,17 @@ if test x$use_ipv6 = xyes; then
   struct sockaddr_in6 addr;
   #endif
   int temp = socket(AF_INET6, SOCK_STREAM, 0);],
-  [AC_MSG_RESULT(yes); have_ipv6=yes; AC_DEFINE(HAVE_IPV6, 1, [Define this symbol if you have ipv6 build support])],
+  [AC_MSG_RESULT(yes); have_ipv6=yes; AC_DEFINE(HAVE_IPV6, 1, [Define this symbol if you have operating system IPv6 support])],
   [AC_MSG_RESULT(no)]; have_ipv6=no)
 fi
 AC_LANG_POP
 
 if test "x$use_ccache" != "xno"; then
-  AC_MSG_CHECKING(if ccache should be enabled)
+  AC_MSG_CHECKING(if ccache should be used)
   if test x$CCACHE = x; then
     if test "x$use_ccache" = "xyes"; then
       AC_MSG_ERROR([ccache not found.]);
     else
-      AC_MSG_NOTICE([ccache not found. Falling back to default CC])
       use_ccache=no
     fi
   else
@@ -613,39 +607,35 @@ if test x$enable_wallet != xno; then
 
 else
   AC_MSG_RESULT(no)
-
-  if test "x$use_qt" != "xno"; then
-    AC_MSG_ERROR([Cannot currently build Qt GUI with wallet disabled. Use --without-qt.])
-  fi
 fi
 
 dnl enable ipv6 support
-AC_MSG_CHECKING([if ipv6 should be enabled])
+AC_MSG_CHECKING([whether to build with support for IPv6])
 if test x$have_ipv6 = xno; then
   if test x$use_ipv6 = xyes; then
-     AC_MSG_ERROR("ipv6 requested but cannot be built. use --disable-ipv6")
+     AC_MSG_ERROR([IPv6 requested, but cannot be built. use --disable-ipv6])
   fi
   AC_MSG_RESULT(no)
 else
   if test x$use_ipv6 = xyes; then
       AC_MSG_RESULT(yes)
-      AC_DEFINE([USE_IPV6],[1],[Define if ipv6 support should be compiled in])
+      AC_DEFINE([USE_IPV6],[1],[Define if IPv6 support should be compiled in])
   else
       AC_MSG_RESULT(no)
   fi
 fi
 
 dnl enable upnp support
-AC_MSG_CHECKING([if upnp should be enabled])
+AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
-     AC_MSG_ERROR("upnp requested but cannot be built. use --without-miniupnpc")
+     AC_MSG_ERROR("UPnP requested but cannot be built. use --without-miniupnpc")
   fi
   AC_MSG_RESULT(no)
 else
   if test x$use_upnp != xno; then
     AC_MSG_RESULT(yes)
-    AC_MSG_CHECKING([if upnp should be on by default])
+    AC_MSG_CHECKING([whether to build with UPnP enabled by default])
     use_upnp=yes
     upnp_setting=0
     if test x$use_upnp_default != xno; then
@@ -653,7 +643,7 @@ else
       upnp_setting=1
     fi
     AC_MSG_RESULT($use_upnp_default)
-    AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[Define to 1 for upnp runtime support])
+    AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
     if test x$TARGET_OS = xwindows; then
       CPPFLAGS="$CPPFLAGS -DSTATICLIB"
     fi
@@ -662,49 +652,18 @@ else
   fi
 fi
 
-dnl enable qt support
-AC_MSG_CHECKING([if qt should be enabled])
-BITCOIN_QT_CHECK([
-  use_qt=yes
-  BUILD_QT=qt
-  if test x$use_tests = xyes; then
-    if test x$have_qt_test = xno; then
-      AC_MSG_ERROR("libQtTest not found. Use --disable-tests or --without-qt.")
-    fi
-  fi
-  if test x$have_qt_dbus = xno;  then
-    if test x$use_dbus = xyes; then
-      AC_MSG_ERROR("libQtDBus not found. Install libQtDBus or remove --with-qtdbus.")
-    fi
-    use_dbus=no
-  fi
-  if test x$XGETTEXT == x; then
-    AC_MSG_WARN("xgettext is required to update qt translations")
-  fi
-  if test x$LUPDATE == x; then
-    AC_MSG_WARN("lupdate is required to update qt translations")
-  fi
-],[
-  use_qt=no
-])
-
-AC_MSG_RESULT($use_qt)
-
 dnl these are only used when qt is enabled
-if test x$use_qt = xyes; then
-
+if test x$bitcoin_enable_qt != xno; then
+  BUILD_QT=qt
   dnl enable dbus support
-  AC_MSG_CHECKING([if dbus should be enabled])
-  if test x$use_dbus != xno; then
-    use_dbus=yes
+  AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
+  if test x$bitcoin_enable_qt_dbus != xno; then
     AC_DEFINE([USE_DBUS],[1],[Define if dbus support should be compiled in])
-  else
-    use_dbus=no
   fi
-  AC_MSG_RESULT($use_dbus)
+  AC_MSG_RESULT($bitcoin_enable_qt_dbus)
 
   dnl enable qr support
-  AC_MSG_CHECKING([if qr should be enabled])
+  AC_MSG_CHECKING([whether to build GUI with support for QR codes])
   if test x$have_qrencode = xno; then
     if test x$use_qr == xyes; then
      AC_MSG_ERROR("QR support requested but cannot be built. use --without-qrencode")
@@ -720,22 +679,40 @@ if test x$use_qt = xyes; then
     fi
   fi
 
-  if test x$use_tests$have_qt_test = xyesyes; then
+  if test x$XGETTEXT == x; then
+    AC_MSG_WARN("xgettext is required to update qt translations")
+  fi
+
+  AC_MSG_CHECKING([whether to build test_bitcoin-qt])
+  if test x$use_tests$bitcoin_enable_qt_test = xyesyes; then
+    AC_MSG_RESULT([yes])
     BUILD_TEST_QT="test"
+  else
+    AC_MSG_RESULT([no])
   fi
 fi
 
+AC_MSG_CHECKING([whether to build test_bitcoin])
 if test x$use_tests = xyes; then
+  AC_MSG_RESULT([yes])
   BUILD_TEST="test"
+else
+  AC_MSG_RESULT([no])
+fi
+
+if test "x$use_tests$build_bitcoind$use_qt" = "xnonono"; then
+  AC_MSG_ERROR([No targets! Please specify at least one of: --enable-cli --enable-daemon --enable-gui or --enable-tests])
 fi
 
 AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
+AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet == xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov == xyes])
 AM_CONDITIONAL([USE_COMPARISON_TOOL],[test x$use_comparison_tool != xno])
 AM_CONDITIONAL([USE_COMPARISON_TOOL_REORG_TESTS],[test x$use_comparison_tool_reorg_test != xno])
+AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
 AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
@@ -756,17 +733,10 @@ AC_SUBST(USE_QRCODE)
 AC_SUBST(USE_IPV6)
 AC_SUBST(INCLUDES)
 AC_SUBST(BOOST_LIBS)
-AC_SUBST(MOC_DEFS)
-AC_SUBST(QT_INCLUDES)
-AC_SUBST(QT_TEST_LIBS)
-AC_SUBST(QT_LIBS)
-AC_SUBST(QT_DBUS_LIBS)
-AC_SUBST(QT_DBUS_INCLUDES)
-AC_SUBST(QT_TEST_INCLUDES)
 AC_SUBST(TESTDEFS)
 AC_SUBST(LEVELDB_TARGET_FLAGS)
-AC_SUBST(BUILD_QT)
 AC_SUBST(BUILD_TEST)
+AC_SUBST(BUILD_QT)
 AC_SUBST(BUILD_TEST_QT)
 AC_CONFIG_FILES([Makefile src/Makefile src/test/Makefile src/qt/Makefile src/qt/test/Makefile share/setup.nsi share/qt/Info.plist])
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])

@@ -30,6 +30,8 @@
  * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
  */
 
+static bool fDaemon;
+
 void DetectShutdownThread(boost::thread_group* threadGroup)
 {
     bool fShutdown = ShutdownRequested();
@@ -68,7 +70,13 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
             return false;
         }
-        ReadConfigFile(mapArgs, mapMultiArgs);
+        try
+        {
+            ReadConfigFile(mapArgs, mapMultiArgs);
+        } catch(std::exception &e) {
+            fprintf(stderr,"Error reading configuration file: %s\n", e.what());
+            return false;
+        }
         // Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
         if (!SelectParamsFromCommandLine()) {
             fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
@@ -80,9 +88,9 @@ bool AppInit(int argc, char* argv[])
             // First part of help message is specific to bitcoind / RPC client
             std::string strUsage = _("Bitcoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
                 _("Usage:") + "\n" +
-                  "  bitcoind [options]                     " + _("Start Bitcoin server") + "\n" +
+                  "  bitcoind [options]                     " + _("Start Bitcoin Core Daemon") + "\n" +
                 _("Usage (deprecated, use bitcoin-cli):") + "\n" +
-                  "  bitcoind [options] <command> [params]  " + _("Send command to Bitcoin server") + "\n" +
+                  "  bitcoind [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n" +
                   "  bitcoind [options] help                " + _("List commands") + "\n" +
                   "  bitcoind [options] help <command>      " + _("Get help for a command") + "\n";
 
@@ -108,6 +116,8 @@ bool AppInit(int argc, char* argv[])
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
+            fprintf(stdout, "Bitcoin server starting\n");
+
             // Daemonize
             pid_t pid = fork();
             if (pid < 0)
@@ -127,9 +137,10 @@ bool AppInit(int argc, char* argv[])
                 fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
         }
 #endif
+        SoftSetBoolArg("-server", true);
 
         detectShutdownThread = new boost::thread(boost::bind(&DetectShutdownThread, &threadGroup));
-        fRet = AppInit2(threadGroup, true);
+        fRet = AppInit2(threadGroup);
     }
     catch (std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");

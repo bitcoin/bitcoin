@@ -20,7 +20,6 @@
 #include <boost/foreach.hpp>
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
 #include "json/json_spirit_writer_template.h"
 
@@ -233,10 +232,11 @@ int CommandLineRPC(int argc, char *argv[])
     }
     catch (std::exception& e) {
         strPrint = string("error: ") + e.what();
-        nRet = 87;
+        nRet = abs(RPC_MISC_ERROR);
     }
     catch (...) {
-        PrintException(NULL, "CommandLineRPC()");
+        PrintExceptionContinue(NULL, "CommandLineRPC()");
+        throw;
     }
 
     if (strPrint != "")
@@ -265,11 +265,12 @@ std::string HelpMessageCli(bool mainProgram)
     strUsage += "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n";
     strUsage += "  -rpcport=<port>        " + _("Connect to JSON-RPC on <port> (default: 8332 or testnet: 18332)") + "\n";
     strUsage += "  -rpcwait               " + _("Wait for RPC server to start") + "\n";
-    strUsage += "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n";
-    strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
 
     if(mainProgram)
     {
+        strUsage += "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n";
+        strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
+
         strUsage += "\n" + _("SSL options: (see the Bitcoin Wiki for SSL setup instructions)") + "\n";
         strUsage += "  -rpcssl                " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n";
     }

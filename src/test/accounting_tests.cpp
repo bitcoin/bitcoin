@@ -1,4 +1,6 @@
-
+// Copyright (c) 2012-2014 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "wallet.h"
 #include "walletdb.h"
@@ -33,6 +35,8 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     CWalletTx wtx;
     CAccountingEntry ae;
     std::map<int64_t, CAccountingEntry> results;
+
+    LOCK(pwalletMain->cs_wallet);
 
     ae.strAccount = "";
     ae.nCreditDebit = 1;

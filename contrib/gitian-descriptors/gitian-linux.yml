@@ -1,0 +1,68 @@
+---
+name: "bitcoin"
+suites:
+- "precise"
+architectures:
+- "i386"
+- "amd64"
+packages: 
+- "g++"
+- "libqt4-dev"
+- "git-core"
+- "unzip"
+- "pkg-config"
+- "autoconf2.13"
+- "libtool"
+- "automake"
+- "faketime"
+- "bsdmainutils"
+reference_datetime: "2013-06-01 00:00:00"
+remotes:
+- "url": "https://github.com/bitcoin/bitcoin.git"
+  "dir": "bitcoin"
+files:
+- "bitcoin-deps-linux32-gitian-r5.zip"
+- "bitcoin-deps-linux64-gitian-r5.zip"
+- "boost-linux32-1.55.0-gitian-r1.zip"
+- "boost-linux64-1.55.0-gitian-r1.zip"
+script: |
+  STAGING="$HOME/install"
+  OPTFLAGS='-O2'
+  BINDIR="${OUTDIR}/bin/${GBUILD_BITS}" # 32/64 bit build specific output directory
+  TEMPDIR="$HOME/tempdir"
+  export TZ=UTC
+  export LIBRARY_PATH="$STAGING/lib"
+  mkdir -p ${BINDIR}
+  #
+  mkdir -p $STAGING
+  cd $STAGING
+  unzip ../build/bitcoin-deps-linux${GBUILD_BITS}-gitian-r5.zip
+  unzip ../build/boost-linux${GBUILD_BITS}-1.55.0-gitian-r1.zip
+  cd ../build
+
+  function do_configure {
+    ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
+  }
+  #
+  cd bitcoin
+  ./autogen.sh
+  do_configure
+  make dist
+  DISTNAME=`echo bitcoin-*.tar.gz`
+
+  # Build dynamic versions of everything
+  # (with static linking to boost and openssl as well a some non-OS deps)
+  mkdir -p distsrc
+  cd distsrc
+  tar --strip-components=1 -xf ../$DISTNAME
+  do_configure --bindir=$BINDIR 
+  make $MAKEOPTS
+  make $MAKEOPTS install-strip
+  make $MAKEOPTS clean
+
+  # sort distribution tar file and normalize user/group/mtime information for deterministic output
+  mkdir -p $OUTDIR/src
+  rm -rf $TEMPDIR
+  mkdir -p $TEMPDIR
+  cd $TEMPDIR
+  tar -xvf $HOME/build/bitcoin/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME

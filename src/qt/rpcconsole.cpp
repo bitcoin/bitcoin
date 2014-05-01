@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -200,7 +200,6 @@ RPCConsole::RPCConsole(QWidget *parent) :
 
 #ifndef Q_OS_MAC
     ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
-    ui->showCLOptionsButton->setIcon(QIcon(":/icons/options"));
 #endif
 
     // Install event filter for up and down arrow
@@ -332,6 +331,13 @@ void RPCConsole::clear()
                         tr("Type <b>help</b> for an overview of available commands.")), true);
 }
 
+void RPCConsole::reject()
+{
+    // Ignore escape keypress if this is not a seperate window
+    if(windowType() != Qt::Widget)
+        QDialog::reject();
+}
+
 void RPCConsole::message(int category, const QString &message, bool html)
 {
     QTime time = QTime::currentTime();
@@ -350,7 +356,14 @@ void RPCConsole::message(int category, const QString &message, bool html)
 
 void RPCConsole::setNumConnections(int count)
 {
-    ui->numberOfConnections->setText(QString::number(count));
+    if (!clientModel)
+        return;
+
+    QString connections = QString::number(count) + " (";
+    connections += tr("In:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_IN)) + " / ";
+    connections += tr("Out:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_OUT)) + ")";
+
+    ui->numberOfConnections->setText(connections);
 }
 
 void RPCConsole::setNumBlocks(int count, int countOfPeers)
@@ -439,12 +452,6 @@ void RPCConsole::scrollToEnd()
 {
     QScrollBar *scrollbar = ui->messagesWidget->verticalScrollBar();
     scrollbar->setValue(scrollbar->maximum());
-}
-
-void RPCConsole::on_showCLOptionsButton_clicked()
-{
-    GUIUtil::HelpMessageBox help;
-    help.exec();
 }
 
 void RPCConsole::on_sldGraphRange_valueChanged(int value)

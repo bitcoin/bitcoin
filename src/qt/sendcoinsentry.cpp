@@ -28,9 +28,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
 #endif
 #if QT_VERSION >= 0x040700
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
-    ui->payTo->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
 #endif
-    setFocusProxy(ui->payTo);
 
     // normal bitcoin address field
     GUIUtil::setupAddressWidget(ui->payTo, this);
@@ -88,6 +86,9 @@ void SendCoinsEntry::clear()
     ui->payTo->clear();
     ui->addAsLabel->clear();
     ui->payAmount->clear();
+    ui->messageTextLabel->clear();
+    ui->messageTextLabel->hide();
+    ui->messageLabel->hide();
     // clear UI elements for insecure payment request
     ui->payTo_is->clear();
     ui->memoTextLabel_is->clear();
@@ -118,7 +119,7 @@ bool SendCoinsEntry::validate()
     if (recipient.paymentRequest.IsInitialized())
         return retval;
 
-    if (!ui->payTo->hasAcceptableInput() || !model->validateAddress(ui->payTo->text()))
+    if (!model->validateAddress(ui->payTo->text()))
     {
         ui->payTo->setValid(false);
         retval = false;
@@ -148,6 +149,7 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
     recipient.amount = ui->payAmount->value();
+    recipient.message = ui->messageTextLabel->text();
 
     return recipient;
 }
@@ -155,11 +157,12 @@ SendCoinsRecipient SendCoinsEntry::getValue()
 QWidget *SendCoinsEntry::setupTabChain(QWidget *prev)
 {
     QWidget::setTabOrder(prev, ui->payTo);
-    QWidget::setTabOrder(ui->payTo, ui->addressBookButton);
+    QWidget::setTabOrder(ui->payTo, ui->addAsLabel);
+    QWidget *w = ui->payAmount->setupTabChain(ui->addAsLabel);
+    QWidget::setTabOrder(w, ui->addressBookButton);
     QWidget::setTabOrder(ui->addressBookButton, ui->pasteButton);
     QWidget::setTabOrder(ui->pasteButton, ui->deleteButton);
-    QWidget::setTabOrder(ui->deleteButton, ui->addAsLabel);
-    return ui->payAmount->setupTabChain(ui->addAsLabel);
+    return ui->deleteButton;
 }
 
 void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
@@ -187,8 +190,15 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
     }
     else // normal payment
     {
-        ui->payTo->setText(recipient.address);
-        ui->addAsLabel->setText(recipient.label);
+        // message
+        ui->messageTextLabel->setText(recipient.message);
+        ui->messageTextLabel->setVisible(!recipient.message.isEmpty());
+        ui->messageLabel->setVisible(!recipient.message.isEmpty());
+
+        ui->addAsLabel->clear();
+        ui->payTo->setText(recipient.address); // this may set a label from addressbook
+        if (!recipient.label.isEmpty()) // if a label had been set from the addressbook, dont overwrite with an empty label
+            ui->addAsLabel->setText(recipient.label);
         ui->payAmount->setValue(recipient.amount);
     }
 }

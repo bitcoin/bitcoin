@@ -34,6 +34,7 @@ src/qt/test/moc*.cpp
 *.rej
 *.orig
 *.o
+*.o-*
 *.patch
 .bitcoin
 *.a
@@ -81,4 +82,4 @@ win32-build
 qa/pull-tester/run-bitcoind-for-test.sh
 qa/pull-tester/build-tests.sh
 
-!src/leveldb-*/Makefile
+!src/leveldb*/Makefile

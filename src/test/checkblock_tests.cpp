@@ -1,3 +1,7 @@
+// Copyright (c) 2013-2014 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 //
 // Unit tests for block.CheckBlock()
 //
@@ -15,8 +19,7 @@
 
 BOOST_AUTO_TEST_SUITE(CheckBlock_tests)
 
-bool
-read_block(const std::string& filename, CBlock& block)
+bool read_block(const std::string& filename, CBlock& block)
 {
     namespace fs = boost::filesystem;
     fs::path testFile = fs::current_path() / "data" / filename;
