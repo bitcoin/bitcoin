@@ -36,6 +36,7 @@ public:
         Fee,                    // qint64
         DisplayUnit,            // BitcoinUnits::Unit
         DisplayAddresses,       // bool
+        ThirdPartyTxUrls,       // QString
         Language,               // QString
         CoinControlFeatures,    // bool
         ThreadsScriptVerif,     // int
@@ -56,6 +57,7 @@ public:
     bool getMinimizeOnClose() { return fMinimizeOnClose; }
     int getDisplayUnit() { return nDisplayUnit; }
     bool getDisplayAddresses() { return bDisplayAddresses; }
+    QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
     bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() { return fCoinControlFeatures; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
@@ -71,6 +73,7 @@ private:
     QString language;
     int nDisplayUnit;
     bool bDisplayAddresses;
+    QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
     /* settings that were overriden by command-line */
     QString strOverriddenByCommandLine;

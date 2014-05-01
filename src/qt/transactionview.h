@@ -19,6 +19,7 @@ class QFrame;
 class QLineEdit;
 class QMenu;
 class QModelIndex;
+class QSignalMapper;
 class QTableView;
 QT_END_NAMESPACE
 
@@ -65,6 +66,7 @@ private:
     QLineEdit *amountWidget;
 
     QMenu *contextMenu;
+    QSignalMapper *mapperThirdPartyTxUrls;
 
     QFrame *dateRangeWidget;
     QDateTimeEdit *dateFrom;
@@ -85,6 +87,7 @@ private slots:
     void copyLabel();
     void copyAmount();
     void copyTxID();
+    void openThirdPartyTxUrl(QString url);
 
 signals:
     void doubleClicked(const QModelIndex&);

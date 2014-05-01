@@ -63,6 +63,10 @@ void OptionsModel::Init()
         settings.setValue("bDisplayAddresses", false);
     bDisplayAddresses = settings.value("bDisplayAddresses", false).toBool();
 
+    if (!settings.contains("strThirdPartyTxUrls"))
+        settings.setValue("strThirdPartyTxUrls", "");
+    strThirdPartyTxUrls = settings.value("strThirdPartyTxUrls", "").toString();
+
     if (!settings.contains("fCoinControlFeatures"))
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
@@ -203,6 +207,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return nDisplayUnit;
         case DisplayAddresses:
             return bDisplayAddresses;
+        case ThirdPartyTxUrls:
+            return strThirdPartyTxUrls;
         case Language:
             return settings.value("language");
         case CoinControlFeatures:
@@ -303,6 +309,13 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case DisplayAddresses:
             bDisplayAddresses = value.toBool();
             settings.setValue("bDisplayAddresses", bDisplayAddresses);
+            break;
+        case ThirdPartyTxUrls:
+            if (strThirdPartyTxUrls != value.toString()) {
+                strThirdPartyTxUrls = value.toString();
+                settings.setValue("strThirdPartyTxUrls", strThirdPartyTxUrls);
+                setRestartRequired(true);
+            }
             break;
         case Language:
             if (settings.value("language") != value) {
