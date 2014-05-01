@@ -50,6 +50,8 @@ public:
         AmountRole,
         /** Unique identifier */
         TxIDRole,
+        /** Transaction hash */
+        TxHashRole,
         /** Is transaction confirmed? */
         ConfirmedRole,
         /** Formatted amount, without brackets when unconfirmed */
