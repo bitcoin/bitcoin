@@ -32,10 +32,6 @@ turned off by default.  See the configure options for upnp behavior desired:
 	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
 	--enable-upnp-default    UPnP support turned on by default at runtime
 
-IPv6 support may be disabled by setting:
-
-	--disable-ipv6           Disable IPv6 support
-
 Licenses of statically linked libraries:
  Berkeley DB   New BSD license with additional requirement that linked
                software must be free open source
