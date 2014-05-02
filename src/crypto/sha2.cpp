@@ -4,41 +4,11 @@
 
 #include "crypto/sha2.h"
 
+#include "crypto/common.h"
 #include <string.h>
 
 // Internal implementation code.
 namespace {
-
-/** Read 4 bytes, and interpret them as a 32-bit unsigned big-endian integer. */
-uint32_t inline ReadBE32(const unsigned char *data) {
-    return ((uint32_t)data[0] << 24 | (uint32_t)data[1] << 16 | (uint32_t)data[2] << 8 | (uint32_t)data[3]);
-}
-
-/** Write a 32-bit unsigned big-endian integer. */
-void inline WriteBE32(unsigned char *data, uint32_t x) {
-    data[0] = x >> 24;
-    data[1] = x >> 16;
-    data[2] = x >> 8;
-    data[3] = x;
-}
-
-/** Read 8 bytes, and interpret them as a 64-bit unsigned big-endian integer. */
-uint64_t inline ReadBE64(const unsigned char *data) {
-    return ((uint64_t)data[0] << 56 | (uint64_t)data[1] << 48 | (uint64_t)data[2] << 40 | (uint64_t)data[3] << 32 |
-            (uint64_t)data[4] << 24 | (uint64_t)data[5] << 16 | (uint64_t)data[6] << 8  | (uint64_t)data[7]);
-}
-
-/** Write a 64-bit unsigned big-endian integer. */
-void inline WriteBE64(unsigned char *data, uint64_t x) {
-    data[0] = x >> 56;
-    data[1] = x >> 48;
-    data[2] = x >> 40;
-    data[3] = x >> 32;
-    data[4] = x >> 24;
-    data[5] = x >> 16;
-    data[6] = x >> 8;
-    data[7] = x;
-}
 
 /// Internal SHA-256 implementation.
 namespace sha256 {
