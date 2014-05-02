@@ -62,6 +62,17 @@ QString PaymentRequestPlus::getPKIType() const
     return QString::fromStdString(paymentRequest.pki_type());
 }
 
+static int certVerifyCallback(int ok, X509_STORE_CTX* ctx)
+{
+    if (X509_STORE_CTX_get_error(ctx) == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT) {
+        // Optionally allow self-signed certificates for testing.
+        if (GetBoolArg("-payreqselfsigned", false))
+            return 1;
+    }
+
+    return ok;
+}
+
 bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) const
 {
     merchant.clear();
@@ -143,6 +154,8 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
             int error = X509_STORE_CTX_get_error(store_ctx);
             throw SSLVerifyError(X509_verify_cert_error_string(error));
         }
+
+        X509_STORE_set_verify_cb_func(store_ctx, certVerifyCallback);
 
         // Now do the verification!
         int result = X509_verify_cert(store_ctx);

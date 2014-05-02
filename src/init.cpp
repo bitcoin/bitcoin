@@ -295,6 +295,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     }
     strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
+    strUsage += "  -payreqselfsigned      " + _("Consider payment requests signed with self-signed certificates as verified.") + "\n";
 
     strUsage += "\n" + _("Block creation options:") + "\n";
     strUsage += "  -blockminsize=<n>      " + _("Set minimum block size in bytes (default: 0)") + "\n";
