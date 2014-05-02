@@ -59,7 +59,7 @@ script: |
     local: *;
   };' > $LINKER_SCRIPT
   function do_configure {
-      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
+      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-qt-bindir=$STAGING/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
   }
   #
   cd bitcoin
