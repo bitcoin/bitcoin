@@ -239,6 +239,20 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
+    // make sure any payment requests involved are still valid.
+    foreach(const SendCoinsRecipient &rcp, recipients)
+    {
+        if (rcp.paymentRequest.IsInitialized())
+        {
+            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
+            if (details.has_expires() && (int64_t)details.expires() < GetTime())
+            {
+                emit message(tr("Payment request error"), tr("Payment request expired"), CClientUIInterface::MSG_ERROR);
+                return;
+            }
+        }
+    }
+
     // now send the prepared transaction
     WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction);
     // process sendStatus and on error generate message shown to user
