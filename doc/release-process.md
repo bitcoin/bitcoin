@@ -47,12 +47,15 @@ Release Process
 	wget 'https://svn.boost.org/trac/boost/raw-attachment/ticket/7262/boost-mingw.patch' -O \ 
 	     boost-mingw-gas-cross-compile-2013-03-03.patch
 	wget 'https://download.qt-project.org/official_releases/qt/5.2/5.2.0/single/qt-everywhere-opensource-src-5.2.0.tar.gz'
+	wget 'https://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.4.tar.gz'
 	wget 'https://protobuf.googlecode.com/files/protobuf-2.5.0.tar.bz2'
 	cd ..
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-linux.yml
 	mv build/out/boost-*.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-linux.yml
 	mv build/out/bitcoin-deps-*.zip inputs/
+	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/qt-linux.yml
+	mv build/out/qt-*.tar.gz inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-win.yml
 	mv build/out/boost-*.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-win.yml
@@ -68,6 +71,8 @@ Release Process
     571789867d172500fa96d63d0ba8c5b1e1a3d6f44f720eddf2f93665affc88b3  bitcoin-deps-linux64-gitian-r5.zip
     f29b7d9577417333fb56e023c2977f5726a7c297f320b175a4108cf7cd4c2d29  boost-linux32-1.55.0-gitian-r1.zip
     88232451c4104f7eb16e469ac6474fd1231bd485687253f7b2bdf46c0781d535  boost-linux64-1.55.0-gitian-r1.zip
+    74ec2d301cf1a9d03b194153f545102ba45dad02b390485212fe6717de486361  qt-linux32-4.6.4-gitian-r1.tar.gz
+    01d0477e299467f09280f15424781154e2b1ea4072c5edb16e044c234954fd9a  qt-linux64-4.6.4-gitian-r1.tar.gz
     60dc2d3b61e9c7d5dbe2f90d5955772ad748a47918ff2d8b74e8db9b1b91c909  boost-win32-1.55.0-gitian-r6.zip
     f65fcaf346bc7b73bc8db3a8614f4f6bee2f61fcbe495e9881133a7c2612a167  boost-win64-1.55.0-gitian-r6.zip
     97e62002d338885336bb24e7cbb9471491294bd8857af7a83d18c0961f864ec0  bitcoin-deps-win32-gitian-r11.zip

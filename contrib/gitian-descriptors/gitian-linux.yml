@@ -7,7 +7,6 @@ architectures:
 - "amd64"
 packages: 
 - "g++"
-- "libqt4-dev"
 - "git-core"
 - "unzip"
 - "pkg-config"
@@ -16,6 +15,11 @@ packages:
 - "automake"
 - "faketime"
 - "bsdmainutils"
+- "libqt4-core"
+- "libqt4-gui"
+- "libqt4-dbus"
+- "libqt4-network"
+- "libqt4-test"
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
@@ -25,6 +29,8 @@ files:
 - "bitcoin-deps-linux64-gitian-r5.zip"
 - "boost-linux32-1.55.0-gitian-r1.zip"
 - "boost-linux64-1.55.0-gitian-r1.zip"
+- "qt-linux32-4.6.4-gitian-r1.tar.gz"
+- "qt-linux64-4.6.4-gitian-r1.tar.gz"
 script: |
   STAGING="$HOME/install"
   OPTFLAGS='-O2'
@@ -32,16 +38,28 @@ script: |
   TEMPDIR="$HOME/tempdir"
   export TZ=UTC
   export LIBRARY_PATH="$STAGING/lib"
+  export PATH="$STAGING/bin:$PATH"
   mkdir -p ${BINDIR}
   #
   mkdir -p $STAGING
   cd $STAGING
   unzip ../build/bitcoin-deps-linux${GBUILD_BITS}-gitian-r5.zip
   unzip ../build/boost-linux${GBUILD_BITS}-1.55.0-gitian-r1.zip
+  tar -zxf ../build/qt-linux${GBUILD_BITS}-4.6.4-gitian-r1.tar.gz
   cd ../build
 
+  # Avoid exporting *any* symbols from the executable
+  # This avoids conflicts between the libraries statically linked into bitcoin and any
+  # libraries we may link dynamically (such as Qt and OpenSSL, see issue #4094).
+  # It also avoids start-up overhead to not export any unnecessary symbols.
+  # To do this, build a linker script that marks all symbols as local.
+  LINKER_SCRIPT=$HOME/build/linker_version_script
+  echo '
+  {
+    local: *;
+  };' > $LINKER_SCRIPT
   function do_configure {
-    ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
+      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
   }
   #
   cd bitcoin
