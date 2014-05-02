@@ -372,7 +372,7 @@ translate: bitcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(
 $(QT_QRC_CPP): $(QT_QRC) $(QT_QM) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
 	@cd $(abs_srcdir); test -f $(RCC) && QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin -o $(abs_builddir)/$@ $< || \
 	  echo error: could not build $@
-	$(SED) -i.bak -e '/^\*\*.*Created:/d' $@ && rm $@.bak
-	$(SED) -i.bak -e '/^\*\*.*by:/d' $@ && rm $@.bak
+	$(SED) -e '/^\*\*.*Created:/d' $@ > $@.n && mv $@{.n,}
+	$(SED) -e '/^\*\*.*by:/d' $@  > $@.n && mv $@{.n,}
 
 CLEANFILES = $(BUILT_SOURCES) $(QT_QM) $(QT_FORMS_H) *.gcda *.gcno
