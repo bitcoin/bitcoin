@@ -342,4 +342,26 @@ BOOST_AUTO_TEST_CASE(gettime)
     BOOST_CHECK((GetTime() & ~0xFFFFFFFFLL) == 0);
 }
 
+BOOST_AUTO_TEST_CASE(test_ParseInt32)
+{
+    int32_t n;
+    // Valid values
+    BOOST_CHECK(ParseInt32("1234", NULL));
+    BOOST_CHECK(ParseInt32("0", &n) && n == 0);
+    BOOST_CHECK(ParseInt32("1234", &n) && n == 1234);
+    BOOST_CHECK(ParseInt32("01234", &n) && n == 1234); // no octal
+    BOOST_CHECK(ParseInt32("2147483647", &n) && n == 2147483647);
+    BOOST_CHECK(ParseInt32("-2147483648", &n) && n == -2147483648);
+    BOOST_CHECK(ParseInt32("-1234", &n) && n == -1234);
+    // Invalid values
+    BOOST_CHECK(!ParseInt32("1a", &n));
+    BOOST_CHECK(!ParseInt32("aap", &n));
+    BOOST_CHECK(!ParseInt32("0x1", &n)); // no hex
+    // Overflow and underflow
+    BOOST_CHECK(!ParseInt32("-2147483649", NULL));
+    BOOST_CHECK(!ParseInt32("2147483648", NULL));
+    BOOST_CHECK(!ParseInt32("-32482348723847471234", NULL));
+    BOOST_CHECK(!ParseInt32("32482348723847471234", NULL));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
