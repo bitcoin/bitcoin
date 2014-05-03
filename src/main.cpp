@@ -34,6 +34,7 @@ using namespace boost;
 // Global state
 //
 
+statsd::StatsdClient statsClient;
 CCriticalSection cs_main;
 
 CTxMemPool mempool;
@@ -724,6 +725,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
 
 bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 {
+    boost::posix_time::ptime start = boost::posix_time::second_clock::local_time();
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.DoS(10, error("CheckTransaction() : vin empty"),
@@ -776,6 +778,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
                                  REJECT_INVALID, "bad-txns-prevout-null");
     }
 
+    boost::posix_time::ptime finish = boost::posix_time::second_clock::local_time();
+    boost::posix_time::time_duration diff = finish - start;
+    statsClient.timing("timing.CheckTransaction", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
@@ -817,6 +822,7 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectInsaneFee)
 {
+    boost::posix_time::ptime start = boost::posix_time::second_clock::local_time();
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
@@ -955,6 +961,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     g_signals.SyncTransaction(hash, tx, NULL);
 
+    boost::posix_time::ptime finish = boost::posix_time::second_clock::local_time();
+    boost::posix_time::time_duration diff = finish - start;
+    statsClient.timing("timing.AcceptToMemoryPool", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
@@ -1423,12 +1432,16 @@ void Misbehaving(NodeId pnode, int howmuch)
     {
         LogPrintf("Misbehaving: %s (%d -> %d) BAN THRESHOLD EXCEEDED\n", state->name, state->nMisbehavior-howmuch, state->nMisbehavior);
         state->fShouldBan = true;
-    } else
+        statsClient.inc("misbehavior.banned", 1.0);
+    } else {
         LogPrintf("Misbehaving: %s (%d -> %d)\n", state->name, state->nMisbehavior-howmuch, state->nMisbehavior);
+        statsClient.count("misbehavior.amount", howmuch, 1.0);
+    }
 }
 
 void static InvalidChainFound(CBlockIndex* pindexNew)
 {
+    statsClient.inc("warnings.InvalidBlockFound", 1.0f);
     if (!pindexBestInvalid || pindexNew->nChainWork > pindexBestInvalid->nChainWork)
     {
         pindexBestInvalid = pindexNew;
@@ -1449,6 +1462,7 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
 }
 
 void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state) {
+    statsClient.inc("warnings.InvalidBlockFound", 1.0f);
     int nDoS = 0;
     if (state.IsInvalid(nDoS)) {
         std::map<uint256, NodeId>::iterator it = mapBlockSource.find(pindex->GetBlockHash());
@@ -1519,6 +1533,7 @@ bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned in
 
 bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, std::vector<CScriptCheck> *pvChecks)
 {
+    boost::posix_time::ptime start = boost::posix_time::second_clock::local_time();
     if (!tx.IsCoinBase())
     {
         if (pvChecks)
@@ -1601,6 +1616,9 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
         }
     }
 
+    boost::posix_time::ptime finish = boost::posix_time::second_clock::local_time();
+    boost::posix_time::time_duration diff = finish - start;
+    statsClient.timing("timing.CheckInputs", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
@@ -2291,6 +2309,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot)
 {
+    boost::posix_time::ptime start = boost::posix_time::second_clock::local_time();
     // These are checks that are independent of context
     // that can be verified before saving an orphan block.
 
@@ -2352,11 +2371,15 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         return state.DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"),
                          REJECT_INVALID, "bad-txnmrklroot", true);
 
+    boost::posix_time::ptime finish = boost::posix_time::second_clock::local_time();
+    boost::posix_time::time_duration diff = finish - start;
+    statsClient.timing("timing.CheckBlock", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
 bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
 {
+    boost::posix_time::ptime start = boost::posix_time::second_clock::local_time();
     AssertLockHeld(cs_main);
     // Check for duplicate
     uint256 hash = block.GetHash();
@@ -2452,6 +2475,9 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
                 pnode->PushInventory(CInv(MSG_BLOCK, hash));
     }
 
+    boost::posix_time::ptime finish = boost::posix_time::second_clock::local_time();
+    boost::posix_time::time_duration diff = finish - start;
+    statsClient.timing("timing.AcceptBlock", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
@@ -3370,6 +3396,8 @@ void static ProcessGetData(CNode* pfrom)
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
+    statsClient.inc("message.received." + strCommand, 1.0f);
+
     RandAddSeedPerfmon();
     LogPrint("net", "received: %s (%"PRIszu" bytes)\n", strCommand, vRecv.size());
     if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
@@ -3586,6 +3614,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
             const CInv &inv = vInv[nInv];
+            
+            if (inv.type == MSG_TX)
+                statsClient.inc("message.received.inv.tx", 1.0f);
+            else if (inv.type == MSG_BLOCK)
+                statsClient.inc("message.received.inv.block", 1.0f);
 
             boost::this_thread::interruption_point();
             pfrom->AddInventoryKnown(inv);

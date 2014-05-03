@@ -509,6 +509,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
             vNodes.push_back(pnode);
         }
 
+        statsClient.inc("peers.connect", 1.0f);
         pnode->nTimeConnected = GetTime();
         return pnode;
     }
@@ -526,6 +527,7 @@ void CNode::CloseSocketDisconnect()
         LogPrint("net", "disconnecting node %s\n", addrName);
         closesocket(hSocket);
         hSocket = INVALID_SOCKET;
+        statsClient.inc("peers.disconnect", 1.0f);
     }
 
     // in case this fails, we'll empty the recv buffer when the CNode is deleted
@@ -826,6 +828,7 @@ void ThreadSocketHandler()
         if(vNodes.size() != nPrevNodeCount) {
             nPrevNodeCount = vNodes.size();
             uiInterface.NotifyNumConnectionsChanged(nPrevNodeCount);
+            statsClient.gauge("peers.totalConnections", nPrevNodeCount, 1.0f);
         }
 
 
@@ -1873,12 +1876,16 @@ void CNode::RecordBytesRecv(uint64_t bytes)
 {
     LOCK(cs_totalBytesRecv);
     nTotalBytesRecv += bytes;
+    statsClient.count("bandwidth.bytesReceived", bytes, 1.0f);
+    statsClient.gauge("bandwidth.totalBytesReceived", nTotalBytesRecv, 1.0f);
 }
 
 void CNode::RecordBytesSent(uint64_t bytes)
 {
     LOCK(cs_totalBytesSent);
     nTotalBytesSent += bytes;
+    statsClient.count("bandwidth.bytesSent", bytes, 1.0f);
+    statsClient.gauge("bandwidth.totalBytesSent", nTotalBytesSent, 1.0f);
 }
 
 uint64_t CNode::GetTotalBytesRecv()
