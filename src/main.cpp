@@ -3616,9 +3616,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             const CInv &inv = vInv[nInv];
             
             if (inv.type == MSG_TX)
-                statsClient.inc("message.received.inv.tx", 1.0f);
+                statsClient.inc("message.received.inv_tx", 1.0f);
             else if (inv.type == MSG_BLOCK)
-                statsClient.inc("message.received.inv.block", 1.0f);
+                statsClient.inc("message.received.inv_block", 1.0f);
 
             boost::this_thread::interruption_point();
             pfrom->AddInventoryKnown(inv);
