@@ -38,7 +38,7 @@ Licenses of statically linked libraries:
  Boost         MIT-like license
  miniupnpc     New (3-clause) BSD license
 
-- For the versions used in this release, see doc/release-process.md under *Fetch and build inputs*.
+- For the versions used in the release, see doc/release-process.md under *Fetch and build inputs*.
 
 System requirements
 --------------------
@@ -87,7 +87,6 @@ for other Ubuntu & Debian:
 
 	sudo apt-get install libdb4.8-dev
 	sudo apt-get install libdb4.8++-dev
-	sudo apt-get install libboost1.55-all-dev
 
 Optional:
 
