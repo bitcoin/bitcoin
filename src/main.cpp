@@ -725,7 +725,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
 
 bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 {
-    boost::posix_time::ptime start = boost::posix_time::second_clock::local_time();
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.DoS(10, error("CheckTransaction() : vin empty"),
@@ -778,9 +778,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
                                  REJECT_INVALID, "bad-txns-prevout-null");
     }
 
-    boost::posix_time::ptime finish = boost::posix_time::second_clock::local_time();
+    boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
-    statsClient.timing("timing.CheckTransaction", diff.total_milliseconds(), 1.0f);
+    statsClient.timing("CheckTransaction", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
@@ -822,7 +822,7 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectInsaneFee)
 {
-    boost::posix_time::ptime start = boost::posix_time::second_clock::local_time();
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
@@ -961,9 +961,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     g_signals.SyncTransaction(hash, tx, NULL);
 
-    boost::posix_time::ptime finish = boost::posix_time::second_clock::local_time();
+    boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
-    statsClient.timing("timing.AcceptToMemoryPool", diff.total_milliseconds(), 1.0f);
+    statsClient.timing("AcceptToMemoryPool", diff.total_microseconds(), 1.0f);
     return true;
 }
 
@@ -1533,7 +1533,7 @@ bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned in
 
 bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, std::vector<CScriptCheck> *pvChecks)
 {
-    boost::posix_time::ptime start = boost::posix_time::second_clock::local_time();
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
     if (!tx.IsCoinBase())
     {
         if (pvChecks)
@@ -1616,9 +1616,9 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
         }
     }
 
-    boost::posix_time::ptime finish = boost::posix_time::second_clock::local_time();
+    boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
-    statsClient.timing("timing.CheckInputs", diff.total_milliseconds(), 1.0f);
+    statsClient.timing("CheckInputs", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
@@ -2309,7 +2309,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot)
 {
-    boost::posix_time::ptime start = boost::posix_time::second_clock::local_time();
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
     // These are checks that are independent of context
     // that can be verified before saving an orphan block.
 
@@ -2371,15 +2371,15 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         return state.DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"),
                          REJECT_INVALID, "bad-txnmrklroot", true);
 
-    boost::posix_time::ptime finish = boost::posix_time::second_clock::local_time();
+    boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
-    statsClient.timing("timing.CheckBlock", diff.total_milliseconds(), 1.0f);
+    statsClient.timing("CheckBlock", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
 bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
 {
-    boost::posix_time::ptime start = boost::posix_time::second_clock::local_time();
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
     AssertLockHeld(cs_main);
     // Check for duplicate
     uint256 hash = block.GetHash();
@@ -2475,9 +2475,9 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
                 pnode->PushInventory(CInv(MSG_BLOCK, hash));
     }
 
-    boost::posix_time::ptime finish = boost::posix_time::second_clock::local_time();
+    boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
-    statsClient.timing("timing.AcceptBlock", diff.total_milliseconds(), 1.0f);
+    statsClient.timing("AcceptBlock", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
