@@ -106,11 +106,7 @@ void OptionsModel::Init()
 
     // Network
     if (!settings.contains("fUseUPnP"))
-#ifdef USE_UPNP
-        settings.setValue("fUseUPnP", true);
-#else
-        settings.setValue("fUseUPnP", false);
-#endif
+        settings.setValue("fUseUPnP", DEFAULT_UPNP);
     if (!SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
         addOverriddenOption("-upnp");
 
