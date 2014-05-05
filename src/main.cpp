@@ -2079,47 +2079,43 @@ static CBlockIndex* FindMostWorkChain() {
     } while(true);
 }
 
-// Try to activate to the most-work chain (thereby connecting it).
-bool ActivateBestChain(CValidationState &state) {
-    LOCK(cs_main);
+// Try to make some progress towards making pindexMostWork the active block.
+static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMostWork) {
+    AssertLockHeld(cs_main);
     CBlockIndex *pindexOldTip = chainActive.Tip();
-    bool fComplete = false;
-    while (!fComplete) {
-        CBlockIndex *pindexMostWork = FindMostWorkChain();
-        CBlockIndex *pindexFork = chainActive.FindFork(pindexMostWork);
-        fComplete = true;
+    CBlockIndex *pindexFork = chainActive.FindFork(pindexMostWork);
 
-        // Check whether we have something to do.
-        if (pindexMostWork == NULL) break;
+    // Disconnect active blocks which are no longer in the best chain.
+    while (chainActive.Tip() && chainActive.Tip() != pindexFork) {
+        if (!DisconnectTip(state))
+            return false;
+    }
 
-        // Disconnect active blocks which are no longer in the best chain.
-        while (chainActive.Tip() && chainActive.Tip() != pindexFork) {
-            if (!DisconnectTip(state))
+    // Build list of new blocks to connect.
+    std::vector<CBlockIndex*> vpindexToConnect;
+    vpindexToConnect.reserve(pindexMostWork->nHeight - (pindexFork ? pindexFork->nHeight : -1));
+    while (pindexMostWork && pindexMostWork != pindexFork) {
+        vpindexToConnect.push_back(pindexMostWork);
+        pindexMostWork = pindexMostWork->pprev;
+    }
+
+    // Connect new blocks.
+    BOOST_REVERSE_FOREACH(CBlockIndex *pindexConnect, vpindexToConnect) {
+        if (!ConnectTip(state, pindexConnect)) {
+            if (state.IsInvalid()) {
+                // The block violates a consensus rule.
+                if (!state.CorruptionPossible())
+                    InvalidChainFound(vpindexToConnect.back());
+                state = CValidationState();
+                break;
+            } else {
+                // A system error occurred (disk space, database error, ...).
                 return false;
-        }
-
-        // Build list of new blocks to connect.
-        std::vector<CBlockIndex*> vpindexToConnect;
-        vpindexToConnect.reserve(pindexMostWork->nHeight - (pindexFork ? pindexFork->nHeight : -1));
-        while (pindexMostWork && pindexMostWork != pindexFork) {
-            vpindexToConnect.push_back(pindexMostWork);
-            pindexMostWork = pindexMostWork->pprev;
-        }
-
-        // Connect new blocks.
-        BOOST_REVERSE_FOREACH(CBlockIndex *pindexConnect, vpindexToConnect) {
-            if (!ConnectTip(state, pindexConnect)) {
-                if (state.IsInvalid()) {
-                    // The block violates a consensus rule.
-                    if (!state.CorruptionPossible())
-                        InvalidChainFound(vpindexToConnect.back());
-                    fComplete = false;
-                    state = CValidationState();
-                    break;
-                } else {
-                    // A system error occurred (disk space, database error, ...).
-                    return false;
-                }
+            }
+        } else {
+            if (!pindexOldTip || chainActive.Tip()->nChainWork > pindexOldTip->nChainWork) {
+                // We're in a better position than we were. Return temporarily to release the lock.
+                break;
             }
         }
     }
@@ -2136,6 +2132,28 @@ bool ActivateBestChain(CValidationState &state) {
     return true;
 }
 
+bool ActivateBestChain(CValidationState &state) {
+    do {
+        boost::this_thread::interruption_point();
+
+        LOCK(cs_main);
+
+        // Check whether we're done (this could be avoided after the first run,
+        // but that's not worth optimizing.
+        CBlockIndex *pindexMostWork = FindMostWorkChain();
+        if (pindexMostWork == NULL || pindexMostWork == chainActive.Tip())
+            return true;
+
+        if (!ActivateBestChainStep(state, pindexMostWork))
+            return false;
+
+        // Check whether we're done now.
+        if (pindexMostWork == chainActive.Tip())
+            return true;
+    } while(true);
+
+    return true;
+}
 
 CBlockIndex* AddToBlockIndex(CBlockHeader& block)
 {
