@@ -52,7 +52,7 @@ public slots:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks shown in the UI */
-    void setNumBlocks(int count, int countOfPeers);
+    void setNumBlocks(int count);
     /** Go forward or back in history */
     void browseHistory(int offset);
     /** Scroll console view to end */
