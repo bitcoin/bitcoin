@@ -40,7 +40,6 @@ CTxMemPool mempool;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
 CChain chainActive;
-CChain chainMostWork;
 int64_t nTimeBestReceived = 0;
 int nScriptCheckThreads = 0;
 bool fImporting = false;
@@ -396,6 +395,12 @@ CBlockIndex *CChain::FindFork(const CBlockLocator &locator) const {
         }
     }
     return Genesis();
+}
+
+CBlockIndex *CChain::FindFork(CBlockIndex *pindex) const {
+    while (pindex && !Contains(pindex))
+        pindex = pindex->pprev;
+    return pindex;
 }
 
 CCoinsViewCache *pcoinsTip = NULL;
@@ -2035,23 +2040,17 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     return true;
 }
 
-// Make chainMostWork correspond to the chain with the most work in it, that isn't
+// Return the tip of the chain with the most work in it, that isn't
 // known to be invalid (it's however far from certain to be valid).
-void static FindMostWorkChain() {
-    CBlockIndex *pindexNew = NULL;
-
-    // In case the current best is invalid, do not consider it.
-    while (chainMostWork.Tip() && (chainMostWork.Tip()->nStatus & BLOCK_FAILED_MASK)) {
-        setBlockIndexValid.erase(chainMostWork.Tip());
-        chainMostWork.SetTip(chainMostWork.Tip()->pprev);
-    }
-
+static CBlockIndex* FindMostWorkChain() {
     do {
+        CBlockIndex *pindexNew = NULL;
+
         // Find the best candidate header.
         {
             std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
             if (it == setBlockIndexValid.rend())
-                return;
+                return NULL;
             pindexNew = *it;
         }
 
@@ -2075,18 +2074,9 @@ void static FindMostWorkChain() {
             }
             pindexTest = pindexTest->pprev;
         }
-        if (fInvalidAncestor)
-            continue;
-
-        break;
+        if (!fInvalidAncestor)
+            return pindexNew;
     } while(true);
-
-    // Check whether it's actually an improvement.
-    if (chainMostWork.Tip() && !CBlockIndexWorkComparator()(chainMostWork.Tip(), pindexNew))
-        return;
-
-    // We have a new best.
-    chainMostWork.SetTip(pindexNew);
 }
 
 // Try to activate to the most-work chain (thereby connecting it).
@@ -2095,26 +2085,34 @@ bool ActivateBestChain(CValidationState &state) {
     CBlockIndex *pindexOldTip = chainActive.Tip();
     bool fComplete = false;
     while (!fComplete) {
-        FindMostWorkChain();
+        CBlockIndex *pindexMostWork = FindMostWorkChain();
+        CBlockIndex *pindexFork = chainActive.FindFork(pindexMostWork);
         fComplete = true;
 
         // Check whether we have something to do.
-        if (chainMostWork.Tip() == NULL) break;
+        if (pindexMostWork == NULL) break;
 
         // Disconnect active blocks which are no longer in the best chain.
-        while (chainActive.Tip() && !chainMostWork.Contains(chainActive.Tip())) {
+        while (chainActive.Tip() && chainActive.Tip() != pindexFork) {
             if (!DisconnectTip(state))
                 return false;
         }
 
+        // Build list of new blocks to connect.
+        std::vector<CBlockIndex*> vpindexToConnect;
+        vpindexToConnect.reserve(pindexMostWork->nHeight - (pindexFork ? pindexFork->nHeight : -1));
+        while (pindexMostWork && pindexMostWork != pindexFork) {
+            vpindexToConnect.push_back(pindexMostWork);
+            pindexMostWork = pindexMostWork->pprev;
+        }
+
         // Connect new blocks.
-        while (!chainActive.Contains(chainMostWork.Tip())) {
-            CBlockIndex *pindexConnect = chainMostWork[chainActive.Height() + 1];
+        BOOST_REVERSE_FOREACH(CBlockIndex *pindexConnect, vpindexToConnect) {
             if (!ConnectTip(state, pindexConnect)) {
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
                     if (!state.CorruptionPossible())
-                        InvalidChainFound(chainMostWork.Tip());
+                        InvalidChainFound(vpindexToConnect.back());
                     fComplete = false;
                     state = CValidationState();
                     break;
