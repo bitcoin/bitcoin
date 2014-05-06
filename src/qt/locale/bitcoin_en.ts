@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="en">
+<TS version="2.1" language="en">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -1332,7 +1332,18 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+214"/>
+        <location line="+194"/>
+        <location line="+13"/>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-10"/>
+        <source>Third party transaction URLs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+41"/>
         <source>Active command-line options that override above options:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1347,7 +1358,7 @@ Address: %4
         <translation>&amp;Reset Options</translation>
     </message>
     <message>
-        <location line="-313"/>
+        <location line="-337"/>
         <source>&amp;Network</source>
         <translation>&amp;Network</translation>
     </message>
@@ -1482,7 +1493,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+398"/>
+        <location line="+422"/>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
@@ -1497,12 +1508,12 @@ Address: %4
         <translation>default</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+61"/>
         <source>none</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+82"/>
         <source>Confirm options reset</source>
         <translation>Confirm options reset</translation>
     </message>
@@ -3043,7 +3054,7 @@ Address: %4
         <translation>(n/a)</translation>
     </message>
     <message>
-        <location line="+190"/>
+        <location line="+192"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaction status. Hover over this field to show number of confirmations.</translation>
     </message>
@@ -3071,7 +3082,7 @@ Address: %4
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+57"/>
+        <location filename="../transactionview.cpp" line="+60"/>
         <location line="+16"/>
         <source>All</source>
         <translation>All</translation>
@@ -3172,7 +3183,7 @@ Address: %4
         <translation>Show transaction details</translation>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+163"/>
         <source>Export Transaction History</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3237,7 +3248,7 @@ Address: %4
         <translation>ID</translation>
     </message>
     <message>
-        <location line="+107"/>
+        <location line="+116"/>
         <source>Range:</source>
         <translation>Range:</translation>
     </message>

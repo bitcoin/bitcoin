@@ -96,11 +96,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>Адреси за изпращане</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Адреси за получаване</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -120,7 +120,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Изнасяне на списъка с адреси</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -128,7 +128,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Грешка при изнасянето</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1.</source>
@@ -281,11 +281,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Транзакции</translation>
+        <translation>&amp;Трансакции</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>История на транзакциите</translation>
+        <translation>История на трансакциите</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -481,23 +481,23 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n час</numerusform><numerusform>%n часа</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n ден</numerusform><numerusform>%n дни</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n седмица</numerusform><numerusform>%n седмици</numerusform></translation>
     </message>
     <message>
         <source>%1 and %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 и %2</translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n година</numerusform><numerusform>%n години</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -533,11 +533,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Изходяща транзакция</translation>
+        <translation>Изходяща трансакция</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Входяща транзакция</translation>
+        <translation>Входяща трансакция</translation>
     </message>
     <message>
         <source>Date: %1
@@ -579,7 +579,7 @@ Address: %4
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Байтове:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -587,7 +587,7 @@ Address: %4
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Приоритет:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -639,7 +639,7 @@ Address: %4
     </message>
     <message>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>Приоритет</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -739,7 +739,7 @@ Address: %4
     </message>
     <message>
         <source>Dust</source>
-        <translation type="unfinished"/>
+        <translation>Прах</translation>
     </message>
     <message>
         <source>yes</source>
@@ -857,7 +857,7 @@ Address: %4
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
+        <translation>Ще се създаде нова папка за данни.</translation>
     </message>
     <message>
         <source>name</source>
@@ -869,7 +869,7 @@ Address: %4
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation type="unfinished"/>
+        <translation>Пътят вече съществува и не е папка.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
@@ -1009,7 +1009,7 @@ Address: %4
     </message>
     <message>
         <source>Pay transaction &amp;fee</source>
-        <translation>&amp;Такса за изходяща транзакция</translation>
+        <translation>&amp;Такса за изходяща трансакция</translation>
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
@@ -1097,7 +1097,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Порт:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
@@ -1153,11 +1153,11 @@ Address: %4
     </message>
     <message>
         <source>Whether to show Bitcoin addresses in the transaction list or not.</source>
-        <translation>Ще се показват адресите в списъка с транзакции независимо от наличието на кратко име.</translation>
+        <translation>Ще се показват адресите в списъка с трансакции независимо от наличието на кратко име.</translation>
     </message>
     <message>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>Показвай и адресите в списъка с транзакции</translation>
+        <translation>&amp;Адреси в списъка с трансакции</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1173,7 +1173,7 @@ Address: %4
     </message>
     <message>
         <source>default</source>
-        <translation type="unfinished"/>
+        <translation>подразбиране</translation>
     </message>
     <message>
         <source>none</source>
@@ -1216,7 +1216,7 @@ Address: %4
     </message>
     <message>
         <source>Available:</source>
-        <translation type="unfinished"/>
+        <translation>Налично:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -1224,7 +1224,7 @@ Address: %4
     </message>
     <message>
         <source>Pending:</source>
-        <translation type="unfinished"/>
+        <translation>Изчакващо:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -1248,7 +1248,7 @@ Address: %4
     </message>
     <message>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Последни транзакции&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Последни трансакции&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1319,7 +1319,7 @@ Address: %4
     </message>
     <message>
         <source>Payment acknowledged</source>
-        <translation type="unfinished"/>
+        <translation>Плащането е приета</translation>
     </message>
     <message>
         <source>Network request error</source>
@@ -1342,6 +1342,10 @@ Address: %4
     </message>
     <message>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Bitcoin Core did&apos;t yet exit safely...</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1591,7 +1595,7 @@ Address: %4
     </message>
     <message>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>Копиране на съобщението</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1712,7 +1716,7 @@ Address: %4
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Байтове:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -1720,7 +1724,7 @@ Address: %4
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Приоритет:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1844,7 +1848,7 @@ Address: %4
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation type="unfinished"/>
+        <translation>Грешка при създаването на трансакция!</translation>
     </message>
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
@@ -1864,11 +1868,11 @@ Address: %4
     </message>
     <message>
         <source>Are you sure you want to send?</source>
-        <translation type="unfinished"/>
+        <translation>Наистина ли искате да изпратите?</translation>
     </message>
     <message>
         <source>added as transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>добавено като такса за трансакция</translation>
     </message>
     <message>
         <source>Payment request expired</source>
@@ -1907,7 +1911,7 @@ Address: %4
     </message>
     <message>
         <source>This is a normal payment.</source>
-        <translation type="unfinished"/>
+        <translation>Това е нормално плащане.</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1923,7 +1927,7 @@ Address: %4
     </message>
     <message>
         <source>Remove this entry</source>
-        <translation type="unfinished"/>
+        <translation>Премахване на този запис</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -1947,7 +1951,7 @@ Address: %4
     </message>
     <message>
         <source>Pay To:</source>
-        <translation type="unfinished"/>
+        <translation>Плащане на:</translation>
     </message>
     <message>
         <source>Memo:</source>
@@ -2238,7 +2242,7 @@ Address: %4
     </message>
     <message>
         <source>Transaction</source>
-        <translation>Транзакция</translation>
+        <translation>Трансакция</translation>
     </message>
     <message>
         <source>Inputs</source>
@@ -2273,11 +2277,11 @@ Address: %4
     <name>TransactionDescDialog</name>
     <message>
         <source>Transaction details</source>
-        <translation>Транзакция</translation>
+        <translation>Трансакция</translation>
     </message>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Описание на транзакцията</translation>
+        <translation>Описание на трансакцията</translation>
     </message>
 </context>
 <context>
@@ -2328,15 +2332,15 @@ Address: %4
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>Непотвърдено</translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Потвърждаване (%1 от %2 препоръчвани потвърждения)</translation>
     </message>
     <message>
         <source>Conflicted</source>
-        <translation type="unfinished"/>
+        <translation>Конфликтно</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2364,7 +2368,7 @@ Address: %4
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Състояние на транзакцията. Задръжте върху това поле за брой потвърждения.</translation>
+        <translation>Състояние на трансакцията. Задръжте върху това поле за брой потвърждения.</translation>
     </message>
     <message>
         <source>Date and time that the transaction was received.</source>
@@ -2372,11 +2376,11 @@ Address: %4
     </message>
     <message>
         <source>Type of transaction.</source>
-        <translation>Тип на транзакцията.</translation>
+        <translation>Вид трансакция.</translation>
     </message>
     <message>
         <source>Destination address of transaction.</source>
-        <translation>Получател на транзакцията.</translation>
+        <translation>Получател на трансакцията.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2463,15 +2467,15 @@ Address: %4
     </message>
     <message>
         <source>Show transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Подробности за трансакцията</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
-        <translation type="unfinished"/>
+        <translation>Изнасяне историята на трансакциите</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Грешка при изнасянето</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
@@ -2479,7 +2483,7 @@ Address: %4
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation type="unfinished"/>
+        <translation>Изнасянето е успешна</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
@@ -2530,7 +2534,7 @@ Address: %4
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Няма зареден портфейл.</translation>
     </message>
 </context>
 <context>
@@ -2773,11 +2777,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>(default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>(по подразбиране 1)</translation>
     </message>
     <message>
         <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
+        <translation>(по подразбиране wallet.dat)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2813,7 +2817,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Connection options:</source>
-        <translation type="unfinished"/>
+        <translation>Настройки на връзката:</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -2857,7 +2861,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Error: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>Грешка: мястото на диска е малко!</translation>
     </message>
     <message>
         <source>Error: Wallet locked, unable to create transaction!</source>
@@ -2865,7 +2869,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Error: system error: </source>
-        <translation type="unfinished"/>
+        <translation>Грешка: системна грешка:</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -2938,6 +2942,10 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Importing...</source>
+        <translation>Внасяне...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -3161,15 +3169,15 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation type="unfinished"/>
+        <translation>Сумата на трансакцията е твърде малка</translation>
     </message>
     <message>
         <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
+        <translation>Сумите на трансакциите трябва да са положителни</translation>
     </message>
     <message>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>Трансакцията е твърде голяма</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 0)</source>
@@ -3233,7 +3241,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Повторно сканиране на блок-връзка за липсващи портефейлни транзакции</translation>
+        <translation>Повторно сканиране на блок-връзка за липсващи портфейлни трансакции</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
