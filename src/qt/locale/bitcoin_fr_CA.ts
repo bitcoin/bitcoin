@@ -124,7 +124,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Fichier séparé par une virgule (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -139,15 +139,15 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Record</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Addresse</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(pas de record)</translation>
     </message>
 </context>
 <context>
@@ -158,35 +158,35 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Entrer Mot de Passe</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Nouveau Mot de passe</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Répéter Mot de Passe</translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Entrer le nouveau mot de passe pour le porte-feuille. Veuillez utiliser un mot de passe de 10 caractères au hasard ou plus, ou, 8 mots ou plus. </translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Encrypter Porte-Feuille</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Cette opération nécessite le mot de passe de votre porte-feuille pour débarrer le porte-feuille.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Débarrer Porte-Feuille</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Cette opération nécessite le mot de passe de votre porte-feuille pour le décrypter.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -623,7 +623,7 @@ Address: %4
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Addresse</translation>
     </message>
     <message>
         <source>Date</source>
@@ -787,7 +787,7 @@ Address: %4
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(pas de record)</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
@@ -1345,6 +1345,10 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
+        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation type="unfinished"/>
     </message>
@@ -1630,7 +1634,7 @@ Address: %4
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Addresse</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -1638,7 +1642,7 @@ Address: %4
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Record</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1661,7 +1665,7 @@ Address: %4
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Record</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1673,7 +1677,7 @@ Address: %4
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(pas de record)</translation>
     </message>
     <message>
         <source>(no message)</source>
@@ -1856,7 +1860,7 @@ Address: %4
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(pas de record)</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2292,7 +2296,7 @@ Address: %4
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Addresse</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2487,7 +2491,7 @@ Address: %4
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Fichier séparé par une virgule (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -2503,11 +2507,11 @@ Address: %4
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Record</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Addresse</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2937,6 +2941,10 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Importing...</source>
         <translation type="unfinished"/>
     </message>
     <message>

@@ -1349,6 +1349,10 @@ Address: %4
         <translation>შეცდომა: -regtest-ისა და -testnet-ის დაუშვებელი კომბინაცია.</translation>
     </message>
     <message>
+        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>შეიყვანეთ ბიტკოინ-მისამართი (მაგ. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
@@ -2952,6 +2956,10 @@ rpcpassword=%s
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation>თუ &lt;category&gt; არ არის მითითებული, ნაჩვენები იქნება სრული დახვეწის ინფორმაცია.</translation>
+    </message>
+    <message>
+        <source>Importing...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
