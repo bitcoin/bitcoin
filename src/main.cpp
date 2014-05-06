@@ -432,7 +432,7 @@ bool AddOrphanTx(const CTransaction& tx)
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
         mapOrphanTransactionsByPrev[txin.prevout.hash].insert(hash);
 
-    LogPrint("mempool", "stored orphan tx %s (mapsz %"PRIszu")\n", hash.ToString(),
+    LogPrint("mempool", "stored orphan tx %s (mapsz %u)\n", hash.ToString(),
         mapOrphanTransactions.size());
     return true;
 }
@@ -3044,7 +3044,7 @@ void PrintBlockTree()
         // print item
         CBlock block;
         ReadBlockFromDisk(block, pindex);
-        LogPrintf("%d (blk%05u.dat:0x%x)  %s  tx %"PRIszu"\n",
+        LogPrintf("%d (blk%05u.dat:0x%x)  %s  tx %u\n",
             pindex->nHeight,
             pindex->GetBlockPos().nFile, pindex->GetBlockPos().nPos,
             DateTimeStrFormat("%Y-%m-%d %H:%M:%S", block.GetBlockTime()),
@@ -3371,7 +3371,7 @@ void static ProcessGetData(CNode* pfrom)
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
     RandAddSeedPerfmon();
-    LogPrint("net", "received: %s (%"PRIszu" bytes)\n", strCommand, vRecv.size());
+    LogPrint("net", "received: %s (%u bytes)\n", strCommand, vRecv.size());
     if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
     {
         LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
@@ -3515,7 +3515,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (vAddr.size() > 1000)
         {
             Misbehaving(pfrom->GetId(), 20);
-            return error("message addr size() = %"PRIszu"", vAddr.size());
+            return error("message addr size() = %u", vAddr.size());
         }
 
         // Store the new addresses
@@ -3578,7 +3578,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (vInv.size() > MAX_INV_SZ)
         {
             Misbehaving(pfrom->GetId(), 20);
-            return error("message inv size() = %"PRIszu"", vInv.size());
+            return error("message inv size() = %u", vInv.size());
         }
 
         LOCK(cs_main);
@@ -3617,11 +3617,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (vInv.size() > MAX_INV_SZ)
         {
             Misbehaving(pfrom->GetId(), 20);
-            return error("message getdata size() = %"PRIszu"", vInv.size());
+            return error("message getdata size() = %u", vInv.size());
         }
 
         if (fDebug || (vInv.size() != 1))
-            LogPrint("net", "received getdata (%"PRIszu" invsz)\n", vInv.size());
+            LogPrint("net", "received getdata (%u invsz)\n", vInv.size());
 
         if ((fDebug && vInv.size() > 0) || (vInv.size() == 1))
             LogPrint("net", "received getdata for: %s\n", vInv[0].ToString());
@@ -3729,7 +3729,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             vEraseQueue.push_back(inv.hash);
 
 
-            LogPrint("mempool", "AcceptToMemoryPool: %s %s : accepted %s (poolsz %"PRIszu")\n",
+            LogPrint("mempool", "AcceptToMemoryPool: %s %s : accepted %s (poolsz %u)\n",
                 pfrom->addr.ToString(), pfrom->cleanSubVer,
                 tx.GetHash().ToString(),
                 mempool.mapTx.size());
@@ -3914,7 +3914,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         if (!(sProblem.empty())) {
-            LogPrint("net", "pong %s %s: %s, %x expected, %x received, %"PRIszu" bytes\n",
+            LogPrint("net", "pong %s %s: %s, %x expected, %x received, %u bytes\n",
                 pfrom->addr.ToString(),
                 pfrom->cleanSubVer,
                 sProblem,
@@ -4049,7 +4049,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 bool ProcessMessages(CNode* pfrom)
 {
     //if (fDebug)
-    //    LogPrintf("ProcessMessages(%"PRIszu" messages)\n", pfrom->vRecvMsg.size());
+    //    LogPrintf("ProcessMessages(%u messages)\n", pfrom->vRecvMsg.size());
 
     //
     // Message format
@@ -4077,7 +4077,7 @@ bool ProcessMessages(CNode* pfrom)
         CNetMessage& msg = *it;
 
         //if (fDebug)
-        //    LogPrintf("ProcessMessages(message %u msgsz, %"PRIszu" bytes, complete:%s)\n",
+        //    LogPrintf("ProcessMessages(message %u msgsz, %u bytes, complete:%s)\n",
         //            msg.hdr.nMessageSize, msg.vRecv.size(),
         //            msg.complete() ? "Y" : "N");
 
