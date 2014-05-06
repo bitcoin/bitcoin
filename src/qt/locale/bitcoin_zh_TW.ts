@@ -1351,6 +1351,10 @@ Address: %4
         <translation>錯誤: -regtest 和 -testnet 的使用組合無效。</translation>
     </message>
     <message>
+        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <translation>位元幣核心還沒有安全地結束...</translation>
+    </message>
+    <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>請輸入位元幣位址(像是 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
@@ -2955,6 +2959,10 @@ alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com</translat
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation>如果沒有提供 &lt;category&gt; 就會輸出所有的除錯資訊。</translation>
+    </message>
+    <message>
+        <source>Importing...</source>
+        <translation>正在匯入中...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
