@@ -1344,6 +1344,10 @@ Adrese: %4
         <translation type="unfinished"/>
     </message>
     <message>
+        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Ierakstiet Bitcoin adresi (piem. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
@@ -2937,6 +2941,10 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation>Ja &lt;category&gt; nav norādīta, izvadīt visu atkļūdošanas informāciju.</translation>
+    </message>
+    <message>
+        <source>Importing...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>

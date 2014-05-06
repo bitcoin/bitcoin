@@ -1349,6 +1349,10 @@ Adres: %4
         <translation>Hata: -regtest ve -testnet&apos;in geçersiz kombinasyonu.</translation>
     </message>
     <message>
+        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <translation>Bitcoin Çekirdeği henüz güvenli bir şekilde çıkış yapmamıştır...</translation>
+    </message>
+    <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Bitcoin adresi giriniz (mesela 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
@@ -2952,6 +2956,10 @@ mesela: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation>&lt;kategori&gt; sağlanmamışsa tüm hata ayıklama verilerini dök.</translation>
+    </message>
+    <message>
+        <source>Importing...</source>
+        <translation>İçe aktarılıyor...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>

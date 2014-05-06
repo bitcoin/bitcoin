@@ -1350,6 +1350,10 @@ Adress: %4
         <translation>Fel: Felaktig kombination av -regtest och -testnet.</translation>
     </message>
     <message>
+        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <translation>Bitcoin Core avslutades säkert...</translation>
+    </message>
+    <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Ange en Bitcoin-adress (t.ex. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
@@ -2953,6 +2957,10 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation>Om &lt;category&gt; inte anges, skrivs all avlusningsinformation ut.</translation>
+    </message>
+    <message>
+        <source>Importing...</source>
+        <translation>Importerar...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>

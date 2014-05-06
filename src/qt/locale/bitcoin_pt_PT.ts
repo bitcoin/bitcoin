@@ -1348,6 +1348,10 @@ Endereço: %4</translation>
         <translation>Erro: Combinação inválida de -regtest e -testnet.</translation>
     </message>
     <message>
+        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Introduza um endereço Bitcoin (p.ex. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
@@ -2950,6 +2954,10 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Alerta Bitcoin&quot; admin@foo
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation>Se uma &lt;categoria&gt; não é fornecida, imprimir toda a informação de depuração.</translation>
+    </message>
+    <message>
+        <source>Importing...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>

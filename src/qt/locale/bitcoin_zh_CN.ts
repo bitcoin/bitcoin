@@ -33,7 +33,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 位)</translation>
     </message>
 </context>
 <context>
@@ -1348,6 +1348,10 @@ Address: %4
     <message>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>错误：无效的 -regtest 与 -testnet 结合体。</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -2963,6 +2967,10 @@ rpcpassword=%s
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation>如果&lt;category&gt;未提供，将输出所有调试信息。</translation>
+    </message>
+    <message>
+        <source>Importing...</source>
+        <translation>导入中...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>

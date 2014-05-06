@@ -580,11 +580,11 @@ Address: %4
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Ποσότητα:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Bytes:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -592,7 +592,7 @@ Address: %4
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Προτεραιότητα:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -636,7 +636,7 @@ Address: %4
     </message>
     <message>
         <source>Confirmations</source>
-        <translation type="unfinished"/>
+        <translation>Επικυρώσεις</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -644,7 +644,7 @@ Address: %4
     </message>
     <message>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>Προτεραιότητα</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -748,11 +748,11 @@ Address: %4
     </message>
     <message>
         <source>yes</source>
-        <translation type="unfinished"/>
+        <translation>ναι</translation>
     </message>
     <message>
         <source>no</source>
-        <translation type="unfinished"/>
+        <translation>όχι</translation>
     </message>
     <message>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
@@ -1350,6 +1350,10 @@ Address: %4
         <translation>Σφάλμα: Άκυρος συνδυασμός των -regtest και -testnet</translation>
     </message>
     <message>
+        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Εισάγετε μια διεύθυνση Bitcoin (π.χ. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
@@ -1370,7 +1374,7 @@ Address: %4
     </message>
     <message>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>Εικόνες PNG (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1393,7 +1397,7 @@ Address: %4
     </message>
     <message>
         <source>Debug window</source>
-        <translation type="unfinished"/>
+        <translation>Παράθυρο αποσφαλμάτωσης</translation>
     </message>
     <message>
         <source>General</source>
@@ -1580,7 +1584,7 @@ Address: %4
     </message>
     <message>
         <source>Show</source>
-        <translation type="unfinished"/>
+        <translation>Εμφάνιση</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
@@ -1588,7 +1592,7 @@ Address: %4
     </message>
     <message>
         <source>Remove</source>
-        <translation type="unfinished"/>
+        <translation>Αφαίρεση</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -1682,7 +1686,7 @@ Address: %4
     </message>
     <message>
         <source>(no message)</source>
-        <translation type="unfinished"/>
+        <translation>(κανένα μήνυμα)</translation>
     </message>
     <message>
         <source>(no amount)</source>
@@ -1709,15 +1713,15 @@ Address: %4
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
+        <translation>Ανεπαρκές κεφάλαιο!</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Ποσότητα:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Bytes:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -1725,7 +1729,7 @@ Address: %4
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Προτεραιότητα:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1849,7 +1853,7 @@ Address: %4
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation type="unfinished"/>
+        <translation>Η δημιουργία της συναλλαγής απέτυχε!</translation>
     </message>
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
@@ -1857,7 +1861,7 @@ Address: %4
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Προειδοποίηση: Μη έγκυρη διεύθυνση Bitcoin</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1952,7 +1956,7 @@ Address: %4
     </message>
     <message>
         <source>Pay To:</source>
-        <translation type="unfinished"/>
+        <translation>Πληρωμή σε:</translation>
     </message>
     <message>
         <source>Memo:</source>
@@ -2953,6 +2957,10 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Importing...</source>
         <translation type="unfinished"/>
     </message>
     <message>
