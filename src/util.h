@@ -591,25 +591,4 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 
-static std::string RejectCodeToString(const char& code)
-{
-    if (code == 0x01)
-        return "malformed";
-    if (code == 0x10)
-        return "invalid";
-    if (code == 0x11)
-        return "obsolete";
-    if (code == 0x12)
-        return "duplicate";
-    if (code == 0x40)
-        return "nonstandard";
-    if (code == 0x41)
-        return "dust";
-    if (code == 0x42)
-        return "insufficientfee";
-    if (code == 0x43)
-        return "checkpoint";
-    return "";
-}
-
 #endif
