@@ -15,6 +15,11 @@ AC_PROG_INSTALL
 AC_PROG_SED
 PKG_PROG_PKG_CONFIG
 
+AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=PATH],
+    [Path to the pkgconfig directory [[LIBDIR/pkgconfig]]]),
+    [pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
+AC_SUBST([pkgconfigdir])
+
 AC_PROG_CC_C99
 if test x"$ac_cv_prog_cc_c99" == x"no"; then
   AC_MSG_ERROR([c99 compiler support required])
@@ -284,7 +289,7 @@ AC_MSG_NOTICE([Using field implementation: $set_field])
 AC_MSG_NOTICE([Using bignum implementation: $set_bignum])
 
 AC_CONFIG_HEADERS([src/libsecp256k1-config.h])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile libsecp256k1.pc])
 AC_SUBST(SECP_INCLUDES)
 AC_SUBST(SECP_LIBS)
 AC_SUBST(SECP_TEST_LIBS)

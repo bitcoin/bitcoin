@@ -32,6 +32,8 @@ noinst_HEADERS += src/field_gmp_impl.h
 noinst_HEADERS += src/field.h
 noinst_HEADERS += src/field_impl.h
 
+pkgconfig_DATA = libsecp256k1.pc
+
 if USE_ASM
 libsecp256k1_la_SOURCES += src/field_5x52_asm.asm
 endif
