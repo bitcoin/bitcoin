@@ -509,27 +509,6 @@ public:
 
     void PushVersion();
 
-    string TranslateRejectCode(const char& code)
-    {
-        if (code == 0x01)
-            return "malformed";
-        if (code == 0x10)
-            return "invalid";
-        if (code == 0x11)
-            return "obsolete";
-        if (code == 0x12)
-            return "duplicate";
-        if (code == 0x40)
-            return "nonstandard";
-        if (code == 0x41)
-            return "dust";
-        if (code == 0x42)
-            return "insufficientfee";
-        if (code == 0x43)
-            return "checkpoint";
-        return "";
-    }
-    
     void PushMessage(const char* pszCommand)
     {
         statsClient.inc("message.sent." + string(pszCommand), 1.0f);
@@ -584,7 +563,7 @@ public:
     {
         statsClient.inc("message.sent." + string(pszCommand), 1.0f);
         if (string(pszCommand) == "reject")
-            statsClient.inc("message.sent.reject_" + string(a1) + "_" + TranslateRejectCode(a2), 1.0f);
+            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -603,7 +582,7 @@ public:
     {
         statsClient.inc("message.sent." + string(pszCommand), 1.0f);
         if (string(pszCommand) == "reject")
-            statsClient.inc("message.sent.reject_" + string(a1) + "_" + TranslateRejectCode(a2), 1.0f);
+            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);

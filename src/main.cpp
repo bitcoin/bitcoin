@@ -780,7 +780,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 
     boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
-    statsClient.timing("CheckTransaction", diff.total_milliseconds(), 1.0f);
+    statsClient.timing("CheckTransaction_us", diff.total_microseconds(), 1.0f);
     return true;
 }
 
@@ -963,7 +963,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
-    statsClient.timing("AcceptToMemoryPool", diff.total_microseconds(), 1.0f);
+    statsClient.timing("AcceptToMemoryPool_ms", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
@@ -1618,7 +1618,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 
     boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
-    statsClient.timing("CheckInputs", diff.total_milliseconds(), 1.0f);
+    statsClient.timing("CheckInputs_ms", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
@@ -2373,7 +2373,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
-    statsClient.timing("CheckBlock", diff.total_milliseconds(), 1.0f);
+    statsClient.timing("CheckBlock_ms", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
@@ -2477,7 +2477,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
 
     boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
-    statsClient.timing("AcceptBlock", diff.total_milliseconds(), 1.0f);
+    statsClient.timing("AcceptBlock_ms", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
