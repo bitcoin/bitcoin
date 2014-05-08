@@ -303,6 +303,8 @@ INCLUDES="$INCLUDES $PTHREAD_CFLAGS"
 # they also need to be passed down to any subprojects. Pull the results out of
 # the cache and add them to CPPFLAGS.
 AC_SYS_LARGEFILE
+# detect POSIX or GNU variant of strerror_r
+AC_FUNC_STRERROR_R
 
 if test x$ac_cv_sys_file_offset_bits != x &&
    test x$ac_cv_sys_file_offset_bits != xno &&
