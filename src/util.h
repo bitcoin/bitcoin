@@ -320,14 +320,7 @@ inline int64_t GetTimeMicros()
             boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_microseconds();
 }
 
-inline std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
-{
-    time_t n = nTime;
-    struct tm* ptmTime = gmtime(&n);
-    char pszTime[200];
-    strftime(pszTime, sizeof(pszTime), pszFormat, ptmTime);
-    return pszTime;
-}
+std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime);
 
 template<typename T>
 void skipspaces(T& it)

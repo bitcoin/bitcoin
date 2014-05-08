@@ -14,6 +14,8 @@
 
 #include <stdarg.h>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #ifndef WIN32
 // for posix_fallocate
 #ifdef __linux_
@@ -1422,4 +1424,14 @@ void SetupEnvironment()
         setenv("LC_ALL", "C", 1); // Force C locale
     }
     #endif
+}
+
+std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
+{
+    // std::locale takes ownership of the pointer
+    std::locale loc(std::locale::classic(), new boost::posix_time::time_facet(pszFormat));
+    std::stringstream ss;
+    ss.imbue(loc);
+    ss << boost::posix_time::from_time_t(nTime);
+    return ss.str();
 }
