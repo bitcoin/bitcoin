@@ -14,6 +14,51 @@
 #include <QKeyEvent>
 #include <qmath.h> // for qPow()
 
+// QDoubleSpinBox that shows SI-style thin space thousands separators
+class AmountSpinBox: public QDoubleSpinBox
+{
+public:
+    explicit AmountSpinBox(QWidget *parent):
+        QDoubleSpinBox(parent)
+    {
+    }
+    QString textFromValue(double value) const
+    {
+        QStringList parts = QDoubleSpinBox::textFromValue(value).split(".");
+        QString quotient_str = parts[0];
+        QString remainder_str;
+        if(parts.size() > 1)
+            remainder_str = parts[1];
+
+        // Code duplication between here and BitcoinUnits::format
+        // TODO: Figure out how to share this code
+        QChar thin_sp(THIN_SP_CP);
+        int q_size = quotient_str.size();
+        if (q_size > 4)
+            for (int i = 3; i < q_size; i += 3)
+                quotient_str.insert(q_size - i, thin_sp);
+
+        int r_size = remainder_str.size();
+        if (r_size > 4)
+            for (int i = 3, adj = 0; i < r_size; i += 3, adj++)
+                remainder_str.insert(i + adj, thin_sp);
+
+        if(remainder_str.isEmpty())
+            return quotient_str;
+        else
+            return quotient_str + QString(".") + remainder_str;
+    }
+    QValidator::State validate (QString &text, int &pos) const
+    {
+        QString s(BitcoinUnits::removeSpaces(text));
+        return QDoubleSpinBox::validate(s, pos);
+    }
+    double valueFromText(const QString& text) const
+    {
+        return QDoubleSpinBox::valueFromText(BitcoinUnits::removeSpaces(text));
+    }
+};
+
 BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
     QWidget(parent),
     amount(0),
@@ -21,7 +66,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
 {
     nSingleStep = 100000; // satoshis
 
-    amount = new QDoubleSpinBox(this);
+    amount = new AmountSpinBox(this);
     amount->setLocale(QLocale::c());
     amount->installEventFilter(this);
     amount->setMaximumWidth(170);
@@ -52,7 +97,7 @@ void BitcoinAmountField::setText(const QString &text)
     if (text.isEmpty())
         amount->clear();
     else
-        amount->setValue(text.toDouble());
+        amount->setValue(BitcoinUnits::removeSpaces(text).toDouble());
 }
 
 void BitcoinAmountField::clear()

@@ -123,6 +123,8 @@ TransactionView::TransactionView(QWidget *parent) :
     view->setTabKeyNavigation(false);
     view->setContextMenuPolicy(Qt::CustomContextMenu);
 
+    view->installEventFilter(this);
+
     transactionView = view;
 
     // Actions
@@ -479,4 +481,23 @@ void TransactionView::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
     columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
+}
+
+// Need to override default Ctrl+C action for amount as default behaviour is just to copy DisplayRole text
+bool TransactionView::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::KeyPress)
+    {
+        QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+        if (ke->key() == Qt::Key_C && ke->modifiers().testFlag(Qt::ControlModifier))
+        {
+            QModelIndex i = this->transactionView->currentIndex();
+            if (i.isValid() && i.column() == TransactionTableModel::Amount)
+            {
+                 GUIUtil::setClipboard(i.data(TransactionTableModel::FormattedAmountRole).toString());
+                 return true;
+            }
+        }
+    }
+    return QWidget::eventFilter(obj, event);
 }
