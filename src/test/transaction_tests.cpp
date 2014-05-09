@@ -13,15 +13,44 @@
 #include <map>
 #include <string>
 
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/test/unit_test.hpp>
 #include "json/json_spirit_writer_template.h"
 
 using namespace std;
 using namespace json_spirit;
+using namespace boost::algorithm;
 
 // In script_tests.cpp
 extern Array read_json(const std::string& jsondata);
 extern CScript ParseScript(string s);
+
+unsigned int ParseFlags(string strFlags){
+    unsigned int flags = 0;
+    vector<string> words;
+    split(words, strFlags, is_any_of(","));
+
+    // Note how NOCACHE is not included as it is a runtime-only flag.
+    static map<string, unsigned int> mapFlagNames;
+    if (mapFlagNames.size() == 0)
+    {
+        mapFlagNames["NONE"] = SCRIPT_VERIFY_NONE;
+        mapFlagNames["P2SH"] = SCRIPT_VERIFY_P2SH;
+        mapFlagNames["STRICTENC"] = SCRIPT_VERIFY_STRICTENC;
+        mapFlagNames["EVEN_S"] = SCRIPT_VERIFY_EVEN_S;
+        mapFlagNames["NULLDUMMY"] = SCRIPT_VERIFY_NULLDUMMY;
+    }
+
+    BOOST_FOREACH(string word, words)
+    {
+        if (!mapFlagNames.count(word))
+            BOOST_ERROR("Bad test: unknown verification flag '" << word << "'");
+        flags |= mapFlagNames[word];
+    }
+
+    return flags;
+}
 
 BOOST_AUTO_TEST_SUITE(transaction_tests)
 
@@ -30,8 +59,10 @@ BOOST_AUTO_TEST_CASE(tx_valid)
     // Read tests from test/data/tx_valid.json
     // Format is an array of arrays
     // Inner arrays are either [ "comment" ]
-    // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, enforceP2SH
+    // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, verifyFlags
     // ... where all scripts are stringified scripts.
+    //
+    // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
     Array tests = read_json(std::string(json_tests::tx_valid, json_tests::tx_valid + sizeof(json_tests::tx_valid)));
 
     BOOST_FOREACH(Value& tv, tests)
@@ -40,7 +71,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
         string strTest = write_string(tv, false);
         if (test[0].type() == array_type)
         {
-            if (test.size() != 3 || test[1].type() != str_type || test[2].type() != bool_type)
+            if (test.size() != 3 || test[1].type() != str_type || test[2].type() != str_type)
             {
                 BOOST_ERROR("Bad test: " << strTest);
                 continue;
@@ -88,7 +119,10 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     break;
                 }
 
-                BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout], tx, i, test[2].get_bool() ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, 0), strTest);
+                unsigned int verify_flags = ParseFlags(test[2].get_str());
+                BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
+                                                 tx, i, verify_flags, 0),
+                                    strTest);
             }
         }
     }
@@ -99,8 +133,10 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
     // Read tests from test/data/tx_invalid.json
     // Format is an array of arrays
     // Inner arrays are either [ "comment" ]
-    // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, enforceP2SH
+    // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, verifyFlags
     // ... where all scripts are stringified scripts.
+    //
+    // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
     Array tests = read_json(std::string(json_tests::tx_invalid, json_tests::tx_invalid + sizeof(json_tests::tx_invalid)));
 
     BOOST_FOREACH(Value& tv, tests)
@@ -109,7 +145,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
         string strTest = write_string(tv, false);
         if (test[0].type() == array_type)
         {
-            if (test.size() != 3 || test[1].type() != str_type || test[2].type() != bool_type)
+            if (test.size() != 3 || test[1].type() != str_type || test[2].type() != str_type)
             {
                 BOOST_ERROR("Bad test: " << strTest);
                 continue;
@@ -156,7 +192,9 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                     break;
                 }
 
-                fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout], tx, i, test[2].get_bool() ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, 0);
+                unsigned int verify_flags = ParseFlags(test[2].get_str());
+                fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
+                                      tx, i, verify_flags, 0);
             }
 
             BOOST_CHECK_MESSAGE(!fValid, strTest);
