@@ -54,20 +54,6 @@ static int64_t TotalFileSize(const std::vector<FileMetaData*>& files) {
   return sum;
 }
 
-namespace {
-std::string IntSetToString(const std::set<uint64_t>& s) {
-  std::string result = "{";
-  for (std::set<uint64_t>::const_iterator it = s.begin();
-       it != s.end();
-       ++it) {
-    result += (result.size() > 1) ? "," : "";
-    result += NumberToString(*it);
-  }
-  result += "}";
-  return result;
-}
-}  // namespace
-
 Version::~Version() {
   assert(refs_ == 0);
 
