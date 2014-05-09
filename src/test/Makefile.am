@@ -61,6 +61,7 @@ test_bitcoin_SOURCES = \
   transaction_tests.cpp \
   uint256_tests.cpp \
   util_tests.cpp \
+  scriptnum_tests.cpp \
   sighash_tests.cpp \
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
