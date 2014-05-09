@@ -49,6 +49,13 @@ class CNetAddr
         explicit CNetAddr(const std::string &strIp, bool fAllowLookup = false);
         void Init();
         void SetIP(const CNetAddr& ip);
+
+        /**
+         * Set raw IPv4 or IPv6 address (in network byte order)
+         * @note Only NET_IPV4 and NET_IPV6 are allowed for network.
+         */
+        void SetRaw(Network network, const uint8_t *data);
+
         bool SetSpecial(const std::string &strName); // for Tor addresses
         bool IsIPv4() const;    // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
         bool IsIPv6() const;    // IPv6 address (not mapped IPv4, not Tor)
@@ -88,6 +95,29 @@ class CNetAddr
             (
              READWRITE(FLATDATA(ip));
             )
+};
+
+class CSubNet
+{
+    protected:
+        /// Network (base) address
+        CNetAddr network;
+        /// Netmask, in network byte order
+        uint8_t netmask[16];
+        /// Is this value valid? (only used to signal parse errors)
+        bool valid;
+
+    public:
+        CSubNet();
+        explicit CSubNet(const std::string &strSubnet, bool fAllowLookup = false);
+
+        bool Match(const CNetAddr &addr) const;
+
+        std::string ToString() const;
+        bool IsValid() const;
+
+        friend bool operator==(const CSubNet& a, const CSubNet& b);
+        friend bool operator!=(const CSubNet& a, const CSubNet& b);
 };
 
 /** A combination of a network address (CNetAddr) and a (TCP) port */
