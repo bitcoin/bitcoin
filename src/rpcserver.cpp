@@ -38,6 +38,7 @@ static map<string, boost::shared_ptr<deadline_timer> > deadlineTimers;
 static ssl::context* rpc_ssl_context = NULL;
 static boost::thread_group* rpc_worker_group = NULL;
 static boost::asio::io_service::work *rpc_dummy_work = NULL;
+static std::vector<CSubNet> rpc_allow_subnets; //!< List of subnets to allow RPC connections from
 
 void RPCTypeCheck(const Array& params,
                   const list<Value_type>& typesExpected,
@@ -358,25 +359,33 @@ void ErrorReply(std::ostream& stream, const Object& objError, const Value& id)
     stream << HTTPReply(nStatus, strReply, false) << std::flush;
 }
 
-bool ClientAllowed(const boost::asio::ip::address& address)
+CNetAddr BoostAsioToCNetAddr(boost::asio::ip::address address)
 {
+    CNetAddr netaddr;
     // Make sure that IPv4-compatible and IPv4-mapped IPv6 addresses are treated as IPv4 addresses
     if (address.is_v6()
      && (address.to_v6().is_v4_compatible()
       || address.to_v6().is_v4_mapped()))
-        return ClientAllowed(address.to_v6().to_v4());
+        address = address.to_v6().to_v4();
 
-    if (address == asio::ip::address_v4::loopback()
-     || address == asio::ip::address_v6::loopback()
-     || (address.is_v4()
-         // Check whether IPv4 addresses match 127.0.0.0/8 (loopback subnet)
-      && (address.to_v4().to_ulong() & 0xff000000) == 0x7f000000))
-        return true;
+    if(address.is_v4())
+    {
+        boost::asio::ip::address_v4::bytes_type bytes = address.to_v4().to_bytes();
+        netaddr.SetRaw(NET_IPV4, &bytes[0]);
+    }
+    else
+    {
+        boost::asio::ip::address_v6::bytes_type bytes = address.to_v6().to_bytes();
+        netaddr.SetRaw(NET_IPV6, &bytes[0]);
+    }
+    return netaddr;
+}
 
-    const string strAddress = address.to_string();
-    const vector<string>& vAllow = mapMultiArgs["-rpcallowip"];
-    BOOST_FOREACH(string strAllow, vAllow)
-        if (WildcardMatch(strAddress, strAllow))
+bool ClientAllowed(const boost::asio::ip::address& address)
+{
+    CNetAddr netaddr = BoostAsioToCNetAddr(address);
+    BOOST_FOREACH(const CSubNet &subnet, rpc_allow_subnets)
+        if (subnet.Match(netaddr))
             return true;
     return false;
 }
@@ -502,6 +511,31 @@ static void RPCAcceptHandler(boost::shared_ptr< basic_socket_acceptor<Protocol, 
 
 void StartRPCThreads()
 {
+    rpc_allow_subnets.clear();
+    rpc_allow_subnets.push_back(CSubNet("127.0.0.0/8")); // always allow IPv4 local subnet
+    rpc_allow_subnets.push_back(CSubNet("::1")); // always allow IPv6 localhost
+    if (mapMultiArgs.count("-rpcallowip"))
+    {
+        const vector<string>& vAllow = mapMultiArgs["-rpcallowip"];
+        BOOST_FOREACH(string strAllow, vAllow)
+        {
+            CSubNet subnet(strAllow);
+            if(!subnet.IsValid())
+            {
+                uiInterface.ThreadSafeMessageBox(
+                    strprintf("Invalid -rpcallowip subnet specification: %s", strAllow),
+                    "", CClientUIInterface::MSG_ERROR);
+                StartShutdown();
+                return;
+            }
+            rpc_allow_subnets.push_back(subnet);
+        }
+    }
+    std::string strAllowed;
+    BOOST_FOREACH(const CSubNet &subnet, rpc_allow_subnets)
+        strAllowed += subnet.ToString() + " ";
+    LogPrint("rpc", "Allowing RPC connections from: %s\n", strAllowed);
+
     strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
     if (((mapArgs["-rpcpassword"] == "") ||
          (mapArgs["-rpcuser"] == mapArgs["-rpcpassword"])) && Params().RequireRPCPassword())
