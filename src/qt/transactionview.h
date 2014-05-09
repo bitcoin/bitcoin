@@ -8,6 +8,7 @@
 #include "guiutil.h"
 
 #include <QWidget>
+#include <QKeyEvent>
 
 class TransactionFilterProxy;
 class WalletModel;
@@ -77,6 +78,8 @@ private:
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
 
     virtual void resizeEvent(QResizeEvent* event);
+
+    bool eventFilter(QObject *obj, QEvent *event);
 
 private slots:
     void contextualMenu(const QPoint &);
