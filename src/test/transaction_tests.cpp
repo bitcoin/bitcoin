@@ -38,7 +38,7 @@ unsigned int ParseFlags(string strFlags){
         mapFlagNames["NONE"] = SCRIPT_VERIFY_NONE;
         mapFlagNames["P2SH"] = SCRIPT_VERIFY_P2SH;
         mapFlagNames["STRICTENC"] = SCRIPT_VERIFY_STRICTENC;
-        mapFlagNames["EVEN_S"] = SCRIPT_VERIFY_EVEN_S;
+        mapFlagNames["LOW_S"] = SCRIPT_VERIFY_LOW_S;
         mapFlagNames["NULLDUMMY"] = SCRIPT_VERIFY_NULLDUMMY;
     }
 
