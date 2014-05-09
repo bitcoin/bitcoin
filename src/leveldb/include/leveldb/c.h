@@ -9,7 +9,6 @@
   Does not support:
   . getters for the option types
   . custom comparators that implement key shortening
-  . capturing post-write-snapshot
   . custom iter, db, env, cache implementations using just the C bindings
 
   Some conventions:
