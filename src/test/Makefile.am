@@ -37,7 +37,6 @@ test_bitcoin_SOURCES = \
   base32_tests.cpp \
   base58_tests.cpp \
   base64_tests.cpp \
-  bignum_tests.cpp \
   bloom_tests.cpp \
   canonical_tests.cpp \
   checkblock_tests.cpp \
@@ -63,6 +62,7 @@ test_bitcoin_SOURCES = \
   util_tests.cpp \
   scriptnum_tests.cpp \
   sighash_tests.cpp \
+  bignum.h \
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 if ENABLE_WALLET
