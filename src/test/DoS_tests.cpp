@@ -8,7 +8,6 @@
 
 
 
-#include "bignum.h"
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
