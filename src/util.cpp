@@ -962,13 +962,15 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 void ClearDatadirCache()
 {
     std::fill(&pathCached[0], &pathCached[CChainParams::MAX_NETWORK_TYPES+1],
-              boost::filesystem::path());
+        boost::filesystem::path());
 }
 
 boost::filesystem::path GetConfigFile()
 {
     boost::filesystem::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
-    if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
+    if (!pathConfigFile.is_complete())
+        pathConfigFile = GetDataDir(false) / pathConfigFile;
+
     return pathConfigFile;
 }
 
@@ -1028,9 +1030,9 @@ bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest)
 #endif /* WIN32 */
 }
 
-
-// Ignores exceptions thrown by boost's create_directory if the requested directory exists.
-//   Specifically handles case where path p exists, but it wasn't possible for the user to write to the parent directory.
+// Ignores exceptions thrown by Boost's create_directory if the requested directory exists.
+// Specifically handles case where path p exists, but it wasn't possible for the user to
+// write to the parent directory.
 bool TryCreateDirectory(const boost::filesystem::path& p)
 {
     try
@@ -1381,19 +1383,19 @@ bool ParseInt32(const std::string& str, int32_t *out)
 
 void SetupEnvironment()
 {
-    #ifndef WIN32
+#ifndef WIN32
     try
     {
-	#if BOOST_FILESYSTEM_VERSION == 3
+#if BOOST_FILESYSTEM_VERSION == 3
             boost::filesystem::path::codecvt(); // Raises runtime error if current locale is invalid
-	#else				          // boost filesystem v2
+#else // boost filesystem v2
             std::locale();                      // Raises runtime error if current locale is invalid
-	#endif
+#endif
     } catch(std::runtime_error &e)
     {
         setenv("LC_ALL", "C", 1); // Force C locale
     }
-    #endif
+#endif
 }
 
 std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
