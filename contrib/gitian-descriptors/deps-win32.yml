@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-deps"
+name: "ppcoin-deps"
 suites:
 - "lucid"
 architectures:
@@ -62,7 +62,7 @@ script: |
   make $MAKEOPTS
   cd ..
   #
-  zip -r $OUTDIR/ppcoin-deps-0.0.1.zip \
+  zip -r $OUTDIR/ppcoin-deps-0.0.2.zip \
     $(ls qrencode-*/{qrencode.h,.libs/libqrencode.{,l}a} | sort) \
     $(ls db-*/build_unix/{libdb_cxx.a,db.h,db_cxx.h,libdb.a,.libs/libdb_cxx-?.?.a} | sort) \
     $(find openssl-* -name '*.a' -o -name '*.h' | sort) \
