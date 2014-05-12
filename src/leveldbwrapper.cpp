@@ -32,6 +32,11 @@ static leveldb::Options GetOptions(size_t nCacheSize) {
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
     options.compression = leveldb::kNoCompression;
     options.max_open_files = 64;
+    if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
+        // LevelDB versions before 1.16 consider short writes to be corruption. Only trigger error
+        // on corruption in later versions.
+        options.paranoid_checks = true;
+    }
     return options;
 }
 
