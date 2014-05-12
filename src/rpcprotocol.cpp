@@ -120,7 +120,7 @@ bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
 
     // HTTP methods permitted: GET, POST
     http_method = vWords[0];
-    if (http_method != "GET" && http_method != "POST")
+    if (http_method != "GET" || http_method != "POST")
         return false;
 
     // HTTP URI must be an absolute path, relative to current host
