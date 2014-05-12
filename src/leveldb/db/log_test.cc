@@ -351,20 +351,32 @@ TEST(LogTest, BadRecordType) {
   ASSERT_EQ("OK", MatchError("unknown record type"));
 }
 
-TEST(LogTest, TruncatedTrailingRecord) {
+TEST(LogTest, TruncatedTrailingRecordIsIgnored) {
   Write("foo");
   ShrinkSize(4);   // Drop all payload as well as a header byte
   ASSERT_EQ("EOF", Read());
-  ASSERT_EQ(kHeaderSize - 1, DroppedBytes());
-  ASSERT_EQ("OK", MatchError("truncated record at end of file"));
+  // Truncated last record is ignored, not treated as an error.
+  ASSERT_EQ(0, DroppedBytes());
+  ASSERT_EQ("", ReportMessage());
 }
 
 TEST(LogTest, BadLength) {
+  const int kPayloadSize = kBlockSize - kHeaderSize;
+  Write(BigString("bar", kPayloadSize));
+  Write("foo");
+  // Least significant size byte is stored in header[4].
+  IncrementByte(4, 1);
+  ASSERT_EQ("foo", Read());
+  ASSERT_EQ(kBlockSize, DroppedBytes());
+  ASSERT_EQ("OK", MatchError("bad record length"));
+}
+
+TEST(LogTest, BadLengthAtEndIsIgnored) {
   Write("foo");
   ShrinkSize(1);
   ASSERT_EQ("EOF", Read());
-  ASSERT_EQ(kHeaderSize + 2, DroppedBytes());
-  ASSERT_EQ("OK", MatchError("bad record length"));
+  ASSERT_EQ(0, DroppedBytes());
+  ASSERT_EQ("", ReportMessage());
 }
 
 TEST(LogTest, ChecksumMismatch) {
@@ -413,6 +425,24 @@ TEST(LogTest, UnexpectedFirstType) {
   ASSERT_EQ("EOF", Read());
   ASSERT_EQ(3, DroppedBytes());
   ASSERT_EQ("OK", MatchError("partial record without end"));
+}
+
+TEST(LogTest, MissingLastIsIgnored) {
+  Write(BigString("bar", kBlockSize));
+  // Remove the LAST block, including header.
+  ShrinkSize(14);
+  ASSERT_EQ("EOF", Read());
+  ASSERT_EQ("", ReportMessage());
+  ASSERT_EQ(0, DroppedBytes());
+}
+
+TEST(LogTest, PartialLastIsIgnored) {
+  Write(BigString("bar", kBlockSize));
+  // Cause a bad record length in the LAST block.
+  ShrinkSize(1);
+  ASSERT_EQ("EOF", Read());
+  ASSERT_EQ("", ReportMessage());
+  ASSERT_EQ(0, DroppedBytes());
 }
 
 TEST(LogTest, ErrorJoinsRecords) {
