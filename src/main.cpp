@@ -3818,8 +3818,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             vEraseQueue.push_back(inv.hash);
 
 
-            LogPrint("mempool", "AcceptToMemoryPool: %s %s : accepted %s (poolsz %"PRIszu")\n",
-                pfrom->addr.ToString(), pfrom->cleanSubVer,
+            LogPrint("mempool", "AcceptToMemoryPool: accepted %s (poolsz %"PRIszu")\n",
                 tx.GetHash().ToString(),
                 mempool.mapTx.size());
 
