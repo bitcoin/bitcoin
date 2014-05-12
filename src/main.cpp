@@ -3709,7 +3709,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return error("message getdata size() = %"PRIszu"", vInv.size());
         }
 
-        if (fDebug || (vInv.size() != 1))
+        if (fDebug && (vInv.size() != 1))
             LogPrint("net", "received getdata (%"PRIszu" invsz)\n", vInv.size());
 
         if ((fDebug && vInv.size() > 0) || (vInv.size() == 1))
