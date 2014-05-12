@@ -133,7 +133,9 @@ bool Reader::ReadRecord(Slice* record, std::string* scratch) {
 
       case kEof:
         if (in_fragmented_record) {
-          ReportCorruption(scratch->size(), "partial record without end(3)");
+          // This can be caused by the writer dying immediately after
+          // writing a physical record but before completing the next; don't
+          // treat it as a corruption, just ignore the entire logical record.
           scratch->clear();
         }
         return false;
@@ -193,13 +195,12 @@ unsigned int Reader::ReadPhysicalRecord(Slice* result) {
           eof_ = true;
         }
         continue;
-      } else if (buffer_.size() == 0) {
-        // End of file
-        return kEof;
       } else {
-        size_t drop_size = buffer_.size();
+        // Note that if buffer_ is non-empty, we have a truncated header at the
+        // end of the file, which can be caused by the writer crashing in the
+        // middle of writing the header. Instead of considering this an error,
+        // just report EOF.
         buffer_.clear();
-        ReportCorruption(drop_size, "truncated record at end of file");
         return kEof;
       }
     }
@@ -213,8 +214,14 @@ unsigned int Reader::ReadPhysicalRecord(Slice* result) {
     if (kHeaderSize + length > buffer_.size()) {
       size_t drop_size = buffer_.size();
       buffer_.clear();
-      ReportCorruption(drop_size, "bad record length");
-      return kBadRecord;
+      if (!eof_) {
+        ReportCorruption(drop_size, "bad record length");
+        return kBadRecord;
+      }
+      // If the end of the file has been reached without reading |length| bytes
+      // of payload, assume the writer died in the middle of writing the record.
+      // Don't report a corruption.
+      return kEof;
     }
 
     if (type == kZeroType && length == 0) {
