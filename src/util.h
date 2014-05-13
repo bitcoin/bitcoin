@@ -106,6 +106,7 @@ extern volatile bool fReopenDebugLog;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
+void SetupEnvironment();
 
 /* Return true if log accepts specified category */
 bool LogAcceptCategory(const char* category);
