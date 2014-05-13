@@ -459,6 +459,8 @@ WId BitcoinApplication::getMainWinId() const
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
+    SetupEnvironment();
+
     /// 1. Parse command-line options. These take precedence over anything else.
     // Command-line options take precedence:
     ParseParameters(argc, argv);
