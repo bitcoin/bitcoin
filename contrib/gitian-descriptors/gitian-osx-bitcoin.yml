@@ -1,0 +1,65 @@
+---
+name: "bitcoin"
+suites:
+- "precise"
+architectures:
+- "i386"
+packages:
+- "git-core"
+- "automake"
+- "faketime"
+- "bsdmainutils"
+- "pkg-config"
+- "p7zip-full"
+
+reference_datetime: "2013-06-01 00:00:00"
+remotes:
+- "url": "https://github.com/bitcoin/bitcoin.git"
+  "dir": "bitcoin"
+files:
+- "osx-native-depends-r2.tar.gz"
+- "osx-depends-r2.tar.gz"
+- "osx-depends-qt-5.2.1-r2.tar.gz"
+- "MacOSX10.6.pkg"
+
+script: |
+
+  echo "a2ccf2299de4e0bb88bd17a3355f02b747575b97492c7c2f5b789a64ccc4cbd6  MacOSX10.6.pkg" | sha256sum -c
+
+  HOST=x86_64-apple-darwin11
+  PREFIX=`pwd`/osx-cross-depends/prefix
+  SDK=`pwd`/osx-cross-depends/SDKs/MacOSX10.6.sdk
+  NATIVEPREFIX=`pwd`/osx-cross-depends/native-prefix
+  export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+
+  export SOURCES_PATH=`pwd`
+
+  mkdir osx-cross-depends
+
+  cd osx-cross-depends
+  mkdir -p SDKs
+  7z -bd -so -y e ${SOURCES_PATH}/MacOSX10.6.pkg Payload | gzip -d -c | cpio -i
+  cd ..
+
+  tar -C osx-cross-depends -xf osx-native-depends-r2.tar.gz
+  tar -C osx-cross-depends -xf osx-depends-r2.tar.gz
+  tar -C osx-cross-depends -xf osx-depends-qt-5.2.1-r2.tar.gz
+  export PATH=`pwd`/osx-cross-depends/native-prefix/bin:$PATH
+
+  cd bitcoin
+
+  export ZERO_AR_DATE=1
+  export QT_RCC_TEST=1
+  ./autogen.sh
+  ./configure --host=${HOST} --with-boost=${PREFIX} CC=clang CXX=clang++ OBJC=clang OBJCXX=clang++ CFLAGS="-target ${HOST} -mmacosx-version-min=10.6 --sysroot ${SDK} -msse2 -Qunused-arguments" CXXFLAGS="-target ${HOST} -mmacosx-version-min=10.6 --sysroot ${SDK} -msse2 -Qunused-arguments" LDFLAGS="-B${NATIVEPREFIX}/bin -L${PREFIX}/lib -L${SDK}/usr/lib/i686-apple-darwin10/4.2.1" CPPFLAGS="-I${NATIVEPREFIX}/lib/clang/3.2/include -I${PREFIX}/include" SSL_LIBS="-lz -lssl -lcrypto" --disable-tests -with-gui=qt5 PKG_CONFIG_LIBDIR="${PREFIX}/lib/pkgconfig" --disable-dependency-tracking --disable-maintainer-mode
+  make dist
+  mkdir -p distsrc
+  cd distsrc
+  tar --strip-components=1 -xf ../bitcoin-*.tar*
+  ./configure --host=${HOST} --with-boost=${PREFIX} CC=clang CXX=clang++ OBJC=clang OBJCXX=clang++ CFLAGS="-target ${HOST} -mmacosx-version-min=10.6 --sysroot ${SDK} -msse2 -Qunused-arguments" CXXFLAGS="-target ${HOST} -mmacosx-version-min=10.6 --sysroot ${SDK} -msse2 -Qunused-arguments" LDFLAGS="-B${NATIVEPREFIX}/bin -L${PREFIX}/lib -L${SDK}/usr/lib/i686-apple-darwin10/4.2.1" CPPFLAGS="-I${NATIVEPREFIX}/lib/clang/3.2/include -I${PREFIX}/include" SSL_LIBS="-lz -lssl -lcrypto" --disable-tests -with-gui=qt5 PKG_CONFIG_LIBDIR="${PREFIX}/lib/pkgconfig"  --disable-dependency-tracking --disable-maintainer-mode
+  make $MAKEOPTS
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  make deploy
+  dmg dmg Bitcoin-Qt.dmg $OUTDIR/Bitcoin-Qt.dmg
