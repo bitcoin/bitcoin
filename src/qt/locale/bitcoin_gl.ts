@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="gl" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="gl" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -1048,6 +1048,14 @@ Dirección: %4
         <translation type="unfinished"/>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation type="unfinished"/>
     </message>
@@ -1349,7 +1357,7 @@ Dirección: %4
         <translation>Erro: combinación inválida de -regtest e -testnet.</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
         <translation type="unfinished"/>
     </message>
     <message>

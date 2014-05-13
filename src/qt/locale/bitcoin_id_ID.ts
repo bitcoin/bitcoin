@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="id_ID" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="id_ID" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -1048,6 +1048,14 @@ Alamat: %4
         <translation>Alamat IP proxy (cth. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation>pilihan perintah-baris aktif menimpa atas pilihan-pilihan: </translation>
     </message>
@@ -1349,7 +1357,7 @@ Alamat: %4
         <translation>Gagal: Gabungan -regtest dan -testnet salah</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
         <translation type="unfinished"/>
     </message>
     <message>
