@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="ru" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="ru" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -1048,6 +1048,14 @@ Address: %4
         <translation>IP-адрес прокси (например IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>Сторонние URL (например, block explorer), которые отображаются на вкладке транзакций как пункты контекстного меню. %s в URL заменяется хэшем транзакции. URL отделяются друг от друга вертикальной чертой |.</translation>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation>Сторонние URL транзакций.</translation>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation>Активные опции командной строки, которые перекрывают вышеуказанные опции:</translation>
     </message>
@@ -1349,8 +1357,8 @@ Address: %4
         <translation>Ошибка: неверная комбинация -regtest и -testnet.</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
-        <translation>Bitcoin Core еще не готов к безопасному завершению...</translation>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
+        <translation>Bitcoin Core ещё не завершился безопасно...</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
