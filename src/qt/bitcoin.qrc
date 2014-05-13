@@ -130,6 +130,7 @@
         <file alias="la">locale/bitcoin_la.qm</file>
         <file alias="lt">locale/bitcoin_lt.qm</file>
         <file alias="lv_LV">locale/bitcoin_lv_LV.qm</file>
+        <file alias="mn">locale/bitcoin_mn.qm</file>
         <file alias="ms_MY">locale/bitcoin_ms_MY.qm</file>
         <file alias="nb">locale/bitcoin_nb.qm</file>
         <file alias="nl">locale/bitcoin_nl.qm</file>
