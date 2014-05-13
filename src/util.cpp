@@ -1384,3 +1384,19 @@ bool ParseInt32(const std::string& str, int32_t *out)
         n <= std::numeric_limits<int32_t>::max();
 }
 
+void SetupEnvironment()
+{
+    #ifndef WIN32
+    try
+    {
+	#if BOOST_FILESYSTEM_VERSION == 3
+            boost::filesystem::path::codecvt(); // Raises runtime error if current locale is invalid
+	#else				          // boost filesystem v2
+            std::locale();                      // Raises runtime error if current locale is invalid
+	#endif
+    } catch(std::runtime_error &e)
+    {
+        setenv("LC_ALL", "C", 1); // Force C locale
+    }
+    #endif
+}
