@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="es_UY" version="2.1">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="mn" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -35,11 +35,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     <name>AddressBookPage</name>
     <message>
         <source>Double-click to edit address or label</source>
-        <translation>Doble clic para editar etiqueta o dirección </translation>
+        <translation>Хаяг эсвэл шошгыг ѳѳрчлѳхийн тулд хоёр удаа дар</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Crear una nueva dirección </translation>
+        <translation>Шинэ хаяг нээх</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -47,7 +47,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copia la dirección seleccionada al portapapeles del sistema</translation>
+        <translation>Одоогоор сонгогдсон байгаа хаягуудыг сануулах</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -59,7 +59,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>Хаягийг &amp;Хуулбарлах</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -75,7 +75,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Borrar</translation>
+        <translation>&amp;Устгах</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -107,11 +107,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Шошгыг хуулбарлах</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ѳѳрчлѳх</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -119,7 +119,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Archivos separados por coma (*.csv)</translation>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -134,15 +134,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Etiqueta</translation>
+        <translation>Шошго</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Direccion </translation>
+        <translation>Хаяг</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(Sin etiqueta)</translation>
+        <translation>(шошго алга)</translation>
     </message>
 </context>
 <context>
@@ -153,51 +153,51 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Escriba la contraseña</translation>
+        <translation>Нууц үгийг оруул</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Nueva contraseña</translation>
+        <translation>Шинэ нууц үг</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Repetir nueva contraseña</translation>
+        <translation>Шинэ нууц үгийг давтана уу</translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Introduzca la nueva contraseña para el monedero. &lt;br/&gt; Utilice una contraseña de &lt;b&gt; 10 o más caracteres al azar &lt;/ b&gt;, o &lt;b&gt; ocho o más palabras &lt;/ b&gt;.</translation>
+        <translation>Түрүйвчийн шинэ нууц үгийг оруул. &lt;br/&gt;&lt;b&gt;Дор хаяж 10 дурын үсэг/тоо бүхий&lt;/b&gt; эсвэл &lt;b&gt;дор хаяж 8 дурын үгнээс бүрдсэн&lt;/b&gt; нууц үгийг ашиглана уу. </translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Monedero cifrado</translation>
+        <translation>Түрүйвчийг цоожлох</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Esta operacion necesita la contraseña del monedero para desbloquear el mismo</translation>
+        <translation>Энэ үйлдэлийг гүйцэтгэхийн тулд та нууц үгээрээ түрүйвчийн цоожийг тайлах хэрэгтэй</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Monedero destrabado</translation>
+        <translation>Түрүйвчийн цоожийг тайлах</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Esta operacion necesita la contraseña del monedero para descifrar el mismo</translation>
+        <translation>Энэ үйлдэлийг гүйцэтгэхийн тулд та эхлээд түрүйвчийн нууц үгийг оруулж цоожийг тайлах шаардлагтай.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Monedero descifrado</translation>
+        <translation>Түрүйвчийн цоожийг устгах</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Cambiar contraseña</translation>
+        <translation>Нууц үгийг солих</translation>
     </message>
     <message>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Ingrese la contraseña anterior y la nueva de acceso a el monedero</translation>
+        <translation>Түрүйвчийн хуучин болоод шинэ нууц үгсийг оруулна уу</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Confirme el cifrado del monedero</translation>
+        <translation>Түрүйвчийн цоожийг баталгаажуулах</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
@@ -217,106 +217,106 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>Monedero cifrado</translation>
+        <translation>Түрүйвч цоожлогдлоо</translation>
     </message>
     <message>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"/>
+        <translation>Цоожлолтын процесыг дуусгахын тулд Биткойн одоо хаагдана. Ѳѳрийн түрүйвчийг цоожлох нь таны биткойнуудыг компьютерийн вирус хулгайлахаас бүрэн сэргийлж чадахгүй гэдгийг санаарай.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>Fallo en el cifrado del monedero</translation>
+        <translation>Түрүйвчийн цоожлол амжилттай болсонгүй</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Fallo en el cifrado del monedero a causa de un error interno. Su monedero no esta cifrado</translation>
+        <translation>Түрүйвчийн цоожлол дотоод алдаанаас үүдэн амжилттай болсонгүй. Түрүйвч цоожлогдоогүй байна.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>Las contraseñas suministradas no coinciden.</translation>
+        <translation>Таны оруулсан нууц үг таарсангүй</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation>Fallo en el desbloqueo del mondero</translation>
+        <translation>Түрүйвчийн цоож тайлагдсангүй</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>La contraseña introducida para el descifrado del monedero es incorrecta.</translation>
+        <translation>Таны оруулсан түрүйвчийн цоожийг тайлах нууц үг буруу байна</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
-        <translation>Fallo en el descifrado del monedero</translation>
+        <translation>Түрүйвчийн цоож амжилттай устгагдсангүй</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн нууц үг амжилттай ѳѳр</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Зурвас хавсаргах...</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
-        <translation>Sincronizando con la red...</translation>
+        <translation>Сүлжээтэй тааруулж байна...</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Vista previa</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>Нод</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Mostrar descripción general del monedero</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;transaciones </translation>
+        <translation>Гүйлгээнүүд</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Buscar en el historial de transacciones</translation>
+        <translation>Гүйлгээнүүдийн түүхийг харах</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>Гарах</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Salir de la aplicacion </translation>
+        <translation>Програмаас Гарах</translation>
     </message>
     <message>
         <source>Show information about Bitcoin</source>
-        <translation>Mostrar informacion sobre Bitcoin</translation>
+        <translation>Биткойны мэдээллийг харуулах</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Клиентийн тухай</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation type="unfinished"/>
+        <translation>Клиентийн тухай мэдээллийг харуул</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
-        <translation>&amp;Opciones...</translation>
+        <translation>&amp;Сонголтууд...</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Түрүйвчийг цоожлох...</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Түрүйвчийг Жоорлох...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Нууц Үгийг Солих...</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
@@ -352,7 +352,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Cambie la clave utilizada para el cifrado del monedero</translation>
+        <translation>Түрүйвчийг цоожлох нууц үгийг солих</translation>
     </message>
     <message>
         <source>&amp;Debug window</source>
@@ -360,7 +360,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
-        <translation type="unfinished"/>
+        <translation>Оношилгоо ба засварын консолыг онгойлго</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -368,11 +368,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Биткойн</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвч</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -384,7 +384,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Show / Hide</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Харуул / Нуу</translation>
     </message>
     <message>
         <source>Show or hide the main Window</source>
@@ -404,23 +404,23 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Archivo</translation>
+        <translation>&amp;Файл</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Configuracion </translation>
+        <translation>&amp;Тохиргоо</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Ayuda</translation>
+        <translation>&amp;Тусламж</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Barra de herramientas</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <source>[testnet]</source>
-        <translation>[prueba_de_red]</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <source>Bitcoin Core</source>
@@ -456,11 +456,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Bitcoin client</source>
-        <translation type="unfinished"/>
+        <translation>Биткойн клиент</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n conexión activa a la red Bitcoin </numerusform><numerusform>%n conexiones activas a la red Bitcoin</numerusform></translation>
+        <translation><numerusform>Биткойны сүлжээрүү %n идэвхитэй холболт байна </numerusform><numerusform>Биткойны сүлжээрүү %n идэвхитэй холболтууд байна </numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -476,11 +476,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n цаг</numerusform><numerusform>%n цаг</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n ѳдѳр</numerusform><numerusform>%n ѳдрүүд</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
@@ -508,7 +508,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Алдаа</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -520,19 +520,19 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Up to date</source>
-        <translation>A la fecha</translation>
+        <translation>Шинэчлэгдсэн</translation>
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Ponerse al dia...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Transaccion enviada</translation>
+        <translation>Гадагшаа гүйлгээ</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Transacción entrante</translation>
+        <translation>Дотогшоо гүйлгээ</translation>
     </message>
     <message>
         <source>Date: %1
@@ -540,15 +540,22 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation type="unfinished"/>
+        <translation>Огноо: %1
+
+Хэмжээ: %2 
+
+Тѳрѳл: %3 
+
+Хаяг: %4
+</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>El Monedero esta &lt;b&gt;cifrado&lt;/b&gt; y actualmente &lt;b&gt;desbloqueado&lt;/b&gt;</translation>
+        <translation>Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;онгорхой&lt;/b&gt; байна</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>El Monedero esta &lt;b&gt;cifrado&lt;/b&gt; y actualmente &lt;b&gt;bloqueado&lt;/b&gt;</translation>
+        <translation>Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;хаалттай&lt;/b&gt; байна</translation>
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
@@ -578,7 +585,7 @@ Address: %4
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ:</translation>
     </message>
     <message>
         <source>Priority:</source>
@@ -586,7 +593,7 @@ Address: %4
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Тѳлбѳр:</translation>
     </message>
     <message>
         <source>Low Output:</source>
@@ -614,15 +621,15 @@ Address: %4
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Direccion </translation>
+        <translation>Хаяг</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Fecha</translation>
+        <translation>Огноо</translation>
     </message>
     <message>
         <source>Confirmations</source>
@@ -630,7 +637,7 @@ Address: %4
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>Баталгаажлаа</translation>
     </message>
     <message>
         <source>Priority</source>
@@ -638,15 +645,15 @@ Address: %4
     </message>
     <message>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Хаягийг санах</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Шошгыг санах</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээг санах</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
@@ -686,7 +693,7 @@ Address: %4
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Ѳѳрчлѳлтийг санах</translation>
     </message>
     <message>
         <source>highest</source>
@@ -782,7 +789,7 @@ Address: %4
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(Sin etiqueta)</translation>
+        <translation>(шошгогүй)</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
@@ -790,18 +797,18 @@ Address: %4
     </message>
     <message>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(ѳѳрчлѳх)</translation>
     </message>
 </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Editar dirección</translation>
+        <translation>Хаягийг ѳѳрчлѳх</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Etiqueta</translation>
+        <translation>&amp;Шошго</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
@@ -813,27 +820,27 @@ Address: %4
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>&amp;Direccion </translation>
+        <translation>&amp;Хаяг</translation>
     </message>
     <message>
         <source>New receiving address</source>
-        <translation>Nueva dirección de recepción </translation>
+        <translation>Шинэ хүлээн авах хаяг</translation>
     </message>
     <message>
         <source>New sending address</source>
-        <translation>Nueva dirección de envío </translation>
+        <translation>Шинэ явуулах хаяг</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>Editar dirección de recepcion </translation>
+        <translation>Хүлээн авах хаягийг ѳѳрчлѳх</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>Editar dirección de envío </translation>
+        <translation>Явуулах хаягийг ѳѳрчлѳх</translation>
     </message>
     <message>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>La dirección introducida &quot;% 1&quot; ya está en la libreta de direcciones.</translation>
+        <translation>Таны оруулсан хаяг &quot;%1&quot; нь хаягийн бүртгэлд ѳмнѳ нь орсон байна</translation>
     </message>
     <message>
         <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
@@ -841,11 +848,11 @@ Address: %4
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation>No se puede abrir el monedero.</translation>
+        <translation>Түрүйвчийн цоожийг тайлж чадсангүй</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation>Fallo en la nueva clave generada.</translation>
+        <translation>Шинэ түлхүүр амжилттай гарсангүй</translation>
     </message>
 </context>
 <context>
@@ -883,11 +890,11 @@ Address: %4
     </message>
     <message>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>хувилбар</translation>
     </message>
     <message>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>Хэрэглээ:</translation>
     </message>
     <message>
         <source>command-line options</source>
@@ -946,7 +953,7 @@ Address: %4
     </message>
     <message>
         <source>Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Биткойн</translation>
     </message>
     <message>
         <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
@@ -954,7 +961,7 @@ Address: %4
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Алдаа</translation>
     </message>
     <message>
         <source>GB of free space available</source>
@@ -992,7 +999,7 @@ Address: %4
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Opciones</translation>
+        <translation>Сонголтууд</translation>
     </message>
     <message>
         <source>&amp;Main</source>
@@ -1020,7 +1027,7 @@ Address: %4
     </message>
     <message>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>МБ</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1028,7 +1035,7 @@ Address: %4
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Биткойны сүлжээрүү SOCKS проксигоор холбогдох.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
@@ -1036,7 +1043,7 @@ Address: %4
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished"/>
+        <translation>проксигийн IP хаяг (жишээ нь: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
@@ -1188,15 +1195,15 @@ Address: %4
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Ѳѳрчлѳлтүүдийг идэвхижүүлхийн тулд клиентийг ахин эхлүүлэх шаардлагтай</translation>
     </message>
     <message>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>Клиент унтрах гэж байна, яг унтраах уу?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>Энэ ѳѳрчлѳлтийг оруулахын тулд кли1нт програмыг ахин эхлүүлэх шаардлагтай</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1207,7 +1214,7 @@ Address: %4
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation>Formulario</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
@@ -1215,11 +1222,11 @@ Address: %4
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвч</translation>
     </message>
     <message>
         <source>Available:</source>
-        <translation type="unfinished"/>
+        <translation>Хэрэглэж болох хэмжээ:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -1251,7 +1258,7 @@ Address: %4
     </message>
     <message>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Transacciones recientes&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Сүүлд хийгдсэн гүйлгээнүүд&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1333,7 +1340,7 @@ Address: %4
     <name>QObject</name>
     <message>
         <source>Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Биткойн</translation>
     </message>
     <message>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
@@ -1372,26 +1379,26 @@ Address: %4
     </message>
     <message>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>PNG форматын зураг (*.png)</translation>
     </message>
 </context>
 <context>
     <name>RPCConsole</name>
     <message>
         <source>Client name</source>
-        <translation type="unfinished"/>
+        <translation>Клиентийн нэр</translation>
     </message>
     <message>
         <source>N/A</source>
-        <translation type="unfinished"/>
+        <translation>Алга Байна</translation>
     </message>
     <message>
         <source>Client version</source>
-        <translation type="unfinished"/>
+        <translation>Клиентийн хувилбар</translation>
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Мэдээллэл</translation>
     </message>
     <message>
         <source>Debug window</source>
@@ -1399,7 +1406,7 @@ Address: %4
     </message>
     <message>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>Ерѳнхий</translation>
     </message>
     <message>
         <source>Using OpenSSL version</source>
@@ -1411,39 +1418,39 @@ Address: %4
     </message>
     <message>
         <source>Network</source>
-        <translation type="unfinished"/>
+        <translation>Сүлжээ</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished"/>
+        <translation>Нэр</translation>
     </message>
     <message>
         <source>Number of connections</source>
-        <translation type="unfinished"/>
+        <translation>Холболтын тоо</translation>
     </message>
     <message>
         <source>Block chain</source>
-        <translation type="unfinished"/>
+        <translation>Блокийн цуваа</translation>
     </message>
     <message>
         <source>Current number of blocks</source>
-        <translation type="unfinished"/>
+        <translation>Одоогийн блокийн тоо</translation>
     </message>
     <message>
         <source>Estimated total blocks</source>
-        <translation type="unfinished"/>
+        <translation>Нийт блокийн барагцаа</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation type="unfinished"/>
+        <translation>Сүүлийн блокийн хугацаа</translation>
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Нээх</translation>
     </message>
     <message>
         <source>&amp;Console</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Консол</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
@@ -1479,7 +1486,7 @@ Address: %4
     </message>
     <message>
         <source>Clear console</source>
-        <translation type="unfinished"/>
+        <translation>Консолыг цэвэрлэх</translation>
     </message>
     <message>
         <source>Welcome to the Bitcoin RPC console.</source>
@@ -1530,7 +1537,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Etiqueta:</translation>
+        <translation>&amp;Шошго:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -1582,27 +1589,27 @@ Address: %4
     </message>
     <message>
         <source>Show</source>
-        <translation type="unfinished"/>
+        <translation>Харуул</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
-        <translation type="unfinished"/>
+        <translation>Сонгогдсон ѳгѳгдлүүдийг устгах</translation>
     </message>
     <message>
         <source>Remove</source>
-        <translation type="unfinished"/>
+        <translation>Устгах</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Шошгыг санах</translation>
     </message>
     <message>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>Зурвасыг санах</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээг санах</translation>
     </message>
 </context>
 <context>
@@ -1637,19 +1644,19 @@ Address: %4
     </message>
     <message>
         <source>Address</source>
-        <translation>Direccion </translation>
+        <translation>Хаяг</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etiqueta</translation>
+        <translation>Шошго</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Зурвас</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
@@ -1664,27 +1671,27 @@ Address: %4
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Fecha</translation>
+        <translation>Огноо</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etiqueta</translation>
+        <translation>Шошго</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Зурвас</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(Sin etiqueta)</translation>
+        <translation>(шошго алга)</translation>
     </message>
     <message>
         <source>(no message)</source>
-        <translation type="unfinished"/>
+        <translation>(зурвас алга)</translation>
     </message>
     <message>
         <source>(no amount)</source>
@@ -1695,7 +1702,7 @@ Address: %4
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Enviar monedas</translation>
+        <translation>Зоос явуулах</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -1707,11 +1714,11 @@ Address: %4
     </message>
     <message>
         <source>automatically selected</source>
-        <translation type="unfinished"/>
+        <translation>автоматаар сонгогдсон</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
+        <translation>Таны дансны үлдэгдэл хүрэлцэхгүй байна!</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1723,7 +1730,7 @@ Address: %4
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ:</translation>
     </message>
     <message>
         <source>Priority:</source>
@@ -1731,7 +1738,7 @@ Address: %4
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Тѳлбѳр:</translation>
     </message>
     <message>
         <source>Low Output:</source>
@@ -1755,11 +1762,11 @@ Address: %4
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Enviar a varios destinatarios a la vez</translation>
+        <translation>Нэгэн зэрэг олон хүлээн авагчруу явуулах</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Хүлээн авагчийг Нэмэх</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -1767,23 +1774,23 @@ Address: %4
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Бүгдийг Цэвэрлэ</translation>
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Balance:</translation>
+        <translation>Баланс:</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Confirmar el envío</translation>
+        <translation>Явуулах үйлдлийг баталгаажуулна уу</translation>
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation type="unfinished"/>
+        <translation>Яв&amp;уул</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation>Confirmar el envio de monedas</translation>
+        <translation>Зоос явуулахыг баталгаажуулна уу</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -1795,7 +1802,7 @@ Address: %4
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээг санах</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -1819,15 +1826,15 @@ Address: %4
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Ѳѳрчлѳлтийг санах</translation>
     </message>
     <message>
         <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
+        <translation>Нийт дүн %1 (= %2)</translation>
     </message>
     <message>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>эсвэл</translation>
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
@@ -1835,15 +1842,15 @@ Address: %4
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>La cantidad a pagar debe ser mayor que 0.</translation>
+        <translation>Тѳлѳх хэмжээ 0.-оос их байх ёстой</translation>
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished"/>
+        <translation>Энэ хэмжээ таны балансаас хэтэрсэн байна.</translation>
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний тѳлбѳр %1-ийг тооцхоор нийт дүн нь таны балансаас хэтрээд байна.</translation>
     </message>
     <message>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
@@ -1859,11 +1866,11 @@ Address: %4
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Анхаар:Буруу Биткойны хаяг байна</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(Sin etiqueta)</translation>
+        <translation>(шошгогүй)</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -1890,11 +1897,11 @@ Address: %4
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>A&amp;Monto:</translation>
+        <translation>Дүн:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>Pagar &amp;A:</translation>
+        <translation>Тѳлѳх &amp;хаяг:</translation>
     </message>
     <message>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -1902,11 +1909,11 @@ Address: %4
     </message>
     <message>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>Introduzca una etiqueta para esta dirección para añadirla a su libreta de direcciones</translation>
+        <translation>Энэ хаягийг ѳѳрийн бүртгэлдээ авахын тулд шошго оруул</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Etiqueta:</translation>
+        <translation>&amp;Шошго:</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -1922,7 +1929,7 @@ Address: %4
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Pegar la dirección desde el portapapeles</translation>
+        <translation>Копидсон хаягийг буулгах</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -1934,7 +1941,7 @@ Address: %4
     </message>
     <message>
         <source>Message:</source>
-        <translation type="unfinished"/>
+        <translation>Зурвас:</translation>
     </message>
     <message>
         <source>This is a verified payment request.</source>
@@ -1965,11 +1972,11 @@ Address: %4
     <name>ShutdownWindow</name>
     <message>
         <source>Bitcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Биткойны цѳм хаагдаж байна...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>Энэ цонхыг хаагдтал компьютерээ бүү унтраагаарай</translation>
     </message>
 </context>
 <context>
@@ -2000,7 +2007,7 @@ Address: %4
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Pegar la dirección desde el portapapeles</translation>
+        <translation>Копидсон хаягийг буулгах</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -2032,7 +2039,7 @@ Address: %4
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Бүгдийг Цэвэрлэ</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
@@ -2127,7 +2134,7 @@ Address: %4
     </message>
     <message>
         <source>[testnet]</source>
-        <translation>[prueba_de_red]</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -2141,11 +2148,11 @@ Address: %4
     <name>TransactionDesc</name>
     <message>
         <source>Open until %1</source>
-        <translation>Abrir hasta %1</translation>
+        <translation>%1 хүртэл нээлттэй</translation>
     </message>
     <message>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>зѳрчилдлѳѳ</translation>
     </message>
     <message>
         <source>%1/offline</source>
@@ -2153,11 +2160,11 @@ Address: %4
     </message>
     <message>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>%1/баталгаажаагүй</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
-        <translation type="unfinished"/>
+        <translation>%1 баталгаажилтууд</translation>
     </message>
     <message>
         <source>Status</source>
@@ -2169,7 +2176,7 @@ Address: %4
     </message>
     <message>
         <source>Date</source>
-        <translation>Fecha</translation>
+        <translation>Огноо</translation>
     </message>
     <message>
         <source>Source</source>
@@ -2221,7 +2228,7 @@ Address: %4
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Зурвас</translation>
     </message>
     <message>
         <source>Comment</source>
@@ -2253,7 +2260,7 @@ Address: %4
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <source>true</source>
@@ -2265,7 +2272,7 @@ Address: %4
     </message>
     <message>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"/>
+        <translation>, хараахан амжилттай цацагдаагүй байна</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
@@ -2273,37 +2280,37 @@ Address: %4
     </message>
     <message>
         <source>unknown</source>
-        <translation>desconocido</translation>
+        <translation>үл мэдэгдэх</translation>
     </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
         <source>Transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний мэдээллэл</translation>
     </message>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний дэлгэрэнгүйг энэ бичил цонх харуулж байна</translation>
     </message>
 </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Fecha</translation>
+        <translation>Огноо</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Тѳрѳл</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Direccion </translation>
+        <translation>Хаяг</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
@@ -2315,19 +2322,19 @@ Address: %4
     </message>
     <message>
         <source>Open until %1</source>
-        <translation>Abrir hasta %1</translation>
+        <translation>%1 хүртэл нээлттэй</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Баталгаажлаа (%1 баталгаажилт)</translation>
     </message>
     <message>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="unfinished"/>
+        <translation>Энэ блокийг аль ч нод хүлээн авсангүй ба ер нь зѳвшѳѳрѳгдѳхгүй байж мэднэ!</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation type="unfinished"/>
+        <translation>Үүсгэгдсэн гэхдээ хүлээн авагдаагүй</translation>
     </message>
     <message>
         <source>Offline</source>
@@ -2335,7 +2342,7 @@ Address: %4
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>Баталгаажаагүй</translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
@@ -2343,78 +2350,78 @@ Address: %4
     </message>
     <message>
         <source>Conflicted</source>
-        <translation type="unfinished"/>
+        <translation>Зѳрчилдлѳѳ</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Хүлээн авсан хаяг</translation>
     </message>
     <message>
         <source>Received from</source>
-        <translation type="unfinished"/>
+        <translation>Хүлээн авагдсан хаяг</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Явуулсан хаяг</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
-        <translation type="unfinished"/>
+        <translation>Ѳѳрлүүгээ хийсэн тѳлбѳр</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Олборлогдсон</translation>
     </message>
     <message>
         <source>(n/a)</source>
-        <translation type="unfinished"/>
+        <translation>(алга байна)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний байдал. Энд хулганыг авчирч баталгаажуулалтын тоог харна уу.</translation>
     </message>
     <message>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээг хүлээн авсан огноо ба цаг.</translation>
     </message>
     <message>
         <source>Type of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний тѳрѳл</translation>
     </message>
     <message>
         <source>Destination address of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээг хүлээн авах хаяг</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished"/>
+        <translation>Балансаас авагдсан болон нэмэгдсэн хэмжээ.</translation>
     </message>
 </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>All</source>
-        <translation type="unfinished"/>
+        <translation>Бүгд</translation>
     </message>
     <message>
         <source>Today</source>
-        <translation type="unfinished"/>
+        <translation>Ѳнѳѳдѳр</translation>
     </message>
     <message>
         <source>This week</source>
-        <translation type="unfinished"/>
+        <translation>Энэ долоо хоног</translation>
     </message>
     <message>
         <source>This month</source>
-        <translation type="unfinished"/>
+        <translation>Энэ сар</translation>
     </message>
     <message>
         <source>Last month</source>
-        <translation type="unfinished"/>
+        <translation>Ѳнгѳрсѳн сар</translation>
     </message>
     <message>
         <source>This year</source>
-        <translation type="unfinished"/>
+        <translation>Энэ жил</translation>
     </message>
     <message>
         <source>Range...</source>
@@ -2422,43 +2429,43 @@ Address: %4
     </message>
     <message>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Хүлээн авсан хаяг</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Явуулсан хаяг</translation>
     </message>
     <message>
         <source>To yourself</source>
-        <translation type="unfinished"/>
+        <translation>Ѳѳрлүүгээ</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Олборлогдсон</translation>
     </message>
     <message>
         <source>Other</source>
-        <translation type="unfinished"/>
+        <translation>Бусад</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished"/>
+        <translation>Хайлт хийхийн тулд хаяг эсвэл шошгыг оруул</translation>
     </message>
     <message>
         <source>Min amount</source>
-        <translation type="unfinished"/>
+        <translation>Хамгийн бага хэмжээ</translation>
     </message>
     <message>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Хаягийг санах</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Шошгыг санах</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээг санах</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
@@ -2466,11 +2473,11 @@ Address: %4
     </message>
     <message>
         <source>Edit label</source>
-        <translation type="unfinished"/>
+        <translation>Шошгыг ѳѳрчлѳх</translation>
     </message>
     <message>
         <source>Show transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээний дэлгэрэнгүйг харуул</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
@@ -2490,39 +2497,39 @@ Address: %4
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Гүйлгээнүй түүхийг %1-д амжилттай хадгаллаа.</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Archivos separados por coma (*.csv)</translation>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>Баталгаажлаа</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Fecha</translation>
+        <translation>Огноо</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Тѳрѳл</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etiqueta</translation>
+        <translation>Шошго</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Direccion </translation>
+        <translation>Хаяг</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Хэмжээ</translation>
     </message>
     <message>
         <source>ID</source>
-        <translation type="unfinished"/>
+        <translation>Тодорхойлолт</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -2530,21 +2537,21 @@ Address: %4
     </message>
     <message>
         <source>to</source>
-        <translation type="unfinished"/>
+        <translation>-рүү/руу</translation>
     </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Ямар ч түрүйвч ачааллагдсангүй.</translation>
     </message>
 </context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Enviar monedas</translation>
+        <translation>Зоос явуулах</translation>
     </message>
 </context>
 <context>
@@ -2586,19 +2593,19 @@ Address: %4
     <name>bitcoin-core</name>
     <message>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>Хэрэглээ:</translation>
     </message>
     <message>
         <source>List commands</source>
-        <translation type="unfinished"/>
+        <translation>Үйлдлүүдийг жагсаах</translation>
     </message>
     <message>
         <source>Get help for a command</source>
-        <translation type="unfinished"/>
+        <translation>Үйлдэлд туслалцаа авах</translation>
     </message>
     <message>
         <source>Options:</source>
-        <translation type="unfinished"/>
+        <translation>Сонголтууд:</translation>
     </message>
     <message>
         <source>Specify configuration file (default: bitcoin.conf)</source>
@@ -2614,7 +2621,7 @@ Address: %4
     </message>
     <message>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation type="unfinished"/>
+        <translation>&lt;port&gt; дээрх холболтуудыг чагна (ѳгѳгдмѳл: 8333 эсвэл testnet: 18333)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
@@ -2812,7 +2819,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Connect through SOCKS proxy</source>
-        <translation type="unfinished"/>
+        <translation>SOCKS проксигоор холбогдох</translation>
     </message>
     <message>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
@@ -3016,7 +3023,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
+        <translation>RPC серверийг эхэлтэл хүлээ</translation>
     </message>
     <message>
         <source>Wallet %s resides outside data directory %s</source>
@@ -3024,7 +3031,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийн сонголтууд:</translation>
     </message>
     <message>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
@@ -3212,7 +3219,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>хувилбар</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
@@ -3236,7 +3243,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Upgrade wallet to latest format</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийг хамгийн сүүлийн үеийн форматруу шинэчлэх</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
@@ -3272,15 +3279,15 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Loading addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Хаягуудыг ачааллаж байна...</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat-ыг ачааллахад алдаа гарлаа: Түрүйвч эвдэрсэн байна</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat-ыг ачааллахад алдаа гарлаа: Түрүйвч Биткойны шинэ хувилбарыг шаардаж байна</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
@@ -3288,11 +3295,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat-ыг ачааллахад алдаа гарлаа</translation>
     </message>
     <message>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Эдгээр прокси хаягнууд буруу байна: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
@@ -3316,23 +3323,23 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Invalid amount</source>
-        <translation type="unfinished"/>
+        <translation>Буруу хэмжээ</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation type="unfinished"/>
+        <translation>Таны дансны үлдэгдэл хүрэлцэхгүй байна</translation>
     </message>
     <message>
         <source>Loading block index...</source>
-        <translation type="unfinished"/>
+        <translation>Блокийн индексүүдийг ачааллаж байна...</translation>
     </message>
     <message>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished"/>
+        <translation>Холболт хийхийн тулд мѳн холболтой онгорхой хадгалхын тулд шинэ нод нэм</translation>
     </message>
     <message>
         <source>Loading wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Түрүйвчийг ачааллаж байна...</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
@@ -3344,19 +3351,19 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Rescanning...</source>
-        <translation type="unfinished"/>
+        <translation>Ахин уншиж байна...</translation>
     </message>
     <message>
         <source>Done loading</source>
-        <translation type="unfinished"/>
+        <translation>Ачааллаж дууслаа</translation>
     </message>
     <message>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>%s сонголтыг ашиглахын тулд</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Алдаа</translation>
     </message>
     <message>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:

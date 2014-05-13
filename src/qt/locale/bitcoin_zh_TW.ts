@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="zh_TW" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="zh_TW" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -1050,6 +1050,14 @@ Address: %4
         <translation>代理伺服器的網際網路位址(像是 IPv4 的 127.0.0.1 或 IPv6 的 ::1)</translation>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>在交易頁籤的情境選單出現的第三方(比如說區塊探索網站)網址連結。網址中的 %s 會被取代為交易的雜湊值。可以用直線符號 | 來分隔多個連結。</translation>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation>交易的第三方網址連結</translation>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation>從命令列取代掉以上設定的選項有:</translation>
     </message>
@@ -1351,7 +1359,7 @@ Address: %4
         <translation>錯誤: -regtest 和 -testnet 的使用組合無效。</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
         <translation>位元幣核心還沒有安全地結束...</translation>
     </message>
     <message>

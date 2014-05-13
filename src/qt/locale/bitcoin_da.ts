@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="da" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="da" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -96,11 +96,11 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>Afsendelsesadresser</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Modtagelsesadresser</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -325,11 +325,11 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Afsendelsesadresser...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Modtagelsesadresser...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
@@ -1048,6 +1048,14 @@ Adresse: %4
         <translation type="unfinished"/>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation type="unfinished"/>
     </message>
@@ -1349,7 +1357,7 @@ Adresse: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
         <translation type="unfinished"/>
     </message>
     <message>
