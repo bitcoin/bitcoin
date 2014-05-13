@@ -485,21 +485,6 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned cha
     return true;
 }
 
-bool CPubKey::VerifyCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {
-    if (!IsValid())
-        return false;
-    if (vchSig.size() != 65)
-        return false;
-    CECKey key;
-    if (!key.Recover(hash, &vchSig[1], (vchSig[0] - 27) & ~4))
-        return false;
-    CPubKey pubkeyRec;
-    key.GetPubKey(pubkeyRec, IsCompressed());
-    if (*this != pubkeyRec)
-        return false;
-    return true;
-}
-
 bool CPubKey::IsFullyValid() const {
     if (!IsValid())
         return false;
