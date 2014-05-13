@@ -15,6 +15,7 @@ import json
 import shutil
 import subprocess
 import time
+import re
 
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
@@ -112,20 +113,43 @@ def initialize_chain(test_dir):
         to_dir = os.path.join(test_dir,  "node"+str(i))
         shutil.copytree(from_dir, to_dir)
 
-def start_nodes(num_nodes, dir):
+def _rpchost_to_args(rpchost):
+    '''Convert optional IP:port spec to rpcconnect/rpcport args'''
+    if rpchost is None:
+        return []
+
+    match = re.match('(\[[0-9a-fA-f:]+\]|[^:]+)(?::([0-9]+))?$', rpchost)
+    if not match:
+        raise ValueError('Invalid RPC host spec ' + rpchost)
+
+    rpcconnect = match.group(1)
+    rpcport = match.group(2)
+
+    if rpcconnect.startswith('['): # remove IPv6 [...] wrapping
+        rpcconnect = rpcconnect[1:-1]
+
+    rv = ['-rpcconnect=' + rpcconnect]
+    if rpcport:
+        rv += ['-rpcport=' + rpcport]
+    return rv
+
+def start_nodes(num_nodes, dir, extra_args=None, rpchost=None):
     # Start bitcoinds, and wait for RPC interface to be up and running:
     devnull = open("/dev/null", "w+")
     for i in range(num_nodes):
         datadir = os.path.join(dir, "node"+str(i))
         args = [ "bitcoind", "-datadir="+datadir ]
+        if extra_args is not None:
+            args += extra_args[i]
         bitcoind_processes.append(subprocess.Popen(args))
-        subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir,
-                                  "-rpcwait", "getblockcount"], stdout=devnull)
+        subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir] +
+                                  _rpchost_to_args(rpchost)  +
+                                  ["-rpcwait", "getblockcount"], stdout=devnull)
     devnull.close()
     # Create&return JSON-RPC connections
     rpc_connections = []
     for i in range(num_nodes):
-        url = "http://rt:rt@127.0.0.1:%d"%(START_RPC_PORT+i,)
+        url = "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', START_RPC_PORT+i,)
         rpc_connections.append(AuthServiceProxy(url))
     return rpc_connections
 
