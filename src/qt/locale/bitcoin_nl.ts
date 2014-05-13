@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="nl" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="nl" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -1048,6 +1048,14 @@ Adres: %4
         <translation>IP-adres van de proxy (bijv. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>Derde partijen URL&apos;s (bijvoorbeeld block explorer) dat in de transacties tab verschijnen als contextmenu elementen. %s in de URL is vervangen door transactie hash. Verscheidene URL&apos;s zijn gescheiden door een verticale streep |.  </translation>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation>Transactie-URLs van derde partijen</translation>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation>Actieve commandoregelopties die bovenstaande opties overschrijven:</translation>
     </message>
@@ -1349,8 +1357,8 @@ Adres: %4
         <translation>Fout: Ongeldige combinatie van -regtest en -testnet</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
+        <translation>Bitcoin Core is nog niet veilig uitgeschakeld...</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -2959,7 +2967,7 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
     </message>
     <message>
         <source>Importing...</source>
-        <translation type="unfinished"/>
+        <translation>Importeren...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>

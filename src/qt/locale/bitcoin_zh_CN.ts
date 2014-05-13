@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="zh_CN" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="zh_CN" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -1049,6 +1049,14 @@ Address: %4
         <translation>代理的 IP 地址 (例如 IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation>有效的命令行参数覆盖上述选项:</translation>
     </message>
@@ -1350,7 +1358,7 @@ Address: %4
         <translation>错误：无效的 -regtest 与 -testnet 结合体。</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
         <translation type="unfinished"/>
     </message>
     <message>

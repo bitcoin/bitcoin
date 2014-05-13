@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="sk" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="sk" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -63,7 +63,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"/>
+        <translation>Vymaž vybranú adresu zo zoznamu</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -79,11 +79,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Zvoľte adresu kam poslať coins</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Zvoľte adresu na ktorú prijať coins</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -99,11 +99,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Toto sú Vaše Bitcoin adresy pre posielanie platieb. Vždy skontrolujte množstvo a prijímaciu adresu pred poslaním coins.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Toto sú vaše Bitcoin adresy pre prijímanie platieb. Odporúča sa použiť novú prijímaciu adresu pre každú transakciu.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -127,7 +127,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Nastala chyba pri pokuse uložiť zoznam adries do %1.</translation>
     </message>
 </context>
 <context>
@@ -392,15 +392,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
+        <translation>Zašifruj súkromné kľúče ktoré patria do vašej peňaženky</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>Podpísať správu s vašou adresou Bitcoin aby ste preukázali že ju vlastníte</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished"/>
+        <translation>Overiť či správa bola podpísaná uvedenou Bitcoin adresou</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -428,7 +428,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished"/>
+        <translation>Vyžiadať platbu (vygeneruje QR kód a bitcoin: URI)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
@@ -436,11 +436,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Zobraziť zoznam použitých adries odosielateľa a ich popisy</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Zobraziť zoznam použitých prijímacích adries a ich popisov</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
@@ -448,7 +448,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>Voľby príkazového riadku</translation>
+        <translation>Možnosti príkazového riadku</translation>
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
@@ -488,15 +488,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>%1 and %2</source>
-        <translation type="unfinished"/>
+        <translation> %1 a  %2</translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%</numerusform><numerusform>%d)</numerusform><numerusform>%n rokov</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 za</translation>
+        <translation>%1 pozadu</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -555,7 +555,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"/>
+        <translation>Vyskytla sa neblahá chyba. Bitcoin nemôže daľej bezpečne pokračovať a vypne sa.</translation>
     </message>
 </context>
 <context>
@@ -569,7 +569,7 @@ Adresa: %4</translation>
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Control Address Selection</source>
-        <translation type="unfinished"/>
+        <translation>Coin Control výber adresy</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -593,11 +593,11 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>Malá hodnota na výstupe:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Po poplatku:</translation>
     </message>
     <message>
         <source>Change:</source>
@@ -605,7 +605,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation type="unfinished"/>
+        <translation>(ne)vybrať všetko</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -657,11 +657,11 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Lock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Uzamknúť neminuté</translation>
     </message>
     <message>
         <source>Unlock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Odomknúť neminuté</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -729,7 +729,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 zamknutých)</translation>
     </message>
     <message>
         <source>none</source>
@@ -777,7 +777,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation type="unfinished"/>
+        <translation>Sumy pod 0.546 násobkom minimálneho poplatku pre prenos sú považované za prach.</translation>
     </message>
     <message>
         <source>This label turns red, if the change is smaller than %1.</source>
@@ -808,11 +808,11 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>Popis tejto položký v zozname adries je prázdny</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"/>
+        <translation>Adresa spojená s týmto záznamom v adresári. Možno upravovať len pre odosielajúce adresy.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -863,7 +863,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Priečinok už existuje. Pridajte &quot;%1&quot; ak chcete vytvoriť nový priečinok tu.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
@@ -878,7 +878,7 @@ Adresa: %4</translation>
     <name>HelpMessageDialog</name>
     <message>
         <source>Bitcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Jadro Bitcoin - možnosti príkazového riadku</translation>
     </message>
     <message>
         <source>Bitcoin Core</source>
@@ -937,7 +937,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>Jadro Bitcoin stiahne zo siete a uloží kópiu Bitcoin blockchain. Aspoň %1GB dát bude uložených v tomto priečinku a časom porastie. Peňaženka bude tiež uložená v tomto priečinku.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -953,7 +953,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation type="unfinished"/>
+        <translation>Chyba: Predpísaný priečinok pre dáta &quot;%1&quot; nemôže byt vytvorený.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -976,7 +976,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
+        <translation>Otvoriť požiadavku na zaplatenie z URI alebo súboru</translation>
     </message>
     <message>
         <source>URI:</source>
@@ -984,11 +984,11 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>Vyberte súbor s výzvou k platbe</translation>
     </message>
     <message>
         <source>Select payment request file to open</source>
-        <translation type="unfinished"/>
+        <translation>Vyberte ktorý súbor s výzvou k platbe otvoriť</translation>
     </message>
 </context>
 <context>
@@ -1003,7 +1003,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation type="unfinished"/>
+        <translation>Voliteľný transakčný poplatok za kB ktorý pomôže rýchlemu spracovaniu transakcie. Väčšina transakcií má 1 kB. Poplatok 0.01 je odporúčaný.</translation>
     </message>
     <message>
         <source>Pay transaction &amp;fee</source>
@@ -1019,7 +1019,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished"/>
+        <translation>Veľkosť vyrovnávacej pamäti databázy</translation>
     </message>
     <message>
         <source>MB</source>
@@ -1031,15 +1031,23 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Pripojiť k Bitcoin sieti cez SOCKS proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation type="unfinished"/>
+        <translation>Pripojiť sa cez SOCKS proxy (predvolené proxy)</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished"/>
+        <translation>IP adresy proxy (napr. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+    </message>
+    <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>URL tretích strán (napr. prehliadač blockchain) ktoré sa zobrazujú v záložke transakcií ako položky kontextového menu. %s v URL je nahradené hash-om transakcie. Viaceré URL sú oddelené zvislou čiarou |.</translation>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation>URL transakcií s tretími stranami</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1063,15 +1071,15 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation type="unfinished"/>
+        <translation>Peňaženka</translation>
     </message>
     <message>
         <source>Expert</source>
-        <translation type="unfinished"/>
+        <translation>Expert</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished"/>
+        <translation>Povoliť možnosti coin control</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
@@ -1139,7 +1147,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation type="unfinished"/>
+        <translation>Tu sa dá nastaviť jazyk užívateľského rozhrania. Toto nastavenie bude účinné po reštartovaní Bitcoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1147,11 +1155,11 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Zvoľte ako deliť bitcoin pri zobrazovaní pri platbách a užívateľskom rozhraní.</translation>
     </message>
     <message>
         <source>Whether to show Bitcoin addresses in the transaction list or not.</source>
-        <translation type="unfinished"/>
+        <translation>Či ukazovať Bitcoin adresy v zozname transakcií alebo nie.</translation>
     </message>
     <message>
         <source>&amp;Display addresses in transaction list</source>
@@ -1159,7 +1167,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"/>
+        <translation>Či zobrazovať možnosti &quot;Coin control&quot; alebo nie.</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1179,19 +1187,19 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
-        <translation type="unfinished"/>
+        <translation>Potvrdiť obnovenie možností</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Reštart klienta potrebný pre aktivovanie zmien.</translation>
     </message>
     <message>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>Klient bude vypnutý, chcete pokračovať?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>Táto zmena by vyžadovala reštart klienta.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1206,7 +1214,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>Zobrazené informácie môžu byť neaktuápne. Vaša peňaženka sa automaticky synchronizuje so sieťou Bitcoin po nadviazaní spojenia ale tento proces ešte nieje ukončený.</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -1214,19 +1222,19 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Available:</source>
-        <translation type="unfinished"/>
+        <translation>Disponibilné:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Váš aktuálny disponibilný zostatok</translation>
     </message>
     <message>
         <source>Pending:</source>
-        <translation type="unfinished"/>
+        <translation>Čakajúce potvrdenie</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Suma transakcií ktoré ešte neboli potvrdené a ešte sa nepočítajú do disponibilného zostatku</translation>
     </message>
     <message>
         <source>Immature:</source>
@@ -1234,7 +1242,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation type="unfinished"/>
+        <translation>Vytvorený zostatok ktorý ešte nedosiahol zrelosť</translation>
     </message>
     <message>
         <source>Total:</source>
@@ -1261,15 +1269,15 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>URI sa nedá rozložiť! To môže byť spôsobené neplatou Bitcoin adresou alebo zle upravenými vlastnosťami URI.</translation>
     </message>
     <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation type="unfinished"/>
+        <translation>Požadovaná platba sumy  %1 je príliš malá (považovaná za prach).</translation>
     </message>
     <message>
         <source>Payment request error</source>
-        <translation type="unfinished"/>
+        <translation>Chyba pri vyžiadaní platby</translation>
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
@@ -1277,7 +1285,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Net manager warning</source>
-        <translation type="unfinished"/>
+        <translation>Varovanie správcu siete</translation>
     </message>
     <message>
         <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
@@ -1297,15 +1305,15 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation type="unfinished"/>
+        <translation>Program nepodporuje neoverené platobné výzvy na vlastná skripty.</translation>
     </message>
     <message>
         <source>Refund from %1</source>
-        <translation type="unfinished"/>
+        <translation>Vrátenie z  %1</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"/>
+        <translation>Chyba komunikácie s %1: %2 </translation>
     </message>
     <message>
         <source>Payment request can not be parsed or processed!</source>
@@ -1317,11 +1325,11 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Payment acknowledged</source>
-        <translation type="unfinished"/>
+        <translation>Platba potvrdená</translation>
     </message>
     <message>
         <source>Network request error</source>
-        <translation type="unfinished"/>
+        <translation>Chyba požiadavky siete</translation>
     </message>
 </context>
 <context>
@@ -1332,7 +1340,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation type="unfinished"/>
+        <translation>Chyba: Uvedený priečinok s dátami &quot;%1&quot; neexistuje.</translation>
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
@@ -1340,11 +1348,11 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"/>
+        <translation>Chyba: Nesprávna kombinácia -regtest a -testnet.</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
+        <translation>Jadro Bitcoin sa ešte úspešne nevyplo ...</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -1478,15 +1486,15 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Welcome to the Bitcoin RPC console.</source>
-        <translation type="unfinished"/>
+        <translation>Vitajte v Bitcoin RPC konzole. Baník, pyčo!</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation type="unfinished"/>
+        <translation>Použi šipky hore a dolu pre navigáciu históriou a &lt;b&gt;Ctrl-L&lt;/b&gt; pre vyčistenie obrazovky.</translation>
     </message>
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation type="unfinished"/>
+        <translation>Napíš &lt;b&gt;help&lt;/b&gt; pre prehľad dostupných príkazov.</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -1545,11 +1553,11 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished"/>
+        <translation>Voliteľný popis ktorý sa pridá k tejto novej prijímajúcej adrese.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Použite tento formulár pre vyžiadanie platby. Všetky polia sú &lt;b&gt;voliteľné&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
@@ -1573,7 +1581,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation type="unfinished"/>
+        <translation>Zobraz zvolenú požiadavku (urobí to isté ako dvoj-klik na záznam)</translation>
     </message>
     <message>
         <source>Show</source>
@@ -1581,7 +1589,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
-        <translation type="unfinished"/>
+        <translation>Odstrániť zvolené záznamy zo zoznamu</translation>
     </message>
     <message>
         <source>Remove</source>
@@ -1694,7 +1702,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation type="unfinished"/>
+        <translation>Možnosti &quot;Coin Control&quot;</translation>
     </message>
     <message>
         <source>Inputs...</source>
@@ -1730,11 +1738,11 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>Malá hodnota na výstupe:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Po poplatku:</translation>
     </message>
     <message>
         <source>Change:</source>
@@ -1854,7 +1862,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Varovanie: Nesprávna Bitcoin adresa</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1862,7 +1870,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
-        <translation type="unfinished"/>
+        <translation>Varovanie: Neznáma adresa pre výdavok</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -1874,7 +1882,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Payment request expired</source>
-        <translation type="unfinished"/>
+        <translation>Vypršala platnosť požiadavky na platbu</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1933,7 +1941,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>This is a verified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>Toto je overená výzva k platbe.</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
@@ -1945,7 +1953,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>Toto je neoverená výzva k platbe.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -1953,7 +1961,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Memo:</source>
-        <translation type="unfinished"/>
+        <translation>Poznámka:</translation>
     </message>
 </context>
 <context>
@@ -1964,14 +1972,14 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>Nevypínajte počítač kým toto okno nezmizne.</translation>
     </message>
 </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation type="unfinished"/>
+        <translation>Podpisy - Podpísať / Overiť správu</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
@@ -2011,7 +2019,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Kopírovať práve zvolenú adresu do systémového klipbordu</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
@@ -2023,7 +2031,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
-        <translation type="unfinished"/>
+        <translation>Vynulovať všetky polia podpisu správy</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2035,7 +2043,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation type="unfinished"/>
+        <translation>Vložte podpisovaciu adresu, správu (uistite sa, že kopírujete ukončenia riadkov, medzery, odrážky, atď. presne) a podpis pod to na overenie adresy. Buďte opatrní a nečítajte ako podpísané viac než je v samotnej podpísanej správe a môžete sa tak vyhnúť podvodu mitm útokom.</translation>
     </message>
     <message>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -2043,7 +2051,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Overím správy sa uistiť že bola podpísaná označenou Bitcoin adresou</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2051,7 +2059,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
-        <translation type="unfinished"/>
+        <translation>Obnoviť všetky polia v overiť správu</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -2071,7 +2079,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished"/>
+        <translation>Vložená adresa nezodpovedá žiadnemu kľúcu.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -2079,7 +2087,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished"/>
+        <translation>Súkromný kľúč pre vložená adresu nieje k dispozícii.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
@@ -2099,7 +2107,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
-        <translation type="unfinished"/>
+        <translation>Podpis sa nezhoduje so zhrnutím správy</translation>
     </message>
     <message>
         <source>Message verification failed.</source>
@@ -2140,7 +2148,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>sporné</translation>
     </message>
     <message>
         <source>%1/offline</source>
@@ -2160,7 +2168,7 @@ Adresa: %4</translation>
     </message>
     <message numerus="yes">
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>,</numerusform><numerusform>,</numerusform><numerusform>, vysielať cez %n nód</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -2196,7 +2204,7 @@ Adresa: %4</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Dospeje o %n blokov</numerusform><numerusform>Dospeje o %n blokov</numerusform><numerusform>dospeje o %n blokov</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2302,7 +2310,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished"/>
+        <translation>Nezrelé (%1 potvrdení, bude k dispozícii po %2)</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
@@ -2326,19 +2334,19 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Offline</source>
-        <translation type="unfinished"/>
+        <translation>Offline</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>Nepotvrdené</translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
+        <translation> Potvrdzuje sa ( %1 z  %2 odporúčaných potvrdení)</translation>
     </message>
     <message>
         <source>Conflicted</source>
-        <translation type="unfinished"/>
+        <translation>V rozpore</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2485,7 +2493,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>História transakciá bola úspešne uložená do %1.</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -2566,11 +2574,11 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Vyskytla sa chyba pri pokuse o uloženie dát peňaženky do %1.</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Dáta peňaženky boli úspešne uložené do %1.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
@@ -2617,7 +2625,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation type="unfinished"/>
+        <translation>Pripojiť sa k nóde, získať adresy ďaľších počítačov v sieti a odpojit sa.</translation>
     </message>
     <message>
         <source>Specify your own public address</source>
@@ -2633,7 +2641,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Vyskytla sa chyba pri nastavovaní RPC portu %u pre počúvanie na IPv4: %s</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
@@ -2645,7 +2653,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Bitcoin Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>Verzia RPC klienta Jadra Bitcoin</translation>
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
@@ -2657,7 +2665,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Prijať spojenia zvonku (predvolené: 1 ak žiadne -proxy alebo -connect)</translation>
     </message>
     <message>
         <source>%s, you must set a rpcpassword in the configuration file:
@@ -2679,11 +2687,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Vyskytla sa chyba pri nastavovaní RPC portu %u pre počúvanie na IPv6, vraciam sa späť ku IPv4: %s</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
+        <translation>Spojiť s danou adresou a vždy na nej počúvať. Použite zápis [host]:port pre IPv6</translation>
     </message>
     <message>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
@@ -2691,7 +2699,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>Vstúpiť do regresného testovacieho módu, ktorý používa špeciálnu reťaz v ktorej môžu byť bloky v okamihu vyriešené. Pre účely regresného testovania a vývoja aplikácie.</translation>
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
@@ -2711,7 +2719,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished"/>
+        <translation>Vykonaj príkaz keď sa zmení transakcia peňaženky (%s v príkaze je nahradená TxID)</translation>
     </message>
     <message>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
@@ -2767,7 +2775,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Varovanie: chyba pri čítaní wallet.dad! Všetky kľúče sú čitateľné ale transakčné dáta alebo záznamy v adresári môžu byť nesprávne.</translation>
     </message>
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
@@ -2775,11 +2783,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>(default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>(predvolené: 1)</translation>
     </message>
     <message>
         <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
+        <translation>(predvolené: wallet.dat)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2787,7 +2795,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>Pokus zachrániť súkromné kľúče z poškodeného wallet.dat</translation>
     </message>
     <message>
         <source>Bitcoin Core Daemon</source>
@@ -2807,7 +2815,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Connect through SOCKS proxy</source>
-        <translation type="unfinished"/>
+        <translation>Pripojiť cez SOCKS proxy</translation>
     </message>
     <message>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
@@ -2815,7 +2823,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Connection options:</source>
-        <translation type="unfinished"/>
+        <translation>Možnosti pripojenia:</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -2823,7 +2831,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Debugging/Testing options:</source>
-        <translation type="unfinished"/>
+        <translation>Možnosti ladenia/testovania:</translation>
     </message>
     <message>
         <source>Disable safemode, override a real safe mode event (default: 0)</source>
@@ -2831,7 +2839,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation type="unfinished"/>
+        <translation>Zisti vlastnú IP adresu (predvolené: 1 pri počúvaní/listening a žiadnej -externalip)</translation>
     </message>
     <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
@@ -2847,7 +2855,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished"/>
+        <translation>Chyba spustenia databázového prostredia peňaženky %s!</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -2871,7 +2879,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished"/>
+        <translation>Chyba počúvania na ktoromkoľvek porte. Použi -listen=0 ak toto chcete.</translation>
     </message>
     <message>
         <source>Failed to read block info</source>
@@ -2883,11 +2891,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Failed to sync block index</source>
-        <translation type="unfinished"/>
+        <translation>Zlyhalo synchronizovanie zoznamu blokov</translation>
     </message>
     <message>
         <source>Failed to write block index</source>
-        <translation type="unfinished"/>
+        <translation>Zlyhalo zapisovanie do zoznamu blokov</translation>
     </message>
     <message>
         <source>Failed to write block info</source>
@@ -2907,11 +2915,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Failed to write transaction index</source>
-        <translation type="unfinished"/>
+        <translation>Zlyhal zápis zoznamu transakcií</translation>
     </message>
     <message>
         <source>Failed to write undo data</source>
-        <translation type="unfinished"/>
+        <translation>Zlyhalo zapisovanie </translation>
     </message>
     <message>
         <source>Fee per kB to add to transactions you send</source>
@@ -2923,7 +2931,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Nájsť počítače v bitcoin sieti použitím DNS vyhľadávania (predvolené: 1 okrem -connect)</translation>
     </message>
     <message>
         <source>Force safe mode (default: 0)</source>
@@ -2931,11 +2939,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Generate coins (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Vytvárať mince (predvolené: 0)</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation type="unfinished"/>
+        <translation>Koľko blokov skontrolovať pri spustení (predvolené: 288, 0 = všetky)</translation>
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
@@ -2943,19 +2951,19 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Importing...</source>
-        <translation type="unfinished"/>
+        <translation>Prebieha import ...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished"/>
+        <translation>Nesprávny alebo žiadny genesis blok nájdený. Nesprávny dátový priečinok alebo sieť?</translation>
     </message>
     <message>
         <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Neplatná -onion adresa:  &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation>Nedostatok kľúčových slov súboru.</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: 1)</source>
@@ -2963,15 +2971,15 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>RPC client options:</source>
-        <translation type="unfinished"/>
+        <translation>Možnosti klienta RPC baník pyčo:</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation type="unfinished"/>
+        <translation>Znovu vytvoriť zoznam blokov zo súčasných blk000??.dat súborov</translation>
     </message>
     <message>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
-        <translation type="unfinished"/>
+        <translation>Zvoľte SOCKS verziu -proxy (4 alebo 5, predvolené 5)</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -2979,15 +2987,15 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Nastaviť najväčšiu veľkosť bloku v bytoch (predvolené: %d)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation type="unfinished"/>
+        <translation>Nastaviť množstvo vlákien na obsluhu RPC volaní (predvolené: 4)</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
-        <translation type="unfinished"/>
+        <translation>Označ súbor peňaženky (v priečinku s dátami)</translation>
     </message>
     <message>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
@@ -2999,7 +3007,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Usage (deprecated, use bitcoin-cli):</source>
-        <translation type="unfinished"/>
+        <translation>Použitie (neodporúča sa, použite bitcoin-cli):</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -3011,11 +3019,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
+        <translation>Čakanie na štart RPC servra</translation>
     </message>
     <message>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
+        <translation>Peňaženka %s sa nachádza mimo dátového priečinka %s </translation>
     </message>
     <message>
         <source>Wallet options:</source>
@@ -3027,7 +3035,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation type="unfinished"/>
+        <translation>Potrebujete prebudovať databázu použitím -reindex zmeniť -txindex</translation>
     </message>
     <message>
         <source>Imports blocks from external blk000??.dat file</source>
@@ -3035,7 +3043,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Neviem uzamknúť data adresár %s. Jadro Bitcoin je pravdepodobne už spustené.</translation>
     </message>
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
@@ -3055,11 +3063,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Neplatná suma pre -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Neplatná suma pre -mintxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
@@ -3075,7 +3083,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation>Maximálna veľkosť prijímacieho zásobníka pre jedno spojenie, &lt;n&gt;*1000 bytov (predvolené: 5000)</translation>
     </message>
     <message>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
@@ -3087,7 +3095,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation type="unfinished"/>
+        <translation>Pripájať sa len k nódam v sieti &lt;net&gt; (IPv4, IPv6 alebo Tor)</translation>
     </message>
     <message>
         <source>Print block on startup, if found in block index</source>
@@ -3103,11 +3111,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>RPC server options:</source>
-        <translation type="unfinished"/>
+        <translation>Možnosti servra RPC:</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
+        <translation>Náhodne zahadzuj 1 z každých &lt;n&gt; sieťových správ</translation>
     </message>
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
@@ -3115,7 +3123,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Mať spustené vlákno pravidelného čístenia peňaženky (predvolené: 1)</translation>
     </message>
     <message>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3123,7 +3131,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Send command to Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Poslať príkaz Jadru Bitcoin</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3131,23 +3139,23 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Set minimum block size in bytes (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Nastaviť minimálnu veľkosť bloku v bytoch (predvolené: 0)</translation>
     </message>
     <message>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Nastaví DB_PRIVATE možnosť v db prostredí peňaženky (prednastavené: 1)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation type="unfinished"/>
+        <translation>Zobraziť všetky možnosti ladenia (použitie: --help --help-debug)</translation>
     </message>
     <message>
         <source>Show benchmark information (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Zobraziť porovnávacie informácie (prednastavené: 0)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation type="unfinished"/>
+        <translation>Zmenšiť debug.log pri spustení klienta (predvolené: 1 ak bez -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -3159,7 +3167,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Start Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Štart služby Jadro Bitcoin</translation>
     </message>
     <message>
         <source>System error: </source>
@@ -3171,7 +3179,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
+        <translation>Hodnoty transakcie musia byť väčšie ako nula (pozitívne)</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3203,7 +3211,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>on startup</source>
-        <translation type="unfinished"/>
+        <translation>pri štarte</translation>
     </message>
     <message>
         <source>version</source>
@@ -3259,7 +3267,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
-        <translation type="unfinished"/>
+        <translation>Nepodarilo sa spojiť s %s na tomto počítači (bind vrátil chybu %d, %s)</translation>
     </message>
     <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
@@ -3291,19 +3299,19 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Neznáma sieť upresnená v -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Unknown -socks proxy version requested: %i</source>
-        <translation type="unfinished"/>
+        <translation>Neznáma verzia -socks proxy požadovaná: %i</translation>
     </message>
     <message>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Nemožno rozriešiť -bind adress: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Nemožno rozriešiť -externalip address: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
