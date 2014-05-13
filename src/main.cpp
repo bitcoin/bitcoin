@@ -3475,6 +3475,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         pfrom->PushMessage("verack");
         pfrom->ssSend.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
 
+        statsClient.gauge("peers.knownAddresses", addrman.size(), 1.0f);
+
         if (!pfrom->fInbound)
         {
             // Advertise our address

@@ -1876,16 +1876,16 @@ void CNode::RecordBytesRecv(uint64_t bytes)
 {
     LOCK(cs_totalBytesRecv);
     nTotalBytesRecv += bytes;
-    statsClient.count("bandwidth.bytesReceived", bytes, 1.0f);
-    statsClient.gauge("bandwidth.totalBytesReceived", nTotalBytesRecv, 1.0f);
+    statsClient.count("bandwidth.bytesReceived", bytes, 0.01f);
+    statsClient.gauge("bandwidth.totalBytesReceived", nTotalBytesRecv, 0.01f);
 }
 
 void CNode::RecordBytesSent(uint64_t bytes)
 {
     LOCK(cs_totalBytesSent);
     nTotalBytesSent += bytes;
-    statsClient.count("bandwidth.bytesSent", bytes, 1.0f);
-    statsClient.gauge("bandwidth.totalBytesSent", nTotalBytesSent, 1.0f);
+    statsClient.count("bandwidth.bytesSent", bytes, 0.01f);
+    statsClient.gauge("bandwidth.totalBytesSent", nTotalBytesSent, 0.01f);
 }
 
 uint64_t CNode::GetTotalBytesRecv()
