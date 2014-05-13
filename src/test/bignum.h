@@ -10,6 +10,7 @@
 #include <limits>
 #include <stdexcept>
 #include <stdint.h>
+#include <string>
 #include <vector>
 
 #include <openssl/bn.h>
