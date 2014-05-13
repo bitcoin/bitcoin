@@ -57,6 +57,7 @@ QT_TS = \
   locale/bitcoin_la.ts \
   locale/bitcoin_lt.ts \
   locale/bitcoin_lv_LV.ts \
+  locale/bitcoin_mn.ts \
   locale/bitcoin_ms_MY.ts \
   locale/bitcoin_nb.ts \
   locale/bitcoin_nl.ts \
