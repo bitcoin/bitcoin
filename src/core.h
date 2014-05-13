@@ -219,7 +219,6 @@ public:
     }
 
     uint256 GetHash() const;
-    bool IsNewerThan(const CTransaction& old) const;
 
     // Return sum of txouts.
     int64_t GetValueOut() const;
