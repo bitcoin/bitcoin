@@ -66,8 +66,8 @@ namespace Checkpoints
         ;
     static const CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
-        1338180505,
-        16341,
+        1337966069,
+        1488,
         300
     };
 
