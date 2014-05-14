@@ -1,33 +1,5 @@
 Deterministic OSX Dmg Notes.
 
-tldr;
- - Fetch the sources and move them to Gitian's input dir:
-  $ wget https://github.com/mingwandroid/toolchain4/archive/10cc648683617cca8bcbeae507888099b41b530c.tar.gz
-  $ wget http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2
-  $ wget http://www.opensource.apple.com/tarballs/cctools/cctools-809.tar.gz
-  $ wget http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz
-  $ wget http://www.opensource.apple.com/tarballs/dyld/dyld-195.5.tar.gz
-  $ wget http://www.opensource.apple.com/tarballs/ld64/ld64-127.2.tar.gz
-  $ wget http://miniupnp.free.fr/files/miniupnpc-1.9.tar.gz
-  $ wget https://www.openssl.org/source/openssl-1.0.1g.tar.gz
-  $ wget https://protobuf.googlecode.com/files/protobuf-2.5.0.tar.bz2
-  $ wget https://fukuchi.org/works/qrencode/qrencode-3.4.3.tar.bz2
-  $ wget http://download.qt-project.org/official_releases/qt/5.2/5.2.1/single/qt-everywhere-opensource-src-5.2.1.tar.gz
-  $ wget http://cdrkit.org/releases/cdrkit-1.1.11.tar.gz
-  $ wget https://github.com/theuni/libdmg-hfsplus/archive/libdmg-hfsplus-v0.1.tar.gz
-  $ wget -O clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz http://llvm.org/releases/3.2/clang+llvm-3.2-x86-linux-ubuntu-12.04.tar.gz
-  $ wget -O cdrkit-deterministic.patch https://raw.githubusercontent.com/theuni/osx-cross-depends/master/patches/cdrtools/genisoimage.diff
-
- - Fetch and extract the .pkg from Apple's SDK (see below) and move it to Gitian's input dir
-
- - Use gitian to build the descriptors in order (remembering to save the outputs):
-  $ gbuild gitian-osx-native.yml
-  $ gbuild gitian-osx-depends.yml
-  $ gbuild gitian-osx-qt.yml
-  $ gbuild gitian-osx-bitcoin.yml -c bitcoin=$COMMIT
-
-Details:
-
 Working OSX DMG's are created in Linux by combining a recent clang,
 the Apple's binutils (ld, ar, etc), and DMG authoring tools.
 
