@@ -7,7 +7,6 @@ architectures:
 packages:
 - "git-core"
 - "automake"
-- "faketime"
 - "p7zip-full"
 
 reference_datetime: "2013-06-01 00:00:00"
@@ -28,13 +27,11 @@ script: |
   export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export ZERO_AR_DATE=1
 
-  export REFERENCE_DATETIME
   export TZ=UTC
 
   REAL_DATE=`which date`
   echo '#!/bin/bash' > $HOME/date
-  echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> $HOME/date
-  echo "$REAL_DATE \"\$@\"" >> $HOME/date
+  echo "$REAL_DATE -d \"${REFERENCE_DATETIME}\" \"\$@\"" >> $HOME/date
 
   chmod +x $HOME/date
   export PATH=$HOME:$PATH
