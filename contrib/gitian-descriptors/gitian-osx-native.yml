@@ -157,7 +157,7 @@ script: |
   patch -p1 < ${SOURCES_PATH}/cdrkit-deterministic.patch
   cmake -DCMAKE_INSTALL_PREFIX=${NATIVEPREFIX}
   make $MAKEOPTS genisoimage
-  make install
+  make -C genisoimage install
   popd
 
   # libdmg-hfsplus
