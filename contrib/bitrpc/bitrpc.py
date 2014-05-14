@@ -1,11 +1,11 @@
+from jsonrpc import ServiceProxy
 import sys
 import string
-from jsonrpc import ServiceProxy
 
 
 class BitcoinRPC:
     def __init__(self, username=None, password=None):
-        if rpcuser and rpcpass:
+        if username and password:
             url = "http://%s:%s@127.0.0.1:8332" % (username, password)
         else:
             url = "http://127.0.0.1:8332"
@@ -225,7 +225,8 @@ class BitcoinRPC:
 cmd = sys.argv[1].lower()
 rpc_client = BitcoinRPC()
 try:
-    print getattr(rpc_client, cmd)
+    func = getattr(rpc_client, cmd)
+    print func()
 except AttributeError:
     print "Command not found or not supported"
 except:
