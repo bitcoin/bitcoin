@@ -66,6 +66,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/foreach.hpp>
+#include <boost/regex.hpp>
 #include <boost/program_options/detail/config_file.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <openssl/crypto.h>
@@ -462,6 +463,14 @@ void ParseParameters(int argc, const char* const argv[])
     for (int i = 1; i < argc; i++)
     {
         std::string str(argv[i]);
+
+        const boost::regex regex("[-]{1,2}\\w+([=].+)?");
+        if (!boost::regex_match(str, regex))
+        {
+            LogPrintf("Wrong command line parameter: %s\n", str);
+            continue;
+        }
+
         std::string strValue;
         size_t is_index = str.find('=');
         if (is_index != std::string::npos)
