@@ -964,6 +964,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
     statsClient.timing("AcceptToMemoryPool_ms", diff.total_milliseconds(), 1.0f);
+    statsClient.gauge("transactions.txInMemoryPool", pool.size(), 0.1f);
     return true;
 }
 
@@ -1517,6 +1518,7 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
     // add outputs
     ret = inputs.SetCoins(txhash, CCoins(tx, nHeight));
     assert(ret);
+    statsClient.gauge("transactions.txInUTXOSet", inputs.GetCacheSize(), 0.1f);
 }
 
 bool CScriptCheck::operator()() const {
@@ -1703,6 +1705,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
+    statsClient.gauge("transactions.txInUTXOSet", view.GetCacheSize(), 1.0f);
 
     if (pfClean) {
         *pfClean = fClean;
@@ -1898,6 +1901,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
     bool ret;
     ret = view.SetBestBlock(pindex->GetBlockHash());
     assert(ret);
+    statsClient.gauge("transactions.txInUTXOSet", view.GetCacheSize(), 1.0f);
 
     // Watch for transactions paying to me
     for (unsigned int i = 0; i < block.vtx.size(); i++)
@@ -1929,7 +1933,7 @@ bool static WriteChainState(CValidationState &state) {
 // Update chainActive and related internal data structures.
 void static UpdateTip(CBlockIndex *pindexNew) {
     chainActive.SetTip(pindexNew);
-    statsClient.gauge("blocks.currentHeight", chainActive.Heigh(), 1.0f);
+    statsClient.gauge("blocks.currentHeight", chainActive.Height(), 1.0f);
             
     // Update best block in wallet (so we can detect restored wallets)
     bool fIsInitialDownload = IsInitialBlockDownload();
