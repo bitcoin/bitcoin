@@ -449,6 +449,7 @@ public:
     // TODO: Document the postcondition of this function.  Is cs_vSend locked?
     void BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSend)
     {
+        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
         ENTER_CRITICAL_SECTION(cs_vSend);
         assert(ssSend.size() == 0);
         ssSend << CMessageHeader(pszCommand, 0);
@@ -532,7 +533,6 @@ public:
     
     void PushMessage(const char* pszCommand)
     {
-        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -548,7 +548,6 @@ public:
     template<typename T1>
     void PushMessage(const char* pszCommand, const T1& a1)
     {
-        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -565,7 +564,6 @@ public:
     template<typename T1, typename T2>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2)
     {
-        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -582,7 +580,6 @@ public:
     template<typename T1, typename T2, typename T3>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3)
     {
-        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
         if (string(pszCommand) == "reject")
             statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
@@ -601,7 +598,6 @@ public:
     template<typename T1, typename T2, typename T3, typename T4>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4)
     {
-        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
         if (string(pszCommand) == "reject")
             statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
@@ -620,7 +616,8 @@ public:
     template<typename T1, typename T2, typename T3, typename T4, typename T5>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5)
     {
-        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
+        if (string(pszCommand) == "reject")
+            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -637,7 +634,8 @@ public:
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6)
     {
-        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
+        if (string(pszCommand) == "reject")
+            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -654,7 +652,8 @@ public:
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7)
     {
-        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
+        if (string(pszCommand) == "reject")
+            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -671,7 +670,8 @@ public:
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8)
     {
-        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
+        if (string(pszCommand) == "reject")
+            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -688,7 +688,6 @@ public:
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8, const T9& a9)
     {
-        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
         try
         {
             BeginMessage(pszCommand);
