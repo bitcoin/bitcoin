@@ -828,7 +828,29 @@ void ThreadSocketHandler()
         if(vNodes.size() != nPrevNodeCount) {
             nPrevNodeCount = vNodes.size();
             uiInterface.NotifyNumConnectionsChanged(nPrevNodeCount);
+            
             statsClient.gauge("peers.totalConnections", nPrevNodeCount, 1.0f);
+            
+            // count various node attributes
+            int fullNodes = 0;
+            int spvNodes = 0;
+            int inboundNodes = 0;
+            int outboundNodes = 0;
+            BOOST_FOREACH(CNode* pnode, vNodes)
+            {
+                if(pnode->fClient)
+                    spvNodes++;
+                else
+                    fullNodes++;
+                if(pnode->fInbound)
+                    inboundNodes++;
+                else
+                    outboundNodes++;
+            }
+            statsClient.gauge("peers.spvNodeConnections", spvNodes, 1.0f);
+            statsClient.gauge("peers.fullNodeConnections", fullNodes, 1.0f);
+            statsClient.gauge("peers.inboundConnections", inboundNodes, 1.0f);
+            statsClient.gauge("peers.outboundConnections", outboundNodes, 1.0f);
         }
 
 
