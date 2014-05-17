@@ -27,7 +27,7 @@ Once you've got the right hardware and software:
     wget 'http://fukuchi.org/works/qrencode/qrencode-3.2.0.tar.bz2'
     # Inputs for Win32: (Linux has packages for these)
     wget 'https://downloads.sourceforge.net/project/boost/boost/1.50.0/boost_1_50_0.tar.bz2'
-    wget 'http://www.openssl.org/source/openssl-1.0.1c.tar.gz'
+    wget 'http://www.openssl.org/source/openssl-1.0.1g.tar.gz'
     wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
     wget 'https://downloads.sourceforge.net/project/libpng/zlib/1.2.6/zlib-1.2.6.tar.gz'
     wget 'https://downloads.sourceforge.net/project/libpng/libpng15/older-releases/1.5.9/libpng-1.5.9.tar.gz'
