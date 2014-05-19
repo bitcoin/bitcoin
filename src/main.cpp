@@ -20,6 +20,7 @@
 
 #include <sstream>
 
+#include <boost/dynamic_bitset.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -3512,6 +3513,75 @@ void static ProcessGetData(CNode* pfrom)
     }
 }
 
+struct CCoin {
+    uint32_t nTxVer;   // Don't call this nVersion, that name has a special meaning inside IMPLEMENT_SERIALIZE
+    uint32_t nHeight;
+    CTxOut out;
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(nTxVer);
+        READWRITE(nHeight);
+        READWRITE(out);
+    )
+};
+
+bool ProcessGetUTXOs(const vector<COutPoint> &vOutPoints, bool fCheckMemPool, vector<unsigned char> *result, vector<CCoin> *resultCoins)
+{
+    // Defined by BIP 64.
+    //
+    // Allows a peer to retrieve the CTxOut structures corresponding to the given COutPoints. 
+    // Note that this data is not authenticated by anything: this code could just invent any
+    // old rubbish and hand it back, with the peer being unable to tell unless they are checking
+    // the outpoints against some out of band data.
+    //
+    // Also the answer could change the moment after we give it. However some apps can tolerate
+    // this, because they're only using the result as a hint or are willing to trust the results
+    // based on something else. For example we may be a "trusted node" for the peer, or it may
+    // be checking the results given by several nodes for consistency, it may
+    // run the UTXOs returned against scriptSigs of transactions obtained elsewhere (after checking
+    // for a standard script form), and because the height in which the UTXO was defined is provided
+    // a client that has a map of heights to block headers (as SPV clients do, for recent blocks)
+    // can request the creating block via hash.
+    //
+    // IMPORTANT: Clients expect ordering to be preserved!
+    if (vOutPoints.size() > MAX_INV_SZ)
+        return error("message getutxos size() = %u", vOutPoints.size());
+
+    LogPrint("net", "getutxos for %d queries %s mempool\n", vOutPoints.size(), fCheckMemPool ? "with" : "without");
+
+    boost::dynamic_bitset<unsigned char> hits(vOutPoints.size());
+    {
+        LOCK2(cs_main, mempool.cs);
+        CCoinsViewMemPool cvMemPool(*pcoinsTip, mempool);
+        CCoinsViewCache view(fCheckMemPool ? cvMemPool : *pcoinsTip);
+        for (size_t i = 0; i < vOutPoints.size(); i++)
+        {
+            CCoins coins;
+            uint256 hash = vOutPoints[i].hash;
+            if (view.GetCoins(hash, coins))
+            {
+                mempool.pruneSpent(hash, coins);
+                if (coins.IsAvailable(vOutPoints[i].n))
+                {
+                    hits[i] = true;
+                    // Safe to index into vout here because IsAvailable checked if it's off the end of the array, or if
+                    // n is valid but points to an already spent output (IsNull).
+                    CCoin coin;
+                    coin.nTxVer = coins.nVersion;
+                    coin.nHeight = coins.nHeight;
+                    coin.out = coins.vout.at(vOutPoints[i].n);
+                    assert(!coin.out.IsNull());
+                    resultCoins->push_back(coin);
+                }
+            }
+        }
+    }
+
+    boost::to_block_range(hits, std::back_inserter(*result));
+    return true;
+}
+
+
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
 {
     RandAddSeedPerfmon();
@@ -3857,6 +3927,22 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 break;
         }
         pfrom->PushMessage("headers", vHeaders);
+    }
+
+
+    else if (strCommand == "getutxos")
+    {
+        bool fCheckMemPool;
+        vector<COutPoint> vOutPoints;
+        vRecv >> fCheckMemPool;
+        vRecv >> vOutPoints;
+
+        vector<unsigned char> bitmap;
+        vector<CCoin> outs;
+        if (ProcessGetUTXOs(vOutPoints, fCheckMemPool, &bitmap, &outs))
+            pfrom->PushMessage("utxos", chainActive.Height(), chainActive.Tip()->GetBlockHash(), bitmap, outs);
+        else
+            Misbehaving(pfrom->GetId(), 20);
     }
 
 
