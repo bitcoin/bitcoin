@@ -2941,6 +2941,24 @@ bool static LoadBlockIndexDB()
     if (pblocktree->ReadBlockFileInfo(nLastBlockFile, infoLastBlockFile))
         LogPrintf("LoadBlockIndexDB(): last block file info: %s\n", infoLastBlockFile.ToString());
 
+    // Check presence of blk files
+    LogPrintf("Checking all blk files are present...\n");
+    set<int> setBlkDataFiles;
+    BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
+    {
+        CBlockIndex* pindex = item.second;
+        if (pindex->nStatus & BLOCK_HAVE_DATA) {
+            setBlkDataFiles.insert(pindex->nFile);
+        }
+    }
+    for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
+    {
+        CDiskBlockPos pos(*it, 0);
+        if (!CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION)) {
+            return false;
+        }
+    }
+
     // Check whether we need to continue reindexing
     bool fReindexing = false;
     pblocktree->ReadReindexing(fReindexing);
@@ -3373,7 +3391,7 @@ void static ProcessGetData(CNode* pfrom)
                 {
                     // Send block from disk
                     CBlock block;
-                    ReadBlockFromDisk(block, (*mi).second);
+                    assert(ReadBlockFromDisk(block, (*mi).second));
                     if (inv.type == MSG_BLOCK)
                         pfrom->PushMessage("block", block);
                     else // MSG_FILTERED_BLOCK)
