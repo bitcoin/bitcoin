@@ -207,10 +207,10 @@ public:
     uint64_t nRecvBytes;
     int nRecvVersion;
 
-    int64_t nLastSend;
-    int64_t nLastRecv;
-    int64_t nLastSendEmpty;
-    int64_t nTimeConnected;
+    int64_t nLastSend;      // Time data last sent to peer.
+    int64_t nLastSendEmpty; // Time empty data last sent to peer.
+    int64_t nLastRecv;      // Time data last received from peer.
+    int64_t nTimeConnected; // Time connection to peer was established.
     CAddress addr;
     std::string addrName;
     CService addrLocal;
