@@ -58,6 +58,8 @@ static bool AppInitRPC(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+    SetupEnvironment();
+
     try
     {
         if(!AppInitRPC(argc, argv))
