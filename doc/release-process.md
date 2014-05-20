@@ -33,6 +33,15 @@ Release Process
 	git checkout v${VERSION}
 	popd
 	pushd ./gitian-builder
+        mkdir -p inputs; cd inputs/
+
+ Register and download the Apple SDK (see OSX Readme for details)
+        visit https://developer.apple.com/devcenter/download.action?path=/Developer_Tools/xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg
+ 
+ Extract MacOSX10.6.pkg using 7zip
+        7z e -y xcode_3.2.6_and_ios_sdk_4.3.dmg 5.hfs
+        7z -y e 5.hfs "Xcode and iOS SDK/Packages/MacOSX10.6.pkg"
+        rm 5.hfs
 
  Fetch and build inputs: (first time, or when dependency versions change)
 
@@ -46,9 +55,19 @@ Release Process
 	wget 'https://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2'
 	wget 'https://svn.boost.org/trac/boost/raw-attachment/ticket/7262/boost-mingw.patch' -O \ 
 	     boost-mingw-gas-cross-compile-2013-03-03.patch
-	wget 'https://download.qt-project.org/official_releases/qt/5.2/5.2.0/single/qt-everywhere-opensource-src-5.2.0.tar.gz'
+	wget 'https://download.qt-project.org/official_releases/qt/5.2/5.2.1/single/qt-everywhere-opensource-src-5.2.1.tar.gz'
 	wget 'https://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.4.tar.gz'
 	wget 'https://protobuf.googlecode.com/files/protobuf-2.5.0.tar.bz2'
+        wget 'https://github.com/mingwandroid/toolchain4/archive/10cc648683617cca8bcbeae507888099b41b530c.tar.gz'
+        wget 'http://www.opensource.apple.com/tarballs/cctools/cctools-809.tar.gz'
+        wget 'http://www.opensource.apple.com/tarballs/dyld/dyld-195.5.tar.gz'
+        wget 'http://www.opensource.apple.com/tarballs/ld64/ld64-127.2.tar.gz'
+        wget 'http://cdrkit.org/releases/cdrkit-1.1.11.tar.gz'
+        wget 'https://github.com/theuni/libdmg-hfsplus/archive/libdmg-hfsplus-v0.1.tar.gz'
+        wget 'http://llvm.org/releases/3.2/clang+llvm-3.2-x86-linux-ubuntu-12.04.tar.gz' -O \
+             clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz
+        wget 'https://raw.githubusercontent.com/theuni/osx-cross-depends/master/patches/cdrtools/genisoimage.diff' -O \
+             cdrkit-deterministic.patch
 	cd ..
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-linux.yml
 	mv build/out/boost-*.zip inputs/
@@ -64,6 +83,12 @@ Release Process
 	mv build/out/qt-*.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/protobuf-win.yml
 	mv build/out/protobuf-*.zip inputs/
+        ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/gitian-osx-native.yml
+        mv build/out/osx-*.tar.gz inputs/
+        ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/gitian-osx-depends.yml
+        mv build/out/osx-*.tar.gz inputs/
+        ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/gitian-osx-qt.yml
+        mv build/out/osx-*.tar.gz inputs/
 
  The expected SHA256 hashes of the intermediate inputs are:
 
