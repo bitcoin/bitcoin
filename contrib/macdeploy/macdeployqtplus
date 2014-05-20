@@ -580,7 +580,7 @@ try:
 except RuntimeError as e:
     if verbose >= 1:
         sys.stderr.write("Error: %s\n" % str(e))
-    sys.exit(ret)
+    sys.exit(1)
 
 # ------------------------------------------------
 
@@ -593,7 +593,7 @@ if config.plugins:
     except RuntimeError as e:
         if verbose >= 1:
             sys.stderr.write("Error: %s\n" % str(e))
-        sys.exit(ret)
+        sys.exit(1)
 
 # ------------------------------------------------
 
