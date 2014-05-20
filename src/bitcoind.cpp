@@ -174,15 +174,8 @@ int main(int argc, char* argv[])
 {
     SetupEnvironment();
 
-    bool fRet = false;
-
     // Connect bitcoind signal handlers
     noui_connect();
 
-    fRet = AppInit(argc, argv);
-
-    if (fRet && fDaemon)
-        return 0;
-
-    return (fRet ? 0 : 1);
+    return (AppInit(argc, argv) ? 0 : 1);
 }
