@@ -311,9 +311,9 @@ Value listunspent(const Array& params, bool fHelp)
 }
 #endif
 
-static int64 txInputTotal(const CTransaction& tx)
+static int64_t txInputTotal(const CTransaction& tx)
 {
-    int64 total = 0;
+    int64_t total = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         CCoins coin;
         if (!pcoinsTip->GetCoins(tx.vin[i].prevout.hash, coin))
@@ -326,22 +326,22 @@ static int64 txInputTotal(const CTransaction& tx)
     return total;
 }
 
-static int64 txOutputTotal(const CTransaction& tx)
+static int64_t txOutputTotal(const CTransaction& tx)
 {
-    int64 total = 0;
+    int64_t total = 0;
     for (unsigned int i = 0; i < tx.vout.size(); i++)
         total += tx.vout[i].nValue;
 
     return total;
 }
 
-static bool txFeeSafetyCheck(const CTransaction& tx, const int64 fee)
+static bool txFeeSafetyCheck(const CTransaction& tx, const int64_t fee)
 {
-    int64 inTotal = txInputTotal(tx);
+    int64_t inTotal = txInputTotal(tx);
     if (inTotal < 0)
         return false;
 
-    int64 outTotal = txOutputTotal(tx);
+    int64_t outTotal = txOutputTotal(tx);
 
     return ((inTotal + fee) == outTotal);
 }
@@ -403,7 +403,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
         rawTx.vin.push_back(in);
     }
 
-    int64 feeCheck = -1;
+    int64_t feeCheck = -1;
 
     set<CBitcoinAddress> setAddress;
     BOOST_FOREACH(const Pair& s, sendTo)
