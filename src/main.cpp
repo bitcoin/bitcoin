@@ -4445,7 +4445,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             uint256 hash = state.vBlocksToDownload.front();
             vGetData.push_back(CInv(MSG_BLOCK, hash));
             MarkBlockAsInFlight(pto->GetId(), hash);
-            LogPrint("net", "Requesting block %s from %s\n", hash.ToString().c_str(), state.name.c_str());
+            LogPrint("net", "Requesting block %s from %s\n", hash.ToString(), state.name);
             if (vGetData.size() >= 1000)
             {
                 pto->PushMessage("getdata", vGetData);
