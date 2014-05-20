@@ -29,6 +29,13 @@ case $host in
      ;;
 esac
 
+case $host_os in
+  darwin*)
+     CPPFLAGS="$CPPFLAGS -I/opt/local/include"
+     LDFLAGS="$LDFLAGS -L/opt/local/lib"
+     ;;
+esac
+
 AC_ARG_ENABLE(benchmark,
     AS_HELP_STRING([--enable-benchmark],[compile benchmark (default is yes)]),
     [use_benchmark=$enableval],
