@@ -3487,11 +3487,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         return true;
     }
 
-    {
-        LOCK(cs_main);
-        State(pfrom->GetId())->nLastBlockProcess = GetTimeMicros();
-    }
-
 
 
     if (strCommand == "version")
@@ -3922,7 +3917,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         CValidationState state;
-        ProcessBlock(state, pfrom, &block);
+        if (ProcessBlock(state, pfrom, &block))
+            {
+                LOCK(cs_main);
+                State(pfrom->GetId())->nLastBlockProcess = GetTimeMicros();
+            }
     }
 
 
