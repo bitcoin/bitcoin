@@ -169,23 +169,6 @@ public:
         if(idx >= 0 && idx < cachedWallet.size())
         {
             KernelRecord *rec = &cachedWallet[idx];
-            // If a status update is needed (blocks came in since last check),
-            //  update the status of this transaction from the wallet. Otherwise,
-            // simply re-use the cached status.
-
-// TODO
-//            if(rec->statusUpdateNeeded())
-//            {
-//                {
-//                    LOCK(wallet->cs_wallet);
-//                    std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
-
-//                    if(mi != wallet->mapWallet.end())
-//                    {
-//                        rec->updateStatus(mi->second);
-//                    }
-//                }
-//            }
             return rec;
         }
         else
@@ -281,88 +264,45 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
             return formatTxBalance(rec);
         case CoinDay:
             return formatTxCoinDay(rec);
+        case MintProbabilityPerDay:
+            return formatDayToMint(rec);
         }
         break;
       case Qt::TextAlignmentRole:
         return column_alignments[index.column()];
         break;
 
-//    case Qt::DecorationRole:
-//        switch(index.column())
-//        {
-//        case Status:
-//            return txStatusDecoration(rec);
-//        case ToAddress:
-//            return txAddressDecoration(rec);
-//        }
-//        break;
-//    case Qt::DisplayRole:
-//        switch(index.column())
-//        {
-//        case Date:
-//            return formatTxDate(rec);
-//        case Type:
-//            return formatTxType(rec);
-//        case ToAddress:
-//            return formatTxToAddress(rec, false);
-//        case Amount:
-//            return formatTxAmount(rec);
-//        }
-//        break;
-//    case Qt::EditRole:
-//        // Edit role is used for sorting, so return the unformatted values
-//        switch(index.column())
-//        {
-//        case Status:
-//            return QString::fromStdString(rec->status.sortKey);
-//        case Date:
-//            return rec->time;
-//        case Type:
-//            return formatTxType(rec);
-//        case ToAddress:
-//            return formatTxToAddress(rec, true);
-//        case Amount:
-//            return rec->credit + rec->debit;
-//        }
-//        break;
-//    case Qt::ToolTipRole:
-//        return formatTooltip(rec);
+      case Qt::EditRole:
+        switch(index.column())
+        {
+        case Address:
+            return formatTxAddress(rec, false);
+        case Age:
+            return formatTxAge(rec);
+        case CoinDay:
+            return formatTxCoinDay(rec);
+        case Balance:
+            return rec->nValue;
+        case MintProbabilityPerDay:
+            return formatDayToMint(rec);
+        }
+        break;
 
-//    case Qt::ForegroundRole:
-//        // Non-confirmed transactions are grey
-//        if(!rec->status.confirmed)
-//        {
-//            return COLOR_UNCONFIRMED;
-//        }
-//        if(index.column() == Amount && (rec->credit+rec->debit) < 0)
-//        {
-//            return COLOR_NEGATIVE;
-//        }
-//        if(index.column() == ToAddress)
-//        {
-//            return addressColor(rec);
-//        }
-//        break;
-//    case TypeRole:
-//        return rec->type;
-//    case DateRole:
-//        return QDateTime::fromTime_t(static_cast<uint>(rec->time));
-//    case LongDescriptionRole:
-//        return priv->describe(rec);
-//    case AddressRole:
-//        return QString::fromStdString(rec->address);
-//    case LabelRole:
-//        return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
-//    case AmountRole:
-//        return rec->credit + rec->debit;
-//    case TxIDRole:
-//        return QString::fromStdString(rec->getTxID());
-//    case ConfirmedRole:
-//        // Return True if transaction counts for balance
-//        return rec->status.confirmed && !(rec->type == TransactionRecord::Generated &&
-//                                          rec->status.maturity != TransactionStatus::Mature);
-//    case FormattedAmountRole:
-//        return formatTxAmount(rec, false);
+      case Qt::BackgroundColorRole:
+        if(rec->getAge() < 30)
+        {
+            return COLOR_MINT_YOUNG;
+        }
+        else if (rec->getAge() >= 30 && rec->getAge() < 90)
+        {
+            return COLOR_MINT_MATURE;
+        }
+        else
+        {
+            return COLOR_MINT_OLD;
+        }
+        break;
+
     }
     return QVariant();
 }
@@ -383,6 +323,10 @@ QString MintingTableModel::lookupAddress(const std::string &address, bool toolti
     return description;
 }
 
+QString MintingTableModel::formatDayToMint(const KernelRecord *wtx) const
+{
+    return QString::number(0);
+}
 
 QString MintingTableModel::formatTxAddress(const KernelRecord *wtx, bool tooltip) const
 {
@@ -391,17 +335,13 @@ QString MintingTableModel::formatTxAddress(const KernelRecord *wtx, bool tooltip
 
 QString MintingTableModel::formatTxCoinDay(const KernelRecord *wtx) const
 {
-    CWalletTx walletTx;
-    this->wallet->GetTransaction(wtx->hash, walletTx);
-    CTxDB txdb("r");
-    uint64 nCoinAge;
-    walletTx.GetCoinAge(txdb, nCoinAge);
-    return QString::number(nCoinAge);
+    return QString::number(wtx->coinAge);
 }
 
 QString MintingTableModel::formatTxAge(const KernelRecord *wtx) const
 {
-    return QString::number((time(NULL) - wtx->time) / 86400);
+    int64 age = wtx->getAge();
+    return QString::number(age);
 }
 
 QString MintingTableModel::formatTxBalance(const KernelRecord *wtx) const

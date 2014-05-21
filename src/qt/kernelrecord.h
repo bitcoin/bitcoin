@@ -12,20 +12,20 @@ class KernelRecord
 {
 public:
     KernelRecord():
-        hash(), time(0), address(""), nValue(0), idx(0), spent(false)
+        hash(), nTime(0), address(""), nValue(0), idx(0), spent(false), coinAge(0)
     {
     }
 
-    KernelRecord(uint256 hash, int64 time):
-            hash(hash), time(time), address(""), nValue(0), idx(0), spent(false)
+    KernelRecord(uint256 hash, int64 nTime):
+            hash(hash), nTime(nTime), address(""), nValue(0), idx(0), spent(false), coinAge(0)
     {
     }
 
-    KernelRecord(uint256 hash, int64 time,
+    KernelRecord(uint256 hash, int64 nTime,
                  const std::string &address,
-                 int64 nValue, bool spent):
-        hash(hash), time(time), address(address), nValue(nValue),
-        idx(0), spent(spent)
+                 int64 nValue, bool spent, int64 coinAge):
+        hash(hash), nTime(nTime), address(address), nValue(nValue),
+        idx(0), spent(spent), coinAge(coinAge)
     {
     }
 
@@ -34,13 +34,15 @@ public:
 
 
     uint256 hash;
-    int64 time;
+    int64 nTime;
     std::string address;
     int64 nValue;
-    bool spent;
     int idx;
+    bool spent;
+    int64 coinAge;
 
     std::string getTxID();
+    int64 getAge() const;
 
 };
 

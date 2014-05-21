@@ -20,4 +20,10 @@ static const int STATUSBAR_ICONSIZE = 16;
 /* Transaction list -- bare address (without label) */
 #define COLOR_BAREADDRESS QColor(140, 140, 140)
 
+/* Colors for minting tab for each coin age group */
+#define COLOR_MINT_YOUNG QColor(127, 127, 240)
+#define COLOR_MINT_MATURE QColor(127, 240, 127)
+#define COLOR_MINT_OLD QColor(240, 127, 127)
+
+
 #endif // GUICONSTANTS_H
