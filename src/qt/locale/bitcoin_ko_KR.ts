@@ -48,7 +48,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>새 항목(N)</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -60,7 +60,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>닫기 (L)</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -76,7 +76,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;내보내기</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -92,7 +92,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>선택하기 (H)</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -108,7 +108,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>비트코인을 받을 수 있는 계좌 주소입니다. 매 거래마다 새로운 주소 사용을 권장합니다. </translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -401,11 +401,11 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>지갑 주소가 자신 소유의 것인지 증명하기 위해 비트코인 주소에 서명할 수 있습니다.</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished"/>
+        <translation>비트코인 주소의 전자 서명 확인을 위해 첨부된 메시지가 있을 경우 이를 검증할 수 있습니다.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -441,11 +441,11 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>한번 이상 사용된 보내는 주소와 주소 제목의 목록을 보여줍니다.</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>한번 이상 사용된 받는 주소와 주소 제목의 목록을 보여줍니다.</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
@@ -814,7 +814,7 @@ Address: %4
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>현재 선택된 주소 필드의 제목입니다. </translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
@@ -869,7 +869,7 @@ Address: %4
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished"/>
+        <translation>폴더가 이미 존재합니다. 새로운 폴더 생성을 원한다면 %1 명령어를 추가하세요. </translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
@@ -1275,7 +1275,7 @@ Address: %4
     </message>
     <message>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>URI의 파싱에 문제가 발생했습니다. 잘못된 비트코인 주소나 URI 파라미터 구성에 오류가 존재할 수 있습니다.</translation>
     </message>
     <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
@@ -1358,7 +1358,7 @@ Address: %4
     </message>
     <message>
         <source>Bitcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>비트코인 코어가 아직 안전하게 종료되지 않았습니다.</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -1563,7 +1563,7 @@ Address: %4
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>지급을 요청하기 위해 아래 형식을 사용하세요. 입력값은 &lt;b&gt;선택 사항&lt;/b&gt; 입니다.</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
@@ -1907,7 +1907,7 @@ Address: %4
     </message>
     <message>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>비트코인을 송금할 지갑 주소 입력하기 (예 : 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to your address book</source>
@@ -2049,7 +2049,7 @@ Address: %4
     </message>
     <message>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation type="unfinished"/>
+        <translation>메시지를 검증하기 위해 아래 칸에 각각 지갑 주소와 메시지, 전자서명을 입력하세요. (메시지 원본의 띄어쓰기, 들여쓰기, 행 나눔 등이 정확하게 입력되어야 하므로 원본을 복사해서 입력하세요) 이 기능은 메시지 검증이 주 목적이며, 네트워크 침입자에 의해 변조되지 않도록 전자서명 해독에 불필요한 시간을 소모하지 마세요. </translation>
     </message>
     <message>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -2174,7 +2174,7 @@ Address: %4
     </message>
     <message numerus="yes">
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n 노드를 거쳐 전파합니다.</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -2278,7 +2278,7 @@ Address: %4
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n 개의 추가 블럭을 읽습니다.</numerusform></translation>
     </message>
     <message>
         <source>unknown</source>
@@ -2320,7 +2320,7 @@ Address: %4
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n 개의 추가 블럭을 읽습니다.</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2560,7 +2560,7 @@ Address: %4
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;내보내기</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -2721,7 +2721,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation type="unfinished"/>
+        <translation>오류 : 해당 거래는 송금액, 다중 거래, 최근 수령한 금액의 사용 등의 이유로 최소 %s 이상의 송금 수수료가 필요합니다.</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2753,7 +2753,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"/>
+        <translation>이 빌드 버전은 정식 출시 전 테스트의 목적이며, 예기치 않은 위험과 오류가 발생할 수 있습니다. 채굴과 상점용 소프트웨어로 사용하는 것을 권하지 않습니다.</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
@@ -2773,7 +2773,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation type="unfinished"/>
+        <translation>경고 : 모든 네트워크가 동의해야 하나, 일부 채굴자들에게 문제가 있는 것으로 보입니다. </translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
@@ -2781,11 +2781,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>경고 : wallet.dat 파일을 읽는 중 에러가 발생했습니다. 주소 키는 모두 정확하게 로딩되었으나 거래 데이터와 주소록 필드에서 누락이나 오류가 존재할 수 있습니다. </translation>
     </message>
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"/>
+        <translation>경고 : wallet.dat가 손상되어 데이터가 복구되었습니다. 원래의 wallet.dat 파일은 %s 후에 wallet.{timestamp}.bak 이름으로 저장됩니다. 잔액과 거래 내역이 정확하지 않다면 백업 파일로 부터 복원해야 합니다. </translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -2957,7 +2957,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Importing...</source>
-        <translation type="unfinished"/>
+        <translation>들여오기 중...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -2969,7 +2969,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation>사용 가능한 파일 디스크립터-File Descriptor-가 부족합니다. </translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: 1)</source>
@@ -2981,7 +2981,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation type="unfinished"/>
+        <translation>현재의 blk000??.dat 파일들로부터 블록체인 색인을 재구성합니다.</translation>
     </message>
     <message>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
@@ -2997,7 +2997,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation type="unfinished"/>
+        <translation>원격 프로시져 호출 서비스를 위한 쓰레드 개수를 설정합니다 (기본값 : 4)</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
@@ -3041,11 +3041,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation type="unfinished"/>
+        <translation>-txindex를 바꾸기 위해서는 -reindex를 사용해서 데이터베이스를 재구성해야 합니다. </translation>
     </message>
     <message>
         <source>Imports blocks from external blk000??.dat file</source>
-        <translation>외부 blk000??.dat 파일에서 블록 가져오기</translation>
+        <translation>외부 blk000??.dat 파일에서 블록을 가져옵니다.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
@@ -3069,11 +3069,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>노드로 전달하기 위한 최저 거래 수수료가 부족합니다. - minrelaytxfee=&lt;amount&gt;: &apos;%s&apos; -</translation>
     </message>
     <message>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>최저 거래 수수료가 부족합니다. -mintxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
@@ -3173,7 +3173,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Start Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>비트코인 코어의 데몬 프로그램을 실행합니다.</translation>
     </message>
     <message>
         <source>System error: </source>

@@ -52,7 +52,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopier den valgte adresse til systemets udklipsholder</translation>
+        <translation>Kopiér den valgte adresse til systemets udklipsholder</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -64,7 +64,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>Kopier adresse</translation>
+        <translation>Kopiér adresse</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -112,11 +112,11 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Kopier mærkat</translation>
+        <translation>Kopiér mærkat</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>Rediger</translation>
+        <translation>Redigér</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -174,7 +174,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Krypter tegnebog</translation>
+        <translation>Kryptér tegnebog</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
@@ -190,7 +190,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Dekrypter tegnebog</translation>
+        <translation>Dekryptér tegnebog</translation>
     </message>
     <message>
         <source>Change passphrase</source>
@@ -261,11 +261,11 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>Underskriv besked...</translation>
+        <translation>Underskriv besked …</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
-        <translation>Synkroniserer med netværk...</translation>
+        <translation>Synkroniserer med netværk …</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
@@ -309,19 +309,19 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>&amp;Options...</source>
-        <translation>Indstillinger...</translation>
+        <translation>Indstillinger …</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>Krypter tegnebog...</translation>
+        <translation>Kryptér tegnebog …</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>Sikkerhedskopier tegnebog...</translation>
+        <translation>Sikkerhedskopiér tegnebog …</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>Skift adgangskode...</translation>
+        <translation>Skift adgangskode …</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
@@ -349,7 +349,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Modify configuration options for Bitcoin</source>
-        <translation>Rediger konfigurationsindstillinger af Bitcoin</translation>
+        <translation>Redigér konfigurationsindstillinger for Bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -369,7 +369,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>&amp;Verify message...</source>
-        <translation>Verificér besked...</translation>
+        <translation>Verificér besked …</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -413,7 +413,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>Indstillinger</translation>
+        <translation>Opsætning</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -465,7 +465,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktiv(e) forbindelse(r) til Bitcoin-netværket</numerusform><numerusform>%n aktiv(e) forbindelse(r) til Bitcoin-netværket</numerusform></translation>
+        <translation><numerusform>%n aktiv forbindelse til Bitcoin-netværket</numerusform><numerusform>%n aktive forbindelser til Bitcoin-netværket</numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -529,7 +529,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Indhenter...</translation>
+        <translation>Indhenter …</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -806,7 +806,7 @@ Adresse: %4
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Rediger adresse</translation>
+        <translation>Redigér adresse</translation>
     </message>
     <message>
         <source>&amp;Label</source>
@@ -834,11 +834,11 @@ Adresse: %4
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>Rediger modtagelsesadresse</translation>
+        <translation>Redigér modtagelsesadresse</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>Rediger afsendelsesadresse</translation>
+        <translation>Redigér afsendelsesadresse</translation>
     </message>
     <message>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
@@ -1017,11 +1017,11 @@ Adresse: %4
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Start Bitcoin automatisk, når der logges ind på systemet</translation>
+        <translation>Start Bitcoin automatisk, når der logges ind på systemet.</translation>
     </message>
     <message>
         <source>&amp;Start Bitcoin on system login</source>
-        <translation>Start Bitcoin, når systemet startes</translation>
+        <translation>Start Bitcoin ved systemlogin</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1097,11 +1097,11 @@ Adresse: %4
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Åbn Bitcoin-klientens port på routeren automatisk. Dette virker kun, når din router understøtter UPnP og UPnP er aktiveret.</translation>
+        <translation>Åbn automatisk Bitcoin-klientens port på routeren. Dette virker kun, når din router understøtter UPnP, og UPnP er aktiveret.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>Konfigurer port vha. UPnP</translation>
+        <translation>Konfigurér port vha. UPnP</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1113,7 +1113,7 @@ Adresse: %4
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Porten på proxyen (f.eks. 9050)</translation>
+        <translation>Port for proxyen (fx 9050)</translation>
     </message>
     <message>
         <source>SOCKS &amp;Version:</source>
@@ -1121,7 +1121,7 @@ Adresse: %4
     </message>
     <message>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>SOCKS-version af proxyen (f.eks. 5)</translation>
+        <translation>SOCKS-version for proxyen (fx 5)</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1416,7 +1416,7 @@ Adresse: %4
     </message>
     <message>
         <source>Startup time</source>
-        <translation>Opstartstid</translation>
+        <translation>Opstartstidspunkt</translation>
     </message>
     <message>
         <source>Network</source>
@@ -1492,11 +1492,11 @@ Adresse: %4
     </message>
     <message>
         <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Velkommen til Bitcoin RPC-konsollen</translation>
+        <translation>Velkommen til Bitcoin RPC-konsollen.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Brug op og ned-piletasterne til at navigere historikken og &lt;b&gt;Ctrl-L&lt;/b&gt; til at rydde skærmen.</translation>
+        <translation>Brug op- og ned-piletasterne til at navigere i historikken og &lt;b&gt;Ctrl-L&lt;/b&gt; til at rydde skærmen.</translation>
     </message>
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
@@ -1852,11 +1852,11 @@ Adresse: %4
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Totalen overstiger din saldo, når %1 transaktionsgebyr er inkluderet.</translation>
+        <translation>Totalen overstiger din saldo, når transaktionsgebyret på %1 er inkluderet.</translation>
     </message>
     <message>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Duplikeret adresse fundet. Du kan kun sende til hver adresse en gang pr. afsendelse.</translation>
+        <translation>Duplikeret adresse fundet. Du kan kun sende til hver adresse én gang pr. afsendelse.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -2396,7 +2396,7 @@ Adresse: %4
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
-        <translation>Beløb fjernet eller tilføjet balance.</translation>
+        <translation>Beløb trukket fra eller tilføjet balance.</translation>
     </message>
 </context>
 <context>
@@ -2427,7 +2427,7 @@ Adresse: %4
     </message>
     <message>
         <source>Range...</source>
-        <translation>Interval...</translation>
+        <translation>Interval …</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2459,15 +2459,15 @@ Adresse: %4
     </message>
     <message>
         <source>Copy address</source>
-        <translation>Kopier adresse</translation>
+        <translation>Kopiér adresse</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Kopier mærkat</translation>
+        <translation>Kopiér mærkat</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Kopier beløb</translation>
+        <translation>Kopiér beløb</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
@@ -2475,7 +2475,7 @@ Adresse: %4
     </message>
     <message>
         <source>Edit label</source>
-        <translation>Rediger mærkat</translation>
+        <translation>Redigér mærkat</translation>
     </message>
     <message>
         <source>Show transaction details</source>
@@ -2631,7 +2631,7 @@ Adresse: %4
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Forbind til en knude for at modtage adresse, og afbryd</translation>
+        <translation>Forbind til en knude for at modtage adresser på andre knuder, og afbryd derefter</translation>
     </message>
     <message>
         <source>Specify your own public address</source>
@@ -2655,7 +2655,7 @@ Adresse: %4
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation>Accepter kommandolinje- og JSON-RPC-kommandoer</translation>
+        <translation>Acceptér kommandolinje- og JSON-RPC-kommandoer</translation>
     </message>
     <message>
         <source>Bitcoin Core RPC client version</source>
@@ -2663,7 +2663,7 @@ Adresse: %4
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation>Kør i baggrunden som en service, og accepter kommandoer</translation>
+        <translation>Kør i baggrunden som en service, og acceptér kommandoer</translation>
     </message>
     <message>
         <source>Use the test network</source>
@@ -3291,7 +3291,7 @@ f.eks.: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Loading addresses...</source>
-        <translation>Indlæser adresser...</translation>
+        <translation>Indlæser adresser …</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet corrupted</source>
@@ -3343,7 +3343,7 @@ f.eks.: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Loading block index...</source>
-        <translation>Indlæser blokindeks...</translation>
+        <translation>Indlæser blokindeks …</translation>
     </message>
     <message>
         <source>Add a node to connect to and attempt to keep the connection open</source>
@@ -3351,7 +3351,7 @@ f.eks.: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Loading wallet...</source>
-        <translation>Indlæser tegnebog...</translation>
+        <translation>Indlæser tegnebog …</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
@@ -3363,7 +3363,7 @@ f.eks.: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Rescanning...</source>
-        <translation>Genindlæser...</translation>
+        <translation>Genindlæser …</translation>
     </message>
     <message>
         <source>Done loading</source>

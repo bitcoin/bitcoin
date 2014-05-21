@@ -20,7 +20,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>الحقوق محفوظة</translation>
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
@@ -35,7 +35,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <name>AddressBookPage</name>
     <message>
         <source>Double-click to edit address or label</source>
-        <translation>أنقر على الماوس مرتين لتعديل العنوان</translation>
+        <translation>أنقر بالماوس مرتين لتعديل العنوان او الوصف</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -43,7 +43,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>&amp;جديد</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -51,11 +51,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>&amp;نسخ</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;اغلاق</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -63,7 +63,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"/>
+        <translation>حذف العنوان المحدد من القائمة</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -71,7 +71,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;تصدير</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -79,23 +79,23 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>اختر العنوان الذي سترسل له العملات</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>اختر العنوان الذي تستقبل عليه العملات</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;اختر</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>ارسال العناوين</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>استقبال العناوين</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -107,7 +107,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>نسخ &amp;الوصف</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -115,7 +115,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>تصدير قائمة العناوين</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -123,7 +123,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>فشل التصدير</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1.</source>
@@ -157,15 +157,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>عبارة مرور جديدة</translation>
+        <translation>كلمة مرور جديدة</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>ادخل الجملة السرية مرة أخرى</translation>
+        <translation>ادخل كلمة المرور الجديدة مرة أخرى</translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>أدخل عبارة مرور جديدة إلى المحفظة. الرجاء استخدام عبارة مرور تتكون من10  حروف عشوائية على الاقل, أو أكثر من 7 كلمات </translation>
+        <translation>أدخل كلمة مرور جديدة للمحفظة. &lt;br/&gt;الرجاء استخدام كلمة مرور تتكون &lt;b&gt;من 10 حروف عشوائية على الاقل&lt;/b&gt;, أو &lt;b&gt;أكثر من 7 كلمات&lt;/b&gt;. </translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -173,7 +173,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>هذه العملية تحتاج عبارة المرور محفظتك لفتحها</translation>
+        <translation>هذه العملية تحتاج كلمة مرور محفظتك لفتحها</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -181,7 +181,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>هذه العملية تحتاج عبارة المرور محفظتك فك تشفيرها</translation>
+        <translation>هذه العملية تحتاج كلمة مرور محفظتك لفك تشفيرها </translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -189,15 +189,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>تغيير عبارة المرور</translation>
+        <translation>تغيير كلمة المرور</translation>
     </message>
     <message>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>أدخل عبارة المرور القديمة والجديدة إلى المحفظة.</translation>
+        <translation>أدخل كلمة المرور القديمة والجديدة للمحفظة.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>تأكيد التشفير المحفظة</translation>
+        <translation>تأكيد تشفير المحفظة</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
@@ -213,7 +213,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished"/>
+        <translation>تحذير: مفتاح الحروف الكبيرة مفعل</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -229,12 +229,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>شل تشفير المحفظة بسبب خطأ داخلي. لم يتم تشفير محفظتك.</translation>
+        <translation>فشل تشفير المحفظة بسبب خطأ داخلي. لم يتم تشفير محفظتك.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>عبارتي المرور ليستا متطابقتان
-</translation>
+        <translation>كلمتي المرور ليستا متطابقتان</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
@@ -242,8 +241,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>عبارة المرور التي تم إدخالها لفك شفرة المحفظة غير صحيحة.
-</translation>
+        <translation>كلمة المرور التي تم إدخالها لفك تشفير المحفظة غير صحيحة.</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
@@ -262,11 +260,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Synchronizing with network...</source>
-        <translation>مزامنة مع شبكة ...</translation>
+        <translation>مزامنة مع الشبكة ...</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
-        <translation>نظرة عامة</translation>
+        <translation>&amp;نظرة عامة</translation>
     </message>
     <message>
         <source>Node</source>
@@ -278,11 +276,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>المعاملات</translation>
+        <translation>&amp;المعاملات</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>تصفح التاريخ المعاملات</translation>
+        <translation>تصفح سجل المعاملات</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -294,7 +292,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Show information about Bitcoin</source>
-        <translation>  إظهار المزيد معلومات حول Bitcoin</translation>
+        <translation>  إظهار معلومات حول بت كوين</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -306,19 +304,19 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Options...</source>
-        <translation>خيارات ...</translation>
+        <translation>&amp;خيارات ...</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;تشفير المحفظة</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;نسخ احتياط للمحفظة</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;تغيير كلمة المرور</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
@@ -330,7 +328,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>افتح &amp;URI...</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -354,11 +352,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>تغيير عبارة المرور المستخدمة لتشفير المحفظة</translation>
+        <translation>تغيير كلمة المرور المستخدمة لتشفير المحفظة</translation>
     </message>
     <message>
         <source>&amp;Debug window</source>
-        <translation type="unfinished"/>
+        <translation>&amp;نافذة المعالجة</translation>
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
@@ -366,7 +364,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Verify message...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;التحقق من الرسالة...</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -378,19 +376,19 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>%ارسل</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation type="unfinished"/>
+        <translation>&amp;استقبل</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
-        <translation type="unfinished"/>
+        <translation>&amp;عرض / اخفاء</translation>
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation type="unfinished"/>
+        <translation>عرض او اخفاء النافذة الرئيسية</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -406,15 +404,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>ملف</translation>
+        <translation>&amp;ملف</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>الاعدادات</translation>
+        <translation>&amp;الاعدادات</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>مساعدة</translation>
+        <translation>&amp;مساعدة</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
@@ -458,7 +456,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Bitcoin client</source>
-        <translation>عميل بتكوين</translation>
+        <translation>عميل بت كوين</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -478,15 +476,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n ساعة</numerusform><numerusform>%n ساعة</numerusform><numerusform>%n ساعة</numerusform><numerusform>%n ساعات</numerusform><numerusform>%n ساعات</numerusform><numerusform>%n ساعات</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n يوم</numerusform><numerusform>%n يوم</numerusform><numerusform>%n يوم</numerusform><numerusform>%n أيام</numerusform><numerusform>%n أيام</numerusform><numerusform>%n ايام</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n اسبوع</numerusform><numerusform>%n اسبوع</numerusform><numerusform>%n اسبوع</numerusform><numerusform>%n اسابيع</numerusform><numerusform>%n اسابيع</numerusform><numerusform>%n اسابيع</numerusform></translation>
     </message>
     <message>
         <source>%1 and %2</source>
@@ -514,15 +512,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>تحذير</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>معلومات</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>محين</translation>
+        <translation>محدث</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -534,7 +532,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>المعاملات واردة</translation>
+        <translation>المعاملات الواردة</translation>
     </message>
     <message>
         <source>Date: %1
@@ -542,15 +540,19 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation type="unfinished"/>
+        <translation>التاريخ : 1% 
+القيمة: 2% 
+النوع: 3% 
+العنوان: 4%
+</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>المحفظة مشفرة و مفتوحة حاليا</translation>
+        <translation>المحفظة &lt;b&gt;مشفرة&lt;/b&gt; و &lt;b&gt;مفتوحة&lt;/b&gt; حاليا</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>المحفظة مشفرة و مقفلة حاليا</translation>
+        <translation>المحفظة &lt;b&gt;مشفرة&lt;/b&gt; و &lt;b&gt;مقفلة&lt;/b&gt; حاليا</translation>
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
@@ -561,7 +563,7 @@ Address: %4
     <name>ClientModel</name>
     <message>
         <source>Network Alert</source>
-        <translation type="unfinished"/>
+        <translation>تنبيه من الشبكة</translation>
     </message>
 </context>
 <context>
@@ -572,7 +574,7 @@ Address: %4
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>الكمية:</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -580,7 +582,7 @@ Address: %4
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>القيمة</translation>
     </message>
     <message>
         <source>Priority:</source>
@@ -588,7 +590,7 @@ Address: %4
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>رسوم :</translation>
     </message>
     <message>
         <source>Low Output:</source>
@@ -628,7 +630,7 @@ Address: %4
     </message>
     <message>
         <source>Confirmations</source>
-        <translation type="unfinished"/>
+        <translation>تأكيد</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -636,11 +638,11 @@ Address: %4
     </message>
     <message>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>أفضلية</translation>
     </message>
     <message>
         <source>Copy address</source>
-        <translation>  انسخ عنوان</translation>
+        <translation>  انسخ العنوان</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -648,11 +650,11 @@ Address: %4
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>نسخ الكمية</translation>
+        <translation>نسخ القيمة</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>نسخ رقم المعاملة</translation>
     </message>
     <message>
         <source>Lock unspent</source>
@@ -664,15 +666,15 @@ Address: %4
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الكمية</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الرسوم</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>نسخ بعد الرسوم</translation>
     </message>
     <message>
         <source>Copy bytes</source>
@@ -680,7 +682,7 @@ Address: %4
     </message>
     <message>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الافضلية</translation>
     </message>
     <message>
         <source>Copy low output</source>
@@ -688,19 +690,19 @@ Address: %4
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>نسخ التغييرات</translation>
     </message>
     <message>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>الاعلى</translation>
     </message>
     <message>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>اعلى</translation>
     </message>
     <message>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>عالي</translation>
     </message>
     <message>
         <source>medium-high</source>
@@ -716,7 +718,7 @@ Address: %4
     </message>
     <message>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>منخفض</translation>
     </message>
     <message>
         <source>lower</source>
@@ -732,7 +734,7 @@ Address: %4
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>لا شيء</translation>
     </message>
     <message>
         <source>Dust</source>
@@ -803,7 +805,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;وصف</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
@@ -815,11 +817,11 @@ Address: %4
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>العنوان</translation>
+        <translation>&amp;العنوان</translation>
     </message>
     <message>
         <source>New receiving address</source>
-        <translation>عنوان تلقي جديد</translation>
+        <translation>عنوان أستلام جديد</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -827,8 +829,7 @@ Address: %4
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>تعديل عنوان التلقي
-</translation>
+        <translation>تعديل عنوان الأستلام</translation>
     </message>
     <message>
         <source>Edit sending address</source>
@@ -855,11 +856,11 @@ Address: %4
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
+        <translation>سيتم انشاء دليل بيانات جديد</translation>
     </message>
     <message>
         <source>name</source>
-        <translation type="unfinished"/>
+        <translation>الاسم</translation>
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
@@ -871,7 +872,7 @@ Address: %4
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
+        <translation>لا يمكن انشاء دليل بيانات هنا .</translation>
     </message>
 </context>
 <context>
@@ -925,7 +926,7 @@ Address: %4
     <name>Intro</name>
     <message>
         <source>Welcome</source>
-        <translation type="unfinished"/>
+        <translation>أهلا</translation>
     </message>
     <message>
         <source>Welcome to Bitcoin Core.</source>
@@ -941,11 +942,11 @@ Address: %4
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation type="unfinished"/>
+        <translation>استخدام دليل البانات الافتراضي</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation type="unfinished"/>
+        <translation>استخدام دليل بيانات مخصص:</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -961,11 +962,11 @@ Address: %4
     </message>
     <message>
         <source>GB of free space available</source>
-        <translation type="unfinished"/>
+        <translation>قيقا بايت مساحة متاحة</translation>
     </message>
     <message>
         <source>(of %1GB needed)</source>
-        <translation type="unfinished"/>
+        <translation>( بحاجة الى 1%قيقا بايت )</translation>
     </message>
 </context>
 <context>
@@ -984,11 +985,11 @@ Address: %4
     </message>
     <message>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>حدد ملف طلب الدفع</translation>
     </message>
     <message>
         <source>Select payment request file to open</source>
-        <translation type="unfinished"/>
+        <translation>حدد ملف طلب الدفع لفتحه</translation>
     </message>
 </context>
 <context>
@@ -999,7 +1000,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Main</source>
-        <translation>الرئيسي</translation>
+        <translation>&amp;الرئيسي</translation>
     </message>
     <message>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
@@ -1007,7 +1008,7 @@ Address: %4
     </message>
     <message>
         <source>Pay transaction &amp;fee</source>
-        <translation type="unfinished"/>
+        <translation>ادفع &amp;رسوم المعاملة</translation>
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
@@ -1023,7 +1024,7 @@ Address: %4
     </message>
     <message>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>م ب</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1047,7 +1048,7 @@ Address: %4
     </message>
     <message>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>عنوان النطاق للطرف الثالث</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1059,11 +1060,11 @@ Address: %4
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation type="unfinished"/>
+        <translation>&amp;استعادة الخيارات</translation>
     </message>
     <message>
         <source>&amp;Network</source>
-        <translation type="unfinished"/>
+        <translation>&amp;الشبكة</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1071,11 +1072,11 @@ Address: %4
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation type="unfinished"/>
+        <translation>&amp;محفظة</translation>
     </message>
     <message>
         <source>Expert</source>
-        <translation type="unfinished"/>
+        <translation>تصدير</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
@@ -1099,15 +1100,15 @@ Address: %4
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation type="unfinished"/>
+        <translation>بروكسي &amp;اي بي:</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;المنفذ:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation type="unfinished"/>
+        <translation>منفذ البروكسي (مثلا 9050)</translation>
     </message>
     <message>
         <source>SOCKS &amp;Version:</source>
@@ -1139,11 +1140,11 @@ Address: %4
     </message>
     <message>
         <source>&amp;Display</source>
-        <translation type="unfinished"/>
+        <translation>&amp;عرض</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation type="unfinished"/>
+        <translation>واجهة المستخدم &amp;اللغة:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
@@ -1183,11 +1184,11 @@ Address: %4
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>لا شيء</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
-        <translation type="unfinished"/>
+        <translation>تأكيد استعادة الخيارات</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
@@ -1230,7 +1231,7 @@ Address: %4
     </message>
     <message>
         <source>Pending:</source>
-        <translation type="unfinished"/>
+        <translation>معلق:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -1246,11 +1247,11 @@ Address: %4
     </message>
     <message>
         <source>Total:</source>
-        <translation type="unfinished"/>
+        <translation>المجموع:</translation>
     </message>
     <message>
         <source>Your current total balance</source>
-        <translation type="unfinished"/>
+        <translation>رصيدك الكلي الحالي</translation>
     </message>
     <message>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
@@ -1321,7 +1322,7 @@ Address: %4
     </message>
     <message>
         <source>Bad response from server %1</source>
-        <translation type="unfinished"/>
+        <translation>استجابة سيئة من الملقم٪ 1</translation>
     </message>
     <message>
         <source>Payment acknowledged</source>
@@ -1363,15 +1364,15 @@ Address: %4
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;حفظ الصورة</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
+        <translation>&amp;نسخ الصورة</translation>
     </message>
     <message>
         <source>Save QR Code</source>
-        <translation type="unfinished"/>
+        <translation>حفظ رمز الاستجابة السريعة QR</translation>
     </message>
     <message>
         <source>PNG Image (*.png)</source>
@@ -1402,7 +1403,7 @@ Address: %4
     </message>
     <message>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>عام</translation>
     </message>
     <message>
         <source>Using OpenSSL version</source>
@@ -1410,7 +1411,7 @@ Address: %4
     </message>
     <message>
         <source>Startup time</source>
-        <translation type="unfinished"/>
+        <translation>وقت البدء</translation>
     </message>
     <message>
         <source>Network</source>
@@ -1450,23 +1451,23 @@ Address: %4
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
+        <translation>&amp;حركة مرور الشبكة</translation>
     </message>
     <message>
         <source>&amp;Clear</source>
-        <translation type="unfinished"/>
+        <translation>&amp;مسح</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>المجاميع</translation>
     </message>
     <message>
         <source>In:</source>
-        <translation type="unfinished"/>
+        <translation>داخل:</translation>
     </message>
     <message>
         <source>Out:</source>
-        <translation type="unfinished"/>
+        <translation>خارج:</translation>
     </message>
     <message>
         <source>Build date</source>
@@ -1490,7 +1491,7 @@ Address: %4
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation type="unfinished"/>
+        <translation>استخدم اسهم الاعلى و الاسفل للتنقل بين السجلات و &lt;b&gt;Ctrl-L&lt;/b&gt;  لمسح الشاشة</translation>
     </message>
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
@@ -1498,46 +1499,46 @@ Address: %4
     </message>
     <message>
         <source>%1 B</source>
-        <translation type="unfinished"/>
+        <translation>1% بايت</translation>
     </message>
     <message>
         <source>%1 KB</source>
-        <translation type="unfinished"/>
+        <translation>1% كيلو بايت</translation>
     </message>
     <message>
         <source>%1 MB</source>
-        <translation type="unfinished"/>
+        <translation>1% ميقا بايت</translation>
     </message>
     <message>
         <source>%1 GB</source>
-        <translation type="unfinished"/>
+        <translation>1% قيقا بايت</translation>
     </message>
     <message>
         <source>%1 m</source>
-        <translation type="unfinished"/>
+        <translation>1% دقيقة</translation>
     </message>
     <message>
         <source>%1 h</source>
-        <translation type="unfinished"/>
+        <translation>1% ساعة</translation>
     </message>
     <message>
         <source>%1 h %2 m</source>
-        <translation type="unfinished"/>
+        <translation>1% ساعة 2% دقيقة</translation>
     </message>
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;القيمة</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;الوصف:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;رسالة:</translation>
     </message>
     <message>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
@@ -1565,15 +1566,15 @@ Address: %4
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>مسح كل حقول النموذج المطلوبة</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation type="unfinished"/>
+        <translation>مسح</translation>
     </message>
     <message>
         <source>Requested payments history</source>
-        <translation type="unfinished"/>
+        <translation>سجل طلبات الدفع</translation>
     </message>
     <message>
         <source>&amp;Request payment</source>
@@ -1585,7 +1586,7 @@ Address: %4
     </message>
     <message>
         <source>Show</source>
-        <translation type="unfinished"/>
+        <translation>عرض</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
@@ -1593,7 +1594,7 @@ Address: %4
     </message>
     <message>
         <source>Remove</source>
-        <translation type="unfinished"/>
+        <translation>ازل</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -1605,26 +1606,26 @@ Address: %4
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>نسخ الكمية</translation>
+        <translation>نسخ القيمة</translation>
     </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
         <source>QR Code</source>
-        <translation type="unfinished"/>
+        <translation>رمز كيو ار</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished"/>
+        <translation>نسخ  &amp;URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>نسخ &amp;العنوان</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;حفظ الصورة</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -1636,7 +1637,7 @@ Address: %4
     </message>
     <message>
         <source>URI</source>
-        <translation type="unfinished"/>
+        <translation> URI</translation>
     </message>
     <message>
         <source>Address</source>
@@ -1652,7 +1653,7 @@ Address: %4
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>رسالة</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
@@ -1675,7 +1676,7 @@ Address: %4
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>رسالة</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -1687,7 +1688,7 @@ Address: %4
     </message>
     <message>
         <source>(no message)</source>
-        <translation type="unfinished"/>
+        <translation>( لا رسائل )</translation>
     </message>
     <message>
         <source>(no amount)</source>
@@ -1710,7 +1711,7 @@ Address: %4
     </message>
     <message>
         <source>automatically selected</source>
-        <translation type="unfinished"/>
+        <translation>اختيار تلقائيا</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
@@ -1718,7 +1719,7 @@ Address: %4
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>الكمية :</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -1726,15 +1727,15 @@ Address: %4
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>القيمة :</translation>
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>افضلية :</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>رسوم :</translation>
     </message>
     <message>
         <source>Low Output:</source>
@@ -1742,11 +1743,11 @@ Address: %4
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>بعد الرسوم :</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>تعديل :</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
@@ -1762,7 +1763,7 @@ Address: %4
     </message>
     <message>
         <source>Add &amp;Recipient</source>
-        <translation type="unfinished"/>
+        <translation>أضافة &amp;مستلم</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -1782,7 +1783,7 @@ Address: %4
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation type="unfinished"/>
+        <translation>&amp;ارسال</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -1790,23 +1791,23 @@ Address: %4
     </message>
     <message>
         <source>%1 to %2</source>
-        <translation type="unfinished"/>
+        <translation>1% الى 2%</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الكمية </translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>نسخ الكمية</translation>
+        <translation>نسخ القيمة</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الرسوم</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>نسخ بعد الرسوم</translation>
     </message>
     <message>
         <source>Copy bytes</source>
@@ -1814,7 +1815,7 @@ Address: %4
     </message>
     <message>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الافضلية</translation>
     </message>
     <message>
         <source>Copy low output</source>
@@ -1822,15 +1823,15 @@ Address: %4
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>نسخ التعديل</translation>
     </message>
     <message>
         <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
+        <translation>مجموع المبلغ %1 (= %2)</translation>
     </message>
     <message>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>أو</translation>
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
@@ -1842,11 +1843,11 @@ Address: %4
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished"/>
+        <translation>القيمة تتجاوز رصيدك</translation>
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>المجموع يتجاوز رصيدك عندما يتم اضافة 1% رسوم العملية</translation>
     </message>
     <message>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
@@ -1897,7 +1898,7 @@ Address: %4
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>ادفع الى </translation>
+        <translation>ادفع &amp;الى :</translation>
     </message>
     <message>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -1909,7 +1910,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;وصف :</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -1925,7 +1926,7 @@ Address: %4
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>انسخ العنوان من لوحة المفاتيح</translation>
+        <translation>الصق العنوان من لوحة المفاتيح</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -1972,7 +1973,7 @@ Address: %4
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>لا توقف عمل الكمبيوتر حتى تختفي هذه النافذة</translation>
     </message>
 </context>
 <context>
@@ -1983,7 +1984,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;توقيع الرسالة</translation>
     </message>
     <message>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
@@ -2011,11 +2012,11 @@ Address: %4
     </message>
     <message>
         <source>Enter the message you want to sign here</source>
-        <translation type="unfinished"/>
+        <translation>ادخل الرسالة التي تريد توقيعها هنا</translation>
     </message>
     <message>
         <source>Signature</source>
-        <translation type="unfinished"/>
+        <translation>التوقيع</translation>
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
@@ -2023,11 +2024,11 @@ Address: %4
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>وقع الرسالة لتثبت انك تمتلك عنوان البت كوين هذا</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>توقيع $الرسالة</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
@@ -2039,7 +2040,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;تحقق رسالة</translation>
     </message>
     <message>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
@@ -2055,7 +2056,7 @@ Address: %4
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>تحقق &amp;الرسالة</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
@@ -2067,7 +2068,7 @@ Address: %4
     </message>
     <message>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation type="unfinished"/>
+        <translation>اضغط  &quot;توقيع الرسالة&quot; لتوليد التوقيع</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -2083,7 +2084,7 @@ Address: %4
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
-        <translation type="unfinished"/>
+        <translation>تم الغاء عملية فتح المحفظة</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -2103,7 +2104,7 @@ Address: %4
     </message>
     <message>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished"/>
+        <translation>فضلا تاكد من التوقيع وحاول مرة اخرى</translation>
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
@@ -2148,7 +2149,7 @@ Address: %4
     </message>
     <message>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>يتعارض</translation>
     </message>
     <message>
         <source>%1/offline</source>
@@ -2196,7 +2197,7 @@ Address: %4
     </message>
     <message>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>علامة</translation>
     </message>
     <message>
         <source>Credit</source>
@@ -2216,7 +2217,7 @@ Address: %4
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation>رسوم التحويل</translation>
+        <translation>رسوم المعاملة</translation>
     </message>
     <message>
         <source>Net amount</source>
@@ -2224,7 +2225,7 @@ Address: %4
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>رسالة </translation>
     </message>
     <message>
         <source>Comment</source>
@@ -2236,7 +2237,7 @@ Address: %4
     </message>
     <message>
         <source>Merchant</source>
-        <translation type="unfinished"/>
+        <translation>تاجر</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
@@ -2268,7 +2269,7 @@ Address: %4
     </message>
     <message>
         <source>, has not been successfully broadcast yet</source>
-        <translation>لم يتم حتى الآن البث بنجاح</translation>
+        <translation>,  لم يتم حتى الآن البث بنجاح</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
@@ -2421,7 +2422,7 @@ Address: %4
     </message>
     <message>
         <source>Range...</source>
-        <translation>v</translation>
+        <translation>المدى...</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2449,7 +2450,7 @@ Address: %4
     </message>
     <message>
         <source>Min amount</source>
-        <translation type="unfinished"/>
+        <translation>الحد الأدنى</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -2465,7 +2466,7 @@ Address: %4
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>نسخ رقم العملية</translation>
     </message>
     <message>
         <source>Edit label</source>
@@ -2473,7 +2474,7 @@ Address: %4
     </message>
     <message>
         <source>Show transaction details</source>
-        <translation type="unfinished"/>
+        <translation>عرض تفاصيل المعاملة</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
@@ -2481,7 +2482,7 @@ Address: %4
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>فشل التصدير</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
@@ -2489,7 +2490,7 @@ Address: %4
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation>نجح الاستخراج</translation>
+        <translation>نجح التصدير</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
@@ -2529,7 +2530,7 @@ Address: %4
     </message>
     <message>
         <source>Range:</source>
-        <translation type="unfinished"/>
+        <translation>المدى:</translation>
     </message>
     <message>
         <source>to</source>
@@ -2554,7 +2555,7 @@ Address: %4
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;تصدير</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -2562,7 +2563,7 @@ Address: %4
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>نسخ احتياط للمحفظة</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
@@ -2570,7 +2571,7 @@ Address: %4
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation>فشل النسخ الاحتياطي</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
@@ -2582,7 +2583,7 @@ Address: %4
     </message>
     <message>
         <source>Backup Successful</source>
-        <translation type="unfinished"/>
+        <translation>نجاح  النسخ الاحتياطي</translation>
     </message>
 </context>
 <context>
@@ -2613,7 +2614,7 @@ Address: %4
     </message>
     <message>
         <source>Specify data directory</source>
-        <translation>حدد موقع مجلد المعلومات او data directory</translation>
+        <translation>حدد مجلد المعلومات</translation>
     </message>
     <message>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
@@ -2867,15 +2868,15 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Error: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>تحذير: مساحة القرص منخفضة</translation>
     </message>
     <message>
         <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation type="unfinished"/>
+        <translation>تحذير: المحفظة مغلقة , لا تستطيع تنفيذ المعاملة</translation>
     </message>
     <message>
         <source>Error: system error: </source>
-        <translation type="unfinished"/>
+        <translation>خطأ: خطأ في النظام:</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -2959,7 +2960,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>عنوان اونيون غير صحيح : &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -3015,7 +3016,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Verifying wallet...</source>
-        <translation type="unfinished"/>
+        <translation>التحقق من المحفظة ...</translation>
     </message>
     <message>
         <source>Wait for RPC server to start</source>
@@ -3027,7 +3028,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>خيارات المحفظة :</translation>
     </message>
     <message>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
@@ -3059,7 +3060,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>معلومات</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
@@ -3159,7 +3160,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Signing transaction failed</source>
-        <translation type="unfinished"/>
+        <translation>فشل توقيع المعاملة</translation>
     </message>
     <message>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
@@ -3171,19 +3172,19 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>System error: </source>
-        <translation type="unfinished"/>
+        <translation>خطأ في النظام :</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation type="unfinished"/>
+        <translation>قيمة العملية صغيره جدا</translation>
     </message>
     <message>
         <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
+        <translation>يجب ان يكون قيمة العملية بالموجب</translation>
     </message>
     <message>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>المعاملة طويلة جدا</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 0)</source>
@@ -3199,11 +3200,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>تحذير</translation>
     </message>
     <message>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation type="unfinished"/>
+        <translation>تحذير : هذا الاصدار قديم , يتطلب التحديث</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
@@ -3239,7 +3240,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Upgrade wallet to latest format</source>
-        <translation type="unfinished"/>
+        <translation>تحديث المحفظة للنسخة الاخيرة</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
@@ -3259,7 +3260,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Server private key (default: server.pem)</source>
-        <translation type="unfinished"/>
+        <translation>المفتاح الخاص بالسيرفر (default: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -3295,7 +3296,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>عنوان البروكسي غير صحيح : &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
@@ -3319,11 +3320,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Invalid amount</source>
-        <translation type="unfinished"/>
+        <translation>قيمة غير صحيحة</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation type="unfinished"/>
+        <translation>اموال غير كافية</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -3343,7 +3344,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Cannot write default address</source>
-        <translation type="unfinished"/>
+        <translation>لايمكن كتابة العنوان الافتراضي</translation>
     </message>
     <message>
         <source>Rescanning...</source>
@@ -3355,7 +3356,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>لاستخدام %s الخيار</translation>
     </message>
     <message>
         <source>Error</source>
