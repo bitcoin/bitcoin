@@ -3430,6 +3430,7 @@ void static ProcessGetData(CNode* pfrom)
                 }
             }
             else
+            {
                 if (inv.IsKnownType())
                 {
                     // Send stream from relay memory
@@ -3456,6 +3457,7 @@ void static ProcessGetData(CNode* pfrom)
                         vNotFound.push_back(inv);
                     }
                 }
+            }
 
             // Track requests for our stuff.
             g_signals.Inventory(inv.hash);
