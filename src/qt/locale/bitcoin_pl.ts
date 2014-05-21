@@ -739,7 +739,7 @@ Adres: %4
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>żaden</translation>
     </message>
     <message>
         <source>Dust</source>
@@ -1189,7 +1189,7 @@ Adres: %4
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>żaden</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -2340,7 +2340,7 @@ Adres: %4
     </message>
     <message>
         <source>Offline</source>
-        <translation type="unfinished"/>
+        <translation>Offline</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -3182,7 +3182,7 @@ na przykład: alertnotify=echo %%s | mail -s &quot;Alarm Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Start Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Uruchom serwer Bitcoin Core</translation>
     </message>
     <message>
         <source>System error: </source>
