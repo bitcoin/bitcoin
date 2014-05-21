@@ -1053,7 +1053,7 @@ Osoite: %4</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>Kolmannen osapuolen rahansiirto URL:t</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
