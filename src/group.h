@@ -48,9 +48,9 @@ void static secp256k1_ge_set_infinity(secp256k1_ge_t *r);
 /** Set a group element equal to the point with given X and Y coordinates */
 void static secp256k1_ge_set_xy(secp256k1_ge_t *r, const secp256k1_fe_t *x, const secp256k1_fe_t *y);
 
-/** Set a group element (jacobian) equal to the point with given X coordinate, and given oddness for Y.
-    The result is not guaranteed to be valid. */
-void static secp256k1_ge_set_xo(secp256k1_ge_t *r, const secp256k1_fe_t *x, int odd);
+/** Set a group element (affine) equal to the point with the given X coordinate, and given oddness
+ *  for Y. Return value indicates whether the result is valid. */
+int  static secp256k1_ge_set_xo(secp256k1_ge_t *r, const secp256k1_fe_t *x, int odd);
 
 /** Check whether a group element is the point at infinity. */
 int  static secp256k1_ge_is_infinity(const secp256k1_ge_t *a);
@@ -91,7 +91,7 @@ void static secp256k1_gej_double(secp256k1_gej_t *r, const secp256k1_gej_t *a);
 /** Set r equal to the sum of a and b. */
 void static secp256k1_gej_add(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_gej_t *b);
 
-/** Set r equal to the sum of a and b (with b given in jacobian coordinates). This is more efficient
+/** Set r equal to the sum of a and b (with b given in affine coordinates). This is more efficient
     than secp256k1_gej_add. */
 void static secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b);
 

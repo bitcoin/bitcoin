@@ -62,7 +62,7 @@ void static secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
     secp256k1_fe_set_b32(r, tmp);
 }
 
-void static secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
+int static secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 
     // The binary representation of (p + 1)/4 has 3 blocks of 1s, with lengths in
     // { 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
@@ -121,6 +121,14 @@ void static secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_mul(&t1, &t1, &x2);
     secp256k1_fe_sqr(&t1, &t1);
     secp256k1_fe_sqr(r, &t1);
+
+    // Check that a square root was actually calculated
+
+    secp256k1_fe_sqr(&t1, r);
+    secp256k1_fe_negate(&t1, &t1, 1);
+    secp256k1_fe_add(&t1, a);
+    secp256k1_fe_normalize(&t1);
+    return secp256k1_fe_is_zero(&t1);
 }
 
 void static secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
