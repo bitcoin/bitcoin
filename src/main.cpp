@@ -3429,32 +3429,33 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
             }
-            else if (inv.IsKnownType())
-            {
-                // Send stream from relay memory
-                bool pushed = false;
+            else
+                if (inv.IsKnownType())
                 {
-                    LOCK(cs_mapRelay);
-                    map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
-                    if (mi != mapRelay.end()) {
-                        pfrom->PushMessage(inv.GetCommand(), (*mi).second);
-                        pushed = true;
+                    // Send stream from relay memory
+                    bool pushed = false;
+                    {
+                        LOCK(cs_mapRelay);
+                        map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
+                        if (mi != mapRelay.end()) {
+                            pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+                            pushed = true;
+                        }
+                    }
+                    if (!pushed && inv.type == MSG_TX) {
+                        CTransaction tx;
+                        if (mempool.lookup(inv.hash, tx)) {
+                            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                            ss.reserve(1000);
+                            ss << tx;
+                            pfrom->PushMessage("tx", ss);
+                            pushed = true;
+                        }
+                    }
+                    if (!pushed) {
+                        vNotFound.push_back(inv);
                     }
                 }
-                if (!pushed && inv.type == MSG_TX) {
-                    CTransaction tx;
-                    if (mempool.lookup(inv.hash, tx)) {
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << tx;
-                        pfrom->PushMessage("tx", ss);
-                        pushed = true;
-                    }
-                }
-                if (!pushed) {
-                    vNotFound.push_back(inv);
-                }
-            }
 
             // Track requests for our stuff.
             g_signals.Inventory(inv.hash);
