@@ -1049,11 +1049,11 @@ Adresse: %4
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
+        <translation>Tredjepart URLer (f. eks. en blokkutforsker) som dukker opp i transaksjonsfanen som kontekst meny elementer. %s i URLen er erstattet med transaksjonen sin hash. Flere URLer er separert av en vertikal linje |.</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>Tredjepart transaksjon URLer</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1358,7 +1358,7 @@ Adresse: %4
     </message>
     <message>
         <source>Bitcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core har ennå ikke avsluttet på en sikker måte...</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>

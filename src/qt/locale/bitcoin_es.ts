@@ -320,7 +320,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>%Guardar copia del monedero...</translation>
+        <translation>&amp;Guardar copia del monedero...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
@@ -1052,11 +1052,11 @@ Dirección: %4
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
+        <translation>URLs de terceros (por ejemplo, un explorador de bloques) que aparecen en la pestaña de transacciones como items del menú contextual. El %s en la URL es reemplazado por el hash de la transacción. Se pueden separar múltiples URLs por una barra vertical |.</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>URLs de transacciones de terceros</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1977,8 +1977,7 @@ Dirección: %4
     <name>ShutdownWindow</name>
     <message>
         <source>Bitcoin Core is shutting down...</source>
-        <translation>Bitcoin Core se está cerrando...
-</translation>
+        <translation>Bitcoin Core se está cerrando...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
