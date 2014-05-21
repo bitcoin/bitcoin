@@ -3428,11 +3428,8 @@ void static ProcessGetData(CNode* pfrom)
                         pfrom->hashContinue = 0;
                     }
                 }
-            }
-            else
-            {
-                if (inv.IsKnownType())
-                {
+            } else {
+                if (inv.IsKnownType()) {
                     // Send stream from relay memory
                     bool pushed = false;
                     {
