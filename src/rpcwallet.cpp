@@ -1475,12 +1475,13 @@ Value listsinceblock(const Array& params, bool fHelp)
 
 Value gettransaction(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 1)
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "gettransaction \"txid\"\n"
             "\nGet detailed information about in-wallet transaction <txid>\n"
             "\nArguments:\n"
             "1. \"txid\"    (string, required) The transaction id\n"
+            "2. \"includeWatchonly\"    (bool, optional, default=false) Whether to include watchonly addresses in balance calculation and details[]\n"
             "\nResult:\n"
             "{\n"
             "  \"amount\" : x.xxx,        (numeric) The transaction amount in btc\n"
@@ -1517,6 +1518,11 @@ Value gettransaction(const Array& params, bool fHelp)
     uint256 hash;
     hash.SetHex(params[0].get_str());
 
+    isminefilter filter = MINE_SPENDABLE;
+    if(params.size() > 1)
+        if(params[1].get_bool())
+            filter = filter | MINE_WATCH_ONLY;
+
     Object entry;
     if (!pwalletMain->mapWallet.count(hash))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
@@ -1534,7 +1540,7 @@ Value gettransaction(const Array& params, bool fHelp)
     WalletTxToJSON(wtx, entry);
 
     Array details;
-    ListTransactions(wtx, "*", 0, false, details);
+    ListTransactions(wtx, "*", 0, false, details, filter);
     entry.push_back(Pair("details", details));
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
