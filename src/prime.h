@@ -68,6 +68,7 @@ enum // prime chain type
     PRIME_CHAIN_BI_TWIN     = 3u,
 };
 bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier, unsigned int& nChainType, unsigned int& nChainLength);
+bool CheckPrimeProofOfWorkV02Compatibility(uint256 hashBlockHeader);
 
 // prime target difficulty value for visualization
 double GetPrimeDifficulty(unsigned int nBits);

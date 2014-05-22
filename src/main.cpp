@@ -2261,6 +2261,16 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     if (!CheckProofOfWork(pblock->GetHeaderHash(), pblock->nBits, pblock->bnPrimeChainMultiplier, pblock->nPrimeChainType, pblock->nPrimeChainLength))
         return state.DoS(100, error("ProcessBlock() : proof of work failed"));
 
+    // Check for v0.2 protocol compatibility
+    if (GetBoolArg("-v2compatible", false) &&
+        !CheckPrimeProofOfWorkV02Compatibility(pblock->GetHeaderHash()))
+    {
+        if (!pfrom) // rpc submitted block, reject if not v0.2 compatible
+            return error("ProcessBlock() : Submitted block incompatible with v0.2 protocol, block=%s", pblock->GetHash().ToString().c_str());
+        else // print warning message to debug log if not v0.2 compatible
+            printf("ProcessBlock() : WARNING : Block incompatible with v0.2 protocol, block=%s\n", pblock->GetHash().ToString().c_str());
+    }
+
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain)
     {

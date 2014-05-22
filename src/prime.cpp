@@ -431,6 +431,12 @@ bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CB
     return true;
 }
 
+bool CheckPrimeProofOfWorkV02Compatibility(uint256 hashBlockHeader)
+{
+    unsigned int nLength = 0;
+    return (FermatProbablePrimalityTest(CBigNum(hashBlockHeader), nLength));
+}
+
 // prime target difficulty value for visualization
 double GetPrimeDifficulty(unsigned int nBits)
 {
