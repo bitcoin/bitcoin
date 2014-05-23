@@ -26,6 +26,7 @@ QT_BEGIN_NAMESPACE
 class QAction;
 class QLabel;
 class QProgressBar;
+class QProgressDialog;
 QT_END_NAMESPACE
 
 /**
@@ -73,6 +74,7 @@ private:
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
     QProgressBar *progressBar;
+    QProgressDialog *progressDialog;
 
     QMenuBar *appMenuBar;
     QAction *overviewAction;
@@ -191,6 +193,9 @@ private slots:
 
     /** called by a timer to check if fRequestShutdown has been set **/
     void detectShutdown();
+
+    /** Show progress dialog e.g. for verifychain */
+    void showProgress(const QString &title, int nProgress);
 };
 
 #endif // BITCOINGUI_H
