@@ -795,7 +795,7 @@ Adresa: %4
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished"/>
+        <translation>restul de la %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
@@ -1587,7 +1587,7 @@ Adresa: %4
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation type="unfinished"/>
+        <translation>Arata cererea selectata (acelas lucru ca si dublu-click pe o inregistrare)</translation>
     </message>
     <message>
         <source>Show</source>
@@ -3008,7 +3008,7 @@ spre exemplu: alertnotify=echo %%s | mail -s &quot;Alerta Bitcoin&quot; admin@fo
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation type="unfinished"/>
+        <translation>Stabileste numarul de thread-uri care servesc apeluri RPC (implicit: 4)</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
