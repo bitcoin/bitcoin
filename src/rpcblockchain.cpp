@@ -427,7 +427,7 @@ Value verifychain(const Array& params, bool fHelp)
     if (params.size() > 1)
         nCheckDepth = params[1].get_int();
 
-    return VerifyDB(nCheckLevel, nCheckDepth);
+    return CVerifyDB().VerifyDB(nCheckLevel, nCheckDepth);
 }
 
 Value getblockchaininfo(const Array& params, bool fHelp)

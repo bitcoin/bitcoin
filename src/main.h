@@ -144,8 +144,6 @@ bool InitBlockIndex();
 bool LoadBlockIndex();
 /** Unload database information */
 void UnloadBlockIndex();
-/** Verify consistency of the block and coin databases */
-bool VerifyDB(int nCheckLevel, int nCheckDepth);
 /** Print the loaded block tree */
 void PrintBlockTree();
 /** Process protocol messages received from a given node */
@@ -1022,6 +1020,15 @@ public:
     }
     unsigned char GetRejectCode() const { return chRejectCode; }
     std::string GetRejectReason() const { return strRejectReason; }
+};
+
+/** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
+class CVerifyDB {
+public:
+
+    CVerifyDB();
+    ~CVerifyDB();
+    bool VerifyDB(int nCheckLevel, int nCheckDepth);
 };
 
 /** An in-memory indexed chain of blocks. */
