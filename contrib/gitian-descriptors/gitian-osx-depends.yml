@@ -18,8 +18,8 @@ files:
 - "openssl-1.0.1g.tar.gz"
 - "protobuf-2.5.0.tar.bz2"
 - "qrencode-3.4.3.tar.bz2"
-- "MacOSX10.6.pkg"
-- "osx-native-depends-r2.tar.gz"
+- "MacOSX10.7.sdk.tar.gz"
+- "osx-native-depends-r3.tar.gz"
 
 script: |
 
@@ -29,9 +29,8 @@ script: |
   echo "53cb818c3b90e507a8348f4f5eaedb05d8bfe5358aabb508b7263cc670c3e028  openssl-1.0.1g.tar.gz" | sha256sum -c
   echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
   echo "dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98  qrencode-3.4.3.tar.bz2" | sha256sum -c
-  echo "a2ccf2299de4e0bb88bd17a3355f02b747575b97492c7c2f5b789a64ccc4cbd6  MacOSX10.6.pkg" | sha256sum -c
 
-  REVISION=r2
+  REVISION=r3
   export SOURCES_PATH=`pwd`
   export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export PATH=$HOME:$PATH
@@ -44,7 +43,7 @@ script: |
   PREFIX=`pwd`/prefix
   NATIVEPREFIX=`pwd`/native-prefix
   BUILD_BASE=`pwd`/build
-  SDK=`pwd`/SDKs/MacOSX10.6.sdk
+  SDK=`pwd`/SDKs/MacOSX10.7.sdk
   HOST=x86_64-apple-darwin11
   MIN_VERSION=10.6
 
@@ -70,10 +69,10 @@ script: |
   mkdir -p ${PREFIX}/lib
   mkdir -p ${BUILD_BASE}
 
-  mkdir -p ${SDK}
-  7z -bd -so -y e ${SOURCES_PATH}/MacOSX10.6.pkg Payload | gzip -d -c | cpio -i
+  mkdir -p SDKs
+  tar -C SDKs -xf ${SOURCES_PATH}/MacOSX10.7.sdk.tar.gz
 
-  tar xf /home/ubuntu/build/osx-native-depends-r2.tar.gz
+  tar xf /home/ubuntu/build/osx-native-depends-r3.tar.gz
 
   # bdb
   SOURCE_FILE=${SOURCES_PATH}/db-4.8.30.NC.tar.gz
