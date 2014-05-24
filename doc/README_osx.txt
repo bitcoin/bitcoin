@@ -37,11 +37,15 @@ originally done in toolchain4.
 
 To complicate things further, all builds must target an Apple SDK. These SDKs
 are free to download, but not redistributable.
-To obtain it, register for a developer account, then download xcode_3.2.6_and_ios_sdk_4.3.dmg:
-https://developer.apple.com/devcenter/download.action?path=/Developer_Tools/xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg
-This file is several gigabytes in size, but only a single .pkg file inside is
-needed (MacOSX10.6.pkg). From Linux, 7-zip can be used to extract this file.
-The DMG can then be discarded.
+To obtain it, register for a developer account, then download xcode4630916281a.dmg:
+https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_4.6.3/xcode4630916281a.dmg
+This file is several gigabytes in size, but only a single directory inside is
+needed: Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
+
+Unfortunately, the usual linux tools (7zip, hpmount, loopback mount) are incapable of opening this file.
+To create a tarball suitable for gitian input, mount the dmg in OSX, then create it with:
+  $ tar -C /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.7.sdk.tar.gz MacOSX10.7.sdk
+
 
 The gitian descriptors build 2 sets of files: Linux tools, then Apple binaries
 which are created using these tools. The build process has been designed to
