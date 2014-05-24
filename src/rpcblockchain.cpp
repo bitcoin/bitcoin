@@ -321,6 +321,11 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
         ret.push_back(Pair("bytes_serialized", (boost::int64_t)stats.nSerializedSize));
         ret.push_back(Pair("hash_serialized", stats.hashSerialized.GetHex()));
         ret.push_back(Pair("total_amount", ValueFromAmount(stats.nTotalAmount)));
+        statsClient.gauge("utxoset.tx", stats.nTransactions, 1.0f);
+        statsClient.gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
+        statsClient.gauge("utxoset.dbSizeBytes", stats.nSerializedSize, 1.0f);
+        statsClient.gauge("utxoset.blockHeight", stats.nHeight, 1.0f);
+        statsClient.gauge("utxoset.totalBTCAmount", (double)stats.nTotalAmount / (double)COIN, 1.0f);
     }
     return ret;
 }

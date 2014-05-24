@@ -155,11 +155,6 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
     stats.nHeight = mapBlockIndex.find(GetBestBlock())->second->nHeight;
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
-    statsClient.gauge("utxoset.tx", stats.nTransactions, 1.0f);
-    statsClient.gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
-    statsClient.gauge("utxoset.dbSizeBytes", stats.nSerializedSize, 1.0f);
-    statsClient.gauge("utxoset.blockHeight", stats.nHeight, 1.0f);
-    statsClient.gauge("utxoset.totalBTCAmount", stats.nTotalAmount, 1.0f);
     return true;
 }
 
