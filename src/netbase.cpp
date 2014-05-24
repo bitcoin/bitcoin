@@ -12,6 +12,9 @@
 
 #ifndef WIN32
 #include <fcntl.h>
+#ifdef _GNU_SOURCE
+#include <netdb.h>
+#endif
 #endif
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
@@ -73,7 +76,6 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
 
     struct addrinfo aiHint;
     memset(&aiHint, 0, sizeof(struct addrinfo));
-
     aiHint.ai_socktype = SOCK_STREAM;
     aiHint.ai_protocol = IPPROTO_TCP;
     aiHint.ai_family = AF_UNSPEC;
@@ -82,8 +84,32 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
 #else
     aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
 #endif
+
     struct addrinfo *aiRes = NULL;
+#ifdef _GNU_SOURCE
+    struct gaicb gcb, *query = &gcb;
+    memset(query, 0, sizeof(struct gaicb));
+    gcb.ar_name = pszName;
+    gcb.ar_request = &aiHint;
+    int nErr = getaddrinfo_a(GAI_NOWAIT, &query, 1, NULL);
+    if (nErr)
+        return false;
+    do {
+        // Should set the timeout limit to a resonable value to avoid
+        // generating unnecessary checking call during the polling loop,
+        // while it can still response to stop request quick enough.
+        // 2 seconds looks fine in our situation.
+        struct timespec ts = { 2, 0 };
+        gai_suspend(&query, 1, &ts);
+        boost::this_thread::interruption_point();
+
+        nErr = gai_error(query);
+        if (0 == nErr)
+            aiRes = query->ar_result;
+    } while (nErr == EAI_INPROGRESS);
+#else
     int nErr = getaddrinfo(pszName, NULL, &aiHint, &aiRes);
+#endif
     if (nErr)
         return false;
 
