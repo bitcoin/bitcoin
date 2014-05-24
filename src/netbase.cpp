@@ -3,6 +3,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#ifdef HAVE_CONFIG_H
+#include "bitcoin-config.h"
+#endif
+
 #include "netbase.h"
 
 #include "hash.h"
@@ -12,7 +16,7 @@
 
 #ifndef WIN32
 #include <fcntl.h>
-#ifdef _GNU_SOURCE
+#if defined(_GNU_SOURCE) && defined(HAVE_LIBANL)
 #include <netdb.h>
 #endif
 #endif
@@ -86,7 +90,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
 #endif
 
     struct addrinfo *aiRes = NULL;
-#ifdef _GNU_SOURCE
+#if defined(_GNU_SOURCE) && defined(HAVE_LIBANL)
     struct gaicb gcb, *query = &gcb;
     memset(query, 0, sizeof(struct gaicb));
     gcb.ar_name = pszName;
