@@ -13,16 +13,15 @@ reference_datetime: "2013-06-01 00:00:00"
 remotes: []
 files:
 - "qt-everywhere-opensource-src-5.2.1.tar.gz"
-- "osx-native-depends-r2.tar.gz"
-- "osx-depends-r2.tar.gz"
-- "MacOSX10.6.pkg"
+- "osx-native-depends-r3.tar.gz"
+- "osx-depends-r3.tar.gz"
+- "MacOSX10.7.sdk.tar.gz"
 
 script: |
 
   echo "84e924181d4ad6db00239d87250cc89868484a14841f77fb85ab1f1dbdcd7da1  qt-everywhere-opensource-src-5.2.1.tar.gz" | sha256sum -c
-  echo "a2ccf2299de4e0bb88bd17a3355f02b747575b97492c7c2f5b789a64ccc4cbd6  MacOSX10.6.pkg" | sha256sum -c
 
-  REVISION=r2
+  REVISION=r3
   export SOURCES_PATH=`pwd`
   export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export ZERO_AR_DATE=1
@@ -42,7 +41,7 @@ script: |
   PREFIX=`pwd`/prefix
   NATIVEPREFIX=`pwd`/native-prefix
   BUILD_BASE=`pwd`/build
-  SDK=`pwd`/SDKs/MacOSX10.6.sdk
+  SDK=`pwd`/SDKs/MacOSX10.7.sdk
   HOST=x86_64-apple-darwin11
   MIN_VERSION=10.6
 
@@ -68,18 +67,13 @@ script: |
   mkdir -p ${PREFIX}/lib
   mkdir -p ${BUILD_BASE}
 
-  mkdir -p ${SDK}
-  7z -bd -so -y e ${SOURCES_PATH}/MacOSX10.6.pkg Payload | gzip -d -c | cpio -i
-
-  tar xf /home/ubuntu/build/osx-native-depends-r2.tar.gz
-
-
   mkdir -p SDKs
-  7z -bd -so -y e ${SOURCES_PATH}/MacOSX10.6.pkg Payload | gzip -d -c | cpio -i
+  tar -C SDKs -xf ${SOURCES_PATH}/MacOSX10.7.sdk.tar.gz
 
-  tar xf /home/ubuntu/build/osx-native-depends-r2.tar.gz
+  tar xf /home/ubuntu/build/osx-native-depends-r3.tar.gz
+
   export PATH=`pwd`/native-prefix/bin:$PATH
-  tar xf /home/ubuntu/build/osx-depends-r2.tar.gz
+  tar xf /home/ubuntu/build/osx-depends-r3.tar.gz
 
   SOURCE_FILE=${SOURCES_PATH}/qt-everywhere-opensource-src-5.2.1.tar.gz
   BUILD_DIR=${BUILD_BASE}/qt-everywhere-opensource-src-5.2.1

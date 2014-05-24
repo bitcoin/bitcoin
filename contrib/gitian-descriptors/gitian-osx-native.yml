@@ -24,7 +24,7 @@ files:
 - "dyld-195.5.tar.gz"
 - "ld64-127.2.tar.gz"
 - "protobuf-2.5.0.tar.bz2"
-- "MacOSX10.6.pkg"
+- "MacOSX10.7.sdk.tar.gz"
 - "cdrkit-1.1.11.tar.gz"
 - "libdmg-hfsplus-v0.1.tar.gz"
 - "clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz"
@@ -38,14 +38,13 @@ script: |
   echo "2cf0484c87cf79b606b351a7055a247dae84093ae92c747a74e0cde2c8c8f83c  dyld-195.5.tar.gz" | sha256sum -c
   echo "97b75547b2bd761306ab3e15ae297f01e7ab9760b922bc657f4ef72e4e052142  ld64-127.2.tar.gz" | sha256sum -c
   echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
-  echo "a2ccf2299de4e0bb88bd17a3355f02b747575b97492c7c2f5b789a64ccc4cbd6  MacOSX10.6.pkg" | sha256sum -c
   echo "d1c030756ecc182defee9fe885638c1785d35a2c2a297b4604c0e0dcc78e47da  cdrkit-1.1.11.tar.gz" | sha256sum -c
   echo "6569a02eb31c2827080d7d59001869ea14484c281efab0ae7f2b86af5c3120b3  libdmg-hfsplus-v0.1.tar.gz" | sha256sum -c
   echo "b9d57a88f9514fa1f327a1a703756d0c1c960f4c58494a5bd80313245d13ffff  clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz" | sha256sum -c
   echo "cc12bdbd7a09f71cb2a6a3e6ec3e0abe885ca7111c2b47857f5095e5980caf4f  cdrkit-deterministic.patch" | sha256sum -c
 
 
-  REVISION=r2
+  REVISION=r3
   export REFERENCE_DATETIME
   export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export FAKETIME=$REFERENCE_DATETIME
@@ -78,7 +77,7 @@ script: |
 
   NATIVEPREFIX=`pwd`/native-prefix
   BUILD_BASE=`pwd`/build
-  SDK=`pwd`/SDKs/MacOSX10.6.sdk
+  SDK=`pwd`/SDKs/MacOSX10.7.sdk
   HOST=x86_64-apple-darwin11
   MIN_VERSION=10.6
 
@@ -91,8 +90,8 @@ script: |
   mkdir -p ${NATIVEPREFIX}/bin
   mkdir -p ${NATIVEPREFIX}/lib
 
-  mkdir -p ${SDK}
-  7z -bd -so -y e ${SOURCES_PATH}/MacOSX10.6.pkg Payload | gzip -d -c | cpio -i
+  mkdir -p SDKs
+  tar -C SDKs -xf ${SOURCES_PATH}/MacOSX10.7.sdk.tar.gz
 
   #  Clang
   SOURCE_FILE=${SOURCES_PATH}/clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz
@@ -112,7 +111,7 @@ script: |
   tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
   mkdir -p ${BUILD_DIR}/sdks
   pushd ${BUILD_DIR}/sdks;
-  ln -sf ${SDK} MacOSX10.6.sdk
+  ln -sf ${SDK} MacOSX10.7.sdk
   ln -sf ${SOURCES_PATH}/cctools-809.tar.gz ${BUILD_DIR}/cctools2odcctools/cctools-809.tar.gz
   ln -sf ${SOURCES_PATH}/ld64-127.2.tar.gz ${BUILD_DIR}/cctools2odcctools/ld64-127.2.tar.gz
   ln -sf ${SOURCES_PATH}/dyld-195.5.tar.gz ${BUILD_DIR}/cctools2odcctools/dyld-195.5.tar.gz
@@ -127,7 +126,7 @@ script: |
   sed -i 's/\# Dynamically linked LTO/\t ;\&\n\t linux*)\n# Dynamically linked LTO/' ${BUILD_DIR}/cctools2odcctools/files/configure.ac
 
   cd ${BUILD_DIR}/cctools2odcctools
-  ./extract.sh --osxver 10.6
+  ./extract.sh --osxver 10.7
   cd odcctools-809
   ./configure --prefix=${NATIVEPREFIX} --target=${HOST} CFLAGS="${CFLAGS} -I${NATIVEPREFIX}/include -D__DARWIN_UNIX03 -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS" LDFLAGS="${LDFLAGS} -Wl,-rpath=\\\$\$ORIGIN/../lib" --with-sysroot=${SDK}
 
