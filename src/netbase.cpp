@@ -16,7 +16,7 @@
 
 #ifndef WIN32
 #include <fcntl.h>
-#if defined(_GNU_SOURCE) && defined(HAVE_LIBANL)
+#if defined(_GNU_SOURCE) && defined(HAVE_GETADDRINFO_A)
 #include <netdb.h>
 #endif
 #endif
@@ -90,7 +90,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
 #endif
 
     struct addrinfo *aiRes = NULL;
-#if defined(_GNU_SOURCE) && defined(HAVE_LIBANL)
+#if defined(_GNU_SOURCE) && defined(HAVE_GETADDRINFO_A)
     struct gaicb gcb, *query = &gcb;
     memset(query, 0, sizeof(struct gaicb));
     gcb.ar_name = pszName;
