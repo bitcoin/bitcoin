@@ -1518,7 +1518,7 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
     // add outputs
     ret = inputs.SetCoins(txhash, CCoins(tx, nHeight));
     assert(ret);
-    statsClient.gauge("transactions.txInUTXOSet", inputs.GetCacheSize(), 0.1f);
+    statsClient.gauge("transactions.txCacheSize", inputs.GetCacheSize(), 0.1f);
 }
 
 bool CScriptCheck::operator()() const {
@@ -1705,7 +1705,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
-    statsClient.gauge("transactions.txInUTXOSet", view.GetCacheSize(), 1.0f);
+    statsClient.gauge("transactions.txCacheSize", view.GetCacheSize(), 1.0f);
 
     if (pfClean) {
         *pfClean = fClean;
@@ -1901,7 +1901,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
     bool ret;
     ret = view.SetBestBlock(pindex->GetBlockHash());
     assert(ret);
-    statsClient.gauge("transactions.txInUTXOSet", view.GetCacheSize(), 1.0f);
+    statsClient.gauge("transactions.txCacheSize", view.GetCacheSize(), 1.0f);
 
     // Watch for transactions paying to me
     for (unsigned int i = 0; i < block.vtx.size(); i++)
