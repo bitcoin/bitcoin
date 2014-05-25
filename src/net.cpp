@@ -1196,7 +1196,6 @@ void ThreadDNSAddressSeed()
         } else {
             vector<CNetAddr> vIPs;
             vector<CAddress> vAdd;
-            boost::this_thread::interruption_point();
             if (LookupHost(seed.host.c_str(), vIPs))
             {
                 BOOST_FOREACH(CNetAddr& ip, vIPs)
@@ -1208,7 +1207,6 @@ void ThreadDNSAddressSeed()
                     found++;
                 }
             }
-            boost::this_thread::interruption_point();
             addrman.Add(vAdd, CNetAddr(seed.name, true));
         }
     }
