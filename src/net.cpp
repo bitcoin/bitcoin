@@ -1898,7 +1898,7 @@ void CNode::RecordBytesRecv(uint64_t bytes)
 {
     LOCK(cs_totalBytesRecv);
     nTotalBytesRecv += bytes;
-    statsClient.count("bandwidth.bytesReceived", bytes, 0.01f);
+    statsClient.count("bandwidth.bytesReceived", bytes, 0.1f);
     statsClient.gauge("bandwidth.totalBytesReceived", nTotalBytesRecv, 0.01f);
 }
 
