@@ -5,6 +5,8 @@
 #ifndef COINCONTROLDIALOG_H
 #define COINCONTROLDIALOG_H
 
+#include "money.h"
+
 #include <QAbstractButton>
 #include <QAction>
 #include <QDialog>
@@ -34,7 +36,7 @@ public:
     static void updateLabels(WalletModel*, QDialog*);
     static QString getPriorityLabel(double);
 
-    static QList<qint64> payAmounts;
+    static QList<CMoney> payAmounts;
     static CCoinControl *coinControl;
 
 private:

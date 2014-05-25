@@ -305,10 +305,43 @@ int LogPrintStr(const std::string &str)
     return ret;
 }
 
-string FormatMoney(int64_t n, bool fPlus)
+
+/* EncodeDouble() transforms a 64-bit IEEE floating-point value into an
+ * equal-width integer by means of a 1:1 function which preserves sort
+ * ordering, at least for non-NaN values. For two floating point values
+ * a and b, if a < b, then EncodeDouble(a) < EncodeDouble(b). This is
+ * useful for circumstances such as the coin-control dialog where it
+ * makes sense to maintain an hidden integer-valued sort field for the
+ * GUI display (see qt/coincontroldialog.cpp).
+ *
+ * For positive values the floating point format is already defined to
+ * be sortable based on encoded representation. Since the result is
+ * unsigned, the sign bit is flipped so that negative values sort
+ * before positive values. The non-sign bits of negative values also
+ * need to be flipped in order to ensure proper ordering of that
+ * sequence.
+ */
+uint64_t EncodeDouble(double d)
+{
+    const uint64_t wide0 = 0;
+    const uint64_t wide1 = 1;
+    uint64_t ieee = *(uint64_t*)&d;
+    return (((wide1<<63) & ieee)? wide0: ((~wide0) >> 1)) ^ ~ieee;
+}
+
+double DecodeDouble(uint64_t lex)
+{
+    const uint64_t wide0 = 0;
+    const uint64_t wide1 = 1;
+    uint64_t ieee = (((wide1<<63) & lex)? ((~wide0) >> 1): wide0) ^ ~lex;
+    return *(double*)&ieee;
+}
+
+string FormatMoney(const CMoney& nIn, bool fPlus)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
+    int64_t n = nIn.ToInt64();
     int64_t n_abs = (n > 0 ? n : -n);
     int64_t quotient = n_abs/COIN;
     int64_t remainder = n_abs%COIN;
@@ -329,12 +362,12 @@ string FormatMoney(int64_t n, bool fPlus)
 }
 
 
-bool ParseMoney(const string& str, int64_t& nRet)
+bool ParseMoney(const string& str, CMoney& nRet)
 {
     return ParseMoney(str.c_str(), nRet);
 }
 
-bool ParseMoney(const char* pszIn, int64_t& nRet)
+bool ParseMoney(const char* pszIn, CMoney& nRet)
 {
     string strWhole;
     int64_t nUnits = 0;
@@ -368,7 +401,7 @@ bool ParseMoney(const char* pszIn, int64_t& nRet)
     if (nUnits < 0 || nUnits > COIN)
         return false;
     int64_t nWhole = atoi64(strWhole);
-    int64_t nValue = nWhole*COIN + nUnits;
+    CMoney nValue = nWhole*COIN + nUnits;
 
     nRet = nValue;
     return true;

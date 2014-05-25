@@ -21,21 +21,21 @@ class CTxMemPoolEntry
 {
 private:
     CTransaction tx;
-    int64_t nFee; // Cached to avoid expensive parent-transaction lookups
+    CMoney nFee; // Cached to avoid expensive parent-transaction lookups
     size_t nTxSize; // ... and avoid recomputing tx size
     int64_t nTime; // Local time when entering the mempool
     double dPriority; // Priority when entering the mempool
     unsigned int nHeight; // Chain height when entering the mempool
 
 public:
-    CTxMemPoolEntry(const CTransaction& _tx, int64_t _nFee,
+    CTxMemPoolEntry(const CTransaction& _tx, const CMoney& _nFee,
                     int64_t _nTime, double _dPriority, unsigned int _nHeight);
     CTxMemPoolEntry();
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
     const CTransaction& GetTx() const { return this->tx; }
     double GetPriority(unsigned int currentHeight) const;
-    int64_t GetFee() const { return nFee; }
+    CMoney GetFee() const { return nFee; }
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return nHeight; }

@@ -8,6 +8,7 @@
 
 #include "uint256.h"
 #include "rpcprotocol.h"
+#include "money.h"
 
 #include <list>
 #include <map>
@@ -103,8 +104,8 @@ extern void InitRPCMining();
 extern void ShutdownRPCMining();
 
 extern int64_t nWalletUnlockTime;
-extern int64_t AmountFromValue(const json_spirit::Value& value);
-extern json_spirit::Value ValueFromAmount(int64_t amount);
+extern CMoney AmountFromValue(const json_spirit::Value& value);
+extern json_spirit::Value ValueFromAmount(const CMoney& amount, RoundingMode mode=ROUND_TIES_TO_EVEN);
 extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
 extern std::string HexBits(unsigned int nBits);
 extern std::string HelpRequiringPassphrase();

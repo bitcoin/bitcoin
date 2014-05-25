@@ -15,8 +15,8 @@
 class CTransaction;
 
 /** No amount larger than this (in satoshi) is valid */
-static const int64_t MAX_MONEY = 21000000 * COIN;
-inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+static const CMoney MAX_MONEY = 21000000 * COIN;
+inline bool MoneyRange(const CMoney& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -119,7 +119,7 @@ public:
 class CTxOut
 {
 public:
-    int64_t nValue;
+    CMoney nValue;
     CScript scriptPubKey;
 
     CTxOut()
@@ -127,11 +127,17 @@ public:
         SetNull();
     }
 
-    CTxOut(int64_t nValueIn, CScript scriptPubKeyIn);
+    CTxOut(const CMoney& nValueIn, CScript scriptPubKeyIn);
 
     IMPLEMENT_SERIALIZE
     (
-        READWRITE(nValue);
+        CTxOut& me = *const_cast<CTxOut*>(this);
+        int64_t nValueI64;
+        if (fWrite)
+            nValueI64 = nValue.ToInt64(ROUND_SIGNAL);
+        READWRITE(nValueI64);
+        if (fRead)
+            me.nValue = nValueI64;
         READWRITE(scriptPubKey);
     )
 
@@ -148,7 +154,7 @@ public:
 
     uint256 GetHash() const;
 
-    bool IsDust(int64_t nMinRelayTxFee) const
+    bool IsDust(const CMoney& nMinRelayTxFee) const
     {
         // "Dust" is defined in terms of CTransaction::nMinRelayTxFee,
         // which has units satoshis-per-kilobyte.
@@ -158,7 +164,7 @@ public:
         // need a CTxIn of at least 148 bytes to spend,
         // so dust is a txout less than 546 satoshis 
         // with default nMinRelayTxFee.
-        return ((nValue*1000)/(3*((int)GetSerializeSize(SER_DISK,0)+148)) < nMinRelayTxFee);
+        return nValue.ToDouble() * (1000.0/3.0) / (GetSerializeSize(SER_DISK,0)+148) < nMinRelayTxFee.ToDouble();
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -183,8 +189,8 @@ public:
 class CTransaction
 {
 public:
-    static int64_t nMinTxFee;
-    static int64_t nMinRelayTxFee;
+    static CMoney nMinTxFee;
+    static CMoney nMinRelayTxFee;
     static const int CURRENT_VERSION=1;
     int nVersion;
     std::vector<CTxIn> vin;
@@ -222,7 +228,7 @@ public:
     bool IsNewerThan(const CTransaction& old) const;
 
     // Return sum of txouts.
-    int64_t GetValueOut() const;
+    CMoney GetValueOut() const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 
@@ -259,20 +265,11 @@ private:
     CTxOut &txout;
 
 public:
-    static uint64_t CompressAmount(uint64_t nAmount);
-    static uint64_t DecompressAmount(uint64_t nAmount);
-
     CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
 
     IMPLEMENT_SERIALIZE(({
-        if (!fRead) {
-            uint64_t nVal = CompressAmount(txout.nValue);
-            READWRITE(VARINT(nVal));
-        } else {
-            uint64_t nVal = 0;
-            READWRITE(VARINT(nVal));
-            txout.nValue = DecompressAmount(nVal);
-        }
+        CCompressedMoney cvalue(REF(txout.nValue));
+        READWRITE(cvalue);
         CScriptCompressor cscript(REF(txout.scriptPubKey));
         READWRITE(cscript);
     });)

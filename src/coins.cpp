@@ -146,12 +146,12 @@ const CTxOut &CCoinsViewCache::GetOutputFor(const CTxIn& input)
     return coins.vout[input.prevout.n];
 }
 
-int64_t CCoinsViewCache::GetValueIn(const CTransaction& tx)
+CMoney CCoinsViewCache::GetValueIn(const CTransaction& tx)
 {
     if (tx.IsCoinBase())
         return 0;
 
-    int64_t nResult = 0;
+    CMoney nResult = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
         nResult += GetOutputFor(tx.vin[i]).nValue;
 
@@ -189,7 +189,7 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight)
         const CCoins &coins = GetCoins(txin.prevout.hash);
         if (!coins.IsAvailable(txin.prevout.n)) continue;
         if (coins.nHeight < nHeight) {
-            dResult += coins.vout[txin.prevout.n].nValue * (nHeight-coins.nHeight);
+            dResult += coins.vout[txin.prevout.n].nValue.ToDouble() * (nHeight-coins.nHeight);
         }
     }
     return tx.ComputePriority(dResult);

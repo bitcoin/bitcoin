@@ -5,6 +5,8 @@
 #ifndef OPTIONSMODEL_H
 #define OPTIONSMODEL_H
 
+#include "money.h"
+
 #include <QAbstractListModel>
 
 QT_BEGIN_NAMESPACE
@@ -33,7 +35,7 @@ public:
         ProxyIP,                // QString
         ProxyPort,              // int
         ProxySocksVersion,      // int
-        Fee,                    // qint64
+        Fee,                    // CMoney serialized as QString
         DisplayUnit,            // BitcoinUnits::Unit
         DisplayAddresses,       // bool
         ThirdPartyTxUrls,       // QString
@@ -83,7 +85,7 @@ private:
 
 signals:
     void displayUnitChanged(int unit);
-    void transactionFeeChanged(qint64);
+    void transactionFeeChanged(const CMoney&);
     void coinControlFeaturesChanged(bool);
 };
 

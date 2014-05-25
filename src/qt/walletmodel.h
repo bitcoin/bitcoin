@@ -37,7 +37,7 @@ class SendCoinsRecipient
 {
 public:
     explicit SendCoinsRecipient() : amount(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
-    explicit SendCoinsRecipient(const QString &addr, const QString &label, quint64 amount, const QString &message):
+    explicit SendCoinsRecipient(const QString &addr, const QString &label, const CMoney& amount, const QString &message):
         address(addr), label(label), amount(amount), message(message), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
     // If from an insecure payment request, this is used for storing
@@ -47,7 +47,7 @@ public:
     // Todo: This is a hack, should be replaced with a cleaner solution!
     QString address;
     QString label;
-    qint64 amount;
+    CMoney amount;
     // If from a payment request, this is used for storing the memo
     QString message;
 
@@ -75,7 +75,12 @@ public:
         nVersion = pthis->nVersion;
         READWRITE(sAddress);
         READWRITE(sLabel);
-        READWRITE(amount);
+        int64_t amountI64;
+        if (fWrite)
+            amountI64 = amount.ToInt64(ROUND_SIGNAL);
+        READWRITE(amountI64);
+        if (fRead)
+            pthis->amount = amountI64;
         READWRITE(sMessage);
         READWRITE(sPaymentRequest);
         READWRITE(sAuthenticatedMerchant);
@@ -125,9 +130,9 @@ public:
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
-    qint64 getBalance(const CCoinControl *coinControl = NULL) const;
-    qint64 getUnconfirmedBalance() const;
-    qint64 getImmatureBalance() const;
+    CMoney getBalance(const CCoinControl *coinControl = NULL) const;
+    CMoney getUnconfirmedBalance() const;
+    CMoney getImmatureBalance() const;
     int getNumTransactions() const;
     EncryptionStatus getEncryptionStatus() const;
 
@@ -203,9 +208,9 @@ private:
     RecentRequestsTableModel *recentRequestsTableModel;
 
     // Cache some values to be able to detect changes
-    qint64 cachedBalance;
-    qint64 cachedUnconfirmedBalance;
-    qint64 cachedImmatureBalance;
+    CMoney cachedBalance;
+    CMoney cachedUnconfirmedBalance;
+    CMoney cachedImmatureBalance;
     qint64 cachedNumTransactions;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
@@ -218,7 +223,7 @@ private:
 
 signals:
     // Signal that balance in wallet changed
-    void balanceChanged(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
+    void balanceChanged(const CMoney& balance, const CMoney& unconfirmedBalance, const CMoney& immatureBalance);
 
     // Number of transactions in wallet changed
     void numTransactionsChanged(int count);
