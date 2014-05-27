@@ -7,6 +7,8 @@
 #include "bitcoin-config.h"
 #endif
 
+#include <arpa/inet.h>
+
 #include "netbase.h"
 
 #include "hash.h"
