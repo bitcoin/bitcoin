@@ -222,7 +222,7 @@ public:
             std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
             if(mi != wallet->mapWallet.end())
             {
-                return TransactionDesc::toHTML(wallet, mi->second, rec->idx, unit);
+                return TransactionDesc::toHTML(wallet, mi->second, rec, unit);
             }
         }
         return QString("");
