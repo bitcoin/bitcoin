@@ -78,6 +78,20 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
         }
     }
 
+    {
+        struct in_addr ipv4_addr;
+        if (inet_pton(AF_INET, pszName, &ipv4_addr) > 0) {
+            vIP.push_back(CNetAddr(ipv4_addr));
+            return true;
+        }
+
+        struct in6_addr ipv6_addr;
+        if (inet_pton(AF_INET6, pszName, &ipv6_addr) > 0) {
+           vIP.push_back(CNetAddr(ipv6_addr));
+           return true;
+        }
+    }
+
     struct addrinfo aiHint;
     memset(&aiHint, 0, sizeof(struct addrinfo));
     aiHint.ai_socktype = SOCK_STREAM;
@@ -98,6 +112,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     int nErr = getaddrinfo_a(GAI_NOWAIT, &query, 1, NULL);
     if (nErr)
         return false;
+
     do {
         // Should set the timeout limit to a resonable value to avoid
         // generating unnecessary checking call during the polling loop,
