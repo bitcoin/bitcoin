@@ -19,6 +19,7 @@ namespace Ui {
 }
 class WalletModel;
 class CCoinControl;
+class CTxMemPool;
 
 class CoinControlDialog : public QDialog
 {
@@ -32,7 +33,7 @@ public:
 
     // static because also called from sendcoinsdialog
     static void updateLabels(WalletModel*, QDialog*);
-    static QString getPriorityLabel(double);
+    static QString getPriorityLabel(const CTxMemPool& pool, double);
 
     static QList<qint64> payAmounts;
     static CCoinControl *coinControl;
