@@ -7,7 +7,13 @@
 #include "bitcoin-config.h"
 #endif
 
+#ifdef HAVE_INET_PTON
 #include <arpa/inet.h>
+#endif
+
+#ifdef HAVE_GETADDRINFO_A
+#include <netdb.h>
+#endif
 
 #include "netbase.h"
 
@@ -18,9 +24,6 @@
 
 #ifndef WIN32
 #include <fcntl.h>
-#ifdef HAVE_GETADDRINFO_A
-#include <netdb.h>
-#endif
 #endif
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
@@ -80,19 +83,25 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
         }
     }
 
-    {
-        struct in_addr ipv4_addr;
-        if (inet_pton(AF_INET, pszName, &ipv4_addr) > 0) {
-            vIP.push_back(CNetAddr(ipv4_addr));
-            return true;
-        }
-
-        struct in6_addr ipv6_addr;
-        if (inet_pton(AF_INET6, pszName, &ipv6_addr) > 0) {
-           vIP.push_back(CNetAddr(ipv6_addr));
-           return true;
-        }
+    struct in_addr ipv4_addr;
+#ifdef HAVE_INET_PTON
+    if (inet_pton(AF_INET, pszName, &ipv4_addr) > 0) {
+        vIP.push_back(CNetAddr(ipv4_addr));
+        return true;
     }
+
+    struct in6_addr ipv6_addr;
+    if (inet_pton(AF_INET6, pszName, &ipv6_addr) > 0) {
+       vIP.push_back(CNetAddr(ipv6_addr));
+       return true;
+    }
+#else
+    ipv4_addr.s_addr = inet_addr(pszName);
+    if (ipv4_addr.s_addr != INADDR_NONE) {
+        vIP.push_back(CNetAddr(ipv4_addr));
+        return true;
+    }
+#endif
 
     struct addrinfo aiHint;
     memset(&aiHint, 0, sizeof(struct addrinfo));
