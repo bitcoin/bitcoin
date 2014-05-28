@@ -464,6 +464,10 @@ int main(int argc, char *argv[])
     /// 1. Parse command-line options. These take precedence over anything else.
     // Command-line options take precedence:
     ParseParameters(argc, argv);
+    // For the GUI, default to creating the wallet if it doesn't exist, as anything else
+    // is going to confuse users. A menu option to create the wallet would be nice to have,
+    // but this will require being able to switch disable-wallet mode at runtime.
+    SoftSetBoolArg("-createwallet", true);
 
     // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
 
