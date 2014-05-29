@@ -243,6 +243,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="allowIncoming">
+         <property name="toolTip">
+          <string>Accept connections from outside</string>
+         </property>
+         <property name="text">
+          <string>Allow incoming connections</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="connectSocks">
          <property name="toolTip">
           <string>Connect to the Bitcoin network through a SOCKS proxy.</string>
