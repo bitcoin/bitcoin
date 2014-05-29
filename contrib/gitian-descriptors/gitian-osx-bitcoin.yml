@@ -17,33 +17,28 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "osx-native-depends-r2.tar.gz"
-- "osx-depends-r2.tar.gz"
-- "osx-depends-qt-5.2.1-r2.tar.gz"
-- "MacOSX10.6.pkg"
+- "osx-native-depends-r3.tar.gz"
+- "osx-depends-r3.tar.gz"
+- "osx-depends-qt-5.2.1-r3.tar.gz"
+- "MacOSX10.7.sdk.tar.gz"
 
 script: |
 
-  echo "a2ccf2299de4e0bb88bd17a3355f02b747575b97492c7c2f5b789a64ccc4cbd6  MacOSX10.6.pkg" | sha256sum -c
-
   HOST=x86_64-apple-darwin11
   PREFIX=`pwd`/osx-cross-depends/prefix
-  SDK=`pwd`/osx-cross-depends/SDKs/MacOSX10.6.sdk
+  SDK=`pwd`/osx-cross-depends/SDKs/MacOSX10.7.sdk
   NATIVEPREFIX=`pwd`/osx-cross-depends/native-prefix
   export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
 
   export SOURCES_PATH=`pwd`
 
-  mkdir osx-cross-depends
+  mkdir -p osx-cross-depends/SDKs
 
-  cd osx-cross-depends
-  mkdir -p SDKs
-  7z -bd -so -y e ${SOURCES_PATH}/MacOSX10.6.pkg Payload | gzip -d -c | cpio -i
-  cd ..
+  tar -C osx-cross-depends/SDKs -xf ${SOURCES_PATH}/MacOSX10.7.sdk.tar.gz
 
-  tar -C osx-cross-depends -xf osx-native-depends-r2.tar.gz
-  tar -C osx-cross-depends -xf osx-depends-r2.tar.gz
-  tar -C osx-cross-depends -xf osx-depends-qt-5.2.1-r2.tar.gz
+  tar -C osx-cross-depends -xf osx-native-depends-r3.tar.gz
+  tar -C osx-cross-depends -xf osx-depends-r3.tar.gz
+  tar -C osx-cross-depends -xf osx-depends-qt-5.2.1-r3.tar.gz
   export PATH=`pwd`/osx-cross-depends/native-prefix/bin:$PATH
 
   cd bitcoin
