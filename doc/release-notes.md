@@ -121,6 +121,7 @@ GUI:
 - Catch Windows shutdown events while client is running
 - Optionally add third party links to transaction context menu
 - Check for !pixmap() before trying to export QR code (avoids crashes when no QR code could be generated)
+- Fix "Start bitcoin on system login"
 
 Miscellaneous:
 
