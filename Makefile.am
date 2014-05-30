@@ -85,14 +85,30 @@ if BUILD_DARWIN
 $(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING)
 	$(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr $(OSX_QT_TRANSLATIONS) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -fancy $(OSX_FANCY_PLIST) -verbose 2
 
+deploydir: $(OSX_DMG)
 else
-$(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING)
-	INSTALLNAMETOOL=$(INSTALLNAMETOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr $(OSX_QT_TRANSLATIONS) -translations-dir=$(QT_TRANSLATION_DIR) -verbose 2
-	$(MKDIR_P) dist/.background
-	$(INSTALL) contrib/macdeploy/background.png dist/.background
-	$(INSTALL) contrib/macdeploy/DS_Store dist/.DS_Store
-	cd dist; $(LN_S) /Applications Applications
-	$(GENISOIMAGE) -no-cache-inodes -l -probe -V "Bitcoin-Qt" -no-pad -r -apple -o $@ dist
+APP_DIST_DIR=$(top_builddir)/dist
+APP_DIST_EXTRAS=$(APP_DIST_DIR)/.background/background.png $(APP_DIST_DIR)/.DS_Store $(APP_DIST_DIR)/Applications
+
+$(APP_DIST_DIR)/Applications:
+	@rm -f $@
+	@cd $(@D); $(LN_S) /Applications $(@F)
+
+$(APP_DIST_EXTRAS): $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Bitcoin-Qt
+
+$(OSX_DMG): $(APP_DIST_EXTRAS)
+	$(GENISOIMAGE) -no-cache-inodes -D -l -probe -V "Bitcoin-Qt" -no-pad -r -apple -o $@ dist
+
+$(APP_DIST_DIR)/.background/background.png:
+	$(MKDIR_P) $(@D)
+	$(INSTALL) $(top_srcdir)/contrib/macdeploy/background.png $@
+$(APP_DIST_DIR)/.DS_Store:
+	$(INSTALL) $(top_srcdir)/contrib/macdeploy/DS_Store $@
+
+$(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Bitcoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
+	INSTALLNAMETOOL=$(INSTALLNAMETOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -translations-dir=$(QT_TRANSLATION_DIR) -add-qt-tr $(OSX_QT_TRANSLATIONS) -verbose 2
+
+deploydir: $(APP_DIST_EXTRAS)
 endif
 
 if TARGET_DARWIN
