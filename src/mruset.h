@@ -32,6 +32,7 @@ public:
     bool empty() const { return set.empty(); }
     iterator find(const key_type& k) const { return set.find(k); }
     size_type count(const key_type& k) const { return set.count(k); }
+    void clear() { set.clear(); queue.clear(); }
     bool inline friend operator==(const mruset<T>& a, const mruset<T>& b) { return a.set == b.set; }
     bool inline friend operator==(const mruset<T>& a, const std::set<T>& b) { return a.set == b; }
     bool inline friend operator<(const mruset<T>& a, const mruset<T>& b) { return a.set < b.set; }
