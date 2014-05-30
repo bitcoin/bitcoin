@@ -38,7 +38,10 @@ class FrameworkInfo(object):
         self.sourceFilePath = ""
         self.destinationDirectory = ""
         self.sourceResourcesDirectory = ""
+        self.sourceVersionContentsDirectory = ""
+        self.sourceContentsDirectory = ""
         self.destinationResourcesDirectory = ""
+        self.destinationVersionContentsDirectory = ""
     
     def __eq__(self, other):
         if self.__class__ == other.__class__:
@@ -142,7 +145,11 @@ class FrameworkInfo(object):
             info.destinationDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, info.binaryDirectory)
             
             info.sourceResourcesDirectory = os.path.join(info.frameworkPath, "Resources")
+            info.sourceContentsDirectory = os.path.join(info.frameworkPath, "Contents")
+            info.sourceVersionContentsDirectory = os.path.join(info.frameworkPath, "Versions", info.version, "Contents")
             info.destinationResourcesDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Resources")
+            info.destinationContentsDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Contents")
+            info.destinationVersionContentsDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Versions", info.version, "Contents")
         
         return info
 
@@ -275,6 +282,13 @@ def copyFramework(framework, path, verbose):
       os.chmod(toPath, permissions.st_mode | stat.S_IWRITE)
 
     if not framework.isDylib(): # Copy resources for real frameworks
+
+        linkfrom = os.path.join(path, "Contents/Frameworks/", framework.frameworkName, framework.binaryName)
+        linkto = os.path.join(framework.binaryPath)
+        if not os.path.exists(linkfrom):
+            os.symlink(linkto, linkfrom)
+            if verbose >= 2:
+                print "Linked:", linkfrom, "->", linkto
         fromResourcesDir = framework.sourceResourcesDirectory
         if os.path.exists(fromResourcesDir):
             toResourcesDir = os.path.join(path, framework.destinationResourcesDirectory)
@@ -282,6 +296,21 @@ def copyFramework(framework, path, verbose):
             if verbose >= 3:
                 print "Copied resources:", fromResourcesDir
                 print " to:", toResourcesDir
+        fromContentsDir = framework.sourceVersionContentsDirectory
+        if not os.path.exists(fromContentsDir):
+            fromContentsDir = framework.sourceContentsDirectory
+        if os.path.exists(fromContentsDir):
+            toContentsDir = os.path.join(path, framework.destinationVersionContentsDirectory)
+            shutil.copytree(fromContentsDir, toContentsDir)
+            contentslinkfrom = os.path.join(path, framework.destinationContentsDirectory)
+            if not os.path.exists(contentslinkfrom):
+                contentslinkto = os.path.join("Versions/", framework.version, "Contents")
+                os.symlink(contentslinkto, contentslinkfrom)
+                if verbose >= 3:
+                    print "Linked:", contentslinkfrom, "->", contentslinkto
+            if verbose >= 3:
+                print "Copied Contents:", fromContentsDir
+                print " to:", toContentsDir
     elif framework.frameworkName.startswith("libQtGui"): # Copy qt_menu.nib (applies to non-framework layout)
         qtMenuNibSourcePath = os.path.join(framework.frameworkDirectory, "Resources", "qt_menu.nib")
         qtMenuNibDestinationPath = os.path.join(path, "Contents", "Resources", "qt_menu.nib")
