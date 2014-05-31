@@ -17,6 +17,7 @@
 #include <vector>
 
 extern int nConnectTimeout;
+extern bool fNameLookup;
 
 #ifdef WIN32
 // In MSVC, this is defined as a macro, undefine it to prevent a compile and link error
@@ -32,9 +33,6 @@ enum Network
 
     NET_MAX,
 };
-
-extern int nConnectTimeout;
-extern bool fNameLookup;
 
 /** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 class CNetAddr
