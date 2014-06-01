@@ -151,7 +151,7 @@ public:
                     parent->endRemoveRows();
                 }
                 else if(inWallet && inModel)
-                {
+                {               
                     // Updated -- nothing to do, status update will take care of this
                 }
             }
@@ -214,24 +214,7 @@ MintingTableModel::~MintingTableModel()
 
 void MintingTableModel::update()
 {
-    QList<uint256> updated;
-
-    {
-        TRY_LOCK(wallet->cs_wallet, lockWallet);
-        if (lockWallet && !wallet->vWalletUpdated.empty())
-        {
-            BOOST_FOREACH(uint256 hash, wallet->vWalletUpdated)
-            {
-                updated.append(hash);
-            }
-            wallet->vWalletUpdated.clear();
-        }
-    }
-
-    if(!updated.empty())
-    {
-        priv->updateWallet(updated);
-    }
+    this->priv->refreshWallet();
 }
 
 int MintingTableModel::rowCount(const QModelIndex &parent) const
