@@ -599,7 +599,7 @@ Adresse: %4
     </message>
     <message>
         <source>Low Output:</source>
-        <translation>Lav Utdata:</translation>
+        <translation>Svake Utdata:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -1744,7 +1744,7 @@ Adresse: %4
     </message>
     <message>
         <source>Low Output:</source>
-        <translation>Svak Utdata:</translation>
+        <translation>Svake Utdata:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -2730,7 +2730,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
     </message>
     <message>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Feil: Denne transaksjonen trenger en gebyr på minst %s på grunn av beløpet, kompleksiteten eller bruk av allerede mottatte penger!</translation>
+        <translation>Feil: Denne transaksjonen trenger et gebyr på minst %s på grunn av beløpet, kompleksiteten eller bruk av allerede mottatte penger!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>

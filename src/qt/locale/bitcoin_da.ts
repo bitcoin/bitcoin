@@ -3,11 +3,11 @@
     <name>AboutDialog</name>
     <message>
         <source>About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Om Bitcoin Core</translation>
     </message>
     <message>
         <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</translation>
     </message>
     <message>
         <source>
@@ -29,11 +29,11 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Udviklerne af Bitcoin Core</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1-bit)</translation>
     </message>
 </context>
 <context>
@@ -48,7 +48,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Ny</translation>
+        <translation>Ny</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -56,11 +56,11 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Kopiér</translation>
+        <translation>Kopiér</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>Luk</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -84,15 +84,15 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Vælg adresse at sende bitcoins til</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Vælg adresse at modtage bitcoins med</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>Vælg</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -108,7 +108,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Dette er dine Bitcoin-adresser til at modtage betalinger med. Det anbefales are bruge en ny modtagelsesadresse for hver transaktion.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -120,7 +120,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Eksportér adresseliste</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -128,11 +128,11 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Eksport mislykkedes</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>En fejl opstod under gemning af adresseliste til %1.</translation>
     </message>
 </context>
 <context>
@@ -273,7 +273,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>Knude</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
@@ -325,15 +325,15 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>&amp;Afsendelsesadresser...</translation>
+        <translation>Afsendelsesadresser …</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Modtagelsesadresser...</translation>
+        <translation>Modtagelsesadresser …</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>Åbn URI …</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -433,31 +433,31 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished"/>
+        <translation>Forespørg betalinger (genererer QR-koder og &quot;bitcoin:&quot;-URI&apos;er)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Om Bitcoin Core</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Vis listen over brugte afsendelsesadresser og -mærkater</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Vis listen over brugte modtagelsesadresser og -mærkater</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>Åbn en &quot;bitcoin:&quot;-URI eller betalingsforespørgsel</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Tilvalg for kommandolinje</translation>
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Vis Bitcoin Core hjælpebesked for at få en liste over mulige tilvalg for Bitcoin kommandolinje</translation>
     </message>
     <message>
         <source>Bitcoin client</source>
@@ -493,11 +493,11 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <source>%1 and %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 og %2</translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n år</numerusform><numerusform>%n år</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -575,15 +575,15 @@ Adresse: %4
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Control Address Selection</source>
-        <translation type="unfinished"/>
+        <translation>Adressevalg for coin-styring</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Mængde:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Byte:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -591,35 +591,35 @@ Adresse: %4
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Prioritet:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Gebyr:</translation>
     </message>
     <message>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>Lavt output:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Efter gebyr:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Byttepenge:</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation type="unfinished"/>
+        <translation>(af)vælg alle</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation type="unfinished"/>
+        <translation>Trætilstand</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation type="unfinished"/>
+        <translation>Listetilstand</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -635,7 +635,7 @@ Adresse: %4
     </message>
     <message>
         <source>Confirmations</source>
-        <translation type="unfinished"/>
+        <translation>Bekræftelser</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -643,151 +643,151 @@ Adresse: %4
     </message>
     <message>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>Prioritet</translation>
     </message>
     <message>
         <source>Copy address</source>
-        <translation>Kopier adresse</translation>
+        <translation>Kopiér adresse</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Kopier mærkat</translation>
+        <translation>Kopiér mærkat</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Kopier beløb</translation>
+        <translation>Kopiér beløb</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Kopier transaktionens ID</translation>
+        <translation>Kopiér transaktions-ID</translation>
     </message>
     <message>
         <source>Lock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Fastlås ubrugte</translation>
     </message>
     <message>
         <source>Unlock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Lås ubrugte op</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér mængde</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér gebyr</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér efter-gebyr</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér byte</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér prioritet</translation>
     </message>
     <message>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér lavt output</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér byttepenge</translation>
     </message>
     <message>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>højest</translation>
     </message>
     <message>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>højere</translation>
     </message>
     <message>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>højt</translation>
     </message>
     <message>
         <source>medium-high</source>
-        <translation type="unfinished"/>
+        <translation>mellemhøj</translation>
     </message>
     <message>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>medium</translation>
     </message>
     <message>
         <source>low-medium</source>
-        <translation type="unfinished"/>
+        <translation>mellemlav</translation>
     </message>
     <message>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>lav</translation>
     </message>
     <message>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>lavere</translation>
     </message>
     <message>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>lavest</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 fastlåst)</translation>
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>ingen</translation>
     </message>
     <message>
         <source>Dust</source>
-        <translation type="unfinished"/>
+        <translation>Støv</translation>
     </message>
     <message>
         <source>yes</source>
-        <translation type="unfinished"/>
+        <translation>ja</translation>
     </message>
     <message>
         <source>no</source>
-        <translation type="unfinished"/>
+        <translation>nej</translation>
     </message>
     <message>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation type="unfinished"/>
+        <translation>Dette mærkat bliver rødt, hvis transaktionsstørrelsen er større end 1000 byte.</translation>
     </message>
     <message>
         <source>This means a fee of at least %1 per kB is required.</source>
-        <translation type="unfinished"/>
+        <translation>Dette betyder, at et gebyr på mindst %1 pr. kB er nødvendigt.</translation>
     </message>
     <message>
         <source>Can vary +/- 1 byte per input.</source>
-        <translation type="unfinished"/>
+        <translation>Kan variere ±1 byte pr. input.</translation>
     </message>
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation type="unfinished"/>
+        <translation>Transaktioner med højere prioritet har højere sansynlighed for at blive inkluderet i en blok.</translation>
     </message>
     <message>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
+        <translation>Dette mærkat bliver rødt, hvis prioriteten er mindre end &quot;medium&quot;.</translation>
     </message>
     <message>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Dette mærkat bliver rødt, hvis mindst én modtager et beløb mindre end %1.</translation>
     </message>
     <message>
         <source>This means a fee of at least %1 is required.</source>
-        <translation type="unfinished"/>
+        <translation>Dette betyder, at et gebyr på mindst %1 er nødvendigt.</translation>
     </message>
     <message>
         <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation type="unfinished"/>
+        <translation>Beløb under 0,546 gange det minimale videreførselsgebyr vises som støv.</translation>
     </message>
     <message>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Dette mærkat bliver rødt, hvis byttepengene er mindre end %1.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -795,11 +795,11 @@ Adresse: %4
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished"/>
+        <translation>byttepenge fra %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(byttepange)</translation>
     </message>
 </context>
 <context>
@@ -814,11 +814,11 @@ Adresse: %4
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>Mærkatet, der er associeret med denne indgang i adresselisten</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"/>
+        <translation>Adressen, der er associeret med denne indgang i adresselisten. Denne kan kune ændres for afsendelsesadresser.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -884,7 +884,7 @@ Adresse: %4
     <name>HelpMessageDialog</name>
     <message>
         <source>Bitcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core – tilvalg for kommandolinje</translation>
     </message>
     <message>
         <source>Bitcoin Core</source>
@@ -908,7 +908,7 @@ Adresse: %4
     </message>
     <message>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Angiv sprog, f.eks &quot;de_DE&quot; (standard: systemlokalitet)</translation>
+        <translation>Angiv sprog, fx &quot;da_DK&quot; (standard: systemlokalitet)</translation>
     </message>
     <message>
         <source>Start minimized</source>
@@ -916,15 +916,15 @@ Adresse: %4
     </message>
     <message>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
+        <translation>Sæt SSL-rodcertifikater for betalingsforespørgsel (standard: -system-)</translation>
     </message>
     <message>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation>Vis opstartsbillede ved start (standard: 1)</translation>
+        <translation>Vis opstartsbillede ved opstart (standard: 1)</translation>
     </message>
     <message>
         <source>Choose data directory on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Vælg datamappe ved opstart (standard: 0)</translation>
     </message>
 </context>
 <context>
@@ -935,15 +935,15 @@ Adresse: %4
     </message>
     <message>
         <source>Welcome to Bitcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Velkommen til Bitcoin Core.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>Siden dette er første gang, programmet startes, kan du vælge, hvor Bitcoin Core skal gemme sin data.</translation>
     </message>
     <message>
         <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core vil downloade og gemme et kopi af Bitcoin-blokkæden. Mindst %1 GB data vil blive gemt i denne mappe, og den vil vokse over tid. Tegnebogen vil også blive gemt i denne mappe.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -959,7 +959,7 @@ Adresse: %4
     </message>
     <message>
         <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation type="unfinished"/>
+        <translation>Fejl: Angivet datamappe &quot;%1&quot; kan ikke oprettes.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -978,23 +978,23 @@ Adresse: %4
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
-        <translation type="unfinished"/>
+        <translation>Åbn URI</translation>
     </message>
     <message>
         <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
+        <translation>Åbn betalingsforespørgsel fra URI eller fil</translation>
     </message>
     <message>
         <source>URI:</source>
-        <translation type="unfinished"/>
+        <translation>URI:</translation>
     </message>
     <message>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>Vælg fil for betalingsforespørgsel</translation>
     </message>
     <message>
         <source>Select payment request file to open</source>
-        <translation type="unfinished"/>
+        <translation>Vælg fil for betalingsforespørgsel til åbning</translation>
     </message>
 </context>
 <context>
@@ -1025,39 +1025,39 @@ Adresse: %4
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished"/>
+        <translation>Størrelsen på databasens cache</translation>
     </message>
     <message>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>MB</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished"/>
+        <translation>Antallet af scriptverificeringstråde</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Forbind til Bitcoin-netværket gennem en SOCKS-proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation type="unfinished"/>
+        <translation>Forbind gennem SOCKS-proxy (standard-proxy):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished"/>
+        <translation>IP-adresse for proxyen (fx IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
+        <translation>Tredjeparts-URL&apos;er (fx et blokhåndteringsværktøj), der vises i transaktionsfanen som genvejsmenupunkter. %s i URL&apos;en erstattes med transaktionens hash. Flere URL&apos;er separeres med en lodret streg |.</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>Tredjeparts-transaktions-URL&apos;er</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
-        <translation type="unfinished"/>
+        <translation>Aktuelle tilvalg for kommandolinjen, der tilsidesætter ovenstående tilvalg:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1073,27 +1073,27 @@ Adresse: %4
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation type="unfinished"/>
+        <translation>(0 = auto, &lt;0 = efterlad så mange kerner fri)</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation type="unfinished"/>
+        <translation>Tegnebog</translation>
     </message>
     <message>
         <source>Expert</source>
-        <translation type="unfinished"/>
+        <translation>Ekspert</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished"/>
+        <translation>Slå egenskaber for coin-styring til</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation type="unfinished"/>
+        <translation>Hvis du slår brug af ubekræftede byttepenge fra, kan byttepengene fra en transaktion ikke bruges, før pågældende transaktion har mindst én bekræftelse. Dette påvirker også måden hvorpå din saldo beregnes.</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished"/>
+        <translation>Brug ubekræftede byttepenge</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1173,7 +1173,7 @@ Adresse: %4
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"/>
+        <translation>Hvorvidt egenskaber for coin-styring skal vises eller ej.</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1189,7 +1189,7 @@ Adresse: %4
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>ingeningen</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1197,15 +1197,15 @@ Adresse: %4
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Genstart af klienten er nødvendig for at aktivere ændringer.</translation>
     </message>
     <message>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>Klienten vil blive lukket ned; vil du fortsætte?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>Denne ændring vil kræve en genstart af klienten.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1228,7 +1228,7 @@ Adresse: %4
     </message>
     <message>
         <source>Available:</source>
-        <translation type="unfinished"/>
+        <translation>Tilgængelig:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -1236,7 +1236,7 @@ Adresse: %4
     </message>
     <message>
         <source>Pending:</source>
-        <translation type="unfinished"/>
+        <translation>Uafgjort:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -1279,7 +1279,7 @@ Adresse: %4
     </message>
     <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation type="unfinished"/>
+        <translation>Forespurgt betalingsbeløb på %1 er for lille (regnes som støv).</translation>
     </message>
     <message>
         <source>Payment request error</source>
@@ -1291,27 +1291,27 @@ Adresse: %4
     </message>
     <message>
         <source>Net manager warning</source>
-        <translation type="unfinished"/>
+        <translation>Net-håndterings-advarsel</translation>
     </message>
     <message>
         <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Din aktuelle proxy understøtter ikke SOCKS5, hvilket kræves for betalingsforespørgsler via proxy.</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation type="unfinished"/>
+        <translation>Betalingsforespørgslens hentnings-URL er ugyldig: %1</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
-        <translation type="unfinished"/>
+        <translation>Filhåndtering for betalingsanmodninger</translation>
     </message>
     <message>
         <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
-        <translation type="unfinished"/>
+        <translation>Betalingsanmodningsfil kan ikke indlæses eller bearbejdes! Dette kan skyldes en ugyldig betalingsanmodningsfil.</translation>
     </message>
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation type="unfinished"/>
+        <translation>Ikke-verificerede betalingsforespørgsler for tilpassede betalings-scripts understøttes ikke.</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1319,19 +1319,19 @@ Adresse: %4
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"/>
+        <translation>Fejl under kommunikation med %1: %2</translation>
     </message>
     <message>
         <source>Payment request can not be parsed or processed!</source>
-        <translation type="unfinished"/>
+        <translation>Betalingsanmodning kan ikke fortolkes eller bearbejdes!</translation>
     </message>
     <message>
         <source>Bad response from server %1</source>
-        <translation type="unfinished"/>
+        <translation>Fejlagtigt svar fra server %1</translation>
     </message>
     <message>
         <source>Payment acknowledged</source>
-        <translation type="unfinished"/>
+        <translation>Betaling anerkendt</translation>
     </message>
     <message>
         <source>Network request error</source>
@@ -1350,7 +1350,7 @@ Adresse: %4
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation type="unfinished"/>
+        <translation>Fejl: Kan ikke fortolke konfigurationsfil: %1. Brug kun syntaksen nøgle=værdi.</translation>
     </message>
     <message>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
@@ -1358,7 +1358,7 @@ Adresse: %4
     </message>
     <message>
         <source>Bitcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core blev ikke afsluttet på sikker vis …</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -1369,11 +1369,11 @@ Adresse: %4
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Gem foto...</translation>
+        <translation>Gem billede …</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation>&amp;Kopiér foto</translation>
+        <translation>Kopiér foto</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1381,7 +1381,7 @@ Adresse: %4
     </message>
     <message>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>PNG-billede (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1404,11 +1404,11 @@ Adresse: %4
     </message>
     <message>
         <source>Debug window</source>
-        <translation type="unfinished"/>
+        <translation>Fejlsøgningsvindue</translation>
     </message>
     <message>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>Generelt</translation>
     </message>
     <message>
         <source>Using OpenSSL version</source>
@@ -1456,23 +1456,23 @@ Adresse: %4
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
+        <translation>Netværkstrafik</translation>
     </message>
     <message>
         <source>&amp;Clear</source>
-        <translation type="unfinished"/>
+        <translation>Ryd</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>Totaler</translation>
     </message>
     <message>
         <source>In:</source>
-        <translation type="unfinished"/>
+        <translation>Indkommende:</translation>
     </message>
     <message>
         <source>Out:</source>
-        <translation>Ud:</translation>
+        <translation>Udgående:</translation>
     </message>
     <message>
         <source>Build date</source>
@@ -1535,7 +1535,7 @@ Adresse: %4
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation>&amp;Mængde:</translation>
+        <translation>Beløb:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1543,35 +1543,35 @@ Adresse: %4
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation>&amp;Besked:</translation>
+        <translation>Besked:</translation>
     </message>
     <message>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation type="unfinished"/>
+        <translation>Genbrug en af de tidligere brugte modtagelsesadresser. Genbrug af adresser har indflydelse på sikkerhed og privatliv. Brug ikke dette med mindre du genskaber en betalingsforespørgsel fra tidligere.</translation>
     </message>
     <message>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation type="unfinished"/>
+        <translation>Genbrug en eksisterende modtagelsesadresse (anbefales ikke)</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>En valgfri besked, der føjes til betalingsanmodningen, og som vil vises, når anmodningen åbnes. Bemærk: Beskeden vil ikke sendes med betalingen over Bitcoin-netværket.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished"/>
+        <translation>Et valgfrit mærkat, der associeres med den nye modtagelsesadresse.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Brug denne formular for at anmode om betalinger. Alle felter er &lt;b&gt;valgfri&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation type="unfinished"/>
+        <translation>Et valgfrit beløb til anmodning. Lad dette felt være tomt eller indeholde nul for at anmode om et ikke-specifikt beløb.</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Ryd alle fælter af formen.</translation>
+        <translation>Ryd alle felter af formen.</translation>
     </message>
     <message>
         <source>Clear</source>
@@ -1579,35 +1579,35 @@ Adresse: %4
     </message>
     <message>
         <source>Requested payments history</source>
-        <translation type="unfinished"/>
+        <translation>Historik over betalingsanmodninger</translation>
     </message>
     <message>
         <source>&amp;Request payment</source>
-        <translation>&amp;Anmod betaling</translation>
+        <translation>Anmod om betaling</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation type="unfinished"/>
+        <translation>Vis den valgte forespørgsel (gør det samme som dobbeltklik på en indgang)</translation>
     </message>
     <message>
         <source>Show</source>
-        <translation type="unfinished"/>
+        <translation>Vis</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
-        <translation type="unfinished"/>
+        <translation>Fjern de valgte indgange fra listen</translation>
     </message>
     <message>
         <source>Remove</source>
-        <translation type="unfinished"/>
+        <translation>Fjern</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Kopier mærkat</translation>
+        <translation>Kopiér mærkat</translation>
     </message>
     <message>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér besked</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1618,23 +1618,23 @@ Adresse: %4
     <name>ReceiveRequestDialog</name>
     <message>
         <source>QR Code</source>
-        <translation>QR Kode</translation>
+        <translation>QR-kode</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation>Kopiér &amp;URL</translation>
+        <translation>Kopiér URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation>Kopiér &amp;Adresse</translation>
+        <translation>Kopiér adresse</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Gem foto...</translation>
+        <translation>Gem billede …</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
-        <translation type="unfinished"/>
+        <translation>Anmod om betaling til %1</translation>
     </message>
     <message>
         <source>Payment information</source>
@@ -1666,7 +1666,7 @@ Adresse: %4
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
-        <translation>Fejl ved kodning fra URI til QR-kode</translation>
+        <translation>Fejl ved kodning fra URI til QR-kode.</translation>
     </message>
 </context>
 <context>
@@ -1693,11 +1693,11 @@ Adresse: %4
     </message>
     <message>
         <source>(no message)</source>
-        <translation type="unfinished"/>
+        <translation>(ingen besked)</translation>
     </message>
     <message>
         <source>(no amount)</source>
-        <translation type="unfinished"/>
+        <translation>(intet beløb)</translation>
     </message>
 </context>
 <context>
@@ -1708,27 +1708,27 @@ Adresse: %4
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation type="unfinished"/>
+        <translation>Egenskaber for coin-styring</translation>
     </message>
     <message>
         <source>Inputs...</source>
-        <translation type="unfinished"/>
+        <translation>Inputs …</translation>
     </message>
     <message>
         <source>automatically selected</source>
-        <translation type="unfinished"/>
+        <translation>valgt automatisk</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
+        <translation>Utilstrækkelige midler!</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Mængde:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Byte:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -1736,31 +1736,31 @@ Adresse: %4
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Prioritet:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Gebyr:</translation>
     </message>
     <message>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>Lavt output:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Efter gebyr:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Byttepenge:</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation type="unfinished"/>
+        <translation>Hvis dette aktiveres, men byttepengeadressen er tom eller ugyldig, vil byttepenge blive sendt til en nygenereret adresse.</translation>
     </message>
     <message>
         <source>Custom change address</source>
-        <translation type="unfinished"/>
+        <translation>Tilpasset byttepengeadresse</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1772,7 +1772,7 @@ Adresse: %4
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Ryd alle fælter af formen.</translation>
+        <translation>Ryd alle felter af formen.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -1796,11 +1796,11 @@ Adresse: %4
     </message>
     <message>
         <source>%1 to %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 til %2</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér mængde</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1808,35 +1808,35 @@ Adresse: %4
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér gebyr</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér efter-gebyr</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér byte</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér prioritet</translation>
     </message>
     <message>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér lavt output</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Kopiér byttepenge</translation>
     </message>
     <message>
         <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
+        <translation>Totalbeløb %1 (= %2)</translation>
     </message>
     <message>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>eller</translation>
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
@@ -1860,15 +1860,15 @@ Adresse: %4
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation type="unfinished"/>
+        <translation>Oprettelse af transaktion mislykkedes!</translation>
     </message>
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Transaktionen blev afvist! Dette kan ske, hvis nogle af dine bitcoins i din tegnebog allerede er brugt, som hvis du brugte en kopi af wallet.dat og dine bitcoins er blevet brugt i kopien, men ikke er markeret som brugt her.</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Advarsel: Ugyldig Bitcoin-adresse</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1876,7 +1876,7 @@ Adresse: %4
     </message>
     <message>
         <source>Warning: Unknown change address</source>
-        <translation type="unfinished"/>
+        <translation>Advarsel: Ukendt byttepengeadresse</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -1892,7 +1892,7 @@ Adresse: %4
     </message>
     <message>
         <source>Invalid payment address %1</source>
-        <translation type="unfinished"/>
+        <translation>Ugyldig betalingsadresse %1</translation>
     </message>
 </context>
 <context>
@@ -1919,11 +1919,11 @@ Adresse: %4
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Vælg tidligere brugt adresse</translation>
     </message>
     <message>
         <source>This is a normal payment.</source>
-        <translation type="unfinished"/>
+        <translation>Dette er en normal betaling.</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1939,7 +1939,7 @@ Adresse: %4
     </message>
     <message>
         <source>Remove this entry</source>
-        <translation type="unfinished"/>
+        <translation>Fjern denne indgang</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -1947,38 +1947,38 @@ Adresse: %4
     </message>
     <message>
         <source>This is a verified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>Dette er en verificeret betalingsforespørgsel.</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished"/>
+        <translation>Indtast et mærkat for denne adresse for at føje den til listen over brugte adresser</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>En besked, som blev føjet til &quot;bitcon:&quot;-URI&apos;en, som vil gemmes med transaktionen til din reference. Bemærk: Denne besked vil ikke blive sendt over Bitcoin-netværket.</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>Dette er en ikke-verificeret betalingsforespørgsel.</translation>
     </message>
     <message>
         <source>Pay To:</source>
-        <translation type="unfinished"/>
+        <translation>Betal til:</translation>
     </message>
     <message>
         <source>Memo:</source>
-        <translation type="unfinished"/>
+        <translation>Memo:</translation>
     </message>
 </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
         <source>Bitcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core lukker ned …</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>Luk ikke computeren ned, før dette vindue forsvinder.</translation>
     </message>
 </context>
 <context>
@@ -2001,7 +2001,7 @@ Adresse: %4
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Vælg tidligere brugt adresse</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2132,7 +2132,7 @@ Adresse: %4
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Udviklerne af Bitcoin Core</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -2154,7 +2154,7 @@ Adresse: %4
     </message>
     <message>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>konflikt</translation>
     </message>
     <message>
         <source>%1/offline</source>
@@ -2242,11 +2242,11 @@ Adresse: %4
     </message>
     <message>
         <source>Merchant</source>
-        <translation type="unfinished"/>
+        <translation>Forretningsdrivende</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation>Udvundne bitcoins skal modne %1 blokke, før de kan bruges. Da du genererede denne blok, blev den udsendt til netværket for at blive føjet til blokkæden. Hvis det ikke lykkes at få den i kæden, vil dens tilstand ændres til &quot;ikke accepteret&quot;, og den vil ikke kunne bruges. Dette kan ske nu og da, hvis en anden knude udvinder en blok inden for nogle få sekunder fra din.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2316,7 +2316,7 @@ Adresse: %4
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished"/>
+        <translation>Umoden (%1 bekræftelser; vil være tilgængelig efter %2)</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
@@ -2340,19 +2340,19 @@ Adresse: %4
     </message>
     <message>
         <source>Offline</source>
-        <translation type="unfinished"/>
+        <translation>Offline</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>Ubekræftet</translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Bekræfter (%1 af %2 anbefalede bekræftelser)</translation>
     </message>
     <message>
         <source>Conflicted</source>
-        <translation type="unfinished"/>
+        <translation>Konflikt</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2483,23 +2483,23 @@ Adresse: %4
     </message>
     <message>
         <source>Export Transaction History</source>
-        <translation type="unfinished"/>
+        <translation>Historik for eksport af transaktioner</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Eksport mislykkedes</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished"/>
+        <translation>En fejl opstod under gemning af transaktionshistorik til %1.</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation type="unfinished"/>
+        <translation>Eksport problemfri</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Transaktionshistorikken blev gemt til %1 med succes.</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -2546,7 +2546,7 @@ Adresse: %4
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Ingen tegnebog er indlæst.</translation>
     </message>
 </context>
 <context>
@@ -2580,11 +2580,11 @@ Adresse: %4
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Der skete en fejl under gemning af tegnebogsdata til %1.</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Tegnebogsdata blev gemt til %1 med succes.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
@@ -2659,7 +2659,7 @@ Adresse: %4
     </message>
     <message>
         <source>Bitcoin Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core RPC-klient-version</translation>
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
@@ -2699,7 +2699,7 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation type="unfinished"/>
+        <translation>Accepterede krypteringer (standard: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
@@ -2711,19 +2711,19 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation type="unfinished"/>
+        <translation>Rate-begræns kontinuerligt frie transaktioner til &lt;n&gt;*1000 byte i minuttet (standard:15)</translation>
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>Start regressionstesttilstand, som bruger en speciel kæde, hvor blokke kan løses med det samme. Dette er tiltænkt til testværktøjer for regression of programudvikling.</translation>
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation type="unfinished"/>
+        <translation>Start regressionstesttilstand, som bruger en speciel kæde, hvor blokke kan løses med det samme.</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %d)</source>
-        <translation type="unfinished"/>
+        <translation>Fejl: Lytning efter indkommende forbindelser mislykkedes (lytning returnerede fejl %d)</translation>
     </message>
     <message>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
@@ -2739,27 +2739,27 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation type="unfinished"/>
+        <translation>Gebyrer mindre end dette opfattes som nul-gebyr (for oprettelse af transaktioner) (standard:</translation>
     </message>
     <message>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>Flyt databaseaktivitet fra hukommelsespulje til disklog hver &lt;n&gt; megabytes (standard: 100)</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation type="unfinished"/>
+        <translation>Hvor gennemarbejdet blokverificeringen for -checkblocks er (0-4; standard: 3)</translation>
     </message>
     <message>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation type="unfinished"/>
+        <translation>I denne tilstand styrer -genproclimit hvor mange blokke, der genereres med det samme.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Sæt antallet af scriptverificeringstråde (%u til %d, 0 = auto, &lt;0 = efterlad det antal kernet fri, standard: %d)</translation>
     </message>
     <message>
         <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation type="unfinished"/>
+        <translation>Sæt processorbegrænsning for når generering er slået til (-1 = ubegrænset, standard: -1)</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -2767,11 +2767,11 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Ikke i stand til at tildele til %s på denne computer. Bitcoin Core kører sansynligvis allerede.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation type="unfinished"/>
+        <translation>Brug separat SOCS5-proxy for at nå andre knuder via Tor skjulte tjenester (standard: -proxy)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2799,15 +2799,15 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>(default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>(standard: 1)</translation>
     </message>
     <message>
         <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
+        <translation>(standard: wallet.dat)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
+        <translation>&lt;kategori&gt; kan være:</translation>
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
@@ -2815,7 +2815,7 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core-tjeneste</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2823,7 +2823,7 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
-        <translation type="unfinished"/>
+        <translation>Ryd liste over transaktioner i tegnebog (diagnoseværktøj; medfører -rescan)</translation>
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>
@@ -2831,15 +2831,15 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Connect through SOCKS proxy</source>
-        <translation type="unfinished"/>
+        <translation>Forbind gennem SOCKS-proxy</translation>
     </message>
     <message>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation type="unfinished"/>
+        <translation>Forbind til JSON-RPC på &lt;port&gt; (standard: 8332 eller testnetværk: 18332)</translation>
     </message>
     <message>
         <source>Connection options:</source>
-        <translation type="unfinished"/>
+        <translation>Tilvalg for forbindelser:</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -2847,11 +2847,11 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Debugging/Testing options:</source>
-        <translation type="unfinished"/>
+        <translation>Tilvalg for fejlfinding/test:</translation>
     </message>
     <message>
         <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Slå sikker tilstand fra, tilsidesæt hændelser fra sikker tilstand (standard: 0)</translation>
     </message>
     <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
@@ -2859,7 +2859,7 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation type="unfinished"/>
+        <translation>Indlæs ikke tegnebogen og slå tegnebogs-RPC-kald fra</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -2939,11 +2939,11 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Fee per kB to add to transactions you send</source>
-        <translation type="unfinished"/>
+        <translation>Føj gebyr pr. kB til transaktioner, du sender</translation>
     </message>
     <message>
         <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
-        <translation type="unfinished"/>
+        <translation>Gebyrer mindre end dette opfattes som nul-gebyr (for videreførsler) (standard:</translation>
     </message>
     <message>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
@@ -2951,7 +2951,7 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Force safe mode (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Gennemtving sikker tilstand (standard: 0)</translation>
     </message>
     <message>
         <source>Generate coins (default: 0)</source>
@@ -2963,11 +2963,11 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation type="unfinished"/>
+        <translation>Hvis &lt;kategori&gt; ikke angives, udskriv al fejlsøgningsinformation.</translation>
     </message>
     <message>
         <source>Importing...</source>
-        <translation type="unfinished"/>
+        <translation>Importerer …</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -2975,7 +2975,7 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Ugyldig -onion adresse: &quot;%s&quot;</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -2983,11 +2983,11 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Føj tidsstempel foran fejlsøgningsoutput (standard: 1)</translation>
     </message>
     <message>
         <source>RPC client options:</source>
-        <translation type="unfinished"/>
+        <translation>Tilvalg for RPC-klient:</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
@@ -2995,15 +2995,15 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
-        <translation type="unfinished"/>
+        <translation>Vælg SOCKS-version for -proxy (4 eller 5, standard: 5)</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Sæt cache-størrelse for database i megabytes (%d til %d; standard: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Sæt maksimum blokstørrelse i byte (standard: %d)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
@@ -3015,15 +3015,15 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Brug ubekræftede byttepenge under afsendelse af transaktioner (standard: 1)</translation>
     </message>
     <message>
         <source>This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>This is intended for regression testing tools and app development.</translation>
     </message>
     <message>
         <source>Usage (deprecated, use bitcoin-cli):</source>
-        <translation type="unfinished"/>
+        <translation>Brug (forældet, brug bitcoin-cli):</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -3035,7 +3035,7 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
+        <translation>Vent på opstart af RPC-server</translation>
     </message>
     <message>
         <source>Wallet %s resides outside data directory %s</source>
@@ -3043,11 +3043,11 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>Tilvalg for tegnebog:</translation>
     </message>
     <message>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation type="unfinished"/>
+        <translation>Advarsel: Forældet argument -debugnet ignoreret; brug -debug=net</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -3059,7 +3059,7 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Kan ikke opnå en lås på datamappe %s. Bitcoin Core kører sansynligvis allerede.</translation>
     </message>
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
@@ -3067,11 +3067,11 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation type="unfinished"/>
+        <translation>Udskriv fejlsøgningsinformation (standard: 0, angivelse af &lt;kategori&gt; er valgfri)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Sæt maksimumstørrelse for højprioritet/lavgebyr-transaktioner i byte (standard: %d)</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3087,11 +3087,11 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation type="unfinished"/>
+        <translation>Begræns størrelsen på signaturcache til &lt;n&gt; indgange (standard: 50000)</translation>
     </message>
     <message>
         <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Prioritet for transaktionslog og gebyr pr. kB under udvinding af blokke (standard: 0)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index (default: 0)</source>
@@ -3115,31 +3115,31 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Print block on startup, if found in block index</source>
-        <translation type="unfinished"/>
+        <translation>Udskriv blok under opstart, hvis den findes i blokindeks</translation>
     </message>
     <message>
         <source>Print block tree on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Udskriv bloktræ under startop (standard: 0)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>Tilvalg for RPC SSL: (se Bitcoin Wiki for instruktioner i SSL-opstart)</translation>
     </message>
     <message>
         <source>RPC server options:</source>
-        <translation type="unfinished"/>
+        <translation>Tilvalg for RPC-server:</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
+        <translation>Drop tilfældigt 1 ud af hver &lt;n&gt; netværksbeskeder</translation>
     </message>
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
+        <translation>Slør tilfældigt 1 ud af hver &lt;n&gt; netværksbeskeder</translation>
     </message>
     <message>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Kør en tråd for at rydde tegnebog periodisk (standard: 1)</translation>
     </message>
     <message>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3147,7 +3147,7 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Send command to Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Send kommando til Bitcoin Core</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3159,15 +3159,15 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Sætter DB_PRIVATE-flaget i tegnebogens db-miljø (standard: 1)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation type="unfinished"/>
+        <translation>Vis alle tilvalg for fejlsøgning (brug: --help -help-debug)</translation>
     </message>
     <message>
         <source>Show benchmark information (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Vis information om ydelsesmåling (standard: 0)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3183,7 +3183,7 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Start Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Start Bitcoin Core-tjeneste</translation>
     </message>
     <message>
         <source>System error: </source>
@@ -3223,11 +3223,11 @@ fx: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Zapper alle transaktioner fra tegnebog …</translation>
     </message>
     <message>
         <source>on startup</source>
-        <translation type="unfinished"/>
+        <translation>under opstart</translation>
     </message>
     <message>
         <source>version</source>
