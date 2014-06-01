@@ -917,7 +917,7 @@ Address: %4
     </message>
     <message>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
+        <translation>设置SSL根证书的付款请求(默认：-系统-)</translation>
     </message>
     <message>
         <source>Show splash screen on startup (default: 1)</source>
@@ -1050,11 +1050,11 @@ Address: %4
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
+        <translation>出现在交易的选项卡的上下文菜单项的第三方网址 (例如：区块链接查询) 。 %s的URL被替换为交易哈希。多个的URL需要竖线 | 分隔。</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>第三方交易网址</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1074,7 +1074,7 @@ Address: %4
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation type="unfinished"/>
+        <translation>(0 = 自动, &lt;0 = 离开很多免费的核心)</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
@@ -1086,7 +1086,7 @@ Address: %4
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished"/>
+        <translation>启动货币 &amp;控制功能</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
@@ -1094,7 +1094,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished"/>
+        <translation>&amp;选择未经确认的花费</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1351,7 +1351,7 @@ Address: %4
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation type="unfinished"/>
+        <translation>错误: 无法解析配置文件: %1. 只有钥匙=重要的私匙.</translation>
     </message>
     <message>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
@@ -1359,7 +1359,7 @@ Address: %4
     </message>
     <message>
         <source>Bitcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>比特币核心钱包没有安全退出....</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -2667,7 +2667,7 @@ Address: %4
     </message>
     <message>
         <source>Bitcoin Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>比特币核心钱包RPC客户端版本</translation>
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
@@ -2722,7 +2722,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation type="unfinished"/>
+        <translation>自由交易不断的速率限制为&lt;n&gt;*1000 字节每分钟(默认值:15)</translation>
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
@@ -2734,7 +2734,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %d)</source>
-        <translation type="unfinished"/>
+        <translation>错误: 监听接收连接失败 (监听错误 %d)</translation>
     </message>
     <message>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
@@ -2750,27 +2750,27 @@ rpcpassword=%s
     </message>
     <message>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation type="unfinished"/>
+        <translation>比这手续费更小的被认为零手续费 (交易产生) (默认:</translation>
     </message>
     <message>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>从缓冲池清理磁盘数据库活动日志每&lt;n&gt;兆字节 (默认值: 100)</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation type="unfinished"/>
+        <translation>如何有效的验证checkblocks区块(0-4, 默认值: 3)</translation>
     </message>
     <message>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation type="unfinished"/>
+        <translation>在-genproclimit这种模式下控制产出多少区块</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>设置脚本验证的程序 (%u 到 %d, 0 = 自动, &lt;0 = 保留自由的核心, 默认值: %d)</translation>
     </message>
     <message>
         <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation type="unfinished"/>
+        <translation>设置处理器生成的限制 (-1 = 无限, 默认值: -1)</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -2778,7 +2778,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>无法 %s的绑定到电脑上，比特币核心钱包可能已经在运行。</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
@@ -2810,11 +2810,11 @@ rpcpassword=%s
     </message>
     <message>
         <source>(default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>(默认值: 1)</translation>
     </message>
     <message>
         <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
+        <translation>(默认: wallet.dat)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2850,7 +2850,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Connection options:</source>
-        <translation type="unfinished"/>
+        <translation>连接选项：</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -2858,11 +2858,11 @@ rpcpassword=%s
     </message>
     <message>
         <source>Debugging/Testing options:</source>
-        <translation type="unfinished"/>
+        <translation>调试/测试选项：</translation>
     </message>
     <message>
         <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>禁止使用安全模式，重新写入一个真正的安全模式日志(默认值: 0)</translation>
     </message>
     <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
@@ -2954,7 +2954,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
-        <translation type="unfinished"/>
+        <translation>比这手续费更小的被认为零手续费 (中继) (默认值: </translation>
     </message>
     <message>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
@@ -2962,7 +2962,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Force safe mode (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>强制安全模式(默认值: 0)</translation>
     </message>
     <message>
         <source>Generate coins (default: 0)</source>
@@ -3010,7 +3010,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>设置以MB为单位的数据库缓存大小(%d 到 %d, 默认值: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>
@@ -3070,7 +3070,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>无法获取数据目录的 %s. 比特币核心钱包可能已经在运行.</translation>
     </message>
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
@@ -3098,11 +3098,11 @@ rpcpassword=%s
     </message>
     <message>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation type="unfinished"/>
+        <translation>签名缓冲大小限制每&lt;n&gt; 条目 (默认值: 50000)</translation>
     </message>
     <message>
         <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>开采区块时，日志优先级和手续费每KB (默认值: 0)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index (default: 0)</source>
@@ -3126,15 +3126,15 @@ rpcpassword=%s
     </message>
     <message>
         <source>Print block on startup, if found in block index</source>
-        <translation type="unfinished"/>
+        <translation>如果在搜索区块中找到，请启动打印区块</translation>
     </message>
     <message>
         <source>Print block tree on startup (default: 0)</source>
-        <translation>启动时打印块树 (默认: 0)</translation>
+        <translation>启动时打印区块树 (默认值: 0)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>RPC SSL选项：(见有关比特币设置用于SSL说明的维基百科)</translation>
     </message>
     <message>
         <source>RPC server options:</source>
@@ -3142,15 +3142,15 @@ rpcpassword=%s
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
+        <translation>随机每1个丢失测试&lt;n&gt;网络信息</translation>
     </message>
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
+        <translation>随机每1个模拟测试&lt;n&gt;网络信息</translation>
     </message>
     <message>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>运行一个程序，定时清理钱包 (默认值：1)</translation>
     </message>
     <message>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3158,7 +3158,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Send command to Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>发送指令到比特币核心钱包</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3170,15 +3170,15 @@ rpcpassword=%s
     </message>
     <message>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>设置DB_PRIVATE钱包标志DB环境 (默认值: 1)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation type="unfinished"/>
+        <translation>显示所有调试选项 (用法: --帮助 -帮助调试)</translation>
     </message>
     <message>
         <source>Show benchmark information (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>显示标准信息 (默认值: 0)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3194,7 +3194,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Start Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>开启比特币核心钱包守护进程</translation>
     </message>
     <message>
         <source>System error: </source>
@@ -3238,7 +3238,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>on startup</source>
-        <translation type="unfinished"/>
+        <translation>启动中</translation>
     </message>
     <message>
         <source>version</source>
