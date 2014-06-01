@@ -21,7 +21,6 @@
 #include <QDateTime>
 #include <QtAlgorithms>
 
-
 static int column_alignments[] = {
     Qt::AlignLeft|Qt::AlignVCenter,
     Qt::AlignRight|Qt::AlignVCenter,
@@ -252,6 +251,7 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
     if(!index.isValid())
         return QVariant();
     KernelRecord *rec = static_cast<KernelRecord*>(index.internalPointer());
+
     switch(role)
     {
       case Qt::DisplayRole:
@@ -288,13 +288,14 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
             return formatDayToMint(rec);
         }
         break;
-
       case Qt::BackgroundColorRole:
-        if(rec->getAge() < 30)
+        int minAge = nStakeMinAge / 60 / 60 / 24;
+        int maxAge = STAKE_MAX_AGE / 60 / 60 / 24;
+        if(rec->getAge() < minAge)
         {
             return COLOR_MINT_YOUNG;
         }
-        else if (rec->getAge() >= 30 && rec->getAge() < 90)
+        else if (rec->getAge() >= minAge && rec->getAge() < maxAge)
         {
             return COLOR_MINT_MATURE;
         }
