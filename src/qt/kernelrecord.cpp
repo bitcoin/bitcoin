@@ -3,6 +3,7 @@
 #include "wallet.h"
 #include "base58.h"
 
+
 bool KernelRecord::showTransaction(const CWalletTx &wtx)
 {
     if (wtx.IsCoinBase())
@@ -65,3 +66,24 @@ int64 KernelRecord::getAge() const
     return (time(NULL) - nTime) / 86400;
 }
 
+double KernelRecord::getProbToMintStake(double difficulty) const
+{
+    double maxTarget = pow(2, 224);
+    double target = maxTarget / difficulty;
+    return target * coinAge / pow(2, 256);
+}
+
+double KernelRecord::getProbToMintWithinNMinutes(double difficulty, int minutes) const
+{
+    double prob = 1;
+    double p = 0;
+    int n = minutes / 10;
+    for(int i=0; i<n; i++)
+    {
+         p = getProbToMintStake(difficulty);
+         p = 1 - pow(1 - p, 60 * 10);
+         prob = prob * (1-p);
+    }
+    prob = 1 - prob;
+    return prob;
+}

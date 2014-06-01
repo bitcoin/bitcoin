@@ -32,10 +32,13 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
 
+    void setMintingInterval(int interval);
+
 private:
     CWallet* wallet;
     WalletModel *walletModel;
     QStringList columns;
+    int mintingInterval;
     MintingTablePriv *priv;
 
     QString lookupAddress(const std::string &address, bool tooltip) const;

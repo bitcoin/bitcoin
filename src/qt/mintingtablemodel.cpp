@@ -197,6 +197,7 @@ MintingTableModel::MintingTableModel(CWallet *wallet, WalletModel *parent):
         QAbstractTableModel(parent),
         wallet(wallet),
         walletModel(parent),
+        mintingInterval(10),
         priv(new MintingTablePriv(wallet, this))
 {
     columns << tr("Address") << tr("Age") << tr("Balance") << tr("CoinDay") << tr("MintProbability");
@@ -307,6 +308,10 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+void MintingTableModel::setMintingInterval(int interval)
+{
+    mintingInterval = interval;
+}
 
 QString MintingTableModel::lookupAddress(const std::string &address, bool tooltip) const
 {
@@ -325,7 +330,12 @@ QString MintingTableModel::lookupAddress(const std::string &address, bool toolti
 
 QString MintingTableModel::formatDayToMint(const KernelRecord *wtx) const
 {
-    return QString::number(0);
+    const CBlockIndex *p = GetLastBlockIndex(pindexBest, true);
+    double difficulty = p->GetBlockDifficulty();
+
+    double prob = wtx->getProbToMintWithinNMinutes(difficulty, mintingInterval);
+    prob = prob * 100;
+    return QString::number(prob, 'f', 2) + "%";
 }
 
 QString MintingTableModel::formatTxAddress(const KernelRecord *wtx, bool tooltip) const
@@ -340,8 +350,8 @@ QString MintingTableModel::formatTxCoinDay(const KernelRecord *wtx) const
 
 QString MintingTableModel::formatTxAge(const KernelRecord *wtx) const
 {
-    int64 age = wtx->getAge();
-    return QString::number(age);
+    int64 nAge = wtx->getAge();
+    return QString::number(nAge);
 }
 
 QString MintingTableModel::formatTxBalance(const KernelRecord *wtx) const

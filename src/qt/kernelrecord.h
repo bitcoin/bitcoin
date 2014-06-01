@@ -2,7 +2,6 @@
 #define KERNELRECORD_H
 
 #include "uint256.h"
-
 #include <QList>
 
 class CWallet;
@@ -43,7 +42,8 @@ public:
 
     std::string getTxID();
     int64 getAge() const;
-
+    double getProbToMintStake(double difficulty) const;
+    double getProbToMintWithinNMinutes(double difficulty, int minutes) const;
 };
 
 #endif // KERNELRECORD_H
