@@ -63,7 +63,7 @@ std::string KernelRecord::getTxID()
 
 int64 KernelRecord::getAge() const
 {
-    return (time(NULL) - nTime) / 86400;
+    return (GetAdjustedTime() - nTime) / 86400;
 }
 
 double KernelRecord::getProbToMintStake(double difficulty) const
