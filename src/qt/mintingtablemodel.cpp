@@ -265,7 +265,7 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
             return formatTxBalance(rec);
         case CoinDay:
             return formatTxCoinDay(rec);
-        case MintProbabilityPerDay:
+        case MintProbability:
             return formatDayToMint(rec);
         }
         break;
@@ -284,7 +284,7 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
             return formatTxCoinDay(rec);
         case Balance:
             return rec->nValue;
-        case MintProbabilityPerDay:
+        case MintProbability:
             return formatDayToMint(rec);
         }
         break;
@@ -382,7 +382,7 @@ QVariant MintingTableModel::headerData(int section, Qt::Orientation orientation,
                 return tr("TODO");
             case CoinDay:
                 return tr("TODO");
-            case MintProbabilityPerDay:
+            case MintProbability:
                 return tr("TODO");
             }
         }

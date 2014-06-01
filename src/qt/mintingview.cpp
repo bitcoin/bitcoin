@@ -4,6 +4,9 @@
 #include "mintingtablemodel.h"
 #include "walletmodel.h"
 #include "guiconstants.h"
+#include "guiutil.h"
+#include "csvmodelwriter.h"
+
 
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -13,7 +16,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QComboBox>
-
+#include <QMessageBox>
 
 MintingView::MintingView(QWidget *parent) :
     QWidget(parent), model(0), mintingView(0)
@@ -123,7 +126,7 @@ void MintingView::setModel(WalletModel *model)
         mintingView->horizontalHeader()->resizeSection(
                 MintingTableModel::CoinDay,120);
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::MintProbabilityPerDay, 120);
+                MintingTableModel::MintProbability, 120);
     }
 }
 
@@ -151,5 +154,27 @@ void MintingView::chooseMintingInterval(int idx)
 
 void MintingView::exportClicked()
 {
-    // TODO
+    // CSV is currently the only supported format
+    QString filename = GUIUtil::getSaveFileName(
+            this,
+            tr("Export Minting Data"), QString(),
+            tr("Comma separated file (*.csv)"));
+
+    if (filename.isNull()) return;
+
+    CSVModelWriter writer(filename);
+
+    // name, column, role
+    writer.setModel(mintingProxyModel);
+    writer.addColumn(tr("Address"), MintingTableModel::Address);
+    writer.addColumn(tr("Age"), MintingTableModel::Age);
+    writer.addColumn(tr("CoinDay"), MintingTableModel::CoinDay);
+    writer.addColumn(tr("Balance"), MintingTableModel::Balance);
+    writer.addColumn(tr("MintingProbability"), MintingTableModel::MintProbability);
+
+    if(!writer.write())
+    {
+        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+                              QMessageBox::Abort, QMessageBox::Abort);
+    }
 }

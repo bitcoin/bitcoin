@@ -22,7 +22,7 @@ public:
         Age = 1,
         Balance = 2,
         CoinDay = 3,
-        MintProbabilityPerDay = 4
+        MintProbability = 4
     };
 
 
