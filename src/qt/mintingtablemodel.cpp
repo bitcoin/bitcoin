@@ -376,15 +376,15 @@ QVariant MintingTableModel::headerData(int section, Qt::Orientation orientation,
             switch(section)
             {
             case Address:
-                return tr("TODO");
+                return tr("Destination address of the output.");
             case Age:
-                return tr("TODO");
+                return tr("Age of the transaction.");
             case Balance:
-                return tr("TODO");
+                return tr("Balance of the output.");
             case CoinDay:
-                return tr("TODO");
+                return tr("Coin age in the output.");
             case MintProbability:
-                return tr("TODO");
+                return tr("Chance to mint a block within given time interval.");
             }
         }
     }
