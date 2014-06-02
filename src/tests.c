@@ -209,6 +209,54 @@ void run_num_smalltests() {
     run_num_int();
 }
 
+/***** FIELD TESTS *****/
+
+void random_fe(secp256k1_fe_t *x) {
+    unsigned char bin[32];
+    secp256k1_rand256(bin);
+    secp256k1_fe_set_b32(x, bin);
+}
+
+void random_fe_non_square(secp256k1_fe_t *ns) {
+    secp256k1_fe_t r;
+    int tries = 100;
+    while (--tries >= 0) {
+        random_fe(ns);
+    	if (!secp256k1_fe_sqrt(&r, ns))
+            break;
+    }
+    // 2^-100 probability of spurious failure here
+    assert(tries >= 0);
+}
+
+void test_sqrt(const secp256k1_fe_t *a, const secp256k1_fe_t *k) {
+    secp256k1_fe_t r1, r2;
+    int v = secp256k1_fe_sqrt(&r1, a);
+    assert((v == 0) == (k == NULL));
+
+    if (k != NULL) {
+        // Check that the returned root is +/- the given known answer
+        secp256k1_fe_negate(&r2, &r1, 1);
+        secp256k1_fe_add(&r1, k); secp256k1_fe_add(&r2, k);
+        secp256k1_fe_normalize(&r1); secp256k1_fe_normalize(&r2);
+        assert(secp256k1_fe_is_zero(&r1) || secp256k1_fe_is_zero(&r2));
+    }
+}
+
+void run_sqrt() {
+    secp256k1_fe_t ns, x, s, t;
+    random_fe_non_square(&ns);
+    for (int i=0; i<10*count; i++) {
+        random_fe(&x);
+        secp256k1_fe_sqr(&s, &x);
+        test_sqrt(&s, &x);
+        secp256k1_fe_mul(&t, &s, &ns);
+        test_sqrt(&t, NULL);
+    }
+}
+
+/***** ECMULT TESTS *****/
+
 void run_ecmult_chain() {
     // random starting point A (on the curve)
     secp256k1_fe_t ax; secp256k1_fe_set_hex(&ax, "8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004", 64);
@@ -275,10 +323,7 @@ void run_ecmult_chain() {
 }
 
 void test_point_times_order(const secp256k1_gej_t *point) {
-    // either the point is not on the curve, or multiplying it by the order results in O
-    if (!secp256k1_gej_is_valid(point))
-        return;
-
+    // multiplying a point by the order results in O
     const secp256k1_num_t *order = &secp256k1_ge_consts->order;
     secp256k1_num_t zero;
     secp256k1_num_init(&zero);
@@ -292,9 +337,14 @@ void test_point_times_order(const secp256k1_gej_t *point) {
 void run_point_times_order() {
     secp256k1_fe_t x; secp256k1_fe_set_hex(&x, "02", 2);
     for (int i=0; i<500; i++) {
-        secp256k1_ge_t p; secp256k1_ge_set_xo(&p, &x, 1);
-        secp256k1_gej_t j; secp256k1_gej_set_ge(&j, &p);
-        test_point_times_order(&j);
+        secp256k1_ge_t p;
+        if (secp256k1_ge_set_xo(&p, &x, 1)) {
+            assert(secp256k1_ge_is_valid(&p));
+            secp256k1_gej_t j;
+            secp256k1_gej_set_ge(&j, &p);
+            assert(secp256k1_gej_is_valid(&j));
+            test_point_times_order(&j);
+        }
         secp256k1_fe_sqr(&x, &x);
     }
     char c[65]; int cl=65;
@@ -450,6 +500,9 @@ int main(int argc, char **argv) {
 
     // num tests
     run_num_smalltests();
+
+    // field tests
+    run_sqrt();
 
     // ecmult tests
     run_wnaf();

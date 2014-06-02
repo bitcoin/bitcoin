@@ -25,7 +25,7 @@ int static secp256k1_ecdsa_pubkey_parse(secp256k1_ge_t *elem, const unsigned cha
     if (size == 33 && (pub[0] == 0x02 || pub[0] == 0x03)) {
         secp256k1_fe_t x;
         secp256k1_fe_set_b32(&x, pub+1);
-        secp256k1_ge_set_xo(elem, &x, pub[0] == 0x03);
+        return secp256k1_ge_set_xo(elem, &x, pub[0] == 0x03);
     } else if (size == 65 && (pub[0] == 0x04 || pub[0] == 0x06 || pub[0] == 0x07)) {
         secp256k1_fe_t x, y;
         secp256k1_fe_set_b32(&x, pub+1);
@@ -33,10 +33,10 @@ int static secp256k1_ecdsa_pubkey_parse(secp256k1_ge_t *elem, const unsigned cha
         secp256k1_ge_set_xy(elem, &x, &y);
         if ((pub[0] == 0x06 || pub[0] == 0x07) && secp256k1_fe_is_odd(&y) != (pub[0] == 0x07))
             return 0;
+        return secp256k1_ge_is_valid(elem);
     } else {
         return 0;
     }
-    return secp256k1_ge_is_valid(elem);
 }
 
 int static secp256k1_ecdsa_sig_parse(secp256k1_ecdsa_sig_t *r, const unsigned char *sig, int size) {
@@ -134,8 +134,7 @@ int static secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
     secp256k1_fe_t fx;
     secp256k1_fe_set_b32(&fx, brx);
     secp256k1_ge_t x;
-    secp256k1_ge_set_xo(&x, &fx, recid & 1);
-    if (!secp256k1_ge_is_valid(&x))
+    if (!secp256k1_ge_set_xo(&x, &fx, recid & 1))
         return 0;
     secp256k1_gej_t xj;
     secp256k1_gej_set_ge(&xj, &x);

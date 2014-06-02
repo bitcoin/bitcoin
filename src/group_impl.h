@@ -77,17 +77,19 @@ void static secp256k1_gej_set_xy(secp256k1_gej_t *r, const secp256k1_fe_t *x, co
     secp256k1_fe_set_int(&r->z, 1);
 }
 
-void static secp256k1_ge_set_xo(secp256k1_ge_t *r, const secp256k1_fe_t *x, int odd) {
+int static secp256k1_ge_set_xo(secp256k1_ge_t *r, const secp256k1_fe_t *x, int odd) {
     r->x = *x;
     secp256k1_fe_t x2; secp256k1_fe_sqr(&x2, x);
     secp256k1_fe_t x3; secp256k1_fe_mul(&x3, x, &x2);
     r->infinity = 0;
     secp256k1_fe_t c; secp256k1_fe_set_int(&c, 7);
     secp256k1_fe_add(&c, &x3);
-    secp256k1_fe_sqrt(&r->y, &c);
+    if (!secp256k1_fe_sqrt(&r->y, &c))
+        return 0;
     secp256k1_fe_normalize(&r->y);
     if (secp256k1_fe_is_odd(&r->y) != odd)
         secp256k1_fe_negate(&r->y, &r->y, 1);
+    return 1;
 }
 
 void static secp256k1_gej_set_ge(secp256k1_gej_t *r, const secp256k1_ge_t *a) {
