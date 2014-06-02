@@ -35,3 +35,15 @@ Implementation details
   * Use a precomputed table of multiples of powers of 16 multiplied with the generator, so general multiplication becomes a series of additions.
   * Slice the precomputed table in memory per byte, so memory access to the table becomes uniform.
   * Not fully constant-time.
+
+Build steps
+-----------
+
+libsecp256k1 is built using autotools:
+
+    $ aclocal
+    $ autoreconf --install
+    $ automake
+    $ ./configure
+    $ make
+    $ sudo make install  # optional
