@@ -74,6 +74,12 @@ BOOST_AUTO_TEST_CASE(rpc_rawparams)
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "locktime").get_int(), 0);
     BOOST_CHECK_THROW(r = CallRPC(string("decoderawtransaction ")+rawtx+" extra"), runtime_error);
 
+    // Only check failure cases, we have no blockchain data to decode the inputs
+    BOOST_CHECK_THROW(CallRPC("explainrawtransaction"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("explainrawtransaction null"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("explainrawtransaction DEADBEEF"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC(string("explainrawtransaction ")+rawtx), runtime_error);
+
     BOOST_CHECK_THROW(CallRPC("signrawtransaction"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("signrawtransaction null"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("signrawtransaction ff00"), runtime_error);
