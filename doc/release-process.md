@@ -97,8 +97,8 @@ Release Process
     60eb4b9c5779580b7d66529efa5b2836ba1a70edde2a0f3f696d647906a826be  qt-linux64-4.6.4-gitian-r1.tar.gz
     60dc2d3b61e9c7d5dbe2f90d5955772ad748a47918ff2d8b74e8db9b1b91c909  boost-win32-1.55.0-gitian-r6.zip
     f65fcaf346bc7b73bc8db3a8614f4f6bee2f61fcbe495e9881133a7c2612a167  boost-win64-1.55.0-gitian-r6.zip
-    97e62002d338885336bb24e7cbb9471491294bd8857af7a83d18c0961f864ec0  bitcoin-deps-win32-gitian-r11.zip
-    ee3ea2d5aac1a67ea6bfbea2c04068a7c0940616ce48ee4f37c264bb9d4438ef  bitcoin-deps-win64-gitian-r11.zip
+    acd59690a49dfbad6b436379843fe4ad1857ad91c603d52506690bc55f2a01a4  bitcoin-deps-win32-gitian-r12.zip
+    a3e5a62fcdad81f758e41848035e6a27be390981a14d590f2cf2509f87417a42  bitcoin-deps-win64-gitian-r12.zip
     963e3e5e85879010a91143c90a711a5d1d5aba992e38672cdf7b54e42c56b2f1  qt-win32-5.2.0-gitian-r3.zip
     751c579830d173ef3e6f194e83d18b92ebef6df03289db13ab77a52b6bc86ef0  qt-win64-5.2.0-gitian-r3.zip
     e2e403e1a08869c7eed4d4293bce13d51ec6a63592918b90ae215a0eceb44cb4  protobuf-win32-2.5.0-gitian-r4.zip
