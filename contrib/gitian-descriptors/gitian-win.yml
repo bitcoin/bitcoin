@@ -16,7 +16,6 @@ packages:
 - "automake"
 - "pkg-config"
 - "bsdmainutils"
-
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"

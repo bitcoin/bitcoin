@@ -1,5 +1,5 @@
 ---
-name: "protobuf-win32"
+name: "protobuf"
 suites:
 - "precise"
 architectures:

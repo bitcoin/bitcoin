@@ -11,19 +11,22 @@ packages:
 - "bsdmainutils"
 - "pkg-config"
 - "p7zip-full"
-
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
+<<<<<<< HEAD:contrib/gitian-descriptors/gitian-osx-bitcoin.yml
 - "osx-native-depends-r3.tar.gz"
 - "osx-depends-r4.tar.gz"
 - "osx-depends-qt-5.2.1-r4.tar.gz"
+=======
+- "osx-native-depends-gitian-r3.tar.gz"
+- "bitcoin-deps-osx-gitian-r3.tar.gz"
+- "qt-osx-5.2.1-gitian-r3.tar.gz"
+>>>>>>> Clean up release-process.md and make descriptors more consistent:contrib/gitian-descriptors/gitian-osx.yml
 - "MacOSX10.7.sdk.tar.gz"
-
 script: |
-
   HOST=x86_64-apple-darwin11
   PREFIX=`pwd`/osx-cross-depends/prefix
   SDK=`pwd`/osx-cross-depends/SDKs/MacOSX10.7.sdk
