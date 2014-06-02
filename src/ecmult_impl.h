@@ -206,13 +206,6 @@ void static secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
     int wnaf_na_lam[129]; int bits_na_lam = secp256k1_ecmult_wnaf(wnaf_na_lam, &na_lam, WINDOW_A);
     int bits = bits_na_1;
     if (bits_na_lam > bits) bits = bits_na_lam;
-
-    // calculate a_lam = a*lambda
-    secp256k1_gej_t a_lam; secp256k1_gej_mul_lambda(&a_lam, a);
-
-    // calculate odd multiples of a_lam
-    secp256k1_gej_t pre_a_lam[ECMULT_TABLE_SIZE(WINDOW_A)];
-    secp256k1_ecmult_table_precomp_gej(pre_a_lam, &a_lam, WINDOW_A);
 #else
     // build wnaf representation for na.
     int wnaf_na[257];     int bits_na     = secp256k1_ecmult_wnaf(wnaf_na,     na,      WINDOW_A);
@@ -222,6 +215,12 @@ void static secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
     // calculate odd multiples of a
     secp256k1_gej_t pre_a[ECMULT_TABLE_SIZE(WINDOW_A)];
     secp256k1_ecmult_table_precomp_gej(pre_a, a, WINDOW_A);
+
+#ifdef USE_ENDOMORPHISM
+    secp256k1_gej_t pre_a_lam[ECMULT_TABLE_SIZE(WINDOW_A)];
+    for (int i=0; i<ECMULT_TABLE_SIZE(WINDOW_A); i++)
+        secp256k1_gej_mul_lambda(&pre_a_lam[i], &pre_a[i]);
+#endif
 
     // Splitted G factors.
     secp256k1_num_t ng_1, ng_128;
