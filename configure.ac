@@ -74,6 +74,9 @@ if test x$YASM = x; then
   has_64bit_asm=no
 else
   case x"$host_os" in
+  xdarwin*)
+    YASM_BINFMT=macho64
+    ;;
   x*-gnux32)
     YASM_BINFMT=elfx32
     ;;

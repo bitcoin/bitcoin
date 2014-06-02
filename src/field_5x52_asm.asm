@@ -10,6 +10,12 @@
 
 	BITS 64
 
+%ifidn   __OUTPUT_FORMAT__,macho64
+%define SYM(x) _ %+ x
+%else
+%define SYM(x) x
+%endif
+
 	;;  Procedure ExSetMult
 	;;  Register Layout:
 	;;  INPUT: 	rdi	= a->n
@@ -26,9 +32,9 @@
 	;; 		rbp	 = Constant 0FFFFFFFFFFFFFh / t8
 	;; 		rsi	 = b.n / b.n[4] / t9
 
-	GLOBAL secp256k1_fe_mul_inner
+	GLOBAL SYM(secp256k1_fe_mul_inner)
 	ALIGN 32
-secp256k1_fe_mul_inner:
+SYM(secp256k1_fe_mul_inner):
 	push rbp
 	push rbx
 	push r12
@@ -315,9 +321,9 @@ common_exit_norm:
 	;; 		rcx	 = a.n[3] / t7
 	;; 		rbp	 = 0FFFFFFFFFFFFFh / t8
 	;; 		rsi	 = a.n[4] / t9
-	GLOBAL secp256k1_fe_sqr_inner
+	GLOBAL SYM(secp256k1_fe_sqr_inner)
 	ALIGN 32
-secp256k1_fe_sqr_inner:
+SYM(secp256k1_fe_sqr_inner):
 	push rbp
 	push rbx
 	push r12
