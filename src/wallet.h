@@ -151,6 +151,7 @@ public:
         nOrderPosNext = 0;
         nNextResend = 0;
         nLastResend = 0;
+        nTimeFirstKey = 0;
     }
     CWallet(std::string strWalletFileIn)
     {
