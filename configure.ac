@@ -294,7 +294,7 @@ AC_MSG_NOTICE([Using field implementation: $set_field])
 AC_MSG_NOTICE([Using bignum implementation: $set_bignum])
 
 AC_CONFIG_HEADERS([src/libsecp256k1-config.h])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile libsecp256k1.pc])
 AC_SUBST(SECP_INCLUDES)
 AC_SUBST(SECP_LIBS)
 AC_SUBST(SECP_TEST_LIBS)
