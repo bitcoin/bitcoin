@@ -217,16 +217,24 @@ void random_fe(secp256k1_fe_t *x) {
     secp256k1_fe_set_b32(x, bin);
 }
 
-void random_fe_non_square(secp256k1_fe_t *ns) {
-    secp256k1_fe_t r;
-    int tries = 100;
+void random_fe_non_zero(secp256k1_fe_t *nz) {
+    int tries = 10;
     while (--tries >= 0) {
-        random_fe(ns);
-    	if (!secp256k1_fe_sqrt(&r, ns))
+        random_fe(nz);
+        secp256k1_fe_normalize(nz);
+        if (!secp256k1_fe_is_zero(nz))
             break;
     }
-    // 2^-100 probability of spurious failure here
+    // Infinitesimal probability of spurious failure here
     assert(tries >= 0);
+}
+
+void random_fe_non_square(secp256k1_fe_t *ns) {
+    random_fe_non_zero(ns);
+    secp256k1_fe_t r;
+    if (secp256k1_fe_sqrt(&r, ns)) {
+        secp256k1_fe_negate(ns, ns, 1);
+    }
 }
 
 void test_sqrt(const secp256k1_fe_t *a, const secp256k1_fe_t *k) {
@@ -245,13 +253,33 @@ void test_sqrt(const secp256k1_fe_t *a, const secp256k1_fe_t *k) {
 
 void run_sqrt() {
     secp256k1_fe_t ns, x, s, t;
-    random_fe_non_square(&ns);
-    for (int i=0; i<10*count; i++) {
-        random_fe(&x);
+
+    // Check sqrt(0) is 0
+    secp256k1_fe_set_int(&x, 0);
+    secp256k1_fe_sqr(&s, &x);
+    test_sqrt(&s, &x);
+
+    // Check sqrt of small squares (and their negatives)
+    for (int i=1; i<=100; i++) {
+        secp256k1_fe_set_int(&x, i);
         secp256k1_fe_sqr(&s, &x);
         test_sqrt(&s, &x);
-        secp256k1_fe_mul(&t, &s, &ns);
+        secp256k1_fe_negate(&t, &s, 1);
         test_sqrt(&t, NULL);
+    }
+
+    // Consistency checks for large random values
+    for (int i=0; i<10; i++) {
+        random_fe_non_square(&ns);
+        for (int j=0; j<count; j++) {
+            random_fe(&x);
+            secp256k1_fe_sqr(&s, &x);
+            test_sqrt(&s, &x);
+            secp256k1_fe_negate(&t, &s, 1);
+            test_sqrt(&t, NULL);
+            secp256k1_fe_mul(&t, &s, &ns);
+            test_sqrt(&t, NULL);
+        }
     }
 }
 
