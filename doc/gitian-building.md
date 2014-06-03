@@ -34,19 +34,22 @@ Table of Contents
 - [Signing externally](#signing-externally)
 - [Uploading signatures](#uploading-signatures)
 
+Preparing the Gitian builder host
+---------------------------------
+
+The first step is to prepare the host environment that will be used to perform the Gitian builds.
+In this guide it is explained how to set up the environment, and how to get the builds started.
+
+Debian Linux was chosen as the host distribution because it has a lightweight install (in contrast to Ubuntu) and is readily available.
+Any kind of virtualization can be used, for example:
+- [VirtualBox](https://www.virtualbox.org/), covered by this guide
+- [KVM](http://www.linux-kvm.org/page/Main_Page)
+- [LXC](https://linuxcontainers.org/), see also [Gitian host docker container](https://github.com/gdm85/tenku/tree/master/docker/gitian-bitcoin-host/README.md).
+
+You can also install on actual hardware instead of using virtualization.
+
 Create a new VirtualBox VM
 ---------------------------
-
-The first step is to create a new Virtual Machine, which will be explained in
-this section.  This VM will be used to do the Gitian builds. In this guide it
-will be explained how to set up the environment, and how to get the builds
-started.
-
-Debian Linux was chosen as the host distribution because it has a lightweight install (in
-contrast to Ubuntu) and is readily available. We here show the steps for
-VirtualBox [1], but any kind of virtualization can be used. You can also install
-on actual hardware instead of using a VM, in this case you can skip this section.
-
 In the VirtualBox GUI click "Create" and choose the following parameters in the wizard:
 
 ![](gitian-building/create_vm_page1.png)
@@ -74,11 +77,11 @@ In the VirtualBox GUI click "Create" and choose the following parameters in the 
 - Disk size: at least 40GB; as low as 20GB *may* be possible, but better to err on the safe side 
 - Push the `Create` button
 
-Get the [Debian 7.4 net installer](http://cdimage.debian.org/debian-cd/7.4.0/amd64/iso-cd/debian-7.4.0-amd64-netinst.iso).
+Get the [Debian 7.4 net installer](http://ftp.at.debian.org/debian-jigdo/current/amd64/iso-cd/debian-7.4.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
 This DVD image can be validated using a SHA256 hashing tool, for example on
 Unixy OSes by entering the following in a terminal:
 
-    echo "b712a141bc60269db217d3b3e456179bd6b181645f90e4aac9c42ed63de492e9  /home/orion/Downloads/debian-7.4.0-amd64-netinst.iso" | sha256sum -c
+    echo "b712a141bc60269db217d3b3e456179bd6b181645f90e4aac9c42ed63de492e9  debian-7.4.0-amd64-netinst.iso" | sha256sum -c
     # (must return OK)
 
 After creating the VM, we need to configure it. 
@@ -105,8 +108,6 @@ After creating the VM, we need to configure it.
 Then start the VM. On the first launch you will be asked for a CD or DVD image. Choose the downloaded iso.
 
 ![](gitian-building/select_startup_disk.png)
-
-[1] https://www.virtualbox.org/
 
 Installing Debian
 ------------------
@@ -279,11 +280,14 @@ cd ..
 
 **Note**: When sudo asks for a password, enter the password for the user *debian* not for *root*.
 
-Clone the git repositories for bitcoin and gitian,
+Clone the git repositories for bitcoin and gitian and then checkout the bitcoin version that you are willing to build.
 
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
 git clone https://github.com/bitcoin/bitcoin
+cd bitcoin
+git checkout v${VERSION}
+cd ..
 ```
 
 Setting up gitian images
@@ -402,9 +406,6 @@ gitian build.
 Uploading signatures
 ---------------------
 
-After building and signing you can push your signatures (both the `.assert` and
-`.assert.sig` files) to the
-[bitcoin/gitian.sigs](https://github.com/bitcoin/gitian.sigs/) repository, or
-if not possible create a pull request. You can also mail the files to me
-(laanwj@gmail.com) and I'll commit them.
-
+After building and signing you can push your signatures (both the `.assert` and `.assert.sig` files) to the
+[bitcoin/gitian.sigs](https://github.com/bitcoin/gitian.sigs/) repository, or if not possible create a pull
+request. You can also mail the files to me (laanwj@gmail.com) and I'll commit them.
