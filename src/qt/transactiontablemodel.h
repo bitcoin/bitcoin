@@ -14,6 +14,7 @@ class WalletModel;
 class TransactionTableModel : public QAbstractTableModel
 {
     Q_OBJECT
+
 public:
     explicit TransactionTableModel(CWallet* wallet, WalletModel *parent = 0);
     ~TransactionTableModel();
@@ -55,11 +56,13 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
+
 private:
     CWallet* wallet;
     WalletModel *walletModel;
     QStringList columns;
     TransactionTablePriv *priv;
+    int cachedNumBlocks;
 
     QString lookupAddress(const std::string &address, bool tooltip) const;
     QVariant addressColor(const TransactionRecord *wtx) const;
@@ -72,11 +75,12 @@ private:
     QVariant txStatusDecoration(const TransactionRecord *wtx) const;
     QVariant txAddressDecoration(const TransactionRecord *wtx) const;
 
-private slots:
-    void update();
+public slots:
+    void updateTransaction(const QString &hash, int status);
+    void updateConfirmations();
+    void updateDisplayUnit();
 
     friend class TransactionTablePriv;
 };
 
-#endif
-
+#endif // TRANSACTIONTABLEMODEL_H

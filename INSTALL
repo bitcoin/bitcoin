@@ -1,6 +1,6 @@
 Building Bitcoin
 
-See doc/readme-qt.rst for instructions on building Bitcoin QT,
+See doc/readme-qt.rst for instructions on building Bitcoin-Qt,
 the intended-for-end-users, nice-graphical-interface, reference
 implementation of Bitcoin.
 

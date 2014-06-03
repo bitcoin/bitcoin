@@ -1,0 +1,21 @@
+commit 4dcc8701ac0eb09d8992d19fb411cee3c9aaf394
+Author: Matt Corallo <git@bluematt.me>
+Date:   Sun Mar 24 20:45:44 2013 -0400
+
+    Revert "Update unit test to match rule enforcement starts 21 March"
+    
+    This reverts commit d3e8c6a9d3fad68b0eee4434401ec7b3066399a2.
+
+diff --git a/src/test/checkblock_tests.cpp b/src/test/checkblock_tests.cpp
+index 3cfb6db..e167def 100644
+--- a/src/test/checkblock_tests.cpp
++++ b/src/test/checkblock_tests.cpp
+@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(May15)
+     if (read_block("Mar12Fork.dat", forkingBlock))
+     {
+         CValidationState state;
+-        forkingBlock.nTime = tMay15-1; // Invalidates PoW
++        BOOST_CHECK(!forkingBlock.CheckBlock(state, true, true));
+         BOOST_CHECK(!forkingBlock.CheckBlock(state, false, false));
+ 
+         // After May 15'th, big blocks are OK:

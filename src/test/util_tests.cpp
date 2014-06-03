@@ -103,11 +103,13 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
 
 BOOST_AUTO_TEST_CASE(util_DateTimeStrFormat)
 {
-    BOOST_CHECK_EQUAL(DateTimeStrFormat("%x %H:%M:%S", 0), "01/01/70 00:00:00");
-    BOOST_CHECK_EQUAL(DateTimeStrFormat("%x %H:%M:%S", 0x7FFFFFFF), "01/19/38 03:14:07");
-    // Formats used within bitcoin
-    BOOST_CHECK_EQUAL(DateTimeStrFormat("%x %H:%M:%S", 1317425777), "09/30/11 23:36:17");
-    BOOST_CHECK_EQUAL(DateTimeStrFormat("%x %H:%M", 1317425777), "09/30/11 23:36");
+/*These are platform-dependant and thus removed to avoid useless test failures
+    BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", 0), "1970-01-01 00:00:00");
+    BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", 0x7FFFFFFF), "2038-01-19 03:14:07");
+    // Formats used within Bitcoin
+    BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", 1317425777), "2011-09-30 23:36:17");
+    BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M", 1317425777), "2011-09-30 23:36");
+*/
 }
 
 BOOST_AUTO_TEST_CASE(util_ParseParameters)
@@ -257,6 +259,68 @@ BOOST_AUTO_TEST_CASE(util_IsHex)
     BOOST_CHECK(!IsHex("eleven"));
     BOOST_CHECK(!IsHex("00xx00"));
     BOOST_CHECK(!IsHex("0x0000"));
+}
+
+BOOST_AUTO_TEST_CASE(util_seed_insecure_rand)
+{
+    // Expected results for the determinstic seed.
+    const uint32_t exp_vals[11] = {  91632771U,1889679809U,3842137544U,3256031132U,
+                                   1761911779U, 489223532U,2692793790U,2737472863U,
+                                   2796262275U,1309899767U,840571781U};
+    // Expected 0s in rand()%(idx+2) for the determinstic seed.
+    const int exp_count[9] = {5013,3346,2415,1972,1644,1386,1176,1096,1009};
+    int i;
+    int count=0;
+
+    seed_insecure_rand();
+
+    //Does the non-determistic rand give us results that look too like the determinstic one?
+    for (i=0;i<10;i++)
+    {
+        int match = 0;
+        uint32_t rval = insecure_rand();
+        for (int j=0;j<11;j++)match |= rval==exp_vals[j];
+        count += match;
+    }
+    // sum(binomial(10,i)*(11/(2^32))^i*(1-(11/(2^32)))^(10-i),i,0,4) ~= 1-1/2^134.73
+    // So _very_ unlikely to throw a false failure here.
+    BOOST_CHECK(count<=4);
+
+    for (int mod=2;mod<11;mod++)
+    {
+        int mask = 1;
+        // Really rough binomal confidence approximation.
+        int err = 30*10000./mod*sqrt((1./mod*(1-1./mod))/10000.);
+        //mask is 2^ceil(log2(mod))-1
+        while(mask<mod-1)mask=(mask<<1)+1;
+
+        count = 0;
+        //How often does it get a zero from the uniform range [0,mod)?
+        for (i=0;i<10000;i++)
+        {
+            uint32_t rval;
+            do{
+                rval=insecure_rand()&mask;
+            }while(rval>=(uint32_t)mod);
+            count += rval==0;
+        }
+        BOOST_CHECK(count<=10000/mod+err);
+        BOOST_CHECK(count>=10000/mod-err);
+    }
+
+    seed_insecure_rand(true);
+
+    for (i=0;i<11;i++)
+    {
+        BOOST_CHECK_EQUAL(insecure_rand(),exp_vals[i]);
+    }
+
+    for (int mod=2;mod<11;mod++)
+    {
+        count = 0;
+        for (i=0;i<10000;i++) count += insecure_rand()%mod==0;
+        BOOST_CHECK_EQUAL(count,exp_count[mod-2]);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

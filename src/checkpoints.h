@@ -3,7 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_CHECKPOINT_H
-#define  BITCOIN_CHECKPOINT_H
+#define BITCOIN_CHECKPOINT_H
 
 #include <map>
 #include "net.h"
@@ -28,6 +28,8 @@ namespace Checkpoints
 
     // Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
+
+    double GuessVerificationProgress(CBlockIndex *pindex);
 
     extern uint256 hashSyncCheckpoint;
     extern CSyncCheckpoint checkpointMessage;

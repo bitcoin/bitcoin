@@ -12,11 +12,11 @@
 #include <QImageWriter>
 
 #ifdef USE_DBUS
-#include <QtDBus/QtDBus>
+#include <QtDBus>
 #include <stdint.h>
 #endif
 
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
 #include <ApplicationServices/ApplicationServices.h>
 extern bool qt_mac_execute_apple_script(const QString &script, AEDesc *ret);
 #endif
@@ -46,7 +46,7 @@ Notificator::Notificator(const QString &programName, QSystemTrayIcon *trayicon, 
         mode = Freedesktop;
     }
 #endif
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
     // Check if Growl is installed (based on Qt's tray icon implementation)
     CFURLRef cfurl;
     OSStatus status = LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator, CFSTR("growlTicket"), kLSRolesAll, 0, &cfurl);
@@ -82,7 +82,7 @@ public:
 
     static int metaType();
 
-    // Image to variant that can be marshaled over DBus
+    // Image to variant that can be marshalled over DBus
     static QVariant toVariant(const QImage &img);
 
 private:
@@ -113,7 +113,7 @@ FreedesktopImage::FreedesktopImage(const QImage &img):
 {
     // Convert 00xAARRGGBB to RGBA bytewise (endian-independent) format
     QImage tmp = img.convertToFormat(QImage::Format_ARGB32);
-    const uint32_t *data = reinterpret_cast<const uint32_t*>(tmp.constBits());
+    const uint32_t *data = reinterpret_cast<const uint32_t*>(tmp.bits());
 
     unsigned int num_pixels = width * height;
     image.resize(num_pixels * BYTES_PER_PIXEL);
@@ -225,7 +225,7 @@ void Notificator::notifySystray(Class cls, const QString &title, const QString &
 }
 
 // Based on Qt's tray icon implementation
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
 void Notificator::notifyGrowl(Class cls, const QString &title, const QString &text, const QIcon &icon)
 {
     const QString script(
@@ -285,7 +285,7 @@ void Notificator::notify(Class cls, const QString &title, const QString &text, c
     case QSystemTray:
         notifySystray(cls, title, text, icon, millisTimeout);
         break;
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
     case Growl12:
     case Growl13:
         notifyGrowl(cls, title, text, icon);
@@ -294,7 +294,7 @@ void Notificator::notify(Class cls, const QString &title, const QString &text, c
     default:
         if(cls == Critical)
         {
-            // Fall back to old fashioned popup dialog if critical and no other notification available
+            // Fall back to old fashioned pop-up dialog if critical and no other notification available
             QMessageBox::critical(parent, title, text, QMessageBox::Ok, QMessageBox::Ok);
         }
         break;

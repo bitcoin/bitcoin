@@ -11,15 +11,15 @@ packages:
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
-- "qt-everywhere-opensource-src-4.7.4.tar.gz"
+- "qt-everywhere-opensource-src-4.8.3.tar.gz"
 script: |
   INSTDIR="$HOME/qt/"
   mkdir $INSTDIR
   SRCDIR="$INSTDIR/src/"
   mkdir $SRCDIR
   #
-  tar xzf qt-everywhere-opensource-src-4.7.4.tar.gz
-  cd qt-everywhere-opensource-src-4.7.4
+  tar xzf qt-everywhere-opensource-src-4.8.3.tar.gz
+  cd qt-everywhere-opensource-src-4.8.3
   sed 's/$TODAY/2011-01-30/' -i configure
   sed 's/i686-pc-mingw32-/i586-mingw32msvc-/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
   sed --posix 's|QMAKE_CFLAGS\t\t= -pipe|QMAKE_CFLAGS\t\t= -pipe -isystem /usr/i586-mingw32msvc/include/ -frandom-seed=qtbuild|' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
@@ -40,7 +40,7 @@ script: |
   #export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  ./configure -prefix $INSTDIR -confirm-license -release -opensource -static -no-qt3support -xplatform unsupported/win32-g++-cross -no-multimedia -no-audio-backend -no-phonon -no-phonon-backend -no-declarative -no-script -no-scripttools -no-javascript-jit  -no-webkit -no-svg -no-xmlpatterns -no-sql-sqlite -no-nis -no-cups -no-iconv -no-dbus -no-gif -no-libtiff -opengl no -nomake examples -nomake demos -nomake docs
+  ./configure -prefix $INSTDIR -confirm-license -release -opensource -static -no-qt3support -xplatform unsupported/win32-g++-cross -no-multimedia -no-audio-backend -no-phonon -no-phonon-backend -no-declarative -no-script -no-scripttools -no-javascript-jit -no-webkit -no-svg -no-xmlpatterns -no-sql-sqlite -no-nis -no-cups -no-iconv -no-dbus -no-gif -no-libtiff -no-opengl -nomake examples -nomake demos -nomake docs -no-feature-style-plastique -no-feature-style-cleanlooks -no-feature-style-motif -no-feature-style-cde -no-feature-style-windowsce -no-feature-style-windowsmobile -no-feature-style-s60
   find . -name *.prl | xargs -l sed 's|/\.||' -i
   find . -name *.prl | xargs -l sed 's|/$||' -i
   make $MAKEOPTS install
@@ -51,4 +51,4 @@ script: |
 
   # as zip stores file timestamps, use faketime to intercept stat calls to set dates for all files to reference date
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-  zip -r $OUTDIR/qt-win32-4.7.4-gitian.zip *
+  zip -r $OUTDIR/qt-win32-4.8.3-gitian-r1.zip *

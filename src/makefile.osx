@@ -2,7 +2,7 @@
 # Copyright (c) 2009-2010 Satoshi Nakamoto
 # Copyright (c) 2011-2012 The PPCoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
-# file license.txt or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Mac OS X makefile for ppcoin
 # Originally by Laszlo Hanyecz (solar@heliacal.net)
@@ -21,6 +21,7 @@ LIBPATHS= \
  -L"$(DEPSDIR)/lib/db48"
 
 USE_UPNP:=1
+USE_IPV6:=1
 
 LIBS= -dead_strip
 
@@ -36,6 +37,7 @@ LIBS += \
  $(DEPSDIR)/lib/libboost_filesystem-mt.a \
  $(DEPSDIR)/lib/libboost_program_options-mt.a \
  $(DEPSDIR)/lib/libboost_thread-mt.a \
+ $(DEPSDIR)/lib/libboost_chrono-mt.a \
  $(DEPSDIR)/lib/libssl.a \
  $(DEPSDIR)/lib/libcrypto.a \
  -lz
@@ -48,6 +50,7 @@ LIBS += \
  -lboost_filesystem-mt \
  -lboost_program_options-mt \
  -lboost_thread-mt \
+ -lboost_chrono-mt \
  -lssl \
  -lcrypto \
  -lz
@@ -67,14 +70,16 @@ else
 CFLAGS += -arch i386
 endif
 else
-CFLAGS = -g
+DEBUGFLAGS = -g
 endif
 
 # ppc doesn't work because we don't support big-endian
-CFLAGS += -Wextra -Wno-sign-compare -Wno-invalid-offsetof -Wformat-security \
+CFLAGS += -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter \
     $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 
 OBJS= \
+    leveldb/libleveldb.a \
+    obj/alert.o \
     obj/version.o \
     obj/checkpoints.o \
     obj/netbase.o \
@@ -83,21 +88,33 @@ OBJS= \
     obj/key.o \
     obj/db.o \
     obj/init.o \
-    obj/irc.o \
     obj/keystore.o \
     obj/main.o \
     obj/net.o \
     obj/protocol.o \
     obj/bitcoinrpc.o \
     obj/rpcdump.o \
+    obj/rpcnet.o \
+    obj/rpcmining.o \
+    obj/rpcwallet.o \
+    obj/rpcblockchain.o \
+    obj/rpcrawtransaction.o \
     obj/script.o \
+    obj/sync.o \
     obj/util.o \
     obj/wallet.o \
     obj/walletdb.o \
+    obj/kernel.o \
+    obj/hash.o \
+    obj/bloom.o \
     obj/noui.o \
-    obj/kernel.o
+    obj/leveldb.o \
+    obj/txdb.o
 
-ifdef USE_UPNP
+ifndef USE_UPNP
+	override USE_UPNP = -
+endif
+ifneq (${USE_UPNP}, -)
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
 ifdef STATIC
 	LIBS += $(DEPSDIR)/lib/libminiupnpc.a
@@ -106,7 +123,23 @@ else
 endif
 endif
 
+ifneq (${USE_IPV6}, -)
+	DEFS += -DUSE_IPV6=$(USE_IPV6)
+endif
+
 all: ppcoind
+
+test check: test_bitcoin FORCE
+	./test_bitcoin
+
+#
+# LevelDB support
+#
+LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
+DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
+DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
+leveldb/libleveldb.a:
+	@echo "Building LevelDB ..." && cd leveldb && $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(CFLAGS)" libleveldb.a libmemenv.a && cd ..
 
 # auto-generated dependencies:
 -include obj/*.P
@@ -118,7 +151,7 @@ version.cpp: obj/build.h
 DEFS += -DHAVE_BUILD_INFO
 
 obj/%.o: %.cpp
-	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
@@ -130,7 +163,7 @@ ppcoind: $(OBJS:obj/%=obj/%)
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
 obj-test/%.o: test/%.cpp
-	$(CXX) -c $(TESTDEFS) $(CFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(TESTDEFS) $(CFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
@@ -145,6 +178,7 @@ clean:
 	-rm -f obj-test/*.o
 	-rm -f obj/*.P
 	-rm -f obj-test/*.P
-	-rm -f src/build.h
+	-rm -f obj/build.h
+	-cd leveldb && $(MAKE) clean || true
 
 FORCE:

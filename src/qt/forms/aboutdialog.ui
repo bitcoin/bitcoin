@@ -22,9 +22,6 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="text">
-      <string/>
-     </property>
      <property name="pixmap">
       <pixmap resource="../bitcoin.qrc">:/images/about</pixmap>
      </property>
@@ -49,6 +46,9 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QLabel" name="label">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
          <property name="text">
           <string>&lt;b&gt;PPCoin&lt;/b&gt; version</string>
          </property>
@@ -59,11 +59,11 @@
        </item>
        <item>
         <widget class="QLabel" name="versionLabel">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
          <property name="text">
           <string notr="true">0.3.666-beta</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::RichText</enum>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -86,12 +86,29 @@
       </layout>
      </item>
      <item>
-      <widget class="QLabel" name="label_ppcoin_copyright">
-       <property name="text">
-        <string>Copyright © 2011-2013 PPCoin Developers</string>
+      <widget class="QLabel" name="PPCoinCopyrightLabel">
+       <property name="cursor">
+        <cursorShape>IBeamCursor</cursorShape>
        </property>
-       <property name="wordWrap">
-        <bool>true</bool>
+       <property name="text">
+        <string>Copyright &amp;copy; 2011-YYYY PPCoin Developers</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::RichText</enum>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="BitcoinCopyrightLabel">
+       <property name="cursor">
+        <cursorShape>IBeamCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string notr="true">Copyright &amp;copy; 2009-2013 Bitcoin Developers</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::RichText</enum>
        </property>
        <property name="textInteractionFlags">
         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -100,12 +117,14 @@
      </item>
      <item>
       <widget class="QLabel" name="label_2">
+       <property name="cursor">
+        <cursorShape>IBeamCursor</cursorShape>
+       </property>
        <property name="text">
-        <string>Copyright © 2009-2012 Bitcoin Developers
-
+        <string>
 This is experimental software.
 
-Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
+Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</string>
        </property>

@@ -2,7 +2,6 @@ src/*.exe
 src/ppcoin
 src/ppcoind
 src/test_ppcoin
-src/build.h
 .*.swp
 *.*~*
 *.bak
@@ -11,20 +10,25 @@ src/build.h
 *.o
 *.patch
 .ppcoin
-#compilation and Qt preprocessor part
+
+# Compilation and Qt preprocessor part
 *.qm
 Makefile
 bitcoin-qt
-#resources cpp
+Bitcoin-Qt.app
+
+# Unit-tests
+Makefile.test
+bitcoin-qt_test
+
+# Resources cpp
 qrc_*.cpp
-#qt creator
+
+# Qt creator
 *.pro.user
-#mac specific
+
+# Mac specific
 .DS_Store
 build
-*.plist
-*.xcodeproj
-PortIndex*
-dist
-*.app
-*.dmg
+
+!src/leveldb-*/Makefile

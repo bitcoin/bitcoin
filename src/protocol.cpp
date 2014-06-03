@@ -1,11 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
+// Copyright (c) 2011-2013 PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "protocol.h"
 #include "util.h"
 #include "netbase.h"
+#include "main.h"
 
 #ifndef WIN32
 # include <arpa/inet.h>
@@ -26,6 +28,8 @@ static unsigned char pchMessageStartBitcoin[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
 static unsigned char pchMessageStartPPCoin[4] = { 0xe6, 0xe8, 0xe9, 0xe5 };
 static unsigned int nMessageStartSwitchTime = 1347300000;
 
+unsigned char pchMessageStart[4] = { 0xe6, 0xe8, 0xe9, 0xe5 };
+
 void GetMessageStart(unsigned char pchMessageStart[], bool fPersistent)
 {
     if (fTestNet)
@@ -39,11 +43,12 @@ static const char* ppszTypeName[] =
     "ERROR",
     "tx",
     "block",
+    "filtered block"
 };
 
 CMessageHeader::CMessageHeader()
 {
-    GetMessageStart(pchMessageStart);
+    memcpy(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart));
     memset(pchCommand, 0, sizeof(pchCommand));
     pchCommand[1] = 1;
     nMessageSize = -1;
@@ -52,7 +57,7 @@ CMessageHeader::CMessageHeader()
 
 CMessageHeader::CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn)
 {
-    GetMessageStart(pchMessageStart);
+    memcpy(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart));
     strncpy(pchCommand, pszCommand, COMMAND_SIZE);
     nMessageSize = nMessageSizeIn;
     nChecksum = 0;
@@ -69,9 +74,7 @@ std::string CMessageHeader::GetCommand() const
 bool CMessageHeader::IsValid() const
 {
     // Check start string
-    unsigned char pchMessageStartProtocol[4];
-    GetMessageStart(pchMessageStartProtocol);
-    if (memcmp(pchMessageStart, pchMessageStartProtocol, sizeof(pchMessageStart)) != 0)
+    if (memcmp(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart)) != 0)
         return false;
 
     // Check the command string for errors
@@ -165,7 +168,7 @@ const char* CInv::GetCommand() const
 
 std::string CInv::ToString() const
 {
-    return strprintf("%s %s", GetCommand(), hash.ToString().substr(0,20).c_str());
+    return strprintf("%s %s", GetCommand(), hash.ToString().c_str());
 }
 
 void CInv::print() const

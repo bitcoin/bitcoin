@@ -20,6 +20,7 @@
 #define TESTNET_PORT 9903
 
 extern bool fTestNet;
+extern unsigned char pchMessageStart[4];
 
 void GetMessageStart(unsigned char pchMessageStart[], bool fPersistent = false);
 
@@ -54,8 +55,17 @@ class CMessageHeader
 
     // TODO: make private (improves encapsulation)
     public:
-        enum { COMMAND_SIZE=12 };
-        unsigned char pchMessageStart[4];
+        enum {
+            MESSAGE_START_SIZE=4,
+            COMMAND_SIZE=12,
+            MESSAGE_SIZE_SIZE=sizeof(int),
+            CHECKSUM_SIZE=sizeof(int),
+
+            MESSAGE_SIZE_OFFSET=MESSAGE_START_SIZE+COMMAND_SIZE,
+            CHECKSUM_OFFSET=MESSAGE_SIZE_OFFSET+MESSAGE_SIZE_SIZE,
+            HEADER_SIZE=MESSAGE_START_SIZE+COMMAND_SIZE+MESSAGE_SIZE_SIZE+CHECKSUM_SIZE
+        };
+        unsigned char pchMessageStart[MESSAGE_START_SIZE];
         char pchCommand[COMMAND_SIZE];
         unsigned int nMessageSize;
         unsigned int nChecksum;
@@ -129,6 +139,15 @@ class CInv
     public:
         int type;
         uint256 hash;
+};
+
+enum
+{
+    MSG_TX = 1,
+    MSG_BLOCK,
+    // Nodes may always request a MSG_FILTERED_BLOCK in a getdata, however,
+    // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
+    MSG_FILTERED_BLOCK,
 };
 
 #endif // __INCLUDED_PROTOCOL_H__

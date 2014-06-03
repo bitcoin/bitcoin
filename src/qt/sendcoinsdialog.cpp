@@ -1,5 +1,6 @@
 #include "sendcoinsdialog.h"
 #include "ui_sendcoinsdialog.h"
+
 #include "walletmodel.h"
 #include "bitcoinunits.h"
 #include "addressbookpage.h"
@@ -7,9 +8,9 @@
 #include "sendcoinsentry.h"
 #include "guiutil.h"
 #include "askpassphrasedialog.h"
+#include "base58.h"
 
 #include <QMessageBox>
-#include <QLocale>
 #include <QTextDocument>
 #include <QScrollBar>
 
@@ -20,7 +21,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-#ifdef Q_WS_MAC // Icons on push buttons are very uncommon on Mac
+#ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
     ui->addButton->setIcon(QIcon());
     ui->clearButton->setIcon(QIcon());
     ui->sendButton->setIcon(QIcon());
@@ -46,10 +47,11 @@ void SendCoinsDialog::setModel(WalletModel *model)
             entry->setModel(model);
         }
     }
-    if(model)
+    if(model && model->getOptionsModel())
     {
-        setBalance(model->getBalance(), model->getStake(), model->getUnconfirmedBalance());
-        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
+        setBalance(model->getBalance(), model->getStake(), model->getUnconfirmedBalance(), model->getImmatureBalance());
+        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64, qint64)));
+        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
     }
 }
 
@@ -120,7 +122,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     {
     case WalletModel::InvalidAddress:
         QMessageBox::warning(this, tr("Send Coins"),
-            tr("The recepient address is not valid, please recheck."),
+            tr("The recipient address is not valid, please recheck."),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
     case WalletModel::InvalidAmount:
@@ -130,28 +132,28 @@ void SendCoinsDialog::on_sendButton_clicked()
         break;
     case WalletModel::AmountExceedsBalance:
         QMessageBox::warning(this, tr("Send Coins"),
-            tr("Amount exceeds your balance"),
+            tr("The amount exceeds your balance."),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
     case WalletModel::AmountWithFeeExceedsBalance:
         QMessageBox::warning(this, tr("Send Coins"),
-            tr("Total exceeds your balance when the %1 transaction fee is included").
+            tr("The total exceeds your balance when the %1 transaction fee is included.").
             arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, sendstatus.fee)),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
     case WalletModel::DuplicateAddress:
         QMessageBox::warning(this, tr("Send Coins"),
-            tr("Duplicate address found, can only send to each address once in one send operation"),
+            tr("Duplicate address found, can only send to each address once per send operation."),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
     case WalletModel::TransactionCreationFailed:
         QMessageBox::warning(this, tr("Send Coins"),
-            tr("Error: Transaction creation failed  "),
+            tr("Error: Transaction creation failed!"),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
     case WalletModel::TransactionCommitFailed:
         QMessageBox::warning(this, tr("Send Coins"),
-            tr("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."),
+            tr("Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
     case WalletModel::Aborted: // User aborted, nothing to do
@@ -200,9 +202,9 @@ SendCoinsEntry *SendCoinsDialog::addEntry()
     entry->clear();
     entry->setFocus();
     ui->scrollAreaWidgetContents->resize(ui->scrollAreaWidgetContents->sizeHint());
-    QCoreApplication::instance()->processEvents();
+    qApp->processEvents();
     QScrollBar* bar = ui->scrollArea->verticalScrollBar();
-    if (bar)
+    if(bar)
         bar->setSliderPosition(bar->maximum());
     return entry;
 }
@@ -243,9 +245,29 @@ QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
     return ui->sendButton;
 }
 
+void SendCoinsDialog::setAddress(const QString &address)
+{
+    SendCoinsEntry *entry = 0;
+    // Replace the first entry if it is still unused
+    if(ui->entries->count() == 1)
+    {
+        SendCoinsEntry *first = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(0)->widget());
+        if(first->isClear())
+        {
+            entry = first;
+        }
+    }
+    if(!entry)
+    {
+        entry = addEntry();
+    }
+
+    entry->setAddress(address);
+}
+
 void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
 {
-    if (!fNewRecipientAllowed)
+    if(!fNewRecipientAllowed)
         return;
 
     SendCoinsEntry *entry = 0;
@@ -266,24 +288,39 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
     entry->setValue(rv);
 }
 
-
-void SendCoinsDialog::handleURI(const QString &uri)
+bool SendCoinsDialog::handleURI(const QString &uri)
 {
     SendCoinsRecipient rv;
-    if(!GUIUtil::parseBitcoinURI(uri, &rv))
+    // URI has to be valid
+    if (GUIUtil::parseBitcoinURI(uri, &rv))
     {
-        return;
+        CBitcoinAddress address(rv.address.toStdString());
+        if (!address.IsValid())
+            return false;
+        pasteEntry(rv);
+        return true;
     }
-    pasteEntry(rv);
+
+    return false;
 }
 
-void SendCoinsDialog::setBalance(qint64 balance, qint64 stake, qint64 unconfirmedBalance)
+void SendCoinsDialog::setBalance(qint64 balance, qint64 stake, qint64 unconfirmedBalance, qint64 immatureBalance)
 {
     Q_UNUSED(stake);
     Q_UNUSED(unconfirmedBalance);
+    Q_UNUSED(immatureBalance);
     if(!model || !model->getOptionsModel())
         return;
 
     int unit = model->getOptionsModel()->getDisplayUnit();
     ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
+}
+
+void SendCoinsDialog::updateDisplayUnit()
+{
+    if(model && model->getOptionsModel())
+    {
+        // Update labelBalance with the current balance and the current unit
+        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->getBalance()));
+    }
 }

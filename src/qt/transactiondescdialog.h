@@ -6,6 +6,7 @@
 namespace Ui {
     class TransactionDescDialog;
 }
+
 QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE

@@ -20,8 +20,6 @@ using namespace boost::assign;
 typedef vector<unsigned char> valtype;
 
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
-extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
-                         bool fValidatePayToScriptHash, int nHashType);
 
 BOOST_AUTO_TEST_SUITE(multisig_tests)
 
@@ -44,6 +42,8 @@ sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction,
 
 BOOST_AUTO_TEST_CASE(multisig_verify)
 {
+    unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
+
     CKey key[4];
     for (int i = 0; i < 4; i++)
         key[i].MakeNewKey(true);
@@ -80,19 +80,19 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     keys.clear();
     keys += key[0],key[1]; // magic operator+= from boost.assign
     s = sign_multisig(a_and_b, keys, txTo[0], 0);
-    BOOST_CHECK(VerifyScript(s, a_and_b, txTo[0], 0, true, 0));
+    BOOST_CHECK(VerifyScript(s, a_and_b, txTo[0], 0, flags, 0));
 
     for (int i = 0; i < 4; i++)
     {
         keys.clear();
         keys += key[i];
         s = sign_multisig(a_and_b, keys, txTo[0], 0);
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, true, 0), strprintf("a&b 1: %d", i));
+        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, flags, 0), strprintf("a&b 1: %d", i));
 
         keys.clear();
         keys += key[1],key[i];
         s = sign_multisig(a_and_b, keys, txTo[0], 0);
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, true, 0), strprintf("a&b 2: %d", i));
+        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, flags, 0), strprintf("a&b 2: %d", i));
     }
 
     // Test a OR b:
@@ -102,16 +102,16 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         keys += key[i];
         s = sign_multisig(a_or_b, keys, txTo[1], 0);
         if (i == 0 || i == 1)
-            BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, txTo[1], 0, true, 0), strprintf("a|b: %d", i));
+            BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, txTo[1], 0, flags, 0), strprintf("a|b: %d", i));
         else
-            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, txTo[1], 0, true, 0), strprintf("a|b: %d", i));
+            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, txTo[1], 0, flags, 0), strprintf("a|b: %d", i));
     }
     s.clear();
     s << OP_0 << OP_0;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, true, 0));
+    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, flags, 0));
     s.clear();
     s << OP_0 << OP_1;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, true, 0));
+    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, flags, 0));
 
 
     for (int i = 0; i < 4; i++)
@@ -121,9 +121,9 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
             keys += key[i],key[j];
             s = sign_multisig(escrow, keys, txTo[2], 0);
             if (i < j && i < 3 && j < 3)
-                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, txTo[2], 0, true, 0), strprintf("escrow 1: %d %d", i, j));
+                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, txTo[2], 0, flags, 0), strprintf("escrow 1: %d %d", i, j));
             else
-                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, txTo[2], 0, true, 0), strprintf("escrow 2: %d %d", i, j));
+                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, txTo[2], 0, flags, 0), strprintf("escrow 2: %d %d", i, j));
         }
 }
 
@@ -175,12 +175,12 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
     //
     CBasicKeyStore keystore, emptykeystore, partialkeystore;
     CKey key[3];
-    CBitcoinAddress keyaddr[3];
+    CTxDestination keyaddr[3];
     for (int i = 0; i < 3; i++)
     {
         key[i].MakeNewKey(true);
         keystore.AddKey(key[i]);
-        keyaddr[i].SetPubKey(key[i].GetPubKey());
+        keyaddr[i] = key[i].GetPubKey().GetID();
     }
     partialkeystore.AddKey(key[0]);
 
@@ -191,8 +191,8 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         s << key[0].GetPubKey() << OP_CHECKSIG;
         BOOST_CHECK(Solver(s, whichType, solutions));
         BOOST_CHECK(solutions.size() == 1);
-        CBitcoinAddress addr;
-        BOOST_CHECK(ExtractAddress(s, addr));
+        CTxDestination addr;
+        BOOST_CHECK(ExtractDestination(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
@@ -201,11 +201,11 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         vector<valtype> solutions;
         txnouttype whichType;
         CScript s;
-        s << OP_DUP << OP_HASH160 << Hash160(key[0].GetPubKey()) << OP_EQUALVERIFY << OP_CHECKSIG;
+        s << OP_DUP << OP_HASH160 << key[0].GetPubKey().GetID() << OP_EQUALVERIFY << OP_CHECKSIG;
         BOOST_CHECK(Solver(s, whichType, solutions));
         BOOST_CHECK(solutions.size() == 1);
-        CBitcoinAddress addr;
-        BOOST_CHECK(ExtractAddress(s, addr));
+        CTxDestination addr;
+        BOOST_CHECK(ExtractDestination(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
@@ -216,9 +216,9 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         CScript s;
         s << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
         BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK_EQUAL(solutions.size(), 4);
-        CBitcoinAddress addr;
-        BOOST_CHECK(!ExtractAddress(s, addr));
+        BOOST_CHECK_EQUAL(solutions.size(), 4U);
+        CTxDestination addr;
+        BOOST_CHECK(!ExtractDestination(s, addr));
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
         BOOST_CHECK(!IsMine(partialkeystore, s));
@@ -229,13 +229,13 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         CScript s;
         s << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
         BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK_EQUAL(solutions.size(), 4);
-        vector<CBitcoinAddress> addrs;
+        BOOST_CHECK_EQUAL(solutions.size(), 4U);
+        vector<CTxDestination> addrs;
         int nRequired;
-        BOOST_CHECK(ExtractAddresses(s, whichType, addrs, nRequired));
+        BOOST_CHECK(ExtractDestinations(s, whichType, addrs, nRequired));
         BOOST_CHECK(addrs[0] == keyaddr[0]);
         BOOST_CHECK(addrs[1] == keyaddr[1]);
-        BOOST_CHECK(nRequired = 1);
+        BOOST_CHECK(nRequired == 1);
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
         BOOST_CHECK(!IsMine(partialkeystore, s));

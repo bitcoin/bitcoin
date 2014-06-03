@@ -1,18 +1,14 @@
 #include "bitcoinamountfield.h"
+
 #include "qvaluecombobox.h"
 #include "bitcoinunits.h"
-
 #include "guiconstants.h"
 
-#include <QLabel>
-#include <QLineEdit>
-#include <QRegExpValidator>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QDoubleSpinBox>
-#include <QComboBox>
 #include <QApplication>
-#include <qmath.h>
+#include <qmath.h> // for qPow()
 
 BitcoinAmountField::BitcoinAmountField(QWidget *parent):
         QWidget(parent), amount(0), currentUnit(-1)
@@ -102,7 +98,7 @@ bool BitcoinAmountField::eventFilter(QObject *object, QEvent *event)
         {
             // Translate a comma into a period
             QKeyEvent periodKeyEvent(event->type(), Qt::Key_Period, keyEvent->modifiers(), ".", keyEvent->isAutoRepeat(), keyEvent->count());
-            qApp->sendEvent(object, &periodKeyEvent);
+            QApplication::sendEvent(object, &periodKeyEvent);
             return true;
         }
     }
@@ -148,6 +144,11 @@ void BitcoinAmountField::unitChanged(int idx)
     // Set max length after retrieving the value, to prevent truncation
     amount->setDecimals(BitcoinUnits::decimals(currentUnit));
     amount->setMaximum(qPow(10, BitcoinUnits::amountDigits(currentUnit)) - qPow(10, -amount->decimals()));
+
+    if(currentUnit == BitcoinUnits::uBTC)
+        amount->setSingleStep(0.01);
+    else
+        amount->setSingleStep(0.001);
 
     if(valid)
     {

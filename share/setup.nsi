@@ -67,7 +67,7 @@ Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
     File ../release/ppcoin-qt.exe
-    File /oname=license.txt ../COPYING
+    File /oname=COPYING.txt ../COPYING
     File /oname=readme.txt ../doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
     File ../src/ppcoind.exe
@@ -98,12 +98,10 @@ Section -post SEC0001
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" UninstallString $INSTDIR\uninstall.exe
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoModify 1
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
-
-    # bitcoin: URI handling disabled for 0.6.0
-    #    WriteRegStr HKCR "bitcoin" "URL Protocol" ""
-    #    WriteRegStr HKCR "bitcoin" "" "URL:Bitcoin"
-    #    WriteRegStr HKCR "bitcoin\DefaultIcon" "" $INSTDIR\bitcoin-qt.exe
-    #    WriteRegStr HKCR "bitcoin\shell\open\command" "" '"$INSTDIR\bitcoin-qt.exe" "$$1"'
+    WriteRegStr HKCR "bitcoin" "URL Protocol" ""
+    WriteRegStr HKCR "bitcoin" "" "URL:Bitcoin"
+    WriteRegStr HKCR "bitcoin\DefaultIcon" "" $INSTDIR\bitcoin-qt.exe
+    WriteRegStr HKCR "bitcoin\shell\open\command" "" '"$INSTDIR\bitcoin-qt.exe" "%1"'
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -122,7 +120,7 @@ done${UNSECTION_ID}:
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\ppcoin-qt.exe
-    Delete /REBOOTOK $INSTDIR\license.txt
+    Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
     RMDir /r /REBOOTOK $INSTDIR\src

@@ -203,7 +203,7 @@ TAB_SIZE               = 8
 # For example adding "sideeffect=\par Side Effects:\n" will allow you to 
 # put the command \sideeffect (or @sideeffect) in the documentation, which 
 # will result in a user-defined paragraph with heading "Side Effects:". 
-# You can put \n's in the value part of an alias to insert newlines.
+# You can put \n in the value part of an alias to insert newlines.
 
 ALIASES                = 
 
