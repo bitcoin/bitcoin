@@ -13,10 +13,10 @@
 
 #include <QClipboard>
 #include <QDrag>
+#include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPixmap>
-#include <QMenu>
 #if QT_VERSION < 0x050000
 #include <QUrl>
 #endif

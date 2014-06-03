@@ -23,7 +23,9 @@
 static const int64_t nClientStartupTime = GetTime();
 
 ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
-    QObject(parent), optionsModel(optionsModel), peerTableModel(0),
+    QObject(parent),
+    optionsModel(optionsModel),
+    peerTableModel(0),
     cachedNumBlocks(0),
     cachedReindexing(0), cachedImporting(0),
     numBlocksAtStartup(-1), pollTimer(0)
