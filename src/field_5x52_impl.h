@@ -34,41 +34,39 @@ void static secp256k1_fe_inner_start(void) {}
 void static secp256k1_fe_inner_stop(void) {}
 
 void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
-    uint64_t c;
-    c = r->n[0];
-    uint64_t t0 = c & 0xFFFFFFFFFFFFFULL;
-    c = (c >> 52) + r->n[1];
-    uint64_t t1 = c & 0xFFFFFFFFFFFFFULL;
-    c = (c >> 52) + r->n[2];
-    uint64_t t2 = c & 0xFFFFFFFFFFFFFULL;
-    c = (c >> 52) + r->n[3];
-    uint64_t t3 = c & 0xFFFFFFFFFFFFFULL;
-    c = (c >> 52) + r->n[4];
-    uint64_t t4 = c & 0x0FFFFFFFFFFFFULL;
-    c >>= 48;
+    uint64_t t0 = r->n[0], t1 = r->n[1], t2 = r->n[2], t3 = r->n[3], t4 = r->n[4];
 
-    // The following code will not modify the t's if c is initially 0.
-    c = c * 0x1000003D1ULL + t0;
-    t0 = c & 0xFFFFFFFFFFFFFULL;
-    c = (c >> 52) + t1;
-    t1 = c & 0xFFFFFFFFFFFFFULL;
-    c = (c >> 52) + t2;
-    t2 = c & 0xFFFFFFFFFFFFFULL;
-    c = (c >> 52) + t3;
-    t3 = c & 0xFFFFFFFFFFFFFULL;
-    c = (c >> 52) + t4;
-    t4 = c & 0x0FFFFFFFFFFFFULL;
-    assert((c >> 48) == 0);
+    // Reduce t4 at the start so there will be at most a single carry from the first pass
+    uint64_t x = t4 >> 48; t4 &= 0x0FFFFFFFFFFFFULL;
 
-    // Subtract p if result >= p
-    uint64_t mask = -(int64_t)((t4 < 0xFFFFFFFFFFFFULL) | (t3 < 0xFFFFFFFFFFFFFULL) | (t2 < 0xFFFFFFFFFFFFFULL) | (t1 < 0xFFFFFFFFFFFFFULL) | (t0 < 0xFFFFEFFFFFC2FULL));
-    t4 &= mask;
-    t3 &= mask;
-    t2 &= mask;
-    t1 &= mask;
-    t0 -= (~mask & 0xFFFFEFFFFFC2FULL);
+    // The first pass ensures the magnitude is 1, ...
+    t0 += x * 0x1000003D1ULL;
+    t1 += (t0 >> 52); t0 &= 0xFFFFFFFFFFFFFULL;
+    t2 += (t1 >> 52); t1 &= 0xFFFFFFFFFFFFFULL;
+    t3 += (t2 >> 52); t2 &= 0xFFFFFFFFFFFFFULL;
+    t4 += (t3 >> 52); t3 &= 0xFFFFFFFFFFFFFULL;
 
-    // push internal variables back
+    // ... except for a possible carry at bit 48 of t4 (i.e. bit 256 of the field element)
+    assert(t4 >> 49 == 0);
+
+    // At most a single final reduction is needed; check if the value is >= the field characteristic
+    x = (t4 >> 48) | ((t4 == 0x0FFFFFFFFFFFFULL)
+        & ((t3 & t2 & t1) == 0xFFFFFFFFFFFFFULL)
+        & (t0 >= 0xFFFFEFFFFFC2FULL));
+
+    // Apply the final reduction (for constant-time behaviour, we do it always)
+    t0 += x * 0x1000003D1ULL;
+    t1 += (t0 >> 52); t0 &= 0xFFFFFFFFFFFFFULL;
+    t2 += (t1 >> 52); t1 &= 0xFFFFFFFFFFFFFULL;
+    t3 += (t2 >> 52); t2 &= 0xFFFFFFFFFFFFFULL;
+    t4 += (t3 >> 52); t3 &= 0xFFFFFFFFFFFFFULL;
+
+    // If t4 didn't carry to bit 48 already, then it should have after any final reduction
+    assert(t4 >> 48 == x);
+
+    // Mask off the possible multiple of 2^256 from the final reduction
+    t4 &= 0x0FFFFFFFFFFFFULL;
+
     r->n[0] = t0; r->n[1] = t1; r->n[2] = t2; r->n[3] = t3; r->n[4] = t4;
 
 #ifdef VERIFY
