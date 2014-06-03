@@ -74,8 +74,9 @@ public:
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
-    void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
-    void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
+    void remove(const CTransaction &tx, std::vector<std::pair<uint256,CTransaction> >& removed, bool fRecursive = false);
+    void removeWithHash(const uint256 &hash, const CTransaction &tx, std::vector<std::pair<uint256,CTransaction> >& removed, bool fRecursive = false);
+    void removeConflicts(const CTransaction &tx, std::vector<std::pair<uint256,CTransaction> >& removed);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
