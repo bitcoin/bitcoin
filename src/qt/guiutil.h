@@ -178,7 +178,6 @@ namespace GUIUtil
 
     /* Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(uint64_t mask);
-
 } // namespace GUIUtil
 
 #endif // GUIUTIL_H
