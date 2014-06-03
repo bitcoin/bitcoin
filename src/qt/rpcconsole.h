@@ -6,16 +6,18 @@
 #define RPCCONSOLE_H
 
 #include "guiutil.h"
-#include "net.h"
-
 #include "peertablemodel.h"
+
+#include "net.h"
 
 #include <QDialog>
 
 class ClientModel;
-
-class QItemSelection;
 class CNodeCombinedStats;
+
+QT_BEGIN_NAMESPACE
+class QItemSelection;
+QT_END_NAMESPACE
 
 namespace Ui {
     class RPCConsole;
