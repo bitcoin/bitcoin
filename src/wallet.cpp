@@ -464,10 +464,8 @@ void CWallet::MarkDirty()
     }
 }
 
-bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
+bool CWallet::AddToWallet(const uint256& hash, const CWalletTx& wtxIn, bool fFromLoadWallet)
 {
-    uint256 hash = wtxIn.GetHash();
-
     if (fFromLoadWallet)
     {
         mapWallet[hash] = wtxIn;
@@ -529,7 +527,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
                 }
                 else
                     LogPrintf("AddToWallet() : found %s in block %s not in index\n",
-                             wtxIn.GetHash().ToString(),
+                             hash.ToString(),
                              wtxIn.hashBlock.ToString());
             }
             AddToSpends(hash);
@@ -558,7 +556,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
         }
 
         //// debug print
-        LogPrintf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
+        LogPrintf("AddToWallet %s  %s%s\n", hash.ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
         // Write to disk
         if (fInsertedNew || fUpdated)
@@ -576,7 +574,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
 
         if ( !strCmd.empty())
         {
-            boost::replace_all(strCmd, "%s", wtxIn.GetHash().GetHex());
+            boost::replace_all(strCmd, "%s", hash.GetHex());
             boost::thread t(runCommand, strCmd); // thread runs free
         }
 
@@ -599,7 +597,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const uint256 &hash, const CTransaction& 
             // Get merkle branch if transaction was found in a block
             if (pblock)
                 wtx.SetMerkleBranch(pblock);
-            return AddToWallet(wtx);
+            return AddToWallet(hash, wtx);
         }
     }
     return false;
@@ -854,6 +852,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
             ReadBlockFromDisk(block, pindex);
             BOOST_FOREACH(CTransaction& tx, block.vtx)
             {
+                // block.GetTxHash() is not available as we don't rebuild the Merkle tree.
                 if (AddToWalletIfInvolvingMe(tx.GetHash(), tx, &block, fUpdate))
                     ret++;
             }
@@ -888,12 +887,11 @@ void CWallet::ReacceptWalletTransactions()
     }
 }
 
-void CWalletTx::RelayWalletTransaction()
+void CWalletTx::RelayWalletTransaction(const uint256 &hash)
 {
     if (!IsCoinBase())
     {
         if (GetDepthInMainChain() == 0) {
-            uint256 hash = GetHash();
             LogPrintf("Relaying wtx %s\n", hash.ToString());
             RelayTransaction((CTransaction)*this, hash);
         }
@@ -945,7 +943,7 @@ void CWallet::ResendWalletTransactions()
         BOOST_FOREACH(PAIRTYPE(const unsigned int, CWalletTx*)& item, mapSorted)
         {
             CWalletTx& wtx = *item.second;
-            wtx.RelayWalletTransaction();
+            wtx.RelayWalletTransaction(wtx.GetHash());
         }
     }
 }
@@ -1384,6 +1382,8 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64_t nValue,
 // Call after CreateTransaction unless you want to abort
 bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 {
+    uint256 hash = wtxNew.GetHash();
+
     {
         LOCK2(cs_main, cs_wallet);
         LogPrintf("CommitTransaction:\n%s", wtxNew.ToString());
@@ -1398,7 +1398,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 
             // Add tx to wallet, because if it has change it's also ours,
             // otherwise just for transaction history.
-            AddToWallet(wtxNew);
+            AddToWallet(hash, wtxNew);
 
             // Notify that old coins are spent
             set<CWalletTx*> setCoins;
@@ -1406,7 +1406,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
             {
                 CWalletTx &coin = mapWallet[txin.prevout.hash];
                 coin.BindWallet(this);
-                NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
+                NotifyTransactionChanged(this, txin.prevout.hash, CT_UPDATED);
             }
 
             if (fFileBacked)
@@ -1414,7 +1414,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
         }
 
         // Track how many getdata requests our transaction gets
-        mapRequestCount[wtxNew.GetHash()] = 0;
+        mapRequestCount[hash] = 0;
 
         // Broadcast
         if (!wtxNew.AcceptToMemoryPool(false))
@@ -1423,7 +1423,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
             LogPrintf("CommitTransaction() : Error: Transaction not valid");
             return false;
         }
-        wtxNew.RelayWalletTransaction();
+        wtxNew.RelayWalletTransaction(hash);
     }
     return true;
 }

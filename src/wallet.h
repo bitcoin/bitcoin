@@ -244,7 +244,7 @@ public:
     TxItems OrderedTxItems(std::list<CAccountingEntry>& acentries, std::string strAccount = "");
 
     void MarkDirty();
-    bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet=false);
+    bool AddToWallet(const uint256 &hash, const CWalletTx& wtxIn, bool fFromLoadWallet=false);
     void SyncTransaction(const uint256 &hash, const CTransaction& tx, const CBlock* pblock);
     bool AddToWalletIfInvolvingMe(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate);
     void EraseFromWallet(const uint256 &hash);
@@ -698,7 +698,7 @@ public:
     int64_t GetTxTime() const;
     int GetRequestCount() const;
 
-    void RelayWalletTransaction();
+    void RelayWalletTransaction(const uint256 &hash);
 
     std::set<uint256> GetConflicts() const;
 };
