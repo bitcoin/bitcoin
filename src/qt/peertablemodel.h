@@ -19,8 +19,9 @@ class QTimer;
 QT_END_NAMESPACE
 
 struct CNodeCombinedStats {
-    CNodeStats nodestats;
-    CNodeStateStats statestats;
+    CNodeStats nodeStats;
+    CNodeStateStats nodeStateStats;
+    bool fNodeStateStatsAvailable;
 };
 
 class NodeLessThan
@@ -47,13 +48,13 @@ public:
     explicit PeerTableModel(ClientModel *parent = 0);
     const CNodeCombinedStats *getNodeStats(int idx);
     int getRowByNodeId(NodeId nodeid);
-    void startAutoRefresh(int msecs);
+    void startAutoRefresh();
     void stopAutoRefresh();
 
     enum ColumnIndex {
         Address = 0,
         Subversion = 1,
-        Height = 2
+        Ping = 2
     };
 
     /** @name Methods overridden from QAbstractTableModel
