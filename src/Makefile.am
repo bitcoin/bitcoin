@@ -1,9 +1,29 @@
-include Makefile.include
+AM_CPPFLAGS =  $(INCLUDES) \
+  -I$(top_builddir)/src/obj \
+  $(BDB_CPPFLAGS) \
+  $(BOOST_CPPFLAGS) $(BOOST_INCLUDES)
+AM_CPPFLAGS += $(LEVELDB_CPPFLAGS)
+AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
 AM_CPPFLAGS += -I$(top_srcdir)/src/leveldb/helpers/memenv \
   -I$(builddir)
 
 AM_CPPFLAGS += -I$(builddir)
+
+if EMBEDDED_LEVELDB
+LEVELDB_CPPFLAGS += -I$(top_srcdir)/src/leveldb/include
+LEVELDB_CPPFLAGS += -I$(top_srcdir)/src/leveldb/helpers/memenv
+LIBLEVELDB += $(top_builddir)/src/leveldb/libleveldb.a
+LIBMEMENV  += $(top_builddir)/src/leveldb/libmemenv.a
+
+# NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
+$(LIBLEVELDB): $(LIBMEMENV)
+
+$(LIBLEVELDB) $(LIBMEMENV):
+	@echo "Building LevelDB ..." && $(MAKE) -C $(@D) $(@F) CXX="$(CXX)" \
+	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
+          OPT="$(CXXFLAGS) $(CPPFLAGS)"
+endif
 
 noinst_LIBRARIES = \
   libppcoin_server.a \
@@ -165,14 +185,6 @@ if TARGET_WINDOWS
 peercoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
-# NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
-leveldb/libleveldb.a: leveldb/libmemenv.a
-
-leveldb/%.a:
-	@echo "Building LevelDB ..." && $(MAKE) -C $(@D) $(@F) CXX="$(CXX)" \
-	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
-	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
-
 CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
 
 DISTCLEANFILES = obj/build.h
@@ -182,6 +194,20 @@ EXTRA_DIST = leveldb
 clean-local:
 	-$(MAKE) -C leveldb clean
 	rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
+
+.rc.o:
+	@test -f $(WINDRES) && $(WINDRES) -i $< -o $@ || \
+	  echo error: could not build $@
+
+.mm.o:
+	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	  $(CPPFLAGS) $(AM_CXXFLAGS) $(QT_INCLUDES) $(CXXFLAGS)  -c -o $@ $<
+
+LIBPPCOIN_SERVER=libppcoin_server.a
+LIBPPCOIN_WALLET=libppcoin_wallet.a
+LIBPPCOIN_COMMON=libppcoin_common.a
+LIBPPCOIN_CLI=libppcoin_cli.a
+LIBPPCOINQT=qt/libppcoinqt.a
 
 if ENABLE_TESTS
 include Makefile.test.include
