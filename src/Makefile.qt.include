@@ -385,3 +385,24 @@ bitcoin_qt_clean: FORCE
 	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_bitcoin_qt_OBJECTS) qt/bitcoin-qt$(EXEEXT) $(LIBBITCOINQT)
 
 bitcoin_qt : qt/bitcoin-qt$(EXEEXT)
+
+ui_%.h: %.ui
+	@test -d $(abs_builddir)/$(@D) || $(MKDIR_P) $(abs_builddir)/$(@D)
+	@test -f $(UIC) && QT_SELECT=$(QT_SELECT) $(UIC) -o $(abs_builddir)/$@ $(abs_srcdir)/$< || echo error: could not build $(abs_builddir)/$@
+	$(SED) -e '/^\*\*.*Created:/d' $(abs_builddir)/$@ > $(abs_builddir)/$@.n && mv $(abs_builddir)/$@{.n,}
+	$(SED) -e '/^\*\*.*by:/d' $(abs_builddir)/$@ > $(abs_builddir)/$@.n && mv $(abs_builddir)/$@{.n,}
+
+%.moc: %.cpp
+	QT_SELECT=$(QT_SELECT) $(MOC) $(QT_INCLUDES) $(MOC_DEFS) -o $@ $<
+	$(SED) -e '/^\*\*.*Created:/d' $@ > $@.n && mv $@{.n,}
+	$(SED) -e '/^\*\*.*by:/d' $@ > $@.n && mv $@{.n,}
+
+moc_%.cpp: %.h
+	QT_SELECT=$(QT_SELECT) $(MOC) $(QT_INCLUDES) $(MOC_DEFS) -o $@ $<
+	$(SED) -e '/^\*\*.*Created:/d' $@ > $@.n && mv $@{.n,}
+	$(SED) -e '/^\*\*.*by:/d' $@ > $@.n && mv $@{.n,}
+
+%.qm: %.ts
+	@test -d $(abs_builddir)/$(@D) || $(MKDIR_P) $(abs_builddir)/$(@D)
+	@test -f $(LRELEASE) && QT_SELECT=$(QT_SELECT) $(LRELEASE) $(abs_srcdir)/$< -qm $(abs_builddir)/$@ || \
+	  echo error: could not build $(abs_builddir)/$@
