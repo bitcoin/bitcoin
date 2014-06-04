@@ -490,6 +490,17 @@ bool PaymentServer::readPaymentRequest(const QString& filename, PaymentRequestPl
     return request.parse(data);
 }
 
+std::string PaymentServer::mapNetworkIdToName(CChainParams::Network networkId)
+{
+    if (networkId == CChainParams::MAIN)
+        return "main";
+    if (networkId == CChainParams::TESTNET)
+        return "test";
+    if (networkId == CChainParams::REGTEST)
+        return "regtest";
+    return "";
+}
+
 bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoinsRecipient& recipient)
 {
     if (!optionsModel)
@@ -499,8 +510,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
         const payments::PaymentDetails& details = request.getDetails();
 
         // Payment request network matches client network?
-        if ((details.network() == "main" && TestNet()) ||
-            (details.network() == "test" && !TestNet()))
+        if (details.network() != mapNetworkIdToName(Params().NetworkID()))
         {
             emit message(tr("Payment request rejected"), tr("Payment request network doesn't match client network."),
                 CClientUIInterface::MSG_ERROR);
