@@ -258,6 +258,9 @@ case $host in
 
      CPPFLAGS="$CPPFLAGS -DMAC_OSX"
      ;;
+   *linux*)
+     TARGET_OS=linux
+     ;;
    *)
      ;;
 esac
