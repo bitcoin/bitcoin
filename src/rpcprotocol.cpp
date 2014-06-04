@@ -54,7 +54,8 @@ static string rfc1123Time()
     return DateTimeStrFormat("%a, %d %b %Y %H:%M:%S +0000", GetTime());
 }
 
-string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
+string HTTPReply(int nStatus, const string& strMsg, bool keepalive,
+                 bool headersOnly, const char *contentType)
 {
     if (nStatus == HTTP_UNAUTHORIZED)
         return strprintf("HTTP/1.0 401 Authorization Required\r\n"
@@ -73,6 +74,7 @@ string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
             "</HEAD>\r\n"
             "<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
             "</HTML>\r\n", rfc1123Time(), FormatFullVersion());
+
     const char *cStatus;
          if (nStatus == HTTP_OK) cStatus = "OK";
     else if (nStatus == HTTP_BAD_REQUEST) cStatus = "Bad Request";
@@ -80,12 +82,19 @@ string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
     else if (nStatus == HTTP_NOT_FOUND) cStatus = "Not Found";
     else if (nStatus == HTTP_INTERNAL_SERVER_ERROR) cStatus = "Internal Server Error";
     else cStatus = "";
+
+    bool useInternalContent = false;
+    if (nStatus != HTTP_OK) {
+        contentType = "text/plain";
+        useInternalContent = true;
+    }
+
     return strprintf(
             "HTTP/1.1 %d %s\r\n"
             "Date: %s\r\n"
             "Connection: %s\r\n"
             "Content-Length: %u\r\n"
-            "Content-Type: application/json\r\n"
+            "Content-Type: %s\r\n"
             "Server: bitcoin-json-rpc/%s\r\n"
             "\r\n"
             "%s",
@@ -94,8 +103,10 @@ string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
         rfc1123Time(),
         keepalive ? "keep-alive" : "close",
         strMsg.size(),
+        contentType,
         FormatFullVersion(),
-        strMsg);
+        headersOnly ? "" :
+	    useInternalContent ? cStatus : strMsg.c_str());
 }
 
 bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
