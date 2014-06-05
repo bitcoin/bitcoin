@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 {
     CWalletDB walletdb(pwalletMain->strWalletFile);
     std::vector<CWalletTx*> vpwtx;
-    CWalletTx wtx;
+    CWalletTx wtx[3];
     CAccountingEntry ae;
     std::map<int64_t, CAccountingEntry> results;
 
@@ -45,9 +45,9 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     ae.strComment = "";
     walletdb.WriteAccountingEntry(ae);
 
-    wtx.mapValue["comment"] = "z";
-    pwalletMain->AddToWallet(wtx);
-    vpwtx.push_back(&pwalletMain->mapWallet[wtx.GetHash()]);
+    wtx[0].mapValue["comment"] = "z";
+    pwalletMain->AddToWallet(wtx[0]);
+    vpwtx.push_back(&pwalletMain->mapWallet[wtx[0].GetHash()]);
     vpwtx[0]->nTimeReceived = (unsigned int)1333333335;
     vpwtx[0]->nOrderPos = -1;
 
@@ -82,16 +82,16 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     BOOST_CHECK(results[3].strComment.empty());
 
 
-    wtx.mapValue["comment"] = "y";
-    --wtx.nLockTime;  // Just to change the hash :)
-    pwalletMain->AddToWallet(wtx);
-    vpwtx.push_back(&pwalletMain->mapWallet[wtx.GetHash()]);
+    wtx[1].mapValue["comment"] = "y";
+    --wtx[1].nLockTime;  // Just to change the hash :)
+    pwalletMain->AddToWallet(wtx[1]);
+    vpwtx.push_back(&pwalletMain->mapWallet[wtx[1].GetHash()]);
     vpwtx[1]->nTimeReceived = (unsigned int)1333333336;
 
-    wtx.mapValue["comment"] = "x";
-    --wtx.nLockTime;  // Just to change the hash :)
-    pwalletMain->AddToWallet(wtx);
-    vpwtx.push_back(&pwalletMain->mapWallet[wtx.GetHash()]);
+    wtx[2].mapValue["comment"] = "x";
+    ++wtx[2].nLockTime;  // Just to change the hash :)
+    pwalletMain->AddToWallet(wtx[2]);
+    vpwtx.push_back(&pwalletMain->mapWallet[wtx[2].GetHash()]);
     vpwtx[2]->nTimeReceived = (unsigned int)1333333329;
     vpwtx[2]->nOrderPos = -1;
 

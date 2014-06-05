@@ -74,10 +74,12 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         pblock->vtx[0].vin[0].scriptSig.push_back(blockinfo[i].extranonce);
         pblock->vtx[0].vin[0].scriptSig.push_back(chainActive.Height());
         pblock->vtx[0].vout[0].scriptPubKey = CScript();
+        pblock->vtx[0].MarkDirty();
         if (txFirst.size() < 2)
             txFirst.push_back(new CTransaction(pblock->vtx[0]));
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
         pblock->nNonce = blockinfo[i].nonce;
+        pblock->MarkDirty();
         CValidationState state;
         BOOST_CHECK(ProcessBlock(state, NULL, pblock));
         BOOST_CHECK(state.IsValid());

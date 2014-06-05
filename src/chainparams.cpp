@@ -135,6 +135,7 @@ public:
         genesis.nTime    = 1231006505;
         genesis.nBits    = 0x1d00ffff;
         genesis.nNonce   = 2083236893;
+        genesis.MarkDirty();
 
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
@@ -203,6 +204,7 @@ public:
         // Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1296688602;
         genesis.nNonce = 414098458;
+        genesis.MarkDirty();
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"));
 
@@ -237,6 +239,7 @@ public:
         genesis.nTime = 1296688602;
         genesis.nBits = 0x207fffff;
         genesis.nNonce = 2;
+        genesis.MarkDirty();
         hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 18444;
         strDataDir = "regtest";

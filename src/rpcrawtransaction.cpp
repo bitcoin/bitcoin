@@ -780,7 +780,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
         // push to local node and sync with wallets
         CValidationState state;
         if (AcceptToMemoryPool(mempool, state, tx, false, NULL, !fOverrideFees))
-            SyncWithWallets(hashTx, tx, NULL);
+            SyncWithWallets(tx, NULL);
         else {
             if(state.IsInvalid())
                 throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
