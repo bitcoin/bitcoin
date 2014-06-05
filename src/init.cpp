@@ -211,11 +211,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + " " + _("on startup") + "\n";
     strUsage += "  -txindex               " + _("Maintain a full transaction index (default: 0)") + "\n";
 #if !defined(WIN32)
-#ifdef ENABLE_WALLET
-    strUsage += "  -laxperms              " + _("Create new files with system default permissions, instead of umask 077 (only effective with -disablewallet)") + "\n";
-#else
-    strUsage += "  -laxperms              " + _("Create new files with system default permissions, instead of umask 077") + "\n";
-#endif
+    strUsage += "  -sysperms              " + _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)") + "\n";
 #endif
 
     strUsage += "\n" + _("Connection options:") + "\n";
@@ -429,6 +425,15 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 #endif
 #ifndef WIN32
+
+#ifdef ENABLE_WALLET
+    if (!GetBoolArg("-sysperms", false) || !GetBoolArg("-disablewallet", false))
+        umask(077);
+#else
+    if (!GetBoolArg("-sysperms", false))
+        umask(077);
+#endif
+
     // Clean shutdown on SIGTERM
     struct sigaction sa;
     sa.sa_handler = HandleSIGTERM;
@@ -591,28 +596,6 @@ bool AppInit2(boost::thread_group& threadGroup)
     strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
-
-#ifndef WIN32
-    bool fCanUseLaxPerms = false;
-
-#ifdef ENABLE_WALLET
-    if (fDisableWallet)
-        fCanUseLaxPerms = true;
-#else
-    fCanUseLaxPerms = true;
-#endif //ENABLE_WALLET
-
-    if (!GetBoolArg("-laxperms", false)) {
-        umask(077);
-    } else {
-        if (fCanUseLaxPerms) {
-            LogPrintf("Using non-restrictive permissions (not setting umask to 077)\n");
-        } else {
-            umask(077);
-            InitWarning("Using non-restrictive permissions is not allowed without -disablewallet\n");
-        }
-    }
-#endif //WIN32
 
     std::string strDataDir = GetDataDir().string();
 #ifdef ENABLE_WALLET
