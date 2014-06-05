@@ -1,4 +1,4 @@
-AM_CPPFLAGS += -I$(top_builddir)/src/test/
+AM_CPPFLAGS += -I$(builddir)/test/
 
 TESTS += test/test_bitcoin
 bin_PROGRAMS += test/test_bitcoin
