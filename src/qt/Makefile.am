@@ -57,6 +57,7 @@ QT_TS = \
   locale/bitcoin_la.ts \
   locale/bitcoin_lt.ts \
   locale/bitcoin_lv_LV.ts \
+  locale/bitcoin_mn.ts \
   locale/bitcoin_ms_MY.ts \
   locale/bitcoin_nb.ts \
   locale/bitcoin_nl.ts \
@@ -125,6 +126,7 @@ QT_MOC_CPP = \
   moc_optionsdialog.cpp \
   moc_optionsmodel.cpp \
   moc_overviewpage.cpp \
+  moc_peertablemodel.cpp \
   moc_paymentserver.cpp \
   moc_qvalidatedlineedit.cpp \
   moc_qvaluecombobox.cpp \
@@ -190,6 +192,7 @@ BITCOIN_QT_H = \
   overviewpage.h \
   paymentrequestplus.h \
   paymentserver.h \
+  peertablemodel.h \
   qvalidatedlineedit.h \
   qvaluecombobox.h \
   receivecoinsdialog.h \
@@ -273,6 +276,7 @@ BITCOIN_QT_CPP = \
   notificator.cpp \
   optionsdialog.cpp \
   optionsmodel.cpp \
+  peertablemodel.cpp \
   qvalidatedlineedit.cpp \
   qvaluecombobox.cpp \
   rpcconsole.cpp \
@@ -372,7 +376,7 @@ translate: bitcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(
 $(QT_QRC_CPP): $(QT_QRC) $(QT_QM) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
 	@cd $(abs_srcdir); test -f $(RCC) && QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin -o $(abs_builddir)/$@ $< || \
 	  echo error: could not build $@
-	$(SED) -i.bak -e '/^\*\*.*Created:/d' $@ && rm $@.bak
-	$(SED) -i.bak -e '/^\*\*.*by:/d' $@ && rm $@.bak
+	$(SED) -e '/^\*\*.*Created:/d' $@ > $@.n && mv $@{.n,}
+	$(SED) -e '/^\*\*.*by:/d' $@  > $@.n && mv $@{.n,}
 
 CLEANFILES = $(BUILT_SOURCES) $(QT_QM) $(QT_FORMS_H) *.gcda *.gcno

@@ -116,11 +116,11 @@ Value getpeerinfo(const Array& params, bool fHelp)
         if (!(stats.addrLocal.empty()))
             obj.push_back(Pair("addrlocal", stats.addrLocal));
         obj.push_back(Pair("services", strprintf("%08x", stats.nServices)));
-        obj.push_back(Pair("lastsend", (boost::int64_t)stats.nLastSend));
-        obj.push_back(Pair("lastrecv", (boost::int64_t)stats.nLastRecv));
-        obj.push_back(Pair("bytessent", (boost::int64_t)stats.nSendBytes));
-        obj.push_back(Pair("bytesrecv", (boost::int64_t)stats.nRecvBytes));
-        obj.push_back(Pair("conntime", (boost::int64_t)stats.nTimeConnected));
+        obj.push_back(Pair("lastsend", stats.nLastSend));
+        obj.push_back(Pair("lastrecv", stats.nLastRecv));
+        obj.push_back(Pair("bytessent", stats.nSendBytes));
+        obj.push_back(Pair("bytesrecv", stats.nRecvBytes));
+        obj.push_back(Pair("conntime", stats.nTimeConnected));
         obj.push_back(Pair("pingtime", stats.dPingTime));
         if (stats.dPingWait > 0.0)
             obj.push_back(Pair("pingwait", stats.dPingWait));
@@ -166,7 +166,7 @@ Value addnode(const Array& params, bool fHelp)
     if (strCommand == "onetry")
     {
         CAddress addr;
-        ConnectNode(addr, strNode.c_str());
+        OpenNetworkConnection(addr, NULL, strNode.c_str());
         return Value::null;
     }
 
@@ -328,8 +328,59 @@ Value getnettotals(const Array& params, bool fHelp)
        );
 
     Object obj;
-    obj.push_back(Pair("totalbytesrecv", static_cast< boost::uint64_t>(CNode::GetTotalBytesRecv())));
-    obj.push_back(Pair("totalbytessent", static_cast<boost::uint64_t>(CNode::GetTotalBytesSent())));
-    obj.push_back(Pair("timemillis", static_cast<boost::int64_t>(GetTimeMillis())));
+    obj.push_back(Pair("totalbytesrecv", CNode::GetTotalBytesRecv()));
+    obj.push_back(Pair("totalbytessent", CNode::GetTotalBytesSent()));
+    obj.push_back(Pair("timemillis", GetTimeMillis()));
+    return obj;
+}
+
+Value getnetworkinfo(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getnetworkinfo\n"
+            "Returns an object containing various state info regarding P2P networking.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"version\": xxxxx,           (numeric) the server version\n"
+            "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
+            "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
+            "  \"connections\": xxxxx,       (numeric) the number of connections\n"
+            "  \"proxy\": \"host:port\",     (string, optional) the proxy used by the server\n"
+            "  \"relayfee\": x.xxxx,         (numeric) minimum relay fee for non-free transactions in btc/kb\n"
+            "  \"localaddresses\": [,        (array) list of local addresses\n"
+            "    \"address\": \"xxxx\",      (string) network address\n"
+            "    \"port\": xxx,              (numeric) network port\n"
+            "    \"score\": xxx              (numeric) relative score\n"
+            "  ]\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getnetworkinfo", "")
+            + HelpExampleRpc("getnetworkinfo", "")
+        );
+
+    proxyType proxy;
+    GetProxy(NET_IPV4, proxy);
+
+    Object obj;
+    obj.push_back(Pair("version",       (int)CLIENT_VERSION));
+    obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
+    obj.push_back(Pair("timeoffset",    GetTimeOffset()));
+    obj.push_back(Pair("connections",   (int)vNodes.size()));
+    obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
+    obj.push_back(Pair("relayfee",      ValueFromAmount(CTransaction::nMinRelayTxFee)));
+    Array localAddresses;
+    {
+        LOCK(cs_mapLocalHost);
+        BOOST_FOREACH(const PAIRTYPE(CNetAddr, LocalServiceInfo) &item, mapLocalHost)
+        {
+            Object rec;
+            rec.push_back(Pair("address", item.first.ToString()));
+            rec.push_back(Pair("port", item.second.nPort));
+            rec.push_back(Pair("score", item.second.nScore));
+            localAddresses.push_back(rec);
+        }
+    }
+    obj.push_back(Pair("localaddresses", localAddresses));
     return obj;
 }

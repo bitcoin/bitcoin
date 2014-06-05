@@ -49,7 +49,7 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
     {
         entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
         entry.push_back(Pair("blockindex", wtx.nIndex));
-        entry.push_back(Pair("blocktime", (boost::int64_t)(mapBlockIndex[wtx.hashBlock]->nTime)));
+        entry.push_back(Pair("blocktime", (int64_t)(mapBlockIndex[wtx.hashBlock]->nTime)));
     }
     uint256 hash = wtx.GetHash();
     entry.push_back(Pair("txid", hash.GetHex()));
@@ -57,8 +57,8 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
     BOOST_FOREACH(const uint256& conflict, wtx.GetConflicts())
         conflicts.push_back(conflict.GetHex());
     entry.push_back(Pair("walletconflicts", conflicts));
-    entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
-    entry.push_back(Pair("timereceived", (boost::int64_t)wtx.nTimeReceived));
+    entry.push_back(Pair("time", wtx.GetTxTime()));
+    entry.push_back(Pair("timereceived", (int64_t)wtx.nTimeReceived));
     BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
 }
@@ -318,7 +318,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
             "                             to which you're sending the transaction. This is not part of the \n"
             "                             transaction, just kept in your wallet.\n"
             "\nResult:\n"
-            "\"transactionid\"  (string) The transaction id. (view at https://blockchain.info/tx/[transactionid])\n"
+            "\"transactionid\"  (string) The transaction id.\n"
             "\nExamples:\n"
             + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
             + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
@@ -747,7 +747,7 @@ Value sendfrom(const Array& params, bool fHelp)
             "                                     to which you're sending the transaction. This is not part of the transaction, \n"
             "                                     it is just kept in your wallet.\n"
             "\nResult:\n"
-            "\"transactionid\"        (string) The transaction id. (view at https://blockchain.info/tx/[transactionid])\n"
+            "\"transactionid\"        (string) The transaction id.\n"
             "\nExamples:\n"
             "\nSend 0.01 btc from the default account to the address, must have at least 1 confirmation\n"
             + HelpExampleCli("sendfrom", "\"\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01") +
@@ -807,7 +807,7 @@ Value sendmany(const Array& params, bool fHelp)
             "4. \"comment\"             (string, optional) A comment\n"
             "\nResult:\n"
             "\"transactionid\"          (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
-            "                                    the number of addresses. See https://blockchain.info/tx/[transactionid]\n"
+            "                                    the number of addresses.\n"
             "\nExamples:\n"
             "\nSend two amounts to two different addresses:\n"
             + HelpExampleCli("sendmany", "\"tabby\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\"") +
@@ -871,7 +871,7 @@ Value sendmany(const Array& params, bool fHelp)
 }
 
 // Defined in rpcmisc.cpp
-extern CScript _createmultisig(const Array& params);
+extern CScript _createmultisig_redeemScript(const Array& params);
 
 Value addmultisigaddress(const Array& params, bool fHelp)
 {
@@ -908,7 +908,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
         strAccount = AccountFromValue(params[2]);
 
     // Construct using pay-to-script-hash:
-    CScript inner = _createmultisig(params);
+    CScript inner = _createmultisig_redeemScript(params);
     CScriptID innerID = inner.GetID();
     pwalletMain->AddCScript(inner);
 
@@ -1167,7 +1167,7 @@ void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Ar
         Object entry;
         entry.push_back(Pair("account", acentry.strAccount));
         entry.push_back(Pair("category", "move"));
-        entry.push_back(Pair("time", (boost::int64_t)acentry.nTime));
+        entry.push_back(Pair("time", acentry.nTime));
         entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
         entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
         entry.push_back(Pair("comment", acentry.strComment));
@@ -1209,8 +1209,7 @@ Value listtransactions(const Array& params, bool fHelp)
             "                                          category of transactions.\n"
             "    \"blockindex\": n,          (numeric) The block index containing the transaction. Available for 'send' and 'receive'\n"
             "                                          category of transactions.\n"
-            "    \"txid\": \"transactionid\", (string) The transaction id (see https://blockchain.info/tx/[transactionid]. Available \n"
-            "                                          for 'send' and 'receive' category of transactions.\n"
+            "    \"txid\": \"transactionid\", (string) The transaction id. Available for 'send' and 'receive' category of transactions.\n"
             "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (midnight Jan 1 1970 GMT).\n"
             "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (midnight Jan 1 1970 GMT). Available \n"
             "                                          for 'send' and 'receive' category of transactions.\n"
@@ -1375,7 +1374,7 @@ Value listsinceblock(const Array& params, bool fHelp)
             "    \"blockhash\": \"hashvalue\",     (string) The block hash containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
             "    \"blockindex\": n,          (numeric) The block index containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
             "    \"blocktime\": xxx,         (numeric) The block time in seconds since epoch (1 Jan 1970 GMT).\n"
-            "    \"txid\": \"transactionid\",  (string) The transaction id (see https://blockchain.info/tx/[transactionid]. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"txid\": \"transactionid\",  (string) The transaction id. Available for 'send' and 'receive' category of transactions.\n"
             "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT).\n"
             "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (Jan 1 1970 GMT). Available for 'send' and 'receive' category of transactions.\n"
             "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
@@ -1447,7 +1446,7 @@ Value gettransaction(const Array& params, bool fHelp)
             "  \"blockhash\" : \"hash\",  (string) The block hash\n"
             "  \"blockindex\" : xx,       (numeric) The block index\n"
             "  \"blocktime\" : ttt,       (numeric) The time in seconds since epoch (1 Jan 1970 GMT)\n"
-            "  \"txid\" : \"transactionid\",   (string) The transaction id, see also https://blockchain.info/tx/[transactionid]\n"
+            "  \"txid\" : \"transactionid\",   (string) The transaction id.\n"
             "  \"time\" : ttt,            (numeric) The transaction time in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"details\" : [\n"
@@ -1747,7 +1746,7 @@ Value lockunspent(const Array& params, bool fHelp)
         throw runtime_error(
             "lockunspent unlock [{\"txid\":\"txid\",\"vout\":n},...]\n"
             "\nUpdates list of temporarily unspendable outputs.\n"
-            "Temporarily lock (lock=true) or unlock (lock=false) specified transaction outputs.\n"
+            "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
             "A locked transaction output will not be chosen by automatic coin selection, when spending bitcoins.\n"
             "Locks are stored in memory only. Nodes start with zero locked outputs, and the locked output list\n"
             "is always cleared (by virtue of process exit) when a node stops or fails.\n"
@@ -1912,9 +1911,9 @@ Value getwalletinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
     obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
     obj.push_back(Pair("txcount",       (int)pwalletMain->mapWallet.size()));
-    obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
+    obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
     obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
     if (pwalletMain->IsCrypted())
-        obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime));
+        obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     return obj;
 }

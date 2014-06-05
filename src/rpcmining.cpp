@@ -88,7 +88,7 @@ Value GetNetworkHashPS(int lookup, int height) {
     uint256 workDiff = pb->nChainWork - pb0->nChainWork;
     int64_t timeDiff = maxTime - minTime;
 
-    return (boost::int64_t)(workDiff.getdouble() / timeDiff);
+    return (int64_t)(workDiff.getdouble() / timeDiff);
 }
 
 Value getnetworkhashps(const Array& params, bool fHelp)
@@ -226,8 +226,8 @@ Value gethashespersec(const Array& params, bool fHelp)
         );
 
     if (GetTimeMillis() - nHPSTimerStart > 8000)
-        return (boost::int64_t)0;
-    return (boost::int64_t)dHashesPerSec;
+        return (int64_t)0;
+    return (int64_t)dHashesPerSec;
 }
 #endif
 
@@ -363,7 +363,7 @@ Value getwork(const Array& params, bool fHelp)
         char phash1[64];
         FormatHashBuffers(pblock, pmidstate, pdata, phash1);
 
-        uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+        uint256 hashTarget = uint256().SetCompact(pblock->nBits);
 
         Object result;
         result.push_back(Pair("midstate", HexStr(BEGIN(pmidstate), END(pmidstate)))); // deprecated
@@ -559,7 +559,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     Object aux;
     aux.push_back(Pair("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
 
-    uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+    uint256 hashTarget = uint256().SetCompact(pblock->nBits);
 
     static Array aMutable;
     if (aMutable.empty())

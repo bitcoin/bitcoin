@@ -25,6 +25,7 @@
 #endif
 
 #include <stdint.h>
+#include <stdio.h>
 
 #ifndef WIN32
 #include <signal.h>
@@ -39,7 +40,6 @@ using namespace std;
 using namespace boost;
 
 #ifdef ENABLE_WALLET
-std::string strWalletFile;
 CWallet* pwalletMain;
 #endif
 
@@ -205,6 +205,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -dbcache=<n>           " + strprintf(_("Set database cache size in megabytes (%d to %d, default: %d)"), nMinDbCache, nMaxDbCache, nDefaultDbCache) + "\n";
     strUsage += "  -keypool=<n>           " + _("Set key pool size to <n> (default: 100)") + "\n";
     strUsage += "  -loadblock=<file>      " + _("Imports blocks from external blk000??.dat file") + " " + _("on startup") + "\n";
+    strUsage += "  -maxorphanblocks=<n>   " + strprintf(_("Keep at most <n> unconnectable blocks in memory (default: %u)"), DEFAULT_MAX_ORPHAN_BLOCKS) + "\n";
     strUsage += "  -par=<n>               " + strprintf(_("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)"), -(int)boost::thread::hardware_concurrency(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS) + "\n";
     strUsage += "  -pid=<file>            " + _("Specify pid file (default: bitcoind.pid)") + "\n";
     strUsage += "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + " " + _("on startup") + "\n";
@@ -303,10 +304,11 @@ std::string HelpMessage(HelpMessageMode hmm)
 
     strUsage += "\n" + _("RPC server options:") + "\n";
     strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
+    strUsage += "  -rpcbind=<addr>        " + _("Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)") + "\n";
     strUsage += "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n";
     strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
     strUsage += "  -rpcport=<port>        " + _("Listen for JSON-RPC connections on <port> (default: 8332 or testnet: 18332)") + "\n";
-    strUsage += "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified IP address") + "\n";
+    strUsage += "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified IP address. This option can be specified multiple times") + "\n";
     strUsage += "  -rpcthreads=<n>        " + _("Set the number of threads to service RPC calls (default: 4)") + "\n";
 
     strUsage += "\n" + _("RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)") + "\n";
@@ -530,6 +532,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     fServer = GetBoolArg("-server", false);
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
     fLogTimestamps = GetBoolArg("-logtimestamps", true);
+    setvbuf(stdout, NULL, _IOLBF, 0);
 #ifdef ENABLE_WALLET
     bool fDisableWallet = GetBoolArg("-disablewallet", false);
 #endif
@@ -580,7 +583,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
     bSpendZeroConfChange = GetArg("-spendzeroconfchange", true);
 
-    strWalletFile = GetArg("-wallet", "wallet.dat");
+    std::string strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
@@ -603,10 +606,14 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     LogPrintf("Bitcoin version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
     LogPrintf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
+#ifdef ENABLE_WALLET
+    LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
+#endif
     if (!fLogTimestamps)
         LogPrintf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
     LogPrintf("Using data directory %s\n", strDataDir);
+    LogPrintf("Using config file %s\n", GetConfigFile().string());
     LogPrintf("Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
     std::ostringstream strErrors;
 
@@ -689,12 +696,6 @@ bool AppInit2(boost::thread_group& threadGroup)
                 SetLimited(net);
         }
     }
-#if defined(USE_IPV6)
-#if ! USE_IPV6
-    else
-        SetLimited(NET_IPV6);
-#endif
-#endif
 
     CService addrProxy;
     bool fProxy = false;
@@ -706,10 +707,8 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (!IsLimited(NET_IPV4))
             SetProxy(NET_IPV4, addrProxy, nSocksVersion);
         if (nSocksVersion > 4) {
-#ifdef USE_IPV6
             if (!IsLimited(NET_IPV6))
                 SetProxy(NET_IPV6, addrProxy, nSocksVersion);
-#endif
             SetNameProxy(addrProxy, nSocksVersion);
         }
         fProxy = true;
@@ -734,12 +733,12 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     // see Step 2: parameter interactions for more information about these
-    fNoListen = !GetBoolArg("-listen", true);
+    fListen = GetBoolArg("-listen", true);
     fDiscover = GetBoolArg("-discover", true);
     fNameLookup = GetBoolArg("-dns", true);
 
     bool fBound = false;
-    if (!fNoListen) {
+    if (fListen) {
         if (mapArgs.count("-bind")) {
             BOOST_FOREACH(std::string strBind, mapMultiArgs["-bind"]) {
                 CService addrBind;
@@ -751,9 +750,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         else {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
-#ifdef USE_IPV6
             fBound |= Bind(CService(in6addr_any, GetListenPort()), BF_NONE);
-#endif
             fBound |= Bind(CService(inaddr_any, GetListenPort()), !fBound ? BF_REPORT_ERROR : BF_NONE);
         }
         if (!fBound)
@@ -862,7 +859,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 }
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
-                if (!VerifyDB(GetArg("-checklevel", 3),
+                if (!CVerifyDB().VerifyDB(GetArg("-checklevel", 3),
                               GetArg("-checkblocks", 288))) {
                     strLoadError = _("Corrupted block database detected");
                     break;
@@ -918,7 +915,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         for (map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.begin(); mi != mapBlockIndex.end(); ++mi)
         {
             uint256 hash = (*mi).first;
-            if (strncmp(hash.ToString().c_str(), strMatch.c_str(), strMatch.size()) == 0)
+            if (boost::algorithm::starts_with(hash.ToString(), strMatch))
             {
                 CBlockIndex* pindex = (*mi).second;
                 CBlock block;
@@ -1085,12 +1082,12 @@ bool AppInit2(boost::thread_group& threadGroup)
     RandAddSeedPerfmon();
 
     //// debug print
-    LogPrintf("mapBlockIndex.size() = %"PRIszu"\n",   mapBlockIndex.size());
+    LogPrintf("mapBlockIndex.size() = %u\n",   mapBlockIndex.size());
     LogPrintf("nBestHeight = %d\n",                   chainActive.Height());
 #ifdef ENABLE_WALLET
-    LogPrintf("setKeyPool.size() = %"PRIszu"\n",      pwalletMain ? pwalletMain->setKeyPool.size() : 0);
-    LogPrintf("mapWallet.size() = %"PRIszu"\n",       pwalletMain ? pwalletMain->mapWallet.size() : 0);
-    LogPrintf("mapAddressBook.size() = %"PRIszu"\n",  pwalletMain ? pwalletMain->mapAddressBook.size() : 0);
+    LogPrintf("setKeyPool.size() = %u\n",      pwalletMain ? pwalletMain->setKeyPool.size() : 0);
+    LogPrintf("mapWallet.size() = %u\n",       pwalletMain ? pwalletMain->mapWallet.size() : 0);
+    LogPrintf("mapAddressBook.size() = %u\n",  pwalletMain ? pwalletMain->mapAddressBook.size() : 0);
 #endif
 
     StartNode(threadGroup);

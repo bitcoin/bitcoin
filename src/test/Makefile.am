@@ -32,12 +32,12 @@ endif
 test_bitcoin_LDADD += $(BDB_LIBS)
 
 test_bitcoin_SOURCES = \
+  bignum.h \
   alert_tests.cpp \
   allocator_tests.cpp \
   base32_tests.cpp \
   base58_tests.cpp \
   base64_tests.cpp \
-  bignum_tests.cpp \
   bloom_tests.cpp \
   canonical_tests.cpp \
   checkblock_tests.cpp \
@@ -61,6 +61,7 @@ test_bitcoin_SOURCES = \
   transaction_tests.cpp \
   uint256_tests.cpp \
   util_tests.cpp \
+  scriptnum_tests.cpp \
   sighash_tests.cpp \
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 

@@ -459,6 +459,8 @@ WId BitcoinApplication::getMainWinId() const
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
+    SetupEnvironment();
+
     /// 1. Parse command-line options. These take precedence over anything else.
     // Command-line options take precedence:
     ParseParameters(argc, argv);
@@ -595,7 +597,7 @@ int main(int argc, char *argv[])
         app.createWindow(isaTestNet);
         app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
-        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Bitcoin Core did't yet exit safely..."), (HWND)app.getMainWinId());
+        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Bitcoin Core didn't yet exit safely..."), (HWND)app.getMainWinId());
 #endif
         app.exec();
         app.requestShutdown();

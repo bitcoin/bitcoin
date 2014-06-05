@@ -71,34 +71,15 @@ We are using https://transifex.com as a frontend for translating the client.
 https://www.transifex.com/projects/p/bitcoin/resource/tx/
 
 The "Transifex client" (see: http://support.transifex.com/customer/portal/topics/440187-transifex-client/articles)
-will help with fetching new translations from Transifex. Use the following
-config to be able to connect with the client:
+is used to fetch new translations from Transifex. The configuration for this client (`.tx/config`)
+is part of the repository.
 
-### .tx/config
-
-    [main]
-    host = https://www.transifex.com
-
-    [bitcoin.tx]
-    file_filter = src/qt/locale/bitcoin_<lang>.ts
-    source_file = src/qt/locale/bitcoin_en.ts
-    source_lang = en
-    
-### .tx/config (for Windows)
-
-    [main]
-    host = https://www.transifex.com
-
-    [bitcoin.tx]
-    file_filter = src\qt\locale\bitcoin_<lang>.ts
-    source_file = src\qt\locale\bitcoin_en.ts
-    source_lang = en
-
-It is also possible to directly download new translations one by one from the Transifex website.
+Do not directly download translations one by one from the Transifex website, as we do a few
+postprocessing steps before committing the translations.
 
 ### Fetching new translations
 
-1. `tx pull -a`
+1. `python contrib/devtools/update-translations.py`
 2. update `src/qt/bitcoin.qrc` manually or via
    `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'`
 3. update `src/qt/Makefile.am` manually or via

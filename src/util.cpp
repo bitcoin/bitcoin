@@ -14,6 +14,8 @@
 
 #include <stdarg.h>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #ifndef WIN32
 // for posix_fallocate
 #ifdef __linux_
@@ -92,7 +94,6 @@ bool fPrintToDebugLog = true;
 bool fDaemon = false;
 bool fServer = false;
 string strMiscWarning;
-bool fNoListen = false;
 bool fLogTimestamps = false;
 volatile bool fReopenDebugLog = false;
 CClientUIInterface uiInterface;
@@ -302,26 +303,6 @@ int LogPrintStr(const std::string &str)
 
     return ret;
 }
-
-void ParseString(const string& str, char c, vector<string>& v)
-{
-    if (str.empty())
-        return;
-    string::size_type i1 = 0;
-    string::size_type i2;
-    while (true)
-    {
-        i2 = str.find(c, i1);
-        if (i2 == str.npos)
-        {
-            v.push_back(str.substr(i1));
-            return;
-        }
-        v.push_back(str.substr(i1, i2-i1));
-        i1 = i2+1;
-    }
-}
-
 
 string FormatMoney(int64_t n, bool fPlus)
 {
@@ -889,43 +870,6 @@ string DecodeBase32(const string& str)
     return string((const char*)&vchRet[0], vchRet.size());
 }
 
-
-bool WildcardMatch(const char* psz, const char* mask)
-{
-    while (true)
-    {
-        switch (*mask)
-        {
-        case '\0':
-            return (*psz == '\0');
-        case '*':
-            return WildcardMatch(psz, mask+1) || (*psz && WildcardMatch(psz+1, mask));
-        case '?':
-            if (*psz == '\0')
-                return false;
-            break;
-        default:
-            if (*psz != *mask)
-                return false;
-            break;
-        }
-        psz++;
-        mask++;
-    }
-}
-
-bool WildcardMatch(const string& str, const string& mask)
-{
-    return WildcardMatch(str.c_str(), mask.c_str());
-}
-
-
-
-
-
-
-
-
 static std::string FormatException(std::exception* pex, const char* pszThread)
 {
 #ifdef WIN32
@@ -940,12 +884,6 @@ static std::string FormatException(std::exception* pex, const char* pszThread)
     else
         return strprintf(
             "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
-}
-
-void LogException(std::exception* pex, const char* pszThread)
-{
-    std::string message = FormatException(pex, pszThread);
-    LogPrintf("\n%s", message);
 }
 
 void PrintExceptionContinue(std::exception* pex, const char* pszThread)
@@ -1427,3 +1365,43 @@ void RenameThread(const char* name)
 #endif
 }
 
+bool ParseInt32(const std::string& str, int32_t *out)
+{
+    char *endp = NULL;
+    errno = 0; // strtol will not set errno if valid
+    long int n = strtol(str.c_str(), &endp, 10);
+    if(out) *out = (int)n;
+    // Note that strtol returns a *long int*, so even if strtol doesn't report a over/underflow
+    // we still have to check that the returned value is within the range of an *int32_t*. On 64-bit
+    // platforms the size of these types may be different.
+    return endp && *endp == 0 && !errno &&
+        n >= std::numeric_limits<int32_t>::min() &&
+        n <= std::numeric_limits<int32_t>::max();
+}
+
+void SetupEnvironment()
+{
+    #ifndef WIN32
+    try
+    {
+	#if BOOST_FILESYSTEM_VERSION == 3
+            boost::filesystem::path::codecvt(); // Raises runtime error if current locale is invalid
+	#else				          // boost filesystem v2
+            std::locale();                      // Raises runtime error if current locale is invalid
+	#endif
+    } catch(std::runtime_error &e)
+    {
+        setenv("LC_ALL", "C", 1); // Force C locale
+    }
+    #endif
+}
+
+std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
+{
+    // std::locale takes ownership of the pointer
+    std::locale loc(std::locale::classic(), new boost::posix_time::time_facet(pszFormat));
+    std::stringstream ss;
+    ss.imbue(loc);
+    ss << boost::posix_time::from_time_t(nTime);
+    return ss.str();
+}

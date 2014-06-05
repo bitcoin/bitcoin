@@ -13,6 +13,7 @@
 
 #include <QClipboard>
 #include <QDrag>
+#include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPixmap>
@@ -29,26 +30,27 @@
 #endif
 
 QRImageWidget::QRImageWidget(QWidget *parent):
-    QLabel(parent)
+    QLabel(parent), contextMenu(0)
 {
-    setContextMenuPolicy(Qt::ActionsContextMenu);
-
+    contextMenu = new QMenu();
     QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
     connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
-    addAction(saveImageAction);
+    contextMenu->addAction(saveImageAction);
     QAction *copyImageAction = new QAction(tr("&Copy Image"), this);
     connect(copyImageAction, SIGNAL(triggered()), this, SLOT(copyImage()));
-    addAction(copyImageAction);
+    contextMenu->addAction(copyImageAction);
 }
 
 QImage QRImageWidget::exportImage()
 {
+    if(!pixmap())
+        return QImage();
     return pixmap()->toImage().scaled(EXPORT_IMAGE_SIZE, EXPORT_IMAGE_SIZE);
 }
 
 void QRImageWidget::mousePressEvent(QMouseEvent *event)
 {
-    if(event->button() == Qt::LeftButton)
+    if(event->button() == Qt::LeftButton && pixmap())
     {
         event->accept();
         QMimeData *mimeData = new QMimeData;
@@ -64,6 +66,8 @@ void QRImageWidget::mousePressEvent(QMouseEvent *event)
 
 void QRImageWidget::saveImage()
 {
+    if(!pixmap())
+        return;
     QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Image (*.png)"), NULL);
     if (!fn.isEmpty())
     {
@@ -73,7 +77,16 @@ void QRImageWidget::saveImage()
 
 void QRImageWidget::copyImage()
 {
+    if(!pixmap())
+        return;
     QApplication::clipboard()->setImage(exportImage());
+}
+
+void QRImageWidget::contextMenuEvent(QContextMenuEvent *event)
+{
+    if(!pixmap())
+        return;
+    contextMenu->exec(event->globalPos());
 }
 
 ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :

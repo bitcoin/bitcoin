@@ -276,8 +276,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
+            // Note that flags: we don't want to set mempool/IsStandard()
+            // policy here, but we still have to ensure that the block we
+            // create only contains transactions that are valid in new blocks.
             CValidationState state;
-            if (!CheckInputs(tx, state, view, true, SCRIPT_VERIFY_P2SH))
+            if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
                 continue;
 
             CTxUndo txundo;
@@ -355,7 +358,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
     }
     ++nExtraNonce;
     unsigned int nHeight = pindexPrev->nHeight+1; // Height first in coinbase required for block.version=2
-    pblock->vtx[0].vin[0].scriptSig = (CScript() << nHeight << CBigNum(nExtraNonce)) + COINBASE_FLAGS;
+    pblock->vtx[0].vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce)) + COINBASE_FLAGS;
     assert(pblock->vtx[0].vin[0].scriptSig.size() <= 100);
 
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
@@ -463,7 +466,7 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
     uint256 hash = pblock->GetHash();
-    uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+    uint256 hashTarget = uint256().SetCompact(pblock->nBits);
 
     if (hash > hashTarget)
         return false;
@@ -528,7 +531,7 @@ void static BitcoinMiner(CWallet *pwallet)
         CBlock *pblock = &pblocktemplate->block;
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
-        LogPrintf("Running BitcoinMiner with %"PRIszu" transactions in block (%u bytes)\n", pblock->vtx.size(),
+        LogPrintf("Running BitcoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
                ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
 
         //
@@ -549,7 +552,7 @@ void static BitcoinMiner(CWallet *pwallet)
         // Search
         //
         int64_t nStart = GetTime();
-        uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+        uint256 hashTarget = uint256().SetCompact(pblock->nBits);
         uint256 hashbuf[2];
         uint256& hash = *alignup<16>(hashbuf);
         while (true)
@@ -633,7 +636,7 @@ void static BitcoinMiner(CWallet *pwallet)
             {
                 // Changing pblock->nTime can change work required on testnet:
                 nBlockBits = ByteReverse(pblock->nBits);
-                hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+                hashTarget.SetCompact(pblock->nBits);
             }
         }
     } }

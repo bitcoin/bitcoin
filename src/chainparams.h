@@ -6,7 +6,6 @@
 #ifndef BITCOIN_CHAIN_PARAMS_H
 #define BITCOIN_CHAIN_PARAMS_H
 
-#include "bignum.h"
 #include "uint256.h"
 
 #include <vector>
@@ -56,7 +55,7 @@ public:
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
     const vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
-    const CBigNum& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
+    const uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
     virtual const CBlock& GenesisBlock() const = 0;
     virtual bool RequireRPCPassword() const { return true; }
@@ -75,7 +74,7 @@ protected:
     vector<unsigned char> vAlertPubKey;
     int nDefaultPort;
     int nRPCPort;
-    CBigNum bnProofOfWorkLimit;
+    uint256 bnProofOfWorkLimit;
     int nSubsidyHalvingInterval;
     string strDataDir;
     vector<CDNSSeedData> vSeeds;

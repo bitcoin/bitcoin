@@ -10,7 +10,6 @@
 #include "bitcoin-config.h"
 #endif
 
-#include "bignum.h"
 #include "chainparams.h"
 #include "coins.h"
 #include "core.h"
@@ -46,8 +45,8 @@ static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 /** The maximum number of orphan transactions kept in memory */
 static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
-/** The maximum number of orphan blocks kept in memory */
-static const unsigned int MAX_ORPHAN_BLOCKS = 750;
+/** Default for -maxorphanblocks, maximum number of orphan blocks kept in memory */
+static const unsigned int DEFAULT_MAX_ORPHAN_BLOCKS = 750;
 /** The maximum size of a blk?????.dat file (since 0.8) */
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
@@ -103,7 +102,6 @@ extern unsigned int nCoinCacheSize;
 static const uint64_t nMinDiskSpace = 52428800;
 
 
-class CCoinsDB;
 class CBlockTreeDB;
 struct CDiskBlockPos;
 class CTxUndo;
@@ -146,8 +144,6 @@ bool InitBlockIndex();
 bool LoadBlockIndex();
 /** Unload database information */
 void UnloadBlockIndex();
-/** Verify consistency of the block and coin databases */
-bool VerifyDB(int nCheckLevel, int nCheckDepth);
 /** Print the loaded block tree */
 void PrintBlockTree();
 /** Process protocol messages received from a given node */
@@ -160,8 +156,6 @@ void ThreadScriptCheck();
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime);
-/** Get the number of active peers */
-int GetNumBlocksOfPeers();
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
 bool IsInitialBlockDownload();
 /** Format a string that describes several potential problems detected by the core */
@@ -309,7 +303,7 @@ inline bool AllowFree(double dPriority)
 // This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
 // instead of being performed inline.
 bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCache &view, bool fScriptChecks = true,
-                 unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC,
+                 unsigned int flags = STANDARD_SCRIPT_VERIFY_FLAGS,
                  std::vector<CScriptCheck> *pvChecks = NULL);
 
 // Apply the effects of this transaction on the UTXO set represented by view
@@ -603,11 +597,13 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos& pos);
 
 // Context-independent validity checks
+bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
 // Store block on disk
 // if dbp is provided, the file is known to already reside on disk
-bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp = NULL);
+bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex **pindex, CDiskBlockPos* dbp = NULL);
+bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex **ppindex= NULL);
 
 
 
@@ -814,13 +810,19 @@ public:
         return (int64_t)nTime;
     }
 
-    CBigNum GetBlockWork() const
+    uint256 GetBlockWork() const
     {
-        CBigNum bnTarget;
-        bnTarget.SetCompact(nBits);
-        if (bnTarget <= 0)
+        uint256 bnTarget;
+        bool fNegative;
+        bool fOverflow;
+        bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+        if (fNegative || fOverflow || bnTarget == 0)
             return 0;
-        return (CBigNum(1)<<256) / (bnTarget+1);
+        // We need to compute 2**256 / (bnTarget+1), but we can't represent 2**256
+        // as it's too large for a uint256. However, as 2**256 is at least as large
+        // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
+        // or ~bnTarget / (nTarget+1) + 1.
+        return (~bnTarget / (bnTarget + 1)) + 1;
     }
 
     bool CheckIndex() const
@@ -844,8 +846,6 @@ public:
         return pbegin[(pend - pbegin)/2];
     }
 
-    int64_t GetMedianTime() const;
-
     /**
      * Returns true if there are nRequired or more blocks of minVersion or above
      * in the last nToCheck blocks, starting at pstart and going backwards.
@@ -857,13 +857,36 @@ public:
     {
         return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
             pprev, nHeight,
-            hashMerkleRoot.ToString().c_str(),
-            GetBlockHash().ToString().c_str());
+            hashMerkleRoot.ToString(),
+            GetBlockHash().ToString());
     }
 
     void print() const
     {
-        LogPrintf("%s\n", ToString().c_str());
+        LogPrintf("%s\n", ToString());
+    }
+
+    // Check whether this block index entry is valid up to the passed validity level.
+    bool IsValid(enum BlockStatus nUpTo = BLOCK_VALID_TRANSACTIONS) const
+    {
+        assert(!(nUpTo & ~BLOCK_VALID_MASK)); // Only validity flags allowed.
+        if (nStatus & BLOCK_FAILED_MASK)
+            return false;
+        return ((nStatus & BLOCK_VALID_MASK) >= nUpTo);
+    }
+
+    // Raise the validity level of this block index entry.
+    // Returns true if the validity was changed.
+    bool RaiseValidity(enum BlockStatus nUpTo)
+    {
+        assert(!(nUpTo & ~BLOCK_VALID_MASK)); // Only validity flags allowed.
+        if (nStatus & BLOCK_FAILED_MASK)
+            return false;
+        if ((nStatus & BLOCK_VALID_MASK) < nUpTo) {
+            nStatus = (nStatus & ~BLOCK_VALID_MASK) | nUpTo;
+            return true;
+        }
+        return false;
     }
 };
 
@@ -925,14 +948,14 @@ public:
         std::string str = "CDiskBlockIndex(";
         str += CBlockIndex::ToString();
         str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
-            GetBlockHash().ToString().c_str(),
-            hashPrev.ToString().c_str());
+            GetBlockHash().ToString(),
+            hashPrev.ToString());
         return str;
     }
 
     void print() const
     {
-        LogPrintf("%s\n", ToString().c_str());
+        LogPrintf("%s\n", ToString());
     }
 };
 
@@ -997,6 +1020,15 @@ public:
     }
     unsigned char GetRejectCode() const { return chRejectCode; }
     std::string GetRejectReason() const { return strRejectReason; }
+};
+
+/** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
+class CVerifyDB {
+public:
+
+    CVerifyDB();
+    ~CVerifyDB();
+    bool VerifyDB(int nCheckLevel, int nCheckDepth);
 };
 
 /** An in-memory indexed chain of blocks. */

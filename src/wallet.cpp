@@ -6,9 +6,9 @@
 #include "wallet.h"
 
 #include "base58.h"
+#include "checkpoints.h"
 #include "coincontrol.h"
 #include "net.h"
-#include "checkpoints.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <openssl/rand.h>
@@ -16,7 +16,7 @@
 using namespace std;
 
 // Settings
-int64_t nTransactionFee = 0;
+int64_t nTransactionFee = DEFAULT_TRANSACTION_FEE;
 bool bSpendZeroConfChange = true;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1638,7 +1638,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
             if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey())))
                 throw runtime_error("TopUpKeyPool() : writing generated key failed");
             setKeyPool.insert(nEnd);
-            LogPrintf("keypool added key %d, size=%"PRIszu"\n", nEnd, setKeyPool.size());
+            LogPrintf("keypool added key %d, size=%u\n", nEnd, setKeyPool.size());
         }
     }
     return true;
@@ -1669,21 +1669,6 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool)
         assert(keypool.vchPubKey.IsValid());
         LogPrintf("keypool reserve %d\n", nIndex);
     }
-}
-
-int64_t CWallet::AddReserveKey(const CKeyPool& keypool)
-{
-    {
-        LOCK2(cs_main, cs_wallet);
-        CWalletDB walletdb(strWalletFile);
-
-        int64_t nIndex = 1 + *(--setKeyPool.end());
-        if (!walletdb.WritePool(nIndex, keypool))
-            throw runtime_error("AddReserveKey() : writing added key failed");
-        setKeyPool.insert(nIndex);
-        return nIndex;
-    }
-    return -1;
 }
 
 void CWallet::KeepKey(int64_t nIndex)

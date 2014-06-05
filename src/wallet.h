@@ -27,6 +27,8 @@
 extern int64_t nTransactionFee;
 extern bool bSpendZeroConfChange;
 
+// -paytxfee default
+static const int64_t DEFAULT_TRANSACTION_FEE = 0;
 // -paytxfee will warn if called with a higher fee than this amount (in satoshis) per KB
 static const int nHighTransactionFeeWarning = 0.01 * COIN;
 
@@ -141,6 +143,17 @@ public:
 
     CWallet()
     {
+        SetNull();
+    }
+    CWallet(std::string strWalletFileIn)
+    {
+        SetNull();
+
+        strWalletFile = strWalletFileIn;
+        fFileBacked = true;
+    }
+    void SetNull()
+    {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
         fFileBacked = false;
@@ -149,18 +162,7 @@ public:
         nOrderPosNext = 0;
         nNextResend = 0;
         nLastResend = 0;
-    }
-    CWallet(std::string strWalletFileIn)
-    {
-        nWalletVersion = FEATURE_BASE;
-        nWalletMaxVersion = FEATURE_BASE;
-        strWalletFile = strWalletFileIn;
-        fFileBacked = true;
-        nMasterKeyMaxID = 0;
-        pwalletdbEncryption = NULL;
-        nOrderPosNext = 0;
-        nNextResend = 0;
-        nLastResend = 0;
+        nTimeFirstKey = 0;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -261,7 +263,6 @@ public:
 
     bool NewKeyPool();
     bool TopUpKeyPool(unsigned int kpSize = 0);
-    int64_t AddReserveKey(const CKeyPool& keypool);
     void ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool);
     void KeepKey(int64_t nIndex);
     void ReturnKey(int64_t nIndex);
@@ -718,12 +719,12 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString().c_str(), i, nDepth, FormatMoney(tx->vout[i].nValue).c_str());
+        return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->vout[i].nValue).c_str());
     }
 
     void print() const
     {
-        LogPrintf("%s\n", ToString().c_str());
+        LogPrintf("%s\n", ToString());
     }
 };
 
