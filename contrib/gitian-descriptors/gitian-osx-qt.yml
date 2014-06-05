@@ -14,14 +14,14 @@ remotes: []
 files:
 - "qt-everywhere-opensource-src-5.2.1.tar.gz"
 - "osx-native-depends-r3.tar.gz"
-- "osx-depends-r3.tar.gz"
+- "osx-depends-r4.tar.gz"
 - "MacOSX10.7.sdk.tar.gz"
 
 script: |
 
   echo "84e924181d4ad6db00239d87250cc89868484a14841f77fb85ab1f1dbdcd7da1  qt-everywhere-opensource-src-5.2.1.tar.gz" | sha256sum -c
 
-  REVISION=r3
+  REVISION=r4
   export SOURCES_PATH=`pwd`
   export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export ZERO_AR_DATE=1
@@ -73,7 +73,7 @@ script: |
   tar xf /home/ubuntu/build/osx-native-depends-r3.tar.gz
 
   export PATH=`pwd`/native-prefix/bin:$PATH
-  tar xf /home/ubuntu/build/osx-depends-r3.tar.gz
+  tar xf /home/ubuntu/build/osx-depends-r4.tar.gz
 
   SOURCE_FILE=${SOURCES_PATH}/qt-everywhere-opensource-src-5.2.1.tar.gz
   BUILD_DIR=${BUILD_BASE}/qt-everywhere-opensource-src-5.2.1
