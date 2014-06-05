@@ -14,7 +14,6 @@ namespace boost {
     class thread_group;
 };
 
-extern std::string strWalletFile;
 extern CWallet* pwalletMain;
 
 void StartShutdown();
