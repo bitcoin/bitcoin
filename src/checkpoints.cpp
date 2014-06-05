@@ -41,6 +41,7 @@ namespace Checkpoints
         ( 0, hashGenesisBlockOfficial )
         ( 19080, uint256("0x000000000000bca54d9ac17881f94193fd6a270c1bb21c3bf0b37f588a40dbd7"))
         ( 30583, uint256("0xd39d1481a7eecba48932ea5913be58ad3894c7ee6d5a8ba8abeb772c66a6696e"))
+        ( 99999, uint256("0x27fd5e1de16a4270eb8c68dee2754a64da6312c7c3a0e99a7e6776246be1ee3f"))
         ;
     static const CCheckpointData data = {
         &mapCheckpoints,

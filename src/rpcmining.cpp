@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
+// Copyright (c) 2011-2014 Peercoin (PPCoin) Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -394,6 +395,10 @@ Value submitblock(const Array& params, bool fHelp)
     catch (std::exception &e) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
     }
+
+    // PPCoin: sign block
+    if (!pblock.SignBlock(*pwalletMain))
+        throw JSONRPCError(-100, "Unable to sign block, wallet locked?");
 
     CValidationState state;
     bool fAccepted = ProcessBlock(state, NULL, &pblock);

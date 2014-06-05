@@ -37,7 +37,7 @@ Release Process
 
 	mkdir -p inputs; cd inputs/
 	wget 'http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.6.tar.gz' -O miniupnpc-1.6.tar.gz
-	wget 'http://www.openssl.org/source/openssl-1.0.1c.tar.gz'
+	wget 'http://www.openssl.org/source/openssl-1.0.1g.tar.gz'
 	wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
 	wget 'http://zlib.net/zlib-1.2.6.tar.gz'
 	wget 'ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng-1.5.9.tar.gz'

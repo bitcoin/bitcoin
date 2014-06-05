@@ -35,11 +35,6 @@ QValidator::State BitcoinAddressValidator::validate(QString &input, int &pos) co
         case 0xFEFF: // ZERO WIDTH NO-BREAK SPACE
             removeChar = true;
             break;
-        // Qt categorizes these as "Other_Format" not "Separator_Space"
-        case 0x200B: // ZERO WIDTH SPACE
-        case 0xFEFF: // ZERO WIDTH NO-BREAK SPACE
-            removeChar = true;
-            break;
         default:
             break;
         }

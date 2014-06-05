@@ -16,7 +16,7 @@
 
 // ppcoin version - intended for display purpose ONLY
 #define PPCOIN_VERSION_MAJOR       0
-#define PPCOIN_VERSION_MINOR       3
+#define PPCOIN_VERSION_MINOR       4
 #define PPCOIN_VERSION_REVISION    0
 #define PPCOIN_VERSION_BUILD       0
 

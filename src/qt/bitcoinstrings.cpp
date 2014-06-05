@@ -45,7 +45,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Execute command when a wallet transaction changes (%s in cmd is replaced by "
 "TxID)"),
->>>>>>> bitcoin-0.8.3
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Execute command when the best block changes (%s in cmd is replaced by block "
 "hash)"),

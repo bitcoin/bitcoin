@@ -68,7 +68,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
     prevBlocks(0)
 {
     restoreWindowGeometry();
-    setWindowTitle(tr("PPCoin") + " - " + tr("Wallet"));
+    setWindowTitle(tr("Peercoin (PPCoin)") + " - " + tr("Wallet"));
 #ifndef Q_OS_MAC
     QApplication::setWindowIcon(QIcon(":icons/ppcoin"));
     setWindowIcon(QIcon(":icons/ppcoin"));

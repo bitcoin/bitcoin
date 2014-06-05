@@ -2126,7 +2126,7 @@ bool CBlock::AddToBlockIndex(CValidationState &state, const CDiskBlockPos &pos)
     // ppcoin: compute stake modifier
     uint64 nStakeModifier = 0;
     bool fGeneratedStakeModifier = false;
-    if (!ComputeNextStakeModifier(pindexNew->pprev, nStakeModifier, fGeneratedStakeModifier))
+    if (!ComputeNextStakeModifier(pindexNew, nStakeModifier, fGeneratedStakeModifier))
         return error("AddToBlockIndex() : ComputeNextStakeModifier() failed");
     pindexNew->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
     pindexNew->nStakeModifierChecksum = GetStakeModifierChecksum(pindexNew);
@@ -2639,6 +2639,29 @@ bool CBlock::CheckBlockSignature() const
     return false;
 }
 
+// ppcoin: entropy bit for stake modifier if chosen by modifier
+unsigned int CBlock::GetStakeEntropyBit() const
+{
+    unsigned int nEntropyBit = 0;
+    if (IsProtocolV04(nTime))
+    {
+        nEntropyBit = ((GetHash().Get64()) & 1llu);// last bit of block hash
+        if (fDebug && GetBoolArg("-printstakemodifier"))
+            printf("GetStakeEntropyBit(v0.4+): nTime=%u hashBlock=%s entropybit=%d\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
+    }
+    else
+    {
+        // old protocol for entropy bit pre v0.4
+        uint160 hashSig = Hash160(vchBlockSig);
+        if (fDebug && GetBoolArg("-printstakemodifier"))
+            printf("GetStakeEntropyBit(v0.3): nTime=%u hashSig=%s", nTime, hashSig.ToString().c_str());
+        hashSig >>= 159; // take the first bit of the hash
+        nEntropyBit = hashSig.Get64();
+        if (fDebug && GetBoolArg("-printstakemodifier"))
+            printf(" entropybit=%d\n", nEntropyBit);
+    }
+    return nEntropyBit;
+}
 
 
 

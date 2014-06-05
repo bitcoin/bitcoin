@@ -1194,12 +1194,14 @@ void MapPort(bool)
 // The second name should resolve to a list of seed addresses.
 static const char *strMainNetDNSSeed[][2] = {
     {"seed", "seed.ppcoin.net"},
+    {"seedppc", "seedppc.ppcoin.net"},
     {"altcointech", "dnsseed.ppc.altcointech.net"},
     {NULL, NULL}
 };
 
 static const char *strTestNetDNSSeed[][2] = {
     {"tnseed", "tnseed.ppcoin.net"},
+    {"tnseedppc", "tnseedppc.ppcoin.net"},
     {NULL, NULL}
 };
 
@@ -1246,9 +1248,12 @@ void ThreadDNSAddressSeed()
 
 
 
+// Physical IP seeds: 32-bit IPv4 addresses: e.g. 178.33.22.32 = 0x201621b2
 unsigned int pnSeed[] =
 {
-    0x231621b2, 0x4a54c854, 0x13cca445,
+    0x36a3b545, 0x3c1c26d8, 0x4031eb6d, 0x4d3463d1, 0x586a6854, 0x5da9ae65,
+    0x6deb7318, 0x9083fb63, 0x961bf618, 0xcabd2e4e, 0xcb766dd5, 0xdd514518,
+    0xdff010b8, 0xe9bb6044, 0xedb24a4c,
 };
 
 void DumpAddresses()

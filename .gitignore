@@ -14,12 +14,12 @@ src/test_ppcoin
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+ppcoin-qt
+PPCoin-Qt.app
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+ppcoin-qt_test
 
 # Resources cpp
 qrc_*.cpp

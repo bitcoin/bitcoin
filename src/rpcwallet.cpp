@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2012-2013 PPCoin developers
+// Copyright (c) 2012-2014 Peercoin (PPCoin) developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1000,6 +1000,15 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                         entry.push_back(Pair("category", "immature"));
                     else
                         entry.push_back(Pair("category", "generate"));
+                }
+                else if (wtx.IsCoinStake())
+                {
+                    if (wtx.GetDepthInMainChain() < 1)
+                        entry.push_back(Pair("category", "stake-orphan"));
+                    else if (wtx.GetBlocksToMaturity() > 0)
+                        entry.push_back(Pair("category", "stake"));
+                    else
+                        entry.push_back(Pair("category", "stake-mint"));
                 }
                 else
                     entry.push_back(Pair("category", "receive"));

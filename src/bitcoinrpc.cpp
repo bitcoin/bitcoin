@@ -45,7 +45,7 @@ static boost::thread_group* rpc_worker_group = NULL;
 
 static inline unsigned short GetDefaultRPCPort()
 {
-    return GetBoolArg("-testnet", false) ? 18332 : 8332;
+    return GetBoolArg("-testnet", false) ? TESTNET_RPC_PORT : RPC_PORT;
 }
 
 Object JSONRPCError(int code, const string& message)
@@ -1283,6 +1283,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
     if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
     if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
+    if (strMethod == "walletpassphrase"       && n > 2) ConvertTo<bool>(params[2]);
     if (strMethod == "getblocktemplate"       && n > 0) ConvertTo<Object>(params[0]);
     if (strMethod == "listsinceblock"         && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "sendalert"              && n > 2) ConvertTo<boost::int64_t>(params[2]);

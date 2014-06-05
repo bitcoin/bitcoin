@@ -151,6 +151,7 @@ public:
 
 
 
+
 /** Information about a peer */
 class CNode
 {

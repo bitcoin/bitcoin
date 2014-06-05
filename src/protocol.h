@@ -18,6 +18,7 @@
 #define PPCOIN_PORT  9901
 #define RPC_PORT     9902
 #define TESTNET_PORT 9903
+#define TESTNET_RPC_PORT 9904
 
 extern bool fTestNet;
 extern unsigned char pchMessageStart[4];

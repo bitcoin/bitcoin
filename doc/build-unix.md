@@ -44,12 +44,12 @@ Licenses of statically linked libraries:
  Boost         MIT-like license
  miniupnpc     New (3-clause) BSD license
 
-- Versions used in this release:
--  GCC           4.3.3
--  OpenSSL       1.0.1c
--  Berkeley DB   4.8.30.NC
--  Boost         1.37
--  miniupnpc     1.6
+Versions used in this release:
+ GCC           4.3.3
+ OpenSSL       1.0.1g
+ Berkeley DB   4.8.30.NC
+ Boost         1.37
+ miniupnpc     1.6
 
 Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------

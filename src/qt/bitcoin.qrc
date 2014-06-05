@@ -46,7 +46,6 @@
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>
         <file alias="splash">res/images/ppcoin_splash.png</file>
-        <file alias="splash">res/images/splash.png</file>
         <file alias="splash_testnet">res/images/splash_testnet.png</file>
     </qresource>
     <qresource prefix="/movies">
