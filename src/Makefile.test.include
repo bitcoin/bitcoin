@@ -1,5 +1,3 @@
-AM_CPPFLAGS += -I$(builddir)/test/
-
 TESTS += test/test_bitcoin
 bin_PROGRAMS += test/test_bitcoin
 TEST_SRCDIR = test
@@ -62,7 +60,7 @@ BITCOIN_TESTS += \
 endif
 
 test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(TESTDEFS)
+test_test_bitcoin_CPPFLAGS = $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS)
 test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
 if ENABLE_WALLET

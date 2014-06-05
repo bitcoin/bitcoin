@@ -1,8 +1,3 @@
-AM_CPPFLAGS += -I$(srcdir) \
-  -I$(srcdir)/qt \
-  -I$(builddir)/qt \
-  $(PROTOBUF_CFLAGS) \
-    $(QR_CFLAGS)
 bin_PROGRAMS += qt/test/test_bitcoin-qt
 TESTS += qt/test/test_bitcoin-qt
 
@@ -17,7 +12,8 @@ TEST_QT_H = \
   qt/test/paymentrequestdata.h \
   qt/test/paymentservertests.h
 
-qt_test_test_bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) $(QT_TEST_INCLUDES)
+qt_test_test_bitcoin_qt_CPPFLAGS = $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+  $(QT_INCLUDES) $(QT_TEST_INCLUDES)
 
 qt_test_test_bitcoin_qt_SOURCES = \
   qt/test/test_main.cpp \
