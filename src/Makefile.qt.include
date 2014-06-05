@@ -1,6 +1,6 @@
-AM_CPPFLAGS += -I$(top_srcdir)/src \
-  -I$(top_builddir)/src/qt \
-  -I$(top_builddir)/src/qt/forms \
+AM_CPPFLAGS += -I$(srcdir) \
+  -I$(builddir)/qt \
+  -I$(builddir)/qt/forms \
   $(PROTOBUF_CFLAGS) \
   $(QR_CFLAGS)
 bin_PROGRAMS += qt/bitcoin-qt
@@ -320,7 +320,7 @@ RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 BITCOIN_RC = qt/res/bitcoin-qt-res.rc
 
 qt_libbitcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
-  -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
+  -I$(srcdir)/qt/forms $(QT_DBUS_INCLUDES)
 qt_libbitcoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
@@ -342,7 +342,7 @@ $(QT_MOC_CPP): $(PROTOBUF_H)
 
 # bitcoin-qt binary #
 qt_bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
-  -I$(top_srcdir)/src/qt/forms
+  -I$(srcdir)/qt/forms
 qt_bitcoin_qt_SOURCES = qt/bitcoin.cpp
 if TARGET_DARWIN
   qt_bitcoin_qt_SOURCES += $(BITCOIN_MM)
