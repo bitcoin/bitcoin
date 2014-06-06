@@ -6,7 +6,7 @@ SetCompressor /SOLID lzma
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
 !define VERSION 0.4.0
-!define COMPANY "PPCoin project"
+!define COMPANY "Peercoin project"
 !define URL http://github.com/ppcoin/ppcoin/
 
 # MUI Symbol Definitions

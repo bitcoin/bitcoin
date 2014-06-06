@@ -64,7 +64,7 @@ Other Pages
 
 
 
-Bitcoin 0.8.3 BETA
+Bitcoin 0.8.6 BETA
 ====================
 
 Copyright (c) 2009-2013 Bitcoin Developers

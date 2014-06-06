@@ -320,8 +320,39 @@ class PosixMmapFile : public WritableFile {
     return Status::OK();
   }
 
-  virtual Status Sync() {
+  Status SyncDirIfManifest() {
+    const char* f = filename_.c_str();
+    const char* sep = strrchr(f, '/');
+    Slice basename;
+    std::string dir;
+    if (sep == NULL) {
+      dir = ".";
+      basename = f;
+    } else {
+      dir = std::string(f, sep - f);
+      basename = sep + 1;
+    }
     Status s;
+    if (basename.starts_with("MANIFEST")) {
+      int fd = open(dir.c_str(), O_RDONLY);
+      if (fd < 0) {
+        s = IOError(dir, errno);
+      } else {
+        if (fsync(fd) < 0) {
+          s = IOError(dir, errno);
+        }
+        close(fd);
+      }
+    }
+    return s;
+  }
+
+  virtual Status Sync() {
+    // Ensure new files referred to by the manifest are in the filesystem.
+    Status s = SyncDirIfManifest();
+    if (!s.ok()) {
+      return s;
+    }
 
     if (pending_sync_) {
       // Some unmapped data was not synced
@@ -345,6 +376,93 @@ class PosixMmapFile : public WritableFile {
     return s;
   }
 };
+
+#if defined(OS_MACOSX)
+class PosixWriteableFile : public WritableFile {
+ private:
+  std::string filename_;
+  int fd_;
+ public:
+  PosixWriteableFile(const std::string& fname, int fd)
+  : filename_(fname),
+  fd_(fd)
+  { }
+
+
+  ~PosixWriteableFile() {
+    if (fd_ >= 0) {
+      PosixWriteableFile::Close();
+    }
+  }
+
+  virtual Status Append(const Slice& data) {
+    Status s;
+    int ret;
+    ret = write(fd_, data.data(), data.size());
+    if (ret < 0) {
+      s = IOError(filename_, errno);
+    } else if (ret < data.size()) {
+      s = Status::IOError(filename_, "short write");
+    }
+    
+    return s;
+  }
+
+  virtual Status Close() {
+    Status s;
+    if (close(fd_) < 0) {
+      s = IOError(filename_, errno);
+    }
+    fd_ = -1;
+    return s;
+  }
+
+  virtual Status Flush() {
+    return Status::OK();
+  }
+  
+  Status SyncDirIfManifest() {
+    const char* f = filename_.c_str();
+    const char* sep = strrchr(f, '/');
+    Slice basename;
+    std::string dir;
+    if (sep == NULL) {
+      dir = ".";
+      basename = f;
+    } else {
+      dir = std::string(f, sep - f);
+      basename = sep + 1;
+    }
+    Status s;
+    if (basename.starts_with("MANIFEST")) {
+      int fd = open(dir.c_str(), O_RDONLY);
+      if (fd < 0) {
+        s = IOError(dir, errno);
+      } else {
+        if (fsync(fd) < 0) {
+          s = IOError(dir, errno);
+        }
+        close(fd);
+      }
+    }
+    return s;
+  }
+  
+  virtual Status Sync() {
+    // Ensure new files referred to by the manifest are in the filesystem.
+    Status s = SyncDirIfManifest();
+    if (!s.ok()) {
+      return s;
+    }
+    
+    if (fdatasync(fd_) < 0) {
+      s = IOError(filename_, errno);
+    }
+    
+    return s;
+  }
+};
+#endif
 
 static int LockOrUnlock(int fd, bool lock) {
   errno = 0;
@@ -386,7 +504,7 @@ class PosixEnv : public Env {
   PosixEnv();
   virtual ~PosixEnv() {
     fprintf(stderr, "Destroying Env::Default()\n");
-    exit(1);
+    abort();
   }
 
   virtual Status NewSequentialFile(const std::string& fname,
@@ -408,6 +526,7 @@ class PosixEnv : public Env {
     int fd = open(fname.c_str(), O_RDONLY);
     if (fd < 0) {
       s = IOError(fname, errno);
+#if !defined(OS_MACOSX)
     } else if (mmap_limit_.Acquire()) {
       uint64_t size;
       s = GetFileSize(fname, &size);
@@ -423,6 +542,7 @@ class PosixEnv : public Env {
       if (!s.ok()) {
         mmap_limit_.Release();
       }
+#endif
     } else {
       *result = new PosixRandomAccessFile(fname, fd);
     }
@@ -437,7 +557,11 @@ class PosixEnv : public Env {
       *result = NULL;
       s = IOError(fname, errno);
     } else {
+#if defined(OS_MACOSX)
+      *result = new PosixWriteableFile(fname, fd);
+#else
       *result = new PosixMmapFile(fname, fd, page_size_);
+#endif
     }
     return s;
   }
@@ -467,7 +591,7 @@ class PosixEnv : public Env {
       result = IOError(fname, errno);
     }
     return result;
-  };
+  }
 
   virtual Status CreateDir(const std::string& name) {
     Status result;
@@ -475,7 +599,7 @@ class PosixEnv : public Env {
       result = IOError(name, errno);
     }
     return result;
-  };
+  }
 
   virtual Status DeleteDir(const std::string& name) {
     Status result;
@@ -483,7 +607,7 @@ class PosixEnv : public Env {
       result = IOError(name, errno);
     }
     return result;
-  };
+  }
 
   virtual Status GetFileSize(const std::string& fname, uint64_t* size) {
     Status s;
@@ -589,7 +713,7 @@ class PosixEnv : public Env {
   void PthreadCall(const char* label, int result) {
     if (result != 0) {
       fprintf(stderr, "pthread %s: %s\n", label, strerror(result));
-      exit(1);
+      abort();
     }
   }
 

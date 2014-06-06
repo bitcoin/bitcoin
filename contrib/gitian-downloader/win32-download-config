@@ -35,4 +35,8 @@ signers:
     weight: 40
     name: "Wladimir J. van der Laan"
     key: laanwj
+  AEC1884398647C47413C1C3FB1179EB7347DC10D:
+    weight: 40
+    name: "Warren Togami"
+    key: wtogami
 minimum_weight: 120
