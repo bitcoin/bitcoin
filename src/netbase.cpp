@@ -16,6 +16,7 @@
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
+#include <boost/bind.hpp>
 
 #if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
@@ -59,6 +60,16 @@ void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
         hostOut = in;
 }
 
+static void resolve_handler(std::vector<CNetAddr>* vIP, unsigned int nMax, const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator itr)
+{
+    if (ec)
+        return;
+
+    boost::asio::ip::tcp::resolver::iterator end;
+    for (; (nMax == 0 || vIP->size() < nMax) && itr != end; ++itr)
+        vIP->push_back(CNetAddr(itr->endpoint().address()));
+}
+
 bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 {
     vIP.clear();
@@ -71,41 +82,25 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
         }
     }
 
-    struct addrinfo aiHint;
-    memset(&aiHint, 0, sizeof(struct addrinfo));
+    boost::system::error_code ec;
+    boost::asio::ip::address addr;
 
-    aiHint.ai_socktype = SOCK_STREAM;
-    aiHint.ai_protocol = IPPROTO_TCP;
-    aiHint.ai_family = AF_UNSPEC;
-#ifdef WIN32
-    aiHint.ai_flags = fAllowLookup ? 0 : AI_NUMERICHOST;
-#else
-    aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
-#endif
-    struct addrinfo *aiRes = NULL;
-    int nErr = getaddrinfo(pszName, NULL, &aiHint, &aiRes);
-    if (nErr)
-        return false;
+    if (fAllowLookup) {
+        boost::asio::io_service ios;
+        boost::asio::ip::tcp::resolver resolver(ios);
+        boost::asio::ip::tcp::resolver::query query(pszName, "");
 
-    struct addrinfo *aiTrav = aiRes;
-    while (aiTrav != NULL && (nMaxSolutions == 0 || vIP.size() < nMaxSolutions))
-    {
-        if (aiTrav->ai_family == AF_INET)
-        {
-            assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in));
-            vIP.push_back(CNetAddr(((struct sockaddr_in*)(aiTrav->ai_addr))->sin_addr));
+        resolver.async_resolve(query, boost::bind(resolve_handler, &vIP, nMaxSolutions, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
+
+        while (!ios.poll(ec) && !ec) {
+            boost::this_thread::interruption_point();
+            MilliSleep(500);
         }
-
-        if (aiTrav->ai_family == AF_INET6)
-        {
-            assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in6));
-            vIP.push_back(CNetAddr(((struct sockaddr_in6*)(aiTrav->ai_addr))->sin6_addr));
-        }
-
-        aiTrav = aiTrav->ai_next;
+    } else {
+        addr = boost::asio::ip::address::from_string(pszName, ec);
+        if (!ec)
+            vIP.push_back(CNetAddr(addr));
     }
-
-    freeaddrinfo(aiRes);
 
     return (vIP.size() > 0);
 }
@@ -588,6 +583,29 @@ CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr)
     SetRaw(NET_IPV6, (const uint8_t*)&ipv6Addr);
 }
 
+CNetAddr::CNetAddr(const boost::asio::ip::address& asioAddr)
+{
+    boost::asio::ip::address addr;
+
+    if (asioAddr.is_v6()
+     && (asioAddr.to_v6().is_v4_compatible()
+      || asioAddr.to_v6().is_v4_mapped()))
+        addr = asioAddr.to_v6().to_v4();
+    else
+        addr = asioAddr;
+
+    if(addr.is_v4())
+    {
+        boost::asio::ip::address_v4::bytes_type bytes = addr.to_v4().to_bytes();
+        SetRaw(NET_IPV4, &bytes[0]);
+    }
+    else
+    {
+        boost::asio::ip::address_v6::bytes_type bytes = addr.to_v6().to_bytes();
+        SetRaw(NET_IPV6, &bytes[0]);
+    }
+}
+
 CNetAddr::CNetAddr(const char *pszIp, bool fAllowLookup)
 {
     Init();
@@ -732,7 +750,6 @@ bool CNetAddr::IsValid() const
         if (memcmp(ip+12, &ipNone, 4) == 0)
             return false;
     }
-
     return true;
 }
 
