@@ -63,6 +63,7 @@ class CMessageHeader
 enum
 {
     NODE_NETWORK = (1 << 0),
+    NODE_BLOOM   = (1 << 1),
 };
 
 /** A CService with information about it as peer */
