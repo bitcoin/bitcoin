@@ -191,6 +191,9 @@ public:
     std::vector<CTxOut> vout;
     unsigned int nLockTime;
 
+    // memory only
+    mutable uint256 hash;
+
     CTransaction()
     {
         SetNull();
@@ -203,6 +206,7 @@ public:
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
+        hash = 0;
     )
 
     void SetNull()
@@ -211,6 +215,7 @@ public:
         vin.clear();
         vout.clear();
         nLockTime = 0;
+        hash = 0;
     }
 
     bool IsNull() const
@@ -218,7 +223,11 @@ public:
         return (vin.empty() && vout.empty());
     }
 
-    uint256 GetHash() const;
+    const uint256& GetHash() const;
+
+    void MarkDirty() const {
+        hash = 0;
+    }
 
     // Return sum of txouts.
     int64_t GetValueOut() const;
@@ -400,6 +409,7 @@ public:
 
     // memory only
     mutable std::vector<uint256> vMerkleTree;
+    mutable uint256 hash;
 
     CBlock()
     {
@@ -416,6 +426,7 @@ public:
     (
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
+        hash = 0;
     )
 
     void SetNull()
@@ -423,6 +434,7 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         vMerkleTree.clear();
+        hash = 0;
     }
 
     CBlockHeader GetBlockHeader() const
@@ -439,10 +451,10 @@ public:
 
     uint256 BuildMerkleTree() const;
 
-    const uint256 &GetTxHash(unsigned int nIndex) const {
-        assert(vMerkleTree.size() > 0); // BuildMerkleTree must have been called first
-        assert(nIndex < vtx.size());
-        return vMerkleTree[nIndex];
+    const uint256& GetHash() const;
+
+    void MarkDirty() {
+        hash = 0;
     }
 
     std::vector<uint256> GetMerkleBranch(int nIndex) const;

@@ -285,7 +285,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
             CTxUndo txundo;
             uint256 hash = tx.GetHash();
-            UpdateCoins(tx, state, view, txundo, pindexPrev->nHeight+1, hash);
+            UpdateCoins(tx, state, view, txundo, pindexPrev->nHeight+1);
 
             // Added
             pblock->vtx.push_back(tx);

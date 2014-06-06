@@ -72,9 +72,11 @@ void CTxOut::print() const
     LogPrintf("%s\n", ToString());
 }
 
-uint256 CTransaction::GetHash() const
+const uint256& CTransaction::GetHash() const
 {
-    return SerializeHash(*this);
+    if (hash == 0)
+        hash = SerializeHash(*this);
+    return hash;
 }
 
 int64_t CTransaction::GetValueOut() const
@@ -256,4 +258,11 @@ void CBlock::print() const
     for (unsigned int i = 0; i < vMerkleTree.size(); i++)
         LogPrintf("%s ", vMerkleTree[i].ToString());
     LogPrintf("\n");
+}
+
+const uint256& CBlock::GetHash() const
+{
+    if (hash == 0)
+        hash = CBlockHeader::GetHash();
+    return hash;
 }
