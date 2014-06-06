@@ -35,7 +35,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <name>AddressBookPage</name>
     <message>
         <source>Double-click to edit address or label</source>
-        <translation>ดับเบิลคลิก เพื่อแก้ไขที่อยู่ หรือชื่อ</translation>
+        <translation>ดับเบิ้ลคลิก เพื่อแก้ไขที่อยู่ หรือชื่อ</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -75,7 +75,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>ลบ</translation>
+        <translation>&amp;ลบ</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -119,7 +119,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>คั่นไฟล์ด้วยเครื่องหมายจุลภาค (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -165,7 +165,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>ใส่รหัสผ่านใหม่ให้กับกระเป๋าเงิน. &lt;br/&gt; กรุณาใช้รหัสผ่านของ &lt;b&gt; 10 หรือแบบสุ่มมากกว่าตัวอักษร &lt;/ b&gt; หรือ &lt;b&gt; แปดหรือมากกว่าคำ &lt;/ b&gt;</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -173,7 +173,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>การดำเนินการนี้ต้องมีรหัสผ่านกระเป๋าเงินของคุณเพื่อปลดล็อคกระเป๋าเงิน</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -181,7 +181,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>การดำเนินการนี้ต้องมีรหัสผ่านกระเป๋าเงินของคุณในการถอดรหัสกระเป๋าเงิน</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -229,7 +229,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished"/>
+        <translation>กระเป๋าเงินเข้ารหัสล้มเหลวเนื่องจากข้อผิดพลาดภายใน กระเป๋าเงินของคุณไม่ได้เข้ารหัส</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
@@ -237,15 +237,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished"/>
+        <translation>ปลดล็อคกระเป๋าเงินล้มเหลว</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>ป้อนรหัสผ่านสำหรับการถอดรหัสกระเป๋าเงินไม่ถูกต้อง</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
-        <translation type="unfinished"/>
+        <translation>ถอดรหัสกระเป๋าเงินล้มเหลว</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
@@ -260,11 +260,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Synchronizing with network...</source>
-        <translation type="unfinished"/>
+        <translation>กำลังทำข้อมูลให้ตรงกันกับเครือข่าย ...</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
-        <translation type="unfinished"/>
+        <translation>&amp;ภาพรวม</translation>
     </message>
     <message>
         <source>Node</source>
@@ -272,15 +272,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation type="unfinished"/>
+        <translation>แสดงภาพรวมทั่วไปของกระเป๋าเงิน</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation type="unfinished"/>
+        <translation>&amp;การทำรายการ</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation type="unfinished"/>
+        <translation>เรียกดูประวัติการทำธุรกรรม</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -288,11 +288,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Quit application</source>
-        <translation type="unfinished"/>
+        <translation>ออกจากโปรแกรม</translation>
     </message>
     <message>
         <source>Show information about Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>แสดงข้อมูลเกี่ยวกับ Bitcoin</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -304,7 +304,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Options...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;ตัวเลือก...</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -352,7 +352,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>เปลี่ยนรหัสผ่านที่ใช้สำหรับการเข้ารหัสกระเป๋าเงิน</translation>
     </message>
     <message>
         <source>&amp;Debug window</source>
@@ -404,23 +404,23 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;File</source>
-        <translation type="unfinished"/>
+        <translation>&amp;ไฟล์</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation type="unfinished"/>
+        <translation>&amp;การตั้งค่า</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation type="unfinished"/>
+        <translation>&amp;ช่วยเหลือ</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation type="unfinished"/>
+        <translation>แถบเครื่องมือ</translation>
     </message>
     <message>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[testnet]</translation>
     </message>
     <message>
         <source>Bitcoin Core</source>
@@ -460,7 +460,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n ที่ใช้งานการเชื่อมต่อกับเครือข่าย Bitcoin</numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -520,19 +520,19 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Up to date</source>
-        <translation type="unfinished"/>
+        <translation>ทันสมัย</translation>
     </message>
     <message>
         <source>Catching up...</source>
-        <translation type="unfinished"/>
+        <translation>จับได้...</translation>
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation type="unfinished"/>
+        <translation>รายการที่ส่ง</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation type="unfinished"/>
+        <translation>การทำรายการขาเข้า</translation>
     </message>
     <message>
         <source>Date: %1
@@ -544,11 +544,11 @@ Address: %4
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>ระเป๋าเงินถูก &lt;b&gt;เข้ารหัส&lt;/b&gt; และในขณะนี้ &lt;b&gt;ปลดล็อคแล้ว&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>กระเป๋าเงินถูก &lt;b&gt;เข้ารหัส&lt;/b&gt; และในปัจจุบัน &lt;b&gt;ล็อค &lt;/b&gt;</translation>
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
@@ -797,11 +797,11 @@ Address: %4
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>แก้ไขที่อยู่</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;ชื่อ</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
@@ -813,27 +813,27 @@ Address: %4
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;ที่อยู่</translation>
     </message>
     <message>
         <source>New receiving address</source>
-        <translation type="unfinished"/>
+        <translation>ที่อยู่ผู้รับใหม่</translation>
     </message>
     <message>
         <source>New sending address</source>
-        <translation type="unfinished"/>
+        <translation>ที่อยู่ผู้ส่งใหม่</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation type="unfinished"/>
+        <translation>แก้ไขที่อยู่ผู้รับ</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation type="unfinished"/>
+        <translation>แก้ไขที่อยู่ผู้ส่ง</translation>
     </message>
     <message>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation type="unfinished"/>
+        <translation>ป้อนที่อยู่ &quot;%1&quot; ที่มีอยู่แล้วในสมุดที่อยู่</translation>
     </message>
     <message>
         <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
@@ -841,11 +841,11 @@ Address: %4
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"/>
+        <translation>ไม่สามารถปลดล็อคกระเป๋าเงิน</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation type="unfinished"/>
+        <translation>สร้างกุญแจใหม่ล้มเหลว</translation>
     </message>
 </context>
 <context>
@@ -992,7 +992,7 @@ Address: %4
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation type="unfinished"/>
+        <translation>ตัวเลือก</translation>
     </message>
     <message>
         <source>&amp;Main</source>
@@ -1207,7 +1207,7 @@ Address: %4
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation type="unfinished"/>
+        <translation>รูป</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
@@ -1251,7 +1251,7 @@ Address: %4
     </message>
     <message>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;รายการทำธุรกรรมล่าสุด&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1695,7 +1695,7 @@ Address: %4
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>ส่งเหรียญ</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -2127,7 +2127,7 @@ Address: %4
     </message>
     <message>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -2494,7 +2494,7 @@ Address: %4
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>คั่นไฟล์ด้วยเครื่องหมายจุลภาค (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -2544,7 +2544,7 @@ Address: %4
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>ส่งเหรียญ</translation>
     </message>
 </context>
 <context>
