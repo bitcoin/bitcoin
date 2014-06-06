@@ -415,8 +415,8 @@ void RPCConsole::on_lineEdit_returnPressed()
     {
         message(CMD_REQUEST, cmd);
         emit cmdRequest(cmd);
-        // Truncate history from current position
-        history.erase(history.begin() + historyPtr, history.end());
+        // Remove command, if already in history
+        history.removeOne(cmd);
         // Append command to history
         history.append(cmd);
         // Enforce maximum history size
