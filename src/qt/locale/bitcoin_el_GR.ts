@@ -3,11 +3,11 @@
     <name>AboutDialog</name>
     <message>
         <source>About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Σχετικά με το Bitcoin Core</translation>
     </message>
     <message>
         <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Bitcoin Core&lt;/b&gt; έκδοση</translation>
     </message>
     <message>
         <source>
@@ -29,11 +29,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Οι προγραμματιστές του Bitcoin Core</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1-bit)</translation>
     </message>
 </context>
 <context>
@@ -128,11 +128,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Η εξαγωγή απέτυχε</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Παρουσιάστηκε σφάλμα κατά την αποθήκευση της λίστας πορτοφολιών στο %1.</translation>
     </message>
 </context>
 <context>
@@ -438,7 +438,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Σχετικά με το Bitcoin Core</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -494,11 +494,11 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>%1 and %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 και %2</translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n έτος</numerusform><numerusform>%n έτη</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -608,11 +608,11 @@ Address: %4
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Ρέστα:</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation type="unfinished"/>
+        <translation>(από)επιλογή όλων</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -672,7 +672,7 @@ Address: %4
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Αντιγραφή ποσότητας</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -684,11 +684,11 @@ Address: %4
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Αντιγραφή των byte</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Αντιγραφή προτεραιότητας</translation>
     </message>
     <message>
         <source>Copy low output</source>
@@ -696,51 +696,51 @@ Address: %4
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Αντιγραφή των ρέστων</translation>
     </message>
     <message>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>ύψιστη</translation>
     </message>
     <message>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>υψηλότερη</translation>
     </message>
     <message>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>ψηλή</translation>
     </message>
     <message>
         <source>medium-high</source>
-        <translation type="unfinished"/>
+        <translation>μεσαία-ψηλή</translation>
     </message>
     <message>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>μεσαία</translation>
     </message>
     <message>
         <source>low-medium</source>
-        <translation type="unfinished"/>
+        <translation>μεσαία-χαμηλή</translation>
     </message>
     <message>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>χαμηλή</translation>
     </message>
     <message>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>χαμηλότερη</translation>
     </message>
     <message>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>χαμηλότατη</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 κλειδωμένο)</translation>
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>κανένα</translation>
     </message>
     <message>
         <source>Dust</source>
@@ -796,11 +796,12 @@ Address: %4
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished"/>
+        <translation>ρέστα από %1 (%2) </translation>
     </message>
     <message>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(ρέστα)
+</translation>
     </message>
 </context>
 <context>
@@ -815,7 +816,7 @@ Address: %4
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>Η ετικέτα που συνδέεται με αυτήν την καταχώρηση στο βιβλίο διευθύνσεων</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
@@ -936,11 +937,11 @@ Address: %4
     </message>
     <message>
         <source>Welcome to Bitcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Καλώς ήρθατε στο Bitcoin Core.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>Καθώς αυτή είναι η πρώτη φορά που εκκινείται το πρόγραμμα, μπορείτε να διαλέξετε πού θα αποθηκεύει το Bitcoin Core τα δεδομένα του.</translation>
     </message>
     <message>
         <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
@@ -1030,7 +1031,7 @@ Address: %4
     </message>
     <message>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>MB</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1082,7 +1083,7 @@ Address: %4
     </message>
     <message>
         <source>Expert</source>
-        <translation type="unfinished"/>
+        <translation>Έμπειρος</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
@@ -1190,7 +1191,7 @@ Address: %4
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>κανένα</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1198,7 +1199,7 @@ Address: %4
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Χρειάζεται επανεκκίνηση του προγράμματος για να ενεργοποιηθούν οι αλλαγές.</translation>
     </message>
     <message>
         <source>Client will be shutdown, do you want to proceed?</source>
@@ -1229,7 +1230,7 @@ Address: %4
     </message>
     <message>
         <source>Available:</source>
-        <translation type="unfinished"/>
+        <translation>Διαθέσιμο:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -1370,11 +1371,11 @@ Address: %4
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Αποθήκευση εικόνας...</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Αντιγραφή εικόνας</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1409,7 +1410,7 @@ Address: %4
     </message>
     <message>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>Γενικά</translation>
     </message>
     <message>
         <source>Using OpenSSL version</source>
@@ -1425,7 +1426,7 @@ Address: %4
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished"/>
+        <translation>Όνομα</translation>
     </message>
     <message>
         <source>Number of connections</source>
@@ -1457,11 +1458,11 @@ Address: %4
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Κίνηση δικτύου</translation>
     </message>
     <message>
         <source>&amp;Clear</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Εκκαθάριση</translation>
     </message>
     <message>
         <source>Totals</source>
@@ -1536,7 +1537,7 @@ Address: %4
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ποσό:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1544,7 +1545,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Μήνυμα:</translation>
     </message>
     <message>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
@@ -1584,7 +1585,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Request payment</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Αίτηση πληρωμής</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -1608,7 +1609,7 @@ Address: %4
     </message>
     <message>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>Αντιγραφή μηνύματος</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1631,7 +1632,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Αποθήκευση εικόνας...</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -1698,7 +1699,7 @@ Address: %4
     </message>
     <message>
         <source>(no amount)</source>
-        <translation type="unfinished"/>
+        <translation>(κανένα ποσό)</translation>
     </message>
 </context>
 <context>
@@ -1717,7 +1718,7 @@ Address: %4
     </message>
     <message>
         <source>automatically selected</source>
-        <translation type="unfinished"/>
+        <translation>επιλεγμένο αυτόματα</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
@@ -1753,7 +1754,7 @@ Address: %4
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Ρέστα:</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
@@ -1801,7 +1802,7 @@ Address: %4
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Αντιγραφή ποσότητας</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1817,11 +1818,11 @@ Address: %4
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Αντιγραφή των byte</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Αντιγραφή προτεραιότητας</translation>
     </message>
     <message>
         <source>Copy low output</source>
@@ -1829,15 +1830,15 @@ Address: %4
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Αντιγραφή των ρέστων</translation>
     </message>
     <message>
         <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
+        <translation>Ολικό Ποσό %1 (= %2)</translation>
     </message>
     <message>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>ή</translation>
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
@@ -1940,7 +1941,7 @@ Address: %4
     </message>
     <message>
         <source>Remove this entry</source>
-        <translation type="unfinished"/>
+        <translation>Αφαίρεση αυτής της καταχώρησης</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -1975,11 +1976,11 @@ Address: %4
     <name>ShutdownWindow</name>
     <message>
         <source>Bitcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Το Bitcoin Core τερματίζεται...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>Μην απενεργοποιήσετε τον υπολογιστή μέχρι να κλείσει αυτό το παράθυρο.</translation>
     </message>
 </context>
 <context>
@@ -2133,7 +2134,7 @@ Address: %4
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Οι προγραμματιστές του Bitcoin Core</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -2341,11 +2342,11 @@ Address: %4
     </message>
     <message>
         <source>Offline</source>
-        <translation type="unfinished"/>
+        <translation>Offline</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>Ανεπιβεβαίωτες</translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
@@ -2484,19 +2485,19 @@ Address: %4
     </message>
     <message>
         <source>Export Transaction History</source>
-        <translation type="unfinished"/>
+        <translation>Εξαγωγή Ιστορικού Συναλλαγών</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Η Εξαγωγή Απέτυχε</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Yπήρξε σφάλμα κατά την προσπάθεια αποθήκευσης του ιστορικού συναλλαγών στο %1.</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation type="unfinished"/>
+        <translation>Επιτυχής εξαγωγή</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
@@ -2547,7 +2548,7 @@ Address: %4
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Δεν έχει φορτωθεί πορτοφόλι</translation>
     </message>
 </context>
 <context>
@@ -2585,7 +2586,7 @@ Address: %4
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Τα δεδομένα πορτοφολιού αποθηκεύτηκαν με επιτυχία στο %1.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
@@ -2801,11 +2802,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>(default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>(προεπιλογή: 1)</translation>
     </message>
     <message>
         <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
+        <translation>(προεπιλογή: wallet.dat)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2841,7 +2842,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Connection options:</source>
-        <translation type="unfinished"/>
+        <translation>Επιλογές σύνδεσης:</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -3045,7 +3046,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>Επιλογές πορτοφολιού:</translation>
     </message>
     <message>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
@@ -3229,7 +3230,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>on startup</source>
-        <translation type="unfinished"/>
+        <translation>κατά την εκκίνηση</translation>
     </message>
     <message>
         <source>version</source>
