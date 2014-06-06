@@ -41,7 +41,7 @@ Instructions: MacPorts
 
 ### Install dependencies
 
-    sudo port install boost db48@+no_java openssl miniupnpc autoconf pkgconfig automake
+    sudo port install boost db48@+no_java openssl miniupnpc autoconf pkgconfig automake libtool
 
 Optional: install Qt4
 
@@ -69,7 +69,7 @@ Instructions: Homebrew
 
 #### Install dependencies using Homebrew
 
-        brew install autoconf automake berkeley-db4 boost miniupnpc openssl pkg-config protobuf qt
+        brew install autoconf automake libtool berkeley-db4 boost miniupnpc openssl pkg-config protobuf qt
 
 Note: After you have installed the dependencies, you should check that the Homebrew installed version of OpenSSL is the one available for compilation. You can check this by typing
 
