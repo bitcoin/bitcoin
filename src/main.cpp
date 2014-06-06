@@ -3342,7 +3342,6 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
 extern map<uint256, CAlert> mapAlerts;
 extern CCriticalSection cs_mapAlerts;
 
-static string strMintMessage = _("Info: Minting suspended due to locked wallet."); 
 static string strMintWarning;
 
 string GetWarnings(string strFor)
@@ -5019,6 +5018,8 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
+
+    string strMintMessage = _("Info: Minting suspended due to locked wallet."); 
 
     try { loop {
         while (vNodes.empty())
