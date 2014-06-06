@@ -86,12 +86,11 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
 }
 
 
-void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive)
+void CTxMemPool::removeWithHash(const uint256 &hash, const CTransaction &tx, std::vector<std::pair<uint256,CTransaction> >& removed, bool fRecursive)
 {
     // Remove transaction from memory pool
     {
         LOCK(cs);
-        uint256 hash = tx.GetHash();
         if (fRecursive) {
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
@@ -102,7 +101,7 @@ void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed
         }
         if (mapTx.count(hash))
         {
-            removed.push_front(tx);
+            removed.push_back(std::make_pair(hash, tx));
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
                 mapNextTx.erase(txin.prevout);
             mapTx.erase(hash);
@@ -111,10 +110,14 @@ void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed
     }
 }
 
-void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed)
+void CTxMemPool::remove(const CTransaction &tx, std::vector<std::pair<uint256,CTransaction> >& removed, bool fRecursive)
+{
+    removeWithHash(tx.GetHash(), tx, removed, fRecursive);
+}
+
+void CTxMemPool::removeConflicts(const CTransaction &tx, std::vector<std::pair<uint256,CTransaction> >& removed)
 {
     // Remove transactions which depend on inputs of tx, recursively
-    list<CTransaction> result;
     LOCK(cs);
     BOOST_FOREACH(const CTxIn &txin, tx.vin) {
         std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(txin.prevout);

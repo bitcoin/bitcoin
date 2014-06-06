@@ -1636,7 +1636,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
     // undo transactions in reverse order
     for (int i = block.vtx.size() - 1; i >= 0; i--) {
         const CTransaction &tx = block.vtx[i];
-        uint256 hash = tx.GetHash();
+        uint256 hash = block.GetTxHash(i);
 
         // Check that all outputs are available and match the outputs in the block itself
         // exactly. Note that transactions with only provably unspendable outputs won't
@@ -1966,6 +1966,7 @@ bool static DisconnectTip(CValidationState &state) {
     CBlock block;
     if (!ReadBlockFromDisk(block, pindexDelete))
         return state.Abort(_("Failed to read block"));
+    block.BuildMerkleTree();
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
@@ -1980,21 +1981,22 @@ bool static DisconnectTip(CValidationState &state) {
     if (!WriteChainState(state))
         return false;
     // Resurrect mempool transactions from the disconnected block.
-    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
+    for (unsigned int i = 0; i < block.vtx.size(); i++) {
         // ignore validation errors in resurrected transactions
-        list<CTransaction> removed;
+        const CTransaction& tx = block.vtx[i];
+        vector<pair<uint256, CTransaction> > removed;
         CValidationState stateDummy; 
         if (!tx.IsCoinBase())
             if (!AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
-                mempool.remove(tx, removed, true);
+                mempool.removeWithHash(block.GetTxHash(i), tx, removed, true);
     }
     mempool.check(pcoinsTip);
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
-    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        SyncWithWallets(tx.GetHash(), tx, NULL);
+    for (unsigned int i=0; i < block.vtx.size(); i++) {
+        SyncWithWallets(block.GetTxHash(i), block.vtx[i], NULL);
     }
     return true;
 }
@@ -2026,23 +2028,26 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     if (!WriteChainState(state))
         return false;
     // Remove conflicting transactions from the mempool.
-    list<CTransaction> txConflicted;
-    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        list<CTransaction> unused;
-        mempool.remove(tx, unused);
-        mempool.removeConflicts(tx, txConflicted);
+    vector<pair<uint256, CTransaction> > txConflicted;
+    {
+        vector<pair<uint256, CTransaction> > txUnused;
+        for (unsigned int i=0; i < block.vtx.size(); i++) {
+            const CTransaction& tx = block.vtx[i];
+            mempool.removeWithHash(block.GetTxHash(i), tx, txUnused);
+            mempool.removeConflicts(tx, txConflicted);
+        }
     }
     mempool.check(pcoinsTip);
     // Update chainActive & related variables.
     UpdateTip(pindexNew);
     // Tell wallet about transactions that went from mempool
     // to conflicted:
-    BOOST_FOREACH(const CTransaction &tx, txConflicted) {
-        SyncWithWallets(tx.GetHash(), tx, NULL);
+    for (vector<pair<uint256, CTransaction> >::const_iterator it = txConflicted.begin(); it != txConflicted.end(); it++) {
+        SyncWithWallets(it->first, it->second, NULL);
     }
     // ... and about transactions that got confirmed:
-    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        SyncWithWallets(tx.GetHash(), tx, &block);
+    for (unsigned int i=0; i < block.vtx.size(); i++) {
+        SyncWithWallets(block.GetTxHash(i), block.vtx[i], &block);
     }
     return true;
 }
