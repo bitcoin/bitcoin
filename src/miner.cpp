@@ -65,8 +65,8 @@ class COrphan
 public:
     const CTransaction* ptx;
     set<uint256> setDependsOn;
-    double dPriority;
     CFeeRate feeRate;
+    double dPriority;
 
     COrphan(const CTransaction* ptxIn) : ptx(ptxIn), feeRate(0), dPriority(0)
     {
