@@ -30,11 +30,11 @@ static bool
 Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict)
 {
     // Create dummy to/from transactions:
-    CTransaction txFrom;
+    CMutableTransaction txFrom;
     txFrom.vout.resize(1);
     txFrom.vout[0].scriptPubKey = scriptPubKey;
 
-    CTransaction txTo;
+    CMutableTransaction txTo;
     txTo.vin.resize(1);
     txTo.vout.resize(1);
     txTo.vin[0].prevout.n = 0;
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(sign)
         evalScripts[i].SetDestination(standardScripts[i].GetID());
     }
 
-    CTransaction txFrom;  // Funding transaction:
+    CMutableTransaction txFrom;  // Funding transaction:
     string reason;
     txFrom.vout.resize(8);
     for (int i = 0; i < 4; i++)
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(sign)
     }
     BOOST_CHECK(IsStandardTx(txFrom, reason));
 
-    CTransaction txTo[8]; // Spending transactions
+    CMutableTransaction txTo[8]; // Spending transactions
     for (int i = 0; i < 8; i++)
     {
         txTo[i].vin.resize(1);
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(set)
         keystore.AddCScript(inner[i]);
     }
 
-    CTransaction txFrom;  // Funding transaction:
+    CMutableTransaction txFrom;  // Funding transaction:
     string reason;
     txFrom.vout.resize(4);
     for (int i = 0; i < 4; i++)
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(set)
     }
     BOOST_CHECK(IsStandardTx(txFrom, reason));
 
-    CTransaction txTo[4]; // Spending transactions
+    CMutableTransaction txTo[4]; // Spending transactions
     for (int i = 0; i < 4; i++)
     {
         txTo[i].vin.resize(1);
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
         keys.push_back(key[i].GetPubKey());
     }
 
-    CTransaction txFrom;
+    CMutableTransaction txFrom;
     txFrom.vout.resize(6);
 
     // First three are standard:
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 
     coins.SetCoins(txFrom.GetHash(), CCoins(txFrom, 0));
 
-    CTransaction txTo;
+    CMutableTransaction txTo;
     txTo.vout.resize(1);
     txTo.vout[0].scriptPubKey.SetDestination(key[1].GetPubKey().GetID());
 
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
         txTo.vin[i].scriptSig = t;
     }
 
-    CTransaction txToNonStd;
+    CMutableTransaction txToNonStd;
     txToNonStd.vout.resize(1);
     txToNonStd.vout[0].scriptPubKey.SetDestination(key[1].GetPubKey().GetID());
     txToNonStd.vout[0].nValue = 1000;
