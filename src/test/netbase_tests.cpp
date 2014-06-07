@@ -7,6 +7,7 @@
 #include <string>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/asio.hpp>
 
 using namespace std;
 
@@ -137,6 +138,21 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:8/128").IsValid());
     BOOST_CHECK(!CSubNet("1:2:3:4:5:6:7:8/129").IsValid());
     BOOST_CHECK(!CSubNet("fuzzy").IsValid());
+}
+
+BOOST_AUTO_TEST_CASE(cnetaddr_from_boostasio)
+{
+    // Check IPv4 addresses
+    BOOST_CHECK_EQUAL(CNetAddr(boost::asio::ip::address::from_string("1.2.3.4")).ToString(), "1.2.3.4");
+    BOOST_CHECK_EQUAL(CNetAddr(boost::asio::ip::address::from_string("127.0.0.1")).ToString(), "127.0.0.1");
+    // Check IPv6 addresses
+    BOOST_CHECK_EQUAL(CNetAddr(boost::asio::ip::address::from_string("::1")).ToString(), "::1");
+    BOOST_CHECK_EQUAL(CNetAddr(boost::asio::ip::address::from_string("123:4567:89ab:cdef:123:4567:89ab:cdef")).ToString(),
+                                         "123:4567:89ab:cdef:123:4567:89ab:cdef");
+    // v4 compatible must be interpreted as IPv4
+    BOOST_CHECK_EQUAL(CNetAddr(boost::asio::ip::address::from_string("::0:127.0.0.1")).ToString(), "127.0.0.1");
+    // v4 mapped must be interpreted as IPv4
+    BOOST_CHECK_EQUAL(CNetAddr(boost::asio::ip::address::from_string("::ffff:127.0.0.1")).ToString(), "127.0.0.1");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
