@@ -65,6 +65,8 @@ static void resolve_handler(std::vector<CNetAddr>* vIP, unsigned int nMax, const
     if (ec)
         return;
 
+    boost::this_thread::interruption_point();
+
     boost::asio::ip::tcp::resolver::iterator end;
     for (; (nMax == 0 || vIP->size() < nMax) && itr != end; ++itr)
         vIP->push_back(CNetAddr(itr->endpoint().address()));
@@ -92,10 +94,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
 
         resolver.async_resolve(query, boost::bind(resolve_handler, &vIP, nMaxSolutions, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
 
-        while (!ios.poll(ec) && !ec) {
-            boost::this_thread::interruption_point();
-            MilliSleep(500);
-        }
+        ios.run();
     } else {
         addr = boost::asio::ip::address::from_string(pszName, ec);
         if (!ec)
