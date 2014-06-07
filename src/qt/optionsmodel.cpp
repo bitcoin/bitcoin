@@ -308,9 +308,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
 #endif
         case DisplayUnit:
-            nDisplayUnit = value.toInt();
-            settings.setValue("nDisplayUnit", nDisplayUnit);
-            emit displayUnitChanged(nDisplayUnit);
+            setDisplayUnit(value);
             break;
         case DisplayAddresses:
             bDisplayAddresses = value.toBool();
@@ -356,9 +354,22 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
         }
     }
+
     emit dataChanged(index, index);
 
     return successful;
+}
+
+/** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
+void OptionsModel::setDisplayUnit(const QVariant &value)
+{
+    if (!value.isNull())
+    {
+        QSettings settings;
+        nDisplayUnit = value.toInt();
+        settings.setValue("nDisplayUnit", nDisplayUnit);
+        emit displayUnitChanged(nDisplayUnit);
+    }
 }
 
 bool OptionsModel::getProxySettings(QNetworkProxy& proxy) const
