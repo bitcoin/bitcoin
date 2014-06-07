@@ -54,6 +54,8 @@ public:
     static QString formatWithUnit(int unit, qint64 amount, bool plussign=false);
     //! Parse string to coin amount
     static bool parse(int unit, const QString &value, qint64 *val_out);
+    //! Gets title for amount column including current display unit if optionsModel reference available */
+    static QString getAmountColumnTitle(int unit);
     ///@}
 
     //! @name AbstractListModel implementation
