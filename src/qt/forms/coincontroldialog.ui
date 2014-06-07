@@ -225,7 +225,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Low Output:</string>
+          <string>Dust:</string>
          </property>
         </widget>
        </item>
