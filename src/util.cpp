@@ -914,7 +914,6 @@ boost::filesystem::path GetDefaultDataDir()
 #ifdef MAC_OSX
     // Mac
     pathRet /= "Library/Application Support";
-    TryCreateDirectory(pathRet);
     return pathRet / "Bitcoin";
 #else
     // Unix
@@ -954,7 +953,12 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     if (fNetSpecific)
         path /= Params().DataDir();
 
-    fs::create_directories(path);
+    try {
+        fs::create_directories(path);
+    } catch(boost::filesystem::filesystem_error &e) {
+        path = "";
+        return path;
+    }
 
     return path;
 }
