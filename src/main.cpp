@@ -2329,28 +2329,6 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
         return state.Invalid(error("CheckBlockHeader() : block timestamp too far in the future"),
                              REJECT_INVALID, "time-too-new");
 
-    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
-    if (pcheckpoint && block.hashPrevBlock != (chainActive.Tip() ? chainActive.Tip()->GetBlockHash() : uint256(0)))
-    {
-        // Extra checks to prevent "fill up memory by spamming with bogus blocks"
-        int64_t deltaTime = block.GetBlockTime() - pcheckpoint->nTime;
-        if (deltaTime < 0)
-        {
-            return state.DoS(100, error("CheckBlockHeader() : block with timestamp before last checkpoint"),
-                             REJECT_CHECKPOINT, "time-too-old");
-        }
-        bool fOverflow = false;
-        uint256 bnNewBlock;
-        bnNewBlock.SetCompact(block.nBits, NULL, &fOverflow);
-        uint256 bnRequired;
-        bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
-        if (fOverflow || bnNewBlock > bnRequired)
-        {
-            return state.DoS(100, error("CheckBlockHeader() : block with too little proof-of-work"),
-                             REJECT_INVALID, "bad-diffbits");
-        }
-    }
-
     return true;
 }
 
@@ -2424,6 +2402,28 @@ bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex
         pindex = miSelf->second;
         if (pindex->nStatus & BLOCK_FAILED_MASK)
             return state.Invalid(error("AcceptBlock() : block is marked invalid"), 0, "duplicate");
+    }
+
+    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+    if (pcheckpoint && block.hashPrevBlock != (chainActive.Tip() ? chainActive.Tip()->GetBlockHash() : uint256(0)))
+    {
+        // Extra checks to prevent "fill up memory by spamming with bogus blocks"
+        int64_t deltaTime = block.GetBlockTime() - pcheckpoint->nTime;
+        if (deltaTime < 0)
+        {
+            return state.DoS(100, error("CheckBlockHeader() : block with timestamp before last checkpoint"),
+                             REJECT_CHECKPOINT, "time-too-old");
+        }
+        bool fOverflow = false;
+        uint256 bnNewBlock;
+        bnNewBlock.SetCompact(block.nBits, NULL, &fOverflow);
+        uint256 bnRequired;
+        bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
+        if (fOverflow || bnNewBlock > bnRequired)
+        {
+            return state.DoS(100, error("CheckBlockHeader() : block with too little proof-of-work"),
+                             REJECT_INVALID, "bad-diffbits");
+        }
     }
 
     // Get prev block index
