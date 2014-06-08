@@ -427,8 +427,11 @@ bool AppInit2(boost::thread_group& threadGroup)
 #ifndef WIN32
 
 #ifdef ENABLE_WALLET
-    if (!GetBoolArg("-sysperms", false) || !GetBoolArg("-disablewallet", false))
+    if (!GetBoolArg("-sysperms", false) || !GetBoolArg("-disablewallet", false)) {
         umask(077);
+        if (GetBoolArg("-sysperms", false))
+            return InitError("Error: -sysperms is not allowed in combination with enabled wallet functionality");
+    }
 #else
     if (!GetBoolArg("-sysperms", false))
         umask(077);
