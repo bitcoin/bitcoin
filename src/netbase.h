@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <boost/asio.hpp>
 
 extern int nConnectTimeout;
 extern bool fNameLookup;
@@ -43,6 +44,8 @@ class CNetAddr
     public:
         CNetAddr();
         CNetAddr(const struct in_addr& ipv4Addr);
+        CNetAddr(const struct in6_addr& ipv6Addr);
+        CNetAddr(const boost::asio::ip::address& asioAddr);
         explicit CNetAddr(const char *pszIp, bool fAllowLookup = false);
         explicit CNetAddr(const std::string &strIp, bool fAllowLookup = false);
         void Init();
@@ -78,12 +81,10 @@ class CNetAddr
         unsigned int GetByte(int n) const;
         uint64_t GetHash() const;
         bool GetInAddr(struct in_addr* pipv4Addr) const;
+        bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
         std::vector<unsigned char> GetGroup() const;
         int GetReachabilityFrom(const CNetAddr *paddrPartner = NULL) const;
         void print() const;
-
-        CNetAddr(const struct in6_addr& pipv6Addr);
-        bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
         friend bool operator==(const CNetAddr& a, const CNetAddr& b);
         friend bool operator!=(const CNetAddr& a, const CNetAddr& b);
