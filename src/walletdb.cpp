@@ -112,10 +112,10 @@ bool CWalletDB::WriteCScript(const uint160& hash, const CScript& redeemScript)
     return Write(std::make_pair(std::string("cscript"), hash), redeemScript, false);
 }
 
-bool CWalletDB::WriteWatchOnly(const CTxDestination &dest)
+bool CWalletDB::WriteWatchOnly(const CScript &dest)
 {
     nWalletDBUpdated++;
-    return Write(std::make_pair(std::string("watch"), CBitcoinAddress(dest).ToString()), '1');
+    return Write(std::make_pair(std::string("watchs"), dest), '1');
 }
 
 bool CWalletDB::WriteBestBlock(const CBlockLocator& locator)
@@ -410,14 +410,14 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                     wss.fAnyUnordered = true;
             }
         }
-        else if (strType == "watch")
+        else if (strType == "watchs")
         {
-            std::string strAddress;
-            ssKey >> strAddress;
+            CScript script;
+            ssKey >> script;
             char fYes;
             ssValue >> fYes;
             if (fYes == '1')
-                pwallet->LoadWatchOnly(CBitcoinAddress(strAddress).Get());
+                pwallet->LoadWatchOnly(script);
 
             // Watch-only addresses have no birthday information for now,
             // so set the wallet birthday to the beginning of time.
