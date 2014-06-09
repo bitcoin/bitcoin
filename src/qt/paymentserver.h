@@ -118,6 +118,7 @@ protected:
 
 private:
     static bool readPaymentRequest(const QString& filename, PaymentRequestPlus& request);
+    std::string mapNetworkIdToName(CChainParams::Network networkId);
     bool processPaymentRequest(PaymentRequestPlus& request, SendCoinsRecipient& recipient);
     void fetchRequest(const QUrl& url);
 

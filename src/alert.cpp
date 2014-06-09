@@ -5,6 +5,7 @@
 
 #include "alert.h"
 
+#include "chainparams.h"
 #include "key.h"
 #include "net.h"
 #include "ui_interface.h"
