@@ -16,6 +16,7 @@
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
+#include <boost/asio.hpp>
 
 #if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
@@ -586,6 +587,23 @@ CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
 CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr)
 {
     SetRaw(NET_IPV6, (const uint8_t*)&ipv6Addr);
+}
+
+CNetAddr::CNetAddr(const boost::asio::ip::address& asioAddr)
+{
+    Network net = NET_IPV4;
+    const uint8_t* bytes;
+
+    if (asioAddr.is_v4())
+        bytes = &(asioAddr.to_v4().to_bytes()[0]);
+    else if (asioAddr.to_v6().is_v4_compatible() || asioAddr.to_v6().is_v4_mapped())
+        bytes = &(asioAddr.to_v6().to_v4().to_bytes()[0]);
+    else {
+        bytes = &(asioAddr.to_v6().to_bytes()[0]);
+        net = NET_IPV6;
+    }
+
+    SetRaw(net, bytes);
 }
 
 CNetAddr::CNetAddr(const char *pszIp, bool fAllowLookup)
