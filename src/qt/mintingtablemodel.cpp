@@ -262,9 +262,9 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
         case Address:
             return formatTxAddress(rec, false);
         case Age:
-            return formatTxAge(rec);
+            return rec->getAge();
         case CoinDay:
-            return formatTxCoinDay(rec);
+            return rec->coinAge;
         case Balance:
             return rec->nValue;
         case MintProbability:
@@ -361,7 +361,7 @@ QVariant MintingTableModel::headerData(int section, Qt::Orientation orientation,
             case Address:
                 return tr("Destination address of the output.");
             case Age:
-                return tr("Age of the transaction.");
+                return tr("Age of the transaction in days.");
             case Balance:
                 return tr("Balance of the output.");
             case CoinDay:
