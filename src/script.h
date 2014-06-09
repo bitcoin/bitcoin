@@ -191,6 +191,7 @@ enum
     SCRIPT_VERIFY_LOW_S     = (1U << 2), // enforce low S values (<n/2) in signatures (depends on STRICTENC)
     SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
     SCRIPT_VERIFY_NULLDUMMY = (1U << 4), // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
+    SCRIPT_VERIFY_CLEANSTACK = (1U << 5), // verify stack has single item after scriptPubKey execution
 };
 
 // Mandatory script verification flags that all new blocks must comply with for
@@ -207,7 +208,8 @@ static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 // blocks and we must accept those blocks.
 static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS |
                                                          SCRIPT_VERIFY_STRICTENC |
-                                                         SCRIPT_VERIFY_NULLDUMMY;
+                                                         SCRIPT_VERIFY_NULLDUMMY |
+                                                         SCRIPT_VERIFY_CLEANSTACK;
 
 // For convenience, standard but not mandatory verify flags.
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
