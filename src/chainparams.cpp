@@ -6,8 +6,6 @@
 #include "chainparams.h"
 
 #include "assert.h"
-#include "core.h"
-#include "protocol.h"
 #include "util.h"
 
 #include <boost/assign/list_of.hpp>
@@ -100,6 +98,7 @@ unsigned int pnSeed[] =
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
+        networkID = CChainParams::MAIN;
         // The message start string is designed to be unlikely to occur in normal data.
         // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
         // a large 4-byte int at any alignment.
@@ -112,6 +111,10 @@ public:
         nRPCPort = 8332;
         bnProofOfWorkLimit = ~uint256(0) >> 32;
         nSubsidyHalvingInterval = 210000;
+        nEnforceBlockUpgradeMajority = 750;
+        nRejectBlockOutdatedMajority = 950;
+        nToCheckBlockUpgradeMajority = 1000;
+        nMinerThreads = 0;
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
         // be spent as it did not originally exist in the database.
@@ -167,20 +170,17 @@ public:
             addr.nTime = GetTime() - GetRand(nOneWeek) - nOneWeek;
             vFixedSeeds.push_back(addr);
         }
-    }
 
-    virtual const CBlock& GenesisBlock() const { return genesis; }
-    virtual Network NetworkID() const { return CChainParams::MAIN; }
-
-    virtual const vector<CAddress>& FixedSeeds() const {
-        return vFixedSeeds;
+        fRequireRPCPassword = true;
+        fMiningRequiresPeers = true;
+        fDefaultCheckMemPool = false;
+        fAllowMinDifficultyBlocks = false;
+        fRequireStandard = true;
+        fRPCisTestNet = false;
+        fMineBlocksOnDemand = false;
     }
-protected:
-    CBlock genesis;
-    vector<CAddress> vFixedSeeds;
 };
 static CMainParams mainParams;
-
 
 //
 // Testnet (v3)
@@ -188,6 +188,7 @@ static CMainParams mainParams;
 class CTestNetParams : public CMainParams {
 public:
     CTestNetParams() {
+        networkID = CChainParams::TESTNET;
         // The message start string is designed to be unlikely to occur in normal data.
         // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
         // a large 4-byte int at any alignment.
@@ -198,6 +199,9 @@ public:
         vAlertPubKey = ParseHex("04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c6467cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162dabbdb45200ca2b0a");
         nDefaultPort = 18333;
         nRPCPort = 18332;
+        nEnforceBlockUpgradeMajority = 51;
+        nRejectBlockOutdatedMajority = 75;
+        nToCheckBlockUpgradeMajority = 100;
         strDataDir = "testnet3";
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
@@ -216,11 +220,17 @@ public:
         base58Prefixes[SECRET_KEY]     = list_of(239);
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x35)(0x87)(0xCF);
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x35)(0x83)(0x94);
+
+        fRequireRPCPassword = true;
+        fMiningRequiresPeers = true;
+        fDefaultCheckMemPool = false;
+        fAllowMinDifficultyBlocks = true;
+        fRequireStandard = false;
+        fRPCisTestNet = true;
+        fMineBlocksOnDemand = false;
     }
-    virtual Network NetworkID() const { return CChainParams::TESTNET; }
 };
 static CTestNetParams testNetParams;
-
 
 //
 // Regression test
@@ -228,11 +238,16 @@ static CTestNetParams testNetParams;
 class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
+        networkID = CChainParams::REGTEST;
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
         pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xda;
         nSubsidyHalvingInterval = 150;
+        nEnforceBlockUpgradeMajority = 750;
+        nRejectBlockOutdatedMajority = 950;
+        nToCheckBlockUpgradeMajority = 1000;
+        nMinerThreads = 1;
         bnProofOfWorkLimit = ~uint256(0) >> 1;
         genesis.nTime = 1296688602;
         genesis.nBits = 0x207fffff;
@@ -243,10 +258,15 @@ public:
         assert(hashGenesisBlock == uint256("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
 
         vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
-    }
 
-    virtual bool RequireRPCPassword() const { return false; }
-    virtual Network NetworkID() const { return CChainParams::REGTEST; }
+        fRequireRPCPassword = false;
+        fMiningRequiresPeers = false;
+        fDefaultCheckMemPool = true;
+        fAllowMinDifficultyBlocks = true;
+        fRequireStandard = false;
+        fRPCisTestNet = true;
+        fMineBlocksOnDemand = true;
+    }
 };
 static CRegTestParams regTestParams;
 
