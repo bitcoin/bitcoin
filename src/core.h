@@ -496,12 +496,6 @@ public:
 
     uint256 BuildMerkleTree() const;
 
-    const uint256 &GetTxHash(unsigned int nIndex) const {
-        assert(vMerkleTree.size() > 0); // BuildMerkleTree must have been called first
-        assert(nIndex < vtx.size());
-        return vMerkleTree[nIndex];
-    }
-
     std::vector<uint256> GetMerkleBranch(int nIndex) const;
     static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
     void print() const;
