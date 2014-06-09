@@ -3,6 +3,7 @@
 #include "wallet.h"
 #include "base58.h"
 
+using namespace std;
 
 bool KernelRecord::showTransaction(const CWalletTx &wtx)
 {
@@ -25,7 +26,6 @@ QList<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const C
     int64 nTime = wtx.GetTxTime();
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
-    CTxDB txdb("r");
 
     if (showTransaction(wtx))
     {
@@ -35,7 +35,10 @@ QList<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const C
             if( wallet->IsMine(txOut) ) {
                 CTxDestination address;
                 std::string addrStr;
-                uint64 coinAge;
+
+                int nDayWeight = (min((GetAdjustedTime() - nTime), (int64)STAKE_MAX_AGE) - nStakeMinAge) / 86400 ;
+                uint64 coinAge = txOut.nValue * nDayWeight / COIN;
+
                 if (ExtractDestination(txOut.scriptPubKey, address))
                 {
                     // Sent to Bitcoin Address
@@ -46,8 +49,6 @@ QList<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const C
                     // Sent to IP, or other non-address transaction like OP_EVAL
                     addrStr = mapValue["to"];
                 }
-
-                wtx.GetCoinAge(txdb, coinAge);
                 parts.append(KernelRecord(hash, nTime, addrStr, txOut.nValue, wtx.IsSpent(nOut), coinAge));
             }
         }
