@@ -214,7 +214,25 @@ MintingTableModel::~MintingTableModel()
 
 void MintingTableModel::update()
 {
-    this->priv->refreshWallet();
+    QList<uint256> updated;
+
+    // Check if there are changes to wallet map
+    {
+        TRY_LOCK(wallet->cs_wallet, lockWallet);
+        if (lockWallet && !wallet->vMintingWalletUpdated.empty())
+        {
+            BOOST_FOREACH(uint256 hash, wallet->vMintingWalletUpdated)
+            {
+                updated.append(hash);
+            }
+            wallet->vMintingWalletUpdated.clear();
+        }
+    }
+
+    if(!updated.empty())
+    {
+        priv->updateWallet(updated);
+    }
 }
 
 int MintingTableModel::rowCount(const QModelIndex &parent) const

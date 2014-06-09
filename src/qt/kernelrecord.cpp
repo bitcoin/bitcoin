@@ -37,7 +37,7 @@ QList<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const C
                 std::string addrStr;
 
                 int nDayWeight = (min((GetAdjustedTime() - nTime), (int64)STAKE_MAX_AGE) - nStakeMinAge) / 86400 ;
-                uint64 coinAge = txOut.nValue * nDayWeight / COIN;
+                uint64 coinAge = max(txOut.nValue * nDayWeight / COIN, (int64)0);
 
                 if (ExtractDestination(txOut.scriptPubKey, address))
                 {
