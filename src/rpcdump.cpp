@@ -138,13 +138,19 @@ Value importaddress(const Array& params, bool fHelp)
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
             "importaddress <address> [label] [rescan=true]\n"
-            "Adds an address that can be watched as if it were in your wallet but cannot be used to spend.");
+            "Adds an address or script (in hex) that can be watched as if it were in your wallet but cannot be used to spend.");
+
+    CScript script;
 
     CBitcoinAddress address(params[0].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
-    CTxDestination dest;
-    dest = address.Get();
+    if (address.IsValid()) {
+        script.SetDestination(address.Get());
+    } else if (IsHex(params[0].get_str())) {
+        std::vector<unsigned char> data(ParseHex(params[0].get_str()));
+        script = CScript(data.begin(), data.end());
+    } else {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+    }
 
     string strLabel = "";
     if (params.size() > 1)
@@ -159,15 +165,16 @@ Value importaddress(const Array& params, bool fHelp)
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
         // add to address book or update label
-        pwalletMain->SetAddressBook(dest, strLabel, "receive");
+        if (address.IsValid())
+            pwalletMain->SetAddressBook(address.Get(), strLabel, "receive");
 
         // Don't throw error in case an address is already there
-        if (pwalletMain->HaveWatchOnly(dest))
+        if (pwalletMain->HaveWatchOnly(script))
             return Value::null;
 
         pwalletMain->MarkDirty();
 
-        if (!pwalletMain->AddWatchOnly(dest))
+        if (!pwalletMain->AddWatchOnly(script))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
 
         if (fRescan)
