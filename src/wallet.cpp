@@ -603,11 +603,11 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
 // Add a transaction to the wallet, or update it.
 // pblock is optional, but should be provided if the transaction is known to be in a block.
 // If fUpdate is true, existing transactions will be updated.
-bool CWallet::AddToWalletIfInvolvingMe(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate)
+bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate)
 {
     {
         AssertLockHeld(cs_wallet);
-        bool fExisted = mapWallet.count(hash);
+        bool fExisted = mapWallet.count(tx.GetHash());
         if (fExisted && !fUpdate) return false;
         if (fExisted || IsMine(tx) || IsFromMe(tx))
         {
@@ -621,10 +621,10 @@ bool CWallet::AddToWalletIfInvolvingMe(const uint256 &hash, const CTransaction& 
     return false;
 }
 
-void CWallet::SyncTransaction(const uint256 &hash, const CTransaction& tx, const CBlock* pblock)
+void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
 {
     LOCK2(cs_main, cs_wallet);
-    if (!AddToWalletIfInvolvingMe(hash, tx, pblock, true))
+    if (!AddToWalletIfInvolvingMe(tx, pblock, true))
         return; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
@@ -870,7 +870,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
             ReadBlockFromDisk(block, pindex);
             BOOST_FOREACH(CTransaction& tx, block.vtx)
             {
-                if (AddToWalletIfInvolvingMe(tx.GetHash(), tx, &block, fUpdate))
+                if (AddToWalletIfInvolvingMe(tx, &block, fUpdate))
                     ret++;
             }
             pindex = chainActive.Next(pindex);
@@ -909,9 +909,8 @@ void CWalletTx::RelayWalletTransaction()
     if (!IsCoinBase())
     {
         if (GetDepthInMainChain() == 0) {
-            uint256 hash = GetHash();
-            LogPrintf("Relaying wtx %s\n", hash.ToString());
-            RelayTransaction((CTransaction)*this, hash);
+            LogPrintf("Relaying wtx %s\n", GetHash().ToString());
+            RelayTransaction((CTransaction)*this);
         }
     }
 }
