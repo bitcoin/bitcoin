@@ -14,6 +14,12 @@ bool KernelRecord::showTransaction(const CWalletTx &wtx)
             return false;
         }
     }
+
+    if(!wtx.IsConfirmed())
+    {
+        return false;
+    }
+
     return true;
 }
 
