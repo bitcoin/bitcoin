@@ -74,16 +74,22 @@ double KernelRecord::getProbToMintStake(double difficulty) const
     return target * coinAge / pow(2, 256);
 }
 
-double KernelRecord::getProbToMintWithinNMinutes(double difficulty, int minutes) const
+double KernelRecord::getProbToMintWithinNMinutes(double difficulty, int minutes)
 {
-    double prob = 1;
-    int n = minutes / 10;
-    double p = getProbToMintStake(difficulty);
-    p = 1 - pow(1 - p, 60 * 10);
-    for(int i=0; i<n; i++)
+    if(difficulty != prevDifficulty || minutes != prevMinutes)
     {
-         prob = prob * (1-p);
+        double prob = 1;
+        int n = minutes / 10;
+        double p = getProbToMintStake(difficulty);
+        p = 1 - pow(1 - p, 60 * 10);
+        for(int i=0; i<n; i++)
+        {
+             prob = prob * (1-p);
+        }
+        prob = 1 - prob;
+        prevProbability = prob;
+        prevDifficulty = difficulty;
+        prevMinutes = minutes;
     }
-    prob = 1 - prob;
-    return prob;
+    return prevProbability;
 }

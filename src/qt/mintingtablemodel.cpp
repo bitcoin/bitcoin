@@ -312,7 +312,7 @@ QString MintingTableModel::lookupAddress(const std::string &address, bool toolti
     return description;
 }
 
-QString MintingTableModel::formatDayToMint(const KernelRecord *wtx) const
+QString MintingTableModel::formatDayToMint(KernelRecord *wtx) const
 {
     const CBlockIndex *p = GetLastBlockIndex(pindexBest, true);
     double difficulty = p->GetBlockDifficulty();

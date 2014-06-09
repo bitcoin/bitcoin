@@ -43,7 +43,7 @@ private:
 
     QString lookupAddress(const std::string &address, bool tooltip) const;
 
-    QString formatDayToMint(const KernelRecord *wtx) const;
+    QString formatDayToMint(KernelRecord *wtx) const;
     QString formatTxAddress(const KernelRecord *wtx, bool tooltip) const;
     QString formatTxAge(const KernelRecord *wtx) const;
     QString formatTxBalance(const KernelRecord *wtx) const;

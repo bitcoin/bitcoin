@@ -11,12 +11,12 @@ class KernelRecord
 {
 public:
     KernelRecord():
-        hash(), nTime(0), address(""), nValue(0), idx(0), spent(false), coinAge(0)
+        hash(), nTime(0), address(""), nValue(0), idx(0), spent(false), coinAge(0), prevMinutes(0), prevDifficulty(0), prevProbability(0)
     {
     }
 
     KernelRecord(uint256 hash, int64 nTime):
-            hash(hash), nTime(nTime), address(""), nValue(0), idx(0), spent(false), coinAge(0)
+            hash(hash), nTime(nTime), address(""), nValue(0), idx(0), spent(false), coinAge(0), prevMinutes(0), prevDifficulty(0), prevProbability(0)
     {
     }
 
@@ -24,7 +24,7 @@ public:
                  const std::string &address,
                  int64 nValue, bool spent, int64 coinAge):
         hash(hash), nTime(nTime), address(address), nValue(nValue),
-        idx(0), spent(spent), coinAge(coinAge)
+        idx(0), spent(spent), coinAge(coinAge), prevMinutes(0), prevDifficulty(0), prevProbability(0)
     {
     }
 
@@ -43,7 +43,11 @@ public:
     std::string getTxID();
     int64 getAge() const;
     double getProbToMintStake(double difficulty) const;
-    double getProbToMintWithinNMinutes(double difficulty, int minutes) const;
+    double getProbToMintWithinNMinutes(double difficulty, int minutes);
+protected:
+    int prevMinutes;
+    double prevDifficulty;
+    double prevProbability;
 };
 
 #endif // KERNELRECORD_H
