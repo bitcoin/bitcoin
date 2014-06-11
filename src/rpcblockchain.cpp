@@ -450,9 +450,6 @@ Value getblockchaininfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getblockchaininfo", "")
         );
 
-    proxyType proxy;
-    GetProxy(NET_IPV4, proxy);
-
     Object obj;
     std::string chain = Params().DataDir();
     if(chain.empty())
