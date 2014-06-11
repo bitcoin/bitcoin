@@ -1432,8 +1432,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOu
             FindNode((CNetAddr)addrConnect) || CNode::IsBanned(addrConnect) ||
             FindNode(addrConnect.ToStringIPPort().c_str()))
             return false;
-    }
-	if (pszDest && FindNode(pszDest))
+    } else if (FindNode(pszDest))
         return false;
 
     CNode* pnode = ConnectNode(addrConnect, pszDest);
