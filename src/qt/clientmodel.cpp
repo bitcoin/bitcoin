@@ -142,14 +142,6 @@ void ClientModel::updateAlert(const QString &hash, int status)
     emit alertsChanged(getStatusBarWarnings());
 }
 
-QString ClientModel::getNetworkName() const
-{
-    QString netname(QString::fromStdString(Params().DataDir()));
-    if(netname.isEmpty())
-        netname = "main";
-    return netname;
-}
-
 bool ClientModel::inInitialBlockDownload() const
 {
     return IsInitialBlockDownload();
