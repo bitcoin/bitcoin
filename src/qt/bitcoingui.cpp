@@ -549,8 +549,7 @@ void BitcoinGUI::aboutClicked()
     if(!clientModel)
         return;
 
-    AboutDialog dlg(this);
-    dlg.setModel(clientModel);
+    HelpMessageDialog dlg(this, true);
     dlg.exec();
 }
 

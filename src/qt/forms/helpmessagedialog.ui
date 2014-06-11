@@ -16,7 +16,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>Bitcoin Core - Command-line options</string>
+   <string notr="true">Bitcoin Core - Command-line options</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <item>
@@ -54,11 +54,6 @@
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
           <widget class="QLabel" name="helpMessageLabel">
-           <property name="font">
-            <font>
-             <family>Terminal</family>
-            </font>
-           </property>
            <property name="cursor">
             <cursorShape>IBeamCursor</cursorShape>
            </property>
