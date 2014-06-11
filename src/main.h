@@ -1013,7 +1013,6 @@ public:
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
 class CVerifyDB {
 public:
-
     CVerifyDB();
     ~CVerifyDB();
     bool VerifyDB(int nCheckLevel, int nCheckDepth);
