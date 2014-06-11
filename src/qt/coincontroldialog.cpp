@@ -521,7 +521,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         sPriorityLabel = CoinControlDialog::getPriorityLabel(dPriority);
 
         // Fee
-        int64_t nFee = payTxFee.GetFee(nBytes);
+        int64_t nFee = payTxFee.GetFee(max((unsigned int)1000, nBytes));
 
         // Min Fee
         int64_t nMinFee = GetMinFee(txDummy, nBytes, AllowFree(dPriority), GMF_SEND);
@@ -582,6 +582,13 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     l6->setText(sPriorityLabel);                                             // Priority
     l7->setText(fDust ? tr("yes") : tr("no"));                               // Dust
     l8->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nChange));        // Change
+    if (nPayFee > 0)
+    {
+        l3->setText("~" + l3->text());
+        l4->setText("~" + l4->text());
+        if (nChange > 0)
+            l8->setText("~" + l8->text());
+    }
 
     // turn labels "red"
     l5->setStyleSheet((nBytes >= 1000) ? "color:red;" : "");                            // Bytes >= 1000
@@ -599,12 +606,22 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
     QString toolTip3 = tr("This label turns red, if any recipient receives an amount smaller than %1.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CTransaction::minRelayTxFee.GetFee(546)));
 
+    // how many satoshis the estimated fee can vary per byte we guess wrong
+    double dFeeVary = (double)std::max(CTransaction::minTxFee.GetFeePerK(), payTxFee.GetFeePerK()) / 1000;
+    QString toolTip4 = tr("Can vary +/- %1 satoshi(s) per input.").arg(dFeeVary);
+
+    l3->setToolTip(toolTip4);
+    l4->setToolTip(toolTip4);
     l5->setToolTip(toolTip1);
     l6->setToolTip(toolTip2);
     l7->setToolTip(toolTip3);
+    l8->setToolTip(toolTip4);
+    dialog->findChild<QLabel *>("labelCoinControlFeeText")      ->setToolTip(l3->toolTip());
+    dialog->findChild<QLabel *>("labelCoinControlAfterFeeText") ->setToolTip(l4->toolTip());
     dialog->findChild<QLabel *>("labelCoinControlBytesText")    ->setToolTip(l5->toolTip());
     dialog->findChild<QLabel *>("labelCoinControlPriorityText") ->setToolTip(l6->toolTip());
     dialog->findChild<QLabel *>("labelCoinControlLowOutputText")->setToolTip(l7->toolTip());
+    dialog->findChild<QLabel *>("labelCoinControlChangeText")   ->setToolTip(l8->toolTip());
 
     // Insufficient funds
     QLabel *label = dialog->findChild<QLabel *>("labelCoinControlInsuffFunds");
