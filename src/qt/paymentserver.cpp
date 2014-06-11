@@ -185,44 +185,17 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
 {
     for (int i = 1; i < argc; i++)
     {
-        QString arg(argv[i]);
-        if (arg.startsWith("-"))
+        QString curArg(argv[i]);
+        if (curArg.startsWith("-"))
             continue;
 
-        if (arg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcoin: URI
+        if (curArg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcoin: URI
         {
-            savedPaymentRequests.append(arg);
-
-            SendCoinsRecipient r;
-            if (GUIUtil::parseBitcoinURI(arg, &r))
-            {
-                CBitcoinAddress address(r.address.toStdString());
-
-                SelectParams(CChainParams::MAIN);
-                if (!address.IsValid())
-                {
-                    SelectParams(CChainParams::TESTNET);
-                }
-            }
+            savedPaymentRequests.append(curArg);
         }
-        else if (QFile::exists(arg)) // Filename
+        else if (QFile::exists(curArg)) // Filename
         {
-            savedPaymentRequests.append(arg);
-
-            PaymentRequestPlus request;
-            if (readPaymentRequest(arg, request))
-            {
-                if (request.getDetails().network() == "main")
-                    SelectParams(CChainParams::MAIN);
-                else
-                    SelectParams(CChainParams::TESTNET);
-            }
-        }
-        else
-        {
-            // Printing to debug.log is about the best we can do here, the
-            // GUI hasn't started yet so we can't pop up a message box.
-            qDebug() << "PaymentServer::ipcSendCommandLine : Payment request file does not exist: " << arg;
+            savedPaymentRequests.append(curArg);
         }
     }
     return true;
@@ -240,11 +213,20 @@ bool PaymentServer::ipcSendCommandLine()
     foreach (const QString& r, savedPaymentRequests)
     {
         QLocalSocket* socket = new QLocalSocket();
+
+        // Try mainnet local server first...
+        SelectParams(CChainParams::MAIN);
         socket->connectToServer(ipcServerName(), QIODevice::WriteOnly);
         if (!socket->waitForConnected(BITCOIN_IPC_CONNECT_TIMEOUT))
         {
-            delete socket;
-            return false;
+            // ...try testnet local server, if mainnet local server connection failed.
+            SelectParams(CChainParams::TESTNET);
+            socket->connectToServer(ipcServerName(), QIODevice::WriteOnly);
+            if (!socket->waitForConnected(BITCOIN_IPC_CONNECT_TIMEOUT))
+            {
+                delete socket;
+                return false;
+            }
         }
 
         QByteArray block;
