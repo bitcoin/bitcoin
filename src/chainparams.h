@@ -79,6 +79,8 @@ public:
      * until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
     Network NetworkID() const { return networkID; }
+    /* Return the BIP70 network string (main, test or regtest) */
+    std::string NetworkIDString() const { return strNetworkID; }
     const vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
@@ -102,6 +104,7 @@ protected:
     vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
     Network networkID;
+    std::string strNetworkID;
     CBlock genesis;
     vector<CAddress> vFixedSeeds;
     bool fRequireRPCPassword;
