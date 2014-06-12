@@ -295,7 +295,7 @@ CSHA256& CSHA256::Write(const unsigned char *data, size_t len) {
     return *this;
 }
 
-void CSHA256::Finalize(unsigned char *hash) {
+void CSHA256::Finalize(unsigned char hash[OUTPUT_SIZE]) {
     static const unsigned char pad[64] = {0x80};
     unsigned char sizedesc[8];
     WriteBE64(sizedesc, bytes << 3);
@@ -348,7 +348,7 @@ CSHA512& CSHA512::Write(const unsigned char *data, size_t len) {
     return *this;
 }
 
-void CSHA512::Finalize(unsigned char *hash) {
+void CSHA512::Finalize(unsigned char hash[OUTPUT_SIZE]) {
     static const unsigned char pad[128] = {0x80};
     unsigned char sizedesc[16] = {0x00};
     WriteBE64(sizedesc+8, bytes << 3);
@@ -391,7 +391,7 @@ CHMAC_SHA512::CHMAC_SHA512(const unsigned char *key, size_t keylen) {
     inner.Write(rkey, 128);
 }
 
-void CHMAC_SHA512::Finalize(unsigned char *hash) {
+void CHMAC_SHA512::Finalize(unsigned char hash[OUTPUT_SIZE]) {
     unsigned char temp[64];
     inner.Finalize(temp);
     outer.Write(temp, 64).Finalize(hash);
