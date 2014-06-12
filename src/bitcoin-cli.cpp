@@ -53,6 +53,12 @@ static bool AppInitRPC(int argc, char* argv[])
         fprintf(stdout, "%s", strUsage.c_str());
         return false;
     }
+    std::string strAmountMode = GetArg("-rpcamount", strRPCDefaultAmountMode);
+    if (!SetRPCAmountMode(strAmountMode))
+    {
+        fprintf(stderr, "Invalid -rpcamount setting: %s\n", strAmountMode.c_str());
+        return false;
+    }
     return true;
 }
 

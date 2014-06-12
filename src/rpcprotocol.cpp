@@ -5,6 +5,7 @@
 
 #include "rpcprotocol.h"
 
+#include "core.h"
 #include "util.h"
 
 #include <stdint.h>
@@ -24,6 +25,10 @@ using namespace std;
 using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
+
+/// How to represent monetary amounts in RPC protocol
+RPCAmountMode nRPCAmountMode = RPC_AMOUNT_NUMBER_BTC;
+std::string strRPCDefaultAmountMode = "number-btc";
 
 //
 // HTTP protocol
@@ -250,4 +255,68 @@ Object JSONRPCError(int code, const string& message)
     error.push_back(Pair("code", code));
     error.push_back(Pair("message", message));
     return error;
+}
+
+int64_t AmountFromValue(const Value& value)
+{
+    int64_t nAmount = 0;
+    switch(nRPCAmountMode)
+    {
+    case RPC_AMOUNT_NUMBER_BTC:
+        {
+            double dAmount = value.get_real();
+            if (dAmount < 0.0 || dAmount > 21000000.0)
+                throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+            nAmount = roundint64(dAmount * COIN);
+        }
+        break;
+    case RPC_AMOUNT_NUMBER_SATOSHIS:
+        nAmount = value.get_int64();
+        break;
+    case RPC_AMOUNT_STRING_BTC:
+        if (!ParseMoney(value.get_str(), nAmount))
+            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+        break;
+    case RPC_AMOUNT_STRING_SATOSHIS:
+        if (!atoi64_err(value.get_str(), nAmount))
+            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+        break;
+    default:
+        throw std::runtime_error("Invalid amount mode");
+    }
+    if (!MoneyRange(nAmount)) // Check for overflow
+        throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
+    return nAmount;
+}
+
+Value ValueFromAmount(int64_t amount)
+{
+    switch(nRPCAmountMode)
+    {
+    case RPC_AMOUNT_NUMBER_BTC:
+        return (double)amount / (double)COIN;
+    case RPC_AMOUNT_NUMBER_SATOSHIS:
+        return (boost::int64_t)amount;
+    case RPC_AMOUNT_STRING_BTC:
+        return FormatMoney(amount, false, false); /* no +, no right-trimming zeroes */
+    case RPC_AMOUNT_STRING_SATOSHIS:
+        return i64tostr(amount);
+    default:
+        throw std::runtime_error("Invalid amount mode");
+    }
+}
+
+bool SetRPCAmountMode(const std::string name)
+{
+    if (name == "number-btc")
+        nRPCAmountMode = RPC_AMOUNT_NUMBER_BTC;
+    else if (name == "number-satoshis")
+        nRPCAmountMode = RPC_AMOUNT_NUMBER_SATOSHIS;
+    else if (name == "string-btc")
+        nRPCAmountMode = RPC_AMOUNT_STRING_BTC;
+    else if (name == "string-satoshis")
+        nRPCAmountMode = RPC_AMOUNT_STRING_SATOSHIS;
+    else
+        return false;
+    return true;
 }

@@ -125,8 +125,7 @@ public:
         boost::system::error_code error = boost::asio::error::host_not_found;
         tcp::resolver::iterator end;
         while (error && endpoint_iterator != end)
-        {
-            stream.lowest_layer().close();
+        { stream.lowest_layer().close();
             stream.lowest_layer().connect(*endpoint_iterator++, error);
         }
         if (error)
@@ -140,6 +139,18 @@ private:
     boost::asio::ssl::stream<typename Protocol::socket>& stream;
 };
 
+/// How to format and parse monetary amounts in RPC protocol
+enum RPCAmountMode
+{
+    RPC_AMOUNT_NUMBER_BTC = 0,  /// Format as number in decimal BTC (default)
+    RPC_AMOUNT_NUMBER_SATOSHIS, /// Format as number in satoshis
+    RPC_AMOUNT_STRING_BTC,      /// Format as string in decimal BTC
+    RPC_AMOUNT_STRING_SATOSHIS  /// Format as string in satoshis
+};
+
+extern std::string strRPCDefaultAmountMode;
+
+bool SetRPCAmountMode(const std::string name);
 std::string HTTPPost(const std::string& strMsg, const std::map<std::string,std::string>& mapRequestHeaders);
 std::string HTTPReply(int nStatus, const std::string& strMsg, bool keepalive);
 bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
@@ -152,5 +163,8 @@ std::string JSONRPCRequest(const std::string& strMethod, const json_spirit::Arra
 json_spirit::Object JSONRPCReplyObj(const json_spirit::Value& result, const json_spirit::Value& error, const json_spirit::Value& id);
 std::string JSONRPCReply(const json_spirit::Value& result, const json_spirit::Value& error, const json_spirit::Value& id);
 json_spirit::Object JSONRPCError(int code, const std::string& message);
+
+extern int64_t AmountFromValue(const json_spirit::Value& value);
+extern json_spirit::Value ValueFromAmount(int64_t amount);
 
 #endif
