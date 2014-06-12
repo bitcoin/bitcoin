@@ -1407,3 +1407,38 @@ std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
     ss << boost::posix_time::from_time_t(nTime);
     return ss.str();
 }
+
+std::string FormatParagraph(const std::string in, size_t width, size_t indent)
+{
+    std::stringstream out;
+    size_t col = 0;
+    size_t ptr = 0;
+    while(ptr < in.size())
+    {
+        // Find beginning of next word
+        ptr = in.find_first_not_of(' ', ptr);
+        if (ptr == std::string::npos)
+            break;
+        // Find end of next word
+        size_t endword = in.find_first_of(' ', ptr);
+        if (endword == std::string::npos)
+            endword = in.size();
+        // Add newline and indentation if this wraps over the allowed width
+        if (col > 0)
+        {
+            if ((col + endword - ptr) > width)
+            {
+                out << '\n';
+                for(size_t i=0; i<indent; ++i)
+                    out << ' ';
+                col = 0;
+            } else
+                out << ' ';
+        }
+        // Append word
+        out << in.substr(ptr, endword - ptr);
+        col += endword - ptr;
+        ptr = endword;
+    }
+    return out.str();
+}

@@ -195,7 +195,6 @@ bool static Bind(const CService &addr, unsigned int flags) {
     return true;
 }
 
-// Core-specific options shared between UI, daemon and RPC client
 std::string HelpMessage(HelpMessageMode hmm)
 {
     string strUsage = _("Options:") + "\n";
@@ -328,6 +327,18 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -rpcsslciphers=<ciphers>                 " + _("Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)") + "\n";
 
     return strUsage;
+}
+
+std::string LicenseInfo()
+{
+    return FormatParagraph(strprintf(_("Copyright (C) 2009-%i The Bitcoin Core Developers"), COPYRIGHT_YEAR)) + "\n" +
+           "\n" +
+           FormatParagraph(_("This is experimental software.")) + "\n" +
+           "\n" +
+           FormatParagraph(_("Distributed under the MIT/X11 software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>.")) + "\n" +
+           "\n" +
+           FormatParagraph(_("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.")) +
+           "\n";
 }
 
 struct CImportingNow
