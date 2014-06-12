@@ -115,11 +115,15 @@ void Shutdown()
     RenameThread("bitcoin-shutoff");
     mempool.AddTransactionsUpdated(1);
     StopRPCThreads();
+#ifdef ENABLE_MINING
     ShutdownRPCMining();
+#endif
 #ifdef ENABLE_WALLET
     if (pwalletMain)
         bitdb.Flush(false);
+#ifdef ENABLE_MINING
     GenerateBitcoins(false, NULL, 0);
+#endif
 #endif
     StopNode();
     UnregisterNodeSignals(GetNodeSignals());
@@ -1140,15 +1144,19 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif
 
     StartNode(threadGroup);
+#ifdef ENABLE_MINING
     // InitRPCMining is needed here so getwork/getblocktemplate in the GUI debug console works properly.
     InitRPCMining();
+#endif
     if (fServer)
         StartRPCThreads();
 
 #ifdef ENABLE_WALLET
+#ifdef ENABLE_MINING
     // Generate coins in the background
     if (pwalletMain)
         GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain, GetArg("-genproclimit", -1));
+#endif
 #endif
 
     // ********************************************************* Step 12: finished

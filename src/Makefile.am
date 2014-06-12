@@ -27,6 +27,9 @@ if ENABLE_WALLET
 BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
 noinst_LIBRARIES += libbitcoin_wallet.a
 endif
+if ENABLE_MINING
+noinst_LIBRARIES += libbitcoin_mining.a
+endif
 
 bin_PROGRAMS =
 TESTS =
@@ -115,11 +118,9 @@ libbitcoin_server_a_SOURCES = \
   keystore.cpp \
   leveldbwrapper.cpp \
   main.cpp \
-  miner.cpp \
   net.cpp \
   noui.cpp \
   rpcblockchain.cpp \
-  rpcmining.cpp \
   rpcmisc.cpp \
   rpcnet.cpp \
   rpcrawtransaction.cpp \
@@ -137,6 +138,12 @@ libbitcoin_wallet_a_SOURCES = \
   rpcwallet.cpp \
   wallet.cpp \
   walletdb.cpp \
+  $(BITCOIN_CORE_H)
+
+libbitcoin_mining_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libbitcoin_mining_a_SOURCES = \
+  miner.cpp \
+  rpcmining.cpp \
   $(BITCOIN_CORE_H)
 
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
@@ -177,6 +184,9 @@ bitcoind_LDADD = \
   $(LIBMEMENV)
 if ENABLE_WALLET
 bitcoind_LDADD += libbitcoin_wallet.a
+endif
+if ENABLE_MINING
+bitcoind_LDADD += libbitcoin_mining.a
 endif
 bitcoind_SOURCES = bitcoind.cpp
 #
@@ -226,6 +236,7 @@ clean-local:
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
+LIBBITCOIN_MINING=libbitcoin_mining.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOINQT=qt/libbitcoinqt.a
 

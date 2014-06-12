@@ -250,11 +250,13 @@ static const CRPCCommand vRPCCommands[] =
     { "gettxoutsetinfo",        &gettxoutsetinfo,        true,      false,      false },
     { "verifychain",            &verifychain,            true,      false,      false },
 
+#ifdef ENABLE_MINING
     /* Mining */
     { "getblocktemplate",       &getblocktemplate,       true,      false,      false },
     { "getmininginfo",          &getmininginfo,          true,      false,      false },
     { "getnetworkhashps",       &getnetworkhashps,       true,      false,      false },
     { "submitblock",            &submitblock,            false,     true,       false },
+#endif // ENABLE_MINING
 
     /* Raw transactions */
     { "createrawtransaction",   &createrawtransaction,   false,     false,      false },
@@ -268,8 +270,10 @@ static const CRPCCommand vRPCCommands[] =
     { "createmultisig",         &createmultisig,         true,      true ,      false },
     { "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
     { "verifymessage",          &verifymessage,          false,     false,      false },
+#ifdef ENABLE_MINING
     { "estimatefee",            &estimatefee,            true,      true,       false },
     { "estimatepriority",       &estimatepriority,       true,      true,       false },
+#endif
 
 #ifdef ENABLE_WALLET
     /* Wallet */
@@ -312,11 +316,13 @@ static const CRPCCommand vRPCCommands[] =
     { "walletpassphrasechange", &walletpassphrasechange, false,     false,      true },
     { "walletpassphrase",       &walletpassphrase,       true,      false,      true },
 
+#ifdef ENABLE_MINING
     /* Wallet-enabled mining */
     { "getgenerate",            &getgenerate,            true,      false,      false },
     { "gethashespersec",        &gethashespersec,        true,      false,      false },
     { "getwork",                &getwork,                true,      false,      true  },
     { "setgenerate",            &setgenerate,            true,      true,       false },
+#endif // ENABLE_MINING
 #endif // ENABLE_WALLET
 };
 
