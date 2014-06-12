@@ -16,6 +16,7 @@ BOOST_AUTO_TEST_SUITE(crypto_tests)
 template<typename Hasher, typename In, typename Out>
 void TestVector(const Hasher &h, const In &in, const Out &out) {
     Out hash;
+    BOOST_CHECK(out.size() == h.OUTPUT_SIZE);
     hash.resize(out.size());
     {
         // Test that writing the whole input string at once works.

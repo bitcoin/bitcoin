@@ -16,9 +16,11 @@ private:
     size_t bytes;
 
 public:
+    static const size_t OUTPUT_SIZE = 20;
+
     CSHA1();
     CSHA1& Write(const unsigned char *data, size_t len);
-    void Finalize(unsigned char *hash);
+    void Finalize(unsigned char hash[OUTPUT_SIZE]);
     CSHA1& Reset();
 };
 

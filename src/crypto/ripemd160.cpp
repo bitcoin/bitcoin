@@ -184,7 +184,7 @@ CRIPEMD160& CRIPEMD160::Write(const unsigned char *data, size_t len) {
     return *this;
 }
 
-void CRIPEMD160::Finalize(unsigned char *hash) {
+void CRIPEMD160::Finalize(unsigned char hash[OUTPUT_SIZE]) {
     static const unsigned char pad[64] = {0x80};
     unsigned char sizedesc[8];
     WriteLE64(sizedesc, bytes << 3);
