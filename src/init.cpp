@@ -572,6 +572,9 @@ bool AppInit2(boost::thread_group& threadGroup)
             nConnectTimeout = nNewTimeout;
     }
 
+    if (GetBoolArg("-bloomfilters", true))
+        nLocalServices |= NODE_BLOOM;
+
     // Continue to put "/P2SH/" in the coinbase to monitor
     // BIP16 support.
     // This can be removed eventually...

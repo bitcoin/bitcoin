@@ -4069,6 +4069,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
     }
 
+    else if (!(nLocalServices & NODE_BLOOM) &&
+             (strCommand == "filterload" ||
+              strCommand == "filteradd" ||
+              strCommand == "filterclear"))
+    {
+        pfrom->CloseSocketDisconnect();
+        return error("peer %s %s attempted to set a bloom filter even though we do not advertise NODE_BLOOM",
+                     pfrom->addr.ToString(), pfrom->cleanSubVer);
+    }
 
     else if (strCommand == "filterload")
     {

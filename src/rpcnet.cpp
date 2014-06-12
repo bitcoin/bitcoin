@@ -80,7 +80,7 @@ Value getpeerinfo(const Array& params, bool fHelp)
             "  {\n"
             "    \"addr\":\"host:port\",      (string) The ip address and port of the peer\n"
             "    \"addrlocal\":\"ip:port\",   (string) local address\n"
-            "    \"services\":\"00000001\",   (string) The services\n"
+            "    \"services\":\"xxxxxxxx\",   (string) The services\n"
             "    \"lastsend\": ttt,           (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last send\n"
             "    \"lastrecv\": ttt,           (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last receive\n"
             "    \"bytessent\": n,            (numeric) The total bytes sent\n"
