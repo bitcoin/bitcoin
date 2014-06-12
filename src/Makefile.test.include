@@ -35,7 +35,6 @@ BITCOIN_TESTS =\
   test/getarg_tests.cpp \
   test/key_tests.cpp \
   test/main_tests.cpp \
-  test/miner_tests.cpp \
   test/mruset_tests.cpp \
   test/multisig_tests.cpp \
   test/netbase_tests.cpp \
@@ -57,6 +56,11 @@ BITCOIN_TESTS += \
   test/accounting_tests.cpp \
   test/wallet_tests.cpp \
   test/rpc_wallet_tests.cpp
+endif
+
+if ENABLE_MINING
+BITCOIN_TESTS += \
+  test/miner_tests.cpp
 endif
 
 test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)

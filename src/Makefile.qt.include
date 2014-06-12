@@ -355,6 +355,9 @@ qt_bitcoin_qt_LDADD = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
 qt_bitcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
 endif
+if ENABLE_MINING
+qt_bitcoin_qt_LDADD += $(LIBBITCOIN_MINING)
+endif
 qt_bitcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS)
 qt_bitcoin_qt_LDFLAGS = $(QT_LDFLAGS)
