@@ -114,9 +114,8 @@ std::string EncodeBase58Check(const std::vector<unsigned char>& vchIn) {
 }
 
 bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRet) {
-    if (!DecodeBase58(psz, vchRet))
-        return false;
-    if (vchRet.size() < 4)
+    if (!DecodeBase58(psz, vchRet) ||
+        (vchRet.size() < 4))
     {
         vchRet.clear();
         return false;
@@ -154,8 +153,8 @@ void CBase58Data::SetData(const std::vector<unsigned char> &vchVersionIn, const 
 
 bool CBase58Data::SetString(const char* psz, unsigned int nVersionBytes) {
     std::vector<unsigned char> vchTemp;
-    DecodeBase58Check(psz, vchTemp);
-    if (vchTemp.size() < nVersionBytes) {
+    bool rc58 = DecodeBase58Check(psz, vchTemp);
+    if ((!rc58) || (vchTemp.size() < nVersionBytes)) {
         vchData.clear();
         vchVersion.clear();
         return false;
