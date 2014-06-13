@@ -14,7 +14,7 @@ packages:
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
-- "openssl-1.0.1g.tar.gz"
+- "openssl-1.0.1h.tar.gz"
 - "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.9.20140401.tar.gz"
 - "zlib-1.2.8.tar.gz"
@@ -28,7 +28,7 @@ script: |
   export INSTALLPREFIX=$OUTDIR/staging/deps
   export HOST=i686-w64-mingw32
   # Integrity Check
-  echo "53cb818c3b90e507a8348f4f5eaedb05d8bfe5358aabb508b7263cc670c3e028  openssl-1.0.1g.tar.gz"  | sha256sum -c
+  echo "9d1c8a9836aa63e2c6adb684186cbd4371c9e9dcc01d6e3bb447abf2d4d3d093  openssl-1.0.1h.tar.gz"  | sha256sum -c
   echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"    | sha256sum -c
   echo "d02670112125300f7a3d61421714d99105edd90190bf12542d16785f16f017aa  miniupnpc-1.9.20140401.tar.gz"   | sha256sum -c
   echo "36658cb768a54c1d4dec43c3116c27ed893e88b02ecfcb44f2166f9c0b7f2a0d  zlib-1.2.8.tar.gz"      | sha256sum -c
@@ -38,8 +38,8 @@ script: |
   #
   mkdir -p $INSTALLPREFIX
 
-  tar xzf openssl-1.0.1g.tar.gz
-  cd openssl-1.0.1g
+  tar xzf openssl-1.0.1h.tar.gz
+  cd openssl-1.0.1h
   ./Configure --cross-compile-prefix=$HOST- mingw --openssldir=$INSTALLPREFIX
   make
   make install_sw
@@ -98,4 +98,4 @@ script: |
   cd ..
   #
   cd $INSTALLPREFIX
-  zip -r $OUTDIR/bitcoin08-deps-win32-gitian-r10.zip include lib
+  zip -r $OUTDIR/bitcoin08-deps-win32-gitian-r11.zip include lib
