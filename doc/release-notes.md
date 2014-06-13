@@ -2,8 +2,9 @@ Bitcoin Core version 0.9.2rc1 is now available from:
 
   https://bitcoin.org/bin/0.9.2rc1/
 
-This is a new minor version release, bringing mostly bug fixes and
-some minor improvements.
+This is a new minor version release, bringing mostly bug fixes and some minor
+improvements. OpenSSL has been updated because of a security issue (CVE-2014-0224).
+Upgrading to this release is recommended.
 
 Please report bugs using the issue tracker at github:
 
@@ -64,6 +65,8 @@ This brings back compatibility with
 0.9.2 Release notes
 =======================
 
+The OpenSSL dependency in the gitian builds has been upgraded to 1.0.1h because of CVE-2014-0224.
+
 RPC:
 - Add `getwalletinfo`, `getblockchaininfo` and `getnetworkinfo` calls (will replace hodge-podge `getinfo` at some point)
 - Add a `relayfee` field to `getnetworkinfo`
@@ -84,12 +87,14 @@ Protocol and network code:
 - Per-peer block download tracking and stalled download detection
 - Add new DNS seed from bitnodes.io
 - Prevent socket leak in ThreadSocketHandler and correct some proxy related socket leaks
+- Use pnode->nLastRecv as sync score (was the wrong way around)
 
 Wallet:
 - Make GetAvailableCredit run GetHash() only once per transaction (performance improvement)
 - Lower paytxfee warning threshold from 0.25 BTC to 0.01 BTC
 - Fix importwallet nTimeFirstKey (trigger necessary rescans)
 - Log BerkeleyDB version at startup
+- CWallet init fix
 
 Build system:
 - Add OSX build descriptors to gitian
