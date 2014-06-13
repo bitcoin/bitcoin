@@ -65,17 +65,17 @@ int main(int argc, char* argv[])
     try
     {
         if(!AppInitRPC(argc, argv))
-            return abs(RPC_MISC_ERROR);
+            return EXIT_FAILURE;
     }
     catch (std::exception& e) {
         PrintExceptionContinue(&e, "AppInitRPC()");
-        return abs(RPC_MISC_ERROR);
+        return EXIT_FAILURE;
     } catch (...) {
         PrintExceptionContinue(NULL, "AppInitRPC()");
-        return abs(RPC_MISC_ERROR);
+        return EXIT_FAILURE;
     }
 
-    int ret = abs(RPC_MISC_ERROR);
+    int ret = EXIT_FAILURE;
     try
     {
         ret = CommandLineRPC(argc, argv);

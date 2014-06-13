@@ -234,7 +234,7 @@ int CommandLineRPC(int argc, char *argv[])
     }
     catch (std::exception& e) {
         strPrint = string("error: ") + e.what();
-        nRet = abs(RPC_MISC_ERROR);
+        nRet = EXIT_FAILURE;
     }
     catch (...) {
         PrintExceptionContinue(NULL, "CommandLineRPC()");
