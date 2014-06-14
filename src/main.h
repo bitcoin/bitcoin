@@ -66,12 +66,6 @@ static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 128;
 /** Timeout in seconds before considering a block download peer unresponsive. */
 static const unsigned int BLOCK_DOWNLOAD_TIMEOUT = 60;
 
-#ifdef USE_UPNP
-static const int fHaveUPnP = true;
-#else
-static const int fHaveUPnP = false;
-#endif
-
 /** "reject" message codes **/
 static const unsigned char REJECT_MALFORMED = 0x01;
 static const unsigned char REJECT_INVALID = 0x10;
@@ -291,13 +285,6 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
  */
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, CCoinsViewCache& mapInputs);
 
-
-inline bool AllowFree(double dPriority)
-{
-    // Large (in bytes) low-priority (new, small-coin) transactions
-    // need a fee.
-    return dPriority > COIN * 144 / 250;
-}
 
 // Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
 // This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
@@ -848,10 +835,11 @@ public:
 
     /**
      * Returns true if there are nRequired or more blocks of minVersion or above
-     * in the last nToCheck blocks, starting at pstart and going backwards.
+     * in the last Params().ToCheckBlockUpgradeMajority() blocks, starting at pstart 
+     * and going backwards.
      */
     static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart,
-                                unsigned int nRequired, unsigned int nToCheck);
+                                unsigned int nRequired);
 
     std::string ToString() const
     {
@@ -1025,7 +1013,6 @@ public:
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
 class CVerifyDB {
 public:
-
     CVerifyDB();
     ~CVerifyDB();
     bool VerifyDB(int nCheckLevel, int nCheckDepth);
@@ -1086,13 +1073,13 @@ public:
 
     /** Find the last common block between this chain and a locator. */
     CBlockIndex *FindFork(const CBlockLocator &locator) const;
+
+    /** Find the last common block between this chain and a block index entry. */
+    CBlockIndex *FindFork(CBlockIndex *pindex) const;
 };
 
 /** The currently-connected chain of blocks. */
 extern CChain chainActive;
-
-/** The currently best known chain of headers (some of which may be invalid). */
-extern CChain chainMostWork;
 
 /** Global variable that points to the active CCoinsView (protected by cs_main) */
 extern CCoinsViewCache *pcoinsTip;

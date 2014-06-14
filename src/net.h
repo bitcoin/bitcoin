@@ -38,8 +38,14 @@ namespace boost {
     class thread_group;
 }
 
+/** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
+static const int PING_INTERVAL = 2 * 60;
+/** Time after which to disconnect, after waiting for a ping response (or inactivity). */
+static const int TIMEOUT_INTERVAL = 20 * 60;
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
+/** -listen default */
+static const bool DEFAULT_LISTEN = true;
 /** -upnp default */
 #ifdef USE_UPNP
 static const bool DEFAULT_UPNP = USE_UPNP;
@@ -56,11 +62,11 @@ bool GetMyExternalIP(CNetAddr& ipRet);
 void AddressCurrentlyConnected(const CService& addr);
 CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const CService& ip);
-CNode* ConnectNode(CAddress addrConnect, const char *strDest = NULL);
+CNode* ConnectNode(CAddress addrConnect, const char *pszDest = NULL);
 bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false);
 void MapPort(bool fUseUPnP);
 unsigned short GetListenPort();
-bool BindListenPort(const CService &bindAddr, std::string& strError=REF(std::string()));
+bool BindListenPort(const CService &bindAddr, std::string& strError);
 void StartNode(boost::thread_group& threadGroup);
 bool StopNode();
 void SocketSendData(CNode *pnode);
@@ -133,7 +139,7 @@ struct LocalServiceInfo {
 };
 
 extern CCriticalSection cs_mapLocalHost;
-extern map<CNetAddr, LocalServiceInfo> mapLocalHost;
+extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
 
 class CNodeStats
 {
@@ -220,7 +226,6 @@ public:
 
     int64_t nLastSend;
     int64_t nLastRecv;
-    int64_t nLastSendEmpty;
     int64_t nTimeConnected;
     CAddress addr;
     std::string addrName;
@@ -276,10 +281,14 @@ public:
     CCriticalSection cs_inventory;
     std::multimap<int64_t, CInv> mapAskFor;
 
-    // Ping time measurement
+    // Ping time measurement:
+    // The pong reply we're expecting, or 0 if no pong expected.
     uint64_t nPingNonceSent;
+    // Time (in usec) the last ping was sent, or 0 if no ping was ever sent.
     int64_t nPingUsecStart;
+    // Last measured round-trip time.
     int64_t nPingUsecTime;
+    // Whether a ping is requested.
     bool fPingQueued;
 
     CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false) : ssSend(SER_NETWORK, INIT_PROTO_VERSION), setAddrKnown(5000)
@@ -291,7 +300,6 @@ public:
         nLastRecv = 0;
         nSendBytes = 0;
         nRecvBytes = 0;
-        nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
         addr = addrIn;
         addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
@@ -464,7 +472,7 @@ public:
     // TODO: Document the postcondition of this function.  Is cs_vSend locked?
     void BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSend)
     {
-        statsClient.inc("message.sent." + string(pszCommand), 1.0f);
+        statsClient.inc("message.sent." + std::string(pszCommand), 1.0f);
         ENTER_CRITICAL_SECTION(cs_vSend);
         assert(ssSend.size() == 0);
         ssSend << CMessageHeader(pszCommand, 0);
@@ -525,7 +533,7 @@ public:
 
     void PushVersion();
 
-    string RejectCodeToString(const char& code)
+    std::string RejectCodeToString(const char& code)
     {
         if (code == 0x01)
             return "malformed";
@@ -595,8 +603,8 @@ public:
     template<typename T1, typename T2, typename T3>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3)
     {
-        if (string(pszCommand) == "reject")
-            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
+        if (std::string(pszCommand) == "reject")
+            statsClient.inc("message.sent.reject_" + std::string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -613,8 +621,8 @@ public:
     template<typename T1, typename T2, typename T3, typename T4>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4)
     {
-        if (string(pszCommand) == "reject")
-            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
+        if (std::string(pszCommand) == "reject")
+            statsClient.inc("message.sent.reject_" + std::string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -631,8 +639,8 @@ public:
     template<typename T1, typename T2, typename T3, typename T4, typename T5>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5)
     {
-        if (string(pszCommand) == "reject")
-            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
+        if (std::string(pszCommand) == "reject")
+            statsClient.inc("message.sent.reject_" + std::string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -649,8 +657,8 @@ public:
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6)
     {
-        if (string(pszCommand) == "reject")
-            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
+        if (std::string(pszCommand) == "reject")
+            statsClient.inc("message.sent.reject_" + std::string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -667,8 +675,8 @@ public:
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7)
     {
-        if (string(pszCommand) == "reject")
-            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
+        if (std::string(pszCommand) == "reject")
+            statsClient.inc("message.sent.reject_" + std::string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);
@@ -685,8 +693,8 @@ public:
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8)
     {
-        if (string(pszCommand) == "reject")
-            statsClient.inc("message.sent.reject_" + string(a1) + "_" + RejectCodeToString(a2), 1.0f);
+        if (std::string(pszCommand) == "reject")
+            statsClient.inc("message.sent.reject_" + std::string(a1) + "_" + RejectCodeToString(a2), 1.0f);
         try
         {
             BeginMessage(pszCommand);
