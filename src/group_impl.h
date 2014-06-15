@@ -393,10 +393,12 @@ void static secp256k1_ge_stop(void) {
         secp256k1_ge_consts_t *c = (secp256k1_ge_consts_t*)secp256k1_ge_consts;
         secp256k1_num_free(&c->order);
         secp256k1_num_free(&c->half_order);
+#ifdef USE_ENDOMORPHISM
         secp256k1_num_free(&c->lambda);
         secp256k1_num_free(&c->a1b2);
         secp256k1_num_free(&c->a2);
         secp256k1_num_free(&c->b1);
+#endif
         free((void*)c);
         secp256k1_ge_consts = NULL;
     }
