@@ -891,6 +891,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Приоритет</translation>
     </message>
     <message>
+        <location line="+344"/>
+        <source>Weight</source>
+        <translation>Вес</translation>
+    </message>
+    <message>
         <location line="-23"/>
         <source>Label</source>
         <translation>Метка</translation>
