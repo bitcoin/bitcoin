@@ -171,7 +171,6 @@ nodist_libbitcoin_common_a_SOURCES = $(srcdir)/obj/build.h
 # bitcoind binary #
 bitcoind_LDADD = \
   libbitcoin_server.a \
-  libbitcoin_cli.a \
   libbitcoin_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
