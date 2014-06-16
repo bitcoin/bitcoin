@@ -316,6 +316,16 @@ void WalletModel::getStakeWeightFromValue(const int64& nTime, const int64& nValu
     wallet->GetStakeWeightFromValue(nTime, nValue, nWeight);
 }
 
+bool WalletModel::dumpWallet(const QString &filename)
+{
+    return DumpWallet(wallet, filename.toLocal8Bit().data());
+}
+
+bool WalletModel::importWallet(const QString &filename)
+{
+    return ImportWallet(wallet, filename.toLocal8Bit().data());
+}
+
 bool WalletModel::backupWallet(const QString &filename)
 {
     return BackupWallet(*wallet, filename.toLocal8Bit().data());

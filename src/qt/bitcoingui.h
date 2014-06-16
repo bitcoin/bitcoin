@@ -87,6 +87,8 @@ private:
     QAction *exportAction;
     QAction *encryptWalletAction;
     QAction *backupWalletAction;
+    QAction *dumpWalletAction;
+    QAction *importWalletAction;
     QAction *changePassphraseAction;
     QAction *aboutQtAction;
     QAction *openRPCConsoleAction;
@@ -120,6 +122,8 @@ public slots:
 
     /** Notify the user of an error in the network or transaction handling code. */
     void error(const QString &title, const QString &message, bool modal);
+    void message(const QString &title, const QString &message, unsigned int style, const QString &detail=QString());
+
     /** Asks the user whether to pay the transaction fee or to cancel the transaction.
        It is currently not possible to pass a return value to another thread through
        BlockingQueuedConnection, so an indirected pointer is used.
@@ -166,6 +170,10 @@ private slots:
     /** Backup the wallet */
     void backupWallet();
     /** Change encrypted wallet passphrase */
+
+    void dumpWallet();
+    void importWallet();
+
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
