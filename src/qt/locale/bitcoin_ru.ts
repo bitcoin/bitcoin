@@ -397,6 +397,110 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Сделать резервную копию бумажника</translation>
     </message>
     <message>
+        <location line="+4"/>
+        <source>&amp;Dump Wallet...</source>
+        <translation>&amp;Выгрузка ключей...</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Dump Wallet</source>
+        <translation>Выгрузка ключей</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Import Wallet</source>
+        <translation>Импорт ключей</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Dump failed</source>
+        <translation>Ошибка выгрузки</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Import failed</source>
+        <translation>Ошибка импорта</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>All keys from:
+ %1,
+ were imported into your wallet.</source>
+        <translation>Все ключи из файла
+ %1,
+ были успешно импортированы.</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>An error happened while trying to save the keys to your location.
+Keys were not saved.</source>
+        <translation>Произошла ошибка при попытке выгрузки ключей в указанный файл.
+Ключи не сохранены.</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Dump successful</source>
+        <translation>Выгрузка завершена</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Import successful</source>
+        <translation>Импорт завершен</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Error</source>
+        <translation>Ошибка</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Warning</source>
+        <translation>Предупреждение</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Information</source>
+        <translation>Сообщение</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Keys were saved to this file:
+%2</source>
+        <translation>Ключи сохранены в 
+%2</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>An error happened while trying to import the keys.
+Some or all keys from:
+ %1,
+ were not imported into your wallet.</source>
+        <translation>При попытке импорта ключей произошла ошибка.
+Некоторые, либо все ключи из
+ %1,
+ не были импортированы.</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Wallet dump (*.txt)</source>
+        <translation>Файл с ключами (*.txt)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Import Wallet...</source>
+        <translation>&amp;Импорт ключей...</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Dump keys to a text file</source>
+        <translation>Выгрузить ключи в текстовый файл</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Import keys into a wallet</source>
+        <translation>Импортировать ключи из текстового файла</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Изменить пароль</translation>

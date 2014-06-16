@@ -254,9 +254,9 @@ void BitcoinGUI::createActions()
     backupWalletAction = new QAction(QIcon(":/icons/filesave"), tr("&Backup Wallet..."), this);
     backupWalletAction->setToolTip(tr("Backup wallet to another location"));
     dumpWalletAction = new QAction(QIcon(":/icons/dump"), tr("&Dump Wallet..."), this);
-    dumpWalletAction->setStatusTip(tr("Export wallet's keys to a text file"));
+    dumpWalletAction->setStatusTip(tr("Dump keys to a text file"));
     importWalletAction = new QAction(QIcon(":/icons/import"), tr("&Import Wallet..."), this);
-    importWalletAction->setStatusTip(tr("Import a file's keys into a wallet"));
+    importWalletAction->setStatusTip(tr("Import keys into a wallet"));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Passphrase..."), this);
     changePassphraseAction->setToolTip(tr("Change the passphrase used for wallet encryption"));
     signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
@@ -904,16 +904,16 @@ void BitcoinGUI::dumpWallet()
 #else
     QString saveDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
 #endif
-    QString filename = QFileDialog::getSaveFileName(this, tr("Export Wallet"), saveDir, tr("Wallet Text (*.txt)"));
+    QString filename = QFileDialog::getSaveFileName(this, tr("Dump Wallet"), saveDir, tr("Wallet dump (*.txt)"));
     if(!filename.isEmpty()) {
         if(!walletModel->dumpWallet(filename)) {
-            error(tr("DumpWallet Failed"),
+            error(tr("Dump failed"),
                          tr("An error happened while trying to save the keys to your location.\n"
-                            "Keys were not saved")
+                            "Keys were not saved.")
                       ,CClientUIInterface::MSG_ERROR);
         }
         else
-          message(tr("DumpWallet Successful"),
+          message(tr("Dump successful"),
                        tr("Keys were saved to this file:\n%2")
                        .arg(filename)
                       ,CClientUIInterface::MSG_INFORMATION);
@@ -937,7 +937,7 @@ void BitcoinGUI::importWallet()
 #else
     QString openDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
 #endif
-    QString filename = QFileDialog::getOpenFileName(this, tr("Import Wallet"), openDir, tr("Wallet Text (*.txt)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Import Wallet"), openDir, tr("Wallet dump (*.txt)"));
     if(!filename.isEmpty()) {
         if(!walletModel->importWallet(filename)) {
             error(tr("Import Failed"),

@@ -397,9 +397,113 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Backup Wallet...</translation>
     </message>
     <message>
+        <location line="+4"/>
+        <source>&amp;Dump Wallet...</source>
+        <translation>&amp;Dump Wallet...</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Dump Wallet</source>
+        <translation>Dump Wallet</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Import Wallet</source>
+        <translation>Import Wallet</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Error</source>
+        <translation>Error</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Warning</source>
+        <translation>Warning</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Information</source>
+        <translation>Information</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Dump failed</source>
+        <translation>Dump failed</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Import failed</source>
+        <translation>Import failed</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Dump successful</source>
+        <translation>Dump successful</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Import successful</source>
+        <translation>Import successful</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>An error happened while trying to import the keys.
+Some or all keys from:
+ %1,
+ were not imported into your wallet.</source>
+        <translation>An error happened while trying to import the keys.
+Some or all keys from:
+ %1,
+ were not imported into your wallet.</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Keys were saved to this file:
+%2</source>
+        <translation>Keys were saved to this file:
+%2</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>All keys from:
+ %1,
+ were imported into your wallet.</source>
+        <translation>All keys from:
+ %1,
+ were imported into your wallet.</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>An error happened while trying to save the keys to your location.
+Keys were not saved.</source>
+        <translation>An error happened while trying to save the keys to your location.
+Keys were not saved.</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Wallet dump (*.txt)</source>
+        <translation>Wallet dump (*.txt)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Import Wallet...</source>
+        <translation>&amp;Import Wallet...</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Change Passphrase...</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Dump keys to a text file</source>
+        <translation>Dump keys to a text file</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Import keys into a wallet</source>
+        <translation>Import keys into a wallet</translation>
     </message>
     <message numerus="yes">
         <location line="+241"/>
