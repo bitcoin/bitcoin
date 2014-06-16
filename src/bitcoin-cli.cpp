@@ -12,6 +12,7 @@
 
 #include <boost/filesystem/operations.hpp>
 
+using namespace std;
 using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
