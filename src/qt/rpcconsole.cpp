@@ -316,7 +316,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->buildDate->setText(model->formatBuildDate());
         ui->startupTime->setText(model->formatClientStartupTime());
 
-        ui->networkName->setText(model->getNetworkName());
+        ui->networkName->setText(QString::fromStdString(Params().NetworkIDString()));
     }
 }
 
