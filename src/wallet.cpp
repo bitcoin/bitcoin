@@ -1249,7 +1249,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
     {
         LOCK2(cs_main, cs_wallet);
         {
-            nFeeRet = payTxFee.GetFeePerK();
+            nFeeRet = 0; // We do not know the txsize yet, so start with zero, even if we pay a voluntary fee (loop will always continue in that case)
             while (true)
             {
                 wtxNew.vin.clear();
