@@ -532,8 +532,8 @@ void CNode::CloseSocketDisconnect()
     fDisconnect = true;
     if (hSocket != INVALID_SOCKET)
     {
-        LogPrint("net", "disconnecting peer=%d\n", id);
         CloseSocket(hSocket);
+        LogPrint("net", "disconnecting peer=%d\n", id);
     }
 
     // in case this fails, we'll empty the recv buffer when the CNode is deleted
@@ -978,8 +978,8 @@ void ThreadSocketHandler()
                 }
                 else if (CNode::IsBanned(addr) && !whitelisted)
                 {
-                    LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
                     CloseSocket(hSocket);
+                    LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
                 }
                 else
                 {
