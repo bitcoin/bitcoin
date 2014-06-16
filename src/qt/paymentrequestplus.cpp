@@ -17,6 +17,7 @@
 #include <QDebug>
 #include <QSslCertificate>
 
+using namespace std;
 
 class SSLVerifyError : public std::runtime_error
 {
