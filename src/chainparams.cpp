@@ -178,7 +178,6 @@ public:
         fDefaultCheckMemPool = false;
         fAllowMinDifficultyBlocks = false;
         fRequireStandard = true;
-        fRPCisTestNet = false;
         fMineBlocksOnDemand = false;
     }
 };
@@ -230,7 +229,6 @@ public:
         fDefaultCheckMemPool = false;
         fAllowMinDifficultyBlocks = true;
         fRequireStandard = false;
-        fRPCisTestNet = true;
         fMineBlocksOnDemand = false;
     }
 };
@@ -269,7 +267,6 @@ public:
         fDefaultCheckMemPool = true;
         fAllowMinDifficultyBlocks = true;
         fRequireStandard = false;
-        fRPCisTestNet = true;
         fMineBlocksOnDemand = true;
     }
 };
