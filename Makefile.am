@@ -57,7 +57,7 @@ tests_LDFLAGS = -static
 TESTS = tests
 endif
 
-EXTRA_DIST = nasm_lt.sh
+EXTRA_DIST = autogen.sh nasm_lt.sh
 
 #x86_64 only
 if USE_ASM
