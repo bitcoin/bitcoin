@@ -1,325 +1,233 @@
 from jsonrpc import ServiceProxy
 import sys
 import string
-import getpass
-
-# ===== BEGIN USER SETTINGS =====
-# if you do not set these you will be prompted for a password for every command
-rpcuser = ""
-rpcpass = ""
-# ====== END USER SETTINGS ======
 
 
-if rpcpass == "":
-    access = ServiceProxy("http://127.0.0.1:8332")
-else:
-    access = ServiceProxy("http://"+rpcuser+":"+rpcpass+"@127.0.0.1:8332")
-cmd = sys.argv[1].lower()
+class BitcoinRPC:
+    def __init__(self, username=None, password=None):
+        if username and password:
+            url = "http://%s:%s@127.0.0.1:8332" % (username, password)
+        else:
+            url = "http://127.0.0.1:8332"
+        self.access = ServiceProxy(url)
 
-if cmd == "backupwallet":
-    try:
+    def backupwallet(self):
         path = raw_input("Enter destination path/filename: ")
-        print access.backupwallet(path)
-    except:
-        print "\n---An error occurred---\n"
+        return self.access.backupwallet(path)
 
-elif cmd == "getaccount":
-    try:
-        addr = raw_input("Enter a Bitcoin address: ")
-        print access.getaccount(addr)
-    except:
-        print "\n---An error occurred---\n"
+    def getaccount(self):
+        address = raw_input("Enter a Bitcoin addressess: ")
+        return self.access.getaccount(address)
 
-elif cmd == "getaccountaddress":
-    try:
-        acct = raw_input("Enter an account name: ")
-        print access.getaccountaddress(acct)
-    except:
-        print "\n---An error occurred---\n"
+    def getaccountaddressess(self):
+        account = raw_input("Enter an account name: ")
+        return self.access.getaccountaddressess(account)
 
-elif cmd == "getaddressesbyaccount":
-    try:
-        acct = raw_input("Enter an account name: ")
-        print access.getaddressesbyaccount(acct)
-    except:
-        print "\n---An error occurred---\n"
+    def getaddressessesbyaccount(self):
+        account = raw_input("Enter an account name: ")
+        return self.access.getaddressessesbyaccount(account)
 
-elif cmd == "getbalance":
-    try:
-        acct = raw_input("Enter an account (optional): ")
-        mc = raw_input("Minimum confirmations (optional): ")
+    def getbalance(self):
+        account = raw_input("Enter an account (optional): ")
+        minimum_confirmations = raw_input("Minimum confirmations (optional): ")
         try:
-            print access.getbalance(acct, mc)
+            return self.access.getbalance(account, minimum_confirmations)
         except:
-            print access.getbalance()
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.getbalance()
 
-elif cmd == "getblockbycount":
-    try:
+    def getblockbycount(self):
         height = raw_input("Height: ")
-        print access.getblockbycount(height)
-    except:
-        print "\n---An error occurred---\n"
+        return self.access.getblockbycount(height)
 
-elif cmd == "getblockcount":
-    try:
-        print access.getblockcount()
-    except:
-        print "\n---An error occurred---\n"
+    def getblockcount(self):
+        return self.access.getblockcount()
 
-elif cmd == "getblocknumber":
-    try:
-        print access.getblocknumber()
-    except:
-        print "\n---An error occurred---\n"
+    def getblocknumber(self):
+        return self.access.getblocknumber()
 
-elif cmd == "getconnectioncount":
-    try:
-        print access.getconnectioncount()
-    except:
-        print "\n---An error occurred---\n"
+    def getconnectioncount(self):
+        return self.access.getconnectioncount()
 
-elif cmd == "getdifficulty":
-    try:
-        print access.getdifficulty()
-    except:
-        print "\n---An error occurred---\n"
+    def getdifficulty(self):
+        return self.access.getdifficulty()
 
-elif cmd == "getgenerate":
-    try:
-        print access.getgenerate()
-    except:
-        print "\n---An error occurred---\n"
+    def getgenerate(self):
+        return self.access.getgenerate()
 
-elif cmd == "gethashespersec":
-    try:
-        print access.gethashespersec()
-    except:
-        print "\n---An error occurred---\n"
+    def gethashespersec(self):
+        return self.access.gethashespersec()
 
-elif cmd == "getinfo":
-    try:
-        print access.getinfo()
-    except:
-        print "\n---An error occurred---\n"
+    def getinfo(self):
+        return self.access.getinfo()
 
-elif cmd == "getnewaddress":
-    try:
-        acct = raw_input("Enter an account name: ")
+    def getnewaddressess(self):
+        account = raw_input("Enter an account name: ")
         try:
-            print access.getnewaddress(acct)
+            return self.access.getnewaddressess(account)
         except:
-            print access.getnewaddress()
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.getnewaddressess()
 
-elif cmd == "getreceivedbyaccount":
-    try:
-        acct = raw_input("Enter an account (optional): ")
-        mc = raw_input("Minimum confirmations (optional): ")
+    def getreceivedbyaccount(self):
+        account = raw_input("Enter an account (optional): ")
+        minimum_confirmations = raw_input("Minimum confirmations (optional): ")
         try:
-            print access.getreceivedbyaccount(acct, mc)
+            return self.access.getreceivedbyaccount(
+                account, minimum_confirmations)
         except:
-            print access.getreceivedbyaccount()
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.getreceivedbyaccount()
 
-elif cmd == "getreceivedbyaddress":
-    try:
-        addr = raw_input("Enter a Bitcoin address (optional): ")
-        mc = raw_input("Minimum confirmations (optional): ")
+    def getreceivedbyaddressess(self):
+        address = raw_input("Enter a Bitcoin addressess (optional): ")
+        minimum_confirmations = raw_input(
+            "Minimum confirmations (optional): ")
         try:
-            print access.getreceivedbyaddress(addr, mc)
+            return self.access.getreceivedbyaddressess(
+                address, minimum_confirmations)
         except:
-            print access.getreceivedbyaddress()
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.getreceivedbyaddressess()
 
-elif cmd == "gettransaction":
-    try:
+    def gettransaction(self):
         txid = raw_input("Enter a transaction ID: ")
-        print access.gettransaction(txid)
-    except:
-        print "\n---An error occurred---\n"
+        return self.access.gettransaction(txid)
 
-elif cmd == "getwork":
-    try:
+    def getwork(self):
         data = raw_input("Data (optional): ")
         try:
-            print access.gettransaction(data)
+            return self.access.gettransaction(data)
         except:
-            print access.gettransaction()
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.gettransaction()
 
-elif cmd == "help":
-    try:
+    def help(self):
         cmd = raw_input("Command (optional): ")
         try:
-            print access.help(cmd)
+            return self.access.help(cmd)
         except:
-            print access.help()
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.help()
 
-elif cmd == "listaccounts":
-    try:
-        mc = raw_input("Minimum confirmations (optional): ")
+    def listaccounts(self):
+        minimum_confirmations = raw_input("Minimum confirmations (optional): ")
         try:
-            print access.listaccounts(mc)
+            return self.access.listaccounts(minimum_confirmations)
         except:
-            print access.listaccounts()
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.listaccounts()
 
-elif cmd == "listreceivedbyaccount":
-    try:
-        mc = raw_input("Minimum confirmations (optional): ")
-        incemp = raw_input("Include empty? (true/false, optional): ")
+    def listreceivedbyaccount(self):
+        minimum_confirmations = raw_input("Minimum confirmations (optional): ")
+        include_empty = raw_input("Include empty? (true/false, optional): ")
         try:
-            print access.listreceivedbyaccount(mc, incemp)
+            return self.access.listreceivedbyaccount(
+                minimum_confirmations, include_empty)
         except:
-            print access.listreceivedbyaccount()
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.listreceivedbyaccount()
 
-elif cmd == "listreceivedbyaddress":
-    try:
-        mc = raw_input("Minimum confirmations (optional): ")
-        incemp = raw_input("Include empty? (true/false, optional): ")
+    def listreceivedbyaddressess(self):
+        minimum_confirmations = raw_input("Minimum confirmations (optional): ")
+        include_empty = raw_input("Include empty? (true/false, optional): ")
         try:
-            print access.listreceivedbyaddress(mc, incemp)
+            return self.access.listreceivedbyaddressess(
+                minimum_confirmations, include_empty)
         except:
-            print access.listreceivedbyaddress()
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.listreceivedbyaddressess()
 
-elif cmd == "listtransactions":
-    try:
-        acct = raw_input("Account (optional): ")
+    def listtransactions(self):
+        account = raw_input("Account (optional): ")
         count = raw_input("Number of transactions (optional): ")
-        frm = raw_input("Skip (optional):")
+        frm = raw_input("Skip (optional): ")
         try:
-            print access.listtransactions(acct, count, frm)
+            return self.access.listtransactions(account, count, frm)
         except:
-            print access.listtransactions()
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.listtransactions()
 
-elif cmd == "move":
-    try:
+    def move(self):
         frm = raw_input("From: ")
         to = raw_input("To: ")
-        amt = raw_input("Amount:")
-        mc = raw_input("Minimum confirmations (optional): ")
+        amount = raw_input("Amount: ")
+        minimum_confirmations = raw_input("Minimum confirmations (optional): ")
         comment = raw_input("Comment (optional): ")
         try:
-            print access.move(frm, to, amt, mc, comment)
+            return self.access.move(
+                frm, to, amount, minimum_confirmations, comment)
         except:
-            print access.move(frm, to, amt)
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.move(frm, to, amount)
 
-elif cmd == "sendfrom":
-    try:
+    def sendfrom(self):
         frm = raw_input("From: ")
         to = raw_input("To: ")
-        amt = raw_input("Amount:")
-        mc = raw_input("Minimum confirmations (optional): ")
+        amount = raw_input("Amount: ")
+        minimum_confirmations = raw_input("Minimum confirmations (optional): ")
         comment = raw_input("Comment (optional): ")
-        commentto = raw_input("Comment-to (optional): ")
+        comment_to = raw_input("Comment-to (optional): ")
         try:
-            print access.sendfrom(frm, to, amt, mc, comment, commentto)
+            return self.access.sendfrom(
+                frm, to, amount, minimum_confirmations, comment, comment_to)
         except:
-            print access.sendfrom(frm, to, amt)
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.sendfrom(frm, to, amount)
 
-elif cmd == "sendmany":
-    try:
+    def sendmany(self):
         frm = raw_input("From: ")
-        to = raw_input("To (in format address1:amount1,address2:amount2,...): ")
-        mc = raw_input("Minimum confirmations (optional): ")
+        to = raw_input(
+            "To (format addressess1:amount1,addressess2:amount2,...): ")
+        minimum_confirmations = raw_input("Minimum confirmations (optional): ")
         comment = raw_input("Comment (optional): ")
         try:
-            print access.sendmany(frm,to,mc,comment)
+            return self.access.sendmany(
+                rm, to, minimum_confirmations, comment)
         except:
-            print access.sendmany(frm,to)
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.sendmany(frm, to)
 
-elif cmd == "sendtoaddress":
-    try:
-        to = raw_input("To (in format address1:amount1,address2:amount2,...): ")
-        amt = raw_input("Amount:")
+    def sendtoaddressess(self):
+        to = raw_input(
+            "To (format addressess1:amount1,addressess2:amount2,...): ")
+        amount = raw_input("Amount: ")
         comment = raw_input("Comment (optional): ")
-        commentto = raw_input("Comment-to (optional): ")
+        comment_to = raw_input("Comment-to (optional): ")
         try:
-            print access.sendtoaddress(to,amt,comment,commentto)
+            return self.access.sendtoaddressess(
+                to, amount, comment, comment_to)
         except:
-            print access.sendtoaddress(to,amt)
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.sendtoaddressess(to, amount)
 
-elif cmd == "setaccount":
-    try:
-        addr = raw_input("Address: ")
-        acct = raw_input("Account:")
-        print access.setaccount(addr,acct)
-    except:
-        print "\n---An error occurred---\n"
+    def setaccount(self):
+        address = raw_input("Address: ")
+        account = raw_input("Account: ")
+        return self.access.setaccount(address, account)
 
-elif cmd == "setgenerate":
-    try:
-        gen= raw_input("Generate? (true/false): ")
-        cpus = raw_input("Max processors/cores (-1 for unlimited, optional):")
+    def setgenerate(self):
+        gen = raw_input("Generate? (true/false): ")
+        cpus = raw_input("Max processors/cores (-1 for unlimited, optional): ")
         try:
-            print access.setgenerate(gen, cpus)
+            return self.access.setgenerate(gen, cpus)
         except:
-            print access.setgenerate(gen)
-    except:
-        print "\n---An error occurred---\n"
+            return self.access.setgenerate(gen)
 
-elif cmd == "settxfee":
-    try:
-        amt = raw_input("Amount:")
-        print access.settxfee(amt)
-    except:
-        print "\n---An error occurred---\n"
+    def settxfee(self):
+        amount = raw_input("Amount: ")
+        return self.access.settxfee(amount)
 
-elif cmd == "stop":
-    try:
-        print access.stop()
-    except:
-        print "\n---An error occurred---\n"
+    def stop(self):
+        return self.access.stop()
 
-elif cmd == "validateaddress":
-    try:
-        addr = raw_input("Address: ")
-        print access.validateaddress(addr)
-    except:
-        print "\n---An error occurred---\n"
+    def validateaddressess(self):
+        address = raw_input("Address: ")
+        return self.access.validateaddressess(address)
 
-elif cmd == "walletpassphrase":
-    try:
-        pwd = getpass.getpass(prompt="Enter wallet passphrase: ")
-        access.walletpassphrase(pwd, 60)
-        print "\n---Wallet unlocked---\n"
-    except:
-        print "\n---An error occurred---\n"
+    def walletpassphrase(self):
+        password = raw_input("Enter wallet passphrase: ")
+        self.access.walletpassphrase(password, 60)
+        return "\n---Wallet unlocked---\n"
 
-elif cmd == "walletpassphrasechange":
-    try:
-        pwd = getpass.getpass(prompt="Enter old wallet passphrase: ")
-        pwd2 = getpass.getpass(prompt="Enter new wallet passphrase: ")
-        access.walletpassphrasechange(pwd, pwd2)
-        print
-        print "\n---Passphrase changed---\n"
-    except:
-        print
-        print "\n---An error occurred---\n"
-        print
+    def walletpassphrasechange(self):
+        password = raw_input("Enter old wallet passphrase: ")
+        new_password = raw_input("Enter new wallet passphrase: ")
+        self.access.walletpassphrasechange(password, new_password)
+        return "\n---Passphrase changed---\n"
 
-else:
+cmd = sys.argv[1].lower()
+rpc_client = BitcoinRPC()
+try:
+    func = getattr(rpc_client, cmd)
+    print func()
+except AttributeError:
     print "Command not found or not supported"
+except:
+    print "\n---An error occurred---\n"
