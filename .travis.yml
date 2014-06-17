@@ -1,0 +1,28 @@
+language: cpp
+compiler: gcc
+install:
+  - sudo apt-get install yasm libgmp-dev
+env:
+  global:
+    - FIELD=auto      BIGNUM=auto     ENDOMORPHISM=no  BUILD=check
+  matrix:
+    - FIELD=gmp       BIGNUM=gmp
+    - FIELD=gmp       BIGNUM=openssl
+    - FIELD=64bit_asm BIGNUM=gmp
+    - FIELD=64bit_asm BIGNUM=openssl
+    - FIELD=64bit     BIGNUM=gmp
+    - FIELD=64bit     BIGNUM=openssl
+    - FIELD=32bit     BIGNUM=gmp
+    - FIELD=32bit     BIGNUM=openssl
+    - FIELD=gmp       BIGNUM=gmp      ENDOMORPHISM=yes
+    - FIELD=gmp       BIGNUM=openssl  ENDOMORPHISM=yes
+    - FIELD=64bit_asm BIGNUM=gmp      ENDOMORPHISM=yes
+    - FIELD=64bit_asm BIGNUM=openssl  ENDOMORPHISM=yes
+    - FIELD=64bit     BIGNUM=gmp      ENDOMORPHISM=yes
+    - FIELD=64bit     BIGNUM=openssl  ENDOMORPHISM=yes
+    - FIELD=32bit     BIGNUM=gmp      ENDOMORPHISM=yes
+    - FIELD=32bit     BIGNUM=openssl  ENDOMORPHISM=yes
+    - BUILD=distcheck
+before_script: ./autogen.sh
+script: ./configure --enable-endomorphism=$ENDOMORPHISM --with-field=$FIELD --with-bignum=$BIGNUM && make -j2 $BUILD
+os: linux
