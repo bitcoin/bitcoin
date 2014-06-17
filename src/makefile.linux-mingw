@@ -89,6 +89,7 @@ OBJS= \
     obj/walletdb.o \
     obj/noui.o \
     obj/kernel.o \
+    obj/checkpointsync.o \
     obj/hash.o \
     obj/bloom.o \
     obj/leveldb.o \

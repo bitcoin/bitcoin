@@ -105,6 +105,7 @@ OBJS= \
     obj/wallet.o \
     obj/walletdb.o \
     obj/kernel.o \
+    obj/checkpointsync.o \
     obj/hash.o \
     obj/bloom.o \
     obj/noui.o \

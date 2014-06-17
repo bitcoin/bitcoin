@@ -232,10 +232,45 @@ Value makekeypair(const Array& params, bool fHelp)
     if (strPrefix != HexStr(key.GetPubKey().Raw()).substr(0, strPrefix.size()))
         return Value::null;
 
-    CPrivKey vchPrivKey = key.GetPrivKey();
     Object result;
-    result.push_back(Pair("PrivateKey", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
     result.push_back(Pair("PublicKey", HexStr(key.GetPubKey().Raw())));
+    bool fCompressed;
+    CSecret vchSecret = key.GetSecret(fCompressed);
+    result.push_back(Pair("PrivateKey", CBitcoinSecret(vchSecret, fCompressed).ToString()));
+    CPrivKey vchPrivKey = key.GetPrivKey();
+    result.push_back(Pair("PrivateKeyHex", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
+    return result;
+}
+
+// ppcoin: display key pair from hex private key
+Value showkeypair(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "showkeypair <hexprivkey>\n"
+            "Display a public/private key pair with given hex private key.\n"
+            "<hexprivkey> is the private key in hex form.\n");
+
+    string strPrivKey = params[0].get_str();
+
+    std::vector<unsigned char> vchPrivKey = ParseHex(strPrivKey);
+    CKey key;
+    key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
+
+    // Test signing some message
+    string strMsg = "Test sign by showkeypair";
+    std::vector<unsigned char> vchMsg(strMsg.begin(), strMsg.end());
+    std::vector<unsigned char> vchSig;
+    if (!key.Sign(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
+        throw runtime_error(
+            "Failed to sign using the key, bad key?\n");
+
+    Object result;
+    result.push_back(Pair("PublicKey", HexStr(key.GetPubKey().Raw())));
+    bool fCompressed;
+    CSecret vchSecret = key.GetSecret(fCompressed);
+    result.push_back(Pair("PrivateKey", CBitcoinSecret(vchSecret, fCompressed).ToString()));
+    result.push_back(Pair("PrivateKeyHex", strPrivKey));
     return result;
 }
 

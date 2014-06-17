@@ -208,6 +208,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/allocators.h \
     src/ui_interface.h \
     src/kernel.h \
+    src/checkpointsync.h \
     src/qt/rpcconsole.h \
     src/version.h \
     src/netbase.h \
@@ -280,6 +281,7 @@ SOURCES += src/qt/bitcoin.cpp \
     src/protocol.cpp \
     src/qt/notificator.cpp \
     src/kernel.cpp \
+    src/checkpointsync.cpp \
     src/qt/paymentserver.cpp \
     src/qt/rpcconsole.cpp \
     src/noui.cpp \
