@@ -1,4 +1,3 @@
-#include "bitcoin-config.h"
 #if defined(HAVE_CONFIG_H)
 #include "bitcoin-config.h"
 #endif

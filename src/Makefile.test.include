@@ -1,0 +1,101 @@
+TESTS += test/test_bitcoin
+bin_PROGRAMS += test/test_bitcoin
+TEST_SRCDIR = test
+TEST_BINARY=test/test_bitcoin$(EXEEXT)
+
+JSON_TEST_FILES = \
+  test/data/script_valid.json \
+  test/data/base58_keys_valid.json \
+  test/data/sig_canonical.json \
+  test/data/sig_noncanonical.json \
+  test/data/base58_encode_decode.json \
+  test/data/base58_keys_invalid.json \
+  test/data/script_invalid.json \
+  test/data/tx_invalid.json \
+  test/data/tx_valid.json \
+  test/data/sighash.json
+
+RAW_TEST_FILES = test/data/alertTests.raw
+
+GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
+
+BITCOIN_TESTS =\
+  test/bignum.h \
+  test/alert_tests.cpp \
+  test/allocator_tests.cpp \
+  test/base32_tests.cpp \
+  test/base58_tests.cpp \
+  test/base64_tests.cpp \
+  test/bloom_tests.cpp \
+  test/canonical_tests.cpp \
+  test/checkblock_tests.cpp \
+  test/Checkpoints_tests.cpp \
+  test/compress_tests.cpp \
+  test/DoS_tests.cpp \
+  test/getarg_tests.cpp \
+  test/key_tests.cpp \
+  test/main_tests.cpp \
+  test/miner_tests.cpp \
+  test/mruset_tests.cpp \
+  test/multisig_tests.cpp \
+  test/netbase_tests.cpp \
+  test/pmt_tests.cpp \
+  test/rpc_tests.cpp \
+  test/script_P2SH_tests.cpp \
+  test/script_tests.cpp \
+  test/serialize_tests.cpp \
+  test/sigopcount_tests.cpp \
+  test/test_bitcoin.cpp \
+  test/transaction_tests.cpp \
+  test/uint256_tests.cpp \
+  test/util_tests.cpp \
+  test/scriptnum_tests.cpp \
+  test/sighash_tests.cpp
+
+if ENABLE_WALLET
+BITCOIN_TESTS += \
+  test/accounting_tests.cpp \
+  test/wallet_tests.cpp \
+  test/rpc_wallet_tests.cpp
+endif
+
+test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
+test_test_bitcoin_CPPFLAGS = $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS)
+test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
+  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+if ENABLE_WALLET
+test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
+endif
+test_test_bitcoin_LDADD += $(BDB_LIBS)
+
+nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
+
+$(BITCOIN_TESTS): $(GENERATED_TEST_FILES)
+
+CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
+
+CLEANFILES += $(CLEAN_BITCOIN_TEST)
+
+bitcoin_test: $(TEST_BINARY)
+
+bitcoin_test_check: $(TEST_BINARY) FORCE
+	$(MAKE) check-TESTS TESTS=$^
+
+bitcoin_test_clean : FORCE
+	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
+
+%.json.h: %.json
+	@$(MKDIR_P) $(@D)
+	@echo "namespace json_tests{" > $@
+	@echo "static unsigned const char $(*F)[] = {" >> $@
+	@$(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' >> $@
+	@echo "};};" >> $@
+	@echo "Generated $@"
+
+%.raw.h: %.raw
+	@$(MKDIR_P) $(@D)
+	@echo "namespace alert_tests{" > $@
+	@echo "static unsigned const char $(*F)[] = {" >> $@
+	@$(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' >> $@
+	@echo "};};" >> $@
+	@echo "Generated $@"

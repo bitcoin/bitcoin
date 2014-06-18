@@ -108,13 +108,11 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
 
 BOOST_AUTO_TEST_CASE(util_DateTimeStrFormat)
 {
-/*These are platform-dependant and thus removed to avoid useless test failures
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", 0), "1970-01-01 00:00:00");
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", 0x7FFFFFFF), "2038-01-19 03:14:07");
-    // Formats used within Bitcoin
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", 1317425777), "2011-09-30 23:36:17");
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M", 1317425777), "2011-09-30 23:36");
-*/
+    BOOST_CHECK_EQUAL(DateTimeStrFormat("%a, %d %b %Y %H:%M:%S +0000", 1317425777), "Fri, 30 Sep 2011 23:36:17 +0000");
 }
 
 BOOST_AUTO_TEST_CASE(util_ParseParameters)
@@ -351,6 +349,17 @@ BOOST_AUTO_TEST_CASE(test_ParseInt32)
     BOOST_CHECK(!ParseInt32("2147483648", NULL));
     BOOST_CHECK(!ParseInt32("-32482348723847471234", NULL));
     BOOST_CHECK(!ParseInt32("32482348723847471234", NULL));
+}
+
+BOOST_AUTO_TEST_CASE(test_FormatParagraph)
+{
+    BOOST_CHECK_EQUAL(FormatParagraph("", 79, 0), "");
+    BOOST_CHECK_EQUAL(FormatParagraph("test", 79, 0), "test");
+    BOOST_CHECK_EQUAL(FormatParagraph(" test", 79, 0), "test");
+    BOOST_CHECK_EQUAL(FormatParagraph("test test", 79, 0), "test test");
+    BOOST_CHECK_EQUAL(FormatParagraph("test test", 4, 0), "test\ntest");
+    BOOST_CHECK_EQUAL(FormatParagraph("testerde test ", 4, 0), "testerde\ntest");
+    BOOST_CHECK_EQUAL(FormatParagraph("test test", 4, 4), "test\n    test");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

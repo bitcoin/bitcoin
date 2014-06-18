@@ -14,7 +14,6 @@ namespace boost {
     class thread_group;
 };
 
-extern std::string strWalletFile;
 extern CWallet* pwalletMain;
 
 void StartShutdown();
@@ -29,6 +28,9 @@ enum HelpMessageMode
     HMM_BITCOIN_QT
 };
 
+/** Help for options shared between UI and daemon (for -help) */
 std::string HelpMessage(HelpMessageMode mode);
+/** Returns licensing information (for -version) */
+std::string LicenseInfo();
 
 #endif

@@ -485,21 +485,6 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned cha
     return true;
 }
 
-bool CPubKey::VerifyCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {
-    if (!IsValid())
-        return false;
-    if (vchSig.size() != 65)
-        return false;
-    CECKey key;
-    if (!key.Recover(hash, &vchSig[1], (vchSig[0] - 27) & ~4))
-        return false;
-    CPubKey pubkeyRec;
-    key.GetPubKey(pubkeyRec, IsCompressed());
-    if (*this != pubkeyRec)
-        return false;
-    return true;
-}
-
 bool CPubKey::IsFullyValid() const {
     if (!IsValid())
         return false;
@@ -646,3 +631,15 @@ bool CExtPubKey::Derive(CExtPubKey &out, unsigned int nChild) const {
     out.nChild = nChild;
     return pubkey.Derive(out.pubkey, out.vchChainCode, nChild, vchChainCode);
 }
+
+bool ECC_InitSanityCheck() {
+    EC_KEY *pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
+    if(pkey == NULL)
+        return false;
+    EC_KEY_free(pkey);
+
+    // TODO Is there more EC functionality that could be missing?
+    return true;
+}
+
+
