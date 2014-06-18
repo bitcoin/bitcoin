@@ -52,8 +52,8 @@ static const bool DEFAULT_UPNP = USE_UPNP;
 static const bool DEFAULT_UPNP = false;
 #endif
 
-inline unsigned int ReceiveFloodSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000); }
-inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
+inline unsigned int ReceiveFloodSize() { return 1024*GetArg("-maxreceivebuffer", 5*1024); }
+inline unsigned int SendBufferSize() { return 1024*GetArg("-maxsendbuffer", 1*1024); }
 
 void AddOneShot(std::string strDest);
 bool RecvLine(SOCKET hSocket, std::string& strLine);
