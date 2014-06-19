@@ -8,6 +8,7 @@
 #include "init.h"
 #include "net.h"
 #include "netbase.h"
+#include "timedata.h"
 #include "util.h"
 #include "wallet.h"
 #include "walletdb.h"
