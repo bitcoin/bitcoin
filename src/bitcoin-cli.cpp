@@ -8,7 +8,7 @@
 #include "rpcclient.h"
 #include "rpcprotocol.h"
 #include "ui_interface.h" /* for _(...) */
-#include "chainparams.h"
+#include "chainparamsbase.h"
 
 #include <boost/filesystem/operations.hpp>
 
@@ -60,12 +60,11 @@ static bool AppInitRPC(int argc, char* argv[])
         fprintf(stderr,"Error reading configuration file: %s\n", e.what());
         return false;
     }
-    // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-    if (!SelectParamsFromCommandLine()) {
+    // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
+    if (!SelectBaseParamsFromCommandLine()) {
         fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
         return false;
     }
-
     if (argc<2 || mapArgs.count("-?") || mapArgs.count("-help") || mapArgs.count("-version"))
     {
         std::string strUsage = _("Bitcoin Core RPC client version") + " " + FormatFullVersion() + "\n";
@@ -104,7 +103,7 @@ Object CallRPC(const string& strMethod, const Array& params)
 
     bool fWait = GetBoolArg("-rpcwait", false); // -rpcwait means try until server has started
     do {
-        bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", itostr(Params().RPCPort())));
+        bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", itostr(BaseParams().RPCPort())));
         if (fConnected) break;
         if (fWait)
             MilliSleep(1000);
