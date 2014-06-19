@@ -195,6 +195,51 @@ Value getrawtransaction(const Array& params, bool fHelp)
     return result;
 }
 
+Value getrawtransactionsinblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1)
+        throw runtime_error(
+            "getrawtransactionsinblock <blockHash>\n"
+            "Returns txid and raw transaction data for all transactions in the specified block.\n"
+            "\nArguments:\n"
+            "1. \"hash\"          (string, required) The block hash\n"
+            "\nResult\n"
+            "[                   (array of json object)\n"
+            "  {\n"
+            "    \"txid\" : \"txid\",      (string) the transaction id \n"
+            "    \"hex\" : \"data\",       (string) The serialized, hex-encoded data for 'txid'\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getrawtransactionsinblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+            + HelpExampleRpc("getrawtransactionsinblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+        );
+
+    std::string strHash = params[0].get_str();
+    uint256 hash(strHash);
+
+    if (mapBlockIndex.count(hash) == 0)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+    CBlock block;
+    CBlockIndex* pblockindex = mapBlockIndex[hash];
+    ReadBlockFromDisk(block, pblockindex);
+
+    Array a;
+
+    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
+        Object txEntry;
+        txEntry.push_back(Pair("txid", tx.GetHash().GetHex()));
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << tx;
+        string strHex = HexStr(ssTx.begin(), ssTx.end());
+        txEntry.push_back(Pair("hex", strHex));
+        a.push_back(txEntry);
+    }
+
+    return a;
+}
 #ifdef ENABLE_WALLET
 Value listunspent(const Array& params, bool fHelp)
 {
