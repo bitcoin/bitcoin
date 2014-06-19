@@ -130,10 +130,13 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     frameBlocksLayout->setContentsMargins(3,0,3,0);
     frameBlocksLayout->setSpacing(3);
     labelEncryptionIcon = new QLabel();
+    labelMiningIcon = new QLabel();
     labelConnectionsIcon = new QLabel();
     labelBlocksIcon = new QLabel();
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelEncryptionIcon);
+    frameBlocksLayout->addStretch();
+    frameBlocksLayout->addWidget(labelMiningIcon);
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelConnectionsIcon);
     frameBlocksLayout->addStretch();
@@ -362,6 +365,7 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
 
         setNumBlocks(clientModel->getNumBlocks(), clientModel->getNumBlocksOfPeers());
         connect(clientModel, SIGNAL(numBlocksChanged(int,int)), this, SLOT(setNumBlocks(int,int)));
+        connect(clientModel, SIGNAL(numBlocksChanged(int,int)), this, SLOT(updateMining()));
 
         // Report errors from network/worker thread
         connect(clientModel, SIGNAL(error(QString,QString,bool)), this, SLOT(error(QString,QString,bool)));
@@ -583,6 +587,54 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     labelBlocksIcon->setToolTip(tooltip);
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
+}
+
+void BitcoinGUI::updateMining()
+{
+   if(!walletModel)
+      return;
+
+    labelMiningIcon->setPixmap(QIcon(":/icons/mining_inactive").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+
+    if (!clientModel->getNumConnections())
+        labelMiningIcon->setToolTip(tr("Wallet is offline"));
+
+    if (walletModel->getEncryptionStatus() == WalletModel::Locked)
+        labelMiningIcon->setToolTip(tr("Wallet is locked"));
+
+    if (clientModel->inInitialBlockDownload() || clientModel->getNumBlocksOfPeers() > clientModel->getNumBlocks())
+        labelMiningIcon->setToolTip(tr("Blockchain download is in progress"));
+
+    uint64 nMinWeight = 0, nMaxWeight = 0, nTotalWeight = 0;
+    walletModel->getStakeWeight(nMinWeight, nMaxWeight, nTotalWeight);
+
+    if (nTotalWeight > 0)
+    {
+        labelMiningIcon->setPixmap(QIcon(":/icons/mining_active").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+
+        double dNetworkWeight = clientModel->getPoSKernelPS();
+/*
+        double dDifficulty = clientModel->getDifficulty(true);
+        QString msg;
+
+        int nApproxTime = 4294967297 * dDifficulty / nTotalWeight;
+
+        if (nApproxTime < 60)
+            msg = tr("%n second(s)", "", nApproxTime);
+        else if (nApproxTime < 60*60)
+            msg = tr("%n minute(s)", "", nApproxTime / 60);
+        else if (nApproxTime < 24*60*60)
+            msg = tr("%n hour(s)", "", nApproxTime / 3600);
+        else
+            msg = tr("%n day(s)", "", nApproxTime / 86400);
+
+        labelMiningIcon->setToolTip(tr("Stake miner is active\nYour current stake weight is %1\nNetwork weight is %2\nAverage block generation time is %3").arg(nTotalWeight).arg(dNetworkWeight).arg(msg));
+*/
+
+        labelMiningIcon->setToolTip(tr("Stake miner is active\nYour current stake weight is %1\nNetwork weight is %2").arg(nTotalWeight).arg(dNetworkWeight));
+    }
+    else
+        labelMiningIcon->setToolTip(tr("No suitable inputs were found"));
 }
 
 void BitcoinGUI::error(const QString &title, const QString &message, bool modal)

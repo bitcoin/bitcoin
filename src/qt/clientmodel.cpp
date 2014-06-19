@@ -11,6 +11,9 @@
 #include <QDateTime>
 #include <QTimer>
 
+extern double GetPoSKernelPS();
+extern double GetDifficulty(const CBlockIndex* blockindex);
+
 static const int64 nClientStartupTime = GetTime();
 
 ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
@@ -30,6 +33,19 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
 ClientModel::~ClientModel()
 {
     unsubscribeFromCoreSignals();
+}
+
+double ClientModel::getPoSKernelPS()
+{
+    return GetPoSKernelPS();
+}
+
+double ClientModel::getDifficulty(bool fProofofStake)
+{
+    if (fProofofStake)
+       return GetDifficulty(GetLastBlockIndex(pindexBest,true));
+    else
+       return GetDifficulty(GetLastBlockIndex(pindexBest,false));
 }
 
 int ClientModel::getNumConnections() const
