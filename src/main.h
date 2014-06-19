@@ -671,7 +671,7 @@ enum BlockStatus {
  * candidates to be the next block. A blockindex may have multiple pprev pointing
  * to it, but at most one of them can be part of the currently active branch.
  */
-class CBlockIndex
+class CBlockIndex : public CBlockHeader
 {
 public:
     // pointer to the hash of the block, if any. memory is owned by this CBlockIndex
@@ -708,18 +708,12 @@ public:
     // Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
 
-    // block header
-    int nVersion;
-    uint256 hashMerkleRoot;
-    unsigned int nTime;
-    unsigned int nBits;
-    unsigned int nNonce;
-
     // (memory only) Sequencial id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
 
-    CBlockIndex()
+    void SetNull()
     {
+        CBlockHeader::SetNull();
         phashBlock = NULL;
         pprev = NULL;
         pskip = NULL;
@@ -732,34 +726,17 @@ public:
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
+    }
 
-        nVersion       = 0;
-        hashMerkleRoot = 0;
-        nTime          = 0;
-        nBits          = 0;
-        nNonce         = 0;
+    CBlockIndex()
+    {
+        SetNull();
     }
 
     CBlockIndex(CBlockHeader& block)
     {
-        phashBlock = NULL;
-        pprev = NULL;
-        pskip = NULL;
-        nHeight = 0;
-        nFile = 0;
-        nDataPos = 0;
-        nUndoPos = 0;
-        nChainWork = 0;
-        nTx = 0;
-        nChainTx = 0;
-        nStatus = 0;
-        nSequenceId = 0;
-
-        nVersion       = block.nVersion;
-        hashMerkleRoot = block.hashMerkleRoot;
-        nTime          = block.nTime;
-        nBits          = block.nBits;
-        nNonce         = block.nNonce;
+        SetNull();
+        *((CBlockHeader*)this) = block;
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -796,11 +773,6 @@ public:
     uint256 GetBlockHash() const
     {
         return *phashBlock;
-    }
-
-    int64_t GetBlockTime() const
-    {
-        return (int64_t)nTime;
     }
 
     uint256 GetBlockWork() const
