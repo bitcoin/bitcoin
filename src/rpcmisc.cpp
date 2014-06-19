@@ -9,6 +9,7 @@
 #include "net.h"
 #include "netbase.h"
 #include "rpcserver.h"
+#include "timedata.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
