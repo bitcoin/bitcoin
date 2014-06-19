@@ -312,7 +312,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header
-        pblock->hashPrev  = pindexPrev->GetBlockHash();
+        pblock->hashPrev  = pindexPrev->GetHash();
         UpdateTime(*pblock, pindexPrev);
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
         pblock->nNonce         = 0;
@@ -419,7 +419,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     // Found a solution
     {
         LOCK(cs_main);
-        if (pblock->hashPrev != chainActive.Tip()->GetBlockHash())
+        if (pblock->hashPrev != chainActive.Tip()->GetHash())
             return error("BitcoinMiner : generated block is stale");
     }
 

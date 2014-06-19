@@ -762,7 +762,7 @@ public:
         CBlockHeader block;
         block.nVersion       = nVersion;
         if (pprev)
-            block.hashPrev   = pprev->GetBlockHash();
+            block.hashPrev   = pprev->GetHash();
         block.hashMerkleRoot = hashMerkleRoot;
         block.nTime          = nTime;
         block.nBits          = nBits;
@@ -770,7 +770,7 @@ public:
         return block;
     }
 
-    uint256 GetBlockHash() const
+    uint256 GetHash() const
     {
         return *phashBlock;
     }
@@ -819,7 +819,7 @@ public:
         return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
             pprev, nHeight,
             hashMerkleRoot.ToString(),
-            GetBlockHash().ToString());
+            GetHash().ToString());
     }
 
     void print() const
@@ -869,7 +869,7 @@ public:
     }
 
     explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex) {
-        hashPrev = (pprev ? pprev->GetBlockHash() : 0);
+        hashPrev = (pprev ? pprev->GetHash() : 0);
     }
 
     IMPLEMENT_SERIALIZE
@@ -896,16 +896,9 @@ public:
         READWRITE(nNonce);
     )
 
-    uint256 GetBlockHash() const
+    uint256 GetHash() const
     {
-        CBlockHeader block;
-        block.nVersion        = nVersion;
-        block.hashPrev        = hashPrev;
-        block.hashMerkleRoot  = hashMerkleRoot;
-        block.nTime           = nTime;
-        block.nBits           = nBits;
-        block.nNonce          = nNonce;
-        return block.GetHash();
+        return CBlockHeader::GetHash();
     }
 
     std::string ToString() const
@@ -913,7 +906,7 @@ public:
         std::string str = "CDiskBlockIndex(";
         str += CBlockIndex::ToString();
         str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
-            GetBlockHash().ToString(),
+            GetHash().ToString(),
             hashPrev.ToString());
         return str;
     }
