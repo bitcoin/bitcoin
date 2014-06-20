@@ -723,22 +723,22 @@ Network weight is %2</source>
     <message>
         <location line="+23"/>
         <source>Unlo&amp;ck wallet</source>
-        <translation>Разб&amp;локировать кошелек</translation>
+        <translation>Разб&amp;локировать бумажник</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Unlock wallet</source>
-        <translation>Разблокировать кошелек</translation>
+        <translation>Разблокировать бумажник</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Lock wallet</source>
-        <translation>Заблокировать кошелек</translation>
+        <translation>Заблокировать бумажник</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>&amp;Lock wallet</source>
-        <translation>&amp;Заблокировать кошелек</translation>
+        <translation>&amp;Заблокировать бкмажник</translation>
     </message>
     <message>
         <location line="+31"/>
