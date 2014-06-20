@@ -333,7 +333,6 @@ void BitcoinGUI::createMenuBar()
     securityMenu->addAction(unlockWalletAction);
     securityMenu->addAction(unlockWalletMiningAction);
     securityMenu->addAction(lockWalletAction);
-    settings->addSeparator();
     settings->addAction(optionsAction);
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));

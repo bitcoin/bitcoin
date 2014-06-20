@@ -715,6 +715,41 @@ Network weight is %2</translation>
         <translation>No suitable inputs were found</translation>
     </message>
     <message>
+        <location line="+23"/>
+        <source>Unlo&amp;ck wallet</source>
+        <translation>Unlo&amp;ck wallet</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Unlock wallet</source>
+        <translation>Unlock wallet</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Lock wallet</source>
+        <translation>Lock wallet</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>&amp;Lock wallet</source>
+        <translation>&amp;Lock wallet</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Unlo&amp;ck wallet for mining</source>
+        <translation>Unlo&amp;ck wallet for mining</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Unlock wallet for mining</source>
+        <translation>Unlock wallet for mining</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>&amp;Wallet security</source>
+        <translation>&amp;Wallet security</translation>
+    </message>
+    <message>
         <location line="+59"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation type="unfinished"></translation>

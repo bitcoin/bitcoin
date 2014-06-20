@@ -721,6 +721,41 @@ Network weight is %2</source>
         <translation>Нет подходящих транзакций</translation>
     </message>
     <message>
+        <location line="+23"/>
+        <source>Unlo&amp;ck wallet</source>
+        <translation>Разб&amp;локировать кошелек</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Unlock wallet</source>
+        <translation>Разблокировать кошелек</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Lock wallet</source>
+        <translation>Заблокировать кошелек</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>&amp;Lock wallet</source>
+        <translation>&amp;Заблокировать кошелек</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Unlo&amp;ck wallet for mining</source>
+        <translation>Ра&amp;зблокировать для майнинга</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Unlock wallet for mining</source>
+        <translation>Разблокировать для майнинга</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>&amp;Wallet security</source>
+        <translation>&amp;Безопасность</translation>
+    </message>
+    <message>
         <location line="+59"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Данная транзакция превышает предельно допустимый размер.  Но Вы можете всё равно совершить её, добавив комиссию в %1, которая отправится тем узлам, которые обработают Вашу транзакцию, и поможет поддержать сеть.  Вы хотите добавить комиссию?</translation>
