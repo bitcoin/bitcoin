@@ -6,6 +6,8 @@
 #include "keystore.h"
 #include "script.h"
 
+extern bool fWalletUnlockMintOnly;
+
 bool CKeyStore::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) const
 {
     CKey key;
@@ -81,6 +83,7 @@ bool CCryptoKeyStore::Lock()
     {
         LOCK(cs_KeyStore);
         vMasterKey.clear();
+        fWalletUnlockMintOnly = false;
     }
 
     NotifyStatusChanged(this);
