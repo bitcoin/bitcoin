@@ -762,7 +762,7 @@ public:
         CBlockHeader block;
         block.nVersion       = nVersion;
         if (pprev)
-            block.hashPrevBlock = pprev->GetBlockHash();
+            block.hashPrev   = pprev->GetBlockHash();
         block.hashMerkleRoot = hashMerkleRoot;
         block.nTime          = nTime;
         block.nBits          = nBits;
@@ -900,14 +900,13 @@ public:
     {
         CBlockHeader block;
         block.nVersion        = nVersion;
-        block.hashPrevBlock   = hashPrev;
+        block.hashPrev        = hashPrev;
         block.hashMerkleRoot  = hashMerkleRoot;
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
         return block.GetHash();
     }
-
 
     std::string ToString() const
     {
