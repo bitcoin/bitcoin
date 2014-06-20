@@ -947,7 +947,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
         unlockWalletMiningAction->setEnabled(false);
 
         if (fWalletUnlockMintOnly)
-            unlockWalletMiningAction->setEnabled(true);
+            unlockWalletMiningAction->setChecked(true);
         else
             unlockWalletAction->setChecked(true);
 
