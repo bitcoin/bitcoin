@@ -106,11 +106,7 @@ static bool CheckNBits(unsigned int nbits1, int64_t time1, unsigned int nbits2, 
         return CheckNBits(nbits2, time2, nbits1, time1);
     int64_t deltaTime = time2-time1;
 
-    uint256 required;
-    required.SetCompact(ComputeMinWork(nbits1, deltaTime));
-    uint256 have;
-    have.SetCompact(nbits2);
-    return (have <= required);
+    return CheckMinWork(nbits2, nbits1, deltaTime);
 }
 
 BOOST_AUTO_TEST_CASE(DoS_checknbits)
