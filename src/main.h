@@ -757,19 +757,6 @@ public:
         return ret;
     }
 
-    CBlockHeader GetBlockHeader() const
-    {
-        CBlockHeader block;
-        block.nVersion       = nVersion;
-        if (pprev)
-            block.hashPrev   = pprev->GetHash();
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
-        return block;
-    }
-
     uint256 GetHash() const
     {
         return *phashBlock;

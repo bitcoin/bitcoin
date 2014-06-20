@@ -2728,16 +2728,9 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     return true;
 }
 
-
-
-
-
-
-
-
 CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter& filter)
 {
-    header = block.GetBlockHeader();
+    header = block;
 
     vector<bool> vMatch;
     vector<uint256> vHashes;
@@ -3877,7 +3870,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         LogPrint("net", "getheaders %d to %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString());
         for (; pindex; pindex = chainActive.Next(pindex))
         {
-            vHeaders.push_back(pindex->GetBlockHeader());
+            vHeaders.push_back(*pindex);
             if (--nLimit <= 0 || pindex->GetHash() == hashStop)
                 break;
         }

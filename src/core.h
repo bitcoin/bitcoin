@@ -485,18 +485,6 @@ public:
         vMerkleTree.clear();
     }
 
-    CBlockHeader GetBlockHeader() const
-    {
-        CBlockHeader block;
-        block.nVersion       = nVersion;
-        block.hashPrev       = hashPrev;
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
-        return block;
-    }
-
     uint256 BuildMerkleTree() const;
 
     std::vector<uint256> GetMerkleBranch(int nIndex) const;
