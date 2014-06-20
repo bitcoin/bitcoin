@@ -200,6 +200,7 @@ enum isminetype
     MINE_NO = 0,
     MINE_WATCH_ONLY = 1,
     MINE_SPENDABLE = 2,
+    MINE_ALL = MINE_WATCH_ONLY | MINE_SPENDABLE
 };
 /** used for bitflags of isminetype */
 typedef uint8_t isminefilter;
