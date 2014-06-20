@@ -686,6 +686,35 @@ Keys were not saved.</translation>
         <translation>Last received block was generated %1.</translation>
     </message>
     <message>
+        <location line="+12"/>
+        <source>Wallet is offline</source>
+        <translation>Wallet is offline</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Wallet is locked</source>
+        <translation>Wallet is locked</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Blockchain download is in progress</source>
+        <translation>Blockchain download is in progress</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Stake miner is active
+Your current stake weight is %1
+Network weight is %2</source>
+        <translation>Stake miner is active
+Your current stake weight is %1
+Network weight is %2</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>No suitable inputs were found</source>
+        <translation>No suitable inputs were found</translation>
+    </message>
+    <message>
         <location line="+59"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation type="unfinished"></translation>

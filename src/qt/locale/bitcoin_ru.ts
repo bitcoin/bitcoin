@@ -692,6 +692,35 @@ Some or all keys from:
         <translation>Последний полученный блок был сгенерирован %1.</translation>
     </message>
     <message>
+        <location line="+12"/>
+        <source>Wallet is offline</source>
+        <translation>Бумажник не в сети</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Wallet is locked</source>
+        <translation>Бумажник заблокирован</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Blockchain download is in progress</source>
+        <translation>Загрузка цепочки блоков ещё не завершена</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Stake miner is active
+Your current stake weight is %1
+Network weight is %2</source>
+        <translation>Proof-of-Stake майнер активен
+Текущий вес %1
+Текущий вес сети %2</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>No suitable inputs were found</source>
+        <translation>Нет подходящих транзакций</translation>
+    </message>
+    <message>
         <location line="+59"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Данная транзакция превышает предельно допустимый размер.  Но Вы можете всё равно совершить её, добавив комиссию в %1, которая отправится тем узлам, которые обработают Вашу транзакцию, и поможет поддержать сеть.  Вы хотите добавить комиссию?</translation>
