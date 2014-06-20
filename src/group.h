@@ -29,9 +29,11 @@ typedef struct {
     secp256k1_num_t half_order; // half the order of the curve (= order of its generator)
     secp256k1_ge_t g; // the generator point
 
+#ifdef USE_ENDOMORPHISM
     // constants related to secp256k1's efficiently computable endomorphism
     secp256k1_fe_t beta;
     secp256k1_num_t lambda, a1b2, b1, a2;
+#endif
 } secp256k1_ge_consts_t;
 
 static const secp256k1_ge_consts_t *secp256k1_ge_consts = NULL;
