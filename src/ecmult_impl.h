@@ -5,6 +5,7 @@
 #ifndef _SECP256K1_ECMULT_IMPL_H_
 #define _SECP256K1_ECMULT_IMPL_H_
 
+#include <assert.h>
 #include "num.h"
 #include "group.h"
 #include "ecmult.h"

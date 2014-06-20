@@ -2,6 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <assert.h>
 #include "num_impl.h"
 #include "field_impl.h"
 #include "group_impl.h"
