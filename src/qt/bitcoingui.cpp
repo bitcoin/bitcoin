@@ -124,8 +124,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Status bar notification icons
     QFrame *frameBlocks = new QFrame();
     frameBlocks->setContentsMargins(0,0,0,0);
-    frameBlocks->setMinimumWidth(56);
-    frameBlocks->setMaximumWidth(56);
+    frameBlocks->setMinimumWidth(72);
+    frameBlocks->setMaximumWidth(72);
     QHBoxLayout *frameBlocksLayout = new QHBoxLayout(frameBlocks);
     frameBlocksLayout->setContentsMargins(3,0,3,0);
     frameBlocksLayout->setSpacing(3);
@@ -395,6 +395,7 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
 
         setEncryptionStatus(walletModel->getEncryptionStatus());
         connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
+        connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(updateMining()));
 
         // Balloon pop-up for new transaction
         connect(walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
@@ -597,13 +598,22 @@ void BitcoinGUI::updateMining()
     labelMiningIcon->setPixmap(QIcon(":/icons/mining_inactive").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
 
     if (!clientModel->getNumConnections())
+    {
         labelMiningIcon->setToolTip(tr("Wallet is offline"));
+        return;
+    }
 
     if (walletModel->getEncryptionStatus() == WalletModel::Locked)
+    {
         labelMiningIcon->setToolTip(tr("Wallet is locked"));
+        return;
+    }
 
     if (clientModel->inInitialBlockDownload() || clientModel->getNumBlocksOfPeers() > clientModel->getNumBlocks())
+    {
         labelMiningIcon->setToolTip(tr("Blockchain download is in progress"));
+        return;
+    }
 
     uint64 nMinWeight = 0, nMaxWeight = 0, nTotalWeight = 0;
     walletModel->getStakeWeight(nMinWeight, nMaxWeight, nTotalWeight);
