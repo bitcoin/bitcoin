@@ -9,6 +9,9 @@ AH_BOTTOM([#endif //LIBSECP256K1_CONFIG_H])
 AM_INIT_AUTOMAKE([foreign])
 LT_INIT
 
+dnl make the compilation flags quiet unless V=1 is used
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
