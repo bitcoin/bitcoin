@@ -8,6 +8,7 @@
 #include "core.h"
 #include "main.h"
 #include "net.h"
+#include "redlist.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
@@ -161,12 +162,36 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             if (tx.IsCoinBase() || !IsFinalTx(tx, pindexPrev->nHeight + 1))
                 continue;
 
+            // Check Redlist against every CTxOut
+            bool redlistedTxOut = false;
+            bool redlistedTxIn = false;
+            BOOST_FOREACH(const CTxOut& txout, tx.vout)
+            {
+                if (IsRedlistedScriptPubKey(getRedList(), txout.scriptPubKey))
+                {
+                    LogPrintf("Transaction rejected.\n");
+                    redlistedTxOut = true;
+                    break;
+                }
+            }
+            if (redlistedTxOut) continue;
+
             COrphan* porphan = NULL;
             double dPriority = 0;
             int64_t nTotalIn = 0;
             bool fMissingInputs = false;
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
             {
+                if(view.HaveInputs(tx) && !tx.IsCoinBase()) 
+                {
+                    if(IsRedlistedScriptSig(getRedList(), txin.scriptSig))
+                    {
+                        LogPrintf("Transaction rejected.\n");
+                        redlistedTxIn = true;
+                        break;
+                    }
+                }
+                
                 // Read prev transaction
                 if (!view.HaveCoins(txin.prevout.hash))
                 {
@@ -204,6 +229,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
                 dPriority += (double)nValueIn * nConf;
             }
+            if(redlistedTxIn) continue;
             if (fMissingInputs) continue;
 
             // Priority is sum(valuein * age) / modified_txsize

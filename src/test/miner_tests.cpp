@@ -4,7 +4,8 @@
 #include "miner.h"
 #include "uint256.h"
 #include "util.h"
-
+#include "redlist.h"
+#include "base58.h"
 #include <boost/test/unit_test.hpp>
 
 extern void SHA256Transform(void* pstate, void* pinput, const void* pinit);
@@ -151,6 +152,49 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     delete pblocktemplate;
     mempool.clear();
 
+    // redlisted address contained in scriptPubKey
+    resetRedlist();
+    redlistAddress("1KtpquhXunViNmHFSi5yCcSjt71BVskh8G"); 
+    BOOST_CHECK(IsRedlistedPubKey(getRedList(), "1KtpquhXunViNmHFSi5yCcSjt71BVskh8G")); 
+    
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vout[0].nValue = 4900000000LL;
+    
+    CScript scriptPK; 
+    CBitcoinAddress address("1KtpquhXunViNmHFSi5yCcSjt71BVskh8G");
+    scriptPK.SetDestination(address.Get());
+
+    tx.vout[0].scriptPubKey = scriptPK;
+    BOOST_CHECK(IsRedlistedScriptPubKey(getRedList(), tx.vout[0].scriptPubKey));
+
+    hash = tx.GetHash();
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11)); 
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 1);                     //block contains only one tx
+    BOOST_CHECK(pblocktemplate->block.vtx.at(0).IsCoinBase());                  //and that tx is coinbase
+    delete pblocktemplate;
+    mempool.clear();
+
+    // redlisted address contained in scriptSig
+    // address & scriptSig taken from http://blockexplorer.com/tx/3e85062614d70fe2654236d149242601dbbee85593ba58dc016c7f4871330e4e
+    resetRedlist();
+    redlistAddress("1CpQDRUhU72gY3E1ksUfRFxC7oZpf3rGbZ"); 
+    BOOST_CHECK(IsRedlistedPubKey(getRedList(), "1CpQDRUhU72gY3E1ksUfRFxC7oZpf3rGbZ"));  
+    
+    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vout[0].nValue = 4900000000LL;
+    
+    tx.vin[0].scriptSig = CScript() << ParseHex("3046022100ead0092049a3bd5b65771f2f38d1423d76de78be89b10bb8a67dc64ed7500080022100ee471dd4291a9c6b45926a32c378895c9f5dd0087d309047a3dfe7446586bea301") << ParseHex("040c34bef1b5fa0e76bc2a4da88943ad272468151236ec54463f5bd72a8dcb610e7bac45c840034174293121c3f88b1850a06927df119d18e28b1e978362341819");
+    BOOST_CHECK(IsRedlistedScriptSig(getRedList(), tx.vin[0].scriptSig));
+    
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11)); 
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 1);                     //block contains only one tx
+    BOOST_CHECK(pblocktemplate->block.vtx.at(0).IsCoinBase());                  //and that tx is coinbase
+    delete pblocktemplate;
+    mempool.clear();
+    
     // coinbase in mempool
     tx.vin.resize(1);
     tx.vin[0].prevout.SetNull();

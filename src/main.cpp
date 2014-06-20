@@ -16,6 +16,7 @@
 #include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "redlist.h"
 
 #include <sstream>
 
@@ -77,6 +78,17 @@ namespace {
 struct CBlockIndexWorkComparator
 {
     bool operator()(CBlockIndex *pa, CBlockIndex *pb) {
+        // if one of the indexes contains redlisted items
+        // that index needs to have performed more work in comparison than the switching threshold
+        if(pb->fTainted && !pa->fTainted)
+        {
+            return (pb->nHeight - pa->nHeight) > GetWorkSwitchThreshold();
+        }
+        if(pa->fTainted && !pb->fTainted)
+        {
+            return (pa->nHeight - pb->nHeight) <= GetWorkSwitchThreshold();
+        }
+
         // First sort by most total work, ...
         if (pa->nChainWork > pb->nChainWork) return false;
         if (pa->nChainWork < pb->nChainWork) return true;
@@ -1870,7 +1882,7 @@ bool static DisconnectTip(CValidationState &state) {
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
         // ignore validation errors in resurrected transactions
         list<CTransaction> removed;
-        CValidationState stateDummy; 
+        CValidationState stateDummy;
         if (!tx.IsCoinBase())
             if (!AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
                 mempool.remove(tx, removed, true);
@@ -1985,6 +1997,8 @@ void static FindMostWorkChain() {
 
     // We have a new best.
     chainMostWork.SetTip(pindexNew);
+    // no longer treat this branch as tainted now that we accepted it
+    pindexNew->fTainted = false;
 }
 
 // Try to activate to the most-work chain (thereby connecting it).
@@ -2065,6 +2079,12 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
     pindexNew->nDataPos = pos.nPos;
     pindexNew->nUndoPos = 0;
     pindexNew->nStatus = BLOCK_VALID_TRANSACTIONS | BLOCK_HAVE_DATA;
+
+    // check if we need to set the branch as one that contains redlisted items
+    // which is either when the parent is tainted, or if we are adding a tainted block
+    if(pindexNew->pprev != NULL && (pindexNew->pprev->fTainted || IsRedlistedBlock(block, pcoinsTip)) )
+        pindexNew->fTainted = true;
+
     setBlockIndexValid.insert(pindexNew);
 
     if (!pblocktree->WriteBlockIndex(CDiskBlockIndex(pindexNew)))
@@ -3690,7 +3710,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
         int nDoS = 0;
         if (state.IsInvalid(nDoS))
-        { 
+        {
             LogPrint("mempool", "%s from %s %s was not accepted into the memory pool: %s\n", tx.GetHash().ToString(),
                 pfrom->addr.ToString(), pfrom->cleanSubVer,
                 state.GetRejectReason());

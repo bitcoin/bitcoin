@@ -716,6 +716,9 @@ public:
     unsigned int nBits;
     unsigned int nNonce;
 
+    // marks this branch as one that contains redlisted blocks
+    bool fTainted;
+
     // (memory only) Sequencial id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
 
@@ -738,6 +741,8 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+
+        fTainted = false;
     }
 
     CBlockIndex(CBlockHeader& block)
@@ -759,6 +764,8 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+
+        fTainted = false;
     }
 
     CDiskBlockPos GetBlockPos() const {
