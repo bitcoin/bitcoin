@@ -854,7 +854,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished">Скопировать ID транзакции</translation>
+        <translation>Скопировать ID транзакции</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -879,51 +879,53 @@ Address: %4
     <message>
         <location line="+319"/>
         <source>highest</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>high</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>medium-high</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>medium</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>low-medium</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>low</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>lowest</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+155"/>
         <source>DUST</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>This label turns red, if the transaction size is bigger than 10000 bytes.
+        <source>This label turns red, if the transaction size is bigger than 1000 bytes.
 
  This means a fee of at least %1 per kb is required.
 
  Can vary +/- 1 Byte per input.</source>
-        <translation type="unfinished"></translation>
+        <translation>Помечается красным, если размер транзакции превышает 1000 байт.
+
+ Это означает, что требуется комиссия как минимум %1 за 1кб.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -932,7 +934,11 @@ Address: %4
 This label turns red, if the priority is smaller than &quot;medium&quot;.
 
  This means a fee of at least %1 per kb is required.</source>
-        <translation type="unfinished"></translation>
+        <translation>Транзакции с более высоким приоритетом с большей вероятностью попадут в блок.
+
+Помечается красным, если приоритет ниже &quot;medium&quot;.
+
+ Это означает, что будет требоваться комиссия как минимум %2.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -940,31 +946,37 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 
  This means a fee of at least %2 is required. 
 
- Amounts below 0.546 times the minimum relay fee are shown as DUST.</source>
-        <translation type="unfinished"></translation>
+ Amounts below the minimum fee are shown as DUST.</source>
+        <translation>Помечается красным, если какому-либо из получателей будет отправлено менее чем %1.
+
+ Это означает, что будет требоваться комиссия как минимум %2.
+
+ Суммы ниже минимальной комиссии отображаются как DUST.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This label turns red, if the change is smaller than %1.
 
  This means a fee of at least %2 is required.</source>
-        <translation type="unfinished"></translation>
+        <translation>Помечается красным, если сдача менее чем %1.
+
+ Это означает, что будет требоваться комиссия как минимум %2.</translation>
     </message>
     <message>
         <location line="+37"/>
         <location line="+66"/>
         <source>(no label)</source>
-        <translation type="unfinished">[нет метки]</translation>
+        <translation>[нет метки]</translation>
     </message>
     <message>
         <location line="-9"/>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>(change)</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="-593"/>
@@ -985,7 +997,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+5"/>
         <source>Copy low output</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1080,7 +1092,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+86"/>
         <location line="+38"/>
         <source>0.00 NVC</source>
-        <translation type="unfinished"></translation>
+        <translation>0.00 NVC</translation>
     </message>
     <message>
         <location line="+131"/>
@@ -1767,66 +1779,66 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+77"/>
         <source>Quantity:</source>
-        <translation type="unfinished">Количество:</translation>
+        <translation>Количество:</translation>
     </message>
     <message>
         <location line="+22"/>
         <location line="+35"/>
         <source>0</source>
-        <translation type="unfinished"></translation>
+        <translation>0</translation>
     </message>
     <message>
         <location line="-19"/>
         <source>Bytes:</source>
-        <translation type="unfinished">Размер:</translation>
+        <translation>Размер:</translation>
     </message>
     <message>
         <location line="+51"/>
         <source>Amount:</source>
-        <translation type="unfinished"></translation>
+        <translation>Сумма:</translation>
     </message>
     <message>
         <location line="+22"/>
         <location line="+86"/>
         <location line="+86"/>
         <location line="+32"/>
-        <source>0.00 BTC</source>
-        <translation type="unfinished">123.456 BTC {0.00 ?}</translation>
+        <source>0.00 NVC</source>
+        <translation>0.00 NVC</translation>
     </message>
     <message>
         <location line="-191"/>
         <source>Priority:</source>
-        <translation type="unfinished">Приоритет:</translation>
+        <translation>Приоритет:</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>medium</source>
-        <translation type="unfinished"></translation>
+        <translation>medium</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Fee:</source>
-        <translation type="unfinished">Комиссия:</translation>
+        <translation>Комиссия:</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Low Output:</source>
-        <translation type="unfinished">Мелкие входы:</translation>
+        <translation>Мелкие выходы:</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>no</source>
-        <translation type="unfinished">нет</translation>
+        <translation>нет</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>After Fee:</source>
-        <translation type="unfinished">С комиссией:</translation>
+        <translation>С комиссией:</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Change</source>
-        <translation type="unfinished"></translation>
+        <translation>Сдача</translation>
     </message>
     <message>
         <location line="+50"/>

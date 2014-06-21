@@ -1058,7 +1058,7 @@ Address: %4
     </message>
     <message>
         <location line="+10"/>
-        <source>This label turns red, if the transaction size is bigger than 10000 bytes.
+        <source>This label turns red, if the transaction size is bigger than 1000 bytes.
 
  This means a fee of at least %1 per kb is required.
 
@@ -1080,7 +1080,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 
  This means a fee of at least %2 is required. 
 
- Amounts below 0.546 times the minimum relay fee are shown as DUST.</source>
+ Amounts below the minimum fee are shown as DUST.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
