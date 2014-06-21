@@ -738,7 +738,7 @@ Network weight is %2</source>
     <message>
         <location line="+30"/>
         <source>&amp;Lock wallet</source>
-        <translation>&amp;Заблокировать бкмажник</translation>
+        <translation>&amp;Заблокировать бумажник</translation>
     </message>
     <message>
         <location line="+31"/>
