@@ -58,7 +58,8 @@ CWallet* pwalletMain;
 enum BindFlags {
     BF_NONE         = 0,
     BF_EXPLICIT     = (1U << 0),
-    BF_REPORT_ERROR = (1U << 1)
+    BF_REPORT_ERROR = (1U << 1),
+    BF_WHITELIST    = (1U << 2),
 };
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
@@ -192,7 +193,7 @@ bool static Bind(const CService &addr, unsigned int flags) {
     if (!(flags & BF_EXPLICIT) && IsLimited(addr))
         return false;
     std::string strError;
-    if (!BindListenPort(addr, strError)) {
+    if (!BindListenPort(addr, strError, flags & BF_WHITELIST)) {
         if (flags & BF_REPORT_ERROR)
             return InitError(strError);
         return false;
@@ -253,6 +254,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -upnp                  " + _("Use UPnP to map the listening port (default: 0)") + "\n";
 #endif
 #endif
+    strUsage += "  -whitebind=<addr>      " + _("Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6") + "\n";
+    strUsage += "  -whitelist=<netmask>   " + _("Whitelist peers connecting from the given netmask or ip. Can be specified multiple times.") + "\n";
 
 #ifdef ENABLE_WALLET
     strUsage += "\n" + _("Wallet options:") + "\n";
@@ -504,11 +507,11 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 2: parameter interactions
 
-    if (mapArgs.count("-bind")) {
+    if (mapArgs.count("-bind") || mapArgs.count("-whitebind")) {
         // when specifying an explicit binding address, you want to listen on it
         // even when -connect or -proxy is specified
         if (SoftSetBoolArg("-listen", true))
-            LogPrintf("AppInit2 : parameter interaction: -bind set -> setting -listen=1\n");
+            LogPrintf("AppInit2 : parameter interaction: -bind or -whitebind set -> setting -listen=1\n");
     }
 
     if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0) {
@@ -552,7 +555,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     // Make sure enough file descriptors are available
-    int nBind = std::max((int)mapArgs.count("-bind"), 1);
+    int nBind = std::max((int)mapArgs.count("-bind") + (int)mapArgs.count("-whitebind"), 1);
     nMaxConnections = GetArg("-maxconnections", 125);
     nMaxConnections = std::max(std::min(nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS)), 0);
     int nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS);
@@ -769,6 +772,15 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     }
 
+    if (mapArgs.count("-whitelist")) {
+        BOOST_FOREACH(const std::string& net, mapMultiArgs["-whitelist"]) {
+            CSubNet subnet(net);
+            if (!subnet.IsValid())
+                return InitError(strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net));
+            CNode::AddWhitelistedRange(subnet);
+        }
+    }
+
     CService addrProxy;
     bool fProxy = false;
     if (mapArgs.count("-proxy")) {
@@ -805,12 +817,20 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     bool fBound = false;
     if (fListen) {
-        if (mapArgs.count("-bind")) {
+        if (mapArgs.count("-bind") || mapArgs.count("-whitebind")) {
             BOOST_FOREACH(std::string strBind, mapMultiArgs["-bind"]) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
                     return InitError(strprintf(_("Cannot resolve -bind address: '%s'"), strBind));
                 fBound |= Bind(addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
+            }
+            BOOST_FOREACH(std::string strBind, mapMultiArgs["-whitebind"]) {
+                CService addrBind;
+                if (!Lookup(strBind.c_str(), addrBind, 0, false))
+                    return InitError(strprintf(_("Cannot resolve -whitebind address: '%s'"), strBind));
+                if (addrBind.GetPort() == 0)
+                    return InitError(strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind));
+                fBound |= Bind(addrBind, (BF_EXPLICIT | BF_REPORT_ERROR | BF_WHITELIST));
             }
         }
         else {

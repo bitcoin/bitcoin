@@ -137,6 +137,7 @@ Value getpeerinfo(const Array& params, bool fHelp)
             obj.push_back(Pair("syncheight", statestats.nSyncHeight));
         }
         obj.push_back(Pair("syncnode", stats.fSyncNode));
+        obj.push_back(Pair("whitelisted", stats.fWhitelisted));
 
         ret.push_back(obj);
     }
