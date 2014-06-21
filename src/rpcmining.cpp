@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,7 +28,8 @@ using namespace std;
 // Return average network hashes per second based on the last 'lookup' blocks,
 // or from the last difficulty change if 'lookup' is nonpositive.
 // If 'height' is nonnegative, compute the estimate at the time when a given block was found.
-Value GetNetworkHashPS(int lookup, int height) {
+Value GetNetworkHashPS(int lookup, int height)
+{
     CBlockIndex *pb = chainActive.Tip();
 
     if (height >= 0 && height < chainActive.Height())
@@ -104,7 +105,6 @@ Value getgenerate(const Array& params, bool fHelp)
 
     return GetBoolArg("-gen", false);
 }
-
 
 Value setgenerate(const Array& params, bool fHelp)
 {
@@ -200,8 +200,7 @@ Value gethashespersec(const Array& params, bool fHelp)
         return (int64_t)0;
     return (int64_t)dHashesPerSec;
 }
-#endif
-
+#endif // ENABLE_WALLET
 
 Value getmininginfo(const Array& params, bool fHelp)
 {
@@ -246,7 +245,6 @@ Value getmininginfo(const Array& params, bool fHelp)
     return obj;
 }
 
-
 Value prioritisetransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
@@ -259,7 +257,6 @@ Value prioritisetransaction(const Array& params, bool fHelp)
     mempool.PrioritiseTransaction(hash, params[0].get_str(), params[1].get_real(), params[2].get_int64());
     return true;
 }
-
 
 Value getblocktemplate(const Array& params, bool fHelp)
 {
