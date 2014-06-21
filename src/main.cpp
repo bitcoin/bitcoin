@@ -4923,6 +4923,17 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
                 }
                 const CCoins &coins = view.GetCoins(txin.prevout.hash);
 
+                if (txin.prevout.n >= coins.vout.size())
+                {
+                    // This should never happen unless the memory pool is invalid
+                    printf("ERROR: mempool transaction invalid input %s:%d\n", txin.prevout.hash.ToString().c_str(), txin.prevout.n);
+                    if (fDebug) assert("mempool transaction invalid input" == 0);
+                    fMissingInputs = true;
+                    if (porphan)
+                        vOrphan.pop_back();
+                    break;
+                }
+
                 int64 nValueIn = coins.vout[txin.prevout.n].nValue;
                 nTotalIn += nValueIn;
 
