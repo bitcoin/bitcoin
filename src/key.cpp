@@ -4,6 +4,8 @@
 
 #include "key.h"
 
+#include "crypto/sha2.h"
+
 #include <openssl/bn.h>
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>
@@ -510,12 +512,10 @@ void static BIP32Hash(const unsigned char chainCode[32], unsigned int nChild, un
     num[1] = (nChild >> 16) & 0xFF;
     num[2] = (nChild >>  8) & 0xFF;
     num[3] = (nChild >>  0) & 0xFF;
-    HMAC_SHA512_CTX ctx;
-    HMAC_SHA512_Init(&ctx, chainCode, 32);
-    HMAC_SHA512_Update(&ctx, &header, 1);
-    HMAC_SHA512_Update(&ctx, data, 32);
-    HMAC_SHA512_Update(&ctx, num, 4);
-    HMAC_SHA512_Final(output, &ctx);
+    CHMAC_SHA512(chainCode, 32).Write(&header, 1)
+                               .Write(data, 32)
+                               .Write(num, 4)
+                               .Finalize(output);
 }
 
 bool CKey::Derive(CKey& keyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const {
@@ -562,13 +562,10 @@ bool CExtKey::Derive(CExtKey &out, unsigned int nChild) const {
 }
 
 void CExtKey::SetMaster(const unsigned char *seed, unsigned int nSeedLen) {
-    static const char hashkey[] = {'B','i','t','c','o','i','n',' ','s','e','e','d'};
-    HMAC_SHA512_CTX ctx;
-    HMAC_SHA512_Init(&ctx, hashkey, sizeof(hashkey));
-    HMAC_SHA512_Update(&ctx, seed, nSeedLen);
+    static const unsigned char hashkey[] = {'B','i','t','c','o','i','n',' ','s','e','e','d'};
     unsigned char out[64];
     LockObject(out);
-    HMAC_SHA512_Final(out, &ctx);
+    CHMAC_SHA512(hashkey, sizeof(hashkey)).Write(seed, nSeedLen).Finalize(out);
     key.Set(&out[0], &out[32], true);
     memcpy(vchChainCode, &out[32], 32);
     UnlockObject(out);
