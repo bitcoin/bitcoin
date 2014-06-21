@@ -1,4 +1,10 @@
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#if defined(HAVE_CONFIG_H)
 #include "bitcoin-config.h"
+#endif
 
 #include <cstddef>
 #if defined(HAVE_SYS_SELECT_H)
@@ -8,7 +14,7 @@
 extern "C" void* memcpy(void* a, const void* b, size_t c);
 void* memcpy_int(void* a, const void* b, size_t c)
 {
-  return memcpy(a,b,c);
+    return memcpy(a,b,c);
 }
 
 namespace {
