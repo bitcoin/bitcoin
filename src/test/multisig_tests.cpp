@@ -55,13 +55,13 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     CScript escrow;
     escrow << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 
-    CTransaction txFrom;  // Funding transaction
+    CMutableTransaction txFrom;  // Funding transaction
     txFrom.vout.resize(3);
     txFrom.vout[0].scriptPubKey = a_and_b;
     txFrom.vout[1].scriptPubKey = a_or_b;
     txFrom.vout[2].scriptPubKey = escrow;
 
-    CTransaction txTo[3]; // Spending transaction
+    CMutableTransaction txTo[3]; // Spending transaction
     for (int i = 0; i < 3; i++)
     {
         txTo[i].vin.resize(1);
@@ -270,13 +270,13 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
     CScript escrow;
     escrow << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 
-    CTransaction txFrom;  // Funding transaction
+    CMutableTransaction txFrom;  // Funding transaction
     txFrom.vout.resize(3);
     txFrom.vout[0].scriptPubKey = a_and_b;
     txFrom.vout[1].scriptPubKey = a_or_b;
     txFrom.vout[2].scriptPubKey = escrow;
 
-    CTransaction txTo[3]; // Spending transaction
+    CMutableTransaction txTo[3]; // Spending transaction
     for (int i = 0; i < 3; i++)
     {
         txTo[i].vin.resize(1);

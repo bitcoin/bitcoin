@@ -203,48 +203,58 @@ public:
 };
 
 
+struct CMutableTransaction;
+
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
 class CTransaction
 {
+private:
+    /** Memory only. */
+    const uint256 hash;
+    void UpdateHash() const;
+
 public:
     static CFeeRate minTxFee;
     static CFeeRate minRelayTxFee;
     static const int CURRENT_VERSION=1;
-    int nVersion;
-    std::vector<CTxIn> vin;
-    std::vector<CTxOut> vout;
-    unsigned int nLockTime;
 
-    CTransaction()
-    {
-        SetNull();
-    }
+    // The local variables are made const to prevent unintended modification
+    // without updating the cached hash value. However, CTransaction is not
+    // actually immutable; deserialization and assignment are implemented,
+    // and bypass the constness. This is safe, as they update the entire
+    // structure, including the hash.
+    const int nVersion;
+    const std::vector<CTxIn> vin;
+    const std::vector<CTxOut> vout;
+    const unsigned int nLockTime;
 
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(this->nVersion);
+    /** Construct a CTransaction that qualifies as IsNull() */
+    CTransaction();
+
+    /** Convert a CMutableTransaction into a CTransaction. */
+    CTransaction(const CMutableTransaction &tx);
+
+    CTransaction& operator=(const CTransaction& tx);
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(*const_cast<int*>(&this->nVersion));
         nVersion = this->nVersion;
-        READWRITE(vin);
-        READWRITE(vout);
-        READWRITE(nLockTime);
+        READWRITE(*const_cast<std::vector<CTxIn>*>(&vin));
+        READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
+        READWRITE(*const_cast<unsigned int*>(&nLockTime));
+        if (fRead)
+            UpdateHash();
     )
 
-    void SetNull()
-    {
-        nVersion = CTransaction::CURRENT_VERSION;
-        vin.clear();
-        vout.clear();
-        nLockTime = 0;
+    bool IsNull() const {
+        return vin.empty() && vout.empty();
     }
 
-    bool IsNull() const
-    {
-        return (vin.empty() && vout.empty());
+    const uint256& GetHash() const {
+        return hash;
     }
-
-    uint256 GetHash() const;
 
     // Return sum of txouts.
     int64_t GetValueOut() const;
@@ -261,20 +271,41 @@ public:
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
-        return (a.nVersion  == b.nVersion &&
-                a.vin       == b.vin &&
-                a.vout      == b.vout &&
-                a.nLockTime == b.nLockTime);
+        return a.hash == b.hash;
     }
 
     friend bool operator!=(const CTransaction& a, const CTransaction& b)
     {
-        return !(a == b);
+        return a.hash != b.hash;
     }
-
 
     std::string ToString() const;
     void print() const;
+};
+
+/** A mutable version of CTransaction. */
+struct CMutableTransaction
+{
+    int nVersion;
+    std::vector<CTxIn> vin;
+    std::vector<CTxOut> vout;
+    unsigned int nLockTime;
+
+    CMutableTransaction();
+    CMutableTransaction(const CTransaction& tx);
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(vin);
+        READWRITE(vout);
+        READWRITE(nLockTime);
+    )
+
+    /** Compute the hash of this CMutableTransaction. This is computed on the
+     * fly, as opposed to GetHash() in CTransaction, which uses a cached result.
+     */
+    uint256 GetHash() const;
 };
 
 /** wrapper for CTxOut that provides a more compact serialization */
@@ -464,12 +495,6 @@ public:
     }
 
     uint256 BuildMerkleTree() const;
-
-    const uint256 &GetTxHash(unsigned int nIndex) const {
-        assert(vMerkleTree.size() > 0); // BuildMerkleTree must have been called first
-        assert(nIndex < vtx.size());
-        return vMerkleTree[nIndex];
-    }
 
     std::vector<uint256> GetMerkleBranch(int nIndex) const;
     static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
