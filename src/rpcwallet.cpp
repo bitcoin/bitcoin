@@ -978,7 +978,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
                 continue;
 
             isminefilter mine = IsMine(*pwalletMain, address);
-            if(!mine & filter)
+            if(!(mine & filter))
                 continue;
 
             tallyitem& item = mapTally[address];
