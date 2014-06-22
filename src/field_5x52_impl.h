@@ -33,6 +33,25 @@
 void static secp256k1_fe_inner_start(void) {}
 void static secp256k1_fe_inner_stop(void) {}
 
+#ifdef VERIFY
+int static secp256k1_fe_verify(const secp256k1_fe_t * a) {
+    const uint64_t *d = a->n;
+    int m = a->magnitude, r = 1;
+    r &= (d[0] <= 0xFFFFFFFFFFFFFULL * m);
+    r &= (d[1] <= 0xFFFFFFFFFFFFFULL * m);
+    r &= (d[2] <= 0xFFFFFFFFFFFFFULL * m);
+    r &= (d[3] <= 0xFFFFFFFFFFFFFULL * m);
+    r &= (d[4] <= 0x0FFFFFFFFFFFFULL * m);
+    if (a->normalized) {
+        r &= (m == 1);
+        if (r && (d[4] == 0x0FFFFFFFFFFFFULL) && ((d[3] & d[2] & d[1]) == 0xFFFFFFFFFFFFFULL)) {
+            r &= (d[0] < 0xFFFFEFFFFFC2FULL);
+        }
+    }
+    return r;
+}
+#endif
+
 void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
     uint64_t t0 = r->n[0], t1 = r->n[1], t2 = r->n[2], t3 = r->n[3], t4 = r->n[4];
 
