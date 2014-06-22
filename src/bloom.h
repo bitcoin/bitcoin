@@ -83,7 +83,7 @@ public:
     bool IsWithinSizeConstraints() const;
 
     // Also adds any outputs which match the filter to the filter (to match their spending txes)
-    bool IsRelevantAndUpdate(const CTransaction& tx, const uint256& hash);
+    bool IsRelevantAndUpdate(const CTransaction& tx);
 
     // Checks for empty and full filters to avoid wasting cpu
     void UpdateEmptyFull();
