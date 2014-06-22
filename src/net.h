@@ -201,9 +201,96 @@ public:
     int readData(const char *pch, unsigned int nBytes);
 };
 
+/** RAII class that provides access to a SOCKET */
+class CSocket
+{
+public:
+    CSocket() :
+        hSocket(INVALID_SOCKET),
+        fCloseOnDestruct(true),
+        fWhitelisted(false)
+    { }
 
+    CSocket(bool fCloseOnDestruct_rhs, bool fWhitelisted_rhs) :
+        hSocket(INVALID_SOCKET)
+    {
+        fCloseOnDestruct = fCloseOnDestruct_rhs;
+        fWhitelisted = fWhitelisted_rhs;
+    }
 
+    CSocket(const CSocket& rhs)
+    {
+        *this = rhs;
+    }
 
+    CSocket(SOCKET rhs) :
+        fCloseOnDestruct(true),
+        fWhitelisted(false)
+    {
+        *this = rhs;
+    }
+
+    ~CSocket()
+    {
+        if (fCloseOnDestruct)
+            Close();
+    }
+
+    CSocket& operator=(const CSocket& rhs)
+    {
+        if (this != &rhs)
+        {
+            hSocket = rhs.hSocket;
+            fCloseOnDestruct = rhs.fCloseOnDestruct;
+            fWhitelisted = rhs.fWhitelisted;
+        }
+
+        return *this;
+    }
+
+    CSocket& operator=(SOCKET rhs)
+    {
+        hSocket = rhs;
+        return *this;
+    }
+
+    bool Close()
+    {
+        return CloseSocket(hSocket);
+    }
+
+    SOCKET& Get()
+    {
+        return hSocket;
+    }
+
+    bool IsValid() const
+    {
+        return hSocket != INVALID_SOCKET;
+    }
+
+    // Currently unused
+    void SetCloseOnDestruct(bool fFlag)
+    {
+        fCloseOnDestruct = fFlag;
+    }
+
+    // Currently unused
+    void SetWhitelisted(bool fFlag)
+    {
+        fWhitelisted = fFlag;
+    }
+
+    bool IsWhitelisted() const
+    {
+        return fWhitelisted;
+    }
+
+private:
+    SOCKET hSocket;
+    bool fCloseOnDestruct;
+    bool fWhitelisted;
+};
 
 /** Information about a peer */
 class CNode
