@@ -115,7 +115,7 @@ public:
     Object operator()(const CScriptID &scriptID) const {
         Object obj;
         obj.push_back(Pair("isscript", true));
-        if (mine == MINE_SPENDABLE) {
+        if (mine != MINE_NO) {
             CScript subscript;
             pwalletMain->GetCScript(scriptID, subscript);
             std::vector<CTxDestination> addresses;
