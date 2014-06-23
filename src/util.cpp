@@ -176,7 +176,14 @@ void RandAddSeedPerfmon()
     {
         RAND_add(begin_ptr(vData), nSize, nSize/100.0);
         OPENSSL_cleanse(begin_ptr(vData), nSize);
-        LogPrint("rand", "RandAddSeed() %lu bytes\n", nSize);
+        LogPrint("rand", "%s: %lu bytes\n", __func__, nSize);
+    } else {
+        static bool warned = false; // Warn only once
+        if (!warned)
+        {
+            LogPrintf("%s: Warning: RegQueryValueExA(HKEY_PERFORMANCE_DATA) failed with code %i\n", __func__, ret);
+            warned = true;
+        }
     }
 #endif
 }
