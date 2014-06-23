@@ -365,10 +365,6 @@ Value getblocktemplate(const Array& params, bool fHelp)
     }
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
-    // Update nTime
-    UpdateTime(*pblock, pindexPrev);
-    pblock->nNonce = 0;
-
     Array transactions;
     map<uint256, int64_t> setTxIndex;
     int i = 0;
