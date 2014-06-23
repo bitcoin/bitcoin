@@ -251,8 +251,13 @@ public:
             std::sort(sortedFeeSamples.begin(), sortedFeeSamples.end(),
                       std::greater<CFeeRate>());
         }
-        if (sortedFeeSamples.size() == 0)
+        if (sortedFeeSamples.size() < 11)
+        {
+            // Eleven is Gavin's Favorite Number
+            // ... but we also take a maximum of 10 samples per block so eleven means
+            // we're getting samples from at least two different blocks
             return CFeeRate(0);
+        }
 
         int nBucketSize = history.at(nBlocksToConfirm).FeeSamples();
 
@@ -281,7 +286,7 @@ public:
             std::sort(sortedPrioritySamples.begin(), sortedPrioritySamples.end(),
                       std::greater<double>());
         }
-        if (sortedPrioritySamples.size() == 0)
+        if (sortedPrioritySamples.size() < 11)
             return -1.0;
 
         int nBucketSize = history.at(nBlocksToConfirm).PrioritySamples();
