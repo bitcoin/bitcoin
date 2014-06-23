@@ -3903,7 +3903,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CBlock block;
         vRecv >> block;
 
-        LogPrint("net", "received block %s\n", block.GetHash().ToString());
+        LogPrintf("received block %s\n", block.GetHash().ToString());
         // block.print();
 
         CInv inv(MSG_BLOCK, block.GetHash());
