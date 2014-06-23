@@ -231,6 +231,7 @@ RPCConsole::RPCConsole(QWidget *parent) :
 
     startExecutor();
     setTrafficGraphRange(INITIAL_TRAFFIC_GRAPH_MINS);
+
     ui->detailWidget->hide();
 
     clear();
@@ -581,7 +582,7 @@ void RPCConsole::peerLayoutChanged()
     if (fUnselect && selectedRow >= 0)
     {
         ui->peerWidget->selectionModel()->select(QItemSelection(selectedModelIndex.first(), selectedModelIndex.last()),
-                                                 QItemSelectionModel::Deselect);
+            QItemSelectionModel::Deselect);
     }
 
     if (fReselect)
