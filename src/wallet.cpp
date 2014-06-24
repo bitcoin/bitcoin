@@ -12,7 +12,6 @@
 #include "timedata.h"
 
 #include <boost/algorithm/string/replace.hpp>
-#include <openssl/rand.h>
 
 using namespace std;
 
@@ -384,13 +383,15 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     RandAddSeedPerfmon();
 
     vMasterKey.resize(WALLET_CRYPTO_KEY_SIZE);
-    RAND_bytes(&vMasterKey[0], WALLET_CRYPTO_KEY_SIZE);
+    if (!GetRandBytes(&vMasterKey[0], WALLET_CRYPTO_KEY_SIZE))
+        return false;
 
     CMasterKey kMasterKey;
-
     RandAddSeedPerfmon();
+
     kMasterKey.vchSalt.resize(WALLET_CRYPTO_SALT_SIZE);
-    RAND_bytes(&kMasterKey.vchSalt[0], WALLET_CRYPTO_SALT_SIZE);
+    if (!GetRandBytes(&kMasterKey.vchSalt[0], WALLET_CRYPTO_SALT_SIZE))
+        return false;
 
     CCrypter crypter;
     int64_t nStartTime = GetTimeMillis();
