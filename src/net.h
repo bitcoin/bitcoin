@@ -28,14 +28,13 @@
 #include <boost/signals2/signal.hpp>
 #include <openssl/rand.h>
 
-
 class CAddrMan;
 class CBlockIndex;
 class CNode;
 
 namespace boost {
     class thread_group;
-}
+} // namespace boost
 
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
 static const int PING_INTERVAL = 2 * 60;

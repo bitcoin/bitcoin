@@ -77,11 +77,12 @@
 // See also: http://stackoverflow.com/questions/10020179/compilation-fail-in-boost-librairies-program-options
 //           http://clang.debian.net/status.php?version=3.0&key=CANNOT_FIND_FUNCTION
 namespace boost {
+
     namespace program_options {
         std::string to_internal(const std::string&);
     }
-}
 
+} // namespace boost
 
 using namespace std;
 
