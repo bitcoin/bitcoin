@@ -60,6 +60,9 @@
            <property name="textFormat">
             <enum>Qt::PlainText</enum>
            </property>
+           <property name="openExternalLinks">
+            <bool>true</bool>
+           </property>
            <property name="textInteractionFlags">
             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
            </property>
