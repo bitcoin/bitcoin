@@ -260,7 +260,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -upgradewallet         " + _("Upgrade wallet to latest format") + " " + _("on startup") + "\n";
     strUsage += "  -wallet=<file>         " + _("Specify wallet file (within data directory)") + " " + _("(default: wallet.dat)") + "\n";
     strUsage += "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n";
-    strUsage += "  -zapwallettxes         " + _("Clear list of wallet transactions (diagnostic tool; implies -rescan)") + "\n";
+    strUsage += "  -zapwallettxes=<mode>  " + _("Delete all wallet transactions and only recover those part of the blockchain through -rescan on startup") + "\n";
+    strUsage += "                         " + _("(default: 1, 1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)") + "\n";
 #endif
 
     strUsage += "\n" + _("Debugging/Testing options:") + "\n";
@@ -536,7 +537,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // -zapwallettx implies a rescan
     if (GetBoolArg("-zapwallettxes", false)) {
         if (SoftSetBoolArg("-rescan", true))
-            LogPrintf("AppInit2 : parameter interaction: -zapwallettxes=1 -> setting -rescan=1\n");
+            LogPrintf("AppInit2 : parameter interaction: -zapwallettxes=<mode> -> setting -rescan=1\n");
     }
 
     // Make sure enough file descriptors are available
@@ -993,11 +994,15 @@ bool AppInit2(boost::thread_group& threadGroup)
         pwalletMain = NULL;
         LogPrintf("Wallet disabled!\n");
     } else {
+
+        // needed to restore wallet transaction meta data after -zapwallettxes
+        std::vector<CWalletTx> vWtx;
+
         if (GetBoolArg("-zapwallettxes", false)) {
             uiInterface.InitMessage(_("Zapping all transactions from wallet..."));
 
             pwalletMain = new CWallet(strWalletFile);
-            DBErrors nZapWalletRet = pwalletMain->ZapWalletTx();
+            DBErrors nZapWalletRet = pwalletMain->ZapWalletTx(vWtx);
             if (nZapWalletRet != DB_LOAD_OK) {
                 uiInterface.InitMessage(_("Error loading wallet.dat: Wallet corrupted"));
                 return false;
@@ -1092,6 +1097,29 @@ bool AppInit2(boost::thread_group& threadGroup)
             LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
             pwalletMain->SetBestChain(chainActive.GetLocator());
             nWalletDBUpdated++;
+
+            // Restore wallet transaction metadata after -zapwallettxes=1
+            if (GetBoolArg("-zapwallettxes", false) && GetArg("-zapwallettxes", "1") != "2")
+            {
+                BOOST_FOREACH(const CWalletTx& wtxOld, vWtx)
+                {
+                    uint256 hash = wtxOld.GetHash();
+                    std::map<uint256, CWalletTx>::iterator mi = pwalletMain->mapWallet.find(hash);
+                    if (mi != pwalletMain->mapWallet.end())
+                    {
+                        const CWalletTx* copyFrom = &wtxOld;
+                        CWalletTx* copyTo = &mi->second;
+                        copyTo->mapValue = copyFrom->mapValue;
+                        copyTo->vOrderForm = copyFrom->vOrderForm;
+                        copyTo->nTimeReceived = copyFrom->nTimeReceived;
+                        copyTo->nTimeSmart = copyFrom->nTimeSmart;
+                        copyTo->fFromMe = copyFrom->fFromMe;
+                        copyTo->strFromAccount = copyFrom->strFromAccount;
+                        copyTo->nOrderPos = copyFrom->nOrderPos;
+                        copyTo->WriteToDisk();
+                    }
+                }
+            }
         }
     } // (!fDisableWallet)
 #else // ENABLE_WALLET
