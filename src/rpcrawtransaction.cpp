@@ -5,6 +5,7 @@
 
 #include "base58.h"
 #include "core.h"
+#include "core_io.h"
 #include "init.h"
 #include "keystore.h"
 #include "main.h"
@@ -182,9 +183,7 @@ Value getrawtransaction(const Array& params, bool fHelp)
     if (!GetTransaction(hash, tx, hashBlock, true))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
 
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << tx;
-    string strHex = HexStr(ssTx.begin(), ssTx.end());
+    string strHex = EncodeHexTx(tx);
 
     if (!fVerbose)
         return strHex;
@@ -388,9 +387,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
         rawTx.vout.push_back(out);
     }
 
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << rawTx;
-    return HexStr(ss.begin(), ss.end());
+    return EncodeHexTx(rawTx);
 }
 
 Value decoderawtransaction(const Array& params, bool fHelp)
@@ -444,15 +441,12 @@ Value decoderawtransaction(const Array& params, bool fHelp)
             + HelpExampleRpc("decoderawtransaction", "\"hexstring\"")
         );
 
-    vector<unsigned char> txData(ParseHexV(params[0], "argument"));
-    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+    RPCTypeCheck(params, list_of(str_type));
+
     CTransaction tx;
-    try {
-        ssData >> tx;
-    }
-    catch (std::exception &e) {
+
+    if (!DecodeHexTx(tx, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
-    }
 
     Object result;
     TxToJSON(tx, 0, result);
@@ -723,9 +717,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     }
 
     Object result;
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << mergedTx;
-    result.push_back(Pair("hex", HexStr(ssTx.begin(), ssTx.end())));
+    result.push_back(Pair("hex", EncodeHexTx(mergedTx)));
     result.push_back(Pair("complete", fComplete));
 
     return result;
@@ -754,24 +746,17 @@ Value sendrawtransaction(const Array& params, bool fHelp)
             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
         );
 
+    RPCTypeCheck(params, list_of(str_type)(bool_type));
 
     // parse hex string from parameter
-    vector<unsigned char> txData(ParseHexV(params[0], "parameter"));
-    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     CTransaction tx;
+    if (!DecodeHexTx(tx, params[0].get_str()))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    uint256 hashTx = tx.GetHash();
 
     bool fOverrideFees = false;
     if (params.size() > 1)
         fOverrideFees = params[1].get_bool();
-
-    // deserialize binary data stream
-    try {
-        ssData >> tx;
-    }
-    catch (std::exception &e) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
-    }
-    const uint256 &hashTx = tx.GetHash();
 
     CCoinsViewCache &view = *pcoinsTip;
     CCoins existingCoins;
