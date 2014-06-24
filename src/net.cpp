@@ -546,7 +546,7 @@ void CNode::PushVersion()
     int64_t nTime = (fInbound ? GetAdjustedTime() : GetTime());
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService("0.0.0.0",0)));
     CAddress addrMe = GetLocalAddress(&addr);
-    RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
+    GetRandBytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
     if (fLogIPs)
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), addrYou.ToString(), id);
     else
@@ -1931,7 +1931,7 @@ bool CAddrDB::Write(const CAddrMan& addr)
 {
     // Generate random temporary filename
     unsigned short randv = 0;
-    RAND_bytes((unsigned char *)&randv, sizeof(randv));
+    GetRandBytes((unsigned char*)&randv, sizeof(randv));
     std::string tmpfn = strprintf("peers.dat.%04x", randv);
 
     // serialize addresses, checksum data up to that point, then append csum

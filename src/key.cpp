@@ -1,11 +1,11 @@
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "key.h"
 
 #include "crypto/sha2.h"
-#include <openssl/rand.h>
+#include "random.h"
 
 #ifdef USE_SECP256K1
 #include <secp256k1.h>
@@ -194,7 +194,7 @@ public:
         if (d2i_ECPrivateKey(&pkey, &pbegin, privkey.size())) {
             if(fSkipCheck)
                 return true;
-            
+
             // d2i_ECPrivateKey returns true if parsing succeeds.
             // This doesn't necessarily mean the key is valid.
             if (EC_KEY_check_key(pkey))
@@ -412,7 +412,7 @@ bool CKey::CheckSignatureElement(const unsigned char *vch, int len, bool half) {
 
 void CKey::MakeNewKey(bool fCompressedIn) {
     do {
-        RAND_bytes(vch, sizeof(vch));
+        GetRandBytes(vch, sizeof(vch));
     } while (!Check(vch));
     fValid = true;
     fCompressed = fCompressedIn;
@@ -745,5 +745,3 @@ bool ECC_InitSanityCheck() {
     return true;
 #endif
 }
-
-

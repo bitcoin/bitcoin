@@ -103,6 +103,7 @@ extern bool fLogTimestamps;
 extern bool fLogIPs;
 extern volatile bool fReopenDebugLog;
 
+bool GetRandBytes(unsigned char *buf, int num);
 void RandAddSeed();
 void RandAddSeedPerfmon();
 void SetupEnvironment();

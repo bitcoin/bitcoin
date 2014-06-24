@@ -4370,7 +4370,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (pingSend) {
             uint64_t nonce = 0;
             while (nonce == 0) {
-                RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
+                GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
             }
             pto->fPingQueued = false;
             pto->nPingUsecStart = GetTimeMicros();
