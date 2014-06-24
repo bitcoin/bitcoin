@@ -377,8 +377,7 @@ const unsigned char vchMaxModHalfOrder[32] = {
 
 const unsigned char vchZero[0] = {};
 
-
-}; // end of anonymous namespace
+} // anon namespace
 
 bool CKey::Check(const unsigned char *vch) {
     return CompareBigEndian(vch, 32, vchZero, 0) > 0 &&
