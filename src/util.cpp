@@ -169,8 +169,17 @@ void RandAddSeedPerfmon()
     // Don't need this on Linux, OpenSSL automatically uses /dev/urandom
     // Seed with the entire set of perfmon data
     std::vector <unsigned char> vData(250000,0);
-    unsigned long nSize = vData.size();
-    long ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, begin_ptr(vData), &nSize);
+    long ret = 0;
+    unsigned long nSize = 0;
+    const size_t nMaxSize = 10000000; // Bail out at more than 10MB of performance data
+    while (true)
+    {
+        nSize = vData.size();
+        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, begin_ptr(vData), &nSize);
+        if (ret != ERROR_MORE_DATA || vData.size() >= nMaxSize)
+            break;
+        vData.resize(std::max((vData.size()*3)/2, nMaxSize)); // Grow size of buffer exponentially
+    }
     RegCloseKey(HKEY_PERFORMANCE_DATA);
     if (ret == ERROR_SUCCESS)
     {
