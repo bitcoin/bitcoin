@@ -13,10 +13,10 @@ autom4te.cache/
 config.log
 config.status
 configure
-src/bitcoin-config.h
-src/bitcoin-config.h.in
+src/config/bitcoin-config.h
+src/config/bitcoin-config.h.in
+src/config/stamp-h1
 src/build-aux/
-src/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
 
