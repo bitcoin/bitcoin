@@ -3616,6 +3616,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
 
         LOCK(cs_main);
+        int nBlocksGet = 0;
 
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
@@ -3629,14 +3630,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             if (!fAlreadyHave) {
                 if (!fImporting && !fReindex) {
-                    if (inv.type == MSG_BLOCK)
-                        AddBlockToQueue(pfrom->GetId(), inv.hash);
-                    else
+                    if (inv.type == MSG_BLOCK) {
+                        if (pfrom->tGetblocks > pfrom->tBlockInvs || CaughtUp()) {
+                            AddBlockToQueue(pfrom->GetId(), inv.hash);
+                            nBlocksGet++;
+                        }
+                    } else
                         pfrom->AskFor(inv);
                 }
-            } else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
+            } else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash))
                 PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(inv.hash));
-            }
 
             if (inv.type == MSG_BLOCK)
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
@@ -3644,6 +3647,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // Track requests for our stuff
             g_signals.Inventory(inv.hash);
         }
+
+        if (nBlocksGet)
+            pfrom->tBlockInvs = GetTimeMillis();
     }
 
 
@@ -3854,7 +3860,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
 
         CValidationState state;
-        ProcessBlock(state, pfrom, &block);
+        if (ProcessBlock(state, pfrom, &block))
+            pfrom->tBlockRecved = GetTimeMillis();
         int nDoS;
         if (state.IsInvalid(nDoS)) {
             pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
@@ -4134,6 +4141,14 @@ bool ProcessMessages(CNode* pfrom)
         //    LogPrintf("ProcessMessages(message %u msgsz, %u bytes, complete:%s)\n",
         //            nMessageSize, msg.vRecv.size(),
         //            msg.complete() ? "Y" : "N");
+        if (msg.nDataPos != msg.nLastDataPos) {
+            if (strCommand == "block") {
+                if (msg.nLastDataPos == 0)
+                    pfrom->tBlockRecvStart = GetTimeMillis();
+                pfrom->tBlockRecving = GetTimeMillis();
+            }
+            msg.nLastDataPos = msg.nDataPos;
+        }
 
         // end, if an incomplete message is found
         if (!msg.complete())
@@ -4327,6 +4342,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (pto->fStartSync && !fImporting && !fReindex) {
             pto->fStartSync = false;
             PushGetBlocks(pto, chainActive.Tip(), uint256(0));
+            pto->tGetblocks = GetTimeMillis();
         }
 
         // Resend wallet transactions that haven't gotten in a block yet
@@ -4410,6 +4426,8 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             vGetData.push_back(CInv(MSG_BLOCK, hash));
             MarkBlockAsInFlight(pto->GetId(), hash);
             LogPrint("net", "Requesting block %s peer=%d\n", hash.ToString(), pto->id);
+            if (!pto->tGetdataBlock)
+                pto->tGetdataBlock = GetTimeMillis();
             if (vGetData.size() >= 1000)
             {
                 pto->PushMessage("getdata", vGetData);

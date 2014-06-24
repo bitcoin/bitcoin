@@ -2052,6 +2052,12 @@ CNode::CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn, bool fIn
     nSendBytes = 0;
     nRecvBytes = 0;
     nTimeConnected = GetTime();
+    tGetblocks = 0;
+    tBlockInvs = 0;
+    tGetdataBlock = 0;
+    tBlockRecvStart = 0;
+    tBlockRecving = 0;
+    tBlockRecved = 0;
     addr = addrIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     nVersion = 0;

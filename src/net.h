@@ -230,9 +230,15 @@ public:
     uint64_t nRecvBytes;
     int nRecvVersion;
 
-    int64_t nLastSend;
-    int64_t nLastRecv;
-    int64_t nTimeConnected;
+    int64_t nLastSend;       // Time data last sent to peer.
+    int64_t nLastRecv;       // Time data last received from peer.
+    int64_t nTimeConnected;  // Time connection to peer was established.
+    int64_t tGetblocks;      // When we became a sync node.
+    int64_t tBlockInvs;      // Time new block invs arrived from peer.
+    int64_t tGetdataBlock;   // Time getdata block sent.
+    int64_t tBlockRecvStart; // Time block reception first detected.
+    int64_t tBlockRecving;   // Time block reception last progressed.
+    int64_t tBlockRecved;    // Time last complete block received.
     CAddress addr;
     std::string addrName;
     CService addrLocal;
