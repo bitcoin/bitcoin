@@ -84,8 +84,8 @@ bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) {
 }
 
 CCoinsMap::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
-    CCoinsMap::iterator it = cacheCoins.lower_bound(txid);
-    if (it != cacheCoins.end() && it->first == txid)
+    CCoinsMap::iterator it = cacheCoins.find(txid);
+    if (it != cacheCoins.end())
         return it;
     CCoins tmp;
     if (!base->GetCoins(txid,tmp))
