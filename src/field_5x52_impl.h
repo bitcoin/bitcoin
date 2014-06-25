@@ -38,20 +38,20 @@ void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
 
     // Reduce t4 at the start so there will be at most a single carry from the first pass
     uint64_t x = t4 >> 48; t4 &= 0x0FFFFFFFFFFFFULL;
+    uint64_t m;
 
     // The first pass ensures the magnitude is 1, ...
     t0 += x * 0x1000003D1ULL;
     t1 += (t0 >> 52); t0 &= 0xFFFFFFFFFFFFFULL;
-    t2 += (t1 >> 52); t1 &= 0xFFFFFFFFFFFFFULL;
-    t3 += (t2 >> 52); t2 &= 0xFFFFFFFFFFFFFULL;
-    t4 += (t3 >> 52); t3 &= 0xFFFFFFFFFFFFFULL;
+    t2 += (t1 >> 52); t1 &= 0xFFFFFFFFFFFFFULL; m = t1;
+    t3 += (t2 >> 52); t2 &= 0xFFFFFFFFFFFFFULL; m &= t2;
+    t4 += (t3 >> 52); t3 &= 0xFFFFFFFFFFFFFULL; m &= t3;
 
     // ... except for a possible carry at bit 48 of t4 (i.e. bit 256 of the field element)
     assert(t4 >> 49 == 0);
 
     // At most a single final reduction is needed; check if the value is >= the field characteristic
-    x = (t4 >> 48) | ((t4 == 0x0FFFFFFFFFFFFULL)
-        & ((t3 & t2 & t1) == 0xFFFFFFFFFFFFFULL)
+    x = (t4 >> 48) | ((t4 == 0x0FFFFFFFFFFFFULL) & (m == 0xFFFFFFFFFFFFFULL)
         & (t0 >= 0xFFFFEFFFFFC2FULL));
 
     // Apply the final reduction (for constant-time behaviour, we do it always)

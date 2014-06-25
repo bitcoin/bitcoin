@@ -15,77 +15,52 @@ void static secp256k1_fe_inner_start(void) {}
 void static secp256k1_fe_inner_stop(void) {}
 
 void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
-//    fog("normalize in: ", r);
-    uint32_t c;
-    c = r->n[0];
-    uint32_t t0 = c & 0x3FFFFFFUL;
-    c = (c >> 26) + r->n[1];
-    uint32_t t1 = c & 0x3FFFFFFUL;
-    c = (c >> 26) + r->n[2];
-    uint32_t t2 = c & 0x3FFFFFFUL;
-    c = (c >> 26) + r->n[3];
-    uint32_t t3 = c & 0x3FFFFFFUL;
-    c = (c >> 26) + r->n[4];
-    uint32_t t4 = c & 0x3FFFFFFUL;
-    c = (c >> 26) + r->n[5];
-    uint32_t t5 = c & 0x3FFFFFFUL;
-    c = (c >> 26) + r->n[6];
-    uint32_t t6 = c & 0x3FFFFFFUL;
-    c = (c >> 26) + r->n[7];
-    uint32_t t7 = c & 0x3FFFFFFUL;
-    c = (c >> 26) + r->n[8];
-    uint32_t t8 = c & 0x3FFFFFFUL;
-    c = (c >> 26) + r->n[9];
-    uint32_t t9 = c & 0x03FFFFFUL;
-    c >>= 22;
-/*    r->n[0] = t0; r->n[1] = t1; r->n[2] = t2; r->n[3] = t3; r->n[4] = t4;
-    r->n[5] = t5; r->n[6] = t6; r->n[7] = t7; r->n[8] = t8; r->n[9] = t9;
-    fog("         tm1: ", r);
-    fprintf(stderr, "out c= %08lx\n", (unsigned long)c);*/
+    uint32_t t0 = r->n[0], t1 = r->n[1], t2 = r->n[2], t3 = r->n[3], t4 = r->n[4],
+             t5 = r->n[5], t6 = r->n[6], t7 = r->n[7], t8 = r->n[8], t9 = r->n[9];
 
-    // The following code will not modify the t's if c is initially 0.
-    uint32_t d = c * 0x3D1UL + t0;
-    t0 = d & 0x3FFFFFFULL;
-    d = (d >> 26) + t1 + c*0x40;
-    t1 = d & 0x3FFFFFFULL;
-    d = (d >> 26) + t2;
-    t2 = d & 0x3FFFFFFULL;
-    d = (d >> 26) + t3;
-    t3 = d & 0x3FFFFFFULL;
-    d = (d >> 26) + t4;
-    t4 = d & 0x3FFFFFFULL;
-    d = (d >> 26) + t5;
-    t5 = d & 0x3FFFFFFULL;
-    d = (d >> 26) + t6;
-    t6 = d & 0x3FFFFFFULL;
-    d = (d >> 26) + t7;
-    t7 = d & 0x3FFFFFFULL;
-    d = (d >> 26) + t8;
-    t8 = d & 0x3FFFFFFULL;
-    d = (d >> 26) + t9;
-    t9 = d & 0x03FFFFFULL;
-    assert((d >> 22) == 0);
-/*    r->n[0] = t0; r->n[1] = t1; r->n[2] = t2; r->n[3] = t3; r->n[4] = t4;
-    r->n[5] = t5; r->n[6] = t6; r->n[7] = t7; r->n[8] = t8; r->n[9] = t9;
-    fog("         tm2: ", r); */
+    // Reduce t9 at the start so there will be at most a single carry from the first pass
+    uint32_t x = t9 >> 22; t9 &= 0x03FFFFFUL;
+    uint32_t m;
 
-    // Subtract p if result >= p
-    uint64_t low = ((uint64_t)t1 << 26) | t0;
-    uint64_t mask = -(int64_t)((t9 < 0x03FFFFFUL) | (t8 < 0x3FFFFFFUL) | (t7 < 0x3FFFFFFUL) | (t6 < 0x3FFFFFFUL) | (t5 < 0x3FFFFFFUL) | (t4 < 0x3FFFFFFUL) | (t3 < 0x3FFFFFFUL) | (t2 < 0x3FFFFFFUL) | (low < 0xFFFFEFFFFFC2FULL));
-    t9 &= mask;
-    t8 &= mask;
-    t7 &= mask;
-    t6 &= mask;
-    t5 &= mask;
-    t4 &= mask;
-    t3 &= mask;
-    t2 &= mask;
-    low -= (~mask & 0xFFFFEFFFFFC2FULL);
+    // The first pass ensures the magnitude is 1, ...
+    t0 += x * 0x3D1UL; t1 += (x << 6);
+    t1 += (t0 >> 26); t0 &= 0x3FFFFFFUL;
+    t2 += (t1 >> 26); t1 &= 0x3FFFFFFUL;
+    t3 += (t2 >> 26); t2 &= 0x3FFFFFFUL; m = t2;
+    t4 += (t3 >> 26); t3 &= 0x3FFFFFFUL; m &= t3;
+    t5 += (t4 >> 26); t4 &= 0x3FFFFFFUL; m &= t4;
+    t6 += (t5 >> 26); t5 &= 0x3FFFFFFUL; m &= t5;
+    t7 += (t6 >> 26); t6 &= 0x3FFFFFFUL; m &= t6;
+    t8 += (t7 >> 26); t7 &= 0x3FFFFFFUL; m &= t7;
+    t9 += (t8 >> 26); t8 &= 0x3FFFFFFUL; m &= t8;
 
-    // push internal variables back
-    r->n[0] = low & 0x3FFFFFFUL; r->n[1] = (low >> 26) & 0x3FFFFFFUL; r->n[2] = t2; r->n[3] = t3; r->n[4] = t4;
+    // ... except for a possible carry at bit 22 of t9 (i.e. bit 256 of the field element)
+    assert(t9 >> 23 == 0);
+
+    // At most a single final reduction is needed; check if the value is >= the field characteristic
+    x = (t9 >> 22) | ((t9 == 0x03FFFFFULL) & (m == 0x3FFFFFFULL)
+        & ((t1 + 0x40UL + ((t0 + 0x3D1UL) >> 26)) > 0x3FFFFFFULL));
+
+    // Apply the final reduction (for constant-time behaviour, we do it always)
+    t0 += x * 0x3D1UL; t1 += (x << 6);
+    t1 += (t0 >> 26); t0 &= 0x3FFFFFFUL;
+    t2 += (t1 >> 26); t1 &= 0x3FFFFFFUL;
+    t3 += (t2 >> 26); t2 &= 0x3FFFFFFUL;
+    t4 += (t3 >> 26); t3 &= 0x3FFFFFFUL;
+    t5 += (t4 >> 26); t4 &= 0x3FFFFFFUL;
+    t6 += (t5 >> 26); t5 &= 0x3FFFFFFUL;
+    t7 += (t6 >> 26); t6 &= 0x3FFFFFFUL;
+    t8 += (t7 >> 26); t7 &= 0x3FFFFFFUL;
+    t9 += (t8 >> 26); t8 &= 0x3FFFFFFUL;
+
+    // If t9 didn't carry to bit 22 already, then it should have after any final reduction
+    assert(t9 >> 22 == x);
+
+    // Mask off the possible multiple of 2^256 from the final reduction
+    t9 &= 0x03FFFFFUL;
+
+    r->n[0] = t0; r->n[1] = t1; r->n[2] = t2; r->n[3] = t3; r->n[4] = t4;
     r->n[5] = t5; r->n[6] = t6; r->n[7] = t7; r->n[8] = t8; r->n[9] = t9;
-/*    fog("         out: ", r);*/
 
 #ifdef VERIFY
     r->magnitude = 1;
