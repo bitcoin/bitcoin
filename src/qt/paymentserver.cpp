@@ -200,10 +200,6 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
                 CBitcoinAddress address(r.address.toStdString());
 
                 SelectParams(CChainParams::MAIN);
-                if (!address.IsValid())
-                {
-                    SelectParams(CChainParams::TESTNET);
-                }
             }
         }
         else if (QFile::exists(arg)) // Filename
