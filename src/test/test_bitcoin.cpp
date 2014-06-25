@@ -31,6 +31,7 @@ struct TestingSetup {
 
     TestingSetup() {
         fPrintToDebugLog = false; // don't want to write to debug.log file
+        SelectParams(CBaseChainParams::MAIN);
         noui_connect();
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
