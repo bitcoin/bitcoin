@@ -119,6 +119,22 @@ CTransaction& CTransaction::operator=(const CTransaction &tx) {
     return *this;
 }
 
+bool CTransaction::IsEquivalentTo(const CTransaction& tx) const
+{
+    if (nVersion   != tx.nVersion   ||
+        nLockTime  != tx.nLockTime  ||
+        vin.size() != tx.vin.size() ||
+        vout       != tx.vout)
+        return false;
+    for (unsigned int i = 0; i < vin.size(); i++)
+    {
+        if (vin[i].nSequence != tx.vin[i].nSequence ||
+            vin[i].prevout   != tx.vin[i].prevout)
+            return false;
+    }
+    return true;
+}
+
 int64_t CTransaction::GetValueOut() const
 {
     int64_t nValueOut = 0;
