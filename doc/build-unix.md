@@ -61,10 +61,8 @@ Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-	sudo apt-get install build-essential
-	sudo apt-get install libtool autotools-dev autoconf
-	sudo apt-get install libssl-dev
-
+	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev
+	
 for Ubuntu 12.04 and later:
 
 	sudo apt-get install libboost-all-dev
@@ -95,8 +93,7 @@ To enable the change run
 
 for other Ubuntu & Debian:
 
-	sudo apt-get install libdb4.8-dev
-	sudo apt-get install libdb4.8++-dev
+	sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
 Optional:
 
