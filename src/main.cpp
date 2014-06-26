@@ -3405,10 +3405,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         return true;
     }
 
-    {
-        LOCK(cs_main);
-        State(pfrom->GetId())->nLastBlockProcess = GetTimeMicros();
-    }
 
 
 
@@ -4349,9 +4345,9 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
         // Start block sync
         if (pto->fStartSync && !fImporting && !fReindex) {
-            pto->fStartSync = false;
             PushGetBlocks(pto, chainActive.Tip(), uint256(0));
             pto->tGetblocks = GetTimeMillis();
+            pto->fStartSync = false;
         }
 
         // Resend wallet transactions that haven't gotten in a block yet
@@ -4411,16 +4407,31 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             pto->PushMessage("inv", vInv);
 
 
-        // Detect stalled peers. Require that blocks are in flight, we haven't
-        // received a (requested) block in one minute, and that all blocks are
-        // in flight for over two minutes, since we first had a chance to
-        // process an incoming block.
-        int64_t nNow = GetTimeMicros();
-        if (!pto->fDisconnect && state.nBlocksInFlight &&
-            state.nLastBlockReceive < state.nLastBlockProcess - BLOCK_DOWNLOAD_TIMEOUT*1000000 &&
-            state.vBlocksInFlight.front().nTime < state.nLastBlockProcess - 2*BLOCK_DOWNLOAD_TIMEOUT*1000000) {
-            LogPrintf("Peer %s is stalling block download, disconnecting\n", state.name.c_str());
-            pto->fDisconnect = true;
+        // Detect stalled peers.
+        int64_t tNow = GetTimeMillis();
+        if (pto->tGetblocks) {
+            if (pto->tBlockRecving > pto->tBlockRecved) {
+                if (tNow-pto->tBlockRecving > BLOCK_DOWNLOAD_TIMEOUT * 1000) {
+                    LogPrintf("sync peer=%d: Block download stalled for over %d seconds.\n",
+                        pto->id, BLOCK_DOWNLOAD_TIMEOUT);
+                    pto->fDisconnect = true;
+                }
+            } else if (pto->tGetblocks > pto->tBlockInvs && tNow-pto->tGetblocks > BLOCK_DOWNLOAD_TIMEOUT * 1000) {
+                LogPrintf("sync peer=%d: No invs of new blocks received within %d seconds.\n",
+                    pto->id, BLOCK_DOWNLOAD_TIMEOUT);
+                pto->fDisconnect = true;
+            } else if (!CaughtUp() && pto->tBlockRecved && tNow-pto->tBlockRecved > BLOCK_DOWNLOAD_TIMEOUT * 1000) {
+                LogPrintf("sync peer=%d: No block reception for over %d seconds.\n",
+                    pto->id, BLOCK_DOWNLOAD_TIMEOUT);
+                if (state.nBlocksInFlight)
+                    pto->fDisconnect = true;
+                else
+                    pto->tGetblocks = 0; // shouldn't ever get here
+            } else if (pto->tGetdataBlock > pto->tBlockRecving && tNow-pto->tGetdataBlock > BLOCK_DOWNLOAD_TIMEOUT * 1000) {
+                LogPrintf("sync peer=%d: No block download started for over %d seconds.\n",
+                    pto->id, BLOCK_DOWNLOAD_TIMEOUT);
+                pto->fDisconnect = true;
+            }
         }
 
         // Update knowledge of peer's block availability.
@@ -4447,6 +4458,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         //
         // Message: getdata (non-blocks)
         //
+        int64_t nNow = GetTimeMicros();
         while (!pto->fDisconnect && !pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
         {
             const CInv& inv = (*pto->mapAskFor.begin()).second;
