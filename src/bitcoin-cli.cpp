@@ -50,8 +50,7 @@ static bool AppInitRPC(int argc, char* argv[])
     // Parameters
     //
     ParseParameters(argc, argv);
-    if (!boost::filesystem::is_directory(GetDataDir(false)))
-    {
+    if (!boost::filesystem::is_directory(GetDataDir(false))) {
         fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
         return false;
     }
@@ -66,11 +65,9 @@ static bool AppInitRPC(int argc, char* argv[])
         fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
         return false;
     }
-    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-help") || mapArgs.count("-version"))
-    {
+    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-help") || mapArgs.count("-version")) {
         std::string strUsage = _("Bitcoin Core RPC client version") + " " + FormatFullVersion() + "\n";
-        if (!mapArgs.count("-version"))
-        {
+        if (!mapArgs.count("-version")) {
             strUsage += "\n" + _("Usage:") + "\n" +
                   "  bitcoin-cli [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n" +
                   "  bitcoin-cli [options] help                " + _("List commands") + "\n" +
@@ -153,11 +150,9 @@ int CommandLineRPC(int argc, char *argv[])
 {
     string strPrint;
     int nRet = 0;
-    try
-    {
+    try {
         // Skip switches
-        while (argc > 1 && IsSwitchChar(argv[1][0]))
-        {
+        while (argc > 1 && IsSwitchChar(argv[1][0])) {
             argc--;
             argv++;
         }
@@ -178,15 +173,12 @@ int CommandLineRPC(int argc, char *argv[])
         const Value& result = find_value(reply, "result");
         const Value& error  = find_value(reply, "error");
 
-        if (error.type() != null_type)
-        {
+        if (error.type() != null_type) {
             // Error
             strPrint = "error: " + write_string(error, false);
             int code = find_value(error.get_obj(), "code").get_int();
             nRet = abs(code);
-        }
-        else
-        {
+        } else {
             // Result
             if (result.type() == null_type)
                 strPrint = "";
@@ -208,8 +200,7 @@ int CommandLineRPC(int argc, char *argv[])
         throw;
     }
 
-    if (strPrint != "")
-    {
+    if (strPrint != "") {
         fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
     }
     return nRet;
@@ -219,8 +210,7 @@ int main(int argc, char* argv[])
 {
     SetupEnvironment();
 
-    try
-    {
+    try {
         if(!AppInitRPC(argc, argv))
             return EXIT_FAILURE;
     }
@@ -233,8 +223,7 @@ int main(int argc, char* argv[])
     }
 
     int ret = EXIT_FAILURE;
-    try
-    {
+    try {
         ret = CommandLineRPC(argc, argv);
     }
     catch (std::exception& e) {
