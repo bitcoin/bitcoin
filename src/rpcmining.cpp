@@ -589,7 +589,7 @@ Value submitblock(const Array& params, bool fHelp)
     if (state.IsError())
     {
         std::string strRejectReason = state.GetRejectReason();
-        throw JSONRPCError(RPC_MISC_ERROR, strRejectReason);
+        throw JSONRPCError(RPC_VERIFY_ERROR, strRejectReason);
     }
     if (state.IsInvalid())
         return "rejected"; // TODO: report validation state
