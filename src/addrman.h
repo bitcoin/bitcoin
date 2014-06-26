@@ -7,6 +7,7 @@
 
 #include "netbase.h"
 #include "protocol.h"
+#include "random.h"
 #include "sync.h"
 #include "timedata.h"
 #include "util.h"
