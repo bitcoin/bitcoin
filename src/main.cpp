@@ -7,6 +7,7 @@
 
 #include "addrman.h"
 #include "alert.h"
+#include "bloom.h"
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
@@ -122,6 +123,10 @@ namespace {
     map<uint256, pair<NodeId, list<uint256>::iterator> > mapBlocksToDownload;
 }
 
+// Forward reference functions defined here:
+static const unsigned int MAX_DOUBLESPEND_BLOOM = 1000;
+static void RelayDoubleSpend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter);
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // dispatching functions
@@ -143,8 +148,23 @@ struct CMainSignals {
     boost::signals2::signal<void (const uint256 &)> Inventory;
     // Tells listeners to broadcast their data.
     boost::signals2::signal<void ()> Broadcast;
+    // Notifies listeners of detection of a double-spent transaction. Arguments are outpoint that is
+    // double-spent, first transaction seen, double-spend transaction, and whether the second double-spend
+    // transaction was first seen in a block.
+    // Note: only notifies if the previous transaction is in the memory pool; if previous transction was in a block,
+    // then the double-spend simply fails when we try to lookup the inputs in the current UTXO set.
+    boost::signals2::signal<void (const COutPoint&, const CTransaction&, bool)> DetectedDoubleSpend;
 } g_signals;
 }
+
+void RegisterInternalSignals() {
+    static CBloomFilter doubleSpendFilter;
+    seed_insecure_rand();
+    doubleSpendFilter = CBloomFilter(MAX_DOUBLESPEND_BLOOM, 0.01, insecure_rand(), BLOOM_UPDATE_NONE);
+
+    g_signals.DetectedDoubleSpend.connect(boost::bind(RelayDoubleSpend, _1, _2, _3, doubleSpendFilter));
+}
+
 
 void RegisterWallet(CWalletInterface* pwalletIn) {
     g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2));
@@ -824,6 +844,22 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, 
     return nMinFee;
 }
 
+// Exponentially limit the rate of nSize flow to nLimit.  nLimit unit is thousands-per-minute.
+bool RateLimitExceeded(double& dCount, int64_t& nLastTime, int64_t nLimit, unsigned int nSize)
+{
+    static CCriticalSection csLimiter;
+    int64_t nNow = GetTime();
+
+    LOCK(csLimiter);
+
+    // Use an exponentially decaying ~10-minute window:
+    dCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+    nLastTime = nNow;
+    if (dCount >= nLimit*10*1000)
+        return true;
+    dCount += nSize;
+    return false;
+}
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectInsaneFee)
@@ -858,9 +894,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         COutPoint outpoint = tx.vin[i].prevout;
-        if (pool.mapNextTx.count(outpoint))
+        // Does tx conflict with a member of the pool, and is it not equivalent to that member?
+        if (pool.mapNextTx.count(outpoint) && !tx.IsEquivalentTo(*pool.mapNextTx[outpoint].ptx))
         {
-            // Disable replacement feature for now
+            g_signals.DetectedDoubleSpend(outpoint, tx, false);
             return false;
         }
     }
@@ -932,23 +969,15 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // be annoying or make others' transactions take longer to confirm.
         if (fLimitFree && nFees < CTransaction::minRelayTxFee.GetFee(nSize))
         {
-            static CCriticalSection csFreeLimiter;
             static double dFreeCount;
-            static int64_t nLastTime;
-            int64_t nNow = GetTime();
+            static int64_t nLastFreeTime;
+            static int64_t nFreeLimit = GetArg("-limitfreerelay", 15);
 
-            LOCK(csFreeLimiter);
-
-            // Use an exponentially decaying ~10-minute window:
-            dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-            nLastTime = nNow;
-            // -limitfreerelay unit is thousand-bytes-per-minute
-            // At default rate it would take over a month to fill 1GB
-            if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
+        	if (RateLimitExceeded(dFreeCount, nLastFreeTime, nFreeLimit, nSize))
                 return state.DoS(0, error("AcceptToMemoryPool : free transaction rejected by rate limiter"),
                                  REJECT_INSUFFICIENTFEE, "insufficient priority");
+
             LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-            dFreeCount += nSize;
         }
 
         if (fRejectInsaneFee && nFees > CTransaction::minRelayTxFee.GetFee(nSize) * 10000)
@@ -969,6 +998,49 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     g_signals.SyncTransaction(tx, NULL);
 
     return true;
+}
+
+static void
+RelayDoubleSpend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter)
+{
+    // Relaying double-spend attempts to our peers lets them detect when
+    // somebody might be trying to cheat them. However, blindly relaying
+    // every double-spend across the entire network gives attackers
+    // a denial-of-service attack: just generate a stream of double-spends
+    // re-spending the same (limited) set of outpoints owned by the attacker.
+    // So, we use a bloom filter and only relay (at most) the first double
+    // spend for each outpoint. False-positives ("we have already relayed")
+    // are OK, because if the peer doesn't hear about the double-spend
+    // from us they are very likely to hear about it from another peer, since
+    // each peer uses a different, randomized bloom filter.
+
+    if (fInBlock || filter.contains(outPoint)) return;
+
+    // Apply an independent rate limit to double-spend relays
+    static double dRespendCount;
+    static int64_t nLastRespendTime;
+    static int64_t nRespendLimit = GetArg("-limitrespendrelay", 100);
+    unsigned int nSize = ::GetSerializeSize(doubleSpend, SER_NETWORK, PROTOCOL_VERSION);
+
+    if (RateLimitExceeded(dRespendCount, nLastRespendTime, nRespendLimit, nSize))
+    {
+        LogPrint("mempool", "Double-spend relay rejected by rate limiter\n");
+        return;
+    }
+
+    LogPrint("mempool", "Rate limit dRespendCount: %g => %g\n", dRespendCount, dRespendCount+nSize);
+
+    // Clear the filter on average every MAX_DOUBLE_SPEND_BLOOM
+    // insertions
+    if (insecure_rand()%MAX_DOUBLESPEND_BLOOM == 0)
+        filter.clear();
+
+    filter.insert(outPoint);
+
+    RelayTransaction(doubleSpend);
+
+    // Share conflict with wallet
+    g_signals.SyncTransaction(doubleSpend, NULL);
 }
 
 
