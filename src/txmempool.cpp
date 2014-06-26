@@ -447,6 +447,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned i
         std::list<CTransaction> dummy;
         remove(tx, dummy, false);
         removeConflicts(tx, conflicts);
+        ClearPrioritisation(tx.GetHash());
     }
 }
 
@@ -562,6 +563,34 @@ CTxMemPool::ReadFeeEstimates(CAutoFile& filein)
         return false;
     }
     return true;
+}
+
+void CTxMemPool::PrioritiseTransaction(const uint256 hash, const string strHash, double dPriorityDelta, int64_t nFeeDelta)
+{
+    {
+        LOCK(cs);
+        std::pair<double, int64_t> &deltas = mapDeltas[hash];
+        deltas.first += dPriorityDelta;
+        deltas.second += nFeeDelta;
+    }
+    LogPrintf("PrioritiseTransaction: %s priority += %f, fee += %d\n", strHash.c_str(), dPriorityDelta, nFeeDelta);
+}
+
+void CTxMemPool::ApplyDeltas(const uint256 hash, double &dPriorityDelta, int64_t &nFeeDelta)
+{
+    LOCK(cs);
+    std::map<uint256, std::pair<double, int64_t> >::iterator pos = mapDeltas.find(hash);
+    if (pos == mapDeltas.end())
+        return;
+    const std::pair<double, int64_t> &deltas = pos->second;
+    dPriorityDelta += deltas.first;
+    nFeeDelta += deltas.second;
+}
+
+void CTxMemPool::ClearPrioritisation(const uint256 hash)
+{
+    LOCK(cs);
+    mapDeltas.erase(hash);
 }
 
 
