@@ -16,15 +16,9 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-<<<<<<< HEAD:contrib/gitian-descriptors/gitian-osx-bitcoin.yml
-- "osx-native-depends-r3.tar.gz"
-- "osx-depends-r4.tar.gz"
-- "osx-depends-qt-5.2.1-r4.tar.gz"
-=======
 - "osx-native-depends-gitian-r3.tar.gz"
-- "bitcoin-deps-osx-gitian-r3.tar.gz"
-- "qt-osx-5.2.1-gitian-r3.tar.gz"
->>>>>>> Clean up release-process.md and make descriptors more consistent:contrib/gitian-descriptors/gitian-osx.yml
+- "bitcoin-deps-osx-gitian-r4.tar.gz"
+- "qt-osx-5.2.1-gitian-r4.tar.gz"
 - "MacOSX10.7.sdk.tar.gz"
 script: |
   HOST=x86_64-apple-darwin11
