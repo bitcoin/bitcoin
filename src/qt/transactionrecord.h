@@ -19,10 +19,17 @@ class TransactionStatus
 {
 public:
     TransactionStatus():
-        countsForBalance(false), sortKey(""),
-        matures_in(0), status(Offline), hasConflicting(false), depth(0), open_for(0), cur_num_blocks(-1),
+        countsForBalance(false),
+        sortKey(""),
+        matures_in(0),
+        status(Offline),
+        hasConflicting(false),
+        depth(0),
+        open_for(0),
+        cur_num_blocks(-1),
         cur_num_conflicts(-1)
-    { }
+    {
+    }
 
     enum Status {
         Confirmed,          /**< Have 6 or more confirmations (normal tx) or fully mature (mined tx) **/

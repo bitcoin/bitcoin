@@ -538,9 +538,9 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case Qt::TextAlignmentRole:
         return column_alignments[index.column()];
     case Qt::BackgroundColorRole:
-    	if (rec->status.hasConflicting)
+        if (rec->status.hasConflicting)
             return COLOR_HASCONFLICTING_BG;
-    	break;
+        break;
     case Qt::ForegroundRole:
         if (rec->status.hasConflicting)
             return COLOR_HASCONFLICTING;
