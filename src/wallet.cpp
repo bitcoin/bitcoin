@@ -637,7 +637,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
 
         bool fIsConflicting = IsConflicting(tx);
         if (fIsConflicting)
-        	nConflictsReceived++;
+            nConflictsReceived++;
 
         if (fExisted || IsMine(tx) || IsFromMe(tx) || fIsConflicting)
         {
