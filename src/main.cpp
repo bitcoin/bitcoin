@@ -1267,6 +1267,11 @@ CAmount GetBlockValue(int nHeight, const CAmount& nFees)
     return nSubsidy + nFees;
 }
 
+bool CaughtUp()
+{
+    return ((chainActive.Height() >= Checkpoints::GetTotalBlocksEstimate()) && chainActive.Tip()->GetBlockTime() > GetTime() - 90 * 60);
+}
+
 bool IsInitialBlockDownload()
 {
     LOCK(cs_main);
