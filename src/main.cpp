@@ -269,7 +269,7 @@ void FinalizeNode(NodeId nodeid) {
 }
 
 // Requires cs_main.
-void MarkBlockAsReceived(const uint256 &hash, NodeId nodeFrom = -1) {
+void MarkBlockAsRequested(const uint256 &hash, NodeId nodeFrom = -1) {
     map<uint256, pair<NodeId, list<uint256>::iterator> >::iterator itToDownload = mapBlocksToDownload.find(hash);
     if (itToDownload != mapBlocksToDownload.end()) {
         CNodeState *state = State(itToDownload->second.first);
@@ -277,7 +277,9 @@ void MarkBlockAsReceived(const uint256 &hash, NodeId nodeFrom = -1) {
         state->nBlocksToDownload--;
         mapBlocksToDownload.erase(itToDownload);
     }
+}
 
+void MarkBlockAsReceived(const uint256 &hash, NodeId nodeFrom = -1) {
     map<uint256, pair<NodeId, list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
     if (itInFlight != mapBlocksInFlight.end()) {
         CNodeState *state = State(itInFlight->second.first);
@@ -312,7 +314,7 @@ void MarkBlockAsInFlight(NodeId nodeid, const uint256 &hash) {
     assert(state != NULL);
 
     // Make sure it's not listed somewhere already.
-    MarkBlockAsReceived(hash);
+    MarkBlockAsRequested(hash);
 
     QueuedBlock newentry = {hash, GetTimeMicros(), state->nBlocksInFlight};
     if (state->nBlocksInFlight == 0)
