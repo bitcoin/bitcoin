@@ -25,10 +25,10 @@
 #include <boost/shared_ptr.hpp>
 #include "json/json_spirit_writer_template.h"
 
-using namespace std;
 using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
+using namespace std;
 
 static std::string strRPCUserColonPass;
 
@@ -897,9 +897,7 @@ void ServiceConnection(AcceptedConnection *conn)
         if (strURI == "/") {
             if (!HTTPReq_JSONRPC(conn, strRequest, mapHeaders, fRun))
                 break;
-        }
-
-        else {
+        } else {
             conn->stream() << HTTPReply(HTTP_NOT_FOUND, "", false) << std::flush;
             break;
         }
