@@ -8,7 +8,7 @@
 // client versioning and copyright year
 //
 
-// These need to be macros, as version.cpp's and bitcoin-qt.rc's voodoo requires it
+// These need to be macros, as version.cpp's and bitcoin*-res.rc's voodoo requires it
 #define CLIENT_VERSION_MAJOR       0
 #define CLIENT_VERSION_MINOR       9
 #define CLIENT_VERSION_REVISION    99
@@ -27,5 +27,8 @@
 // Don't merge these into one macro!
 #define STRINGIZE(X) DO_STRINGIZE(X)
 #define DO_STRINGIZE(X) #X
+
+// Copyright string used in Windows .rc files
+#define COPYRIGHT_STR          "2009-" STRINGIZE(COPYRIGHT_YEAR) " The Bitcoin Core Developers"
 
 #endif // CLIENTVERSION_H
