@@ -600,6 +600,14 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
                 if (IsFromMe(txConflict) || IsMine(txConflict))
                 {
                     NotifyTransactionChanged(this, conflictHash, CT_GOT_CONFLICT);  //Throws dialog
+                    // external respend notify
+                    std::string strCmd = GetArg("-respendnotify", "");
+                    if (!strCmd.empty())
+                    {
+                        boost::replace_all(strCmd, "%s", wtxIn.GetHash().GetHex());
+                        boost::replace_all(strCmd, "%t", conflictHash.GetHex());
+                        boost::thread t(runCommand, strCmd); // thread runs free
+                    }
                 }
             }
         }
