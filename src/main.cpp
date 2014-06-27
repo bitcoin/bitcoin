@@ -852,7 +852,6 @@ bool RateLimitExceeded(double& dCount, int64_t& nLastTime, int64_t nLimit, unsig
 
     LOCK(csLimiter);
 
-    // Use an exponentially decaying ~10-minute window:
     dCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
     nLastTime = nNow;
     if (dCount >= nLimit*10*1000)
@@ -973,7 +972,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             static int64_t nLastFreeTime;
             static int64_t nFreeLimit = GetArg("-limitfreerelay", 15);
 
-        	if (RateLimitExceeded(dFreeCount, nLastFreeTime, nFreeLimit, nSize))
+            if (RateLimitExceeded(dFreeCount, nLastFreeTime, nFreeLimit, nSize))
                 return state.DoS(0, error("AcceptToMemoryPool : free transaction rejected by rate limiter"),
                                  REJECT_INSUFFICIENTFEE, "insufficient priority");
 
@@ -1000,8 +999,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     return true;
 }
 
-static void
-RelayDoubleSpend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter)
+static void RelayDoubleSpend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter)
 {
     // Relaying double-spend attempts to our peers lets them detect when
     // somebody might be trying to cheat them. However, blindly relaying

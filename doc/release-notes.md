@@ -63,5 +63,5 @@ Warning
  - Using other relay rules, a double-spender can craft his crime to
    resist broadcast
  - Miners can choose which conflicting spend to confirm, and some
-   miners may not confirmg the first acceptable spend they see
+   miners may not confirm the first acceptable spend they see
 
