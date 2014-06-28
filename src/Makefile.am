@@ -192,6 +192,7 @@ libbitcoin_util_a_SOURCES = \
   chainparamsbase.cpp \
   rpcprotocol.cpp \
   sync.cpp \
+  uint256.cpp \
   util.cpp \
   version.cpp \
   compat/glibc_sanity.cpp \
