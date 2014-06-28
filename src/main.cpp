@@ -4125,6 +4125,15 @@ bool ProcessMessages(CNode* pfrom)
     // this maintains the order of responses
     if (!pfrom->vRecvGetData.empty()) return fOk;
 
+    int nBlocksToDownload = State(pfrom->id)->nBlocksToDownload;
+    int nBlocksInFlight = State(pfrom->id)->nBlocksInFlight;
+
+    // Cause a new syncnode to be reselected since we're about to stop receiving blocks
+    // (and we'll be ignoring the inv the current syncnode sends in favour of selecting
+    // a potentially better syncnode.
+    if (nBlocksInFlight + nBlocksToDownload == 1 && !CaughtUp())
+        pfrom->tGetblocks = 0;
+
     std::deque<CNetMessage>::iterator it = pfrom->vRecvMsg.begin();
     while (!pfrom->fDisconnect && it != pfrom->vRecvMsg.end()) {
         // Don't bother if send buffer is too full to respond anyway
