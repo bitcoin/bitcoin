@@ -20,4 +20,6 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime);
 
+void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
+
 #endif
