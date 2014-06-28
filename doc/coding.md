@@ -4,44 +4,65 @@ Coding
 Please be consistent with the existing coding style.
 
 Block style:
+```c++
+    bool Function(char* psz, int n)
+    {
+        // Comment summarising what this section of code does
+        for (int i = 0; i < n; i++)
+        {
+            // When something fails, return early
+            if (!Something())
+                return false;
+            ...
+        }
 
-	bool Function(char* psz, int n)
-	{
-	    // Comment summarising what this section of code does
-	    for (int i = 0; i < n; i++)
-	    {
-	        // When something fails, return early
-	        if (!Something())
-	            return false;
-	        ...
-	    }
-	
-	    // Success return is usually at the end
-	    return true;
-	}
-
+        // Success return is usually at the end
+        return true;
+    }
+```
 - ANSI/Allman block style
 - 4 space indenting, no tabs
 - No extra spaces inside parenthesis; please don't do ( this )
 - No space after function names, one space after if, for and while
+- Includes need to be ordered alphabetically, separate own and foreign headers with a new-line (example key.cpp):
+```c++
+#include "key.h"
 
+#include "crypto/sha2.h"
+#include "util.h"
+
+#include <openssl/foo.h>
+```
+- Class or struct keywords in header files need to be ordered alphabetically:
+```c++
+class CAlpha;
+class CBeta;
+```
+- When using namespace keyword use the following form:
+```c++
+namespace Foo {
+
+...
+
+} // Foo
+```
 Variable names begin with the type in lowercase, like nSomeVariable.
 Please don't put the first word of the variable name in lowercase like
 someVariable.
 
 Common types:
 
-	n       integer number: short, unsigned short, int, unsigned int, int64, uint64, sometimes char if used as a number
-	d       double, float
-	f       flag
-	hash    uint256
-	p       pointer or array, one p for each level of indirection
-	psz     pointer to null terminated string
-	str     string object
-	v       vector or similar list objects
-	map     map or multimap
-	set     set or multiset
-	bn      CBigNum
+    n       integer number: short, unsigned short, int, unsigned int, int64, uint64, sometimes char if used as a number
+    d       double, float
+    f       flag
+    hash    uint256
+    p       pointer or array, one p for each level of indirection
+    psz     pointer to null terminated string
+    str     string object
+    v       vector or similar list objects
+    map     map or multimap
+    set     set or multiset
+    bn      CBigNum
 
 Doxygen comments
 -----------------

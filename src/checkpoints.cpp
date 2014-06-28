@@ -12,8 +12,8 @@
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/foreach.hpp>
 
-namespace Checkpoints
-{
+namespace Checkpoints {
+
     typedef std::map<int, uint256> MapCheckpoints;
 
     // How many times we expect transactions after the last checkpoint to
@@ -161,4 +161,5 @@ namespace Checkpoints
         }
         return NULL;
     }
-}
+
+} // namespace Checkpoints
