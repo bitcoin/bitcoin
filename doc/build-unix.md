@@ -91,7 +91,7 @@ To enable the change run
 
 	sudo apt-get update
 
-for other Ubuntu & Debian:
+for other Debian & Ubuntu (with ppa):
 
 	sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
