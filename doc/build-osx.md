@@ -9,7 +9,7 @@ Notes
 Older OSX releases or 32-bit processors are no longer supported.
 
 * All of the commands should be executed in a Terminal application. The
-built-in one is located in `/Applications/Utilities`.
+built-in and suggested one is located in `/Applications/Utilities`.
 
 Preparation
 -----------
@@ -31,10 +31,11 @@ available via Homebrew or MacPorts.
 You will also need to install [Homebrew](http://brew.sh)
 or [MacPorts](https://www.macports.org/) in order to install library
 dependencies. It's largely a religious decision which to choose, but, as of
-December 2012, MacPorts is a little easier because you can just install the
-dependencies immediately - no other work required. If you're unsure, read
-the instructions through first in order to assess what you want to do.
-Homebrew is a little more popular among those newer to OS X.
+May 2014, MacPorts is a little easier because you can just install the
+dependencies immediately - no other work required. If you're unsure, please
+read the instructions through first in order to assess what you want to do.
+Homebrew is a little more popular among those who are newer to terminal and/or
+OS X.
 
 The installation of the actual dependencies is covered in the Instructions
 sections below.
@@ -80,7 +81,7 @@ Note: After you have installed the dependencies, you should check that the Homeb
 
         openssl version
 
-into Terminal. You should see OpenSSL 1.0.1f 6 Jan 2014.
+into Terminal. You should see OpenSSL 1.0.1g 7 Apr 2014.
 
 If not, you can ensure that the Homebrew OpenSSL is correctly linked by running
 
@@ -92,7 +93,7 @@ PATH.
 
 ### Building `bitcoind`
 
-1. Clone the github tree to get the source code and go into the directory.
+1. Clone the github tree to get the source code and enter the directory.
 
         git clone https://github.com/bitcoin/bitcoin.git
         cd bitcoin
@@ -140,8 +141,8 @@ bundle is packaged and signed to create the .dmg disk image that is distributed.
 Running
 -------
 
-It's now available at `./bitcoind`, provided that you are still in the `src`
-directory. We have to first create the RPC configuration file, though.
+The daemon is now available by running `./bitcoind`, provided that you are still in
+the `src` directory. We have to first create the RPC configuration file, though.
 
 Run `./bitcoind` to get the filename where it should be put, or just try these
 commands:
@@ -150,12 +151,33 @@ commands:
     chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
 
 When next you run it, it will start downloading the blockchain, but it won't
-output anything while it's doing this. This process may take several hours;
+output anything while it's doing this. This process may take several hours or days;
 you can monitor its process by looking at the debug.log file, like this:
 
     tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
 
+Installing bootstrap.dat
+-------
+
+The bootstrap.dat file allows your wallet or daemon to sync with the blockchain faster;
+to download and install this file:
+
+1.  Install the bittorent client to download the bootstrap.dat file (requires macports)
+
+    sudo port install aria
+
+2.  Download the bootstrap.dat file (this may take a bit)
+ 
+    aria2c http://sourceforge.net/projects/bitcoin/files/Bitcoin/blockchain/bootstrap.dat.torrent
+
+3.  Move the file to the app data folder
+  
+    mv /bootstrap.dat /Library/Application Support/bitcoin/
+
+4.  Open the bitcoin daemon or GUI client and it will start syncing
+
 Other commands:
+-------
 
     ./bitcoind -daemon # to start the bitcoin daemon.
     ./bitcoin-cli --help  # for a list of command-line options.
