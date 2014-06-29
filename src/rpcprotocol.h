@@ -141,6 +141,8 @@ private:
 };
 
 std::string HTTPPost(const std::string& strMsg, const std::map<std::string,std::string>& mapRequestHeaders);
+std::string HTTPError(int nStatus, bool keepalive,
+                      bool headerOnly = false);
 std::string HTTPReply(int nStatus, const std::string& strMsg, bool keepalive,
                       bool headerOnly = false,
                       const char *contentType = "application/json");
