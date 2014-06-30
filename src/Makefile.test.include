@@ -47,6 +47,7 @@ BITCOIN_TESTS =\
   test/script_tests.cpp \
   test/serialize_tests.cpp \
   test/sigopcount_tests.cpp \
+  test/skiplist_tests.cpp \
   test/test_bitcoin.cpp \
   test/transaction_tests.cpp \
   test/uint256_tests.cpp \
