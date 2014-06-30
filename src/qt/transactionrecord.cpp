@@ -170,6 +170,8 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     status.depth = wtx.GetDepthInMainChain();
     status.cur_num_blocks = chainActive.Height();
 
+    status.hasConflicting = false;
+
     if (!IsFinalTx(wtx, chainActive.Height() + 1))
     {
         if (wtx.nLockTime < LOCKTIME_THRESHOLD)
@@ -213,6 +215,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         if (status.depth < 0)
         {
             status.status = TransactionStatus::Conflicted;
+            status.hasConflicting = !(wtx.GetConflicts(false).empty());
         }
         else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
         {
@@ -221,6 +224,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         else if (status.depth == 0)
         {
             status.status = TransactionStatus::Unconfirmed;
+            status.hasConflicting = !(wtx.GetConflicts(false).empty());
         }
         else if (status.depth < RecommendedNumConfirmations)
         {
@@ -231,13 +235,13 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
             status.status = TransactionStatus::Confirmed;
         }
     }
-
 }
 
-bool TransactionRecord::statusUpdateNeeded()
+bool TransactionRecord::statusUpdateNeeded(int64_t nConflictsReceived)
 {
     AssertLockHeld(cs_main);
-    return status.cur_num_blocks != chainActive.Height();
+    return (status.cur_num_blocks != chainActive.Height() ||
+            status.cur_num_conflicts != nConflictsReceived);
 }
 
 QString TransactionRecord::getTxID() const
