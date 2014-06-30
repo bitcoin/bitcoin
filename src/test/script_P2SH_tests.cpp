@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 
     // vout[4] is max sigops:
     CScript fifteenSigops; fifteenSigops << OP_1;
-    for (int i = 0; i < MAX_P2SH_SIGOPS; i++)
+    for (unsigned i = 0; i < MAX_P2SH_SIGOPS; i++)
         fifteenSigops << key[i%3].GetPubKey();
     fifteenSigops << OP_15 << OP_CHECKMULTISIG;
     keystore.AddCScript(fifteenSigops);
