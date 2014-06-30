@@ -256,6 +256,9 @@ public:
         return hash;
     }
 
+    // True if only scriptSigs are different
+    bool IsEquivalentTo(const CTransaction& tx) const;
+
     // Return sum of txouts.
     int64_t GetValueOut() const;
     // GetValueIn() is a method on CCoinsViewCache, because
