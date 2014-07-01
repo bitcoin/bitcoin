@@ -36,6 +36,17 @@
 #define MSG_NOSIGNAL 0
 #endif
 
+// Fix for ancient MinGW versions, that don't have defined these in ws2tcpip.h.
+// Todo: Can be removed when our pull-tester is upgraded to a modern MinGW version.
+#ifdef WIN32
+#ifndef PROTECTION_LEVEL_UNRESTRICTED
+#define PROTECTION_LEVEL_UNRESTRICTED 10
+#endif
+#ifndef IPV6_PROTECTION_LEVEL
+#define IPV6_PROTECTION_LEVEL 23
+#endif
+#endif
+
 using namespace std;
 using namespace boost;
 
@@ -816,7 +827,6 @@ void ThreadSocketHandler()
             uiInterface.NotifyNumConnectionsChanged(nPrevNodeCount);
         }
 
-
         //
         // Find which sockets have data to receive
         //
@@ -838,6 +848,7 @@ void ThreadSocketHandler()
             hSocketMax = max(hSocketMax, hListenSocket);
             have_fds = true;
         }
+
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
@@ -898,57 +909,58 @@ void ThreadSocketHandler()
             MilliSleep(timeout.tv_usec/1000);
         }
 
-
         //
         // Accept new connections
         //
         BOOST_FOREACH(SOCKET hListenSocket, vhListenSocket)
-        if (hListenSocket != INVALID_SOCKET && FD_ISSET(hListenSocket, &fdsetRecv))
         {
-            struct sockaddr_storage sockaddr;
-            socklen_t len = sizeof(sockaddr);
-            SOCKET hSocket = accept(hListenSocket, (struct sockaddr*)&sockaddr, &len);
-            CAddress addr;
-            int nInbound = 0;
+            if (hListenSocket != INVALID_SOCKET && FD_ISSET(hListenSocket, &fdsetRecv))
+            {
+                struct sockaddr_storage sockaddr;
+                socklen_t len = sizeof(sockaddr);
+                SOCKET hSocket = accept(hListenSocket, (struct sockaddr*)&sockaddr, &len);
+                CAddress addr;
+                int nInbound = 0;
 
-            if (hSocket != INVALID_SOCKET)
-                if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr))
-                    LogPrintf("Warning: Unknown socket family\n");
+                if (hSocket != INVALID_SOCKET)
+                    if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr))
+                        LogPrintf("Warning: Unknown socket family\n");
 
-            {
-                LOCK(cs_vNodes);
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                    if (pnode->fInbound)
-                        nInbound++;
-            }
-
-            if (hSocket == INVALID_SOCKET)
-            {
-                int nErr = WSAGetLastError();
-                if (nErr != WSAEWOULDBLOCK)
-                    LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
-            }
-            else if (nInbound >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS)
-            {
-                closesocket(hSocket);
-            }
-            else if (CNode::IsBanned(addr))
-            {
-                LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
-                closesocket(hSocket);
-            }
-            else
-            {
-                LogPrint("net", "accepted connection %s\n", addr.ToString());
-                CNode* pnode = new CNode(hSocket, addr, "", true);
-                pnode->AddRef();
                 {
                     LOCK(cs_vNodes);
-                    vNodes.push_back(pnode);
+                    BOOST_FOREACH(CNode* pnode, vNodes)
+                        if (pnode->fInbound)
+                            nInbound++;
+                }
+
+                if (hSocket == INVALID_SOCKET)
+                {
+                    int nErr = WSAGetLastError();
+                    if (nErr != WSAEWOULDBLOCK)
+                        LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
+                }
+                else if (nInbound >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS)
+                {
+                    closesocket(hSocket);
+                }
+                else if (CNode::IsBanned(addr))
+                {
+                    LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
+                    closesocket(hSocket);
+                }
+                else
+                {
+                    LogPrint("net", "accepted connection %s\n", addr.ToString());
+                    CNode* pnode = new CNode(hSocket, addr, "", true);
+                    pnode->AddRef();
+
+                    {
+                        LOCK(cs_vNodes);
+                        vNodes.push_back(pnode);
+                    }
                 }
             }
         }
-
 
         //
         // Service each socket
@@ -1587,17 +1599,15 @@ bool BindListenPort(const CService &addrBind, string& strError)
         return false;
     }
 
+#ifndef WIN32
 #ifdef SO_NOSIGPIPE
     // Different way of disabling SIGPIPE on BSD
     setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
 #endif
-
-#ifndef WIN32
     // Allow binding if the port is still in TIME_WAIT state after
-    // the program was closed and restarted.  Not an issue on windows.
+    // the program was closed and restarted. Not an issue on windows!
     setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
 #endif
-
 
 #ifdef WIN32
     // Set to non-blocking, incoming connections will also inherit this
@@ -1622,10 +1632,8 @@ bool BindListenPort(const CService &addrBind, string& strError)
 #endif
 #endif
 #ifdef WIN32
-        int nProtLevel = 10 /* PROTECTION_LEVEL_UNRESTRICTED */;
-        int nParameterId = 23 /* IPV6_PROTECTION_LEVEl */;
-        // this call is allowed to fail
-        setsockopt(hListenSocket, IPPROTO_IPV6, nParameterId, (const char*)&nProtLevel, sizeof(int));
+        int nProtLevel = PROTECTION_LEVEL_UNRESTRICTED;
+        setsockopt(hListenSocket, IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, (const char*)&nProtLevel, sizeof(int));
 #endif
     }
 
