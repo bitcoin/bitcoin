@@ -106,10 +106,10 @@ Release Process
     ec95abef1df2b096a970359787c01d8c45e2a4475b7ae34e12c022634fbdba8a  osx-depends-qt-5.2.1-r4.tar.gz
 
 
- Build bitcoind and bitcoin-qt on Linux32, Linux64, and Win32:
+ Build bitcoind and bitcoin-qt on Linux32, Linux64, Win32, and Win64:
   
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 	pushd build/out
 	zip -r bitcoin-${VERSION}-linux-gitian.zip *
 	mv bitcoin-${VERSION}-linux-gitian.zip ../../../
@@ -129,10 +129,10 @@ Release Process
 
   Build output expected:
 
-  1. linux 32-bit and 64-bit binaries + source (bitcoin-${VERSION}-linux-gitian.zip)
-  2. windows 32-bit and 64-bit binaries + installer + source (bitcoin-${VERSION}-win-gitian.zip)
-  3. OSX installer (Bitcoin-Qt.dmg)
-  4. Gitian signatures (in gitian.sigs/${VERSION}[-win|-osx]/(your gitian key)/
+  1. Linux 32-bit and 64-bit binaries + source (bitcoin-${VERSION}-linux-gitian.zip)
+  2. Windows 32-bit and 64-bit binaries + installer + source (bitcoin-${VERSION}-win-gitian.zip)
+  3. OS X installer (Bitcoin-Qt.dmg)
+  4. Gitian signatures (in gitian.sigs/${VERSION}-<linux|win|osx>/(your gitian key)/
 
 repackage gitian builds for release as stand-alone zip/tar/installer exe
 
@@ -172,7 +172,7 @@ repackage gitian builds for release as stand-alone zip/tar/installer exe
 Commit your signature to gitian.sigs:
 
 	pushd gitian.sigs
-	git add ${VERSION}/${SIGNER}
+	git add ${VERSION}-linux/${SIGNER}
 	git add ${VERSION}-win/${SIGNER}
 	git commit -a
 	git push  # Assuming you can push to the gitian.sigs tree
