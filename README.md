@@ -1,7 +1,7 @@
 Bitcoin Core integration/staging tree
 =====================================
 
-http://www.bitcoin.org
+https://www.bitcoin.org
 
 Copyright (c) 2009-2014 Bitcoin Core Developers
 
@@ -15,7 +15,7 @@ out collectively by the network. Bitcoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see http://www.bitcoin.org/en/download.
+the Bitcoin Core software, see https://www.bitcoin.org/en/download.
 
 License
 -------
