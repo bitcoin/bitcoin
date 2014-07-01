@@ -24,6 +24,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
+#define MAX_BLOCK_INVS 500
+
 using namespace std;
 using namespace boost;
 
@@ -3752,29 +3754,35 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         // Find the last block the caller has in the main chain
         CBlockIndex* pindex = chainActive.FindFork(locator);
+        CBlockIndex* pindexStart;
+        CBlockIndex* pindexEnd;
 
         // Send the rest of the chain
+        int nLimit = MAX_BLOCK_INVS;
+        LogPrint("net", "getblocks %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop==uint256(0) ? "end" : hashStop.ToString(), pfrom->id);
         if (pindex)
             pindex = chainActive.Next(pindex);
-        int nLimit = 500;
-        LogPrint("net", "getblocks %d to %s limit %d from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop==uint256(0) ? "end" : hashStop.ToString(), nLimit, pfrom->id);
-        for (; pindex; pindex = chainActive.Next(pindex))
-        {
+        pindexStart = 0;
+        pindexEnd = 0;
+        int nCount = 0;
+        for (; pindex; pindex = chainActive.Next(pindex)) {
             if (pindex->GetBlockHash() == hashStop)
-            {
-                LogPrint("net", "  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
                 break;
+            if (pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()))) {
+                nCount++;
+                if (pindexStart == 0) pindexStart = pindex;
+                pindexEnd = pindex;
             }
-            pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
-            if (--nLimit <= 0)
-            {
+            if (--nLimit <= 0) {
                 // When this block is requested, we'll send an inv that'll make them
                 // getblocks the next batch of inventory.
-                LogPrint("net", "  getblocks stopping at limit %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
                 pfrom->hashContinue = pindex->GetBlockHash();
                 break;
             }
         }
+        if (pindexEnd != 0)
+            LogPrint("net", "sending %d block invs (height %d to %d) to peer=%d\n",
+              nCount, pindexStart->nHeight, pindexEnd->nHeight, pfrom->id);
     }
 
 
