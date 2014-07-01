@@ -195,7 +195,6 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             savedPaymentRequests.append(arg);
 
             SendCoinsRecipient r;
-            SelectParams(CChainParams::MAIN);
             if (GUIUtil::parseBitcoinURI(arg, &r) && r.address.toStdString() != "")
             {
                 CBitcoinAddress address(r.address.toStdString());
