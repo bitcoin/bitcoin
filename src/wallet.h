@@ -315,7 +315,7 @@ public:
     }
     bool IsFromMe(const CTransaction& tx) const     // should probably be renamed to IsRelevantToMe
     {
-        return (GetDebit(tx, MINE_ALL) > 0);
+        return (GetDebit(tx, ISMINE_ALL) > 0);
     }
     bool IsConflicting(const CTransaction& tx) const
     {
@@ -621,24 +621,24 @@ public:
             return 0;
 
         int64_t debit = 0;
-        if(filter & MINE_SPENDABLE)
+        if(filter & ISMINE_SPENDABLE)
         {
             if (fDebitCached)
                 debit += nDebitCached;
             else
             {
-                nDebitCached = pwallet->GetDebit(*this, MINE_SPENDABLE);
+                nDebitCached = pwallet->GetDebit(*this, ISMINE_SPENDABLE);
                 fDebitCached = true;
                 debit += nDebitCached;
             }
         }
-        if(filter & MINE_WATCH_ONLY)
+        if(filter & ISMINE_WATCH_ONLY)
         {
             if(fWatchDebitCached)
                 debit += nWatchDebitCached;
             else
             {
-                nWatchDebitCached = pwallet->GetDebit(*this, MINE_WATCH_ONLY);
+                nWatchDebitCached = pwallet->GetDebit(*this, ISMINE_WATCH_ONLY);
                 fWatchDebitCached = true;
                 debit += nWatchDebitCached;
             }
@@ -655,7 +655,7 @@ public:
         // GetBalance can assume transactions in mapWallet won't change
         if (fUseCache && fCreditCached)
             return nCreditCached;
-        nCreditCached = pwallet->GetCredit(*this, MINE_ALL);
+        nCreditCached = pwallet->GetCredit(*this, ISMINE_ALL);
         fCreditCached = true;
         return nCreditCached;
     }
@@ -666,7 +666,7 @@ public:
         {
             if (fUseCache && fImmatureCreditCached)
                 return nImmatureCreditCached;
-            nImmatureCreditCached = pwallet->GetCredit(*this, MINE_SPENDABLE);
+            nImmatureCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
             fImmatureCreditCached = true;
             return nImmatureCreditCached;
         }
@@ -693,7 +693,7 @@ public:
             if (!pwallet->IsSpent(hashTx, i))
             {
                 const CTxOut &txout = vout[i];
-                nCredit += pwallet->GetCredit(txout, MINE_SPENDABLE);
+                nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
                 if (!MoneyRange(nCredit))
                     throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
             }
@@ -710,7 +710,7 @@ public:
         {
             if (fUseCache && fImmatureWatchCreditCached)
                 return nImmatureWatchCreditCached;
-            nImmatureWatchCreditCached = pwallet->GetCredit(*this, MINE_WATCH_ONLY);
+            nImmatureWatchCreditCached = pwallet->GetCredit(*this, ISMINE_WATCH_ONLY);
             fImmatureWatchCreditCached = true;
             return nImmatureWatchCreditCached;
         }
@@ -736,7 +736,7 @@ public:
             if (!pwallet->IsSpent(GetHash(), i))
             {
                 const CTxOut &txout = vout[i];
-                nCredit += pwallet->GetCredit(txout, MINE_WATCH_ONLY);
+                nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
                 if (!MoneyRange(nCredit))
                     throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
             }
@@ -777,7 +777,7 @@ public:
             return true;
         if (nDepth < 0)
             return false;
-        if (!bSpendZeroConfChange || !IsFromMe(MINE_ALL)) // using wtx's cached debit
+        if (!bSpendZeroConfChange || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
             return false;
 
         // Trusted if all inputs are from us and are in the mempool:
@@ -788,7 +788,7 @@ public:
             if (parent == NULL)
                 return false;
             const CTxOut& parentOut = parent->vout[txin.prevout.n];
-            if (pwallet->IsMine(parentOut) != MINE_SPENDABLE)
+            if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
                 return false;
         }
         return true;
