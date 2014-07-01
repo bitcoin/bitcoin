@@ -80,17 +80,18 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         digestAlgorithm = EVP_sha1();
     }
     else if (paymentRequest.pki_type() == "none") {
-        qDebug() << "PaymentRequestPlus::getMerchant : Payment request: pki_type == none";
+        // This is normal for insecure payment requests
+        qDebug() << "PaymentRequestPlus::getMerchant: Payment request: pki_type == none";
         return false;
     }
     else {
-        qDebug() << "PaymentRequestPlus::getMerchant : Payment request: unknown pki_type " << QString::fromStdString(paymentRequest.pki_type());
+        qDebug() << "PaymentRequestPlus::getMerchant: Payment request: unknown pki_type " << QString::fromStdString(paymentRequest.pki_type());
         return false;
     }
 
     payments::X509Certificates certChain;
     if (!certChain.ParseFromString(paymentRequest.pki_data())) {
-        qDebug() << "PaymentRequestPlus::getMerchant : Payment request: error parsing pki_data";
+        qDebug() << "PaymentRequestPlus::getMerchant: Payment request: error parsing pki_data";
         return false;
     }
 
@@ -100,12 +101,12 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         QByteArray certData(certChain.certificate(i).data(), certChain.certificate(i).size());
         QSslCertificate qCert(certData, QSsl::Der);
         if (currentTime < qCert.effectiveDate() || currentTime > qCert.expiryDate()) {
-            qDebug() << "PaymentRequestPlus::getMerchant : Payment request: certificate expired or not yet active: " << qCert;
+            qDebug() << "PaymentRequestPlus::getMerchant: Payment request: certificate expired or not yet active: " << qCert;
             return false;
         }
 #if QT_VERSION >= 0x050000
         if (qCert.isBlacklisted()) {
-            qDebug() << "PaymentRequestPlus::getMerchant : Payment request: certificate blacklisted: " << qCert;
+            qDebug() << "PaymentRequestPlus::getMerchant: Payment request: certificate blacklisted: " << qCert;
             return false;
         }
 #endif
@@ -115,7 +116,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
             certs.push_back(cert);
     }
     if (certs.empty()) {
-        qDebug() << "PaymentRequestPlus::getMerchant : Payment request: empty certificate chain";
+        qDebug() << "PaymentRequestPlus::getMerchant: Payment request: certificate chain empty";
         return false;
     }
 
@@ -131,7 +132,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     // load the signing cert into it and verify.
     X509_STORE_CTX *store_ctx = X509_STORE_CTX_new();
     if (!store_ctx) {
-        qDebug() << "PaymentRequestPlus::getMerchant : Payment request: error creating X509_STORE_CTX";
+        qDebug() << "PaymentRequestPlus::getMerchant: Payment request: error creating X509_STORE_CTX";
         return false;
     }
 
@@ -166,7 +167,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
             !EVP_VerifyUpdate(&ctx, data_to_verify.data(), data_to_verify.size()) ||
             !EVP_VerifyFinal(&ctx, (const unsigned char*)paymentRequest.signature().data(), paymentRequest.signature().size(), pubkey)) {
 
-            throw SSLVerifyError("Bad signature, invalid PaymentRequest.");
+            throw SSLVerifyError("Bad signature, invalid payment request.");
         }
 
         // OpenSSL API for getting human printable strings from certs is baroque.
@@ -183,7 +184,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     catch (SSLVerifyError& err)
     {
         fResult = false;
-        qDebug() << "PaymentRequestPlus::getMerchant : SSL error: " << err.what();
+        qDebug() << "PaymentRequestPlus::getMerchant: SSL error: " << err.what();
     }
 
     if (website)
