@@ -126,15 +126,15 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
 #if QT_VERSION < 0x050000
 void DebugMessageHandler(QtMsgType type, const char *msg)
 {
-    Q_UNUSED(type);
-    LogPrint("qt", "GUI: %s\n", msg);
+    const char *category = (type == QtDebugMsg) ? "qt" : NULL;
+    LogPrint(category, "GUI: %s\n", msg);
 }
 #else
 void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString &msg)
 {
-    Q_UNUSED(type);
     Q_UNUSED(context);
-    LogPrint("qt", "GUI: %s\n", qPrintable(msg));
+    const char *category = (type == QtDebugMsg) ? "qt" : NULL;
+    LogPrint(category, "GUI: %s\n", QString::toStdString(msg));
 }
 #endif
 
