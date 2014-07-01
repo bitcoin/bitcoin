@@ -324,4 +324,9 @@ public:
     uint32_t GetCompact(bool fNegative = false) const;
 };
 
+/** Return a hash value for boost::unordered_map.
+ * This trivial implementation is only useful if the uint256 itself represents a hash, which is always the case in bitcoin.
+ */
+static inline std::size_t hash_value(const uint256& x) { return x.GetLow64(); }
+
 #endif
