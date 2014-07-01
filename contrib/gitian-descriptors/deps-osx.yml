@@ -1,5 +1,5 @@
 ---
-name: "osx-depends"
+name: "bitcoin-deps"
 suites:
 - "precise"
 architectures:
@@ -8,7 +8,6 @@ packages:
 - "git-core"
 - "automake"
 - "p7zip-full"
-
 reference_datetime: "2013-06-01 00:00:00"
 remotes: []
 files:
@@ -19,10 +18,8 @@ files:
 - "protobuf-2.5.0.tar.bz2"
 - "qrencode-3.4.3.tar.bz2"
 - "MacOSX10.7.sdk.tar.gz"
-- "osx-native-depends-r3.tar.gz"
-
+- "osx-native-depends-gitian-r3.tar.gz"
 script: |
-
   echo "fff00023dd79486d444c8e29922f4072e1d451fc5a4d2b6075852ead7f2b7b52  boost_1_55_0.tar.bz2" | sha256sum -c
   echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz" | sha256sum -c
   echo "2923e453e880bb949e3d4da9f83dd3cb6f08946d35de0b864d0339cf70934464  miniupnpc-1.9.tar.gz" | sha256sum -c
@@ -72,7 +69,7 @@ script: |
   mkdir -p SDKs
   tar -C SDKs -xf ${SOURCES_PATH}/MacOSX10.7.sdk.tar.gz
 
-  tar xf /home/ubuntu/build/osx-native-depends-r3.tar.gz
+  tar xf /home/ubuntu/build/osx-native-depends-gitian-r3.tar.gz
 
   # bdb
   SOURCE_FILE=${SOURCES_PATH}/db-4.8.30.NC.tar.gz
@@ -154,6 +151,6 @@ script: |
   popd
 
   export GZIP="-9n"
-  find prefix | sort | tar --no-recursion -czf osx-depends-${REVISION}.tar.gz -T -
+  find prefix | sort | tar --no-recursion -czf bitcoin-deps-osx-gitian-${REVISION}.tar.gz -T -
 
-  mv osx-depends-${REVISION}.tar.gz $OUTDIR
+  mv bitcoin-deps-osx-gitian-${REVISION}.tar.gz $OUTDIR

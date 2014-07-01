@@ -1,5 +1,5 @@
 ---
-name: "osx-native"
+name: "osx-native-depends"
 suites:
 - "precise"
 architectures:
@@ -15,7 +15,6 @@ packages:
 - "libcap-dev"
 - "p7zip-full"
 - "uuid-dev"
-
 reference_datetime: "2013-06-01 00:00:00"
 remotes: []
 files:
@@ -29,10 +28,7 @@ files:
 - "libdmg-hfsplus-v0.1.tar.gz"
 - "clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz"
 - "cdrkit-deterministic.patch"
-
-
 script: |
-
   echo "18406961fd4a1ec5c7ea35c91d6a80a2f8bb797a2bd243a610bd75e13eff9aca  10cc648683617cca8bcbeae507888099b41b530c.tar.gz" | sha256sum -c
   echo "03ba62749b843b131c7304a044a98c6ffacd65b1399b921d69add0375f79d8ad  cctools-809.tar.gz" | sha256sum -c
   echo "2cf0484c87cf79b606b351a7055a247dae84093ae92c747a74e0cde2c8c8f83c  dyld-195.5.tar.gz" | sha256sum -c
@@ -174,5 +170,5 @@ script: |
   rm -rf native-prefix/docs
 
   export GZIP="-9n"
-  find native-prefix | sort | tar --no-recursion -czf osx-native-depends-$REVISION.tar.gz -T -
-  mv osx-native-depends-$REVISION.tar.gz $OUTDIR
+  find native-prefix | sort | tar --no-recursion -czf osx-native-depends-gitian-$REVISION.tar.gz -T -
+  mv osx-native-depends-gitian-$REVISION.tar.gz $OUTDIR

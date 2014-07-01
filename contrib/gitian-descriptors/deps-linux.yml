@@ -1,5 +1,5 @@
 ---
-name: "bitcoin"
+name: "bitcoin-deps"
 suites:
 - "precise"
 architectures:

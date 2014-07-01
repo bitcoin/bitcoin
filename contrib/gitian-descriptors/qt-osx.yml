@@ -1,5 +1,5 @@
 ---
-name: "osx-qt"
+name: "qt"
 suites:
 - "precise"
 architectures:
@@ -8,17 +8,14 @@ packages:
 - "git-core"
 - "automake"
 - "p7zip-full"
-
 reference_datetime: "2013-06-01 00:00:00"
 remotes: []
 files:
 - "qt-everywhere-opensource-src-5.2.1.tar.gz"
-- "osx-native-depends-r3.tar.gz"
-- "osx-depends-r4.tar.gz"
+- "osx-native-depends-gitian-r3.tar.gz"
+- "bitcoin-deps-osx-gitian-r4.tar.gz"
 - "MacOSX10.7.sdk.tar.gz"
-
 script: |
-
   echo "84e924181d4ad6db00239d87250cc89868484a14841f77fb85ab1f1dbdcd7da1  qt-everywhere-opensource-src-5.2.1.tar.gz" | sha256sum -c
 
   REVISION=r4
@@ -70,10 +67,10 @@ script: |
   mkdir -p SDKs
   tar -C SDKs -xf ${SOURCES_PATH}/MacOSX10.7.sdk.tar.gz
 
-  tar xf /home/ubuntu/build/osx-native-depends-r3.tar.gz
+  tar xf /home/ubuntu/build/osx-native-depends-gitian-r3.tar.gz
 
   export PATH=`pwd`/native-prefix/bin:$PATH
-  tar xf /home/ubuntu/build/osx-depends-r4.tar.gz
+  tar xf /home/ubuntu/build/bitcoin-deps-osx-gitian-r4.tar.gz
 
   SOURCE_FILE=${SOURCES_PATH}/qt-everywhere-opensource-src-5.2.1.tar.gz
   BUILD_DIR=${BUILD_BASE}/qt-everywhere-opensource-src-5.2.1
@@ -181,6 +178,6 @@ script: |
   find ${PREFIX}/lib -name "*.prl" -delete
 
   export GZIP="-9n"
-  find native-prefix prefix | sort | tar --no-recursion -czf osx-depends-qt-5.2.1-${REVISION}.tar.gz -T -
+  find native-prefix prefix | sort | tar --no-recursion -czf qt-osx-5.2.1-gitian-${REVISION}.tar.gz -T -
 
-  mv osx-depends-qt-5.2.1-${REVISION}.tar.gz $OUTDIR
+  mv qt-osx-5.2.1-gitian-${REVISION}.tar.gz $OUTDIR

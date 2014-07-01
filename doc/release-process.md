@@ -33,16 +33,21 @@ Release Process
 	git checkout v${VERSION}
 	popd
 	pushd ./gitian-builder
-        mkdir -p inputs; cd inputs/
-
- Register and download the Apple SDK (see OSX Readme for details)
-	visit https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_4.6.3/xcode4630916281a.dmg
- 
- Using a Mac, create a tarball for the 10.7 SDK
-	tar -C /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.7.sdk.tar.gz MacOSX10.7.sdk
 
  Fetch and build inputs: (first time, or when dependency versions change)
+ 
+	mkdir -p inputs; cd inputs/
 
+ Register and download the Apple SDK: (see OSX Readme for details)
+ 
+ https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_4.6.3/xcode4630916281a.dmg
+ 
+ Using a Mac, create a tarball for the 10.7 SDK and copy it to the inputs directory:
+ 
+	tar -C /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.7.sdk.tar.gz MacOSX10.7.sdk
+
+ Download remaining inputs, and build everything:
+ 
 	wget 'http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.tar.gz' -O miniupnpc-1.9.tar.gz
 	wget 'https://www.openssl.org/source/openssl-1.0.1h.tar.gz'
 	wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
@@ -78,19 +83,19 @@ Release Process
 	mv build/out/qt-*.zip inputs/
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/protobuf-win.yml
 	mv build/out/protobuf-*.zip inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/gitian-osx-native.yml
+	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/native-osx.yml
 	mv build/out/osx-*.tar.gz inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/gitian-osx-depends.yml
-	mv build/out/osx-*.tar.gz inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/gitian-osx-qt.yml
-	mv build/out/osx-*.tar.gz inputs/
+	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-osx.yml
+	mv build/out/bitcoin-deps-*.tar.gz inputs/
+	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/qt-osx.yml
+	mv build/out/qt-*.tar.gz inputs/
 
  The expected SHA256 hashes of the intermediate inputs are:
 
-    46710f673467e367738d8806e45b4cb5931aaeea61f4b6b55a68eea56d5006c5  bitcoin-deps-linux32-gitian-r6.zip
-    f03be39fb26670243d3a659e64d18e19d03dec5c11e9912011107768390b5268  bitcoin-deps-linux64-gitian-r6.zip
     f29b7d9577417333fb56e023c2977f5726a7c297f320b175a4108cf7cd4c2d29  boost-linux32-1.55.0-gitian-r1.zip
     88232451c4104f7eb16e469ac6474fd1231bd485687253f7b2bdf46c0781d535  boost-linux64-1.55.0-gitian-r1.zip
+    46710f673467e367738d8806e45b4cb5931aaeea61f4b6b55a68eea56d5006c5  bitcoin-deps-linux32-gitian-r6.zip
+    f03be39fb26670243d3a659e64d18e19d03dec5c11e9912011107768390b5268  bitcoin-deps-linux64-gitian-r6.zip
     57e57dbdadc818cd270e7e00500a5e1085b3bcbdef69a885f0fb7573a8d987e1  qt-linux32-4.6.4-gitian-r1.tar.gz
     60eb4b9c5779580b7d66529efa5b2836ba1a70edde2a0f3f696d647906a826be  qt-linux64-4.6.4-gitian-r1.tar.gz
     60dc2d3b61e9c7d5dbe2f90d5955772ad748a47918ff2d8b74e8db9b1b91c909  boost-win32-1.55.0-gitian-r6.zip
@@ -101,15 +106,15 @@ Release Process
     751c579830d173ef3e6f194e83d18b92ebef6df03289db13ab77a52b6bc86ef0  qt-win64-5.2.0-gitian-r3.zip
     e2e403e1a08869c7eed4d4293bce13d51ec6a63592918b90ae215a0eceb44cb4  protobuf-win32-2.5.0-gitian-r4.zip
     a0999037e8b0ef9ade13efd88fee261ba401f5ca910068b7e0cd3262ba667db0  protobuf-win64-2.5.0-gitian-r4.zip
-    512bc0622c883e2e0f4cbc3fedfd8c2402d06c004ce6fb32303cc2a6f405b6df  osx-native-depends-r3.tar.gz
-    927e4b222be6d590b4bc2fc185872a5d0ca5c322adb983764d3ed84be6bdbc81  osx-depends-r4.tar.gz
-    ec95abef1df2b096a970359787c01d8c45e2a4475b7ae34e12c022634fbdba8a  osx-depends-qt-5.2.1-r4.tar.gz
+    512bc0622c883e2e0f4cbc3fedfd8c2402d06c004ce6fb32303cc2a6f405b6df  osx-native-depends-gitian-r3.tar.gz
+    927e4b222be6d590b4bc2fc185872a5d0ca5c322adb983764d3ed84be6bdbc81  bitcoin-deps-osx-gitian-r4.tar.gz
+    ec95abef1df2b096a970359787c01d8c45e2a4475b7ae34e12c022634fbdba8a  qt-osx-5.2.1-gitian-r4.tar.gz
 
 
- Build bitcoind and bitcoin-qt on Linux32, Linux64, and Win32:
+ Build Bitcoin Core for Linux, Windows, and OS X:
   
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 	pushd build/out
 	zip -r bitcoin-${VERSION}-linux-gitian.zip *
 	mv bitcoin-${VERSION}-linux-gitian.zip ../../../
@@ -120,8 +125,8 @@ Release Process
 	zip -r bitcoin-${VERSION}-win-gitian.zip *
 	mv bitcoin-${VERSION}-win-gitian.zip ../../../
 	popd
-        ./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
-        ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
+	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
 	pushd build/out
 	mv Bitcoin-Qt.dmg ../../../
 	popd
@@ -132,7 +137,7 @@ Release Process
   1. linux 32-bit and 64-bit binaries + source (bitcoin-${VERSION}-linux-gitian.zip)
   2. windows 32-bit and 64-bit binaries + installer + source (bitcoin-${VERSION}-win-gitian.zip)
   3. OSX installer (Bitcoin-Qt.dmg)
-  4. Gitian signatures (in gitian.sigs/${VERSION}[-win|-osx]/(your gitian key)/
+  4. Gitian signatures (in gitian.sigs/${VERSION}-<linux|win|osx>/(your gitian key)/
 
 repackage gitian builds for release as stand-alone zip/tar/installer exe
 
@@ -172,8 +177,9 @@ repackage gitian builds for release as stand-alone zip/tar/installer exe
 Commit your signature to gitian.sigs:
 
 	pushd gitian.sigs
-	git add ${VERSION}/${SIGNER}
+	git add ${VERSION}-linux/${SIGNER}
 	git add ${VERSION}-win/${SIGNER}
+	git add ${VERSION}-osx/${SIGNER}
 	git commit -a
 	git push  # Assuming you can push to the gitian.sigs tree
 	popd
