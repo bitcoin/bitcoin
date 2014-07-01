@@ -197,10 +197,10 @@ enum
 /** IsMine() return codes */
 enum isminetype
 {
-    MINE_NO = 0,
-    MINE_WATCH_ONLY = 1,
-    MINE_SPENDABLE = 2,
-    MINE_ALL = MINE_WATCH_ONLY | MINE_SPENDABLE
+    ISMINE_NO = 0,
+    ISMINE_WATCH_ONLY = 1,
+    ISMINE_SPENDABLE = 2,
+    ISMINE_ALL = ISMINE_WATCH_ONLY | ISMINE_SPENDABLE
 };
 /** used for bitflags of isminetype */
 typedef uint8_t isminefilter;
