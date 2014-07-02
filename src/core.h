@@ -406,7 +406,7 @@ public:
     // header
     static const int CURRENT_VERSION=2;
     int nVersion;
-    uint256 hashPrevBlock;
+    uint256 hashPrev;
     uint256 hashMerkleRoot;
     unsigned int nTime;
     unsigned int nBits;
@@ -421,7 +421,7 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
-        READWRITE(hashPrevBlock);
+        READWRITE(hashPrev);
         READWRITE(hashMerkleRoot);
         READWRITE(nTime);
         READWRITE(nBits);
@@ -431,7 +431,7 @@ public:
     void SetNull()
     {
         nVersion = CBlockHeader::CURRENT_VERSION;
-        hashPrevBlock = 0;
+        hashPrev = 0;
         hashMerkleRoot = 0;
         nTime = 0;
         nBits = 0;
@@ -483,18 +483,6 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         vMerkleTree.clear();
-    }
-
-    CBlockHeader GetBlockHeader() const
-    {
-        CBlockHeader block;
-        block.nVersion       = nVersion;
-        block.hashPrevBlock  = hashPrevBlock;
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
-        return block;
     }
 
     uint256 BuildMerkleTree() const;

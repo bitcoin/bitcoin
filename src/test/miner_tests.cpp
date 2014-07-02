@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         CValidationState state;
         BOOST_CHECK(ProcessBlock(state, NULL, pblock));
         BOOST_CHECK(state.IsValid());
-        pblock->hashPrevBlock = pblock->GetHash();
+        pblock->hashPrev = pblock->GetHash();
     }
     delete pblocktemplate;
 
