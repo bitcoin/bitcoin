@@ -18,11 +18,12 @@ public:
     ~MintingTableModel();
 
     enum ColumnIndex {
-        Address = 0,
-        Age = 1,
-        Balance = 2,
-        CoinDay = 3,
-        MintProbability = 4
+        TxHash = 0,
+        Address = 1,
+        Age = 2,
+        Balance = 3,
+        CoinDay = 4,
+        MintProbability = 5
     };
 
 
@@ -43,8 +44,10 @@ private:
 
     QString lookupAddress(const std::string &address, bool tooltip) const;
 
+    double getDayToMint(KernelRecord *wtx) const;
     QString formatDayToMint(KernelRecord *wtx) const;
     QString formatTxAddress(const KernelRecord *wtx, bool tooltip) const;
+    QString formatTxHash(const KernelRecord *wtx) const;
     QString formatTxAge(const KernelRecord *wtx) const;
     QString formatTxBalance(const KernelRecord *wtx) const;
     QString formatTxCoinDay(const KernelRecord *wtx) const;

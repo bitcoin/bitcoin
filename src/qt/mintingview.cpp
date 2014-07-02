@@ -117,8 +117,10 @@ void MintingView::setModel(WalletModel *model)
         mintingView->sortByColumn(MintingTableModel::CoinDay, Qt::DescendingOrder);
         mintingView->verticalHeader()->hide();
 
+        mintingView->horizontalHeader()->resizeSection(
+                MintingTableModel::Address, 420);
         mintingView->horizontalHeader()->setResizeMode(
-                MintingTableModel::Address, QHeaderView::Stretch);
+                MintingTableModel::TxHash, QHeaderView::Stretch);
         mintingView->horizontalHeader()->resizeSection(
                 MintingTableModel::Age, 120);
         mintingView->horizontalHeader()->resizeSection(
@@ -126,7 +128,7 @@ void MintingView::setModel(WalletModel *model)
         mintingView->horizontalHeader()->resizeSection(
                 MintingTableModel::CoinDay,120);
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::MintProbability, 120);
+                MintingTableModel::MintProbability, 160);
     }
 }
 
@@ -167,6 +169,7 @@ void MintingView::exportClicked()
     // name, column, role
     writer.setModel(mintingProxyModel);
     writer.addColumn(tr("Address"), MintingTableModel::Address);
+    writer.addColumn(tr("Transaction"), MintingTableModel::TxHash);
     writer.addColumn(tr("Age"), MintingTableModel::Age);
     writer.addColumn(tr("CoinDay"), MintingTableModel::CoinDay);
     writer.addColumn(tr("Balance"), MintingTableModel::Balance);

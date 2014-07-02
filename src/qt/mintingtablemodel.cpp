@@ -23,6 +23,7 @@
 
 static int column_alignments[] = {
     Qt::AlignLeft|Qt::AlignVCenter,
+    Qt::AlignLeft|Qt::AlignVCenter,
     Qt::AlignRight|Qt::AlignVCenter,
     Qt::AlignRight|Qt::AlignVCenter,
     Qt::AlignRight|Qt::AlignVCenter,
@@ -199,7 +200,7 @@ MintingTableModel::MintingTableModel(CWallet *wallet, WalletModel *parent):
         mintingInterval(10),
         priv(new MintingTablePriv(wallet, this))
 {
-    columns << tr("Address") << tr("Age") << tr("Balance") << tr("CoinDay") << tr("MintProbability");
+    columns << tr("Transaction") <<  tr("Address") << tr("Age") << tr("Balance") << tr("CoinDay") << tr("MintProbability");
     priv->refreshWallet();
 
     QTimer *timer = new QTimer(this);
@@ -260,6 +261,8 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
         {
         case Address:
             return formatTxAddress(rec, false);
+        case TxHash:
+            return formatTxHash(rec);
         case Age:
             return formatTxAge(rec);
         case Balance:
@@ -279,6 +282,8 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
         {
         case Address:
             return formatTxAddress(rec, false);
+        case TxHash:
+            return formatTxHash(rec);
         case Age:
             return rec->getAge();
         case CoinDay:
@@ -286,7 +291,7 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
         case Balance:
             return rec->nValue;
         case MintProbability:
-            return formatDayToMint(rec);
+            return getDayToMint(rec);
         }
         break;
       case Qt::BackgroundColorRole:
@@ -330,19 +335,30 @@ QString MintingTableModel::lookupAddress(const std::string &address, bool toolti
     return description;
 }
 
-QString MintingTableModel::formatDayToMint(KernelRecord *wtx) const
+double MintingTableModel::getDayToMint(KernelRecord *wtx) const
 {
     const CBlockIndex *p = GetLastBlockIndex(pindexBest, true);
     double difficulty = p->GetBlockDifficulty();
 
     double prob = wtx->getProbToMintWithinNMinutes(difficulty, mintingInterval);
     prob = prob * 100;
+    return prob;
+}
+
+QString MintingTableModel::formatDayToMint(KernelRecord *wtx) const
+{
+    double prob = getDayToMint(wtx);
     return QString::number(prob, 'f', 2) + "%";
 }
 
 QString MintingTableModel::formatTxAddress(const KernelRecord *wtx, bool tooltip) const
 {
     return QString::fromStdString(wtx->address);
+}
+
+QString MintingTableModel::formatTxHash(const KernelRecord *wtx) const
+{
+    return QString::fromStdString(wtx->hash.ToString());
 }
 
 QString MintingTableModel::formatTxCoinDay(const KernelRecord *wtx) const
@@ -378,6 +394,8 @@ QVariant MintingTableModel::headerData(int section, Qt::Orientation orientation,
             {
             case Address:
                 return tr("Destination address of the output.");
+            case TxHash:
+                return tr("Original transaction id.");
             case Age:
                 return tr("Age of the transaction in days.");
             case Balance:
