@@ -32,6 +32,7 @@ QList<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const C
     int64 nTime = wtx.GetTxTime();
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
+    int nDayWeight = (min((GetAdjustedTime() - nTime), (int64)STAKE_MAX_AGE) - nStakeMinAge) / 86400;
 
     if (showTransaction(wtx))
     {
@@ -42,7 +43,6 @@ QList<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const C
                 CTxDestination address;
                 std::string addrStr;
 
-                int nDayWeight = (min((GetAdjustedTime() - nTime), (int64)STAKE_MAX_AGE) - nStakeMinAge) / 86400 ;
                 uint64 coinAge = max(txOut.nValue * nDayWeight / COIN, (int64)0);
 
                 if (ExtractDestination(txOut.scriptPubKey, address))
@@ -55,6 +55,7 @@ QList<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const C
                     // Sent to IP, or other non-address transaction like OP_EVAL
                     addrStr = mapValue["to"];
                 }
+
                 parts.append(KernelRecord(hash, nTime, addrStr, txOut.nValue, wtx.IsSpent(nOut), coinAge));
             }
         }
