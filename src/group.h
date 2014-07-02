@@ -68,6 +68,9 @@ void static secp256k1_ge_get_hex(char *r, int *rlen, const secp256k1_ge_t *a);
 /** Set a group element equal to another which is given in jacobian coordinates */
 void static secp256k1_ge_set_gej(secp256k1_ge_t *r, secp256k1_gej_t *a);
 
+/** Set a batch of group elements equal to the inputs given in jacobian coordinates */
+void static secp256k1_ge_set_all_gej(size_t len, secp256k1_ge_t r[len], const secp256k1_gej_t a[len]);
+
 
 /** Set a group element (jacobian) equal to the point at infinity. */
 void static secp256k1_gej_set_infinity(secp256k1_gej_t *r);
