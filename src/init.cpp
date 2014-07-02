@@ -38,8 +38,8 @@
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <openssl/crypto.h>
 
-using namespace std;
 using namespace boost;
+using namespace std;
 
 #ifdef ENABLE_WALLET
 CWallet* pwalletMain;
