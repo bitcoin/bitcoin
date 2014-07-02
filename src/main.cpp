@@ -125,9 +125,14 @@ namespace {
 
 } // anon namespace
 
-// Forward reference functions defined here:
+// Bloom filter to limit respend relays to one
 static const unsigned int MAX_DOUBLESPEND_BLOOM = 1000;
-static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter);
+static CBloomFilter doubleSpendFilter;
+void InitRespendFilter() {
+    seed_insecure_rand();
+    doubleSpendFilter = CBloomFilter(MAX_DOUBLESPEND_BLOOM, 0.01, insecure_rand(), BLOOM_UPDATE_NONE);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -151,23 +156,9 @@ struct CMainSignals {
     boost::signals2::signal<void (const uint256 &)> Inventory;
     // Tells listeners to broadcast their data.
     boost::signals2::signal<void ()> Broadcast;
-    // Notifies listeners of detection of a double-spent transaction. Arguments are outpoint that is
-    // double-spent, first transaction seen, double-spend transaction, and whether the second double-spend
-    // transaction was first seen in a block.
-    // Note: only notifies if the previous transaction is in the memory pool; if previous transction was in a block,
-    // then the double-spend simply fails when we try to lookup the inputs in the current UTXO set.
-    boost::signals2::signal<bool (const COutPoint&, const CTransaction&, bool)> DetectedDoubleSpend;
 } g_signals;
 
 } // anon namespace
-
-void RegisterInternalSignals() {
-    static CBloomFilter doubleSpendFilter;
-    seed_insecure_rand();
-    doubleSpendFilter = CBloomFilter(MAX_DOUBLESPEND_BLOOM, 0.01, insecure_rand(), BLOOM_UPDATE_NONE);
-
-    g_signals.DetectedDoubleSpend.connect(boost::bind(RelayableRespend, _1, _2, _3, doubleSpendFilter));
-}
 
 
 void RegisterWallet(CWalletInterface* pwalletIn) {
@@ -908,6 +899,45 @@ bool RateLimitExceeded(double& dCount, int64_t& nLastTime, int64_t nLimit, unsig
     return false;
 }
 
+static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter)
+{
+    // Relaying double-spend attempts to our peers lets them detect when
+    // somebody might be trying to cheat them. However, blindly relaying
+    // every double-spend across the entire network gives attackers
+    // a denial-of-service attack: just generate a stream of double-spends
+    // re-spending the same (limited) set of outpoints owned by the attacker.
+    // So, we use a bloom filter and only relay (at most) the first double
+    // spend for each outpoint. False-positives ("we have already relayed")
+    // are OK, because if the peer doesn't hear about the double-spend
+    // from us they are very likely to hear about it from another peer, since
+    // each peer uses a different, randomized bloom filter.
+
+    if (fInBlock || filter.contains(outPoint)) return false;
+
+    // Apply an independent rate limit to double-spend relays
+    static double dRespendCount;
+    static int64_t nLastRespendTime;
+    static int64_t nRespendLimit = GetArg("-limitrespendrelay", 100);
+    unsigned int nSize = ::GetSerializeSize(doubleSpend, SER_NETWORK, PROTOCOL_VERSION);
+
+    if (RateLimitExceeded(dRespendCount, nLastRespendTime, nRespendLimit, nSize))
+    {
+        LogPrint("mempool", "Double-spend relay rejected by rate limiter\n");
+        return false;
+    }
+
+    LogPrint("mempool", "Rate limit dRespendCount: %g => %g\n", dRespendCount, dRespendCount+nSize);
+
+    // Clear the filter on average every MAX_DOUBLE_SPEND_BLOOM
+    // insertions
+    if (insecure_rand()%MAX_DOUBLESPEND_BLOOM == 0)
+        filter.clear();
+
+    filter.insert(outPoint);
+
+    return true;
+}
+
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectInsaneFee)
 {
@@ -945,7 +975,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // Does tx conflict with a member of the pool, and is it not equivalent to that member?
         if (pool.mapNextTx.count(outpoint) && !tx.IsEquivalentTo(*pool.mapNextTx[outpoint].ptx))
         {
-            relayableRespend = g_signals.DetectedDoubleSpend(outpoint, tx, false);
+            relayableRespend = RelayableRespend(outpoint, tx, false, doubleSpendFilter);
             if (!relayableRespend)
                 return false;
         }
@@ -1055,45 +1085,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     g_signals.SyncTransaction(tx, NULL);
 
     return !relayableRespend;
-}
-
-static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter)
-{
-    // Relaying double-spend attempts to our peers lets them detect when
-    // somebody might be trying to cheat them. However, blindly relaying
-    // every double-spend across the entire network gives attackers
-    // a denial-of-service attack: just generate a stream of double-spends
-    // re-spending the same (limited) set of outpoints owned by the attacker.
-    // So, we use a bloom filter and only relay (at most) the first double
-    // spend for each outpoint. False-positives ("we have already relayed")
-    // are OK, because if the peer doesn't hear about the double-spend
-    // from us they are very likely to hear about it from another peer, since
-    // each peer uses a different, randomized bloom filter.
-
-    if (fInBlock || filter.contains(outPoint)) return false;
-
-    // Apply an independent rate limit to double-spend relays
-    static double dRespendCount;
-    static int64_t nLastRespendTime;
-    static int64_t nRespendLimit = GetArg("-limitrespendrelay", 100);
-    unsigned int nSize = ::GetSerializeSize(doubleSpend, SER_NETWORK, PROTOCOL_VERSION);
-
-    if (RateLimitExceeded(dRespendCount, nLastRespendTime, nRespendLimit, nSize))
-    {
-        LogPrint("mempool", "Double-spend relay rejected by rate limiter\n");
-        return false;
-    }
-
-    LogPrint("mempool", "Rate limit dRespendCount: %g => %g\n", dRespendCount, dRespendCount+nSize);
-
-    // Clear the filter on average every MAX_DOUBLE_SPEND_BLOOM
-    // insertions
-    if (insecure_rand()%MAX_DOUBLESPEND_BLOOM == 0)
-        filter.clear();
-
-    filter.insert(outPoint);
-
-    return true;
 }
 
 
