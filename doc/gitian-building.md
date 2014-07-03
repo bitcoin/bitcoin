@@ -4,8 +4,8 @@ Gitian building
 *Setup instructions for a gitian build of Bitcoin using a Debian VM or physical system.*
 
 Gitian is the deterministic build process that is used to build the Bitcoin
-Core executables [1]. It provides a way to be reasonably sure that the
-executables are really built from source on github. It also makes sure that
+Core executables. It provides a way to be reasonably sure that the
+executables are really built from source on GitHub. It also makes sure that
 the same, tested dependencies are used and statically built into the executable.
 
 Multiple developers build the source code by following a specific descriptor
@@ -16,9 +16,6 @@ to bitcoin.org.
 More independent gitian builders are needed, which is why I wrote this
 guide. It is preferred to follow these steps yourself instead of using someone else's
 VM image to avoid 'contaminating' the build.
-
-[1] For all platforms except for MacOSX, at this point. Work for deterministic
-builds for Mac is under way here: https://github.com/theuni/osx-cross-depends .
 
 Table of Contents
 ------------------
@@ -38,7 +35,7 @@ Preparing the Gitian builder host
 ---------------------------------
 
 The first step is to prepare the host environment that will be used to perform the Gitian builds.
-In this guide it is explained how to set up the environment, and how to get the builds started.
+This guide explains how to set up the environment, and how to start the builds.
 
 Debian Linux was chosen as the host distribution because it has a lightweight install (in contrast to Ubuntu) and is readily available.
 Any kind of virtualization can be used, for example:
@@ -134,7 +131,7 @@ and proceed, just press `Enter`. To select a different button, press `Tab`.
 
 ![](gitian-building/debian_install_5_configure_the_network.png)
 
-- Choose a root password and enter it twice (and remember it for later) 
+- Choose a root password and enter it twice (remember it for later) 
 
 ![](gitian-building/debian_install_6a_set_up_root_password.png)
 
@@ -143,7 +140,7 @@ and proceed, just press `Enter`. To select a different button, press `Tab`.
 ![](gitian-building/debian_install_7_set_up_user_fullname.png)
 ![](gitian-building/debian_install_8_set_up_username.png)
 
-- Choose a user password and enter it twice (and remember it for later) 
+- Choose a user password and enter it twice (remember it for later) 
 
 ![](gitian-building/debian_install_9_user_password.png)
 
@@ -236,7 +233,7 @@ adduser debian sudo
 When you get a colorful screen with a question about the 'LXC directory', just
 go with the default (`/var/lib/lxc`).
 
-Then set up LXC and the rest with the following is a complex jumble of settings and workarounds:
+Then set up LXC and the rest with the following, which is a complex jumble of settings and workarounds:
 
 ```bash
 # the version of lxc-start in Debian 7.4 needs to run as root, so make sure
@@ -280,7 +277,7 @@ cd ..
 
 **Note**: When sudo asks for a password, enter the password for the user *debian* not for *root*.
 
-Clone the git repositories for bitcoin and gitian and then checkout the bitcoin version that you are willing to build.
+Clone the git repositories for bitcoin and gitian and then checkout the bitcoin version that you want to build.
 
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
@@ -319,10 +316,10 @@ you will find a list of `wget` commands that can be executed to get the dependen
 
 I needed to add `--no-check-certificate` to the OpenSSL wget line to make it work.
 Likely this is because the ca-certificates in Debian 7.4 is fairly old. This does not create a 
-security issue as the gitian descriptors check integrity of the input archives and refuse to work
+security issue as the gitian descriptors check the integrity of the input archives and refuse to work
 if any one is corrupted.
 
-After downloading the archives, execute the `gbuild` commends to build the dependencies.
+After downloading the archives, execute the `gbuild` commands to build the dependencies.
 This can take a long time, but only has to be done when the dependencies change, for example
 to upgrade the used version.
 
@@ -339,7 +336,7 @@ tail -f var/build.log
 Building Bitcoin
 ----------------
 
-To build Bitcoin (for Linux and/or Windows) just follow the steps under 'perform
+To build Bitcoin (for Linux, OSX and Windows) just follow the steps under 'perform
 gitian builds' in [doc/release-process.md](release-process.md) in the bitcoin repository.
 
 Output from `gbuild` will look something like
@@ -372,7 +369,7 @@ can be inspected in `var/install.log` and `var/build.log`.
 Building an alternative repository
 -----------------------------------
 
-If you want to do a test build of a pull on github it can be useful to point
+If you want to do a test build of a pull on GitHub it can be useful to point
 the gitian builder at an alternative repository, using the same descriptors
 and inputs.
 
@@ -382,13 +379,14 @@ URL=https://github.com/laanwj/bitcoin.git
 COMMIT=2014_03_windows_unicode_path
 ./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 ./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
 ```
 
 Signing externally
 -------------------
 
-If you want to do the PGP signing on another device that's possible too; just define `SIGNER` as mentioned
-and follow the steps in the build process as normally.
+If you want to do the PGP signing on another device that's also possible; just define `SIGNER` as mentioned
+and follow the steps in the build process as normal.
 
     gpg: skipped "laanwj": secret key not available
 
@@ -396,8 +394,9 @@ When you execute `gsign` you will get an error from GPG, which can be ignored. C
 in `gitian.sigs` to your signing machine and do
 
 ```bash
-    gpg --detach-sign ${VERSION}/${SIGNER}/bitcoin-build.assert
+    gpg --detach-sign ${VERSION}-linux/${SIGNER}/bitcoin-build.assert
     gpg --detach-sign ${VERSION}-win/${SIGNER}/bitcoin-build.assert
+    gpg --detach-sign ${VERSION}-osx/${SIGNER}/bitcoin-build.assert
 ```
 
 This will create the `.sig` files that can be committed together with the `.assert` files to assert your
@@ -407,5 +406,5 @@ Uploading signatures
 ---------------------
 
 After building and signing you can push your signatures (both the `.assert` and `.assert.sig` files) to the
-[bitcoin/gitian.sigs](https://github.com/bitcoin/gitian.sigs/) repository, or if not possible create a pull
+[bitcoin/gitian.sigs](https://github.com/bitcoin/gitian.sigs/) repository, or if that's not possible create a pull
 request. You can also mail the files to me (laanwj@gmail.com) and I'll commit them.
