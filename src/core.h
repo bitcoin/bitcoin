@@ -125,13 +125,14 @@ public:
     CFeeRate(int64_t nFeePaid, size_t nSize);
     CFeeRate(const CFeeRate& other) { nSatoshisPerK = other.nSatoshisPerK; }
 
-    int64_t GetFee(size_t size); // unit returned is satoshis
-    int64_t GetFeePerK() { return GetFee(1000); } // satoshis-per-1000-bytes
+    int64_t GetFee(size_t size) const; // unit returned is satoshis
+    int64_t GetFeePerK() const { return GetFee(1000); } // satoshis-per-1000-bytes
 
     friend bool operator<(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK < b.nSatoshisPerK; }
     friend bool operator>(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK > b.nSatoshisPerK; }
     friend bool operator==(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK == b.nSatoshisPerK; }
-
+    friend bool operator<=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK <= b.nSatoshisPerK; }
+    friend bool operator>=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK >= b.nSatoshisPerK; }
     std::string ToString() const;
 
     IMPLEMENT_SERIALIZE( READWRITE(nSatoshisPerK); )
@@ -216,8 +217,6 @@ private:
     void UpdateHash() const;
 
 public:
-    static CFeeRate minTxFee;
-    static CFeeRate minRelayTxFee;
     static const int CURRENT_VERSION=1;
 
     // The local variables are made const to prevent unintended modification
