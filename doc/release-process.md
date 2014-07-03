@@ -23,7 +23,7 @@ Release Process
 
 * * *
 
-##perform gitian builds
+###perform gitian builds
 
  From a directory containing the bitcoin source, gitian-builder and gitian.sigs
   
@@ -34,7 +34,7 @@ Release Process
 	popd
 	pushd ./gitian-builder
 
- ###Fetch and build inputs: (first time, or when dependency versions change)
+###fetch and build inputs: (first time, or when dependency versions change)
  
 	mkdir -p inputs; cd inputs/
 
