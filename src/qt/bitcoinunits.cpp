@@ -169,6 +169,16 @@ bool BitcoinUnits::parse(int unit, const QString &value, qint64 *val_out)
     return ok;
 }
 
+QString BitcoinUnits::getAmountColumnTitle(int unit)
+{
+    QString amountTitle = QObject::tr("Amount");
+    if (BitcoinUnits::valid(unit))
+    {
+        amountTitle += " ("+BitcoinUnits::name(unit) + ")";
+    }
+    return amountTitle;
+}
+
 int BitcoinUnits::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
