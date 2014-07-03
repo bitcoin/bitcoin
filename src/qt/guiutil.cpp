@@ -11,6 +11,7 @@
 
 #include "core.h"
 #include "init.h"
+#include "main.h"
 #include "protocol.h"
 #include "util.h"
 
@@ -212,7 +213,7 @@ bool isDust(const QString& address, qint64 amount)
     CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
     CScript script; script.SetDestination(dest);
     CTxOut txOut(amount, script);
-    return txOut.IsDust(CTransaction::minRelayTxFee);
+    return txOut.IsDust(::minRelayTxFee);
 }
 
 QString HtmlEscape(const QString& str, bool fMultiLine)

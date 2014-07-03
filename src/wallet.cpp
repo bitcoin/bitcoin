@@ -21,6 +21,9 @@ CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = 1;
 bool bSpendZeroConfChange = true;
 
+/** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
+CFeeRate CWallet::minTxFee = CFeeRate(10000);  // Override with -mintxfee
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // mapWallet
@@ -1294,7 +1297,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                 BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
                 {
                     CTxOut txout(s.second, s.first);
-                    if (txout.IsDust(CTransaction::minRelayTxFee))
+                    if (txout.IsDust(::minRelayTxFee))
                     {
                         strFailReason = _("Transaction amount too small");
                         return false;
@@ -1355,7 +1358,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
 
                     // Never create dust outputs; if we would, just
                     // add the dust to the fee.
-                    if (newTxOut.IsDust(CTransaction::minRelayTxFee))
+                    if (newTxOut.IsDust(::minRelayTxFee))
                     {
                         nFeeRet += nChange;
                         reservekey.ReturnKey();
@@ -1537,7 +1540,7 @@ int64_t CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
     // ... unless we don't have enough mempool data, in which case fall
     // back to a hard-coded fee
     if (nFeeNeeded == 0)
-        nFeeNeeded = CTransaction::minTxFee.GetFee(nTxBytes);
+        nFeeNeeded = minTxFee.GetFee(nTxBytes);
     return nFeeNeeded;
 }
 
