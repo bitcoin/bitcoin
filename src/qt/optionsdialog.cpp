@@ -14,7 +14,10 @@
 #include "monitoreddatamapper.h"
 #include "optionsmodel.h"
 
-#include "main.h" // for CTransaction::minTxFee and MAX_SCRIPTCHECK_THREADS
+#include "main.h" // for MAX_SCRIPTCHECK_THREADS
+#ifdef ENABLE_WALLET
+#include "wallet.h" // for CWallet::minTxFee
+#endif
 #include "netbase.h"
 #include "txdb.h" // for -dbcache defaults
 
@@ -101,7 +104,9 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
 #endif
 
     ui->unit->setModel(new BitcoinUnits(this));
-    ui->transactionFee->setSingleStep(CTransaction::minTxFee.GetFeePerK());
+#ifdef ENABLE_WALLET
+    ui->transactionFee->setSingleStep(CWallet::minTxFee.GetFeePerK());
+#endif
 
     /* Widget-to-option mapper */
     mapper = new MonitoredDataMapper(this);
