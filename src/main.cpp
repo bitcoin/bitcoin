@@ -4156,8 +4156,13 @@ bool ProcessMessages(CNode* pfrom)
         //            msg.complete() ? "Y" : "N");
         if (msg.nDataPos != msg.nLastDataPos) {
             if (strCommand == "block") {
-                if (msg.nLastDataPos == 0)
+                if (msg.nLastDataPos == 0) {
                     pfrom->tBlockRecvStart = GetTimeMillis();
+                    if (pfrom->tBlockRecved)
+                        LogPrint("net", "%ums later, ", pfrom->tBlockRecvStart - pfrom->tBlockRecved);
+                    LogPrint("net", "incoming block (%u bytes) (%d still to get, %d in flight) peer=%d\n",
+                        nMessageSize, nBlocksToDownload, nBlocksInFlight, pfrom->id);
+                }
                 pfrom->tBlockRecving = GetTimeMillis();
             }
             msg.nLastDataPos = msg.nDataPos;
