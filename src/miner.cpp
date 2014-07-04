@@ -3,8 +3,6 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <inttypes.h>
-
 #include "miner.h"
 
 #include "core.h"
@@ -15,6 +13,8 @@
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
+
+#include <inttypes.h>
 
 using namespace std;
 
