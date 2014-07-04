@@ -252,6 +252,7 @@ std::string HelpMessage(HelpMessageMode mode)
 
 #ifdef ENABLE_WALLET
     strUsage += "\n" + _("Wallet options:") + "\n";
+    strUsage += "  -createwallet          " + _("Create a new wallet if it doesn't exist yet (default: 0)") + "\n";
     strUsage += "  -disablewallet         " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
     strUsage += "  -mintxfee=<amt>        " + strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)"), FormatMoney(CWallet::minTxFee.GetFeePerK())) + "\n";
     strUsage += "  -paytxfee=<amt>        " + strprintf(_("Fee (in BTC/kB) to add to transactions you send (default: %s)"), FormatMoney(payTxFee.GetFeePerK())) + "\n";
@@ -694,6 +695,13 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 5: verify wallet database integrity
 #ifdef ENABLE_WALLET
+    // Disable wallet if enabled but cannot be found, unless `-createwallet` is set
+    if (!fDisableWallet && !filesystem::exists(GetDataDir() / strWalletFile) && !GetBoolArg("-createwallet", false))
+    {
+        LogPrintf("Could not find wallet %s: disabling wallet functionality. Pass -createwallet to create it.\n", strWalletFile);
+        fDisableWallet = true;
+    }
+
     if (!fDisableWallet) {
         LogPrintf("Using wallet %s\n", strWalletFile);
         uiInterface.InitMessage(_("Verifying wallet..."));
