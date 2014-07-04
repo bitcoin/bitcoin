@@ -19,6 +19,13 @@ src/config/stamp-h1
 src/build-aux/
 share/setup.nsi
 share/qt/Info.plist
+# Libtool
+libtool
+src/m4/libtool.m4
+src/m4/ltoptions.m4
+src/m4/ltsugar.m4
+src/m4/ltversion.m4
+src/m4/lt~obsolete.m4
 
 src/qt/*.moc
 src/qt/moc_*.cpp
