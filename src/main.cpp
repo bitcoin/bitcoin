@@ -4409,27 +4409,28 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
         // Detect stalled peers.
         int64_t tNow = GetTimeMillis();
+        int nSyncTimeout = GetArg("-synctimeout", 60);
         if (pto->tGetblocks) {
             if (pto->tBlockRecving > pto->tBlockRecved) {
-                if (tNow-pto->tBlockRecving > BLOCK_DOWNLOAD_TIMEOUT * 1000) {
+                if (tNow-pto->tBlockRecving > nSyncTimeout * 1000) {
                     LogPrintf("sync peer=%d: Block download stalled for over %d seconds.\n",
-                        pto->id, BLOCK_DOWNLOAD_TIMEOUT);
+                        pto->id, nSyncTimeout);
                     pto->fDisconnect = true;
                 }
-            } else if (pto->tGetblocks > pto->tBlockInvs && tNow-pto->tGetblocks > BLOCK_DOWNLOAD_TIMEOUT * 1000) {
+            } else if (pto->tGetblocks > pto->tBlockInvs && tNow-pto->tGetblocks > nSyncTimeout * 1000) {
                 LogPrintf("sync peer=%d: No invs of new blocks received within %d seconds.\n",
-                    pto->id, BLOCK_DOWNLOAD_TIMEOUT);
+                    pto->id, nSyncTimeout);
                 pto->fDisconnect = true;
-            } else if (!CaughtUp() && pto->tBlockRecved && tNow-pto->tBlockRecved > BLOCK_DOWNLOAD_TIMEOUT * 1000) {
+            } else if (!CaughtUp() && pto->tBlockRecved && tNow-pto->tBlockRecved > nSyncTimeout * 1000) {
                 LogPrintf("sync peer=%d: No block reception for over %d seconds.\n",
-                    pto->id, BLOCK_DOWNLOAD_TIMEOUT);
+                    pto->id, nSyncTimeout);
                 if (state.nBlocksInFlight)
                     pto->fDisconnect = true;
                 else
                     pto->tGetblocks = 0; // shouldn't ever get here
-            } else if (pto->tGetdataBlock > pto->tBlockRecving && tNow-pto->tGetdataBlock > BLOCK_DOWNLOAD_TIMEOUT * 1000) {
+            } else if (pto->tGetdataBlock > pto->tBlockRecving && tNow-pto->tGetdataBlock > nSyncTimeout * 1000) {
                 LogPrintf("sync peer=%d: No block download started for over %d seconds.\n",
-                    pto->id, BLOCK_DOWNLOAD_TIMEOUT);
+                    pto->id, nSyncTimeout);
                 pto->fDisconnect = true;
             }
         }
