@@ -4126,10 +4126,13 @@ bool ProcessMessages(CNode* pfrom)
 
         // get next message
         CNetMessage& msg = *it;
+        CMessageHeader& hdr = msg.hdr;
+        unsigned int nMessageSize = hdr.nMessageSize;
+        string strCommand = hdr.GetCommand();
 
         //if (fDebug)
         //    LogPrintf("ProcessMessages(message %u msgsz, %u bytes, complete:%s)\n",
-        //            msg.hdr.nMessageSize, msg.vRecv.size(),
+        //            nMessageSize, msg.vRecv.size(),
         //            msg.complete() ? "Y" : "N");
 
         // end, if an incomplete message is found
@@ -4146,17 +4149,11 @@ bool ProcessMessages(CNode* pfrom)
             break;
         }
 
-        // Read header
-        CMessageHeader& hdr = msg.hdr;
         if (!hdr.IsValid())
         {
-            LogPrintf("\n\nPROCESSMESSAGE: ERRORS IN HEADER %s\n\n\n", hdr.GetCommand());
+            LogPrintf("\n\nPROCESSMESSAGE: ERRORS IN HEADER %s\n\n\n", strCommand);
             continue;
         }
-        string strCommand = hdr.GetCommand();
-
-        // Message size
-        unsigned int nMessageSize = hdr.nMessageSize;
 
         // Checksum
         CDataStream& vRecv = msg.vRecv;
