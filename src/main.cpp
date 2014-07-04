@@ -2624,16 +2624,17 @@ void CBlockIndex::BuildSkip()
         pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
 }
 
-void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
+bool PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
 {
     AssertLockHeld(cs_main);
     // Filter out duplicate requests
     if (pindexBegin == pnode->pindexLastGetBlocksBegin && hashEnd == pnode->hashLastGetBlocksEnd)
-        return;
+        return false;
     pnode->pindexLastGetBlocksBegin = pindexBegin;
     pnode->hashLastGetBlocksEnd = hashEnd;
 
     pnode->PushMessage("getblocks", chainActive.GetLocator(pindexBegin), hashEnd);
+    return true;
 }
 
 bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
@@ -2673,7 +2674,8 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
             mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrev, pblock2));
 
             // Ask this guy to fill in what we're missing
-            PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(hash));
+            if (PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(hash)))
+                LogPrint("net", "send fill-in getblocks for %s\n", hash.ToString());
         }
         return true;
     }
@@ -3768,7 +3770,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                         pfrom->AskFor(inv);
                 }
             } else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
-                PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(inv.hash));
+                if (PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(inv.hash)))
+                    LogPrint("net", "send getblocks for %s\n", inv.hash.ToString());
             }
 
             if (inv.type == MSG_BLOCK)
@@ -4448,7 +4451,8 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Start block sync
         if (pto->fStartSync && !fImporting && !fReindex) {
             pto->fStartSync = false;
-            PushGetBlocks(pto, chainActive.Tip(), uint256(0));
+            if (PushGetBlocks(pto, chainActive.Tip(), uint256(0)))
+                LogPrint("net", "send initial getblocks\n");
         }
 
         // Resend wallet transactions that haven't gotten in a block yet
