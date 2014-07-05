@@ -276,7 +276,29 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
       case Qt::TextAlignmentRole:
         return column_alignments[index.column()];
         break;
+      case Qt::ToolTipRole:
+        switch(index.column())
+        {
+        case MintProbability:
+            int interval = this->mintingInterval;
+            QString unit = tr("minutes");
 
+            int hours = interval / 60;
+            int days = hours  / 24;
+
+            if(hours > 1) {
+                interval = hours;
+                unit = tr("hours");
+            }
+            if(days > 1) {
+                interval = days;
+                unit = tr("days");
+            }
+
+            QString str = QString(tr("You have %1 chance to find a POS block if you mint %2 %3 at current difficulty."));
+            return str.arg(index.data().toString().toUtf8().constData()).arg(interval).arg(unit);
+        }
+        break;
       case Qt::EditRole:
         switch(index.column())
         {
