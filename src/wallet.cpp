@@ -1484,7 +1484,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                     break;
 
                 // Small enough, and priority high enough, to send for free
-                if (dPriority >= dPriorityNeeded)
+                if (dPriorityNeeded > 0 && dPriority >= dPriorityNeeded)
                     break;
 
                 // Include more fee and try again.
