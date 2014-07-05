@@ -22,4 +22,6 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime);
 
 void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
 
+uint256 GetProofIncrement(unsigned int nBits);
+
 #endif
