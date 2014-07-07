@@ -72,38 +72,67 @@ void CTxOut::print() const
     LogPrintf("%s\n", ToString());
 }
 
-uint256 CTransaction::GetHash() const
+CFeeRate::CFeeRate(int64_t nFeePaid, size_t nSize)
+{
+    if (nSize > 0)
+        nSatoshisPerK = nFeePaid*1000/nSize;
+    else
+        nSatoshisPerK = 0;
+}
+
+int64_t CFeeRate::GetFee(size_t nSize) const
+{
+    return nSatoshisPerK*nSize / 1000;
+}
+
+std::string CFeeRate::ToString() const
+{
+    std::string result = FormatMoney(nSatoshisPerK) + " BTC/kB";
+    return result;
+}
+
+CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
+CMutableTransaction::CMutableTransaction(const CTransaction& tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime) {}
+
+uint256 CMutableTransaction::GetHash() const
 {
     return SerializeHash(*this);
 }
 
-bool CTransaction::IsNewerThan(const CTransaction& old) const
+void CTransaction::UpdateHash() const
 {
-    if (vin.size() != old.vin.size())
+    *const_cast<uint256*>(&hash) = SerializeHash(*this);
+}
+
+CTransaction::CTransaction() : hash(0), nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { }
+
+CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime) {
+    UpdateHash();
+}
+
+CTransaction& CTransaction::operator=(const CTransaction &tx) {
+    *const_cast<int*>(&nVersion) = tx.nVersion;
+    *const_cast<std::vector<CTxIn>*>(&vin) = tx.vin;
+    *const_cast<std::vector<CTxOut>*>(&vout) = tx.vout;
+    *const_cast<unsigned int*>(&nLockTime) = tx.nLockTime;
+    *const_cast<uint256*>(&hash) = tx.hash;
+    return *this;
+}
+
+bool CTransaction::IsEquivalentTo(const CTransaction& tx) const
+{
+    if (nVersion   != tx.nVersion   ||
+        nLockTime  != tx.nLockTime  ||
+        vin.size() != tx.vin.size() ||
+        vout       != tx.vout)
         return false;
     for (unsigned int i = 0; i < vin.size(); i++)
-        if (vin[i].prevout != old.vin[i].prevout)
-            return false;
-
-    bool fNewer = false;
-    unsigned int nLowest = std::numeric_limits<unsigned int>::max();
-    for (unsigned int i = 0; i < vin.size(); i++)
     {
-        if (vin[i].nSequence != old.vin[i].nSequence)
-        {
-            if (vin[i].nSequence <= nLowest)
-            {
-                fNewer = false;
-                nLowest = vin[i].nSequence;
-            }
-            if (old.vin[i].nSequence < nLowest)
-            {
-                fNewer = true;
-                nLowest = old.vin[i].nSequence;
-            }
-        }
+        if (vin[i].nSequence != tx.vin[i].nSequence ||
+            vin[i].prevout   != tx.vin[i].prevout)
+            return false;
     }
-    return fNewer;
+    return true;
 }
 
 int64_t CTransaction::GetValueOut() const
@@ -140,7 +169,7 @@ double CTransaction::ComputePriority(double dPriorityInputs, unsigned int nTxSiz
 std::string CTransaction::ToString() const
 {
     std::string str;
-    str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%"PRIszu", vout.size=%"PRIszu", nLockTime=%u)\n",
+    str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%u, vout.size=%u, nLockTime=%u)\n",
         GetHash().ToString().substr(0,10),
         nVersion,
         vin.size(),
@@ -269,7 +298,7 @@ uint256 CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMer
 
 void CBlock::print() const
 {
-    LogPrintf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu")\n",
+    LogPrintf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u)\n",
         GetHash().ToString(),
         nVersion,
         hashPrevBlock.ToString(),

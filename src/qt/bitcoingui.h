@@ -6,17 +6,22 @@
 #define BITCOINGUI_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "config/bitcoin-config.h"
 #endif
 
+#include <QLabel>
 #include <QMainWindow>
 #include <QMap>
+#include <QMenu>
+#include <QPoint>
 #include <QSystemTrayIcon>
 
 class ClientModel;
 class Notificator;
+class OptionsModel;
 class RPCConsole;
 class SendCoinsRecipient;
+class UnitDisplayStatusBarControl;
 class WalletFrame;
 class WalletModel;
 
@@ -24,8 +29,8 @@ class CWallet;
 
 QT_BEGIN_NAMESPACE
 class QAction;
-class QLabel;
 class QProgressBar;
+class QProgressDialog;
 QT_END_NAMESPACE
 
 /**
@@ -68,11 +73,13 @@ private:
     ClientModel *clientModel;
     WalletFrame *walletFrame;
 
+    UnitDisplayStatusBarControl *unitDisplayControl;
     QLabel *labelEncryptionIcon;
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
     QProgressBar *progressBar;
+    QProgressDialog *progressDialog;
 
     QMenuBar *appMenuBar;
     QAction *overviewAction;
@@ -130,7 +137,7 @@ public slots:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks shown in the UI */
-    void setNumBlocks(int count, int nTotalBlocks);
+    void setNumBlocks(int count);
 
     /** Notify the user of an event from the core network or transaction handling code.
        @param[in] title     the message box / notification title
@@ -191,6 +198,37 @@ private slots:
 
     /** called by a timer to check if fRequestShutdown has been set **/
     void detectShutdown();
+
+    /** Show progress dialog e.g. for verifychain */
+    void showProgress(const QString &title, int nProgress);
+};
+
+class UnitDisplayStatusBarControl : public QLabel
+{
+    Q_OBJECT
+
+public:
+    explicit UnitDisplayStatusBarControl();
+    /** Lets the control know about the Options Model (and its signals) */
+    void setOptionsModel(OptionsModel *optionsModel);
+
+protected:
+    /** So that it responds to left-button clicks */
+    void mousePressEvent(QMouseEvent *event);
+
+private:
+    OptionsModel *optionsModel;
+    QMenu* menu;
+    /** Shows context menu with Display Unit options by the mouse coordinates */
+    void onDisplayUnitsClicked(const QPoint& point);
+    /** Creates context menu, its actions, and wires up all the relevant signals for mouse events. */
+    void createContextMenu();
+
+private slots:
+    /** When Display Units are changed on OptionsModel it will refresh the display text of the control on the status bar */
+    void updateDisplayUnit(int newUnits);
+    /** Tells underlying optionsModel to update its current display unit. */
+    void onMenuSelection(QAction* action);
 };
 
 #endif // BITCOINGUI_H

@@ -9,47 +9,21 @@
 #include "net.h"
 #include "main.h"
 #include "miner.h"
+#include "pow.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
 #endif
+
 #include <stdint.h>
+
+#include <boost/assign/list_of.hpp>
 
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 
 using namespace json_spirit;
 using namespace std;
-
-#ifdef ENABLE_WALLET
-// Key used by getwork miners.
-// Allocated in InitRPCMining, free'd in ShutdownRPCMining
-static CReserveKey* pMiningKey = NULL;
-
-void InitRPCMining()
-{
-    if (!pwalletMain)
-        return;
-
-    // getwork/getblocktemplate mining rewards paid here:
-    pMiningKey = new CReserveKey(pwalletMain);
-}
-
-void ShutdownRPCMining()
-{
-    if (!pMiningKey)
-        return;
-
-    delete pMiningKey; pMiningKey = NULL;
-}
-#else
-void InitRPCMining()
-{
-}
-void ShutdownRPCMining()
-{
-}
-#endif
 
 // Return average network hashes per second based on the last 'lookup' blocks,
 // or from the last difficulty change if 'lookup' is nonpositive.
@@ -88,7 +62,7 @@ Value GetNetworkHashPS(int lookup, int height) {
     uint256 workDiff = pb->nChainWork - pb0->nChainWork;
     int64_t timeDiff = maxTime - minTime;
 
-    return (boost::int64_t)(workDiff.getdouble() / timeDiff);
+    return (int64_t)(workDiff.getdouble() / timeDiff);
 }
 
 Value getnetworkhashps(const Array& params, bool fHelp)
@@ -127,9 +101,6 @@ Value getgenerate(const Array& params, bool fHelp)
             + HelpExampleCli("getgenerate", "")
             + HelpExampleRpc("getgenerate", "")
         );
-
-    if (!pMiningKey)
-        return false;
 
     return GetBoolArg("-gen", false);
 }
@@ -174,7 +145,7 @@ Value setgenerate(const Array& params, bool fHelp)
     }
 
     // -regtest mode: don't return until nGenProcLimit blocks are generated
-    if (fGenerate && Params().NetworkID() == CChainParams::REGTEST)
+    if (fGenerate && Params().MineBlocksOnDemand())
     {
         int nHeightStart = 0;
         int nHeightEnd = 0;
@@ -226,8 +197,8 @@ Value gethashespersec(const Array& params, bool fHelp)
         );
 
     if (GetTimeMillis() - nHPSTimerStart > 8000)
-        return (boost::int64_t)0;
-    return (boost::int64_t)dHashesPerSec;
+        return (int64_t)0;
+    return (int64_t)dHashesPerSec;
 }
 #endif
 
@@ -250,6 +221,7 @@ Value getmininginfo(const Array& params, bool fHelp)
             "  \"hashespersec\": n          (numeric) The hashes per second of the generation, or 0 if no generation.\n"
             "  \"pooledtx\": n              (numeric) The size of the mem pool\n"
             "  \"testnet\": true|false      (boolean) If using testnet or not\n"
+            "  \"chain\": \"xxxx\",         (string) current network name as defined in BIP70 (main, test, regtest)\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getmininginfo", "")
@@ -265,7 +237,8 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("genproclimit",     (int)GetArg("-genproclimit", -1)));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(params, false)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
-    obj.push_back(Pair("testnet",          TestNet()));
+    obj.push_back(Pair("testnet",          Params().NetworkID() == CBaseChainParams::TESTNET));
+    obj.push_back(Pair("chain",            Params().NetworkIDString()));
 #ifdef ENABLE_WALLET
     obj.push_back(Pair("generate",         getgenerate(params, false)));
     obj.push_back(Pair("hashespersec",     gethashespersec(params, false)));
@@ -274,131 +247,19 @@ Value getmininginfo(const Array& params, bool fHelp)
 }
 
 
-#ifdef ENABLE_WALLET
-Value getwork(const Array& params, bool fHelp)
+Value prioritisetransaction(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() != 3)
         throw runtime_error(
-            "getwork ( \"data\" )\n"
-            "\nIf 'data' is not specified, it returns the formatted hash data to work on.\n"
-            "If 'data' is specified, tries to solve the block and returns true if it was successful.\n"
-            "\nArguments:\n"
-            "1. \"data\"       (string, optional) The hex encoded data to solve\n"
-            "\nResult (when 'data' is not specified):\n"
-            "{\n"
-            "  \"midstate\" : \"xxxx\",   (string) The precomputed hash state after hashing the first half of the data (DEPRECATED)\n" // deprecated
-            "  \"data\" : \"xxxxx\",      (string) The block data\n"
-            "  \"hash1\" : \"xxxxx\",     (string) The formatted hash buffer for second hash (DEPRECATED)\n" // deprecated
-            "  \"target\" : \"xxxx\"      (string) The little endian hash target\n"
-            "}\n"
-            "\nResult (when 'data' is specified):\n"
-            "true|false       (boolean) If solving the block specified in the 'data' was successfull\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getwork", "")
-            + HelpExampleRpc("getwork", "")
-        );
+            "prioritisetransaction <txid> <priority delta> <fee delta>\n"
+            "Accepts the transaction into mined blocks at a higher (or lower) priority");
 
-    if (vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
-
-    if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
-
-    typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
-    static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
-    static vector<CBlockTemplate*> vNewBlockTemplate;
-
-    if (params.size() == 0)
-    {
-        // Update block
-        static unsigned int nTransactionsUpdatedLast;
-        static CBlockIndex* pindexPrev;
-        static int64_t nStart;
-        static CBlockTemplate* pblocktemplate;
-        if (pindexPrev != chainActive.Tip() ||
-            (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
-        {
-            if (pindexPrev != chainActive.Tip())
-            {
-                // Deallocate old blocks since they're obsolete now
-                mapNewBlock.clear();
-                BOOST_FOREACH(CBlockTemplate* pblocktemplate, vNewBlockTemplate)
-                    delete pblocktemplate;
-                vNewBlockTemplate.clear();
-            }
-
-            // Clear pindexPrev so future getworks make a new block, despite any failures from here on
-            pindexPrev = NULL;
-
-            // Store the pindexBest used before CreateNewBlock, to avoid races
-            nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-            CBlockIndex* pindexPrevNew = chainActive.Tip();
-            nStart = GetTime();
-
-            // Create new block
-            pblocktemplate = CreateNewBlockWithKey(*pMiningKey);
-            if (!pblocktemplate)
-                throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
-            vNewBlockTemplate.push_back(pblocktemplate);
-
-            // Need to update only after we know CreateNewBlock succeeded
-            pindexPrev = pindexPrevNew;
-        }
-        CBlock* pblock = &pblocktemplate->block; // pointer for convenience
-
-        // Update nTime
-        UpdateTime(*pblock, pindexPrev);
-        pblock->nNonce = 0;
-
-        // Update nExtraNonce
-        static unsigned int nExtraNonce = 0;
-        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
-
-        // Save
-        mapNewBlock[pblock->hashMerkleRoot] = make_pair(pblock, pblock->vtx[0].vin[0].scriptSig);
-
-        // Pre-build hash buffers
-        char pmidstate[32];
-        char pdata[128];
-        char phash1[64];
-        FormatHashBuffers(pblock, pmidstate, pdata, phash1);
-
-        uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
-
-        Object result;
-        result.push_back(Pair("midstate", HexStr(BEGIN(pmidstate), END(pmidstate)))); // deprecated
-        result.push_back(Pair("data",     HexStr(BEGIN(pdata), END(pdata))));
-        result.push_back(Pair("hash1",    HexStr(BEGIN(phash1), END(phash1)))); // deprecated
-        result.push_back(Pair("target",   HexStr(BEGIN(hashTarget), END(hashTarget))));
-        return result;
-    }
-    else
-    {
-        // Parse parameters
-        vector<unsigned char> vchData = ParseHex(params[0].get_str());
-        if (vchData.size() != 128)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
-        CBlock* pdata = (CBlock*)&vchData[0];
-
-        // Byte reverse
-        for (int i = 0; i < 128/4; i++)
-            ((unsigned int*)pdata)[i] = ByteReverse(((unsigned int*)pdata)[i]);
-
-        // Get saved block
-        if (!mapNewBlock.count(pdata->hashMerkleRoot))
-            return false;
-        CBlock* pblock = mapNewBlock[pdata->hashMerkleRoot].first;
-
-        pblock->nTime = pdata->nTime;
-        pblock->nNonce = pdata->nNonce;
-        pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
-        pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-
-        assert(pwalletMain != NULL);
-        return CheckWork(pblock, *pwalletMain, *pMiningKey);
-    }
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+    mempool.PrioritiseTransaction(hash, params[0].get_str(), params[1].get_real(), params[2].get_int64());
+    return true;
 }
-#endif
+
 
 Value getblocktemplate(const Array& params, bool fHelp)
 {
@@ -559,7 +420,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     Object aux;
     aux.push_back(Pair("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
 
-    uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+    uint256 hashTarget = uint256().SetCompact(pblock->nBits);
 
     static Array aMutable;
     if (aMutable.empty())
@@ -581,8 +442,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("noncerange", "00000000ffffffff"));
     result.push_back(Pair("sigoplimit", (int64_t)MAX_BLOCK_SIGOPS));
     result.push_back(Pair("sizelimit", (int64_t)MAX_BLOCK_SIZE));
-    result.push_back(Pair("curtime", (int64_t)pblock->nTime));
-    result.push_back(Pair("bits", HexBits(pblock->nBits)));
+    result.push_back(Pair("curtime", pblock->GetBlockTime()));
+    result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
     return result;
@@ -625,4 +486,64 @@ Value submitblock(const Array& params, bool fHelp)
         return "rejected"; // TODO: report validation state
 
     return Value::null;
+}
+
+Value estimatefee(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "estimatefee nblocks\n"
+            "\nEstimates the approximate fee per kilobyte\n"
+            "needed for a transaction to get confirmed\n"
+            "within nblocks blocks.\n"
+            "\nArguments:\n"
+            "1. nblocks     (numeric)\n"
+            "\nResult:\n"
+            "n :    (numeric) estimated fee-per-kilobyte\n"
+            "\n"
+            "-1.0 is returned if not enough transactions and\n"
+            "blocks have been observed to make an estimate.\n"
+            "\nExample:\n"
+            + HelpExampleCli("estimatefee", "6")
+            );
+
+    RPCTypeCheck(params, boost::assign::list_of(int_type));
+
+    int nBlocks = params[0].get_int();
+    if (nBlocks < 1)
+        nBlocks = 1;
+
+    CFeeRate feeRate = mempool.estimateFee(nBlocks);
+    if (feeRate == CFeeRate(0))
+        return -1.0;
+
+    return ValueFromAmount(feeRate.GetFeePerK());
+}
+
+Value estimatepriority(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "estimatepriority nblocks\n"
+            "\nEstimates the approximate priority\n"
+            "a zero-fee transaction needs to get confirmed\n"
+            "within nblocks blocks.\n"
+            "\nArguments:\n"
+            "1. nblocks     (numeric)\n"
+            "\nResult:\n"
+            "n :    (numeric) estimated priority\n"
+            "\n"
+            "-1.0 is returned if not enough transactions and\n"
+            "blocks have been observed to make an estimate.\n"
+            "\nExample:\n"
+            + HelpExampleCli("estimatepriority", "6")
+            );
+
+    RPCTypeCheck(params, boost::assign::list_of(int_type));
+
+    int nBlocks = params[0].get_int();
+    if (nBlocks < 1)
+        nBlocks = 1;
+
+    return mempool.estimatePriority(nBlocks);
 }

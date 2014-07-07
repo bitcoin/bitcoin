@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="de" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="de" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -1047,6 +1047,14 @@ Adresse: %4</translation>
         <translation>IP-Adresse des Proxies (z.B. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>Externe URLs (z.B. ein Block-Explorer), die im Kontextmenü des Transaktionsverlaufs eingefügt werden. In der URL wird %s durch den Transaktionshash ersetzt. Bei Angabe mehrerer URLs müssen diese durch &quot;|&quot; voneinander getrennt werden.</translation>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation>Externe Transaktions-URLs</translation>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation>Aktive Kommandozeilenoptionen, die obige Konfiguration überschreiben:</translation>
     </message>
@@ -1348,7 +1356,7 @@ Adresse: %4</translation>
         <translation>Fehler: Ungültige Kombination von -regtest und -testnet.</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
         <translation>Bitcoin Core wurde noch nicht sicher beendet...</translation>
     </message>
     <message>

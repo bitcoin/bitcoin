@@ -24,7 +24,7 @@ public:
     PaymentRequestPlus() { }
 
     bool parse(const QByteArray& data);
-    bool SerializeToString(string* output) const;
+    bool SerializeToString(std::string* output) const;
 
     bool IsInitialized() const;
     QString getPKIType() const;

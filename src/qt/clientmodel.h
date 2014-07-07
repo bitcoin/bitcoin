@@ -9,6 +9,7 @@
 
 class AddressTableModel;
 class OptionsModel;
+class PeerTableModel;
 class TransactionTableModel;
 
 class CWallet;
@@ -42,6 +43,7 @@ public:
     ~ClientModel();
 
     OptionsModel *getOptionsModel();
+    PeerTableModel *getPeerTableModel();
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
@@ -54,14 +56,10 @@ public:
     double getVerificationProgress() const;
     QDateTime getLastBlockDate() const;
 
-    //! Return network (main, testnet3, regtest)
-    QString getNetworkName() const;
     //! Return true if core is doing initial block download
     bool inInitialBlockDownload() const;
     //! Return true if core is importing blocks
     enum BlockSource getBlockSource() const;
-    //! Return conservative estimate of total number of blocks, or 0 if unknown
-    int getNumBlocksOfPeers() const;
     //! Return warnings to be displayed in status bar
     QString getStatusBarWarnings() const;
 
@@ -73,9 +71,9 @@ public:
 
 private:
     OptionsModel *optionsModel;
+    PeerTableModel *peerTableModel;
 
     int cachedNumBlocks;
-    int cachedNumBlocksOfPeers;
     bool cachedReindexing;
     bool cachedImporting;
 
@@ -88,12 +86,15 @@ private:
 
 signals:
     void numConnectionsChanged(int count);
-    void numBlocksChanged(int count, int countOfPeers);
+    void numBlocksChanged(int count);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
 
     //! Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
+
+    // Show progress dialog e.g. for verifychain
+    void showProgress(const QString &title, int nProgress);
 
 public slots:
     void updateTimer();

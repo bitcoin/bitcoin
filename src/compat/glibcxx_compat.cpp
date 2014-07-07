@@ -1,49 +1,55 @@
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include <cstddef>
 #include <istream>
 #include <stdexcept>
 #include <typeinfo>
 
 #ifndef _GLIBCXX_USE_NOEXCEPT
-    #define _GLIBCXX_USE_NOEXCEPT throw()
+#define _GLIBCXX_USE_NOEXCEPT throw()
 #endif
 
 namespace std {
 
 const char* bad_exception::what() const throw()
 {
-  return "std::bad_exception";
+    return "std::bad_exception";
 }
 
 const char* bad_cast::what() const throw()
 {
-  return "std::bad_cast";
+    return "std::bad_cast";
 }
 
 const char* bad_alloc::what() const throw()
 {
-  return "std::bad_alloc";
+    return "std::bad_alloc";
 }
 
 namespace __detail
 {
 struct _List_node_base
 {
-  void _M_hook(std::__detail::_List_node_base* const __position) throw () __attribute__((used))
-  {
-    _M_next = __position;
-    _M_prev = __position->_M_prev;
-    __position->_M_prev->_M_next = this;
-    __position->_M_prev = this;
-  }
-  void _M_unhook() __attribute__((used))
-  {
-    _List_node_base* const __next_node = _M_next;
-    _List_node_base* const __prev_node = _M_prev;
-    __prev_node->_M_next = __next_node;
-    __next_node->_M_prev = __prev_node;
-  }
-  _List_node_base* _M_next;
-  _List_node_base* _M_prev;
+    void _M_hook(std::__detail::_List_node_base* const __position) throw () __attribute__((used))
+    {
+        _M_next = __position;
+        _M_prev = __position->_M_prev;
+        __position->_M_prev->_M_next = this;
+        __position->_M_prev = this;
+    }
+
+    void _M_unhook() __attribute__((used))
+    {
+        _List_node_base* const __next_node = _M_next;
+        _List_node_base* const __prev_node = _M_prev;
+        __prev_node->_M_next = __next_node;
+        __next_node->_M_prev = __prev_node;
+    }
+
+    _List_node_base* _M_next;
+    _List_node_base* _M_prev;
 };
 } // namespace detail
 
@@ -61,8 +67,8 @@ out_of_range::~out_of_range() _GLIBCXX_USE_NOEXCEPT { }
 // Used with permission.
 // See: https://github.com/madlib/madlib/commit/c3db418c0d34d6813608f2137fef1012ce03043d
 
-void
-ctype<char>::_M_widen_init() const {
+void ctype<char>::_M_widen_init() const
+{
     char __tmp[sizeof(_M_widen)];
     for (unsigned __i = 0; __i < sizeof(_M_widen); ++__i)
         __tmp[__i] = __i;

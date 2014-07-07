@@ -112,6 +112,32 @@ public:
 
 
 
+/** Type-safe wrapper class to for fee rates
+ * (how much to pay based on transaction size)
+ */
+class CFeeRate
+{
+private:
+    int64_t nSatoshisPerK; // unit is satoshis-per-1,000-bytes
+public:
+    CFeeRate() : nSatoshisPerK(0) { }
+    explicit CFeeRate(int64_t _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) { }
+    CFeeRate(int64_t nFeePaid, size_t nSize);
+    CFeeRate(const CFeeRate& other) { nSatoshisPerK = other.nSatoshisPerK; }
+
+    int64_t GetFee(size_t size) const; // unit returned is satoshis
+    int64_t GetFeePerK() const { return GetFee(1000); } // satoshis-per-1000-bytes
+
+    friend bool operator<(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK < b.nSatoshisPerK; }
+    friend bool operator>(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK > b.nSatoshisPerK; }
+    friend bool operator==(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK == b.nSatoshisPerK; }
+    friend bool operator<=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK <= b.nSatoshisPerK; }
+    friend bool operator>=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK >= b.nSatoshisPerK; }
+    std::string ToString() const;
+
+    IMPLEMENT_SERIALIZE( READWRITE(nSatoshisPerK); )
+};
+
 
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
@@ -148,17 +174,18 @@ public:
 
     uint256 GetHash() const;
 
-    bool IsDust(int64_t nMinRelayTxFee) const
+    bool IsDust(CFeeRate minRelayTxFee) const
     {
-        // "Dust" is defined in terms of CTransaction::nMinRelayTxFee,
+        // "Dust" is defined in terms of CTransaction::minRelayTxFee,
         // which has units satoshis-per-kilobyte.
         // If you'd pay more than 1/3 in fees
         // to spend something, then we consider it dust.
         // A typical txout is 34 bytes big, and will
-        // need a CTxIn of at least 148 bytes to spend,
+        // need a CTxIn of at least 148 bytes to spend:
         // so dust is a txout less than 546 satoshis 
-        // with default nMinRelayTxFee.
-        return ((nValue*1000)/(3*((int)GetSerializeSize(SER_DISK,0)+148)) < nMinRelayTxFee);
+        // with default minRelayTxFee.
+        size_t nSize = GetSerializeSize(SER_DISK,0)+148u;
+        return (nValue < 3*minRelayTxFee.GetFee(nSize));
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -177,49 +204,59 @@ public:
 };
 
 
+struct CMutableTransaction;
+
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
 class CTransaction
 {
+private:
+    /** Memory only. */
+    const uint256 hash;
+    void UpdateHash() const;
+
 public:
-    static int64_t nMinTxFee;
-    static int64_t nMinRelayTxFee;
     static const int CURRENT_VERSION=1;
-    int nVersion;
-    std::vector<CTxIn> vin;
-    std::vector<CTxOut> vout;
-    unsigned int nLockTime;
 
-    CTransaction()
-    {
-        SetNull();
-    }
+    // The local variables are made const to prevent unintended modification
+    // without updating the cached hash value. However, CTransaction is not
+    // actually immutable; deserialization and assignment are implemented,
+    // and bypass the constness. This is safe, as they update the entire
+    // structure, including the hash.
+    const int nVersion;
+    const std::vector<CTxIn> vin;
+    const std::vector<CTxOut> vout;
+    const unsigned int nLockTime;
 
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(this->nVersion);
+    /** Construct a CTransaction that qualifies as IsNull() */
+    CTransaction();
+
+    /** Convert a CMutableTransaction into a CTransaction. */
+    CTransaction(const CMutableTransaction &tx);
+
+    CTransaction& operator=(const CTransaction& tx);
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(*const_cast<int*>(&this->nVersion));
         nVersion = this->nVersion;
-        READWRITE(vin);
-        READWRITE(vout);
-        READWRITE(nLockTime);
+        READWRITE(*const_cast<std::vector<CTxIn>*>(&vin));
+        READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
+        READWRITE(*const_cast<unsigned int*>(&nLockTime));
+        if (fRead)
+            UpdateHash();
     )
 
-    void SetNull()
-    {
-        nVersion = CTransaction::CURRENT_VERSION;
-        vin.clear();
-        vout.clear();
-        nLockTime = 0;
+    bool IsNull() const {
+        return vin.empty() && vout.empty();
     }
 
-    bool IsNull() const
-    {
-        return (vin.empty() && vout.empty());
+    const uint256& GetHash() const {
+        return hash;
     }
 
-    uint256 GetHash() const;
-    bool IsNewerThan(const CTransaction& old) const;
+    // True if only scriptSigs are different
+    bool IsEquivalentTo(const CTransaction& tx) const;
 
     // Return sum of txouts.
     int64_t GetValueOut() const;
@@ -236,20 +273,41 @@ public:
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
-        return (a.nVersion  == b.nVersion &&
-                a.vin       == b.vin &&
-                a.vout      == b.vout &&
-                a.nLockTime == b.nLockTime);
+        return a.hash == b.hash;
     }
 
     friend bool operator!=(const CTransaction& a, const CTransaction& b)
     {
-        return !(a == b);
+        return a.hash != b.hash;
     }
-
 
     std::string ToString() const;
     void print() const;
+};
+
+/** A mutable version of CTransaction. */
+struct CMutableTransaction
+{
+    int nVersion;
+    std::vector<CTxIn> vin;
+    std::vector<CTxOut> vout;
+    unsigned int nLockTime;
+
+    CMutableTransaction();
+    CMutableTransaction(const CTransaction& tx);
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(vin);
+        READWRITE(vout);
+        READWRITE(nLockTime);
+    )
+
+    /** Compute the hash of this CMutableTransaction. This is computed on the
+     * fly, as opposed to GetHash() in CTransaction, which uses a cached result.
+     */
+    uint256 GetHash() const;
 };
 
 /** wrapper for CTxOut that provides a more compact serialization */
@@ -439,12 +497,6 @@ public:
     }
 
     uint256 BuildMerkleTree() const;
-
-    const uint256 &GetTxHash(unsigned int nIndex) const {
-        assert(vMerkleTree.size() > 0); // BuildMerkleTree must have been called first
-        assert(nIndex < vtx.size());
-        return vMerkleTree[nIndex];
-    }
 
     std::vector<uint256> GetMerkleBranch(int nIndex) const;
     static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
