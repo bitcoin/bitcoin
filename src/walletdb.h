@@ -7,6 +7,7 @@
 
 #include "db.h"
 #include "key.h"
+#include "keystore.h"
 
 #include <list>
 #include <stdint.h>
@@ -92,6 +93,8 @@ public:
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
 
     bool WriteCScript(const uint160& hash, const CScript& redeemScript);
+
+    bool WriteWatchOnly(const CScript &script);
 
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);
