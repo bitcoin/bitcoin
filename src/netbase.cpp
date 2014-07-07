@@ -7,10 +7,6 @@
 #include "bitcoin-config.h"
 #endif
 
-#ifdef HAVE_INET_PTON
-#include <arpa/inet.h>
-#endif
-
 #ifdef HAVE_GETADDRINFO_A
 #include <netdb.h>
 #endif
@@ -23,6 +19,9 @@
 #include "util.h"
 
 #ifndef WIN32
+#if HAVE_INET_PTON
+#include <arpa/inet.h>
+#endif
 #include <fcntl.h>
 #endif
 
