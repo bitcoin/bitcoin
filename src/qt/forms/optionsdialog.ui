@@ -329,26 +329,6 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="socksVersionLabel">
-           <property name="text">
-            <string>SOCKS &amp;Version:</string>
-           </property>
-           <property name="textFormat">
-            <enum>Qt::PlainText</enum>
-           </property>
-           <property name="buddy">
-            <cstring>socksVersion</cstring>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QValueComboBox" name="socksVersion">
-           <property name="toolTip">
-            <string>SOCKS version of the proxy (e.g. 5)</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <spacer name="horizontalSpacer_1_Network">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
