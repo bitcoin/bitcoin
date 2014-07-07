@@ -341,20 +341,14 @@ void PaymentServer::initNetManager()
 
     QNetworkProxy proxy;
 
-    // Query active proxy (fails if no SOCKS5 proxy)
+    // Query active SOCKS5 proxy
     if (optionsModel->getProxySettings(proxy)) {
-        if (proxy.type() == QNetworkProxy::Socks5Proxy) {
-            netManager->setProxy(proxy);
+        netManager->setProxy(proxy);
 
-            qDebug() << "PaymentServer::initNetManager : Using SOCKS5 proxy" << proxy.hostName() << ":" << proxy.port();
-        }
-        else
-            qDebug() << "PaymentServer::initNetManager : No active proxy server found.";
+        qDebug() << "PaymentServer::initNetManager : Using SOCKS5 proxy" << proxy.hostName() << ":" << proxy.port();
     }
     else
-        emit message(tr("Net manager warning"),
-            tr("Your active proxy doesn't support SOCKS5, which is required for payment requests via proxy."),
-            CClientUIInterface::MSG_WARNING);
+        qDebug() << "PaymentServer::initNetManager : No active proxy server found.";
 
     connect(netManager, SIGNAL(finished(QNetworkReply*)),
             this, SLOT(netRequestFinished(QNetworkReply*)));
