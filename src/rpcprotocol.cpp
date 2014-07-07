@@ -25,6 +25,9 @@ using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
 
+// Number of bytes to allocate and read at most at once in post data
+const size_t POST_READ_SIZE = 256 * 1024;
+
 //
 // HTTP protocol
 //
@@ -204,8 +207,17 @@ int ReadHTTPMessage(std::basic_istream<char>& stream, map<string,
     // Read message
     if (nLen > 0)
     {
-        vector<char> vch(nLen);
-        stream.read(&vch[0], nLen);
+        vector<char> vch;
+        size_t ptr = 0;
+        while (ptr < (size_t)nLen)
+        {
+            size_t bytes_to_read = std::min((size_t)nLen - ptr, POST_READ_SIZE);
+            vch.resize(ptr + bytes_to_read);
+            stream.read(&vch[ptr], bytes_to_read);
+            if (!stream) // Connection lost while reading
+                return HTTP_INTERNAL_SERVER_ERROR;
+            ptr += bytes_to_read;
+        }
         strMessageRet = string(vch.begin(), vch.end());
     }
 
