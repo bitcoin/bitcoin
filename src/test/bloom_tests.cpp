@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize)
 BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak)
 {
     // Same test as bloom_create_insert_serialize, but we add a nTweak of 100
-    CBloomFilter filter(3, 0.01, 2147483649, BLOOM_UPDATE_ALL);
+    CBloomFilter filter(3, 0.01, 2147483649UL, BLOOM_UPDATE_ALL);
 
     filter.insert(ParseHex("99108ad8ed9bb6274d3980bab5a85c048f0950c8"));
     BOOST_CHECK_MESSAGE( filter.contains(ParseHex("99108ad8ed9bb6274d3980bab5a85c048f0950c8")), "BloomFilter doesn't contain just-inserted object!");
