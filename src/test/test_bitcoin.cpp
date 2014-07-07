@@ -18,7 +18,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
-
+CClientUIInterface uiInterface;
 CWallet* pwalletMain;
 
 extern bool fPrintToConsole;
