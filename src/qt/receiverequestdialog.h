@@ -11,10 +11,12 @@
 #include <QImage>
 #include <QLabel>
 
+class OptionsModel;
+
 namespace Ui {
     class ReceiveRequestDialog;
 }
-class OptionsModel;
+
 QT_BEGIN_NAMESPACE
 class QMenu;
 QT_END_NAMESPACE

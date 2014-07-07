@@ -13,16 +13,16 @@
 
 #include <QClipboard>
 #include <QDrag>
+#include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPixmap>
-#include <QMenu>
 #if QT_VERSION < 0x050000
 #include <QUrl>
 #endif
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h" /* for USE_QRCODE */
+#include "config/bitcoin-config.h" /* for USE_QRCODE */
 #endif
 
 #ifdef USE_QRCODE

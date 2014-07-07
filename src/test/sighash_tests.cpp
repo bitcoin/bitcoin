@@ -28,7 +28,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
         printf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
         return 1;
     }
-    CTransaction txTmp(txTo);
+    CMutableTransaction txTmp(txTo);
 
     // In case concatenating two scripts ends up with two codeseparators,
     // or an extra one at the end, this prevents all those possible incompatibilities.
@@ -90,7 +90,7 @@ void static RandomScript(CScript &script) {
         script << oplist[insecure_rand() % (sizeof(oplist)/sizeof(oplist[0]))];
 }
 
-void static RandomTransaction(CTransaction &tx, bool fSingle) {
+void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
     tx.nVersion = insecure_rand();
     tx.vin.clear();
     tx.vout.clear();
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
     #endif
     for (int i=0; i<nRandomTests; i++) {
         int nHashType = insecure_rand();
-        CTransaction txTo;
+        CMutableTransaction txTo;
         RandomTransaction(txTo, (nHashType & 0x1f) == SIGHASH_SINGLE);
         CScript scriptCode;
         RandomScript(scriptCode);

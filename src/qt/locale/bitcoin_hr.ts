@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="hr" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="hr" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -1043,6 +1043,14 @@ Adresa:%4
         <translation type="unfinished"/>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation type="unfinished"/>
     </message>
@@ -1196,7 +1204,7 @@ Adresa:%4
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>Priložena proxy adresa je nevažeća.</translation>
     </message>
 </context>
 <context>
@@ -1207,7 +1215,7 @@ Adresa:%4
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>Prikazani podatci mogu biti zastarjeli. Vaš novčanik se automatski sinkronizira s Bitcoin mrežom kada je veza uspostavljena, ali taj proces još nije završen.</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -1344,7 +1352,7 @@ Adresa:%4
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1483,7 +1491,7 @@ Adresa:%4
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation type="unfinished"/>
+        <translation>Kako bi navigirali kroz povijest koristite strelice gore i dolje. &lt;b&gt;Ctrl-L&lt;/b&gt; kako bi očistili ekran.</translation>
     </message>
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
@@ -2466,7 +2474,7 @@ Adresa:%4
     </message>
     <message>
         <source>Show transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Prikaži detalje transakcije</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
@@ -2622,7 +2630,7 @@ Adresa:%4
     </message>
     <message>
         <source>Specify your own public address</source>
-        <translation type="unfinished"/>
+        <translation>Odaberi vlastitu javnu adresu</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>

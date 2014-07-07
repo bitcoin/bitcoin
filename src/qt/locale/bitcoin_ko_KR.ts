@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="ko_KR" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="ko_KR" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -33,14 +33,14 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1-비트)</translation>
     </message>
 </context>
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Double-click to edit address or label</source>
-        <translation>주소 또는 표를 편집하기 위해 더블클릭 하시오</translation>
+        <translation>지갑 주소나 제목을 수정하려면 더블클릭하세요.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -48,7 +48,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>새 항목(N)</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -60,7 +60,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>닫기 (L)</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -76,7 +76,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;내보내기</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -92,7 +92,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>선택하기 (H)</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -108,7 +108,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>비트코인을 받을 수 있는 계좌 주소입니다. 매 거래마다 새로운 주소 사용을 권장합니다. </translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -401,11 +401,11 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>지갑 주소가 자신 소유의 것인지 증명하기 위해 비트코인 주소에 서명할 수 있습니다.</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished"/>
+        <translation>비트코인 주소의 전자 서명 확인을 위해 첨부된 메시지가 있을 경우 이를 검증할 수 있습니다.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -441,11 +441,11 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>한번 이상 사용된 보내는 주소와 주소 제목의 목록을 보여줍니다.</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>한번 이상 사용된 받는 주소와 주소 제목의 목록을 보여줍니다.</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
@@ -611,7 +611,7 @@ Address: %4
     </message>
     <message>
         <source>(un)select all</source>
-        <translation type="unfinished"/>
+        <translation>모두 선택(하지 않음)</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -663,11 +663,11 @@ Address: %4
     </message>
     <message>
         <source>Lock unspent</source>
-        <translation type="unfinished"/>
+        <translation>비트코인이 사용되지 않은 주소를 잠금 처리합니다.</translation>
     </message>
     <message>
         <source>Unlock unspent</source>
-        <translation type="unfinished"/>
+        <translation>비트코인이 사용되지 않은 주소를 잠금 해제합니다. </translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -755,7 +755,7 @@ Address: %4
     </message>
     <message>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation type="unfinished"/>
+        <translation>만약 거래 양이 1000bytes 보다 크면 제목이 빨간색으로 변합니다</translation>
     </message>
     <message>
         <source>This means a fee of at least %1 per kB is required.</source>
@@ -767,27 +767,27 @@ Address: %4
     </message>
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation type="unfinished"/>
+        <translation>우선 순위가 높은 거래의 경우 블럭에 포함될 가능성이 더 많습니다.</translation>
     </message>
     <message>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
+        <translation>우선권이 중간보다 작으면 제목이 빨간색으로 변합니다. </translation>
     </message>
     <message>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>만약 수령인이 받은 액수가 잔고의 1%보다 작으면 이 제목이 빨간색으로 변합니다.</translation>
     </message>
     <message>
         <source>This means a fee of at least %1 is required.</source>
-        <translation type="unfinished"/>
+        <translation>최소 %1의 거래 수수료가 필요하다는 뜻입니다. </translation>
     </message>
     <message>
         <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation type="unfinished"/>
+        <translation>노드 릴레이를 위한 최저 수수료의 0.546배보다 낮은 거래는 먼지 거래로 표현됩니다.</translation>
     </message>
     <message>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>만약 잔돈이 1%보다 작다면 제목이 빨간색으로 변합니다</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -814,7 +814,7 @@ Address: %4
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>현재 선택된 주소 필드의 제목입니다. </translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
@@ -869,7 +869,7 @@ Address: %4
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished"/>
+        <translation>폴더가 이미 존재합니다. 새로운 폴더 생성을 원한다면 %1 명령어를 추가하세요. </translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
@@ -916,7 +916,7 @@ Address: %4
     </message>
     <message>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
+        <translation>지불 요청을 위해 SSL 최상위 인증을 설정합니다. (기본값: -system-)</translation>
     </message>
     <message>
         <source>Show splash screen on startup (default: 1)</source>
@@ -939,11 +939,11 @@ Address: %4
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>프로그램이 처음으로 실행되고 있습니다. 비트코인 코어가 어디에 데이터를 저장할지 선택할 수 있습니다. </translation>
     </message>
     <message>
         <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>비트코인 코어가 블럭체인의 복사본을 다운로드 저장합니다. 적어도 %1GB의 데이터가 이 폴더에 저장되며 시간이 경과할수록 점차 증가합니다. 그리고 지갑 또한 이 폴더에 저장됩니다. </translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -959,7 +959,7 @@ Address: %4
     </message>
     <message>
         <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation type="unfinished"/>
+        <translation>오류 : 별도 정의한 폴더명 &quot;%1&quot; 생성에 실패했습니다. </translation>
     </message>
     <message>
         <source>Error</source>
@@ -1033,7 +1033,7 @@ Address: %4
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished"/>
+        <translation>스크립트 인증 쓰레드의 개수</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
@@ -1046,6 +1046,14 @@ Address: %4
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>프록시 아이피 주소(예. IPv4:127.0.0.1 / IPv6: ::1)</translation>
+    </message>
+    <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation>제 3자 거래 URLs</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1073,11 +1081,11 @@ Address: %4
     </message>
     <message>
         <source>Expert</source>
-        <translation type="unfinished"/>
+        <translation>전문가</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished"/>
+        <translation>코인 상세 제어기능을 활성화합니다 - &amp;C</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
@@ -1085,7 +1093,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished"/>
+        <translation>&amp;확인되지 않은 돈을 쓰다</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1165,7 +1173,7 @@ Address: %4
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"/>
+        <translation>코인 상세 제어기능에 대한 표시 여부를 선택할 수 있습니다.</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1189,7 +1197,7 @@ Address: %4
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>변경 사항을 적용하기 위해서는 프로그램이 종료 후 재시작되어야 합니다.</translation>
     </message>
     <message>
         <source>Client will be shutdown, do you want to proceed?</source>
@@ -1197,7 +1205,7 @@ Address: %4
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>이 변경 사항 적용을 위해 프로그램 재시작이 필요합니다. </translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1267,11 +1275,11 @@ Address: %4
     </message>
     <message>
         <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>URI의 파싱에 문제가 발생했습니다. 잘못된 비트코인 주소나 URI 파라미터 구성에 오류가 존재할 수 있습니다.</translation>
     </message>
     <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation type="unfinished"/>
+        <translation>요청한 금액 %1의 양이 너무 적습니다. (스팸성 거래로 간주)</translation>
     </message>
     <message>
         <source>Payment request error</source>
@@ -1287,7 +1295,7 @@ Address: %4
     </message>
     <message>
         <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation type="unfinished"/>
+        <translation>현재의 프록시가 SOCKS5를 지원하지 않아 지불 요청을 수행할 수 없습니다. </translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1295,7 +1303,7 @@ Address: %4
     </message>
     <message>
         <source>Payment request file handling</source>
-        <translation type="unfinished"/>
+        <translation>지불이 파일 처리를 요청합니다</translation>
     </message>
     <message>
         <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
@@ -1346,11 +1354,11 @@ Address: %4
     </message>
     <message>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"/>
+        <translation>오류: 잘못된 -regtest 와 -testnet의 조합입니다.</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
+        <translation>비트코인 코어가 아직 안전하게 종료되지 않았습니다.</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -1452,7 +1460,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Clear</source>
-        <translation type="unfinished"/>
+        <translation>&amp;지우기</translation>
     </message>
     <message>
         <source>Totals</source>
@@ -1539,11 +1547,11 @@ Address: %4
     </message>
     <message>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation type="unfinished"/>
+        <translation>이전에 사용된 수취용 주소를 사용할려고 합니다. 주소의 재사용은 보안과 개인정보 보호 측면에서 문제를 초래할 수 있습니다. 이전 지불 요청을 재생성하는 경우가 아니라면 주소 재사용을 권하지 않습니다.  </translation>
     </message>
     <message>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation type="unfinished"/>
+        <translation>현재의 수취용 주소를 재사용합니다만 권장하지는 않습니다. (R&amp;)</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
@@ -1555,11 +1563,11 @@ Address: %4
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>지급을 요청하기 위해 아래 형식을 사용하세요. 입력값은 &lt;b&gt;선택 사항&lt;/b&gt; 입니다.</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation type="unfinished"/>
+        <translation>요청할 금액 입력칸으로 선택 사항입니다. 빈 칸으로 두거나 특정 금액이 필요하지 않는 경우 0을 입력하세요. </translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -1704,7 +1712,7 @@ Address: %4
     </message>
     <message>
         <source>Inputs...</source>
-        <translation type="unfinished"/>
+        <translation>입력...</translation>
     </message>
     <message>
         <source>automatically selected</source>
@@ -1856,7 +1864,7 @@ Address: %4
     </message>
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>거래가 거부되었습니다. 몇몇 코인들이 지갑에서 이미 사용된 경우, 예를 들어 코인을 이미 사용한  wallet.dat를 복사해서 사용한 경우 지금 지갑에 기록이 안되있어 이런 일이 생길 수 있습니다.</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -1899,7 +1907,7 @@ Address: %4
     </message>
     <message>
         <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>비트코인을 송금할 지갑 주소 입력하기 (예 : 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to your address book</source>
@@ -1943,7 +1951,7 @@ Address: %4
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished"/>
+        <translation>사용된 주소 목록에 새 주소를 추가하기 위해 제목을 입력합니다. </translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
@@ -1955,7 +1963,7 @@ Address: %4
     </message>
     <message>
         <source>Pay To:</source>
-        <translation type="unfinished"/>
+        <translation>송금할 대상 : </translation>
     </message>
     <message>
         <source>Memo:</source>
@@ -2041,7 +2049,7 @@ Address: %4
     </message>
     <message>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation type="unfinished"/>
+        <translation>메시지를 검증하기 위해 아래 칸에 각각 지갑 주소와 메시지, 전자서명을 입력하세요. (메시지 원본의 띄어쓰기, 들여쓰기, 행 나눔 등이 정확하게 입력되어야 하므로 원본을 복사해서 입력하세요) 이 기능은 메시지 검증이 주 목적이며, 네트워크 침입자에 의해 변조되지 않도록 전자서명 해독에 불필요한 시간을 소모하지 마세요. </translation>
     </message>
     <message>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -2166,7 +2174,7 @@ Address: %4
     </message>
     <message numerus="yes">
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n 노드를 거쳐 전파합니다.</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -2238,7 +2246,7 @@ Address: %4
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation>신규 채굴된 코인이 사용되기 위해서는 %1 개의 블럭이 경과되어야 합니다. 블럭을 생성할 때 블럭체인에 추가되도록 네트워크에 전파되는 과정을 거치는데, 블럭체인에 포함되지 못하고 실패한다면 해당 블럭의 상태는 &apos;미승인&apos;으로 표현되고 비트코인 또한 사용될 수 없습니다. 이 현상은 다른 노드가 비슷한 시간대에 동시에 블럭을 생성할 때 종종 발생할 수 있습니다. </translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2270,7 +2278,7 @@ Address: %4
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n 개의 추가 블럭을 읽습니다.</numerusform></translation>
     </message>
     <message>
         <source>unknown</source>
@@ -2308,11 +2316,11 @@ Address: %4
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished"/>
+        <translation>충분히 숙성되지 않은 상태 (%1 승인, %2 후에 사용 가능합니다)</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n 개의 추가 블럭을 읽습니다.</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2340,7 +2348,7 @@ Address: %4
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>승인 중 (권장되는 승인 회수 %2 대비 현재 승인 수 %1)</translation>
     </message>
     <message>
         <source>Conflicted</source>
@@ -2552,7 +2560,7 @@ Address: %4
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;내보내기</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -2572,7 +2580,7 @@ Address: %4
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished"/>
+        <translation>지갑 데이터를 %1 폴더에 저장하는 동안 오류가 발생했습니다. </translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
@@ -2643,7 +2651,7 @@ Address: %4
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation type="unfinished"/>
+        <translation>포트 &lt;port&gt;을 통해 JSON-RPC 연결 (기본값: 8332 또는 testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2651,7 +2659,7 @@ Address: %4
     </message>
     <message>
         <source>Bitcoin Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>비트코인 코어 RPC 클라이언트 버전</translation>
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
@@ -2685,7 +2693,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>IPv6 연결을 위해 RPC port %u 설정 중 오류가 발생했습니다. IPv4: %s 환경으로 돌아갑니다.</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
@@ -2709,19 +2717,21 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>에러: 거래가 거부되었습니다! 이런 일이 생길 수 있습니다 만약 몇개의 코인들을 지갑에서 이미 사용했다면요, 예를 들어 만약 당신이 wallet.dat를 복사해서 사용했거나 코인들을 사용 후에 복사했다면 여기선 표시가 안되서 사용할 수 없습니다
+
+-번역은 했으나 약간 이상한점이 있어서 수정해야함-</translation>
     </message>
     <message>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation type="unfinished"/>
+        <translation>오류 : 해당 거래는 송금액, 다중 거래, 최근 수령한 금액의 사용 등의 이유로 최소 %s 이상의 송금 수수료가 필요합니다.</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished"/>
+        <translation>지갑 거래가 바뀌면 명령을 실행합니다.(%s 안의 명령어가 TxID로 바뀝니다)</translation>
     </message>
     <message>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation type="unfinished"/>
+        <translation>해당 금액보다 적은 수수료는 수수료 면제로 간주됩니다. (거래 생성의 목적)(기본값:</translation>
     </message>
     <message>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
@@ -2745,7 +2755,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"/>
+        <translation>이 빌드 버전은 정식 출시 전 테스트의 목적이며, 예기치 않은 위험과 오류가 발생할 수 있습니다. 채굴과 상점용 소프트웨어로 사용하는 것을 권하지 않습니다.</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
@@ -2765,7 +2775,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation type="unfinished"/>
+        <translation>경고 : 모든 네트워크가 동의해야 하나, 일부 채굴자들에게 문제가 있는 것으로 보입니다. </translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
@@ -2773,19 +2783,19 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>경고 : wallet.dat 파일을 읽는 중 에러가 발생했습니다. 주소 키는 모두 정확하게 로딩되었으나 거래 데이터와 주소록 필드에서 누락이나 오류가 존재할 수 있습니다. </translation>
     </message>
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"/>
+        <translation>경고 : wallet.dat가 손상되어 데이터가 복구되었습니다. 원래의 wallet.dat 파일은 %s 후에 wallet.{timestamp}.bak 이름으로 저장됩니다. 잔액과 거래 내역이 정확하지 않다면 백업 파일로 부터 복원해야 합니다. </translation>
     </message>
     <message>
         <source>(default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>(기본값: 1)</translation>
     </message>
     <message>
         <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
+        <translation>(기본값: wallet.dat)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2821,7 +2831,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Connection options:</source>
-        <translation type="unfinished"/>
+        <translation>연결 설정 : </translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -2829,11 +2839,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Debugging/Testing options:</source>
-        <translation type="unfinished"/>
+        <translation>디버그 및 테스트 설정</translation>
     </message>
     <message>
         <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>안전 모드를 비활성화하고 안전 모드의 이벤트가 발생하더라도 무시합니다. (기본값: 0, 비활성화)</translation>
     </message>
     <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
@@ -2853,7 +2863,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished"/>
+        <translation>지갑 데이터베이스 환경 초기화하는데 오류</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -2921,11 +2931,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Fee per kB to add to transactions you send</source>
-        <translation type="unfinished"/>
+        <translation>송금 거래시 추가되는 KB 당 수수료입니다. </translation>
     </message>
     <message>
         <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
-        <translation type="unfinished"/>
+        <translation>해당 금액보다 적은 수수료는 수수료 면제로 간주됩니다. (릴레이 목적)(기본값:</translation>
     </message>
     <message>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
@@ -2933,7 +2943,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Force safe mode (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>안전 모드로 강제 진입하는 기능입니다.(기본값: 0) </translation>
     </message>
     <message>
         <source>Generate coins (default: 0)</source>
@@ -2949,11 +2959,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Importing...</source>
-        <translation type="unfinished"/>
+        <translation>들여오기 중...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished"/>
+        <translation>올바르지 않거나 생성된 블록을 찾을 수 없습니다. 잘못된 네트워크 자료 디렉토리?</translation>
     </message>
     <message>
         <source>Invalid -onion address: &apos;%s&apos;</source>
@@ -2961,7 +2971,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation>사용 가능한 파일 디스크립터-File Descriptor-가 부족합니다. </translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: 1)</source>
@@ -2973,7 +2983,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation type="unfinished"/>
+        <translation>현재의 blk000??.dat 파일들로부터 블록체인 색인을 재구성합니다.</translation>
     </message>
     <message>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
@@ -2989,7 +2999,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation type="unfinished"/>
+        <translation>원격 프로시져 호출 서비스를 위한 쓰레드 개수를 설정합니다 (기본값 : 4)</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
@@ -3033,11 +3043,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation type="unfinished"/>
+        <translation>-txindex를 바꾸기 위해서는 -reindex를 사용해서 데이터베이스를 재구성해야 합니다. </translation>
     </message>
     <message>
         <source>Imports blocks from external blk000??.dat file</source>
-        <translation>외부 blk000??.dat 파일에서 블록 가져오기</translation>
+        <translation>외부 blk000??.dat 파일에서 블록을 가져옵니다.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
@@ -3045,7 +3055,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation type="unfinished"/>
+        <translation>이 사항과 관련있는 경고가 발생하거나 아주 긴 포크가 발생했을 때 명령어를 실행해 주세요. (cmd 명령어 목록에서 %s는 메시지로 대체됩니다) </translation>
     </message>
     <message>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
@@ -3053,7 +3063,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>최대 크기를 최우선으로 설정 / 바이트당 최소 수수료로 거래(기본값: %d)</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3061,19 +3071,19 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>노드로 전달하기 위한 최저 거래 수수료가 부족합니다. - minrelaytxfee=&lt;amount&gt;: &apos;%s&apos; -</translation>
     </message>
     <message>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>최저 거래 수수료가 부족합니다. -mintxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation type="unfinished"/>
+        <translation>&lt;n&gt;번 째 순서에서 전자서명 캐쉬의 용량을 제한합니다. (기본값: 50000) </translation>
     </message>
     <message>
         <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>블럭을 채굴할 때 kB당 거래 우선 순위와 수수료를 로그에 남깁니다. (기본값: 0, 비활성화)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index (default: 0)</source>
@@ -3081,11 +3091,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation>최대 연결마다 1000bytes 버퍼를 받는다. (기본값: 5000)</translation>
     </message>
     <message>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation type="unfinished"/>
+        <translation>최대 연결 마다 1000bytes 버퍼를 보낸다.(기본값: 1000) </translation>
     </message>
     <message>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
@@ -3093,27 +3103,27 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation type="unfinished"/>
+        <translation>노드가 있는 네트워크에만 접속 합니다(IPv4, IPv6 또는 Tor)</translation>
     </message>
     <message>
         <source>Print block on startup, if found in block index</source>
-        <translation type="unfinished"/>
+        <translation>블럭 색인을 발견하면 구동 시 블럭을 출력합니다.</translation>
     </message>
     <message>
         <source>Print block tree on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>구동 시 블럭 트리를 출력합니다. (기본값: 0, 비활성화)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>RPC SSL 옵션: (비트코인 위키의 SSL 설정 설명서 참고)</translation>
     </message>
     <message>
         <source>RPC server options:</source>
-        <translation type="unfinished"/>
+        <translation>RPC 서버 설정</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
+        <translation>모든 네트워크 메시지 마다 무작위로 1이 떨어진다</translation>
     </message>
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
@@ -3129,7 +3139,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Send command to Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>비트코인 코어로 명령 보내기</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3141,15 +3151,15 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>전자지갑 데이터베이스 환경에 DB_PRIVATE 플래그를 설정합니다. (기본값: 1, 활성화)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation type="unfinished"/>
+        <translation>모든 디버그 설정 보기(설정: --help -help-debug)</translation>
     </message>
     <message>
         <source>Show benchmark information (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>벤치마크 정보 보기(기본값: 0)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3165,7 +3175,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Start Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>비트코인 코어의 데몬 프로그램을 실행합니다.</translation>
     </message>
     <message>
         <source>System error: </source>
@@ -3209,7 +3219,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>on startup</source>
-        <translation type="unfinished"/>
+        <translation>구동 중</translation>
     </message>
     <message>
         <source>version</source>

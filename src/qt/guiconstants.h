@@ -23,6 +23,10 @@ static const int STATUSBAR_ICONSIZE = 16;
 #define COLOR_NEGATIVE QColor(255, 0, 0)
 /* Transaction list -- bare address (without label) */
 #define COLOR_BAREADDRESS QColor(140, 140, 140)
+/* Transaction list -- has conflicting transactions */
+#define COLOR_HASCONFLICTING QColor(255, 255, 255)
+/* Transaction list -- has conflicting transactions - background */
+#define COLOR_HASCONFLICTING_BG QColor(192, 0, 0)
 
 /* Tooltips longer than this (in characters) are converted into rich text,
    so that they can be word-wrapped.

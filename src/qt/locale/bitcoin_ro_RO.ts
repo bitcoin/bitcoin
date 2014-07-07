@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="ro_RO" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="ro_RO" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -795,7 +795,7 @@ Adresa: %4
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished"/>
+        <translation>restul de la %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
@@ -1045,6 +1045,14 @@ Adresa: %4
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1349,7 +1357,7 @@ Adresa: %4
         <translation>Eroare: combinație nevalidă de -regtest și -testnet.</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1579,7 +1587,7 @@ Adresa: %4
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation type="unfinished"/>
+        <translation>Arata cererea selectata (acelas lucru ca si dublu-click pe o inregistrare)</translation>
     </message>
     <message>
         <source>Show</source>
@@ -3000,7 +3008,7 @@ spre exemplu: alertnotify=echo %%s | mail -s &quot;Alerta Bitcoin&quot; admin@fo
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation type="unfinished"/>
+        <translation>Stabileste numarul de thread-uri care servesc apeluri RPC (implicit: 4)</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>

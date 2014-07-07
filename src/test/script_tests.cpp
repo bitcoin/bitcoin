@@ -67,7 +67,11 @@ ParseScript(string s)
 
     BOOST_FOREACH(string w, words)
     {
-        if (all(w, is_digit()) ||
+        if (w.size() == 0)
+        {
+            // Empty string, ignore. (boost::split given '' will return one word)
+        }
+        else if (all(w, is_digit()) ||
             (starts_with(w, "-") && all(string(w.begin()+1, w.end()), is_digit())))
         {
             // Number
@@ -236,11 +240,11 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     CScript scriptPubKey12;
     scriptPubKey12 << OP_1 << key1.GetPubKey() << key2.GetPubKey() << OP_2 << OP_CHECKMULTISIG;
 
-    CTransaction txFrom12;
+    CMutableTransaction txFrom12;
     txFrom12.vout.resize(1);
     txFrom12.vout[0].scriptPubKey = scriptPubKey12;
 
-    CTransaction txTo12;
+    CMutableTransaction txTo12;
     txTo12.vin.resize(1);
     txTo12.vout.resize(1);
     txTo12.vin[0].prevout.n = 0;
@@ -270,11 +274,11 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     CScript scriptPubKey23;
     scriptPubKey23 << OP_2 << key1.GetPubKey() << key2.GetPubKey() << key3.GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 
-    CTransaction txFrom23;
+    CMutableTransaction txFrom23;
     txFrom23.vout.resize(1);
     txFrom23.vout[0].scriptPubKey = scriptPubKey23;
 
-    CTransaction txTo23;
+    CMutableTransaction txTo23;
     txTo23.vin.resize(1);
     txTo23.vout.resize(1);
     txTo23.vin[0].prevout.n = 0;
@@ -341,11 +345,11 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
         keystore.AddKey(key);
     }
 
-    CTransaction txFrom;
+    CMutableTransaction txFrom;
     txFrom.vout.resize(1);
     txFrom.vout[0].scriptPubKey.SetDestination(keys[0].GetPubKey().GetID());
     CScript& scriptPubKey = txFrom.vout[0].scriptPubKey;
-    CTransaction txTo;
+    CMutableTransaction txTo;
     txTo.vin.resize(1);
     txTo.vout.resize(1);
     txTo.vin[0].prevout.n = 0;

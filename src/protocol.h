@@ -10,13 +10,15 @@
 #ifndef __INCLUDED_PROTOCOL_H__
 #define __INCLUDED_PROTOCOL_H__
 
-#include "chainparams.h"
 #include "netbase.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "version.h"
 
 #include <stdint.h>
 #include <string>
+
+#define MESSAGE_START_SIZE 4
 
 /** Message header.
  * (4) message start.
@@ -62,6 +64,14 @@ class CMessageHeader
 enum
 {
     NODE_NETWORK = (1 << 0),
+
+    // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
+    // isn't getting used, or one not being used much, and notify the
+    // bitcoin-development mailing list. Remember that service bits are just
+    // unauthenticated advertisements, so your code must be robust against
+    // collisions and other cases where nodes may be advertising a service they
+    // do not actually support. Other service bits should be allocated via the
+    // BIP process.
 };
 
 /** A CService with information about it as peer */

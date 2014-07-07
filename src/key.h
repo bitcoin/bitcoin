@@ -156,10 +156,6 @@ public:
     // If this public key is not fully valid, the return value will be false.
     bool Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const;
 
-    // Verify a compact signature (~65 bytes).
-    // See CKey::SignCompact.
-    bool VerifyCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) const;
-
     // Recover a public key from a compact signature.
     bool RecoverCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig);
 
@@ -269,6 +265,9 @@ public:
 
     // Load private key and check that public key matches.
     bool Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck);
+
+    // Check whether an element of a signature (r or s) is valid.
+    static bool CheckSignatureElement(const unsigned char *vch, int len, bool half);
 };
 
 struct CExtPubKey {
@@ -306,5 +305,8 @@ struct CExtKey {
     CExtPubKey Neuter() const;
     void SetMaster(const unsigned char *seed, unsigned int nSeedLen);
 };
+
+/** Check that required EC support is available at runtime */
+bool ECC_InitSanityCheck(void);
 
 #endif
