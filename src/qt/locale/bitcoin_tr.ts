@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="tr" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="tr" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -1048,6 +1048,14 @@ Adres: %4
         <translation>Vekil sunucusunun IP adresi (mesela IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>Muameleler sekmesinde bağlam menüsü unsurları olarak görünen üçüncü taraf bağlantıları (mesela bir blok tarayıcısı). URL&apos;deki %s, muamele hash değeri ile değiştirilecektir. Birden çok bağlantılar düşey çubuklar | ile ayrılacaktır.</translation>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation>Üçüncü taraf muamele URL&apos;leri</translation>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation>Yukarıdaki seçeneklerin yerine geçen faal komut satırı seçenekleri:</translation>
     </message>
@@ -1349,7 +1357,7 @@ Adres: %4
         <translation>Hata: -regtest ve -testnet&apos;in geçersiz kombinasyonu.</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
         <translation>Bitcoin Çekirdeği henüz güvenli bir şekilde çıkış yapmamıştır...</translation>
     </message>
     <message>

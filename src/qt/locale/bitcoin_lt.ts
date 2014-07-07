@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="lt" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="lt" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -1046,6 +1046,14 @@ Adresas: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation type="unfinished"/>
     </message>
@@ -1347,7 +1355,7 @@ Adresas: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1482,7 +1490,7 @@ Adresas: %4</translation>
     </message>
     <message>
         <source>Welcome to the Bitcoin RPC console.</source>
-        <translation type="unfinished"/>
+        <translation>Sveiki atvykę į Bitcoin RPC konsolę.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -2625,7 +2633,7 @@ Adresas: %4</translation>
     </message>
     <message>
         <source>Specify your own public address</source>
-        <translation type="unfinished"/>
+        <translation>Nurodykite savo nuosavą viešą adresą</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
@@ -3339,7 +3347,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Cannot write default address</source>
-        <translation type="unfinished"/>
+        <translation>Negalima parašyti įprasto adreso</translation>
     </message>
     <message>
         <source>Rescanning...</source>

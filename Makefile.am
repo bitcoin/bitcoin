@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I src/m4
 SUBDIRS = src
-.PHONY: deploy
+.PHONY: deploy FORCE
 
 GZIP_ENV="-9n"
 
@@ -35,6 +35,7 @@ COVERAGE_INFO = baseline_filtered_combined.info baseline.info block_test.info \
 
 dist-hook:
 	-$(MAKE) -C $(top_distdir)/src/leveldb clean
+	-$(MAKE) -C $(top_distdir)/src/secp256k1 distclean
 	-$(GIT) archive --format=tar HEAD -- src/version.cpp | $(AMTAR) -C $(top_distdir) -xf -
 
 distcheck-hook:
@@ -53,8 +54,8 @@ $(BITCOIN_WIN_INSTALLER): $(BITCOIND_BIN) $(BITCOIN_QT_BIN) $(BITCOIN_CLI_BIN)
 	@test -f $(MAKENSIS) && $(MAKENSIS) $(top_builddir)/share/setup.nsi || \
 	  echo error: could not build $@
 
-$(BITCOIND_BIN) $(BITCOIN_QT_BIN) $(BITCOIN_CLI_BIN):
-	make -C $(dir $@) $(notdir $@)
+$(if $(findstring src/,$(MAKECMDGOALS)),$(MAKECMDGOALS), none): FORCE
+	$(MAKE) -C src $(patsubst src/%,%,$@)
 
 $(OSX_APP)/Contents/PkgInfo:
 	$(MKDIR_P) $(@D)

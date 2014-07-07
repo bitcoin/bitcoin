@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="sl_SI" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="sl_SI" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -344,7 +344,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Modify configuration options for Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Spremeni konfiguracijo nastavitev za Bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -1043,6 +1043,14 @@ Naslov: %4
         <translation type="unfinished"/>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation type="unfinished"/>
     </message>
@@ -1136,7 +1144,7 @@ Naslov: %4
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation type="unfinished"/>
+        <translation>Vmesnik uporabnika &amp;jezik:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
@@ -1344,7 +1352,7 @@ Naslov: %4
         <translation>Napaka: Neveljavna kombinacija -regtest and -testnet</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1479,11 +1487,11 @@ Naslov: %4
     </message>
     <message>
         <source>Welcome to the Bitcoin RPC console.</source>
-        <translation type="unfinished"/>
+        <translation>Dobrodošli na Bitcoin RPC konzoli.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation type="unfinished"/>
+        <translation>Uporabi puščice za gor in dol za navigacijo po zgodovini in &lt;b&gt;Ctrl-L&lt;/b&gt; za izbris izpisa na ekranu.</translation>
     </message>
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
@@ -1839,7 +1847,7 @@ Naslov: %4
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>Celotni znesek presega vaše stanje, ko je zaračunana 1% provizija.</translation>
     </message>
     <message>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
@@ -2618,7 +2626,7 @@ Naslov: %4
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation type="unfinished"/>
+        <translation>Povežite se z vozliščem za pridobitev naslovov uporabnikov in nato prekinite povezavo.</translation>
     </message>
     <message>
         <source>Specify your own public address</source>
@@ -2630,7 +2638,7 @@ Naslov: %4
     </message>
     <message>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation type="unfinished"/>
+        <translation>Število sekund za težavo pri vzpostavitvi povezave med uporabniki (privzeto: 86400)</translation>
     </message>
     <message>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
@@ -3260,11 +3268,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
-        <translation type="unfinished"/>
+        <translation>Nemogoče je povezati s/z %s na tem računalniku (povezava je vrnila napaka %d, %s)</translation>
     </message>
     <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation type="unfinished"/>
+        <translation>Omogoči DNS poizvedbe za -addnode, -seednode in -connect.</translation>
     </message>
     <message>
         <source>Loading addresses...</source>
@@ -3288,27 +3296,27 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Neveljaven -proxy naslov: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Neznano omrežje določeno v -onlynet: &apos;%s&apos;.</translation>
     </message>
     <message>
         <source>Unknown -socks proxy version requested: %i</source>
-        <translation type="unfinished"/>
+        <translation>Neznano -socks zahtevan zastopnik različice: %i</translation>
     </message>
     <message>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Nemogoče rešiti -bind naslova: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Nemogoče rešiti -externalip naslova: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Neveljavna količina za -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <source>Invalid amount</source>
@@ -3336,7 +3344,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Cannot write default address</source>
-        <translation type="unfinished"/>
+        <translation>Ni mogoče zapisati privzetega naslova</translation>
     </message>
     <message>
         <source>Rescanning...</source>
@@ -3348,7 +3356,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>Za uporabo %s opcije</translation>
     </message>
     <message>
         <source>Error</source>
@@ -3358,7 +3366,9 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
-        <translation type="unfinished"/>
+        <translation>Potrebno je nastaviti rpcpassword=&lt;password&gt; v nastavitveni datoteki:
+%s
+Če datoteka ne obstaja jo ustvarite z dovoljenjem, da jo lahko bere samo uporabnik.</translation>
     </message>
 </context>
 </TS>

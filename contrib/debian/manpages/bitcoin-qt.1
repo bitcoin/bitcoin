@@ -139,6 +139,9 @@ Execute command when the best block changes (%s in cmd is replaced by block hash
 \fB\-walletnotify=\fR<cmd>
 Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)
 .TP
+\fB\-respendnotify=\fR<cmd>
+Execute command when a network tx respends wallet tx input (%s=respend TxID, %t=wallet TxID)
+.TP
 \fB\-alertnotify=\fR<cmd>
 Execute command when a relevant alert is received (%s in cmd is replaced by message)
 .TP

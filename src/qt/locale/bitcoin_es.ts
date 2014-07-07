@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="es" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="es" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -320,7 +320,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>%Guardar copia del monedero...</translation>
+        <translation>&amp;Guardar copia del monedero...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
@@ -1051,6 +1051,14 @@ Dirección: %4
         <translation>Dirección IP del proxy (p. ej. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>URLs de terceros (por ejemplo, un explorador de bloques) que aparecen en la pestaña de transacciones como items del menú contextual. El %s en la URL es reemplazado por el hash de la transacción. Se pueden separar múltiples URLs por una barra vertical |.</translation>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation>URLs de transacciones de terceros</translation>
+    </message>
+    <message>
         <source>Active command-line options that override above options:</source>
         <translation>Opciones activas de consola de comandos que tienen preferencia sobre las opciones antes mencionadas:</translation>
     </message>
@@ -1352,8 +1360,8 @@ Dirección: %4
         <translation>Error: Combinación no válida de -regtest y -testnet.</translation>
     </message>
     <message>
-        <source>Bitcoin Core did&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
+        <translation>Bitcoin core no se ha cerrado de forma segura todavía...</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -1969,8 +1977,7 @@ Dirección: %4
     <name>ShutdownWindow</name>
     <message>
         <source>Bitcoin Core is shutting down...</source>
-        <translation>Bitcoin Core se está cerrando...
-</translation>
+        <translation>Bitcoin Core se está cerrando...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -2971,7 +2978,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Importing...</source>
-        <translation type="unfinished"/>
+        <translation>Importando...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>

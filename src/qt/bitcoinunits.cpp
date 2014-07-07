@@ -34,6 +34,17 @@ bool BitcoinUnits::valid(int unit)
     }
 }
 
+QString BitcoinUnits::id(int unit)
+{
+    switch(unit)
+    {
+    case BTC: return QString("btc");
+    case mBTC: return QString("mbtc");
+    case uBTC: return QString("ubtc");
+    default: return QString("???");
+    }
+}
+
 QString BitcoinUnits::name(int unit)
 {
     switch(unit)
@@ -186,6 +197,16 @@ bool BitcoinUnits::parse(int unit, const QString &value, qint64 *val_out)
         *val_out = retvalue;
     }
     return ok;
+}
+
+QString BitcoinUnits::getAmountColumnTitle(int unit)
+{
+    QString amountTitle = QObject::tr("Amount");
+    if (BitcoinUnits::valid(unit))
+    {
+        amountTitle += " ("+BitcoinUnits::name(unit) + ")";
+    }
+    return amountTitle;
 }
 
 int BitcoinUnits::rowCount(const QModelIndex &parent) const

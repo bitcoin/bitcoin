@@ -11,6 +11,13 @@
 #include "core.h"
 #include "sync.h"
 
+inline bool AllowFree(double dPriority)
+{
+    // Large (in bytes) low-priority (new, small-coin) transactions
+    // need a fee.
+    return dPriority > COIN * 144 / 250;
+}
+
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
@@ -41,6 +48,8 @@ public:
     unsigned int GetHeight() const { return nHeight; }
 };
 
+class CMinerPolicyEstimator;
+
 /*
  * CTxMemPool stores valid-according-to-the-current-best-chain
  * transactions that may be included in the next block.
@@ -56,13 +65,18 @@ class CTxMemPool
 private:
     bool fSanityCheck; // Normally false, true if -checkmempool or -regtest
     unsigned int nTransactionsUpdated;
+    CMinerPolicyEstimator* minerPolicyEstimator;
+
+    CFeeRate minRelayFee; // Passed to constructor to avoid dependency on main
 
 public:
     mutable CCriticalSection cs;
     std::map<uint256, CTxMemPoolEntry> mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
+    std::map<uint256, std::pair<double, int64_t> > mapDeltas;
 
-    CTxMemPool();
+    CTxMemPool(const CFeeRate& _minRelayFee);
+    ~CTxMemPool();
 
     /*
      * If sanity-checking is turned on, check makes sure the pool is
@@ -76,11 +90,18 @@ public:
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
     void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
     void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
+    void removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
+                        std::list<CTransaction>& conflicts);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
+
+    /** Affect CreateNewBlock prioritisation of transactions */
+    void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, int64_t nFeeDelta);
+    void ApplyDeltas(const uint256 hash, double &dPriorityDelta, int64_t &nFeeDelta);
+    void ClearPrioritisation(const uint256 hash);
 
     unsigned long size()
     {
@@ -95,6 +116,16 @@ public:
     }
 
     bool lookup(uint256 hash, CTransaction& result) const;
+
+    // Estimate fee rate needed to get into the next
+    // nBlocks
+    CFeeRate estimateFee(int nBlocks) const;
+    // Estimate priority needed to get into the next
+    // nBlocks
+    double estimatePriority(int nBlocks) const;
+    // Write/Read estimates to disk
+    bool WriteFeeEstimates(CAutoFile& fileout) const;
+    bool ReadFeeEstimates(CAutoFile& filein);
 };
 
 /** CCoinsView that brings transactions from a memorypool into view.

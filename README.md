@@ -1,7 +1,7 @@
 Bitcoin Core integration/staging tree
 =====================================
 
-http://www.bitcoin.org
+https://www.bitcoin.org
 
 Copyright (c) 2009-2014 Bitcoin Core Developers
 
@@ -15,7 +15,7 @@ out collectively by the network. Bitcoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see http://www.bitcoin.org/en/download.
+the Bitcoin Core software, see https://www.bitcoin.org/en/download.
 
 License
 -------
@@ -49,8 +49,8 @@ Testing
 -------
 
 Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test. Please be patient and help out, and
-remember this is a security-critical project where any mistake might cost people
+requests than we can review and test on short notice. Please be patient and help out by testing
+other people's pull requests, and remember this is a security-critical project where any mistake might cost people
 lots of money.
 
 ### Automated Testing
@@ -76,8 +76,45 @@ Translations
 Changes to translations as well as new translations can be submitted to
 [Bitcoin Core's Transifex page](https://www.transifex.com/projects/p/bitcoin/).
 
-Periodically the translations are pulled from Transifex and merged into the git repository. See the
+Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
 
-**Important**: We do not accept translation changes as github pull request because the next
+**Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
+
+Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
+
+Development tips and tricks
+---------------------------
+
+**compiling for debugging**
+
+Run configure with the --enable-debug option, then make. Or run configure with
+CXXFLAGS="-g -ggdb -O0" or whatever debug flags you need.
+
+**debug.log**
+
+If the code is behaving strangely, take a look in the debug.log file in the data directory;
+error and debugging message are written there.
+
+The -debug=... command-line option controls debugging; running with just -debug will turn
+on all categories (and give you a very large debug.log file).
+
+The Qt code routes qDebug() output to debug.log under category "qt": run with -debug=qt
+to see it.
+
+**testnet and regtest modes**
+
+Run with the -testnet option to run with "play bitcoins" on the test network, if you
+are testing multi-machine code that needs to operate across the internet.
+
+If you are testing something that can run on one machine, run with the -regtest option.
+In regression test mode blocks can be created on-demand; see qa/rpc-tests/ for tests
+that run in -regest mode.
+
+**DEBUG_LOCKORDER**
+
+Bitcoin Core is a multithreaded application, and deadlocks or other multithreading bugs
+can be very difficult to track down. Compiling with -DDEBUG_LOCKORDER (configure
+CXXFLAGS="-DDEBUG_LOCKORDER -g") inserts run-time checks to keep track of what locks
+are held, and adds warning to the debug.log file if inconsistencies are detected.

@@ -18,8 +18,8 @@
 namespace Ui {
     class ReceiveCoinsDialog;
 }
-class WalletModel;
 class OptionsModel;
+class WalletModel;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -57,16 +57,16 @@ private:
     WalletModel *model;
     QMenu *contextMenu;
     void copyColumnToClipboard(int column);
-    virtual void resizeEvent(QResizeEvent* event);
+    virtual void resizeEvent(QResizeEvent *event);
 
 private slots:
     void on_receiveButton_clicked();
     void on_showRequestButton_clicked();
     void on_removeRequestButton_clicked();
     void on_recentRequestsView_doubleClicked(const QModelIndex &index);
-    void on_recentRequestsView_selectionChanged(const QItemSelection &, const QItemSelection &);
+    void recentRequestsView_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void updateDisplayUnit();
-    void showMenu(const QPoint &);
+    void showMenu(const QPoint &point);
     void copyLabel();
     void copyMessage();
     void copyAmount();
