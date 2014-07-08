@@ -13,6 +13,9 @@ autom4te.cache/
 config.log
 config.status
 configure
+libtool
+src/m4/lt*.m4
+src/m4/libtool.m4
 src/config/bitcoin-config.h
 src/config/bitcoin-config.h.in
 src/config/stamp-h1
