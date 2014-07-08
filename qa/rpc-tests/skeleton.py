@@ -21,63 +21,63 @@ import traceback
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
+class Skeleton(object):
+    
+    def run_test(self,nodes):
+        # Replace this as appropriate
+        for node in nodes:
+            assert_equal(node.getblockcount(), 200)
+            assert_equal(node.getbalance(), 25*50)
 
-def run_test(nodes):
-    # Replace this as appropriate
-    for node in nodes:
-        assert_equal(node.getblockcount(), 200)
-        assert_equal(node.getbalance(), 25*50)
+    def main(self):
+        import optparse
 
-def main():
-    import optparse
+        parser = optparse.OptionParser(usage="%prog [options]")
+        parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
+                          help="Leave bitcoinds and test.* datadir on exit or error")
+        parser.add_option("--srcdir", dest="srcdir", default="../../src",
+                          help="Source directory containing bitcoind/bitcoin-cli (default: %default%)")
+        parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
+                          help="Root directory for datadirs")
+        (options, args) = parser.parse_args()
 
-    parser = optparse.OptionParser(usage="%prog [options]")
-    parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
-                      help="Leave bitcoinds and test.* datadir on exit or error")
-    parser.add_option("--srcdir", dest="srcdir", default="../../src",
-                      help="Source directory containing bitcoind/bitcoin-cli (default: %default%)")
-    parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
-                      help="Root directory for datadirs")
-    (options, args) = parser.parse_args()
+        os.environ['PATH'] = options.srcdir+":"+os.environ['PATH']
 
-    os.environ['PATH'] = options.srcdir+":"+os.environ['PATH']
+        check_json_precision()
 
-    check_json_precision()
+        success = False
+        nodes = []
+        try:
+            print("Initializing test directory "+options.tmpdir)
+            if not os.path.isdir(options.tmpdir):
+                os.makedirs(options.tmpdir)
+            initialize_chain(options.tmpdir)
 
-    success = False
-    nodes = []
-    try:
-        print("Initializing test directory "+options.tmpdir)
-        if not os.path.isdir(options.tmpdir):
-            os.makedirs(options.tmpdir)
-        initialize_chain(options.tmpdir)
+            nodes = start_nodes(2, options.tmpdir)
+            connect_nodes(nodes[1], 0)
+            sync_blocks(nodes)
 
-        nodes = start_nodes(2, options.tmpdir)
-        connect_nodes(nodes[1], 0)
-        sync_blocks(nodes)
+            self.run_test(nodes)
 
-        run_test(nodes)
+            success = True
 
-        success = True
+        except AssertionError as e:
+            print("Assertion failed: "+e.message)
+        except Exception as e:
+            print("Unexpected exception caught during testing: "+str(e))
+            traceback.print_tb(sys.exc_info()[2])
 
-    except AssertionError as e:
-        print("Assertion failed: "+e.message)
-    except Exception as e:
-        print("Unexpected exception caught during testing: "+str(e))
-        traceback.print_tb(sys.exc_info()[2])
+        if not options.nocleanup:
+            print("Cleaning up")
+            stop_nodes(nodes)
+            wait_bitcoinds()
+            shutil.rmtree(options.tmpdir)
 
-    if not options.nocleanup:
-        print("Cleaning up")
-        stop_nodes(nodes)
-        wait_bitcoinds()
-        shutil.rmtree(options.tmpdir)
+        if success:
+            print("Tests successful")
+            sys.exit(0)
+        else:
+            print("Failed")
+            sys.exit(1)
 
-    if success:
-        print("Tests successful")
-        sys.exit(0)
-    else:
-        print("Failed")
-        sys.exit(1)
 
-if __name__ == '__main__':
-    main()
