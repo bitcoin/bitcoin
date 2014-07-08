@@ -1,5 +1,5 @@
 AM_CPPFLAGS =  $(INCLUDES)
-AM_LDFLAGS = $(PTHREAD_CFLAGS)
+AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS)
 
 if USE_LIBSECP256K1
 secp256k1/libsecp256k1.la: $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
