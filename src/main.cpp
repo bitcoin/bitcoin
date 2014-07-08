@@ -892,21 +892,8 @@ bool RateLimitExceeded(double& dCount, int64_t& nLastTime, int64_t nLimit, unsig
     return false;
 }
 
-static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter)
+static bool RespendRelayExceeded(const CTransaction& doubleSpend)
 {
-    // Relaying double-spend attempts to our peers lets them detect when
-    // somebody might be trying to cheat them. However, blindly relaying
-    // every double-spend across the entire network gives attackers
-    // a denial-of-service attack: just generate a stream of double-spends
-    // re-spending the same (limited) set of outpoints owned by the attacker.
-    // So, we use a bloom filter and only relay (at most) the first double
-    // spend for each outpoint. False-positives ("we have already relayed")
-    // are OK, because if the peer doesn't hear about the double-spend
-    // from us they are very likely to hear about it from another peer, since
-    // each peer uses a different, randomized bloom filter.
-
-    if (fInBlock || filter.contains(outPoint)) return false;
-
     // Apply an independent rate limit to double-spend relays
     static double dRespendCount;
     static int64_t nLastRespendTime;
@@ -916,19 +903,12 @@ static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doub
     if (RateLimitExceeded(dRespendCount, nLastRespendTime, nRespendLimit, nSize))
     {
         LogPrint("mempool", "Double-spend relay rejected by rate limiter\n");
-        return false;
+        return true;
     }
 
     LogPrint("mempool", "Rate limit dRespendCount: %g => %g\n", dRespendCount, dRespendCount+nSize);
 
-    // Clear the filter on average every MAX_DOUBLE_SPEND_BLOOM
-    // insertions
-    if (insecure_rand()%MAX_DOUBLESPEND_BLOOM == 0)
-        filter.clear();
-
-    filter.insert(outPoint);
-
-    return true;
+    return false;
 }
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
@@ -959,20 +939,27 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         return false;
 
     // Check for conflicts with in-memory transactions
-    bool relayableRespend = false;
+    bool respend = false;
+    COutPoint relayForOutpoint;
     {
     LOCK(pool.cs); // protect pool.mapNextTx
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         COutPoint outpoint = tx.vin[i].prevout;
-        // Does tx conflict with a member of the pool, and is it not equivalent to that member?
-        if (pool.mapNextTx.count(outpoint) && !tx.IsEquivalentTo(*pool.mapNextTx[outpoint].ptx))
+        // A respend is a tx that conflicts with a member of the pool
+        if (pool.mapNextTx.count(outpoint))
         {
-            relayableRespend = RelayableRespend(outpoint, tx, false, doubleSpendFilter);
-            if (!relayableRespend)
-                return false;
+            respend = true;
+            // Relay only one tx per respent outpoint, but not if tx is equivalent to pool member
+            if (!doubleSpendFilter.contains(outpoint) && !tx.IsEquivalentTo(*pool.mapNextTx[outpoint].ptx))
+            {
+                relayForOutpoint = outpoint;
+                break;
+            }
         }
     }
+    if (respend && (relayForOutpoint.IsNull() || RespendRelayExceeded(tx)))
+        return false;
     }
 
     {
@@ -1064,8 +1051,12 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return error("AcceptToMemoryPool: : ConnectInputs failed %s", hash.ToString());
         }
 
-        if (relayableRespend)
+        if (respend)
         {
+            // Clear the filter on average every MAX_DOUBLE_SPEND_BLOOM insertions
+            if (insecure_rand()%MAX_DOUBLESPEND_BLOOM == 0)
+                doubleSpendFilter.clear();
+            doubleSpendFilter.insert(relayForOutpoint);
             RelayTransaction(tx);
         }
         else
@@ -1077,7 +1068,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     g_signals.SyncTransaction(tx, NULL);
 
-    return !relayableRespend;
+    return !respend;
 }
 
 
