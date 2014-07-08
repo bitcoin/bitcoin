@@ -82,7 +82,12 @@ CFeeRate::CFeeRate(int64_t nFeePaid, size_t nSize)
 
 int64_t CFeeRate::GetFee(size_t nSize) const
 {
-    return nSatoshisPerK*nSize / 1000;
+    int64_t nFee = nSatoshisPerK*nSize / 1000;
+
+    if (nFee == 0 && nSatoshisPerK > 0)
+        nFee = nSatoshisPerK;
+
+    return nFee;
 }
 
 std::string CFeeRate::ToString() const
