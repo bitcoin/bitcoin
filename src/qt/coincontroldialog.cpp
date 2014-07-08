@@ -419,6 +419,8 @@ QString CoinControlDialog::getPriorityLabel(const CTxMemPool& pool, double dPrio
     }
     // Note: if mempool hasn't accumulated enough history (estimatePriority
     // returns -1) we're conservative and classify as "lowest"
+    if (mempool.estimatePriority(nTxConfirmTarget) <= 0 && AllowFree(dPriority))
+        return ">=" + tr("medium");
     return tr("lowest");
 }
 
@@ -523,15 +525,21 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         dPriority = dPriorityInputs / (nBytes - nBytesInputs + (nQuantityUncompressed * 29)); // 29 = 180 - 151 (uncompressed public keys are over the limit. max 151 bytes of the input are ignored for priority)
         sPriorityLabel = CoinControlDialog::getPriorityLabel(mempool, dPriority);
 
+        // Voluntary Fee
+        nPayFee = payTxFee.GetFee(max((unsigned int)1000, nBytes));
+
         // Min Fee
-        nPayFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
+        if (nPayFee == 0)
+        {
+            nPayFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
 
-        double dPriorityNeeded = mempool.estimatePriority(nTxConfirmTarget);
-        if (dPriorityNeeded <= 0) // Not enough mempool history: never send free
-            dPriorityNeeded = std::numeric_limits<double>::max();
+            double dPriorityNeeded = mempool.estimatePriority(nTxConfirmTarget);
+            if (dPriorityNeeded <= 0 && !AllowFree(dPriority)) // not enough mempool history: never send free
+                dPriorityNeeded = std::numeric_limits<double>::max();
 
-        if (nBytes <= MAX_FREE_TRANSACTION_CREATE_SIZE && dPriority >= dPriorityNeeded)
-            nPayFee = 0;
+            if (nBytes <= MAX_FREE_TRANSACTION_CREATE_SIZE && dPriority >= dPriorityNeeded)
+                nPayFee = 0;
+        }
 
         if (nPayAmount > 0)
         {
@@ -612,7 +620,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     QString toolTip3 = tr("This label turns red, if any recipient receives an amount smaller than %1.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, ::minRelayTxFee.GetFee(546)));
 
     // how many satoshis the estimated fee can vary per byte we guess wrong
-    double dFeeVary = (double)std::max(CWallet::minTxFee.GetFeePerK(), payTxFee.GetFeePerK()) / 1000;
+    double dFeeVary = (double)std::max(CWallet::minTxFee.GetFeePerK(), std::max(payTxFee.GetFeePerK(), mempool.estimateFee(nTxConfirmTarget).GetFeePerK())) / 1000;
     QString toolTip4 = tr("Can vary +/- %1 satoshi(s) per input.").arg(dFeeVary);
 
     l3->setToolTip(toolTip4);
