@@ -258,6 +258,7 @@ std::string HelpMessage(HelpMessageMode mode)
 #ifndef WIN32
     strUsage += "  -pid=<file>            " + strprintf(_("Specify pid file (default: %s)"), "bitcoind.pid") + "\n";
 #endif
+    strUsage += "  -pruned                " + _("Run in a pruned state") + "\n";
     strUsage += "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + " " + _("on startup") + "\n";
 #if !defined(WIN32)
     strUsage += "  -sysperms              " + _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)") + "\n";
@@ -638,6 +639,19 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (nFD - MIN_CORE_FILEDESCRIPTORS < nMaxConnections)
         nMaxConnections = nFD - MIN_CORE_FILEDESCRIPTORS;
 
+    if (GetBoolArg("-pruned", false)) {
+        if (GetBoolArg("-txindex", false))
+            return InitError(_("Pruned mode is incompatible with -txindex."));
+#ifdef ENABLE_WALLET
+        if (!GetBoolArg("-disablewallet", false)) {
+            if (SoftSetBoolArg("-disablewallet", true))
+                LogPrintf("AppInit2 : parameter interaction: -pruned=1 -> setting -disablewallet=1\n");
+            else
+                return InitError(_("Can't run with a wallet in pruned mode."));
+        }
+#endif
+    }
+
     // ********************************************************* Step 3: parameter-to-internal-flags
 
     fDebug = !mapMultiArgs["-debug"].empty();
@@ -673,6 +687,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
 
     fServer = GetBoolArg("-server", false);
+    fPruned = GetBoolArg("-pruned", false);
 #ifdef ENABLE_WALLET
     bool fDisableWallet = GetBoolArg("-disablewallet", false);
 #endif
@@ -1276,6 +1291,10 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("mapAddressBook.size() = %u\n",  pwalletMain ? pwalletMain->mapAddressBook.size() : 0);
 #endif
 
+    if (fPruned) {
+        LogPrintf("Unsetting NODE_NETWORK on prune mode\n");
+        nLocalServices &= ~NODE_NETWORK;
+    }
     StartNode(threadGroup);
 
 #ifdef ENABLE_WALLET
