@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include <boost/foreach.hpp>
+#include <boost/unordered_map.hpp>
 
 /** pruned version of CTransaction: only retains metadata and unspent transaction outputs
  *
@@ -239,7 +240,19 @@ public:
     }
 };
 
-typedef std::map<uint256,CCoins> CCoinsMap;
+class CCoinsKeyHasher
+{
+private:
+    uint256 salt;
+
+public:
+    CCoinsKeyHasher();
+    uint64_t operator()(const uint256& key) const {
+        return key.GetHash(salt);
+    }
+};
+
+typedef boost::unordered_map<uint256, CCoins, CCoinsKeyHasher> CCoinsMap;
 
 struct CCoinsStats
 {
