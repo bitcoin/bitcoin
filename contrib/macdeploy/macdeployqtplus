@@ -211,6 +211,7 @@ def getFrameworks(binaryPath, verbose):
     
     libraries = []
     for line in otoolLines:
+        line = line.replace("@loader_path", os.path.dirname(binaryPath))
         info = FrameworkInfo.fromOtoolLibraryLine(line.strip())
         if info is not None:
             if verbose >= 3:
@@ -307,7 +308,7 @@ def deployFrameworks(frameworks, bundlePath, binaryPath, strip, verbose, deploym
         if deploymentInfo.qtPath is None and framework.isQtFramework():
             deploymentInfo.detectQtPath(framework.frameworkDirectory)
         
-        if framework.installName.startswith("@executable_path"):
+        if framework.installName.startswith("@executable_path") or framework.installName.startswith(bundlePath):
             if verbose >= 2:
                 print framework.frameworkName, "already deployed, skipping."
             continue
