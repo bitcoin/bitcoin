@@ -13,7 +13,6 @@
 #ifndef WIN32
 #include <sys/time.h>
 #endif
-#include <cstring> // for memset()
 
 #include <openssl/crypto.h>
 #include <openssl/err.h>
@@ -37,7 +36,7 @@ void RandAddSeed()
     // Seed with CPU performance counter
     int64_t nCounter = GetPerformanceCounter();
     RAND_add(&nCounter, sizeof(nCounter), 1.5);
-    memset(&nCounter, 0, sizeof(nCounter));
+    OPENSSL_cleanse((void*)&nCounter, sizeof(nCounter));
 }
 
 void RandAddSeedPerfmon()
