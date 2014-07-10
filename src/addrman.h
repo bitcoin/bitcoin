@@ -245,140 +245,142 @@ protected:
     void Connected_(const CService &addr, int64_t nTime);
 
 public:
+    // serialized format:
+    // * version byte (currently 0)
+    // * nKey
+    // * nNew
+    // * nTried
+    // * number of "new" buckets
+    // * all nNew addrinfos in vvNew
+    // * all nTried addrinfos in vvTried
+    // * for each bucket:
+    //   * number of elements
+    //   * for each element: index
+    //
+    // Notice that vvTried, mapAddr and vVector are never encoded explicitly;
+    // they are instead reconstructed from the other information.
+    //
+    // vvNew is serialized, but only used if ADDRMAN_UNKOWN_BUCKET_COUNT didn't change,
+    // otherwise it is reconstructed as well.
+    //
+    // This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
+    // changes to the ADDRMAN_ parameters without breaking the on-disk structure.
+    //
+    // We don't use IMPLEMENT_SERIALIZE since the serialization and deserialization code has
+    // very little in common.
+    template<typename Stream>
+    void Serialize(Stream &s, int nType, int nVersionDummy) const
+    {
+        LOCK(cs);
 
-    IMPLEMENT_SERIALIZE
-    (({
-        // serialized format:
-        // * version byte (currently 0)
-        // * nKey
-        // * nNew
-        // * nTried
-        // * number of "new" buckets
-        // * all nNew addrinfos in vvNew
-        // * all nTried addrinfos in vvTried
-        // * for each bucket:
-        //   * number of elements
-        //   * for each element: index
-        //
-        // Notice that vvTried, mapAddr and vVector are never encoded explicitly;
-        // they are instead reconstructed from the other information.
-        //
-        // vvNew is serialized, but only used if ADDRMAN_UNKOWN_BUCKET_COUNT didn't change,
-        // otherwise it is reconstructed as well.
-        //
-        // This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
-        // changes to the ADDRMAN_ parameters without breaking the on-disk structure.
-        {
-            LOCK(cs);
-            unsigned char nVersion = 0;
-            READWRITE(nVersion);
-            READWRITE(nKey);
-            READWRITE(nNew);
-            READWRITE(nTried);
+        unsigned char nVersion = 0;
+        s << nVersion;
+        s << nKey;
+        s << nNew;
+        s << nTried;
 
-            CAddrMan *am = const_cast<CAddrMan*>(this);
-            if (fWrite)
-            {
-                int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT;
-                READWRITE(nUBuckets);
-                std::map<int, int> mapUnkIds;
-                int nIds = 0;
-                for (std::map<int, CAddrInfo>::iterator it = am->mapInfo.begin(); it != am->mapInfo.end(); it++)
-                {
-                    if (nIds == nNew) break; // this means nNew was wrong, oh ow
-                    mapUnkIds[(*it).first] = nIds;
-                    CAddrInfo &info = (*it).second;
-                    if (info.nRefCount)
-                    {
-                        READWRITE(info);
-                        nIds++;
-                    }
-                }
-                nIds = 0;
-                for (std::map<int, CAddrInfo>::iterator it = am->mapInfo.begin(); it != am->mapInfo.end(); it++)
-                {
-                    if (nIds == nTried) break; // this means nTried was wrong, oh ow
-                    CAddrInfo &info = (*it).second;
-                    if (info.fInTried)
-                    {
-                        READWRITE(info);
-                        nIds++;
-                    }
-                }
-                for (std::vector<std::set<int> >::iterator it = am->vvNew.begin(); it != am->vvNew.end(); it++)
-                {
-                    const std::set<int> &vNew = (*it);
-                    int nSize = vNew.size();
-                    READWRITE(nSize);
-                    for (std::set<int>::iterator it2 = vNew.begin(); it2 != vNew.end(); it2++)
-                    {
-                        int nIndex = mapUnkIds[*it2];
-                        READWRITE(nIndex);
-                    }
-                }
+        int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT;
+        s << nUBuckets;
+        std::map<int, int> mapUnkIds;
+        int nIds = 0;
+        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
+            if (nIds == nNew) break; // this means nNew was wrong, oh ow
+            mapUnkIds[(*it).first] = nIds;
+            const CAddrInfo &info = (*it).second;
+            if (info.nRefCount) {
+                s << info;
+                nIds++;
+            }
+        }
+        nIds = 0;
+        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
+            if (nIds == nTried) break; // this means nTried was wrong, oh ow
+            const CAddrInfo &info = (*it).second;
+            if (info.fInTried) {
+                s << info;
+                nIds++;
+            }
+        }
+        for (std::vector<std::set<int> >::const_iterator it = vvNew.begin(); it != vvNew.end(); it++) {
+            const std::set<int> &vNew = (*it);
+            int nSize = vNew.size();
+            s << nSize;
+            for (std::set<int>::const_iterator it2 = vNew.begin(); it2 != vNew.end(); it2++) {
+                int nIndex = mapUnkIds[*it2];
+                s << nIndex;
+            }
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s, int nType, int nVersionDummy)
+    {
+        LOCK(cs);
+
+        unsigned char nVersion;
+        s >> nVersion;
+        s >> nKey;
+        s >> nNew;
+        s >> nTried;
+
+        int nUBuckets = 0;
+        s >> nUBuckets;
+        nIdCount = 0;
+        mapInfo.clear();
+        mapAddr.clear();
+        vRandom.clear();
+        vvTried = std::vector<std::vector<int> >(ADDRMAN_TRIED_BUCKET_COUNT, std::vector<int>(0));
+        vvNew = std::vector<std::set<int> >(ADDRMAN_NEW_BUCKET_COUNT, std::set<int>());
+        for (int n = 0; n < nNew; n++) {
+            CAddrInfo &info = mapInfo[n];
+            s >> info;
+            mapAddr[info] = n;
+            info.nRandomPos = vRandom.size();
+            vRandom.push_back(n);
+            if (nUBuckets != ADDRMAN_NEW_BUCKET_COUNT) {
+                vvNew[info.GetNewBucket(nKey)].insert(n);
+                info.nRefCount++;
+            }
+        }
+        nIdCount = nNew;
+        int nLost = 0;
+        for (int n = 0; n < nTried; n++) {
+            CAddrInfo info;
+            s >> info;
+            std::vector<int> &vTried = vvTried[info.GetTriedBucket(nKey)];
+            if (vTried.size() < ADDRMAN_TRIED_BUCKET_SIZE) {
+                info.nRandomPos = vRandom.size();
+                info.fInTried = true;
+                vRandom.push_back(nIdCount);
+                mapInfo[nIdCount] = info;
+                mapAddr[info] = nIdCount;
+                vTried.push_back(nIdCount);
+                nIdCount++;
             } else {
-                int nUBuckets = 0;
-                READWRITE(nUBuckets);
-                am->nIdCount = 0;
-                am->mapInfo.clear();
-                am->mapAddr.clear();
-                am->vRandom.clear();
-                am->vvTried = std::vector<std::vector<int> >(ADDRMAN_TRIED_BUCKET_COUNT, std::vector<int>(0));
-                am->vvNew = std::vector<std::set<int> >(ADDRMAN_NEW_BUCKET_COUNT, std::set<int>());
-                for (int n = 0; n < am->nNew; n++)
-                {
-                    CAddrInfo &info = am->mapInfo[n];
-                    READWRITE(info);
-                    am->mapAddr[info] = n;
-                    info.nRandomPos = vRandom.size();
-                    am->vRandom.push_back(n);
-                    if (nUBuckets != ADDRMAN_NEW_BUCKET_COUNT)
-                    {
-                        am->vvNew[info.GetNewBucket(am->nKey)].insert(n);
-                        info.nRefCount++;
-                    }
-                }
-                am->nIdCount = am->nNew;
-                int nLost = 0;
-                for (int n = 0; n < am->nTried; n++)
-                {
-                    CAddrInfo info;
-                    READWRITE(info);
-                    std::vector<int> &vTried = am->vvTried[info.GetTriedBucket(am->nKey)];
-                    if (vTried.size() < ADDRMAN_TRIED_BUCKET_SIZE)
-                    {
-                        info.nRandomPos = vRandom.size();
-                        info.fInTried = true;
-                        am->vRandom.push_back(am->nIdCount);
-                        am->mapInfo[am->nIdCount] = info;
-                        am->mapAddr[info] = am->nIdCount;
-                        vTried.push_back(am->nIdCount);
-                        am->nIdCount++;
-                    } else {
-                        nLost++;
-                    }
-                }
-                am->nTried -= nLost;
-                for (int b = 0; b < nUBuckets; b++)
-                {
-                    std::set<int> &vNew = am->vvNew[b];
-                    int nSize = 0;
-                    READWRITE(nSize);
-                    for (int n = 0; n < nSize; n++)
-                    {
-                        int nIndex = 0;
-                        READWRITE(nIndex);
-                        CAddrInfo &info = am->mapInfo[nIndex];
-                        if (nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS)
-                        {
-                            info.nRefCount++;
-                            vNew.insert(nIndex);
-                        }
-                    }
+                nLost++;
+            }
+        }
+        nTried -= nLost;
+        for (int b = 0; b < nUBuckets; b++) {
+            std::set<int> &vNew = vvNew[b];
+            int nSize = 0;
+            s >> nSize;
+            for (int n = 0; n < nSize; n++) {
+                int nIndex = 0;
+                s >> nIndex;
+                CAddrInfo &info = mapInfo[nIndex];
+                if (nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS) {
+                    info.nRefCount++;
+                    vNew.insert(nIndex);
                 }
             }
         }
-    });)
+    }
+
+    unsigned int GetSerializeSize(int nType, int nVersion) const
+    {
+        return (CSizeComputer(nType, nVersion) << *this).size();
+    }
 
     CAddrMan() : vRandom(0), vvTried(ADDRMAN_TRIED_BUCKET_COUNT, std::vector<int>(0)), vvNew(ADDRMAN_NEW_BUCKET_COUNT, std::set<int>())
     {
