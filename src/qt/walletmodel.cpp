@@ -306,6 +306,26 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
     return retval;
 }
 
+void WalletModel::getStakeWeight(uint64& nMinWeight, uint64& nMaxWeight, uint64& nWeight)
+{
+    wallet->GetStakeWeight(*wallet, nMinWeight, nMaxWeight, nWeight);
+}
+
+void WalletModel::getStakeWeightFromValue(const int64& nTime, const int64& nValue, uint64& nWeight)
+{
+    wallet->GetStakeWeightFromValue(nTime, nValue, nWeight);
+}
+
+bool WalletModel::dumpWallet(const QString &filename)
+{
+    return DumpWallet(wallet, filename.toLocal8Bit().data());
+}
+
+bool WalletModel::importWallet(const QString &filename)
+{
+    return ImportWallet(wallet, filename.toLocal8Bit().data());
+}
+
 bool WalletModel::backupWallet(const QString &filename)
 {
     return BackupWallet(*wallet, filename.toLocal8Bit().data());

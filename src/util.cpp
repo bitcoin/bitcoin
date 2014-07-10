@@ -24,6 +24,8 @@ namespace boost {
 #include <boost/program_options/parsers.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 #include <openssl/crypto.h>
@@ -61,6 +63,7 @@ namespace boost {
 
 
 using namespace std;
+namespace bt = boost::posix_time;
 
 map<string, string> mapArgs;
 map<string, vector<string> > mapMultiArgs;
@@ -79,6 +82,25 @@ bool fNoListen = false;
 bool fLogTimestamps = false;
 CMedianFilter<int64> vTimeOffsets(200,0);
 bool fReopenDebugLog = false;
+
+// Extended DecodeDumpTime implementation, see this page for details:
+// http://stackoverflow.com/questions/3786201/parsing-of-date-time-from-string-boost
+const std::locale formats[] = {
+    std::locale(std::locale::classic(),new bt::time_input_facet("%Y-%m-%dT%H:%M:%SZ")),
+    std::locale(std::locale::classic(),new bt::time_input_facet("%Y-%m-%d %H:%M:%S")),
+    std::locale(std::locale::classic(),new bt::time_input_facet("%Y/%m/%d %H:%M:%S")),
+    std::locale(std::locale::classic(),new bt::time_input_facet("%d.%m.%Y %H:%M:%S")),
+    std::locale(std::locale::classic(),new bt::time_input_facet("%Y-%m-%d"))
+};
+
+const size_t formats_n = sizeof(formats)/sizeof(formats[0]);
+
+std::time_t pt_to_time_t(const bt::ptime& pt)
+{
+    bt::ptime timet_start(boost::gregorian::date(1970,1,1));
+    bt::time_duration diff = pt - timet_start;
+    return diff.ticks()/bt::time_duration::rep_type::ticks_per_second;
+}
 
 // Init OpenSSL library multithreading support
 static CCriticalSection** ppmutexOpenSSL;
@@ -917,6 +939,51 @@ string DecodeBase32(const string& str)
     return string((const char*)&vchRet[0], vchRet.size());
 }
 
+
+int64 DecodeDumpTime(const std::string& s)
+{
+    bt::ptime pt;
+
+    for(size_t i=0; i<formats_n; ++i)
+    {
+        std::istringstream is(s);
+        is.imbue(formats[i]);
+        is >> pt;
+        if(pt != bt::ptime()) break;
+    }
+
+    return pt_to_time_t(pt);
+}
+
+std::string EncodeDumpTime(int64 nTime) {
+    return DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", nTime);
+}
+
+std::string EncodeDumpString(const std::string &str) {
+    std::stringstream ret;
+    BOOST_FOREACH(unsigned char c, str) {
+        if (c <= 32 || c >= 128 || c == '%') {
+            ret << '%' << HexStr(&c, &c + 1);
+        } else {
+            ret << c;
+        }
+    }
+    return ret.str();
+}
+
+std::string DecodeDumpString(const std::string &str) {
+    std::stringstream ret;
+    for (unsigned int pos = 0; pos < str.length(); pos++) {
+        unsigned char c = str[pos];
+        if (c == '%' && pos+2 < str.length()) {
+            c = (((str[pos+1]>>6)*9+((str[pos+1]-'0')&15)) << 4) | 
+                ((str[pos+2]>>6)*9+((str[pos+2]-'0')&15));
+            pos += 2;
+        }
+        ret << c;
+    }
+    return ret.str();
+}
 
 bool WildcardMatch(const char* psz, const char* mask)
 {

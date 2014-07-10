@@ -23,6 +23,9 @@ public:
 
     OptionsModel *getOptionsModel();
 
+    double getPoSKernelPS();
+    double getDifficulty(bool fProofofStake);
+
     int getNumConnections() const;
     int getNumBlocks() const;
     int getNumBlocksAtStartup();

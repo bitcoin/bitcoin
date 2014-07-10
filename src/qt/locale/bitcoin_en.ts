@@ -397,9 +397,113 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Backup Wallet...</translation>
     </message>
     <message>
+        <location line="+4"/>
+        <source>&amp;Dump Wallet...</source>
+        <translation>&amp;Dump Wallet...</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Dump Wallet</source>
+        <translation>Dump Wallet</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Import Wallet</source>
+        <translation>Import Wallet</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Error</source>
+        <translation>Error</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Warning</source>
+        <translation>Warning</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Information</source>
+        <translation>Information</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Dump failed</source>
+        <translation>Dump failed</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Import failed</source>
+        <translation>Import failed</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Dump successful</source>
+        <translation>Dump successful</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Import successful</source>
+        <translation>Import successful</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>An error happened while trying to import the keys.
+Some or all keys from:
+ %1,
+ were not imported into your wallet.</source>
+        <translation>An error happened while trying to import the keys.
+Some or all keys from:
+ %1,
+ were not imported into your wallet.</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Keys were saved to this file:
+%2</source>
+        <translation>Keys were saved to this file:
+%2</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>All keys from:
+ %1,
+ were imported into your wallet.</source>
+        <translation>All keys from:
+ %1,
+ were imported into your wallet.</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>An error happened while trying to save the keys to your location.
+Keys were not saved.</source>
+        <translation>An error happened while trying to save the keys to your location.
+Keys were not saved.</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Wallet dump (*.txt)</source>
+        <translation>Wallet dump (*.txt)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Import Wallet...</source>
+        <translation>&amp;Import Wallet...</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Change Passphrase...</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Dump keys to a text file</source>
+        <translation>Dump keys to a text file</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Import keys into a wallet</source>
+        <translation>Import keys into a wallet</translation>
     </message>
     <message numerus="yes">
         <location line="+241"/>
@@ -580,6 +684,70 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+10"/>
         <source>Last received block was generated %1.</source>
         <translation>Last received block was generated %1.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Wallet is offline</source>
+        <translation>Wallet is offline</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Wallet is locked</source>
+        <translation>Wallet is locked</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Blockchain download is in progress</source>
+        <translation>Blockchain download is in progress</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Stake miner is active
+Your current stake weight is %1
+Network weight is %2</source>
+        <translation>Stake miner is active
+Your current stake weight is %1
+Network weight is %2</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>No suitable inputs were found</source>
+        <translation>No suitable inputs were found</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Unlo&amp;ck wallet</source>
+        <translation>Unlo&amp;ck wallet</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Unlock wallet</source>
+        <translation>Unlock wallet</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Lock wallet</source>
+        <translation>Lock wallet</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>&amp;Lock wallet</source>
+        <translation>&amp;Lock wallet</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Unlo&amp;ck wallet for mining</source>
+        <translation>Unlo&amp;ck wallet for mining</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Unlock wallet for mining</source>
+        <translation>Unlock wallet for mining</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>&amp;Wallet security</source>
+        <translation>&amp;Wallet security</translation>
     </message>
     <message>
         <location line="+59"/>
@@ -890,7 +1058,7 @@ Address: %4
     </message>
     <message>
         <location line="+10"/>
-        <source>This label turns red, if the transaction size is bigger than 10000 bytes.
+        <source>This label turns red, if the transaction size is bigger than 1000 bytes.
 
  This means a fee of at least %1 per kb is required.
 
@@ -912,7 +1080,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 
  This means a fee of at least %2 is required. 
 
- Amounts below 0.546 times the minimum relay fee are shown as DUST.</source>
+ Amounts below the minimum fee are shown as DUST.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2589,7 +2757,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
-        <translation type="obsolete">Specify wallet file (within data directory)</translation>
+        <translation>Specify wallet file (within data directory)</translation>
     </message>
     <message>
         <location line="-1"/>
@@ -2688,8 +2856,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+4"/>
-        <source>Find peers using DNS lookup (default: 0)</source>
-        <translation type="unfinished">Find peers using DNS lookup (default: 1) {0)?}</translation>
+        <source>Find peers using DNS lookup (default: 1)</source>
+        <translation>Find peers using DNS lookup (default: 1)</translation>
+    </message>
+    <message>
+        <source>Sync checkpoints policy (default: strict)</source>
+        <translation>Sync checkpoints policy (default: strict)</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2779,14 +2951,6 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+10"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Failed to listen on any port. Use -listen=0 if you want this.</translation>
-    </message>
-    <message>
-        <source>Find peers using DNS lookup (default: 1)</source>
-        <translation type="obsolete">Find peers using DNS lookup (default: 1)</translation>
-    </message>
-    <message>
-        <source>Sync checkpoints policy (default: strict)</source>
-        <translation type="obsolete">Sync checkpoints policy (default: strict)</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -2947,6 +3111,16 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+119"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Upgrade wallet to latest format</translation>
+    </message>
+    <message>
+    <location line="+120"/>
+        <source>Require a confirmations for change (default: 0)</source>
+        <translation>Require a confirmations for change (default: 0)</translation>
+    </message>
+    <message>
+        <location line="+121"/>
+        <source>Enforce transaction scripts to use canonical PUSH operators (default: 1)</source>
+        <translation>Enforce transaction scripts to use canonical PUSH operators (default: 1)</translation>
     </message>
     <message>
         <location line="-16"/>
@@ -3131,6 +3305,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="-2"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Fee per KB to add to transactions you send</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>When creating transactions, ignore inputs with value less than this (default: %s)</source>
+        <translation>When creating transactions, ignore inputs with value less than this (default: %s)</translation>
     </message>
     <message>
         <location line="+19"/>

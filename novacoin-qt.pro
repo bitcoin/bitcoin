@@ -162,6 +162,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/coincontrol.h \
     src/sync.h \
     src/util.h \
+    src/timestamps.h \
     src/uint256.h \
     src/kernel.h \
     src/scrypt.h \

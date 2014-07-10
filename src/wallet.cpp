@@ -1394,18 +1394,21 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
                 // if sub-cent change is required, the fee must be raised to at least MIN_TX_FEE
                 // or until nChange becomes zero
                 // NOTE: this depends on the exact behaviour of GetMinFee
-                if (nFeeRet < MIN_TX_FEE && nChange > 0 && nChange < CENT)
+                if (wtxNew.nTime < FEE_SWITCH_TIME && !fTestNet)
                 {
-                    int64 nMoveToFee = min(nChange, MIN_TX_FEE - nFeeRet);
-                    nChange -= nMoveToFee;
-                    nFeeRet += nMoveToFee;
-                }
+                    if (nFeeRet < MIN_TX_FEE && nChange > 0 && nChange < CENT)
+                    {
+                        int64 nMoveToFee = min(nChange, MIN_TX_FEE - nFeeRet);
+                        nChange -= nMoveToFee;
+                        nFeeRet += nMoveToFee;
+                    }
 
-                // ppcoin: sub-cent change is moved to fee
-                if (nChange > 0 && nChange < MIN_TXOUT_AMOUNT)
-                {
-                    nFeeRet += nChange;
-                    nChange = 0;
+                    // sub-cent change is moved to fee
+                    if (nChange > 0 && nChange < CENT)
+                    {
+                        nFeeRet += nChange;
+                        nChange = 0;
+                    }
                 }
 
                 if (nChange > 0)
@@ -1460,7 +1463,15 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
 
                 // Check that enough fee is included
                 int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
-                int64 nMinFee = wtxNew.GetMinFee(1, false, GMF_SEND, nBytes);
+                bool fAllowFree = CTransaction::AllowFree(dPriority);
+
+                // Disable free transactions until 1 July 2014
+                if (!fTestNet && wtxNew.nTime < FEE_SWITCH_TIME)
+                {
+                    fAllowFree = false;
+                }
+
+                int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree, GMF_SEND, nBytes);
 
                 if (nFeeRet < max(nPayFee, nMinFee))
                 {
@@ -1485,6 +1496,22 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& w
     vecSend.push_back(make_pair(scriptPubKey, nValue));
     return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, coinControl);
 }
+
+void CWallet::GetStakeWeightFromValue(const int64& nTime, const int64& nValue, uint64& nWeight)
+{
+    int64 nTimeWeight = GetWeight(nTime, (int64)GetTime());
+
+    // If time weight is lower or equal to zero then weight is zero.
+    if (nTimeWeight <= 0)
+    {
+        nWeight = 0;
+        return;
+    }
+
+    CBigNum bnCoinDayWeight = CBigNum(nValue) * nTimeWeight / COIN / (24 * 60 * 60);
+    nWeight = bnCoinDayWeight.getuint64();
+}
+
 
 // NovaCoin: get current stake weight
 bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint64& nMaxWeight, uint64& nWeight)
@@ -1800,9 +1827,9 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             return error("CreateCoinStake : exceeded coinstake size limit");
 
         // Check enough fee is paid
-        if (nMinFee < txNew.GetMinFee() - MIN_TX_FEE)
+        if (nMinFee < txNew.GetMinFee(1, false, GMF_BLOCK, nBytes) - CENT)
         {
-            nMinFee = txNew.GetMinFee() - MIN_TX_FEE;
+            nMinFee = txNew.GetMinFee(1, false, GMF_BLOCK, nBytes) - CENT;
             continue; // try signing again
         }
         else
@@ -2353,6 +2380,16 @@ void CWallet::FixSpentCoins(int& nMismatchFound, int64& nBalanceInQuestion, bool
                     pcoin->MarkSpent(n);
                     pcoin->WriteToDisk();
                 }
+            }
+
+        }
+
+        if(IsMine((CTransaction)*pcoin) && (pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetDepthInMainChain() == 0)
+        {
+            printf("FixSpentCoins %s tx %s\n", fCheckOnly ? "found" : "removed", pcoin->GetHash().ToString().c_str());
+            if (!fCheckOnly)
+            {
+                EraseFromWallet(pcoin->GetHash());
             }
         }
     }
