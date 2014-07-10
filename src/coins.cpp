@@ -107,7 +107,12 @@ bool CCoinsViewCache::SetCoins(const uint256 &txid, const CCoins &coins) {
 }
 
 bool CCoinsViewCache::HaveCoins(const uint256 &txid) {
-    return FetchCoins(txid) != cacheCoins.end();
+    CCoinsMap::iterator it = FetchCoins(txid);
+    // We're using vtx.empty() instead of IsPruned here for performance reasons,
+    // as we only care about the case where an transaction was replaced entirely
+    // in a reorganization (which wipes vout entirely, as opposed to spending
+    // which just cleans individual outputs).
+    return (it != cacheCoins.end() && !it->second.vout.empty());
 }
 
 uint256 CCoinsViewCache::GetBestBlock() {
