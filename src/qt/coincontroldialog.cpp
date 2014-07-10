@@ -443,7 +443,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     double dPriority            = 0;
     double dPriorityInputs      = 0;
     unsigned int nQuantity      = 0;
-    
+
     vector<COutPoint> vCoinControl;
     vector<COutput>   vOutputs;
     coinControl->ListSelected(vCoinControl);
@@ -453,13 +453,13 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     {
         // Quantity
         nQuantity++;
-            
+
         // Amount
         nAmount += out.tx->vout[out.i].nValue;
-        
+
         // Priority
         dPriorityInputs += (double)out.tx->vout[out.i].nValue * (out.nDepth+1);
-        
+
         // Bytes
         CTxDestination address;
         if(ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
@@ -473,59 +473,70 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         }
         else nBytesInputs += 148;
     }
-    
+
     // calculation
     if (nQuantity > 0)
     {
         // Bytes
         nBytes = nBytesInputs + ((CoinControlDialog::payAmounts.size() > 0 ? CoinControlDialog::payAmounts.size() + 1 : 2) * 34) + 10; // always assume +1 output for change here
-        
+
         // Priority
         dPriority = dPriorityInputs / nBytes;
         sPriorityLabel = CoinControlDialog::getPriorityLabel(dPriority);
-        
+
         // Fee
         int64 nFee = nTransactionFee * (1 + (int64)nBytes / 1000);
-        
+
         // Min Fee
-        int64 nMinFee = txDummy.GetMinFee(1, false, GMF_SEND, nBytes);
-        
+        bool fAllowFree = CTransaction::AllowFree(dPriority);
+
+        // Disable free transactions until 1 July 2014
+        if (!fTestNet && txDummy.nTime < FEE_SWITCH_TIME)
+        {
+            fAllowFree = false;
+        }
+
+        int64 nMinFee = txDummy.GetMinFee(1, fAllowFree, GMF_SEND, nBytes);
+
         nPayFee = max(nFee, nMinFee);
-        
+
         if (nPayAmount > 0)
         {
             nChange = nAmount - nPayFee - nPayAmount;
-            
+
             // if sub-cent change is required, the fee must be raised to at least CTransaction::nMinTxFee   
-            if (nPayFee < CENT && nChange > 0 && nChange < CENT)
+            if (txDummy.nTime < FEE_SWITCH_TIME && !fTestNet)
             {
-                if (nChange < CENT) // change < 0.01 => simply move all change to fees
+                if (nPayFee < CENT && nChange > 0 && nChange < CENT)
                 {
-                    nPayFee = nChange;
-                    nChange = 0;
+                    if (nChange < CENT) // change < 0.01 => simply move all change to fees
+                    {
+                        nPayFee = nChange;
+                        nChange = 0;
+                    }
+                    else
+                    {
+                        nChange = nChange + nPayFee - CENT;
+                        nPayFee = CENT;
+                    }
                 }
-                else
-                {
-                    nChange = nChange + nPayFee - CENT;
-                    nPayFee = CENT;
-                }  
             }
-            
+
             if (nChange == 0)
                 nBytes -= 34;
         }
-        
+
         // after fee
         nAfterFee = nAmount - nPayFee;
         if (nAfterFee < 0)
             nAfterFee = 0;
     }
-    
+
     // actually update labels
     int nDisplayUnit = BitcoinUnits::BTC;
     if (model && model->getOptionsModel())
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
-            
+
     QLabel *l1 = dialog->findChild<QLabel *>("labelCoinControlQuantity");
     QLabel *l2 = dialog->findChild<QLabel *>("labelCoinControlAmount");
     QLabel *l3 = dialog->findChild<QLabel *>("labelCoinControlFee");
@@ -534,13 +545,13 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     QLabel *l6 = dialog->findChild<QLabel *>("labelCoinControlPriority");
     QLabel *l7 = dialog->findChild<QLabel *>("labelCoinControlLowOutput");
     QLabel *l8 = dialog->findChild<QLabel *>("labelCoinControlChange");
-    
+
     // enable/disable "low output" and "change"
     dialog->findChild<QLabel *>("labelCoinControlLowOutputText")->setEnabled(nPayAmount > 0);
     dialog->findChild<QLabel *>("labelCoinControlLowOutput")    ->setEnabled(nPayAmount > 0);
     dialog->findChild<QLabel *>("labelCoinControlChangeText")   ->setEnabled(nPayAmount > 0);
     dialog->findChild<QLabel *>("labelCoinControlChange")       ->setEnabled(nPayAmount > 0);
-    
+
     // stats
     l1->setText(QString::number(nQuantity));                                 // Quantity        
     l2->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAmount));        // Amount
@@ -550,15 +561,15 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     l6->setText(sPriorityLabel);                                             // Priority
     l7->setText((fLowOutput ? (fDust ? tr("DUST") : tr("yes")) : tr("no"))); // Low Output / Dust
     l8->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nChange));        // Change
-    
+
     // turn labels "red"
-    l5->setStyleSheet((nBytes >= 10000) ? "color:red;" : "");               // Bytes >= 10000
+    l5->setStyleSheet((nBytes >= 5000) ? "color:red;" : "");               // Bytes >= 5000
     l6->setStyleSheet((dPriority <= 576000) ? "color:red;" : "");         // Priority < "medium"
     l7->setStyleSheet((fLowOutput) ? "color:red;" : "");                    // Low Output = "yes"
     l8->setStyleSheet((nChange > 0 && nChange < CENT) ? "color:red;" : ""); // Change < 0.01BTC
-        
+
     // tool tips
-    l5->setToolTip(tr("This label turns red, if the transaction size is bigger than 10000 bytes.\n\n This means a fee of at least %1 per kb is required.\n\n Can vary +/- 1 Byte per input.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CENT)));
+    l5->setToolTip(tr("This label turns red, if the transaction size is bigger than 5000 bytes.\n\n This means a fee of at least %1 per kb is required.\n\n Can vary +/- 1 Byte per input.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CENT)));
     l6->setToolTip(tr("Transactions with higher priority get more likely into a block.\n\nThis label turns red, if the priority is smaller than \"medium\".\n\n This means a fee of at least %1 per kb is required.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CENT)));
     l7->setToolTip(tr("This label turns red, if any recipient receives an amount smaller than %1.\n\n This means a fee of at least %2 is required. \n\n Amounts below 0.546 times the minimum relay fee are shown as DUST.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CENT)).arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CENT)));
     l8->setToolTip(tr("This label turns red, if the change is smaller than %1.\n\n This means a fee of at least %2 is required.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CENT)).arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CENT)));
@@ -566,7 +577,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     dialog->findChild<QLabel *>("labelCoinControlPriorityText") ->setToolTip(l6->toolTip());
     dialog->findChild<QLabel *>("labelCoinControlLowOutputText")->setToolTip(l7->toolTip());
     dialog->findChild<QLabel *>("labelCoinControlChangeText")   ->setToolTip(l8->toolTip());
-   
+
     // Insufficient funds
     QLabel *label = dialog->findChild<QLabel *>("labelCoinControlInsuffFunds");
     if (label)
