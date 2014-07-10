@@ -2601,7 +2601,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
-        <translation type="obsolete">Указать файл кошелька (в пределах DATA директории)</translation>
+        <translation>Указать файл кошелька (в пределах DATA директории)</translation>
     </message>
     <message>
         <location line="-1"/>
@@ -2705,8 +2705,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+23"/>
-        <source>Find peers using DNS lookup (default: 0)</source>
-        <translation type="unfinished">Искать узлы с помощью DNS (по умолчанию: 1) {0)?}</translation>
+        <source>Find peers using DNS lookup (default: 1)</source>
+        <translation>Искать узлы с помощью DNS (по умолчанию: 1)</translation>
+    </message>
+    <message>
+        <source>Sync checkpoints policy (default: strict)</source>
+        <translation>Политика синхронизированных меток (по умолчанию: strict)</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2791,14 +2795,6 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Не удалось начать прослушивание на порту. Используйте -listen=0 если вас это устраивает.</translation>
-    </message>
-    <message>
-        <source>Find peers using DNS lookup (default: 1)</source>
-        <translation type="obsolete">Искать узлы с помощью DNS (по умолчанию: 1)</translation>
-    </message>
-    <message>
-        <source>Sync checkpoints policy (default: strict)</source>
-        <translation type="obsolete">Политика синхронизированных меток (по умолчанию: strict)</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -2960,6 +2956,16 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+119"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Обновить бумажник до последнего формата</translation>
+    </message>
+    <message>
+        <location line="+120"/>
+        <source>Require a confirmations for change (default: 0)</source>
+        <translation>Требовать подтверждения для сдачи (по умолчанию: 0)</translation>
+    </message>
+    <message>
+        <location line="+121"/>
+        <source>Enforce transaction scripts to use canonical PUSH operators (default: 1)</source>
+        <translation>Требовать от скриптов использования стандартных PUSH операторов (по умолчанию: 1)</translation>
     </message>
     <message>
         <location line="-16"/>
@@ -3144,6 +3150,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="-2"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Комиссия на килобайт, добавляемая к вашим транзакциям</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>When creating transactions, ignore inputs with value less than this (default: %s)</source>
+        <translation>При создании транзакций игнорировать входы с суммой ниже указанной (по умолчанию: %s)</translation>
     </message>
     <message>
         <location line="+19"/>

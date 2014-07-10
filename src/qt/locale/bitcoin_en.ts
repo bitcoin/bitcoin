@@ -2589,7 +2589,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
-        <translation type="obsolete">Specify wallet file (within data directory)</translation>
+        <translation>Specify wallet file (within data directory)</translation>
     </message>
     <message>
         <location line="-1"/>
@@ -2688,8 +2688,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+4"/>
-        <source>Find peers using DNS lookup (default: 0)</source>
-        <translation type="unfinished">Find peers using DNS lookup (default: 1) {0)?}</translation>
+        <source>Find peers using DNS lookup (default: 1)</source>
+        <translation>Find peers using DNS lookup (default: 1)</translation>
+    </message>
+    <message>
+        <source>Sync checkpoints policy (default: strict)</source>
+        <translation>Sync checkpoints policy (default: strict)</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2779,14 +2783,6 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+10"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Failed to listen on any port. Use -listen=0 if you want this.</translation>
-    </message>
-    <message>
-        <source>Find peers using DNS lookup (default: 1)</source>
-        <translation type="obsolete">Find peers using DNS lookup (default: 1)</translation>
-    </message>
-    <message>
-        <source>Sync checkpoints policy (default: strict)</source>
-        <translation type="obsolete">Sync checkpoints policy (default: strict)</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -2947,6 +2943,16 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+119"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Upgrade wallet to latest format</translation>
+    </message>
+    <message>
+    <location line="+120"/>
+        <source>Require a confirmations for change (default: 0)</source>
+        <translation>Require a confirmations for change (default: 0)</translation>
+    </message>
+    <message>
+        <location line="+121"/>
+        <source>Enforce transaction scripts to use canonical PUSH operators (default: 1)</source>
+        <translation>Enforce transaction scripts to use canonical PUSH operators (default: 1)</translation>
     </message>
     <message>
         <location line="-16"/>
@@ -3131,6 +3137,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="-2"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Fee per KB to add to transactions you send</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>When creating transactions, ignore inputs with value less than this (default: %s)</source>
+        <translation>When creating transactions, ignore inputs with value less than this (default: %s)</translation>
     </message>
     <message>
         <location line="+19"/>
