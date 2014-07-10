@@ -21,6 +21,8 @@
 class CBlockIndex;
 class CNetAddr;
 
+extern bool fRPCRunning;
+
 class AcceptedConnection
 {
 public:
