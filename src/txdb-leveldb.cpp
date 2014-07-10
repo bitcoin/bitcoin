@@ -304,6 +304,16 @@ bool CTxDB::WriteCheckpointPubKey(const string& strPubKey)
     return Write(string("strCheckpointPubKey"), strPubKey);
 }
 
+bool CTxDB::ReadModifierUpgradeTime(unsigned int& nUpgradeTime)
+{
+    return Read(string("nUpgradeTime"), nUpgradeTime);
+}
+
+bool CTxDB::WriteModifierUpgradeTime(const unsigned int& nUpgradeTime)
+{
+    return Write(string("nUpgradeTime"), nUpgradeTime);
+}
+
 static CBlockIndex *InsertBlockIndex(uint256 hash)
 {
     if (hash == 0)
