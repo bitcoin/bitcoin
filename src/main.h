@@ -152,6 +152,8 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp = NULL);
 bool InitBlockIndex();
 /** Load the block tree and coins database from disk */
 bool LoadBlockIndex();
+/** Check all required block files are present */
+bool CheckBlockFiles();
 /** Unload database information */
 void UnloadBlockIndex();
 /** Print the loaded block tree */

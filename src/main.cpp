@@ -2877,24 +2877,6 @@ bool static LoadBlockIndexDB()
     if (pblocktree->ReadBlockFileInfo(nLastBlockFile, infoLastBlockFile))
         LogPrintf("LoadBlockIndexDB(): last block file info: %s\n", infoLastBlockFile.ToString());
 
-    // Check presence of blk files
-    LogPrintf("Checking all blk files are present...\n");
-    set<int> setBlkDataFiles;
-    BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
-    {
-        CBlockIndex* pindex = item.second;
-        if (pindex->nStatus & BLOCK_HAVE_DATA) {
-            setBlkDataFiles.insert(pindex->nFile);
-        }
-    }
-    for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
-    {
-        CDiskBlockPos pos(*it, 0);
-        if (!CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION)) {
-            return false;
-        }
-    }
-
     // Check whether we need to continue reindexing
     bool fReindexing = false;
     pblocktree->ReadReindexing(fReindexing);
@@ -2913,7 +2895,41 @@ bool static LoadBlockIndexDB()
         chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(),
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
         Checkpoints::GuessVerificationProgress(chainActive.Tip()));
+    return true;
+}
 
+bool CheckBlockFiles()
+{
+    // Check presence of essential data
+    LogPrintf("Checking all required data for active chain is available...\n");
+    set<int> setBlkDataFileReadable,setBlkUndoFileReadable;
+    for (CBlockIndex* pindex = chainActive.Tip() ; pindex && pindex->pprev ; pindex = pindex->pprev) {
+        CDiskBlockPos pos(pindex->nFile, 0);
+        if (pindex->nStatus & BLOCK_HAVE_DATA) {
+            if (!setBlkDataFileReadable.count(pindex->nFile)) {
+                if (CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION))
+                    setBlkDataFileReadable.insert(pindex->nFile);
+                else
+                    return false;
+            }
+        }
+        else {
+            LogPrintf("Error: Missing block data for block: %i\n", pindex->nHeight);
+            return false;
+        }
+        if (pindex->nStatus & BLOCK_HAVE_UNDO) {
+            if (!setBlkUndoFileReadable.count(pindex->nFile)) {
+                if (CAutoFile(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION))
+                    setBlkUndoFileReadable.insert(pindex->nFile);
+                else
+                    return false;
+            }
+        }
+        else {
+            LogPrintf("Error: Missing undo data for block: %i\n", pindex->nHeight);
+            return false;
+        }
+    }
     return true;
 }
 
