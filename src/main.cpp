@@ -964,11 +964,12 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     {
         COutPoint outpoint = tx.vin[i].prevout;
         // Does tx conflict with a member of the pool, and is it not equivalent to that member?
-        if (pool.mapNextTx.count(outpoint) && !tx.IsEquivalentTo(*pool.mapNextTx[outpoint].ptx))
-        {
-            relayableRespend = RelayableRespend(outpoint, tx, false, doubleSpendFilter);
-            if (!relayableRespend)
+        if (pool.mapNextTx.count(outpoint)) {
+            if (!tx.IsEquivalentTo(*pool.mapNextTx[outpoint].ptx) && RelayableRespend(outpoint, tx, false, doubleSpendFilter)) {
+                relayableRespend = true;
+            } else {
                 return false;
+            }
         }
     }
     }
