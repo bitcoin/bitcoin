@@ -354,6 +354,11 @@ public:
         return (unsigned char*)&pn[WIDTH];
     }
 
+    std::vector<unsigned char> getBytes()
+    {
+        return std::vector<unsigned char>(begin(), end());
+    }
+
     unsigned int size()
     {
         return sizeof(pn);

@@ -241,6 +241,49 @@ public:
         BN_mpi2bn(pch, p - pch, this);
     }
 
+    void setuint160(uint160 n)
+    {
+        unsigned char pch[sizeof(n) + 6];
+        unsigned char* p = pch + 4;
+        bool fLeadingZeroes = true;
+        unsigned char* pbegin = (unsigned char*)&n;
+        unsigned char* psrc = pbegin + sizeof(n);
+        while (psrc != pbegin)
+        {
+            unsigned char c = *(--psrc);
+            if (fLeadingZeroes)
+            {
+                if (c == 0)
+                    continue;
+                if (c & 0x80)
+                    *p++ = 0;
+                fLeadingZeroes = false;
+            }
+            *p++ = c;
+        }
+        unsigned int nSize = p - (pch + 4);
+        pch[0] = (nSize >> 24) & 0xff;
+        pch[1] = (nSize >> 16) & 0xff;
+        pch[2] = (nSize >> 8) & 0xff;
+        pch[3] = (nSize >> 0) & 0xff;
+        BN_mpi2bn(pch, p - pch, this);
+    }
+
+    uint160 getuint160() const
+    {
+        unsigned int nSize = BN_bn2mpi(this, NULL);
+        if (nSize < 4)
+            return 0;
+        std::vector<unsigned char> vch(nSize);
+        BN_bn2mpi(this, &vch[0]);
+        if (vch.size() > 4)
+            vch[4] &= 0x7f;
+        uint160 n = 0;
+        for (unsigned int i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
+            ((unsigned char*)&n)[i] = vch[j];
+        return n;
+    }
+
     void setuint256(uint256 n)
     {
         unsigned char pch[sizeof(n) + 6];
@@ -284,6 +327,24 @@ public:
         return n;
     }
 
+    void setBytes(const std::vector<unsigned char>& vchBytes)
+    {
+        BN_bin2bn(&vchBytes[0], vchBytes.size(), this);
+    }
+
+    std::vector<unsigned char> getBytes() const
+    {
+        int nBytes = BN_num_bytes(this);
+
+        std::vector<unsigned char> vchBytes(nBytes);
+
+        int n = BN_bn2bin(this, &vchBytes[0]);
+        if (n != nBytes) {
+            throw bignum_error("CBigNum::getBytes : BN_bn2bin failed");
+        }
+
+        return vchBytes;
+    }
 
     void setvch(const std::vector<unsigned char>& vch)
     {
