@@ -85,7 +85,7 @@ def initialize_chain(test_dir):
         # Create cache directories, run bitcoinds:
         for i in range(4):
             datadir=initialize_datadir("cache", i)
-            args = [ "bitcoind", "-keypool=1", "-datadir="+datadir ]
+            args = [ "bitcoind", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             bitcoind_processes[i] = subprocess.Popen(args)
@@ -147,7 +147,7 @@ def start_node(i, dir, extra_args=None, rpchost=None):
     Start a bitcoind and return RPC connection to it
     """
     datadir = os.path.join(dir, "node"+str(i))
-    args = [ "bitcoind", "-datadir="+datadir, "-keypool=1" ]
+    args = [ "bitcoind", "-datadir="+datadir, "-keypool=1", "-discover=0" ]
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args)
     devnull = open("/dev/null", "w+")
