@@ -47,6 +47,8 @@ protected:
 private:
     /** show detailed information on ui about selected node */
     void updateNodeDetail(const CNodeCombinedStats *combinedStats);
+    /** initialize peer table */
+    void initPeerTable();
 
     enum ColumnWidths
     {
