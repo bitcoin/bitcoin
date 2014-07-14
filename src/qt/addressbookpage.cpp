@@ -282,7 +282,7 @@ void AddressBookPage::on_exportButton_clicked()
 
     if(!writer.write()) {
         QMessageBox::critical(this, tr("Exporting Failed"),
-            tr("There was an error trying to save the address list to %1.").arg(filename));
+            tr("There was an error trying to save the address list to %1. Please try again.").arg(filename));
     }
 }
 
