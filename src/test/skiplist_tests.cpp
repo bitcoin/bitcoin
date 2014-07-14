@@ -2,11 +2,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/test/unit_test.hpp>
-#include <vector>
 #include "main.h"
+#include "random.h"
 #include "util.h"
 
+#include <vector>
+
+#include <boost/test/unit_test.hpp>
 
 #define SKIPLIST_LENGTH 300000
 
@@ -98,4 +100,3 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-

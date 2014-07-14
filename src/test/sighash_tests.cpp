@@ -2,15 +2,16 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/test/unit_test.hpp>
+#include "data/sighash.json.h"
+#include "main.h"
+#include "random.h"
+#include "serialize.h"
+#include "util.h"
+#include "version.h"
+
 #include <iostream>
 
-#include "main.h"
-#include "util.h"
-#include "serialize.h"
-#include "version.h"
-#include "data/sighash.json.h"
-
+#include <boost/test/unit_test.hpp>
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_writer_template.h"
@@ -118,7 +119,7 @@ BOOST_AUTO_TEST_SUITE(sighash_tests)
 BOOST_AUTO_TEST_CASE(sighash_test)
 {
     seed_insecure_rand(false);
-  
+
     #if defined(PRINT_SIGHASH_JSON)
     std::cout << "[\n";
     std::cout << "\t[\"raw_transaction, script, input_index, hashType, signature_hash (result)\"],\n";
@@ -205,10 +206,9 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           BOOST_ERROR("Bad test, couldn't deserialize data: " << strTest);
           continue;
         }
-        
+
         sh = SignatureHash(scriptCode, tx, nIn, nHashType);
         BOOST_CHECK_MESSAGE(sh.GetHex() == sigHashHex, strTest);
     }
 }
 BOOST_AUTO_TEST_SUITE_END()
-
