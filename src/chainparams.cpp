@@ -64,7 +64,7 @@ public:
 
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x000000005f94b67f20bf3cad62cf7cf74fd7f2878574d3e81015d38ffacd7b6e"));
-        assert(genesis.hashMerkleRoot == uint256("0xb2f058260be078d0613a87ff9d488678a4ec0c88409f94eda9676dd2818853e4"));
+        assert(genesis.hashMerkleRoot == uint256("0xe4538881d26d67a9ed949f40880ceca47886489dff873a61d078e00b2658f0b2"));
 
         // vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be"));
         // vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me"));
@@ -130,7 +130,7 @@ public:
         genesis.nTime = 1405338325;
         genesis.nNonce = 1678912305;
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"));
+        assert(hashGenesisBlock == uint256("0x000000005f94b67f20bf3cad62cf7cf74fd7f2878574d3e81015d38ffacd7b6e"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
