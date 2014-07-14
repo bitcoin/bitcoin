@@ -94,7 +94,7 @@ PATH.
 
 1. Clone the github tree to get the source code and go into the directory.
 
-        git clone https://github.com/bitcoin/bitcoin.git
+        git clone https://github.com/Climbee/crowncoin.git
         cd bitcoin
 
 2.  Build bitcoind:

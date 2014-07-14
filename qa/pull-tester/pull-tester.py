@@ -152,7 +152,7 @@ if "GITHUB_USER" not in os.environ or "GITHUB_AUTH_TOKEN" not in os.environ:
     print("GITHUB_USER and/or GITHUB_AUTH_TOKEN environment variables not set")
     sys.exit(1)
 
-environ_default("CLONE_URL", "https://github.com/bitcoin/bitcoin.git")
+environ_default("CLONE_URL", "https://github.com/Climbee/crowncoin.git")
 environ_default("MINGW_DEPS_DIR", "/mnt/w32deps")
 environ_default("SCRIPTS_DIR", "/mnt/test-scripts")
 environ_default("CHROOT_COPY", "/mnt/chroot-tmp")
