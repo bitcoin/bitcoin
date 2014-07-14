@@ -2623,8 +2623,8 @@ Address: %4
         <translation>Задать каталог данных</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Принимать входящие подключения на &lt;port&gt; (по умолчанию: 8333 или 18333 в тестовой сети)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 9340 or testnet: 19340)</source>
+        <translation>Принимать входящие подключения на &lt;port&gt; (по умолчанию: 9340 или 19340 в тестовой сети)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
@@ -2651,8 +2651,8 @@ Address: %4
         <translation>Произошла ошибка при открытии RPC-порта %u для прослушивания на IPv4: %s</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Прослушивать подключения JSON-RPC на &lt;порту&gt; (по умолчанию: 8332 или для testnet: 18332)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
+        <translation>Прослушивать подключения JSON-RPC на &lt;порту&gt; (по умолчанию: 9341 или для testnet: 19341)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2835,8 +2835,8 @@ rpcpassword=%s
         <translation>Подключаться через SOCKS прокси</translation>
     </message>
     <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Подключаться к JSON-RPC на &lt;порт&gt; (по умолчанию: 8332 или testnet: 18332)</translation>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
+        <translation>Подключаться к JSON-RPC на &lt;порт&gt; (по умолчанию: 9341 или testnet: 19341)</translation>
     </message>
     <message>
         <source>Connection options:</source>

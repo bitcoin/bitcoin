@@ -2622,8 +2622,8 @@ Adres: %4
         <translation>Wskaż folder danych</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Nasłuchuj połączeń na &lt;port&gt; (domyślnie: 8333 lub testnet: 18333)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 9340 or testnet: 19340)</source>
+        <translation>Nasłuchuj połączeń na &lt;port&gt; (domyślnie: 9340 lub testnet: 19340)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
@@ -2650,8 +2650,8 @@ Adres: %4
         <translation>Wystąpił błąd podczas ustawiania portu RPC %u w tryb nasłuchu: %s</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Nasłuchuj połączeń JSON-RPC na &lt;port&gt; (domyślnie: 8332 or testnet: 18332)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
+        <translation>Nasłuchuj połączeń JSON-RPC na &lt;port&gt; (domyślnie: 9341 or testnet: 19341)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2833,8 +2833,8 @@ na przykład: alertnotify=echo %%s | mail -s &quot;Alarm Bitcoin&quot; admin@foo
         <translation>Połącz przez SOCKS proxy</translation>
     </message>
     <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>podłącz do JSON-RPC na &lt;port&gt; (domyślnie: 8332 lub sieć testowa: 18332)</translation>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
+        <translation>podłącz do JSON-RPC na &lt;port&gt; (domyślnie: 9341 lub sieć testowa: 19341)</translation>
     </message>
     <message>
         <source>Connection options:</source>

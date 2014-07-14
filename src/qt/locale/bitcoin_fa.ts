@@ -2617,8 +2617,8 @@ Address: %4
         <translation>مشخص کردن دایرکتوری داده‌ها</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>پذیرش اتصالات روی پورت &lt;port&gt; (پیش‌فرض: 8833 یا شبکهٔ آزمایشی: 18333)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 9340 or testnet: 19340)</source>
+        <translation>پذیرش اتصالات روی پورت &lt;port&gt; (پیش‌فرض: 8833 یا شبکهٔ آزمایشی: 19340)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
@@ -2645,8 +2645,8 @@ Address: %4
         <translation>هنگام تنظیم پورت RPC %u برای گوش دادن روی IPv4 خطایی رخ داده است: %s</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>پورت مورد شنود برای اتصالات JSON-RPC (پیش‌فرض: 8332 برای شبکهٔ تست 18332)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
+        <translation>پورت مورد شنود برای اتصالات JSON-RPC (پیش‌فرض: 9341 برای شبکهٔ تست 19341)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2819,7 +2819,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
         <translation type="unfinished"/>
     </message>
     <message>

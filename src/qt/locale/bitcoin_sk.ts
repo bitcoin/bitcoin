@@ -2621,8 +2621,8 @@ Adresa: %4</translation>
         <translation>Určiť priečinok s dátami</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Načúvať spojeniam na &lt;port&gt; (prednastavené: 8333 alebo testovacia sieť: 18333)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 9340 or testnet: 19340)</source>
+        <translation>Načúvať spojeniam na &lt;port&gt; (prednastavené: 9340 alebo testovacia sieť: 19340)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
@@ -2649,8 +2649,8 @@ Adresa: %4</translation>
         <translation>Vyskytla sa chyba pri nastavovaní RPC portu %u pre počúvanie na IPv4: %s</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Počúvať JSON-RPC spojeniam na &lt;port&gt; (predvolené: 8332 or testnet: 18332)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
+        <translation>Počúvať JSON-RPC spojeniam na &lt;port&gt; (predvolené: 9341 or testnet: 19341)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2835,8 +2835,8 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Pripojiť cez SOCKS proxy</translation>
     </message>
     <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Pripojiť ku JSON-RPC na &lt;port&gt; (prednastavené: 8332 alebo testnet: 18332)</translation>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
+        <translation>Pripojiť ku JSON-RPC na &lt;port&gt; (prednastavené: 9341 alebo testnet: 19341)</translation>
     </message>
     <message>
         <source>Connection options:</source>

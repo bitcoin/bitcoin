@@ -2622,8 +2622,8 @@ Adresse: %4
         <translation>Angi mappe for datafiler</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Lytt etter tilkoblinger på &lt;port&gt; (standardverdi: 8333 eller testnett: 18333)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 9340 or testnet: 19340)</source>
+        <translation>Lytt etter tilkoblinger på &lt;port&gt; (standardverdi: 9340 eller testnett: 19340)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
@@ -2650,8 +2650,8 @@ Adresse: %4
         <translation>En feil oppstod ved opprettelse av RPC-port %u for IPv4: %s</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Lytt etter JSON-RPC tilkoblinger på &lt;port&gt; (standardverdi: 8332 eller testnett: 18332)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
+        <translation>Lytt etter JSON-RPC tilkoblinger på &lt;port&gt; (standardverdi: 9341 eller testnett: 19341)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2833,8 +2833,8 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Koble til via SOCKS proxy</translation>
     </message>
     <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Koble til JSON-RPC på &lt;port&gt; (default: 8332 eller testnet: 18332)</translation>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
+        <translation>Koble til JSON-RPC på &lt;port&gt; (default: 9341 eller testnet: 19341)</translation>
     </message>
     <message>
         <source>Connection options:</source>

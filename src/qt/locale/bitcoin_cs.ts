@@ -2622,8 +2622,8 @@ Adresa: %4
         <translation>Adresář pro data</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Čekat na spojení na &lt;portu&gt; (výchozí: 8333 nebo testnet: 18333)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 9340 or testnet: 19340)</source>
+        <translation>Čekat na spojení na &lt;portu&gt; (výchozí: 9340 nebo testnet: 19340)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
@@ -2650,8 +2650,8 @@ Adresa: %4
         <translation>Při nastavování naslouchacího RPC portu %i pro IPv4 nastala chyba: %s</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Čekat na JSON RPC spojení na &lt;portu&gt; (výchozí: 8332 nebo testnet: 18332)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
+        <translation>Čekat na JSON RPC spojení na &lt;portu&gt; (výchozí: 9341 nebo testnet: 19341)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2834,8 +2834,8 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Připojit se přes SOCKS proxy</translation>
     </message>
     <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Připojit se k JSON RPC na &lt;port&gt; (výchozí: 8332 nebo testnet: 18332)</translation>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
+        <translation>Připojit se k JSON RPC na &lt;port&gt; (výchozí: 9341 nebo testnet: 19341)</translation>
     </message>
     <message>
         <source>Connection options:</source>

@@ -77,7 +77,7 @@ Bug fixes
 
 * Clicking on a bitcoin: URI on Windows should now launch Bitcoin-Qt properly.
 
-* When running -testnet, use RPC port 18332 by default.
+* When running -testnet, use RPC port 19341 by default.
 
 * Better detection and handling of corrupt wallet.dat and blkindex.dat files.
   Previous versions would crash with a DB_RUNRECOVERY exception, this

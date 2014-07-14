@@ -2618,7 +2618,7 @@ Address: %4
         <translation>Определете директория за данните</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
+        <source>Listen for connections on &lt;port&gt; (default: 9340 or testnet: 19340)</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -2646,7 +2646,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -2820,7 +2820,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9341 or testnet: 19341)</source>
         <translation type="unfinished"/>
     </message>
     <message>
