@@ -13,6 +13,7 @@
 #include "mruset.h"
 #include "netbase.h"
 #include "protocol.h"
+#include "random.h"
 #include "sync.h"
 #include "uint256.h"
 #include "util.h"
@@ -26,7 +27,6 @@
 
 #include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
-#include <openssl/rand.h>
 
 class CAddrMan;
 class CBlockIndex;
