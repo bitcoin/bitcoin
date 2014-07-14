@@ -179,13 +179,13 @@ void HandleSIGHUP(int)
 
 bool static InitError(const std::string &str)
 {
-    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_ERROR | CClientUIInterface::NOSHOWGUI);
+    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_ERROR);
     return false;
 }
 
 bool static InitWarning(const std::string &str)
 {
-    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
+    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING);
     return true;
 }
 
