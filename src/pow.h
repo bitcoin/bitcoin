@@ -6,21 +6,43 @@
 #ifndef BITCOIN_POW_H
 #define BITCOIN_POW_H
 
+#include "serialize.h"
+
 #include <stdint.h>
 
 class CBlockIndex;
 class CBlockHeader;
 class uint256;
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
-
-/** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 /** Check the work is more than the minimum a received block needs, without knowing its direct parent */
 bool CheckMinWork(unsigned int nBits, unsigned int nBase, int64_t deltaTime);
 
-void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
+class CProof
+{
+public:
+    uint32_t nTime;
+    uint32_t nBits;
+    uint32_t nNonce;
 
-uint256 GetProofIncrement(unsigned int nBits);
+    CProof();
+    bool CheckSolution(const uint256 hash) const;
+    void UpdateTime(const CBlockIndex* pindexPrev);
+    uint256 GetProofIncrement() const;
+    int64_t GetBlockTime() const;
+    bool IsNull() const;
+    void SetNull();
+
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(nTime);
+        READWRITE(nBits);
+        READWRITE(nNonce);
+    }
+
+    CProof(unsigned int nTime, unsigned int nBits, unsigned int nNonce);
+    unsigned int GetNextChallenge(const CBlockIndex* pindexLast) const;
+};
 
 #endif // BITCOIN_POW_H

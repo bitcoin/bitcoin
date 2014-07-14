@@ -307,9 +307,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-        UpdateTime(pblock, pindexPrev);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
-        pblock->nNonce         = 0;
+        pblock->proof.UpdateTime(pindexPrev);
+        pblock->proof.nBits = pblock->proof.GetNextChallenge(pindexPrev);
+        pblock->proof.nNonce = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
         CBlockIndex indexDummy(*pblock);
@@ -466,7 +466,7 @@ void static BitcoinMiner(CWallet *pwallet)
             // Search
             //
             int64_t nStart = GetTime();
-            uint256 hashTarget = uint256().SetCompact(pblock->nBits);
+            uint256 hashTarget = uint256().SetCompact(pblock->proof.nBits);
             uint256 hash;
             uint32_t nNonce = 0;
             uint32_t nOldNonce = 0;
@@ -481,7 +481,7 @@ void static BitcoinMiner(CWallet *pwallet)
                     if (hash <= hashTarget)
                     {
                         // Found a solution
-                        pblock->nNonce = nNonce;
+                        pblock->proof.nNonce = nNonce;
                         assert(hash == pblock->GetHash());
 
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
@@ -540,11 +540,11 @@ void static BitcoinMiner(CWallet *pwallet)
                     break;
 
                 // Update nTime every few seconds
-                UpdateTime(pblock, pindexPrev);
+                pblock->proof.UpdateTime(pindexPrev);
                 if (Params().AllowMinDifficultyBlocks())
                 {
                     // Changing pblock->nTime can change work required on testnet:
-                    hashTarget.SetCompact(pblock->nBits);
+                    hashTarget.SetCompact(pblock->proof.nBits);
                 }
             }
         }

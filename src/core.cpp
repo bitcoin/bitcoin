@@ -211,7 +211,7 @@ uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
 
 uint256 CBlockHeader::GetHash() const
 {
-    return Hash(BEGIN(nVersion), END(nNonce));
+    return SerializeHash(*this);
 }
 
 uint256 CBlock::BuildMerkleTree() const
@@ -272,7 +272,7 @@ std::string CBlock::ToString() const
         nVersion,
         hashPrevBlock.ToString(),
         hashMerkleRoot.ToString(),
-        nTime, nBits, nNonce,
+        proof.nTime, proof.nBits, proof.nNonce,
         vtx.size());
     for (unsigned int i = 0; i < vtx.size(); i++)
     {

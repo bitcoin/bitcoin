@@ -6,7 +6,6 @@
 #include "txdb.h"
 
 #include "core.h"
-#include "pow.h"
 #include "uint256.h"
 
 #include <boost/thread.hpp>
@@ -213,9 +212,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nUndoPos       = diskindex.nUndoPos;
                 pindexNew->nVersion       = diskindex.nVersion;
                 pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
-                pindexNew->nTime          = diskindex.nTime;
-                pindexNew->nBits          = diskindex.nBits;
-                pindexNew->nNonce         = diskindex.nNonce;
+                pindexNew->proof          = diskindex.proof;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 

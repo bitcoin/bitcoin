@@ -12,7 +12,36 @@
 #include "uint256.h"
 #include "util.h"
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
+CProof::CProof()
+{
+    SetNull();
+}
+
+CProof::CProof(unsigned int nTime, unsigned int nBits, unsigned int nNonce)
+{
+    this->nTime = nTime;
+    this->nBits = nBits;
+    this->nNonce = nNonce;
+}
+
+void CProof::SetNull()
+{
+    nTime = 0;
+    nBits = 0;
+    nNonce = 0;
+}
+
+bool CProof::IsNull() const
+{
+    return (nBits == 0);
+}
+
+int64_t CProof::GetBlockTime() const
+{
+    return (int64_t)nTime;
+}
+
+unsigned int CProof::GetNextChallenge(const CBlockIndex* pindexLast) const
 {
     unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
 
@@ -28,18 +57,18 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + Params().TargetSpacing()*2)
+            if (GetBlockTime() > pindexLast->GetBlockTime() + Params().TargetSpacing()*2)
                 return nProofOfWorkLimit;
             else
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % Params().Interval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % Params().Interval() != 0 && pindex->proof.nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
-                return pindex->nBits;
+                return pindex->proof.nBits;
             }
         }
-        return pindexLast->nBits;
+        return pindexLast->proof.nBits;
     }
 
     // Go back by what we want to be 14 days worth of blocks
@@ -59,7 +88,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // Retarget
     uint256 bnNew;
     uint256 bnOld;
-    bnNew.SetCompact(pindexLast->nBits);
+    bnNew.SetCompact(pindexLast->proof.nBits);
     bnOld = bnNew;
     bnNew *= nActualTimespan;
     bnNew /= Params().TargetTimespan();
@@ -70,13 +99,14 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     /// debug print
     LogPrintf("GetNextWorkRequired RETARGET\n");
     LogPrintf("Params().TargetTimespan() = %d    nActualTimespan = %d\n", Params().TargetTimespan(), nActualTimespan);
-    LogPrintf("Before: %08x  %s\n", pindexLast->nBits, bnOld.ToString());
+    LogPrintf("Before: %08x  %s\n", pindexLast->proof.nBits, bnOld.ToString());
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.ToString());
 
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits)
+/** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
+bool CProof::CheckSolution(const uint256 hash) const
 {
     bool fNegative;
     bool fOverflow;
@@ -85,11 +115,11 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit())
-        return error("CheckProofOfWork() : nBits below minimum work");
+        return error("CProof::CheckSolution() : nBits below minimum work");
 
     // Check proof of work matches claimed amount
     if (hash > bnTarget)
-        return error("CheckProofOfWork() : hash doesn't match nBits");
+        return error("CProof::CheckSolution() : hash doesn't match nBits");
 
     return true;
 }
@@ -127,16 +157,16 @@ bool CheckMinWork(unsigned int nBits, unsigned int nBase, int64_t deltaTime)
     return bnNewBlock <= bnResult;
 }
 
-void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
+void CProof::UpdateTime(const CBlockIndex* pindexPrev)
 {
-    pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
 
     // Updating time can change work required on testnet:
     if (Params().AllowMinDifficultyBlocks())
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
+        nBits = GetNextChallenge(pindexPrev);
 }
 
-uint256 GetProofIncrement(unsigned int nBits)
+uint256 CProof::GetProofIncrement() const
 {
     uint256 bnTarget;
     bool fNegative;
