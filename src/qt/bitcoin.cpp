@@ -507,6 +507,7 @@ int main(int argc, char *argv[])
     {
         HelpMessageDialog help(NULL, mapArgs.count("-version"));
         help.showOrPrint();
+        SelectParamsFromCommandLine();
         return 1;
     }
 
@@ -520,6 +521,7 @@ int main(int argc, char *argv[])
     {
         QMessageBox::critical(0, QObject::tr("Bitcoin"),
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
+        SelectParamsFromCommandLine();
         return 1;
     }
     try {
@@ -527,6 +529,7 @@ int main(int argc, char *argv[])
     } catch(std::exception &e) {
         QMessageBox::critical(0, QObject::tr("Bitcoin"),
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
+        SelectParamsFromCommandLine();
         return false;
     }
 
