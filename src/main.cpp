@@ -1479,7 +1479,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
     // fBlock is true when this is called from AcceptBlock when a new best-block is added to the blockchain
     // fMiner is true when called from the internal bitcoin miner
     // ... both are false when called from CTransaction::AcceptToMemoryPool
-    bool fScriptChecks = !(fBlock && pindexBlock->nHeight >= Checkpoints::GetTotalBlocksEstimate());
+    bool fScriptChecks = !(fBlock && Checkpoints::GetTotalBlocksEstimate() >= nBestHeight);
 
     if (!IsCoinBase())
     {
