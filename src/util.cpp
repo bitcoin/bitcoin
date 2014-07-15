@@ -8,7 +8,6 @@
 #include "chainparamsbase.h"
 #include "random.h"
 #include "sync.h"
-#include "uint256.h"
 #include "version.h"
 
 #include <stdarg.h>

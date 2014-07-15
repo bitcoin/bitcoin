@@ -190,6 +190,7 @@ libbitcoin_common_a_SOURCES = \
   keystore.cpp \
   netbase.cpp \
   protocol.cpp \
+  uint256.cpp \
   script.cpp \
   $(BITCOIN_CORE_H)
 
@@ -204,7 +205,6 @@ libbitcoin_util_a_SOURCES = \
   random.cpp \
   rpcprotocol.cpp \
   sync.cpp \
-  uint256.cpp \
   util.cpp \
   version.cpp \
   $(BITCOIN_CORE_H)
