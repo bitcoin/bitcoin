@@ -42,10 +42,6 @@ void static secp256k1_fe_start(void);
 /** Unload field element precomputation data. */
 void static secp256k1_fe_stop(void);
 
-#ifdef VERIFY
-int  static secp256k1_fe_verify(const secp256k1_fe_t * a);
-#endif
-
 /** Normalize a field element. */
 void static secp256k1_fe_normalize(secp256k1_fe_t *r);
 

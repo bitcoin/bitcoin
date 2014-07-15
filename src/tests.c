@@ -315,9 +315,6 @@ void run_field_inv_all_var() {
 void run_sqr() {
     secp256k1_fe_t x, s;
 
-#if defined(USE_FIELD_5X52)
-    // Known issue with reduction part of sqr. For simplicity, we trigger the problem here
-    // with "negative" powers of 2, but the problem exists for large ranges of values.
     {
         secp256k1_fe_set_int(&x, 1);
         secp256k1_fe_negate(&x, &x, 1);
@@ -326,13 +323,8 @@ void run_sqr() {
             secp256k1_fe_mul_int(&x, 2);
             secp256k1_fe_normalize(&x);
             secp256k1_fe_sqr(&s, &x);
-            if (!secp256k1_fe_verify(&s)) {
-                printf("%4i: %016llx %016llx %016llx %016llx %016llx\n",
-                    i, s.n[4], s.n[3], s.n[2], s.n[1], s.n[0]);
-            }
         }
     }
-#endif
 }
 
 void test_sqrt(const secp256k1_fe_t *a, const secp256k1_fe_t *k) {
