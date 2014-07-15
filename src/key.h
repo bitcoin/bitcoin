@@ -12,6 +12,7 @@
 #include "serialize.h"
 #include "uint256.h"
 #include "hash.h"
+#include "bignum.h"
 
 #include <openssl/ec.h> // for EC_KEY definition
 
