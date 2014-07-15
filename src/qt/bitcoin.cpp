@@ -286,15 +286,17 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     returnValue(0)
 {
     setQuitOnLastWindowClosed(false);
-    startThread();
 }
 
 BitcoinApplication::~BitcoinApplication()
 {
-    qDebug() << __func__ << ": Stopping thread";
-    emit stopThread();
-    coreThread->wait();
-    qDebug() << __func__ << ": Stopped thread";
+    if(coreThread)
+    {
+        qDebug() << __func__ << ": Stopping thread";
+        emit stopThread();
+        coreThread->wait();
+        qDebug() << __func__ << ": Stopped thread";
+    }
 
     delete window;
     window = 0;
@@ -337,6 +339,8 @@ void BitcoinApplication::createSplashScreen(bool isaTestNet)
 
 void BitcoinApplication::startThread()
 {
+    if(coreThread)
+        return;
     coreThread = new QThread(this);
     BitcoinCore *executor = new BitcoinCore();
     executor->moveToThread(coreThread);
@@ -357,12 +361,14 @@ void BitcoinApplication::startThread()
 void BitcoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
+    startThread();
     emit requestedInitialize();
 }
 
 void BitcoinApplication::requestShutdown()
 {
     qDebug() << __func__ << ": Requesting shutdown";
+    startThread();
     window->hide();
     window->setClientModel(0);
     pollShutdownTimer->stop();
