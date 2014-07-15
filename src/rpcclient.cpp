@@ -85,6 +85,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getrawmempool", 0 },
     { "estimatefee", 0 },
     { "estimatepriority", 0 },
+    { "prioritisetransaction", 1 },
+    { "prioritisetransaction", 2 },
 };
 
 class CRPCConvertTable
