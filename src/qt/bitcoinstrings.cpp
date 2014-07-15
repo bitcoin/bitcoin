@@ -12,7 +12,7 @@ static const char UNUSED *bitcoin_strings[] = {
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "%s, you must set a rpcpassword in the configuration file:\n"
 "%s\n"
-"It is recommended you use the following random password:\n"
+"It is recommended you use a long random password such as:\n"
 "rpcuser=bitcoinrpc\n"
 "rpcpassword=%s\n"
 "(you do not need to remember this password)\n"
