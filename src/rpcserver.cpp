@@ -135,11 +135,18 @@ vector<unsigned char> ParseHexO(const Object& o, string strKey)
 string CRPCTable::help(string strCommand) const
 {
     string strRet;
+    string category;
     set<rpcfn_type> setDone;
+    vector<pair<string, const CRPCCommand*> > vCommands;
+
     for (map<string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
+        vCommands.push_back(make_pair(mi->second->category + mi->first, mi->second));
+    sort(vCommands.begin(), vCommands.end());
+
+    BOOST_FOREACH(const PAIRTYPE(string, const CRPCCommand*)& command, vCommands)
     {
-        const CRPCCommand *pcmd = mi->second;
-        string strMethod = mi->first;
+        const CRPCCommand *pcmd = command.second;
+        string strMethod = pcmd->name;
         // We already filter duplicates, but these deprecated screw up the sort order
         if (strMethod.find("label") != string::npos)
             continue;
@@ -162,8 +169,20 @@ string CRPCTable::help(string strCommand) const
             // Help text is returned in an exception
             string strHelp = string(e.what());
             if (strCommand == "")
+            {
                 if (strHelp.find('\n') != string::npos)
                     strHelp = strHelp.substr(0, strHelp.find('\n'));
+
+                if (category != pcmd->category)
+                {
+                    if (!category.empty())
+                        strRet += "\n";
+                    category = pcmd->category;
+                    string firstLetter = category.substr(0,1);
+                    boost::to_upper(firstLetter);
+                    strRet += "== " + firstLetter + category.substr(1) + " ==\n";
+                }
+            }
             strRet += strHelp + "\n";
         }
     }
@@ -213,103 +232,105 @@ Value stop(const Array& params, bool fHelp)
 
 
 static const CRPCCommand vRPCCommands[] =
-{ //  name                      actor (function)         okSafeMode threadSafe reqWallet
-  //  ------------------------  -----------------------  ---------- ---------- ---------
+{ //  category              name                      actor (function)         okSafeMode threadSafe reqWallet
+  //  --------------------- ------------------------  -----------------------  ---------- ---------- ---------
     /* Overall control/query calls */
-    { "getinfo",                &getinfo,                true,      false,      false }, /* uses wallet if enabled */
-    { "help",                   &help,                   true,      true,       false },
-    { "stop",                   &stop,                   true,      true,       false },
+    { "control",            "getinfo",                &getinfo,                true,      false,      false }, /* uses wallet if enabled */
+    { "control",            "help",                   &help,                   true,      true,       false },
+    { "control",            "stop",                   &stop,                   true,      true,       false },
 
     /* P2P networking */
-    { "getnetworkinfo",         &getnetworkinfo,         true,      false,      false },
-    { "addnode",                &addnode,                true,      true,       false },
-    { "getaddednodeinfo",       &getaddednodeinfo,       true,      true,       false },
-    { "getconnectioncount",     &getconnectioncount,     true,      false,      false },
-    { "getnettotals",           &getnettotals,           true,      true,       false },
-    { "getpeerinfo",            &getpeerinfo,            true,      false,      false },
-    { "ping",                   &ping,                   true,      false,      false },
+    { "network",            "getnetworkinfo",         &getnetworkinfo,         true,      false,      false },
+    { "network",            "addnode",                &addnode,                true,      true,       false },
+    { "network",            "getaddednodeinfo",       &getaddednodeinfo,       true,      true,       false },
+    { "network",            "getconnectioncount",     &getconnectioncount,     true,      false,      false },
+    { "network",            "getnettotals",           &getnettotals,           true,      true,       false },
+    { "network",            "getpeerinfo",            &getpeerinfo,            true,      false,      false },
+    { "network",            "ping",                   &ping,                   true,      false,      false },
 
     /* Block chain and UTXO */
-    { "getblockchaininfo",      &getblockchaininfo,      true,      false,      false },
-    { "getbestblockhash",       &getbestblockhash,       true,      false,      false },
-    { "getblockcount",          &getblockcount,          true,      false,      false },
-    { "getblock",               &getblock,               true,      false,      false },
-    { "getblockhash",           &getblockhash,           true,      false,      false },
-    { "getchaintips",           &getchaintips,           true,      false,      false },
-    { "getdifficulty",          &getdifficulty,          true,      false,      false },
-    { "getrawmempool",          &getrawmempool,          true,      false,      false },
-    { "gettxout",               &gettxout,               true,      false,      false },
-    { "gettxoutsetinfo",        &gettxoutsetinfo,        true,      false,      false },
-    { "verifychain",            &verifychain,            true,      false,      false },
+    { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true,      false,      false },
+    { "blockchain",         "getbestblockhash",       &getbestblockhash,       true,      false,      false },
+    { "blockchain",         "getblockcount",          &getblockcount,          true,      false,      false },
+    { "blockchain",         "getblock",               &getblock,               true,      false,      false },
+    { "blockchain",         "getblockhash",           &getblockhash,           true,      false,      false },
+    { "blockchain",         "getchaintips",           &getchaintips,           true,      false,      false },
+    { "blockchain",         "getdifficulty",          &getdifficulty,          true,      false,      false },
+    { "blockchain",         "getrawmempool",          &getrawmempool,          true,      false,      false },
+    { "blockchain",         "gettxout",               &gettxout,               true,      false,      false },
+    { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true,      false,      false },
+    { "blockchain",         "verifychain",            &verifychain,            true,      false,      false },
 
     /* Mining */
-    { "getblocktemplate",       &getblocktemplate,       true,      false,      false },
-    { "getmininginfo",          &getmininginfo,          true,      false,      false },
-    { "getnetworkhashps",       &getnetworkhashps,       true,      false,      false },
-    { "prioritisetransaction",  &prioritisetransaction,  true,      false,      false },
-    { "submitblock",            &submitblock,            true,      true,       false },
+    { "mining",             "getblocktemplate",       &getblocktemplate,       true,      false,      false },
+    { "mining",             "getmininginfo",          &getmininginfo,          true,      false,      false },
+    { "mining",             "getnetworkhashps",       &getnetworkhashps,       true,      false,      false },
+    { "mining",             "prioritisetransaction",  &prioritisetransaction,  true,      false,      false },
+    { "mining",             "submitblock",            &submitblock,            true,      true,       false },
+
+#ifdef ENABLE_WALLET
+    /* Coin generation */
+    { "generating",         "getgenerate",            &getgenerate,            true,      false,      false },
+    { "generating",         "gethashespersec",        &gethashespersec,        true,      false,      false },
+    { "generating",         "setgenerate",            &setgenerate,            true,      true,       false },
+#endif
 
     /* Raw transactions */
-    { "createrawtransaction",   &createrawtransaction,   true,      false,      false },
-    { "decoderawtransaction",   &decoderawtransaction,   true,      false,      false },
-    { "decodescript",           &decodescript,           true,      false,      false },
-    { "getrawtransaction",      &getrawtransaction,      true,      false,      false },
-    { "sendrawtransaction",     &sendrawtransaction,     false,     false,      false },
-    { "signrawtransaction",     &signrawtransaction,     false,     false,      false }, /* uses wallet if enabled */
+    { "rawtransactions",    "createrawtransaction",   &createrawtransaction,   true,      false,      false },
+    { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   true,      false,      false },
+    { "rawtransactions",    "decodescript",           &decodescript,           true,      false,      false },
+    { "rawtransactions",    "getrawtransaction",      &getrawtransaction,      true,      false,      false },
+    { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     false,     false,      false },
+    { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     false,     false,      false }, /* uses wallet if enabled */
 
     /* Utility functions */
-    { "createmultisig",         &createmultisig,         true,      true ,      false },
-    { "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
-    { "verifymessage",          &verifymessage,          true,      false,      false },
-    { "estimatefee",            &estimatefee,            true,      true,       false },
-    { "estimatepriority",       &estimatepriority,       true,      true,       false },
+    { "util",               "createmultisig",         &createmultisig,         true,      true ,      false },
+    { "util",               "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
+    { "util",               "verifymessage",          &verifymessage,          true,      false,      false },
+    { "util",               "estimatefee",            &estimatefee,            true,      true,       false },
+    { "util",               "estimatepriority",       &estimatepriority,       true,      true,       false },
 
 #ifdef ENABLE_WALLET
     /* Wallet */
-    { "addmultisigaddress",     &addmultisigaddress,     true,      false,      true },
-    { "backupwallet",           &backupwallet,           true,      false,      true },
-    { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
-    { "dumpwallet",             &dumpwallet,             true,      false,      true },
-    { "encryptwallet",          &encryptwallet,          true,      false,      true },
-    { "getaccountaddress",      &getaccountaddress,      true,      false,      true },
-    { "getaccount",             &getaccount,             true,      false,      true },
-    { "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false,      true },
-    { "getbalance",             &getbalance,             false,     false,      true },
-    { "getnewaddress",          &getnewaddress,          true,      false,      true },
-    { "getrawchangeaddress",    &getrawchangeaddress,    true,      false,      true },
-    { "getreceivedbyaccount",   &getreceivedbyaccount,   false,     false,      true },
-    { "getreceivedbyaddress",   &getreceivedbyaddress,   false,     false,      true },
-    { "gettransaction",         &gettransaction,         false,     false,      true },
-    { "getunconfirmedbalance",  &getunconfirmedbalance,  false,     false,      true },
-    { "getwalletinfo",          &getwalletinfo,          false,     false,      true },
-    { "importprivkey",          &importprivkey,          true,      false,      true },
-    { "importwallet",           &importwallet,           true,      false,      true },
-    { "importaddress",          &importaddress,          true,      false,      true },
-    { "keypoolrefill",          &keypoolrefill,          true,      false,      true },
-    { "listaccounts",           &listaccounts,           false,     false,      true },
-    { "listaddressgroupings",   &listaddressgroupings,   false,     false,      true },
-    { "listlockunspent",        &listlockunspent,        false,     false,      true },
-    { "listreceivedbyaccount",  &listreceivedbyaccount,  false,     false,      true },
-    { "listreceivedbyaddress",  &listreceivedbyaddress,  false,     false,      true },
-    { "listsinceblock",         &listsinceblock,         false,     false,      true },
-    { "listtransactions",       &listtransactions,       false,     false,      true },
-    { "listunspent",            &listunspent,            false,     false,      true },
-    { "lockunspent",            &lockunspent,            true,      false,      true },
-    { "move",                   &movecmd,                false,     false,      true },
-    { "sendfrom",               &sendfrom,               false,     false,      true },
-    { "sendmany",               &sendmany,               false,     false,      true },
-    { "sendtoaddress",          &sendtoaddress,          false,     false,      true },
-    { "setaccount",             &setaccount,             true,      false,      true },
-    { "settxfee",               &settxfee,               true,      false,      true },
-    { "signmessage",            &signmessage,            true,      false,      true },
-    { "walletlock",             &walletlock,             true,      false,      true },
-    { "walletpassphrasechange", &walletpassphrasechange, true,      false,      true },
-    { "walletpassphrase",       &walletpassphrase,       true,      false,      true },
-
-    /* Wallet-enabled mining */
-    { "getgenerate",            &getgenerate,            true,      false,      false },
-    { "gethashespersec",        &gethashespersec,        true,      false,      false },
-    { "setgenerate",            &setgenerate,            true,      true,       false },
+    { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true,      false,      true },
+    { "wallet",             "backupwallet",           &backupwallet,           true,      false,      true },
+    { "wallet",             "dumpprivkey",            &dumpprivkey,            true,      false,      true },
+    { "wallet",             "dumpwallet",             &dumpwallet,             true,      false,      true },
+    { "wallet",             "encryptwallet",          &encryptwallet,          true,      false,      true },
+    { "wallet",             "getaccountaddress",      &getaccountaddress,      true,      false,      true },
+    { "wallet",             "getaccount",             &getaccount,             true,      false,      true },
+    { "wallet",             "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false,      true },
+    { "wallet",             "getbalance",             &getbalance,             false,     false,      true },
+    { "wallet",             "getnewaddress",          &getnewaddress,          true,      false,      true },
+    { "wallet",             "getrawchangeaddress",    &getrawchangeaddress,    true,      false,      true },
+    { "wallet",             "getreceivedbyaccount",   &getreceivedbyaccount,   false,     false,      true },
+    { "wallet",             "getreceivedbyaddress",   &getreceivedbyaddress,   false,     false,      true },
+    { "wallet",             "gettransaction",         &gettransaction,         false,     false,      true },
+    { "wallet",             "getunconfirmedbalance",  &getunconfirmedbalance,  false,     false,      true },
+    { "wallet",             "getwalletinfo",          &getwalletinfo,          false,     false,      true },
+    { "wallet",             "importprivkey",          &importprivkey,          true,      false,      true },
+    { "wallet",             "importwallet",           &importwallet,           true,      false,      true },
+    { "wallet",             "importaddress",          &importaddress,          true,      false,      true },
+    { "wallet",             "keypoolrefill",          &keypoolrefill,          true,      false,      true },
+    { "wallet",             "listaccounts",           &listaccounts,           false,     false,      true },
+    { "wallet",             "listaddressgroupings",   &listaddressgroupings,   false,     false,      true },
+    { "wallet",             "listlockunspent",        &listlockunspent,        false,     false,      true },
+    { "wallet",             "listreceivedbyaccount",  &listreceivedbyaccount,  false,     false,      true },
+    { "wallet",             "listreceivedbyaddress",  &listreceivedbyaddress,  false,     false,      true },
+    { "wallet",             "listsinceblock",         &listsinceblock,         false,     false,      true },
+    { "wallet",             "listtransactions",       &listtransactions,       false,     false,      true },
+    { "wallet",             "listunspent",            &listunspent,            false,     false,      true },
+    { "wallet",             "lockunspent",            &lockunspent,            true,      false,      true },
+    { "wallet",             "move",                   &movecmd,                false,     false,      true },
+    { "wallet",             "sendfrom",               &sendfrom,               false,     false,      true },
+    { "wallet",             "sendmany",               &sendmany,               false,     false,      true },
+    { "wallet",             "sendtoaddress",          &sendtoaddress,          false,     false,      true },
+    { "wallet",             "setaccount",             &setaccount,             true,      false,      true },
+    { "wallet",             "settxfee",               &settxfee,               true,      false,      true },
+    { "wallet",             "signmessage",            &signmessage,            true,      false,      true },
+    { "wallet",             "walletlock",             &walletlock,             true,      false,      true },
+    { "wallet",             "walletpassphrasechange", &walletpassphrasechange, true,      false,      true },
+    { "wallet",             "walletpassphrase",       &walletpassphrase,       true,      false,      true },
 #endif // ENABLE_WALLET
 };
 
