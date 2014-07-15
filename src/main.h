@@ -132,8 +132,6 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
 
 
 
-
-
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
 /** Position on disk for a particular transaction. */
@@ -707,6 +705,33 @@ protected:
     const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
 };
 
+/** Closure representing one script verification
+ *  Note that this stores references to the spending transaction */
+class CScriptCheck
+{
+private:
+    CScript scriptPubKey;
+    const CTransaction *ptxTo;
+    unsigned int nIn;
+    unsigned int nFlags;
+    int nHashType;
+
+public:
+    CScriptCheck() {}
+    CScriptCheck(const CTransaction& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
+        scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
+        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), nHashType(nHashTypeIn) { }
+
+    bool operator()() const;
+
+    void swap(CScriptCheck &check) {
+        scriptPubKey.swap(check.scriptPubKey);
+        std::swap(ptxTo, check.ptxTo);
+        std::swap(nIn, check.nIn);
+        std::swap(nFlags, check.nFlags);
+        std::swap(nHashType, check.nHashType);
+    }
+};
 
 
 
