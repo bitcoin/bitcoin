@@ -127,12 +127,14 @@ void Shutdown()
     StopNode();
     UnregisterNodeSignals(GetNodeSignals());
 
-    boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
-    CAutoFile est_fileout = CAutoFile(fopen(est_path.string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
-    if (est_fileout)
-        mempool.WriteFeeEstimates(est_fileout);
-    else
-        LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
+    {
+        boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
+        CAutoFile est_fileout(fopen(est_path.string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
+        if (est_fileout)
+            mempool.WriteFeeEstimates(est_fileout);
+        else
+            LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
+    }
 
     {
         LOCK(cs_main);
