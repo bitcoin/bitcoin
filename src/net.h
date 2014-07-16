@@ -382,6 +382,7 @@ public:
     mruset<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
+    std::set<uint256> setAskFor;
     std::multimap<int64_t, CInv> mapAskFor;
 
     // Ping time measurement:

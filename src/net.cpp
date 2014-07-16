@@ -2410,6 +2410,10 @@ void CNode::AskFor(const CInv& inv)
 {
     if (mapAskFor.size() > MAPASKFOR_MAX_SZ)
         return;
+    // a peer may not occupy multiple positions in an inv's request queue
+    if (!setAskFor.insert(inv.hash).second)
+        return;
+
     // We're using mapAskFor as a priority queue,
     // the key is the earliest time the request can be sent
     int64_t nRequestTime;
