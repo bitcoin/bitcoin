@@ -29,23 +29,7 @@ double GetDifficulty(const CBlockIndex* blockindex)
         else
             blockindex = chainActive.Tip();
     }
-    int nShift = (blockindex->proof.nBits >> 24) & 0xff;
-
-    double dDiff =
-        (double)0x0000ffff / (double)(blockindex->proof.nBits & 0x00ffffff);
-
-    while (nShift < 29)
-    {
-        dDiff *= 256.0;
-        nShift++;
-    }
-    while (nShift > 29)
-    {
-        dDiff /= 256.0;
-        nShift--;
-    }
-
-    return dDiff;
+    return blockindex->proof.GetChallengeDouble();
 }
 
 
@@ -67,8 +51,8 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
         txs.push_back(tx.GetHash().GetHex());
     result.push_back(Pair("tx", txs));
     result.push_back(Pair("time", block.proof.GetBlockTime()));
-    result.push_back(Pair("nonce", (uint64_t)block.proof.nNonce));
-    result.push_back(Pair("bits", strprintf("%08x", block.proof.nBits)));
+    result.push_back(Pair("nonce", block.proof.GetSolutionInt64()));
+    result.push_back(Pair("bits", block.proof.GetChallenge()));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
 

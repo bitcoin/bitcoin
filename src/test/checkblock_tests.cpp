@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(May15)
         CValidationState state;
 
         // After May 15'th, big blocks are OK:
-        forkingBlock.proof.nTime = tMay15; // Invalidates PoW
+        forkingBlock.proof.SetBlockTime(tMay15); // Invalidates PoW
         BOOST_CHECK(CheckBlock(forkingBlock, state, false, false));
     }
 

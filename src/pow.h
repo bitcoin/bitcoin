@@ -7,8 +7,10 @@
 #define BITCOIN_POW_H
 
 #include "serialize.h"
+#include "util.h"
 
 #include <stdint.h>
+#include <string>
 
 class CBlockIndex;
 class CBlockHeader;
@@ -16,12 +18,12 @@ class uint256;
 
 class CProof
 {
-    unsigned int GetNextChallenge(const CBlockIndex* pindexLast) const;
-public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
 
+    unsigned int GetNextChallenge(const CBlockIndex* pindexLast) const;
+public:
     CProof();
     bool CheckSolution(const uint256 hash) const;
     void ResetSolution();
@@ -32,8 +34,12 @@ public:
     bool GenerateSolution(CBlockHeader* pblock);
     uint256 GetProofIncrement() const;
     int64_t GetBlockTime() const;
+    void SetBlockTime(int64_t nTime);
     bool IsNull() const;
     void SetNull();
+    std::string GetChallenge() const;
+    std::string GetSolution() const;
+    std::string ToString() const;
 
     IMPLEMENT_SERIALIZE;
 
@@ -45,6 +51,11 @@ public:
     }
 
     CProof(unsigned int nTime, unsigned int nBits, unsigned int nNonce);
+    unsigned int GetChallengeUint() const;
+    double GetChallengeDouble() const;
+    std::string GetChallengeHex() const;
+    uint64_t GetSolutionInt64() const;
+    void SetSolutionUint(unsigned int solution);
 };
 
 #endif // BITCOIN_POW_H

@@ -43,6 +43,27 @@ int64_t CProof::GetBlockTime() const
     return (int64_t)nTime;
 }
 
+void CProof::SetBlockTime(int64_t nTime)
+{
+    this->nTime = nTime;
+}
+
+std::string CProof::ToString() const
+{
+    return strprintf("CProof(nTime=%u, nBits=%08x, nNonce=%u)",
+                     nTime, nBits, nNonce);
+}
+
+std::string CProof::GetChallenge() const
+{
+    return strprintf("%08x", nBits);
+}
+
+std::string CProof::GetSolution() const
+{
+    return strprintf("%08x", nNonce);
+}
+
 unsigned int CProof::GetNextChallenge(const CBlockIndex* pindexLast) const
 {
     unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
@@ -59,7 +80,7 @@ unsigned int CProof::GetNextChallenge(const CBlockIndex* pindexLast) const
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (GetBlockTime() > pindexLast->GetBlockTime() + Params().TargetSpacing()*2)
+            if (GetBlockTime() > pindexLast->proof.GetBlockTime() + Params().TargetSpacing()*2)
                 return nProofOfWorkLimit;
             else
             {
@@ -273,4 +294,40 @@ bool CProof::GenerateSolution(CBlockHeader* pblock)
         }
     }
     return toReturn;
+}
+
+unsigned int CProof::GetChallengeUint() const
+{
+    return nBits;
+}
+
+std::string CProof::GetChallengeHex() const
+{
+    return uint256().SetCompact(nBits).GetHex();
+}
+
+uint64_t CProof::GetSolutionInt64() const
+{
+    return (uint64_t)nNonce;
+}
+
+double CProof::GetChallengeDouble() const
+{
+    double dDiff = (double)0x0000ffff / (double)(nBits & 0x00ffffff);
+    int nShift = (nBits >> 24) & 0xff;
+
+    while (nShift < 29) {
+        dDiff *= 256.0;
+        nShift++;
+    }
+    while (nShift > 29) {
+        dDiff /= 256.0;
+        nShift--;
+    }
+    return dDiff;
+}
+
+void CProof::SetSolutionUint(unsigned int solution)
+{
+    nNonce = solution;
 }
