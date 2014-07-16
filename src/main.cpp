@@ -3898,7 +3898,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         {
             mempool.check(pcoinsTip);
             RelayTransaction(tx);
-            mapAlreadyAskedFor.erase(inv);
             vWorkQueue.push_back(inv.hash);
             vEraseQueue.push_back(inv.hash);
 
@@ -3928,7 +3927,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     {
                         LogPrint("mempool", "   accepted orphan tx %s\n", orphanHash.ToString());
                         RelayTransaction(orphanTx);
-                        mapAlreadyAskedFor.erase(CInv(MSG_TX, orphanHash));
                         vWorkQueue.push_back(orphanHash);
                         vEraseQueue.push_back(orphanHash);
                     }
@@ -4534,7 +4532,6 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // received a (requested) block in one minute, and that all blocks are
         // in flight for over two minutes, since we first had a chance to
         // process an incoming block.
-        int64_t nNow = GetTimeMicros();
         if (!pto->fDisconnect && state.nBlocksInFlight &&
             state.nLastBlockReceive < state.nLastBlockProcess - BLOCK_DOWNLOAD_TIMEOUT*1000000 &&
             state.vBlocksInFlight.front().nTime < state.nLastBlockProcess - 2*BLOCK_DOWNLOAD_TIMEOUT*1000000) {
@@ -4564,22 +4561,24 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         //
         // Message: getdata (non-blocks)
         //
-        while (!pto->fDisconnect && !pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
+        BOOST_FOREACH(const CInv& inv, pto->vAskFor)
         {
-            const CInv& inv = (*pto->mapAskFor.begin()).second;
-            if (!AlreadyHave(inv))
+            if (pto->fDisconnect)
+                break;
+
+            if (AlreadyHave(inv))
+                continue;
+
+            if (fDebug)
+                LogPrint("net", "Requesting %s peer=%d\n", inv.ToString(), pto->id);
+            vGetData.push_back(inv);
+            if (vGetData.size() >= 1000)
             {
-                if (fDebug)
-                    LogPrint("net", "Requesting %s peer=%d\n", inv.ToString(), pto->id);
-                vGetData.push_back(inv);
-                if (vGetData.size() >= 1000)
-                {
-                    pto->PushMessage("getdata", vGetData);
-                    vGetData.clear();
-                }
+                pto->PushMessage("getdata", vGetData);
+                vGetData.clear();
             }
-            pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
+        pto->vAskFor.clear();
         if (!vGetData.empty())
             pto->PushMessage("getdata", vGetData);
 
