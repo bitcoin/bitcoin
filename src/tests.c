@@ -244,6 +244,74 @@ void random_fe_non_square(secp256k1_fe_t *ns) {
     }
 }
 
+int check_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+    secp256k1_fe_t an = *a; secp256k1_fe_normalize(&an);
+    secp256k1_fe_t bn = *b; secp256k1_fe_normalize(&bn);
+    return secp256k1_fe_equal(&an, &bn);
+}
+
+int check_fe_inverse(const secp256k1_fe_t *a, const secp256k1_fe_t *ai) {
+    secp256k1_fe_t x; secp256k1_fe_mul(&x, a, ai);
+    secp256k1_fe_t one; secp256k1_fe_set_int(&one, 1);
+    return check_fe_equal(&x, &one);
+}
+
+void run_field_inv() {
+    secp256k1_fe_t x, xi, xii;
+    for (int i=0; i<10*count; i++) {
+        random_fe_non_zero(&x);
+        secp256k1_fe_inv(&xi, &x);
+        CHECK(check_fe_inverse(&x, &xi));
+        secp256k1_fe_inv(&xii, &xi);
+        CHECK(check_fe_equal(&x, &xii));
+    }
+}
+
+void run_field_inv_var() {
+    secp256k1_fe_t x, xi, xii;
+    for (int i=0; i<10*count; i++) {
+        random_fe_non_zero(&x);
+        secp256k1_fe_inv_var(&xi, &x);
+        CHECK(check_fe_inverse(&x, &xi));
+        secp256k1_fe_inv_var(&xii, &xi);
+        CHECK(check_fe_equal(&x, &xii));
+    }
+}
+
+void run_field_inv_all() {
+    secp256k1_fe_t x[16], xi[16], xii[16];
+    // Check it's safe to call for 0 elements
+    secp256k1_fe_inv_all(0, xi, x);
+    for (int i=0; i<count; i++) {
+        size_t len = (secp256k1_rand32() & 15) + 1;
+        for (int j=0; j<len; j++)
+            random_fe_non_zero(&x[j]);
+        secp256k1_fe_inv_all(len, xi, x);
+        for (int j=0; j<len; j++)
+            CHECK(check_fe_inverse(&x[j], &xi[j]));
+        secp256k1_fe_inv_all(len, xii, xi);
+        for (int j=0; j<len; j++)
+            CHECK(check_fe_equal(&x[j], &xii[j]));
+    }
+}
+
+void run_field_inv_all_var() {
+    secp256k1_fe_t x[16], xi[16], xii[16];
+    // Check it's safe to call for 0 elements
+    secp256k1_fe_inv_all_var(0, xi, x);
+    for (int i=0; i<count; i++) {
+        size_t len = (secp256k1_rand32() & 15) + 1;
+        for (int j=0; j<len; j++)
+            random_fe_non_zero(&x[j]);
+        secp256k1_fe_inv_all_var(len, xi, x);
+        for (int j=0; j<len; j++)
+            CHECK(check_fe_inverse(&x[j], &xi[j]));
+        secp256k1_fe_inv_all_var(len, xii, xi);
+        for (int j=0; j<len; j++)
+            CHECK(check_fe_equal(&x[j], &xii[j]));
+    }
+}
+
 void test_sqrt(const secp256k1_fe_t *a, const secp256k1_fe_t *k) {
     secp256k1_fe_t r1, r2;
     int v = secp256k1_fe_sqrt(&r1, a);
@@ -537,6 +605,10 @@ int main(int argc, char **argv) {
     run_num_smalltests();
 
     // field tests
+    run_field_inv();
+    run_field_inv_var();
+    run_field_inv_all();
+    run_field_inv_all_var();
     run_sqrt();
 
     // ecmult tests

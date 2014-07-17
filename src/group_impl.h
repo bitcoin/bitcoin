@@ -66,6 +66,31 @@ void static secp256k1_ge_set_gej(secp256k1_ge_t *r, secp256k1_gej_t *a) {
     r->y = a->y;
 }
 
+void static secp256k1_ge_set_all_gej(size_t len, secp256k1_ge_t r[len], const secp256k1_gej_t a[len]) {
+    int count = 0;
+    secp256k1_fe_t az[len];
+    for (int i=0; i<len; i++) {
+        if (!a[i].infinity) {
+            az[count++] = a[i].z;
+        }
+    }
+
+    secp256k1_fe_t azi[count];
+    secp256k1_fe_inv_all_var(count, azi, az);
+
+    count = 0;
+    for (int i=0; i<len; i++) {
+        r[i].infinity = a[i].infinity;
+        if (!a[i].infinity) {
+            secp256k1_fe_t *zi = &azi[count++];
+            secp256k1_fe_t zi2; secp256k1_fe_sqr(&zi2, zi);
+            secp256k1_fe_t zi3; secp256k1_fe_mul(&zi3, &zi2, zi);
+            secp256k1_fe_mul(&r[i].x, &a[i].x, &zi2);
+            secp256k1_fe_mul(&r[i].y, &a[i].y, &zi3);
+        }
+    }
+}
+
 void static secp256k1_gej_set_infinity(secp256k1_gej_t *r) {
     r->infinity = 1;
 }
