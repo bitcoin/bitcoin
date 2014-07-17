@@ -2024,6 +2024,13 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     CBlock block;
     if (!ReadBlockFromDisk(block, pindexNew))
         return state.Abort(_("Failed to read block"));
+
+    int nKnown = 0;
+    BOOST_FOREACH(const CTransaction &tx, block.vtx)
+        nKnown += mempool.exists(tx.GetHash());
+    int nNew = block.vtx.size() - nKnown;
+    LogPrintf("new block %s: %u new, %u known\n", pindexNew->GetBlockHash().ToString(), nNew, nKnown);
+
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
@@ -2037,8 +2044,9 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
         mapBlockSource.erase(inv.hash);
         assert(view.Flush());
     }
-    if (fBenchmark)
-        LogPrintf("- Connect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
+
+    LogPrintf("- Connect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
+
     // Write the chain state to disk, if necessary.
     if (!WriteChainState(state))
         return false;
