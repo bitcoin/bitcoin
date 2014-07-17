@@ -126,7 +126,7 @@ namespace {
 } // anon namespace
 
 // Bloom filter to limit respend relays to one
-static const unsigned int MAX_DOUBLESPEND_BLOOM = 1000;
+static const unsigned int MAX_DOUBLESPEND_BLOOM = 100000;
 static CBloomFilter doubleSpendFilter;
 void InitRespendFilter() {
     seed_insecure_rand();
