@@ -144,9 +144,6 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
-    // Increment to cause UI refresh, similar to new block
-    int64_t nConflictsReceived;
-
     CWallet()
     {
         SetNull();
@@ -169,7 +166,6 @@ public:
         nNextResend = 0;
         nLastResend = 0;
         nTimeFirstKey = 0;
-        nConflictsReceived = 0;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -322,13 +318,6 @@ public:
     {
         return (GetDebit(tx, ISMINE_ALL) > 0);
     }
-    bool IsConflicting(const CTransaction& tx) const
-    {
-  	    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-    	    if (mapTxSpends.count(txin.prevout))
-    	        return true;
-   	    return false;
-    }
     int64_t GetDebit(const CTransaction& tx, const isminefilter& filter) const
     {
         int64_t nDebit = 0;
@@ -401,7 +390,7 @@ public:
     int GetVersion() { LOCK(cs_wallet); return nWalletVersion; }
 
     // Get wallet transactions that conflict with given transaction (spend same outputs)
-    std::set<uint256> GetConflicts(const uint256& txid, bool includeEquivalent) const;
+    std::set<uint256> GetConflicts(const uint256& txid) const;
 
     /** Address book entry changed.
      * @note called with lock cs_wallet held.
@@ -812,7 +801,7 @@ public:
 
     void RelayWalletTransaction();
 
-    std::set<uint256> GetConflicts(bool includeEquivalent=true) const;
+    std::set<uint256> GetConflicts() const;
 };
 
 
