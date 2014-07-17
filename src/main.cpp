@@ -128,7 +128,7 @@ namespace {
 
 // Forward reference functions defined here:
 static const unsigned int MAX_DOUBLESPEND_BLOOM = 1000;
-static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter);
+static void RelayDoubleSpend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter);
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -157,7 +157,7 @@ struct CMainSignals {
     // transaction was first seen in a block.
     // Note: only notifies if the previous transaction is in the memory pool; if previous transction was in a block,
     // then the double-spend simply fails when we try to lookup the inputs in the current UTXO set.
-    boost::signals2::signal<bool (const COutPoint&, const CTransaction&, bool)> DetectedDoubleSpend;
+    boost::signals2::signal<void (const COutPoint&, const CTransaction&, bool)> DetectedDoubleSpend;
 } g_signals;
 
 } // anon namespace
@@ -167,7 +167,7 @@ void RegisterInternalSignals() {
     seed_insecure_rand();
     doubleSpendFilter = CBloomFilter(MAX_DOUBLESPEND_BLOOM, 0.01, insecure_rand(), BLOOM_UPDATE_NONE);
 
-    g_signals.DetectedDoubleSpend.connect(boost::bind(RelayableRespend, _1, _2, _3, doubleSpendFilter));
+    g_signals.DetectedDoubleSpend.connect(boost::bind(RelayDoubleSpend, _1, _2, _3, doubleSpendFilter));
 }
 
 
@@ -934,7 +934,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         return false;
 
     // Check for conflicts with in-memory transactions
-    bool relayableRespend = false;
     {
     LOCK(pool.cs); // protect pool.mapNextTx
     for (unsigned int i = 0; i < tx.vin.size(); i++)
@@ -943,9 +942,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // Does tx conflict with a member of the pool, and is it not equivalent to that member?
         if (pool.mapNextTx.count(outpoint) && !tx.IsEquivalentTo(*pool.mapNextTx[outpoint].ptx))
         {
-            relayableRespend = g_signals.DetectedDoubleSpend(outpoint, tx, false);
-            if (!relayableRespend)
-                return false;
+            g_signals.DetectedDoubleSpend(outpoint, tx, false);
+            return false;
         }
     }
     }
@@ -1038,24 +1036,16 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         {
             return error("AcceptToMemoryPool: : ConnectInputs failed %s", hash.ToString());
         }
-
-        if (relayableRespend)
-        {
-            RelayTransaction(tx);
-        }
-        else
-        {
-            // Store transaction in memory
-            pool.addUnchecked(hash, entry);
-        }
+        // Store transaction in memory
+        pool.addUnchecked(hash, entry);
     }
 
     g_signals.SyncTransaction(tx, NULL);
 
-    return !relayableRespend;
+    return true;
 }
 
-static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter)
+static void RelayDoubleSpend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter)
 {
     // Relaying double-spend attempts to our peers lets them detect when
     // somebody might be trying to cheat them. However, blindly relaying
@@ -1068,7 +1058,7 @@ static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doub
     // from us they are very likely to hear about it from another peer, since
     // each peer uses a different, randomized bloom filter.
 
-    if (fInBlock || filter.contains(outPoint)) return false;
+    if (fInBlock || filter.contains(outPoint)) return;
 
     // Apply an independent rate limit to double-spend relays
     static double dRespendCount;
@@ -1079,7 +1069,7 @@ static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doub
     if (RateLimitExceeded(dRespendCount, nLastRespendTime, nRespendLimit, nSize))
     {
         LogPrint("mempool", "Double-spend relay rejected by rate limiter\n");
-        return false;
+        return;
     }
 
     LogPrint("mempool", "Rate limit dRespendCount: %g => %g\n", dRespendCount, dRespendCount+nSize);
@@ -1091,7 +1081,10 @@ static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doub
 
     filter.insert(outPoint);
 
-    return true;
+    RelayTransaction(doubleSpend);
+
+    // Share conflict with wallet
+    g_signals.SyncTransaction(doubleSpend, NULL);
 }
 
 
