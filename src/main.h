@@ -112,8 +112,8 @@ struct CNodeStateStats;
 
 struct CBlockTemplate;
 
-/** Initialize respend bloom filter **/
-void InitRespendFilter();
+/** Set up internal signal handlers **/
+void RegisterInternalSignals();
 
 /** Register a wallet to receive updates from core */
 void RegisterWallet(CWalletInterface* pwalletIn);
