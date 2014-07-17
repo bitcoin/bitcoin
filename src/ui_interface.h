@@ -21,8 +21,7 @@ enum ChangeType
 {
     CT_NEW,
     CT_UPDATED,
-    CT_DELETED,
-    CT_GOT_CONFLICT
+    CT_DELETED
 };
 
 /** Signals for UI communication. */
