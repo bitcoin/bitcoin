@@ -48,6 +48,7 @@ bool fImporting = false;
 bool fReindex = false;
 bool fBenchmark = false;
 bool fTxIndex = false;
+bool fIsBareMultisigStd = true;
 unsigned int nCoinCacheSize = 5000;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
@@ -604,9 +605,13 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
             reason = "scriptpubkey";
             return false;
         }
+
         if (whichType == TX_NULL_DATA)
             nDataOut++;
-        else if (txout.IsDust(::minRelayTxFee)) {
+        else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
+            reason = "bare-multisig";
+            return false;
+        } else if (txout.IsDust(::minRelayTxFee)) {
             reason = "dust";
             return false;
         }
