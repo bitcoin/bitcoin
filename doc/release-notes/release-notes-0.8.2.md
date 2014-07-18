@@ -24,12 +24,12 @@ your machine.
 
 Fee Policy changes
 
-The default fee for low-priority transactions is lowered from 0.0005 BTC 
+The default fee for low-priority transactions is lowered from 0.0005 CRW 
 (for each 1,000 bytes in the transaction; an average transaction is
-about 500 bytes) to 0.0001 BTC.
+about 500 bytes) to 0.0001 CRW.
 
 Payments (transaction outputs) of 0.543 times the minimum relay fee
-(0.00005430 BTC) are now considered 'non-standard', because storing them
+(0.00005430 CRW) are now considered 'non-standard', because storing them
 costs the network more than they are worth and spending them will usually
 cost their owner more in transaction fees than they are worth.
 

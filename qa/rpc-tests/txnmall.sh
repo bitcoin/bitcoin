@@ -129,7 +129,7 @@ $CLI $B2ARGS addnode 127.0.0.1:11000 onetry
 $CLI $B2ARGS setgenerate true 1
 WaitBlocks
 
-# B1 should have 49 BTC; the 2 BTC send is
+# B1 should have 49 CRW; the 2 CRW send is
 # conflicted, and should not count in
 # balances.
 CheckBalance "$B1ARGS" 49
@@ -137,7 +137,7 @@ CheckBalance "$B1ARGS" 49 "*"
 CheckBalance "$B1ARGS" 9 "foo"
 CheckBalance "$B1ARGS" 10 "bar"
 
-# B2 should have 51 BTC
+# B2 should have 51 CRW
 CheckBalance "$B2ARGS" 51
 CheckBalance "$B2ARGS" 1 "from1"
 
