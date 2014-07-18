@@ -1548,23 +1548,11 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                     {
                         CScriptCheck check(txPrev, *this, i, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, 0);
                         if (!check())
-                            return error("ConnectInputs() : %s STANDARD_NOT_MANDATORY_VERIFY_FLAGS VerifySignature failed", GetHash().ToString().substr(0,10).c_str());
+                            return error("ConnectInputs() : %s not mandatory VerifySignature failed", GetHash().ToString().substr(0,10).c_str());
                     }
 
-                    return DoS(100,error("ConnectInputs() : %s STANDARD_MANDATORY_VERIFY_FLAGS VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
+                    return DoS(100,error("ConnectInputs() : %s mandatory VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
                 }
-
-/*
-                if (!VerifySignature(txPrev, *this, i, flags, 0))
-                {
-                    if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS)
-                    {
-                        if (VerifySignature(txPrev, *this, i, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, 0))
-                            return error("ConnectInputs() : %s STANDARD_NOT_MANDATORY_VERIFY_FLAGS VerifySignature failed", GetHash().ToString().substr(0,10).c_str());
-                    }
-                    return DoS(100,error("ConnectInputs() : %s STANDARD_MANDATORY_VERIFY_FLAGS VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
-                }
-*/
             }
 
             // Mark outpoints as spent
