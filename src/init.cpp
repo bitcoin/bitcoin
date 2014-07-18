@@ -86,10 +86,6 @@ void Shutdown(void* parg)
         nTransactionsUpdated++;
 //        CTxDB().Close();
         bitdb.Flush(false);
-        {
-            LOCK(cs_main);
-            ThreadScriptCheckQuit();
-        }
         StopNode();
         bitdb.Flush(true);
         boost::filesystem::remove(GetPidFile());
@@ -880,7 +876,7 @@ bool AppInit2()
             if (file)
                 LoadExternalBlockFile(file);
         }
-        exit(0);
+        StartShutdown();
     }
 
     filesystem::path pathBootstrap = GetDataDir() / "bootstrap.dat";
