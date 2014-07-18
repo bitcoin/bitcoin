@@ -145,6 +145,7 @@ BITCOIN_MM = \
 
 QT_MOC = \
   qt/bitcoin.moc \
+  qt/bitcoinamountfield.moc \
   qt/intro.moc \
   qt/overviewpage.moc \
   qt/rpcconsole.moc

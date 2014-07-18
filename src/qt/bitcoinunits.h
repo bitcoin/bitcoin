@@ -120,6 +120,9 @@ public:
         return text;
     }
 
+    //! Return maximum number of base units (Satoshis)
+    static qint64 maxMoney();
+
 private:
     QList<BitcoinUnits::Unit> unitlist;
 };
