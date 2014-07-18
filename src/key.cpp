@@ -289,11 +289,12 @@ bool CKey::Sign(uint256 hash, std::vector<unsigned char>& vchSig)
     ECDSA_SIG *sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
     if (sig==NULL)
         return false;
-    // Force even S value in order to prevent signature modification issues.
-    if (BN_is_odd(sig->s)) {
-        const EC_GROUP *group = EC_KEY_get0_group(pkey);
-        CBigNum order;
-        EC_GROUP_get_order(group, &order, NULL);
+    const EC_GROUP *group = EC_KEY_get0_group(pkey);
+    CBigNum order, halforder;
+    EC_GROUP_get_order(group, &order, NULL);
+    BN_rshift1(&halforder, &order);
+    // enforce low S values, by negating the value (modulo the order) if above order/2.
+    if (BN_cmp(sig->s, &halforder)) {
         BN_sub(sig->s, &order, sig->s);
     }
     unsigned int nSize = ECDSA_size(pkey);
@@ -320,11 +321,12 @@ bool CKey::SignCompact(uint256 hash, std::vector<unsigned char>& vchSig)
     ECDSA_SIG *sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
     if (sig==NULL)
         return false;
-    // Force even S value in order to prevent signature modification issues.
-    if (BN_is_odd(sig->s)) {
-        const EC_GROUP *group = EC_KEY_get0_group(pkey);
-        CBigNum order;
-        EC_GROUP_get_order(group, &order, NULL);
+    const EC_GROUP *group = EC_KEY_get0_group(pkey);
+    CBigNum order, halforder;
+    EC_GROUP_get_order(group, &order, NULL);
+    BN_rshift1(&halforder, &order);
+    // enforce low S values, by negating the value (modulo the order) if above order/2.
+    if (BN_cmp(sig->s, &halforder)) {
         BN_sub(sig->s, &order, sig->s);
     }
     vchSig.clear();
