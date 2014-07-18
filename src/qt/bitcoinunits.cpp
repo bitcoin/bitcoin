@@ -4,6 +4,8 @@
 
 #include "bitcoinunits.h"
 
+#include "core.h"
+
 #include <QStringList>
 
 BitcoinUnits::BitcoinUnits(QObject *parent):
@@ -249,4 +251,9 @@ QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
         }
     }
     return QVariant();
+}
+
+qint64 BitcoinUnits::maxMoney()
+{
+    return MAX_MONEY;
 }
