@@ -40,24 +40,29 @@ enum
     SCRIPT_VERIFY_NULLDUMMY = (1U << 4), // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
 };
 
+// Strict verification:
+//
+// * force DER encoding;
+// * force low S;
+// * ensure that CHECKMULTISIG dummy argument is null.
+static const unsigned int STRICT_FORMAT_FLAGS = SCRIPT_VERIFY_STRICTENC | SCRIPT_VERIFY_LOW_S | SCRIPT_VERIFY_NULLDUMMY;
+
 // Mandatory script verification flags that all new blocks must comply with for
 // them to be valid. (but old blocks may not comply with) Currently just P2SH,
 // but in the future other flags may be added, such as a soft-fork to enforce
 // strict DER encoding.
 //
-// Failing one of these tests may trigger a DoS ban - see CheckInputs() for
+// Failing one of these tests may trigger a DoS ban - see ConnectInputs() for
 // details.
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 
 // Standard script verification flags that standard transactions will comply
 // with. However scripts violating these flags may still be present in valid
 // blocks and we must accept those blocks.
-static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS |
-                                                         SCRIPT_VERIFY_STRICTENC |
-                                                         SCRIPT_VERIFY_NULLDUMMY;
+static const unsigned int STRICT_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS | STRICT_FORMAT_FLAGS;
 
-// For convenience, standard but not mandatory verify flags.
-static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
+// Soft verifications, no extended signature format checkings
+static const unsigned int SOFT_FLAGS = STRICT_FLAGS & ~STRICT_FORMAT_FLAGS;
 
 enum txnouttype
 {

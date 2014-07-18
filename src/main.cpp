@@ -726,7 +726,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!tx.ConnectInputs(txdb, mapInputs, mapUnused, CDiskTxPos(1,1,1), pindexBest, false, false, true, STANDARD_SCRIPT_VERIFY_FLAGS))
+        if (!tx.ConnectInputs(txdb, mapInputs, mapUnused, CDiskTxPos(1,1,1), pindexBest, false, false, true, VALIDATION_SWITCH_TIME < tx.nTime ? STRICT_FLAGS : SOFT_FLAGS))
         {
             return error("CTxMemPool::accept() : ConnectInputs failed %s", hash.ToString().substr(0,10).c_str());
         }
@@ -1544,14 +1544,14 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                 }
                 else if (!check())
                 {
-                    if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS)
+                    if (flags & STRICT_FLAGS)
                     {
-                        CScriptCheck check(txPrev, *this, i, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, 0);
-                        if (!check())
-                            return error("ConnectInputs() : %s not mandatory VerifySignature failed", GetHash().ToString().substr(0,10).c_str());
+                        // Don't trigger DoS code in case of STRICT_FLAGS caused failure.
+                        CScriptCheck check(txPrev, *this, i, flags & ~STRICT_FLAGS, 0);
+                        if (check())
+                            return error("ConnectInputs() : %s strict VerifySignature failed", GetHash().ToString().substr(0,10).c_str());
                     }
-
-                    return DoS(100,error("ConnectInputs() : %s mandatory VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
+                    return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
                 }
             }
 
