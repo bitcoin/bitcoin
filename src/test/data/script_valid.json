@@ -10,6 +10,7 @@
 ["  1  2  ", "2 EQUALVERIFY 1 EQUAL"],
 
 ["1", ""],
+["0x09 0x00000000 0x00000000 0x10", "", "equals zero when cast to Int64"],
 
 ["0x01 0x0b", "11 EQUAL", "push 1 byte"],
 ["0x02 0x417a", "'Az' EQUAL"],
