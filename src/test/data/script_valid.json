@@ -126,6 +126,7 @@
 ["-9223372036854775807", "SIZE 8 EQUAL"],
 ["'abcdefghijklmnopqrstuvwxyz'", "SIZE 26 EQUAL"],
 
+["42", "SIZE 1 EQUALVERIFY 42 EQUAL", "SIZE does not consume argument"],
 
 ["2 -2 ADD", "0 EQUAL"],
 ["2147483647 -2147483647 ADD", "0 EQUAL"],
