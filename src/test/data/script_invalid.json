@@ -272,6 +272,9 @@
 ["2147483647", "1ADD 1SUB 1", "We cannot do math on 5-byte integers, even if the result is 4-bytes"],
 ["2147483648", "1SUB 1", "We cannot do math on 5-byte integers, even if the result is 4-bytes"],
 
+["2147483648 1", "BOOLOR 1", "We cannot do BOOLOR on 5-byte integers (but we can still do IF etc)"],
+["2147483648 1", "BOOLAND 1", "We cannot do BOOLAND on 5-byte integers"],
+
 ["1", "1 ENDIF", "ENDIF without IF"],
 ["1", "IF 1", "IF without ENDIF"],
 ["1 IF 1", "ENDIF", "IFs don't carry over"],
