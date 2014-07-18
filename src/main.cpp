@@ -144,8 +144,9 @@ void InitRespendFilter() {
 namespace {
 
 struct CMainSignals {
-    // Notifies listeners of updated transaction data (transaction, and optionally the block it is found in.
-    boost::signals2::signal<void (const CTransaction &, const CBlock *)> SyncTransaction;
+    // Notifies listeners of updated transaction data (transaction, optionally the block it is found in,
+	// and whether this is a known respend)
+    boost::signals2::signal<void (const CTransaction &, const CBlock *, bool)> SyncTransaction;
     // Notifies listeners of an erased transaction (currently disabled, requires transaction replacement).
     boost::signals2::signal<void (const uint256 &)> EraseTransaction;
     // Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible).
@@ -162,7 +163,7 @@ struct CMainSignals {
 
 
 void RegisterWallet(CWalletInterface* pwalletIn) {
-    g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2));
+    g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
     g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
     g_signals.UpdatedTransaction.connect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.SetBestChain.connect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
@@ -176,7 +177,7 @@ void UnregisterWallet(CWalletInterface* pwalletIn) {
     g_signals.SetBestChain.disconnect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
     g_signals.UpdatedTransaction.disconnect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.EraseTransaction.disconnect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
-    g_signals.SyncTransaction.disconnect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2));
+    g_signals.SyncTransaction.disconnect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
 }
 
 void UnregisterAllWallets() {
@@ -188,8 +189,8 @@ void UnregisterAllWallets() {
     g_signals.SyncTransaction.disconnect_all_slots();
 }
 
-void SyncWithWallets(const CTransaction &tx, const CBlock *pblock) {
-    g_signals.SyncTransaction(tx, pblock);
+void SyncWithWallets(const CTransaction &tx, const CBlock *pblock, bool fRespend) {
+    g_signals.SyncTransaction(tx, pblock, fRespend);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -939,7 +940,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         return false;
 
     // Check for conflicts with in-memory transactions
-    bool respend = false;
+    bool fRespend = false;
     COutPoint relayForOutpoint;
     {
     LOCK(pool.cs); // protect pool.mapNextTx
@@ -949,7 +950,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // A respend is a tx that conflicts with a member of the pool
         if (pool.mapNextTx.count(outpoint))
         {
-            respend = true;
+            fRespend = true;
             // Relay only one tx per respent outpoint, but not if tx is equivalent to pool member
             if (!doubleSpendFilter.contains(outpoint) && !tx.IsEquivalentTo(*pool.mapNextTx[outpoint].ptx))
             {
@@ -958,7 +959,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             }
         }
     }
-    if (respend && (relayForOutpoint.IsNull() || RespendRelayExceeded(tx)))
+    if (fRespend && (relayForOutpoint.IsNull() || RespendRelayExceeded(tx)))
         return false;
     }
 
@@ -1051,7 +1052,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return error("AcceptToMemoryPool: : ConnectInputs failed %s", hash.ToString());
         }
 
-        if (respend)
+        if (fRespend)
         {
             // Clear the filter on average every MAX_DOUBLE_SPEND_BLOOM insertions
             if (insecure_rand()%MAX_DOUBLESPEND_BLOOM == 0)
@@ -1066,9 +1067,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         }
     }
 
-    g_signals.SyncTransaction(tx, NULL);
+    g_signals.SyncTransaction(tx, NULL, fRespend);
 
-    return !respend;
+    return !fRespend;
 }
 
 
@@ -1896,7 +1897,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 
     // Watch for transactions paying to me
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        g_signals.SyncTransaction(tx, &block);
+        g_signals.SyncTransaction(tx, &block, false);
 
     // Watch for changes to the previous coinbase transaction.
     static uint256 hashPrevBestCoinBase;
@@ -2002,7 +2003,7 @@ bool static DisconnectTip(CValidationState &state) {
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        SyncWithWallets(tx, NULL);
+        SyncWithWallets(tx, NULL, false);
     }
     return true;
 }
@@ -2042,11 +2043,11 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     // Tell wallet about transactions that went from mempool
     // to conflicted:
     BOOST_FOREACH(const CTransaction &tx, txConflicted) {
-        SyncWithWallets(tx, NULL);
+        SyncWithWallets(tx, NULL, false);
     }
     // ... and about transactions that got confirmed:
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        SyncWithWallets(tx, &block);
+        SyncWithWallets(tx, &block, false);
     }
     return true;
 }
