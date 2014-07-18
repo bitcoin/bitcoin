@@ -66,6 +66,7 @@
 ["0", "IF RETURN ENDIF 1", "RETURN only works if executed"],
 
 ["1 1", "VERIFY"],
+["1 0x05 0x01 0x00 0x00 0x00 0x00", "VERIFY", "values >4 bytes can be cast to boolean"],
 
 ["10 0 11 TOALTSTACK DROP FROMALTSTACK", "ADD 21 EQUAL"],
 ["'gavin_was_here' TOALTSTACK 11 FROMALTSTACK", "'gavin_was_here' EQUALVERIFY 11 EQUAL"],
