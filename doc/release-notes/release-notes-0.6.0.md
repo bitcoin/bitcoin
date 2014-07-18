@@ -44,7 +44,7 @@ and receiving addresses.
 New context menu on addresses to copy/edit/delete them.
 
 New Sign Message dialog that allows you to prove that you
-own a bitcoin address by creating a digital
+own a Crowncoin address by creating a digital
 signature.
 
 New wallets created with this version will

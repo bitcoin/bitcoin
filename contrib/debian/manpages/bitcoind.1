@@ -91,7 +91,7 @@ Returns the account associated with the given address.
 Sets the ['account'] associated with the given address. ['account'] may be omitted to remove an address from ['account'].
 .TP
 \fBgetaccountaddress 'account'\fR
-Returns a new bitcoin address for 'account'.
+Returns a new Crowncoin address for 'account'.
 .TP
 \fBgetaddressesbyaccount 'account'\fR
 Returns the list of addresses associated with the given 'account'.
@@ -124,7 +124,7 @@ Returns a recent hashes per second performance measurement while generating.
 Returns an object containing server information.
 .TP
 \fBgetnewaddress 'account'\fR
-Returns a new bitcoin address for receiving payments. If 'account' is specified (recommended), it is added to the address book so payments received with the address will be credited to 'account'.
+Returns a new Crowncoin address for receiving payments. If 'account' is specified (recommended), it is added to the address book so payments received with the address will be credited to 'account'.
 .TP
 \fBgetreceivedbyaccount 'account' ['minconf=1']\fR
 Returns the total amount received by addresses associated with 'account' in transactions with at least ['minconf'] confirmations.
@@ -192,7 +192,7 @@ Sends amount from the server's available balance to 'bitcoinaddress'. amount is 
 Stops the bitcoin server.
 .TP    
 \fBvalidateaddress 'bitcoinaddress'\fR
-Checks that 'bitcoinaddress' looks like a proper bitcoin address. Returns an object containing:
+Checks that 'bitcoinaddress' looks like a proper Crowncoin address. Returns an object containing:
 
     "isvalid" : true or false.
     "ismine"  : true if the address is in the server's wallet.

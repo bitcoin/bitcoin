@@ -103,11 +103,11 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
         <translation>Adresa pe care primiti</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Crowncoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Acestea sunt adresele dumneavoastra Bitcoin care pot fi folosite la trimiterea platilor. Verificati totdeauna cantitatea si adresa de primire inainte de a trimite monezi.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your Crowncoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>Acestea sunt adresele dumneavoastra Bitcoin folosite pentru a primi plati. Este recomandat sa folositi cate o adresa noua de primire pentru fiecare tranzactie in parte.</translation>
     </message>
     <message>
@@ -344,7 +344,7 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
         <translation>Se reindexează blocurile pe disc...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Crowncoin address</source>
         <translation>Trimite monede către o adresă Bitcoin</translation>
     </message>
     <message>
@@ -400,11 +400,11 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
         <translation>Criptează cheile private ale portofelului tău</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your Crowncoin addresses to prove you own them</source>
         <translation>Semnează mesaje cu adresa ta Bitcoin pentru a dovedi că îți aparțin</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified Crowncoin addresses</source>
         <translation>Verifică mesaje pentru a te asigura că au fost semnate cu adresa Bitcoin specificată</translation>
     </message>
     <message>
@@ -845,7 +845,7 @@ Adresa: %4
         <translation>Adresa introdusă &quot;%1&quot; se află deja în lista de adrese.</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
+        <source>The entered address &quot;%1&quot; is not a valid Crowncoin address.</source>
         <translation>Adresa introdusă &quot;%1&quot; nu este o adresă bitcoin validă.</translation>
     </message>
     <message>
@@ -1164,7 +1164,7 @@ Adresa: %4
         <translation>Alege subdiviziunea folosită la afişarea interfeţei şi la trimiterea de bitcoin.</translation>
     </message>
     <message>
-        <source>Whether to show Bitcoin addresses in the transaction list or not.</source>
+        <source>Whether to show Crowncoin addresses in the transaction list or not.</source>
         <translation>Vezi dacă adresele Bitcoin sunt în lista de tranzacție sau nu</translation>
     </message>
     <message>
@@ -1274,7 +1274,7 @@ Adresa: %4
         <translation>Gestionare URI</translation>
     </message>
     <message>
-        <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source>URI can not be parsed! This can be caused by an invalid Crowncoin address or malformed URI parameters.</source>
         <translation>URI nu poate fi analizat! Acest lucru poate fi cauzat de o adresa Bitcoin invalida sau parametri deformati URI.</translation>
     </message>
     <message>
@@ -1361,7 +1361,7 @@ Adresa: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>Enter a Crowncoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Introdu o adresă Bitcoin (de exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
@@ -1867,7 +1867,7 @@ Adresa: %4
         <translation>Tranzactia a fost respinsa! Acest lucru se poate intampla daca o parte din monedele tale din portofel au fost deja cheltuite, la fel ca si cum ai fi folosit o copie a wallet.dat si monedele au fost cheltuite in copie, dar nu au fost marcate si si cheltuite si aici.</translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
+        <source>Warning: Invalid Crowncoin address</source>
         <translation>Atentie: Adresa Bitcoin invalida!</translation>
     </message>
     <message>
@@ -2028,7 +2028,7 @@ Adresa: %4
         <translation>Copiaza semnatura curenta in clipboard-ul sistemului</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this Crowncoin address</source>
         <translation>Semneaza mesajul pentru a dovedi ca detii acesta adresa Bitcoin</translation>
     </message>
     <message>
@@ -2056,7 +2056,7 @@ Adresa: %4
         <translation>Introduceţi o adresă Bitcoin (de exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <source>Verify the message to ensure it was signed with the specified Crowncoin address</source>
         <translation>Verifica mesajul pentru a fi sigur ca a fost semnat cu adresa Bitcoin specifica</translation>
     </message>
     <message>
@@ -2068,7 +2068,7 @@ Adresa: %4
         <translation>Reseteaza toate spatiile mesajelor semnate.</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>Enter a Crowncoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Introduceţi o adresă Bitcoin (de exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>

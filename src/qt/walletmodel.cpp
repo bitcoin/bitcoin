@@ -200,7 +200,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             total += subtotal;
         }
         else
-        {   // User-entered bitcoin address / amount:
+        {   // User-entered Crowncoin address / amount:
             if(!validateAddress(rcp.address))
             {
                 return InvalidAddress;

@@ -1467,7 +1467,7 @@ string CWallet::SendMoneyToDestination(const CTxDestination& address, int64_t nV
     if (nValue + nTransactionFee > GetBalance())
         return _("Insufficient funds");
 
-    // Parse Bitcoin address
+    // Parse Crowncoin address
     CScript scriptPubKey;
     scriptPubKey.SetDestination(address);
 

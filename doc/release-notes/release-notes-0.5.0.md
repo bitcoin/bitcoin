@@ -21,23 +21,23 @@ If you have a previously encrypted wallet.dat, the first time you run bitcoin-qt
 shut down, and you will be prompted to restart it to run with the new, properly encrypted file.
 
 If you had a previously encrypted wallet.dat that might have been copied or stolen (for example, you backed it up to a public
-location) you should send all of your bitcoins to yourself using a new bitcoin address and stop using any previously generated addresses.
+location) you should send all of your bitcoins to yourself using a new Crowncoin address and stop using any previously generated addresses.
 
 Wallets encrypted with this version of Bitcoin are written properly.
 
-Technical note: the encrypted wallet's 'keypool' will be regenerated the first time you request a new bitcoin address; to be certain that the
+Technical note: the encrypted wallet's 'keypool' will be regenerated the first time you request a new Crowncoin address; to be certain that the
 new private keys are properly backed up you should:
 
 1. Run Bitcoin and let it rewrite the wallet.dat file
 
-2. Run it again, then ask it for a new bitcoin address.
+2. Run it again, then ask it for a new Crowncoin address.
 Bitcoin-Qt: Address Book, then New Address...
 bitcoind: run the 'walletpassphrase' RPC command to unlock the wallet,  then run the 'getnewaddress' RPC command.
 
-3. If your encrypted wallet.dat may have been copied or stolen, send  all of your bitcoins to the new bitcoin address.
+3. If your encrypted wallet.dat may have been copied or stolen, send  all of your bitcoins to the new Crowncoin address.
 
 4. Shut down Bitcoin, then backup the wallet.dat file.
-IMPORTANT: be sure to request a new bitcoin address before backing up, so that the 'keypool' is regenerated and backed up.
+IMPORTANT: be sure to request a new Crowncoin address before backing up, so that the 'keypool' is regenerated and backed up.
 
 "Security in depth" is always a good idea, so choosing a secure location for the backup and/or encrypting the backup before uploading it is recommended. And as in previous releases, if your machine is infected by malware there are several ways an attacker might steal your bitcoins.
 
@@ -63,7 +63,7 @@ getmemorypool : new RPC command, provides everything needed to construct a block
 
 listsinceblock : new RPC command, list transactions since given block
 
-signmessage/verifymessage : new RPC commands to sign a message with one of your private keys or verify that a message signed by the private key associated with a bitcoin address.
+signmessage/verifymessage : new RPC commands to sign a message with one of your private keys or verify that a message signed by the private key associated with a Crowncoin address.
 
 GENERAL CHANGES
 
