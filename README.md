@@ -3,7 +3,7 @@ Crowncoin integration/staging tree
 
 http://www.crowncoin.com
 
-Copyright (c) 2009-2014 Bitcoin Core Developers
+Copyright (c) 2009-2014 Crowncoin Developers
 
 What is Crowncoin?
 ----------------

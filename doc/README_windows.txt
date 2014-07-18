@@ -1,6 +1,6 @@
 Bitcoin 0.9.2 BETA
 
-Copyright (c) 2009-2014 Bitcoin Core Developers
+Copyright (c) 2009-2014 Crowncoin Developers
 
 Distributed under the MIT/X11 software license, see the accompanying
 file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -21,7 +21,7 @@ Setup
 -----
 Unpack the files into a directory and run bitcoin-qt.exe.
 
-Bitcoin Core is the original Bitcoin client and it builds the backbone of the network.
+Crowncoin is the original Bitcoin client and it builds the backbone of the network.
 However, it downloads and stores the entire history of Bitcoin transactions;
 depending on the speed of your computer and network connection, the synchronization
 process can take anywhere from a few hours to a day or more.
