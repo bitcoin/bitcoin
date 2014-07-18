@@ -82,19 +82,19 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     keys.clear();
     keys += key[0],key[1]; // magic operator+= from boost.assign
     s = sign_multisig(a_and_b, keys, txTo[0], 0);
-    BOOST_CHECK(VerifyScript(s, a_and_b, txTo[0], 0, flags, 0));
+    BOOST_CHECK(VerifyScript(s, a_and_b, txTo[0], 0, flags));
 
     for (int i = 0; i < 4; i++)
     {
         keys.clear();
         keys += key[i];
         s = sign_multisig(a_and_b, keys, txTo[0], 0);
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, flags, 0), strprintf("a&b 1: %d", i));
+        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, flags), strprintf("a&b 1: %d", i));
 
         keys.clear();
         keys += key[1],key[i];
         s = sign_multisig(a_and_b, keys, txTo[0], 0);
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, flags, 0), strprintf("a&b 2: %d", i));
+        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, flags), strprintf("a&b 2: %d", i));
     }
 
     // Test a OR b:
@@ -104,16 +104,16 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         keys += key[i];
         s = sign_multisig(a_or_b, keys, txTo[1], 0);
         if (i == 0 || i == 1)
-            BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, txTo[1], 0, flags, 0), strprintf("a|b: %d", i));
+            BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, txTo[1], 0, flags), strprintf("a|b: %d", i));
         else
-            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, txTo[1], 0, flags, 0), strprintf("a|b: %d", i));
+            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, txTo[1], 0, flags), strprintf("a|b: %d", i));
     }
     s.clear();
     s << OP_0 << OP_0;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, flags, 0));
+    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, flags));
     s.clear();
     s << OP_0 << OP_1;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, flags, 0));
+    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, flags));
 
 
     for (int i = 0; i < 4; i++)
@@ -123,9 +123,9 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
             keys += key[i],key[j];
             s = sign_multisig(escrow, keys, txTo[2], 0);
             if (i < j && i < 3 && j < 3)
-                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, txTo[2], 0, flags, 0), strprintf("escrow 1: %d %d", i, j));
+                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, txTo[2], 0, flags), strprintf("escrow 1: %d %d", i, j));
             else
-                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, txTo[2], 0, flags, 0), strprintf("escrow 2: %d %d", i, j));
+                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, txTo[2], 0, flags), strprintf("escrow 2: %d %d", i, j));
         }
 }
 
