@@ -432,7 +432,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
         <translation>비트코인코어</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
         <translation>지불 요청하기 (QR코드와 비트코인이 생성됩니다: URIs)</translation>
     </message>
     <message>
@@ -448,7 +448,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
         <translation>한번 이상 사용된 받는 주소와 주소 제목의 목록을 보여줍니다.</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
+        <source>Open a crowncoin: URI or payment request</source>
         <translation>비트코인: URI 또는 지불요청 열기</translation>
     </message>
     <message>
@@ -1286,7 +1286,7 @@ Address: %4
         <translation>지불 요청 애러</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
         <translation>비트코인을 시작할 수 없습니다: 지급제어기를 클릭하시오</translation>
     </message>
     <message>
@@ -1954,7 +1954,7 @@ Address: %4
         <translation>사용된 주소 목록에 새 주소를 추가하기 위해 제목을 입력합니다. </translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>

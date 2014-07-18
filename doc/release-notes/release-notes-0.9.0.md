@@ -299,14 +299,14 @@ GUI:
 - Move initialization/shutdown to a thread. This prevents "Not responding"
   messages during startup. Also show a window during shutdown.
 - Don't regenerate autostart link on every client startup
-- Show and store message of normal bitcoin:URI
+- Show and store message of normal crowncoin:URI
 - Fix richtext detection hang issue on very old Qt versions
 - OS X: Make use of the 10.8+ user notification center to display Growl-like 
   notifications
 - OS X: Added NSHighResolutionCapable flag to Info.plist for better font
   rendering on Retina displays.
 - OS X: Fix bitcoin-qt startup crash when clicking dock icon
-- Linux: Fix Gnome bitcoin: URI handler
+- Linux: Fix Gnome crowncoin: URI handler
 
 Miscellaneous:
 

@@ -27,7 +27,7 @@ Skip splash screen when -min is used, and fix Minimize to Tray function.
 Do not blank "label" in Bitcoin-Qt "Send" tab, if the user has already entered something.
 Correct various labels and messages.
 Various memory leaks and potential null pointer deferences have been fixed.
-Handle invalid Bitcoin URIs using "bitcoin://" instead of "bitcoin:".
+Handle invalid Bitcoin URIs using "crowncoin://" instead of "crowncoin:".
 Several shutdown issues have been fixed.
 Revert to "global progress indication", as starting from zero every time was considered too confusing for many users.
 Check that keys stored in the wallet are valid at startup, and if not, report corruption.

@@ -432,8 +432,8 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Crowncoin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Požaduj platby (generuje QR kódy a bitcoin: URI)</translation>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
+        <translation>Požaduj platby (generuje QR kódy a crowncoin: URI)</translation>
     </message>
     <message>
         <source>&amp;About Crowncoin</source>
@@ -448,8 +448,8 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Ukaž seznam použitých přijímacích adres a jejich označení</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Načti bitcoin: URI nebo platební požadavek</translation>
+        <source>Open a crowncoin: URI or payment request</source>
+        <translation>Načti crowncoin: URI nebo platební požadavek</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1286,8 +1286,8 @@ Adresa: %4
         <translation>Chyba platebního požadavku</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Nemůžu spustit bitcoin: obsluha click-to-pay</translation>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
+        <translation>Nemůžu spustit crowncoin: obsluha click-to-pay</translation>
     </message>
     <message>
         <source>Net manager warning</source>
@@ -1954,7 +1954,7 @@ Adresa: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>

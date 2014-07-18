@@ -433,8 +433,8 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Crowncoin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Αίτηση πληρωμών (δημιουργεί QR codes και διευθύνσεις bitcoin: )</translation>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
+        <translation>Αίτηση πληρωμών (δημιουργεί QR codes και διευθύνσεις crowncoin: )</translation>
     </message>
     <message>
         <source>&amp;About Crowncoin</source>
@@ -449,7 +449,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Προβολή της λίστας των χρησιμοποιημένων διευθύνσεων και ετικετών λήψεως</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
+        <source>Open a crowncoin: URI or payment request</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1288,8 +1288,8 @@ Address: %4
         <translation>Σφάλμα αιτήματος πληρωμής</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Δεν είναι δυνατή η εκκίνηση του Bitcoin: click-to-pay handler</translation>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
+        <translation>Δεν είναι δυνατή η εκκίνηση του crowncoin: click-to-pay handler</translation>
     </message>
     <message>
         <source>Net manager warning</source>
@@ -1956,7 +1956,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>

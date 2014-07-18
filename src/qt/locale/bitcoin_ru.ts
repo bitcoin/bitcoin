@@ -432,8 +432,8 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Crowncoin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Запросить платежи (создаёт QR-коды и bitcoin: ссылки)</translation>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
+        <translation>Запросить платежи (создаёт QR-коды и crowncoin: ссылки)</translation>
     </message>
     <message>
         <source>&amp;About Crowncoin</source>
@@ -448,8 +448,8 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Показать список использованных адресов и меток получения</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Открыть bitcoin: URI или запрос платежа</translation>
+        <source>Open a crowncoin: URI or payment request</source>
+        <translation>Открыть crowncoin: URI или запрос платежа</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1286,8 +1286,8 @@ Address: %4
         <translation>Ошибка запроса платежа</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Не удаётся запустить bitcoin: обработчик click-to-pay</translation>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
+        <translation>Не удаётся запустить crowncoin: обработчик click-to-pay</translation>
     </message>
     <message>
         <source>Net manager warning</source>
@@ -1954,8 +1954,8 @@ Address: %4
         <translation>Введите метку для этого адреса, чтобы добавить его в список использованных</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>К bitcoin: URI было прикреплено сообщение, которое будет сохранено вместе с транзакцией для вашего сведения. Заметьте: сообщение не будет отправлено через сеть Bitcoin.</translation>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>К crowncoin: URI было прикреплено сообщение, которое будет сохранено вместе с транзакцией для вашего сведения. Заметьте: сообщение не будет отправлено через сеть Bitcoin.</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>

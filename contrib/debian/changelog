@@ -111,7 +111,7 @@ bitcoin (0.6.1-natty0) natty; urgency=low
 bitcoin (0.6.0-natty0) natty; urgency=low
 
   * New upstream release.
-  * Add GNOME/KDE support for bitcoin-qt's bitcoin: URI support.
+  * Add GNOME/KDE support for bitcoin-qt's crowncoin: URI support.
     Thanks to luke-jr for the KDE .protocol file.
 
  -- Matt Corallo <matt@bluematt.me>  Sat, 31 Mar 2012 15:35:00 -0500
@@ -181,7 +181,7 @@ bitcoin (0.5.0~rc1-natty0) natty; urgency=low
   * Mark for natty
   * Fix broken build
   * Fix copyright listing
-  * Remove bitcoin: URL handler until bitcoin actually has support for it (Oops)
+  * Remove crowncoin: URL handler until bitcoin actually has support for it (Oops)
 
  -- Matt Corallo <matt@bluematt.me>  Wed, 26 Oct 2011 14:37:18 -0400
 

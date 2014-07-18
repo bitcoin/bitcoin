@@ -432,8 +432,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <translation>Bitcoin Kern</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Vraag betaling aan (genereert QR codes en bitcoin: URIs)</translation>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
+        <translation>Vraag betaling aan (genereert QR codes en crowncoin: URIs)</translation>
     </message>
     <message>
         <source>&amp;About Crowncoin</source>
@@ -448,8 +448,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <translation>Toon de lijst met gebruikte ontvangst adressen en labels</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Open een bitcoin: URI of betalingsverzoek</translation>
+        <source>Open a crowncoin: URI or payment request</source>
+        <translation>Open een crowncoin: URI of betalingsverzoek</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1286,7 +1286,7 @@ Adres: %4
         <translation>Fout bij betalingsverzoek</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
         <translation>Kan bitcoin niet starten: click-to-pay handler</translation>
     </message>
     <message>
@@ -1954,8 +1954,8 @@ Adres: %4
         <translation>Vul een label voor dit adres in om het aan de lijst met gebruikte adressen toe te voegen</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>Een bericht dat werd toegevoegd aan de bitcoin: URI dewelke wordt opgeslagen met de transactie ter referentie. Opmerking: Dit bericht zal niet worden verzonden over het Bitcoin netwerk.</translation>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>Een bericht dat werd toegevoegd aan de crowncoin: URI dewelke wordt opgeslagen met de transactie ter referentie. Opmerking: Dit bericht zal niet worden verzonden over het Bitcoin netwerk.</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>

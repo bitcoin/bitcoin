@@ -432,8 +432,8 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
         <translation>Crowncoin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Forespørg betalinger (genererer QR-koder og &quot;bitcoin:&quot;-URI&apos;er)</translation>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
+        <translation>Forespørg betalinger (genererer QR-koder og &quot;crowncoin:&quot;-URI&apos;er)</translation>
     </message>
     <message>
         <source>&amp;About Crowncoin</source>
@@ -448,8 +448,8 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
         <translation>Vis listen over brugte modtagelsesadresser og -mærkater</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Åbn en &quot;bitcoin:&quot;-URI eller betalingsforespørgsel</translation>
+        <source>Open a crowncoin: URI or payment request</source>
+        <translation>Åbn en &quot;crowncoin:&quot;-URI eller betalingsforespørgsel</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1286,8 +1286,8 @@ Adresse: %4
         <translation>Fejl i betalingsforespørgsel</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Kan ikke starte bitcoin: click-to-pay-håndtering</translation>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
+        <translation>Kan ikke starte crowncoin: click-to-pay-håndtering</translation>
     </message>
     <message>
         <source>Net manager warning</source>
@@ -1954,7 +1954,7 @@ Adresse: %4
         <translation>Indtast et mærkat for denne adresse for at føje den til listen over brugte adresser</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation>En besked, som blev føjet til &quot;bitcon:&quot;-URI&apos;en, som vil gemmes med transaktionen til din reference. Bemærk: Denne besked vil ikke blive sendt over Bitcoin-netværket.</translation>
     </message>
     <message>

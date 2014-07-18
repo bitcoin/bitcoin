@@ -432,8 +432,8 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
         <translation>Núcleo Bitcoin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Solicitações de pagamentos (gera códigos QR e bitcoin: URIs)</translation>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
+        <translation>Solicitações de pagamentos (gera códigos QR e crowncoin: URIs)</translation>
     </message>
     <message>
         <source>&amp;About Crowncoin</source>
@@ -448,8 +448,8 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
         <translation>Mostrar a lista de endereços de recebimento usados ​​e rótulos</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Abrir um bitcoin: URI ou cobrança</translation>
+        <source>Open a crowncoin: URI or payment request</source>
+        <translation>Abrir um crowncoin: URI ou cobrança</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -942,7 +942,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Crowncoin will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Crowncoin vai fazer download e guardar uma cópia da longa e única cadeia de blocos do Bitcoin: Blockchain. Pelo menos %1 GB de dados serão armazenados nesse diretório e isso aumentará ao longo do tempo. Sua carteira também será armazenada nesse diretório.</translation>
+        <translation>Crowncoin vai fazer download e guardar uma cópia da longa e única cadeia de blocos do crowncoin: Blockchain. Pelo menos %1 GB de dados serão armazenados nesse diretório e isso aumentará ao longo do tempo. Sua carteira também será armazenada nesse diretório.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1285,8 +1285,8 @@ Endereço: %4</translation>
         <translation>Erro no pedido de pagamento</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Não foi possível iniciar bitcoin: manipulador clique-para-pagar</translation>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
+        <translation>Não foi possível iniciar crowncoin: manipulador clique-para-pagar</translation>
     </message>
     <message>
         <source>Net manager warning</source>
@@ -1953,8 +1953,8 @@ Endereço: %4</translation>
         <translation>Digite um rótulo para este endereço para adicioná-lo no catálogo</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>A mensagem que foi anexada ao bitcoin: URI na qual será gravada na transação para sua referência. Nota: Essa mensagem não será gravada publicamente na rede Bitcoin.</translation>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>A mensagem que foi anexada ao crowncoin: URI na qual será gravada na transação para sua referência. Nota: Essa mensagem não será gravada publicamente na rede Bitcoin.</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>

@@ -75,7 +75,7 @@ Dependency changes
 Bug fixes
 ---------
 
-* Clicking on a bitcoin: URI on Windows should now launch Bitcoin-Qt properly.
+* Clicking on a crowncoin: URI on Windows should now launch Bitcoin-Qt properly.
 
 * When running -testnet, use RPC port 19341 by default.
 

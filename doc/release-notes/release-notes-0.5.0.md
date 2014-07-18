@@ -51,7 +51,7 @@ MAJOR GUI CHANGES
 
 Icons at the bottom of the window that show how well connected you are to the network, with tooltips to display details.
 
-Drag and drop support for bitcoin: URIs on web pages.
+Drag and drop support for crowncoin: URIs on web pages.
 
 Export transactions as a .csv file.
 

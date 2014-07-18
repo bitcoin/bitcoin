@@ -431,7 +431,7 @@ Platinama pagal MIT/X11 licenciją, kurią rasite faile COPYING arba http://www.
         <translation>Bitcoin branduolys</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -447,7 +447,7 @@ Platinama pagal MIT/X11 licenciją, kurią rasite faile COPYING arba http://www.
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
+        <source>Open a crowncoin: URI or payment request</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1284,7 +1284,7 @@ Adresas: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1952,7 +1952,7 @@ Adresas: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>

@@ -433,7 +433,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Bitcoin Kärna</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
         <translation>Begär betalning (genererar QR-koder och bitcoin-URI)</translation>
     </message>
     <message>
@@ -449,8 +449,8 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Visa listan av använda mottagningsadresser och etiketter</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Öppna en bitcoin: URI eller betalningsbegäran</translation>
+        <source>Open a crowncoin: URI or payment request</source>
+        <translation>Öppna en crowncoin: URI eller betalningsbegäran</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1287,8 +1287,8 @@ Adress: %4
         <translation>Fel vid betalningsbegäran</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Kan inte starta bitcoin: klicka-och-betala handhavare</translation>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
+        <translation>Kan inte starta crowncoin: klicka-och-betala handhavare</translation>
     </message>
     <message>
         <source>Net manager warning</source>
@@ -1955,7 +1955,7 @@ Adress: %4
         <translation>Ange en etikett för denna adress att adderas till listan över använda adresser</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation>Ett meddelande som bifogades bitcoin-URI, vilket lagras med transaktionen som referens. NB: Meddelandet kommer inte att sändas över Bitcoinnätverket.</translation>
     </message>
     <message>

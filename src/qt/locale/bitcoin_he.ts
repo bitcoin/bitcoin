@@ -432,7 +432,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>ליבת ביטקוין</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
         <translation>בקש תשלומים (מייצר קודיי QR וסכימות URI של :bitcoin)</translation>
     </message>
     <message>
@@ -448,7 +448,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>הצג את רשימת הכתובות והתויות המשומשות</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
+        <source>Open a crowncoin: URI or payment request</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1285,7 +1285,7 @@ Address: %4
         <translation>שגיאה בבקשת תשלום</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
         <translation>לא ניתן להתחיל את ביטקוין: מפעיל לחץ-לתשלום </translation>
     </message>
     <message>
@@ -1953,7 +1953,7 @@ Address: %4
         <translation>הקלד תווית עבור כתובת זו בכדי להוסיף אותה לרשימת הכתובות בשימוש</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>

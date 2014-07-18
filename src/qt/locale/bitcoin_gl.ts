@@ -432,8 +432,8 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
         <translation>Core de Bitcoin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Solicitar pagos (xenera códigos QR e bitcoin: URIs)</translation>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
+        <translation>Solicitar pagos (xenera códigos QR e crowncoin: URIs)</translation>
     </message>
     <message>
         <source>&amp;About Crowncoin</source>
@@ -448,8 +448,8 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
         <translation>Amosar a listaxe de etiquetas e direccións para recibir empregadas</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Abrir un bitcoin: URI ou solicitude de pago</translation>
+        <source>Open a crowncoin: URI or payment request</source>
+        <translation>Abrir un crowncoin: URI ou solicitude de pago</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1286,7 +1286,7 @@ Dirección: %4
         <translation>Erro na petición de pago</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1954,7 +1954,7 @@ Dirección: %4
         <translation>Introduce unha etiqueta para esta dirección para engadila á listaxe de direccións empregadas</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>

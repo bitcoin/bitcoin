@@ -433,8 +433,8 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Bitcoin-ydin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Pyydä maksuja (Luo QR koodit ja bitcoin: URIt)</translation>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
+        <translation>Pyydä maksuja (Luo QR koodit ja crowncoin: URIt)</translation>
     </message>
     <message>
         <source>&amp;About Crowncoin</source>
@@ -449,8 +449,8 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Näytä vastaanottamiseen käytettyjen osoitteiden ja nimien lista</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Avaa bitcoin: URI tai maksupyyntö</translation>
+        <source>Open a crowncoin: URI or payment request</source>
+        <translation>Avaa crowncoin: URI tai maksupyyntö</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1286,8 +1286,8 @@ Osoite: %4</translation>
         <translation>Maksupyyntövirhe</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Ei voida käynnistää bitcoin: klikkaa-maksu käsittelijää</translation>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
+        <translation>Ei voida käynnistää crowncoin: klikkaa-maksu käsittelijää</translation>
     </message>
     <message>
         <source>Net manager warning</source>
@@ -1954,8 +1954,8 @@ Osoite: %4</translation>
         <translation>Aseta nimi tälle osoitteelle lisätäksesi sen käytettyjen osoitteiden listalle.</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>Viesti joka liitettiin bitcoin: URI:iin tallennetaan rahansiirtoon viitteeksi. Tätä viestiä ei lähetetä Bitcoin-verkkoon.</translation>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>Viesti joka liitettiin crowncoin: URI:iin tallennetaan rahansiirtoon viitteeksi. Tätä viestiä ei lähetetä Bitcoin-verkkoon.</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>

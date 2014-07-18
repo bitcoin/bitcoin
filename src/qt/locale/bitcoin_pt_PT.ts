@@ -432,8 +432,8 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Crowncoin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Solicitar pagamentos (gera códigos QR e URIs bitcoin:)</translation>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
+        <translation>Solicitar pagamentos (gera códigos QR e URIs crowncoin:)</translation>
     </message>
     <message>
         <source>&amp;About Crowncoin</source>
@@ -448,8 +448,8 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Mostrar a lista de rótulos e endereços de receção usados</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Abrir URI bitcoin: ou pedido de pagamento</translation>
+        <source>Open a crowncoin: URI or payment request</source>
+        <translation>Abrir URI crowncoin: ou pedido de pagamento</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1285,8 +1285,8 @@ Endereço: %4</translation>
         <translation>Erro de pedido de pagamento</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Impossível iniciar o controlador de bitcoin: click-to-pay</translation>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
+        <translation>Impossível iniciar o controlador de crowncoin: click-to-pay</translation>
     </message>
     <message>
         <source>Net manager warning</source>
@@ -1953,8 +1953,8 @@ Endereço: %4</translation>
         <translation>Introduza um rótulo para este endereço para o adicionar à sua lista de endereços usados</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>Uma mensagem que estava anexada ao URI bitcoin: que será armazenada com a transação para sua referência. Nota: Esta mensagem não será enviada através da rede Bitcoin.</translation>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>Uma mensagem que estava anexada ao URI crowncoin: que será armazenada com a transação para sua referência. Nota: Esta mensagem não será enviada através da rede Bitcoin.</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>

@@ -432,8 +432,8 @@ Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datn
         <translation>Crowncoin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Pieprasīt maksājumus (izveido QR kodu un bitcoin: URIs)</translation>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
+        <translation>Pieprasīt maksājumus (izveido QR kodu un crowncoin: URIs)</translation>
     </message>
     <message>
         <source>&amp;About Crowncoin</source>
@@ -448,7 +448,7 @@ Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datn
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
+        <source>Open a crowncoin: URI or payment request</source>
         <translation>Atvērt bitcoin URI vai maksājuma pieprasījumu</translation>
     </message>
     <message>
@@ -1286,8 +1286,8 @@ Adrese: %4
         <translation>Maksājumu pieprasījuma kļūda</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Nevar palaist Bitcoin: nospied-lai-maksātu apstrādātāju</translation>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
+        <translation>Nevar palaist crowncoin: nospied-lai-maksātu apstrādātāju</translation>
     </message>
     <message>
         <source>Net manager warning</source>
@@ -1954,7 +1954,7 @@ Adrese: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>

@@ -226,7 +226,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, int vout, int u
 
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + TransactionRecord::formatSubTxId(wtx.GetHash(), vout) + "<br>";
 
-    // Message from normal bitcoin:URI (bitcoin:123...?message=example)
+    // Message from normal crowncoin:URI (crowncoin:123...?message=example)
     foreach (const PAIRTYPE(string, string)& r, wtx.vOrderForm)
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";

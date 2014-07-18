@@ -432,7 +432,7 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
         <translation>Crowncoin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
         <translation>Cereti plati (genereaza coduri QR si bitcoin-uri: URls)</translation>
     </message>
     <message>
@@ -448,8 +448,8 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
         <translation>Aratati lista de adrese pentru primire si etichete </translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Deschideti un bitcoin: o adresa URI sau o cerere de plata</translation>
+        <source>Open a crowncoin: URI or payment request</source>
+        <translation>Deschideti un crowncoin: o adresa URI sau o cerere de plata</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1286,8 +1286,8 @@ Adresa: %4
         <translation>Eroare la cererea de plată</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Nu poate porni bitcoin: regula clic-pentru-plata</translation>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
+        <translation>Nu poate porni crowncoin: regula clic-pentru-plata</translation>
     </message>
     <message>
         <source>Net manager warning</source>
@@ -1954,7 +1954,7 @@ Adresa: %4
         <translation>Introduceti eticheta pentru ca aceasta adresa sa fie introdusa in lista de adrese folosite</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>

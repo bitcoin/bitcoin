@@ -431,7 +431,7 @@ Hoc productum continet programmata composita ab OpenSSL Project pro utendo in Op
         <translation>Bitcoin Nucleus</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <source>Request payments (generates QR codes and crowncoin: URIs)</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -447,7 +447,7 @@ Hoc productum continet programmata composita ab OpenSSL Project pro utendo in Op
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
+        <source>Open a crowncoin: URI or payment request</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1285,7 +1285,7 @@ Inscriptio: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <source>Cannot start crowncoin: click-to-pay handler</source>
         <translation>Bitcoin incipere non potest: cliccare-ad-pensandum handler</translation>
     </message>
     <message>
@@ -1953,7 +1953,7 @@ Inscriptio: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
