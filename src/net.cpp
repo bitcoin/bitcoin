@@ -1227,7 +1227,7 @@ void ThreadDNSAddressSeed()
     LogPrintf("Loading addresses from DNS seeds (could take a while)\n");
 
     BOOST_FOREACH(const CDNSSeedData &seed, vSeeds) {
-        if (HaveNameProxy()) {
+        if (HaveProxy(NET_IPV4)) {
             AddOneShot(seed.host);
         } else {
             vector<CNetAddr> vIPs;
@@ -1397,7 +1397,7 @@ void ThreadOpenAddedConnections()
         vAddedNodes = mapMultiArgs["-addnode"];
     }
 
-    if (HaveNameProxy()) {
+    if (HaveProxy(NET_IPV4)) {
         while(true) {
             list<string> lAddresses(0);
             {

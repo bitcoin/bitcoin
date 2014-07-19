@@ -836,12 +836,6 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (!ProxyInit(NET_TOR, "-proxy", true))
             return false;  // errors with default proxy lead to exit
 
-        // if -noproxy was not specified
-        if (GetArg("-proxy", "0") != "0")
-            // setup default name proxy and exit on error
-            if (!SetNameProxy(CService(mapArgs["-proxy"], 9050)))
-                return InitError(strprintf(_("Invalid name proxy address '%s' for: -proxy"), mapArgs["-proxy"].c_str()));
-
     // see Step 2: parameter interactions for more information about these
     fListen = GetBoolArg("-listen", DEFAULT_LISTEN);
     fDiscover = GetBoolArg("-discover", true);
