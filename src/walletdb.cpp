@@ -287,6 +287,19 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                     wss.fAnyUnordered = true;
             }
         }
+        else if (strType == "watch")
+        {
+            std::string strAddress;
+            ssKey >> strAddress;
+            char fYes;
+            ssValue >> fYes;
+            if (fYes == '1')
+                pwallet->LoadWatchOnly(CBitcoinAddress(strAddress).Get());
+
+            // Watch-only addresses have no birthday information for now,
+            // so set the wallet birthday to the beginning of time.
+            pwallet->nTimeFirstKey = 1;
+        }
         else if (strType == "key" || strType == "wkey")
         {
             vector<unsigned char> vchPubKey;
