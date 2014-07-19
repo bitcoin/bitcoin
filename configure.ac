@@ -499,8 +499,8 @@ fi
 AC_ARG_WITH([cli],
   [AS_HELP_STRING([--with-cli],
   [with CLI (default is yes)])],
-  [build_bitcoin_cli=$withval],
-  [build_bitcoin_cli=yes])
+  [build_crowncoin_cli=$withval],
+  [build_crowncoin_cli=yes])
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
@@ -549,8 +549,8 @@ AM_CONDITIONAL([BUILD_CROWNCOIND], [test x$build_crowncoind = xyes])
 AC_MSG_RESULT($build_crowncoind)
 
 AC_MSG_CHECKING([whether to build bitcoin-cli])
-AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_bitcoin_cli = xyes])
-AC_MSG_RESULT($build_bitcoin_cli)
+AM_CONDITIONAL([BUILD_CROWNCOIN_CLI], [test x$build_crowncoin_cli = xyes])
+AC_MSG_RESULT($build_crowncoin_cli)
 
 dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
 BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
