@@ -49,9 +49,9 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case CRW: return QString("Bitcoins");
-    case mCRW: return QString("Milli-Bitcoins (1 / 1,000)");
-    case uCRW: return QString("Micro-Bitcoins (1 / 1,000,000)");
+    case CRW: return QString("Crowncoins");
+    case mCRW: return QString("Milli-Crowncoins (1 / 1,000)");
+    case uCRW: return QString("Micro-Crowncoins (1 / 1,000,000)");
     default: return QString("???");
     }
 }

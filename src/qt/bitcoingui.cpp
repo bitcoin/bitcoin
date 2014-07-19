@@ -266,7 +266,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
         aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Crowncoin"), this);
     else
         aboutAction = new QAction(QIcon(":/icons/bitcoin_testnet"), tr("&About Crowncoin"), this);
-    aboutAction->setStatusTip(tr("Show information about Bitcoin"));
+    aboutAction->setStatusTip(tr("Show information about Crowncoin"));
     aboutAction->setMenuRole(QAction::AboutRole);
 #if QT_VERSION < 0x050000
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
@@ -276,7 +276,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setStatusTip(tr("Modify configuration options for Bitcoin"));
+    optionsAction->setStatusTip(tr("Modify configuration options for Crowncoin"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     if (!fIsTestnet)
         toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Show / Hide"), this);
@@ -308,7 +308,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     openAction->setStatusTip(tr("Open a crowncoin: URI or payment request"));
 
     showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
-    showHelpMessageAction->setStatusTip(tr("Show the Crowncoin help message to get a list with possible Bitcoin command-line options"));
+    showHelpMessageAction->setStatusTip(tr("Show the Crowncoin help message to get a list with possible Crowncoin command-line options"));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
@@ -467,12 +467,12 @@ void BitcoinGUI::createTrayIcon(bool fIsTestnet)
 
     if (!fIsTestnet)
     {
-        trayIcon->setToolTip(tr("Bitcoin client"));
+        trayIcon->setToolTip(tr("Crowncoin client"));
         trayIcon->setIcon(QIcon(":/icons/toolbar"));
     }
     else
     {
-        trayIcon->setToolTip(tr("Bitcoin client") + " " + tr("[testnet]"));
+        trayIcon->setToolTip(tr("Crowncoin client") + " " + tr("[testnet]"));
         trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
     }
 
@@ -614,7 +614,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Bitcoin network", "", count));
+    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Crowncoin network", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
@@ -733,7 +733,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    QString strTitle = tr("Bitcoin"); // default title
+    QString strTitle = tr("Crowncoin"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
@@ -759,7 +759,7 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
             break;
         }
     }
-    // Append title to "Bitcoin - "
+    // Append title to "Crowncoin - "
     if (!msgType.isEmpty())
         strTitle += " - " + msgType;
 
