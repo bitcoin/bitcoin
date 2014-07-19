@@ -12,12 +12,12 @@ endif
 
 bin_PROGRAMS =
 
-if BUILD_BITCOIND
-  bin_PROGRAMS += bitcoind
+if BUILD_CROWNCOIND
+  bin_PROGRAMS += crowncoind
 endif
 
-if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += bitcoin-cli
+if BUILD_CROWNCOIN_CLI
+  bin_PROGRAMS += crowncoin-cli
 endif
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
