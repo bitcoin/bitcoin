@@ -344,7 +344,7 @@ bool CKey::Sign(uint256 hash, std::vector<unsigned char>& vchSig)
     EC_GROUP_get_order(group, &order, NULL);
     BN_rshift1(&halforder, &order);
     // enforce low S values, by negating the value (modulo the order) if above order/2.
-    if (BN_cmp(sig->s, &halforder)) {
+    if (BN_cmp(sig->s, &halforder) > 0) {
         BN_sub(sig->s, &order, sig->s);
     }
     unsigned int nSize = ECDSA_size(pkey);
@@ -376,7 +376,7 @@ bool CKey::SignCompact(uint256 hash, std::vector<unsigned char>& vchSig)
     EC_GROUP_get_order(group, &order, NULL);
     BN_rshift1(&halforder, &order);
     // enforce low S values, by negating the value (modulo the order) if above order/2.
-    if (BN_cmp(sig->s, &halforder)) {
+    if (BN_cmp(sig->s, &halforder) > 0) {
         BN_sub(sig->s, &order, sig->s);
     }
     vchSig.clear();
