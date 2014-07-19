@@ -143,8 +143,8 @@ protected:
 
 public:
     CCoinsViewMemPool(CCoinsView &baseIn, CTxMemPool &mempoolIn);
-    bool GetCoins(const uint256 &txid, CCoins &coins);
-    bool HaveCoins(const uint256 &txid);
+    bool GetCoins(const uint256 &txid, CCoins &coins) const;
+    bool HaveCoins(const uint256 &txid) const;
 };
 
 #endif /* BITCOIN_TXMEMPOOL_H */
