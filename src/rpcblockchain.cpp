@@ -125,12 +125,11 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool fPri
     {
         if (fPrintTransactionDetail)
         {
-            Object entry;
+            CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+            ssTx << tx;
+            string strHex = HexStr(ssTx.begin(), ssTx.end());
 
-            entry.push_back(Pair("txid", tx.GetHash().GetHex()));
-            TxToJSON(tx, 0, entry);
-
-            txinfo.push_back(entry);
+            txinfo.push_back(strHex);
         }
         else
             txinfo.push_back(tx.GetHash().GetHex());
