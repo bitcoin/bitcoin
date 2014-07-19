@@ -69,11 +69,15 @@ Value getinfo(const Array& params, bool fHelp)
     proxyType proxy;
     GetProxy(NET_IPV4, proxy);
 
+    int64 nTotal = 0, nWatchOnly = 0;
+    pwalletMain->GetBalance(nTotal, nWatchOnly);
+
     Object obj, diff;
     obj.push_back(Pair("version",       FormatFullVersion()));
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
     obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
-    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
+    obj.push_back(Pair("balance",       ValueFromAmount(nTotal)));
+    obj.push_back(Pair("unspendable",       ValueFromAmount(nWatchOnly)));
     obj.push_back(Pair("newmint",       ValueFromAmount(pwalletMain->GetNewMint())));
     obj.push_back(Pair("stake",         ValueFromAmount(pwalletMain->GetStake())));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
@@ -722,7 +726,10 @@ Value sendmany(const Array& params, bool fHelp)
     bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired);
     if (!fCreated)
     {
-        if (totalAmount + nFeeRequired > pwalletMain->GetBalance())
+        int64 nTotal = 0, nWatchOnly = 0;
+        pwalletMain->GetBalance(nTotal, nWatchOnly);
+
+        if (totalAmount + nFeeRequired > nTotal - nWatchOnly)
             throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
         throw JSONRPCError(RPC_WALLET_ERROR, "Transaction creation failed");
     }
@@ -1258,7 +1265,7 @@ Value gettransaction(const Array& params, bool fHelp)
 
         TxToJSON(wtx, 0, entry);
 
-        int64 nCredit = wtx.GetCredit();
+        int64 nCredit = wtx.GetCredit(false);
         int64 nDebit = wtx.GetDebit();
         int64 nNet = nCredit - nDebit;
         int64 nFee = (wtx.IsFromMe() ? wtx.GetValueOut() - nDebit : 0);
