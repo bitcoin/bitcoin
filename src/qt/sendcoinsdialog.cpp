@@ -124,9 +124,12 @@ void SendCoinsDialog::on_sendButton_clicked()
         if(!ui->lineEditCoinControlChange->hasAcceptableInput() ||
            (model && !model->validateAddress(ui->lineEditCoinControlChange->text())))
         {
+            CoinControlDialog::coinControl->destChange = CNoDestination();
             ui->lineEditCoinControlChange->setValid(false);
             valid = false;
         }
+        else
+            CoinControlDialog::coinControl->destChange = CBitcoinAddress(ui->lineEditCoinControlChange->text().toStdString()).Get();
     }
 
     for(int i = 0; i < ui->entries->count(); ++i)
