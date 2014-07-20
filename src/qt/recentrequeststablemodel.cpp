@@ -79,9 +79,16 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
         case Amount:
             if (rec->recipient.amount == 0 && role == Qt::DisplayRole)
                 return tr("(no amount)");
+            else if (role == Qt::EditRole)
+                return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, BitcoinUnits::separatorNever);
             else
                 return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
         }
+    }
+    else if (role == Qt::TextAlignmentRole)
+    {
+        if (index.column() == Amount)
+            return (int)(Qt::AlignRight|Qt::AlignVCenter);
     }
     return QVariant();
 }
