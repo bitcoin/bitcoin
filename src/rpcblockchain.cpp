@@ -270,7 +270,7 @@ Value getblockbynumber(const Array& params, bool fHelp)
     return blockToJSON(block, pblockindex, params.size() > 1 ? params[1].get_bool() : false);
 }
 
-// ppcoin: get information of sync-checkpoint
+// get information of sync-checkpoint
 Value getcheckpoint(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -285,6 +285,27 @@ Value getcheckpoint(const Array& params, bool fHelp)
     pindexCheckpoint = mapBlockIndex[Checkpoints::hashSyncCheckpoint];
     result.push_back(Pair("height", pindexCheckpoint->nHeight));
     result.push_back(Pair("timestamp", DateTimeStrFormat(pindexCheckpoint->GetBlockTime()).c_str()));
+
+    if (Checkpoints::checkpointMessage.vchSig.size() != 0)
+    {
+        Object msgdata;
+        CUnsignedSyncCheckpoint checkpoint;
+
+        CDataStream sMsg(Checkpoints::checkpointMessage.vchMsg, SER_NETWORK, PROTOCOL_VERSION);
+        sMsg >> checkpoint;
+
+        Object parsed; // message version and data (block hash)
+        parsed.push_back(Pair("version", checkpoint.nVersion));
+        parsed.push_back(Pair("hash", checkpoint.hashCheckpoint.GetHex().c_str()));
+        msgdata.push_back(Pair("parsed", parsed));
+
+        Object raw; // raw checkpoint message data
+        raw.push_back(Pair("data", HexStr(Checkpoints::checkpointMessage.vchMsg).c_str()));
+        raw.push_back(Pair("signature", HexStr(Checkpoints::checkpointMessage.vchSig).c_str()));
+        msgdata.push_back(Pair("details", raw));
+
+        result.push_back(Pair("raw", msgdata));
+    }
 
     // Check that the block satisfies synchronized checkpoint
     if (CheckpointsMode == Checkpoints::STRICT)
