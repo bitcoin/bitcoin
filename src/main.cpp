@@ -12,6 +12,7 @@
 #include "checkpoints.h"
 #include "checkqueue.h"
 #include "init.h"
+#include "mruset.h"
 #include "net.h"
 #include "pow.h"
 #include "txdb.h"
@@ -66,6 +67,8 @@ multimap<uint256, COrphanBlock*> mapOrphanBlocksByPrev;
 
 map<uint256, CTransaction> mapOrphanTransactions;
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
+
+mruset<uint256> setRejectedTx(200);
 
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
@@ -535,9 +538,12 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
 
 
 
-bool IsStandardTx(const CTransaction& tx, string& reason)
+bool IsStandardTx(const CTransaction& tx, string& reason, bool* pfPermanentRet)
 {
     AssertLockHeld(cs_main);
+    if (pfPermanentRet)
+        *pfPermanentRet = true;
+
     if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
         reason = "version";
         return false;
@@ -561,6 +567,8 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
     // can't know what timestamp the next block will have, and there aren't
     // timestamp applications where it matters.
     if (!IsFinalTx(tx, chainActive.Height() + 1)) {
+        if (pfPermanentRet)
+            *pfPermanentRet = false;
         reason = "non-final";
         return false;
     }
@@ -953,10 +961,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     string reason;
-    if (Params().RequireStandard() && !IsStandardTx(tx, reason))
+    bool fPermanentlyNonstandard;
+    if (Params().RequireStandard() && !IsStandardTx(tx, reason, &fPermanentlyNonstandard))
         return state.DoS(0,
                          error("AcceptToMemoryPool : nonstandard transaction: %s", reason),
-                         REJECT_NONSTANDARD, reason);
+                         REJECT_NONSTANDARD, reason, fPermanentlyNonstandard);
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
@@ -1008,7 +1017,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // are the actual inputs available?
         if (!view.HaveInputs(tx))
             return state.Invalid(error("AcceptToMemoryPool : inputs already spent"),
-                                 REJECT_DUPLICATE, "bad-txns-inputs-spent");
+                                 REJECT_DUPLICATE, "bad-txns-inputs-spent", false);
 
         // Bring the best block into scope
         view.GetBestBlock();
@@ -1052,7 +1061,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
             if (RateLimitExceeded(dFreeCount, nLastFreeTime, nFreeLimit, nSize))
                 return state.DoS(0, error("AcceptToMemoryPool : free transaction rejected by rate limiter"),
-                                 REJECT_INSUFFICIENTFEE, "insufficient priority");
+                                 REJECT_INSUFFICIENTFEE, "insufficient priority", false);
 
             LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
         }
@@ -1537,7 +1546,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
         // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
         // for an attacker to attempt to split the network.
         if (!inputs.HaveInputs(tx))
-            return state.Invalid(error("CheckInputs() : %s inputs unavailable", tx.GetHash().ToString()));
+            return state.Invalid(error("CheckInputs() : %s inputs unavailable", tx.GetHash().ToString()),
+                                 0, "", false);
 
         // While checking, GetBestBlock() refers to the parent block.
         // This is also true for mempool checks.
@@ -1555,7 +1565,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
                 if (nSpendHeight - coins.nHeight < COINBASE_MATURITY)
                     return state.Invalid(
                         error("CheckInputs() : tried to spend coinbase at depth %d", nSpendHeight - coins.nHeight),
-                        REJECT_INVALID, "bad-txns-premature-spend-of-coinbase");
+                        REJECT_INVALID, "bad-txns-premature-spend-of-coinbase", false);
             }
 
             // Check for negative or overflow input values
@@ -2410,7 +2420,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     }
     if (uniqueTx.size() != block.vtx.size())
         return state.DoS(100, error("CheckBlock() : duplicate transaction"),
-                         REJECT_INVALID, "bad-txns-duplicate", true);
+                         REJECT_INVALID, "bad-txns-duplicate", true, true);
 
     unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
@@ -2419,12 +2429,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     }
     if (nSigOps > MAX_BLOCK_SIGOPS)
         return state.DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"),
-                         REJECT_INVALID, "bad-blk-sigops", true);
+                         REJECT_INVALID, "bad-blk-sigops", true, true);
 
     // Check merkle root
     if (fCheckMerkleRoot && block.hashMerkleRoot != block.BuildMerkleTree())
         return state.DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"),
-                         REJECT_INVALID, "bad-txnmrklroot", true);
+                         REJECT_INVALID, "bad-txnmrklroot", true, true);
 
     return true;
 }
@@ -3401,7 +3411,8 @@ bool static AlreadyHave(const CInv& inv)
         {
             bool txInMap = false;
             txInMap = mempool.exists(inv.hash);
-            return txInMap || mapOrphanTransactions.count(inv.hash) ||
+            bool txRejected = setRejectedTx.count(inv.hash);
+            return txInMap || txRejected || mapOrphanTransactions.count(inv.hash) ||
                 pcoinsTip->HaveCoins(inv.hash);
         }
     case MSG_BLOCK:
@@ -3974,6 +3985,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                state.GetRejectReason(), inv.hash);
             if (nDoS > 0)
                 Misbehaving(pfrom->GetId(), nDoS);
+            if (state.IsPermanent())
+                setRejectedTx.insert(inv.hash);
         }
     }
 

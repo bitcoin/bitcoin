@@ -300,7 +300,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state);
 /** Check for standard transaction types
     @return True if all outputs (scriptPubKeys) use only standard transaction forms
 */
-bool IsStandardTx(const CTransaction& tx, std::string& reason);
+bool IsStandardTx(const CTransaction& tx, std::string& reason, bool* pfPermanent=NULL);
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
 
@@ -955,14 +955,17 @@ private:
     int nDoS;
     std::string strRejectReason;
     unsigned char chRejectCode;
+    bool permanent;
     bool corruptionPossible;
 public:
-    CValidationState() : mode(MODE_VALID), nDoS(0), corruptionPossible(false) {}
+    CValidationState() : mode(MODE_VALID), nDoS(0), permanent(false), corruptionPossible(false) {}
     bool DoS(int level, bool ret = false,
              unsigned char chRejectCodeIn=0, std::string strRejectReasonIn="",
+             bool permanentIn=true,
              bool corruptionIn=false) {
         chRejectCode = chRejectCodeIn;
         strRejectReason = strRejectReasonIn;
+        permanent = permanent || permanentIn;
         corruptionPossible = corruptionIn;
         if (mode == MODE_ERROR)
             return ret;
@@ -971,8 +974,9 @@ public:
         return ret;
     }
     bool Invalid(bool ret = false,
-                 unsigned char _chRejectCode=0, std::string _strRejectReason="") {
-        return DoS(0, ret, _chRejectCode, _strRejectReason);
+                 unsigned char _chRejectCode=0, std::string _strRejectReason="",
+                 bool _permanent=true) {
+        return DoS(0, ret, _chRejectCode, _strRejectReason, _permanent);
     }
     bool Error(std::string strRejectReasonIn="") {
         if (mode == MODE_VALID)
@@ -999,6 +1003,9 @@ public:
             return true;
         }
         return false;
+    }
+    bool IsPermanent() const {
+        return permanent;
     }
     bool CorruptionPossible() const {
         return corruptionPossible;
