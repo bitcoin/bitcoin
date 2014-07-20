@@ -17,14 +17,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "Bitcoin-cli (OSS RPC client for Bitcoin)"
+            VALUE "CompanyName",        "Crowncoin"
+            VALUE "FileDescription",    "Crowncoin-cli (OSS RPC client for Crowncoin)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "bitcoin-cli"
+            VALUE "InternalName",       "crowncoin-cli"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "bitcoin-cli.exe"
-            VALUE "ProductName",        "Bitcoin-cli"
+            VALUE "OriginalFilename",   "crowncoin-cli.exe"
+            VALUE "ProductName",        "Crowncoin-cli"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

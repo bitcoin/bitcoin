@@ -73,7 +73,7 @@ static void InitMessage(const std::string &message)
  */
 static std::string Translate(const char* psz)
 {
-    return QCoreApplication::translate("bitcoin-core", psz).toStdString();
+    return QCoreApplication::translate("crowncoin-core", psz).toStdString();
 }
 
 /** Set up translations */
@@ -513,7 +513,7 @@ int main(int argc, char *argv[])
     // User language is set up: pick a data directory
     Intro::pickDataDirectory();
 
-    /// 6. Determine availability of data directory and parse bitcoin.conf
+    /// 6. Determine availability of data directory and parse crowncoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {

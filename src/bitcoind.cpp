@@ -63,7 +63,7 @@ bool AppInit(int argc, char* argv[])
         //
         // Parameters
         //
-        // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
+        // If Qt is used, parameters/crowncoin.conf are parsed in qt/bitcoin.cpp's main()
         ParseParameters(argc, argv);
         if (!boost::filesystem::is_directory(GetDataDir(false)))
         {
@@ -85,14 +85,14 @@ bool AppInit(int argc, char* argv[])
 
         if (mapArgs.count("-?") || mapArgs.count("--help"))
         {
-            // First part of help message is specific to bitcoind / RPC client
+            // First part of help message is specific to crowncoind / RPC client
             std::string strUsage = _("Crowncoin Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
                 _("Usage:") + "\n" +
-                  "  bitcoind [options]                     " + _("Start Crowncoin Daemon") + "\n" +
-                _("Usage (deprecated, use bitcoin-cli):") + "\n" +
-                  "  bitcoind [options] <command> [params]  " + _("Send command to Crowncoin") + "\n" +
-                  "  bitcoind [options] help                " + _("List commands") + "\n" +
-                  "  bitcoind [options] help <command>      " + _("Get help for a command") + "\n";
+                  "  crowncoind [options]                     " + _("Start Crowncoin Daemon") + "\n" +
+                _("Usage (deprecated, use crowncoin-cli):") + "\n" +
+                  "  crowncoind [options] <command> [params]  " + _("Send command to Crowncoin") + "\n" +
+                  "  crowncoind [options] help                " + _("List commands") + "\n" +
+                  "  crowncoind [options] help <command>      " + _("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessage(HMM_BITCOIND);
             strUsage += "\n" + HelpMessageCli(false);
@@ -116,7 +116,7 @@ bool AppInit(int argc, char* argv[])
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
-            fprintf(stdout, "Bitcoin server starting\n");
+            fprintf(stdout, "Crowncoin server starting\n");
 
             // Daemonize
             pid_t pid = fork();
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 
     bool fRet = false;
 
-    // Connect bitcoind signal handlers
+    // Connect crowncoind signal handlers
     noui_connect();
 
     fRet = AppInit(argc, argv);
