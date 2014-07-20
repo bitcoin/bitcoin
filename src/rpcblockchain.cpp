@@ -302,9 +302,9 @@ Value getcheckpoint(const Array& params, bool fHelp)
         Object raw; // raw checkpoint message data
         raw.push_back(Pair("data", HexStr(Checkpoints::checkpointMessage.vchMsg).c_str()));
         raw.push_back(Pair("signature", HexStr(Checkpoints::checkpointMessage.vchSig).c_str()));
-        msgdata.push_back(Pair("details", raw));
+        msgdata.push_back(Pair("raw", raw));
 
-        result.push_back(Pair("raw", msgdata));
+        result.push_back(Pair("data", msgdata));
     }
 
     // Check that the block satisfies synchronized checkpoint
