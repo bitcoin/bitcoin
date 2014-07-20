@@ -127,7 +127,7 @@ namespace {
 } // anon namespace
 
 // Bloom filter to limit respend relays to one
-static const unsigned int MAX_DOUBLESPEND_BLOOM = 1000;
+static const unsigned int MAX_DOUBLESPEND_BLOOM = 100000;
 static CBloomFilter doubleSpendFilter;
 void InitRespendFilter() {
     seed_insecure_rand();
@@ -145,8 +145,9 @@ void InitRespendFilter() {
 namespace {
 
 struct CMainSignals {
-    // Notifies listeners of updated transaction data (transaction, and optionally the block it is found in.
-    boost::signals2::signal<void (const CTransaction &, const CBlock *)> SyncTransaction;
+    // Notifies listeners of updated transaction data (transaction, optionally the block it is found in,
+	// and whether this is a known respend)
+    boost::signals2::signal<void (const CTransaction &, const CBlock *, bool)> SyncTransaction;
     // Notifies listeners of an erased transaction (currently disabled, requires transaction replacement).
     boost::signals2::signal<void (const uint256 &)> EraseTransaction;
     // Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible).
@@ -163,7 +164,7 @@ struct CMainSignals {
 
 
 void RegisterWallet(CWalletInterface* pwalletIn) {
-    g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2));
+    g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
     g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
     g_signals.UpdatedTransaction.connect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.SetBestChain.connect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
@@ -177,7 +178,7 @@ void UnregisterWallet(CWalletInterface* pwalletIn) {
     g_signals.SetBestChain.disconnect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
     g_signals.UpdatedTransaction.disconnect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.EraseTransaction.disconnect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
-    g_signals.SyncTransaction.disconnect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2));
+    g_signals.SyncTransaction.disconnect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
 }
 
 void UnregisterAllWallets() {
@@ -189,8 +190,8 @@ void UnregisterAllWallets() {
     g_signals.SyncTransaction.disconnect_all_slots();
 }
 
-void SyncWithWallets(const CTransaction &tx, const CBlock *pblock) {
-    g_signals.SyncTransaction(tx, pblock);
+void SyncWithWallets(const CTransaction &tx, const CBlock *pblock, bool fRespend) {
+    g_signals.SyncTransaction(tx, pblock, fRespend);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -897,21 +898,8 @@ bool RateLimitExceeded(double& dCount, int64_t& nLastTime, int64_t nLimit, unsig
     return false;
 }
 
-static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doubleSpend, bool fInBlock, CBloomFilter& filter)
+static bool RespendRelayExceeded(const CTransaction& doubleSpend)
 {
-    // Relaying double-spend attempts to our peers lets them detect when
-    // somebody might be trying to cheat them. However, blindly relaying
-    // every double-spend across the entire network gives attackers
-    // a denial-of-service attack: just generate a stream of double-spends
-    // re-spending the same (limited) set of outpoints owned by the attacker.
-    // So, we use a bloom filter and only relay (at most) the first double
-    // spend for each outpoint. False-positives ("we have already relayed")
-    // are OK, because if the peer doesn't hear about the double-spend
-    // from us they are very likely to hear about it from another peer, since
-    // each peer uses a different, randomized bloom filter.
-
-    if (fInBlock || filter.contains(outPoint)) return false;
-
     // Apply an independent rate limit to double-spend relays
     static double dRespendCount;
     static int64_t nLastRespendTime;
@@ -921,19 +909,12 @@ static bool RelayableRespend(const COutPoint& outPoint, const CTransaction& doub
     if (RateLimitExceeded(dRespendCount, nLastRespendTime, nRespendLimit, nSize))
     {
         LogPrint("mempool", "Double-spend relay rejected by rate limiter\n");
-        return false;
+        return true;
     }
 
     LogPrint("mempool", "Rate limit dRespendCount: %g => %g\n", dRespendCount, dRespendCount+nSize);
 
-    // Clear the filter on average every MAX_DOUBLE_SPEND_BLOOM
-    // insertions
-    if (insecure_rand()%MAX_DOUBLESPEND_BLOOM == 0)
-        filter.clear();
-
-    filter.insert(outPoint);
-
-    return true;
+    return false;
 }
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
@@ -964,20 +945,27 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         return false;
 
     // Check for conflicts with in-memory transactions
-    bool relayableRespend = false;
+    bool fRespend = false;
+    COutPoint relayForOutpoint;
     {
     LOCK(pool.cs); // protect pool.mapNextTx
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         COutPoint outpoint = tx.vin[i].prevout;
-        // Does tx conflict with a member of the pool, and is it not equivalent to that member?
-        if (pool.mapNextTx.count(outpoint) && !tx.IsEquivalentTo(*pool.mapNextTx[outpoint].ptx))
+        // A respend is a tx that conflicts with a member of the pool
+        if (pool.mapNextTx.count(outpoint))
         {
-            relayableRespend = RelayableRespend(outpoint, tx, false, doubleSpendFilter);
-            if (!relayableRespend)
-                return false;
+            fRespend = true;
+            // Relay only one tx per respent outpoint, but not if tx is equivalent to pool member
+            if (!doubleSpendFilter.contains(outpoint) && !tx.IsEquivalentTo(*pool.mapNextTx[outpoint].ptx))
+            {
+                relayForOutpoint = outpoint;
+                break;
+            }
         }
     }
+    if (fRespend && (relayForOutpoint.IsNull() || RespendRelayExceeded(tx)))
+        return false;
     }
 
     {
@@ -1069,8 +1057,12 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return error("AcceptToMemoryPool: : ConnectInputs failed %s", hash.ToString());
         }
 
-        if (relayableRespend)
+        if (fRespend)
         {
+            // Clear the filter on average every MAX_DOUBLE_SPEND_BLOOM insertions
+            if (insecure_rand()%MAX_DOUBLESPEND_BLOOM == 0)
+                doubleSpendFilter.clear();
+            doubleSpendFilter.insert(relayForOutpoint);
             RelayTransaction(tx);
         }
         else
@@ -1080,9 +1072,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         }
     }
 
-    g_signals.SyncTransaction(tx, NULL);
+    g_signals.SyncTransaction(tx, NULL, fRespend);
 
-    return !relayableRespend;
+    return !fRespend;
 }
 
 
@@ -1910,7 +1902,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 
     // Watch for transactions paying to me
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        g_signals.SyncTransaction(tx, &block);
+        g_signals.SyncTransaction(tx, &block, false);
 
     // Watch for changes to the previous coinbase transaction.
     static uint256 hashPrevBestCoinBase;
@@ -2016,7 +2008,7 @@ bool static DisconnectTip(CValidationState &state) {
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        SyncWithWallets(tx, NULL);
+        SyncWithWallets(tx, NULL, false);
     }
     return true;
 }
@@ -2056,11 +2048,11 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     // Tell wallet about transactions that went from mempool
     // to conflicted:
     BOOST_FOREACH(const CTransaction &tx, txConflicted) {
-        SyncWithWallets(tx, NULL);
+        SyncWithWallets(tx, NULL, false);
     }
     // ... and about transactions that got confirmed:
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        SyncWithWallets(tx, &block);
+        SyncWithWallets(tx, &block, false);
     }
     return true;
 }
