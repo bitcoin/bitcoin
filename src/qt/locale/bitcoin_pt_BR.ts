@@ -1507,7 +1507,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>%1 KB</source>
-        <translation>1% KB</translation>
+        <translation>%1 KB</translation>
     </message>
     <message>
         <source>%1 MB</source>
