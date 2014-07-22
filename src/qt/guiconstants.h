@@ -29,6 +29,10 @@ static const int STATUSBAR_ICONSIZE = 16;
 #define COLOR_TX_STATUS_OFFLINE QColor(192, 192, 192)
 /* Transaction list -- TX status decoration - default color */
 #define COLOR_BLACK QColor(0, 0, 0)
+/* Transaction list -- has conflicting transactions */
+#define COLOR_HASCONFLICTING QColor(255, 255, 255)
+/* Transaction list -- has conflicting transactions - background */
+#define COLOR_HASCONFLICTING_BG QColor(192, 0, 0)
 
 /* Tooltips longer than this (in characters) are converted into rich text,
    so that they can be word-wrapped.
