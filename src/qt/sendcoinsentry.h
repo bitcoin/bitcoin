@@ -51,6 +51,7 @@ public slots:
 signals:
     void removeEntry(SendCoinsEntry *entry);
     void payAmountChanged();
+    void subtractFeeFromAmountChanged();
 
 private slots:
     void deleteClicked();
