@@ -1,0 +1,84 @@
+cross_compiling=maybe
+host_alias=@HOST@
+ac_tool_prefix=${host_alias}-
+
+if test -z $with_boost; then
+  with_boost=$prefix
+fi
+if test -z $with_qt_plugindir; then
+  with_qt_plugindir=$prefix/plugins
+fi
+if test -z $with_qt_translationdir; then
+  with_qt_translationdir=$prefix/translations
+fi
+if test -z $with_qt_bindir; then
+  with_qt_bindir=$prefix/native/bin
+fi
+if test -z $with_protoc_bindir; then
+  with_protoc_bindir=$prefix/native/bin
+fi
+if test -z $with_comparison_tool; then
+  with_comparison_tool=$prefix/native/share/BitcoindComparisonTool_jar/BitcoindComparisonTool.jar
+fi
+
+
+if test -z $enable_wallet && test -n "@no_wallet@"; then
+  enable_wallet=no
+fi
+
+if test -z $with_miniupnpc && test -n "@no_upnp@"; then
+  with_miniupnpc=no
+fi
+
+if test -z $with_gui && test -n "@no_qt@"; then
+  with_gui=no
+fi
+
+if test @host_os@ == darwin; then
+  BREW=no
+  PORT=no
+fi
+
+if test @host_os@ == mingw32; then
+  if test -z $with_qt_incdir; then
+    with_qt_incdir=$prefix/include
+  fi
+  if test -z $with_qt_libdir; then
+    with_qt_libdir=$prefix/lib
+  fi
+fi
+
+export PATH=$prefix/native/bin:$PATH
+export PKG_CONFIG="`which pkg-config` --static"
+export PKG_CONFIG_LIBDIR=$prefix/lib/pkgconfig
+export PKG_CONFIG_PATH=$prefix/share/pkgconfig
+export CPPFLAGS=-I$prefix/include/
+
+export CC="@CC@"
+export CXX="@CXX@"
+export OBJC="${CC}"
+export OBJCXX="${CXX}"
+export CCACHE=$prefix/native/bin/ccache
+
+if test -n "@AR@"; then
+  export AR=@AR@
+  ac_cv_path_ac_pt_AR=${AR}
+fi
+
+if test -n "@RANLIB@"; then
+  export RANLIB=@RANLIB@
+  ac_cv_path_ac_pt_RANLIB=${RANLIB}
+fi
+
+if test -n "@NM@"; then
+  export NM=@NM@
+  ac_cv_path_ac_pt_NM=${NM}
+fi
+
+if test -n "@CFLAGS@"; then
+  export CFLAGS="@CFLAGS@ $CFLAGS"
+fi
+if test -n "@CXXFLAGS@"; then
+  export CXXFLAGS="@CXXFLAGS@ $CXXFLAGS"
+fi
+export LDFLAGS="-L$prefix/lib @LDFLAGS@ $LDFLAGS"
