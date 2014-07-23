@@ -193,7 +193,7 @@ public:
 
     uint256 GetHash() const;
 
-    bool IsDust(CFeeRate minRelayTxFee) const
+    int64_t GetDustThreshold(CFeeRate& minRelayTxFee) const
     {
         // "Dust" is defined in terms of CTransaction::minRelayTxFee,
         // which has units satoshis-per-kilobyte.
@@ -204,7 +204,12 @@ public:
         // so dust is a txout less than 546 satoshis 
         // with default minRelayTxFee.
         size_t nSize = GetSerializeSize(SER_DISK,0)+148u;
-        return (nValue < 3*minRelayTxFee.GetFee(nSize));
+        return 3*minRelayTxFee.GetFee(nSize);
+    }
+
+    bool IsDust(CFeeRate minRelayTxFee) const
+    {
+        return (nValue < GetDustThreshold(minRelayTxFee));
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
