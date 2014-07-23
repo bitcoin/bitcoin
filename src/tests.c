@@ -312,6 +312,21 @@ void run_field_inv_all_var() {
     }
 }
 
+void run_sqr() {
+    secp256k1_fe_t x, s;
+
+    {
+        secp256k1_fe_set_int(&x, 1);
+        secp256k1_fe_negate(&x, &x, 1);
+
+        for (int i=1; i<=512; ++i) {
+            secp256k1_fe_mul_int(&x, 2);
+            secp256k1_fe_normalize(&x);
+            secp256k1_fe_sqr(&s, &x);
+        }
+    }
+}
+
 void test_sqrt(const secp256k1_fe_t *a, const secp256k1_fe_t *k) {
     secp256k1_fe_t r1, r2;
     int v = secp256k1_fe_sqrt(&r1, a);
@@ -609,6 +624,7 @@ int main(int argc, char **argv) {
     run_field_inv_var();
     run_field_inv_all();
     run_field_inv_all_var();
+    run_sqr();
     run_sqrt();
 
     // ecmult tests
