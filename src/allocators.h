@@ -131,7 +131,7 @@ public:
  * Due to the unpredictable order of static initializers, we have to make sure the
  * LockedPageManager instance exists before any other STL-based objects that use
  * secure_allocator are created. So instead of having LockedPageManager also be
- * static-intialized, it is created on demand.
+ * static-initialized, it is created on demand.
  */
 class LockedPageManager: public LockedPageManagerBase<MemoryPageLocker>
 {
