@@ -602,14 +602,15 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
 CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView &baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
 bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) {
-    if (base->GetCoins(txid, coins))
-        return true;
+    // If an entry in the mempool exists, always return that one, as it's guaranteed to never
+    // conflict with the underlying cache, and it cannot have pruned entries (as it contains full)
+    // transactions. First checking the underlying cache risks returning a pruned entry instead.
     CTransaction tx;
     if (mempool.lookup(txid, tx)) {
         coins = CCoins(tx, MEMPOOL_HEIGHT);
         return true;
     }
-    return false;
+    return (base->GetCoins(txid, coins) && !coins.IsPruned());
 }
 
 bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) {
