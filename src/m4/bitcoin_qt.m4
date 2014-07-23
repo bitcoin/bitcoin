@@ -123,7 +123,8 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
         _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)],[-lqwindows])
         AC_DEFINE(QT_QPA_PLATFORM_WINDOWS, 1, [Define this symbol if the qt platform is windows])
       elif test x$TARGET_OS == xlinux; then
-        _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QXcbIntegrationPlugin)],[-lqxcb -lxcb-static -lxcb])
+        PKG_CHECK_MODULES([X11XCB], [x11-xcb], [QT_LIBS="$X11XCB_LIBS $QT_LIBS"])
+        _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QXcbIntegrationPlugin)],[-lqxcb -lxcb-static])
         AC_DEFINE(QT_QPA_PLATFORM_XCB, 1, [Define this symbol if the qt platform is xcb])
       elif test x$TARGET_OS == xdarwin; then
         if test x$use_pkgconfig = xyes; then
@@ -370,7 +371,7 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
   BITCOIN_QT_CHECK(AC_CHECK_LIB([z] ,[main],,AC_MSG_WARN([zlib not found. Assuming qt has it built-in])))
   BITCOIN_QT_CHECK(AC_CHECK_LIB([png] ,[main],,AC_MSG_WARN([libpng not found. Assuming qt has it built-in])))
   BITCOIN_QT_CHECK(AC_CHECK_LIB([jpeg] ,[main],,AC_MSG_WARN([libjpeg not found. Assuming qt has it built-in])))
-  BITCOIN_QT_CHECK(AC_CHECK_LIB([pcre] ,[main],,AC_MSG_WARN([libpcre not found. Assuming qt has it built-in])))
+  BITCOIN_QT_CHECK(AC_CHECK_LIB([pcre16] ,[main],,AC_MSG_WARN([libpcre16 not found. Assuming qt has it built-in])))
   BITCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}Core]   ,[main],,BITCOIN_QT_FAIL(lib$QT_LIB_PREFIXCore not found)))
   BITCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}Gui]    ,[main],,BITCOIN_QT_FAIL(lib$QT_LIB_PREFIXGui not found)))
   BITCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}Network],[main],,BITCOIN_QT_FAIL(lib$QT_LIB_PREFIXNetwork not found)))
