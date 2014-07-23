@@ -8,9 +8,10 @@
 #include <QWidget>
 
 QT_BEGIN_NAMESPACE
-class QDoubleSpinBox;
 class QValueComboBox;
 QT_END_NAMESPACE
+
+class AmountSpinBox;
 
 /** Widget for entering bitcoin amounts.
   */
@@ -18,7 +19,7 @@ class BitcoinAmountField: public QWidget
 {
     Q_OBJECT
 
-    Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY textChanged USER true)
+    Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY valueChanged USER true)
 
 public:
     explicit BitcoinAmountField(QWidget *parent = 0);
@@ -49,20 +50,15 @@ public:
     QWidget *setupTabChain(QWidget *prev);
 
 signals:
-    void textChanged();
+    void valueChanged();
 
 protected:
     /** Intercept focus-in event and ',' key presses */
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
-    QDoubleSpinBox *amount;
+    AmountSpinBox *amount;
     QValueComboBox *unit;
-    int currentUnit;
-    qint64 nSingleStep;
-
-    void setText(const QString &text);
-    QString text() const;
 
 private slots:
     void unitChanged(int idx);

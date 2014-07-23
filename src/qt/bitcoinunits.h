@@ -82,10 +82,6 @@ public:
     static QString description(int unit);
     //! Number of Satoshis (1e-8) per unit
     static qint64 factor(int unit);
-    //! Max amount per unit
-    static qint64 maxAmount(int unit);
-    //! Number of amount digits (to represent max number of coins)
-    static int amountDigits(int unit);
     //! Number of decimals left
     static int decimals(int unit);
     //! Format as string
@@ -119,6 +115,9 @@ public:
 #endif
         return text;
     }
+
+    //! Return maximum number of base units (Satoshis)
+    static qint64 maxMoney();
 
 private:
     QList<BitcoinUnits::Unit> unitlist;
