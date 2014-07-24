@@ -49,6 +49,24 @@ void AddTimeData(const CNetAddr& ip, int64_t nTime)
     static CMedianFilter<int64_t> vTimeOffsets(200,0);
     vTimeOffsets.input(nOffsetSample);
     LogPrintf("Added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample/60);
+
+    // There is a known issue here (see issue #4521):
+    //
+    // - The structure vTimeOffsets contains up to 200 elements, after which
+    // any new element added to it will not increase its size, replacing the
+    // oldest element.
+    //
+    // - The condition to update nTimeOffset includes checking whether the
+    // number of elements in vTimeOffsets is odd, which will never happen after
+    // there are 200 elements.
+    //
+    // But in this case the 'bug' is protective against some attacks, and may
+    // actually explain why we've never seen attacks which manipulate the
+    // clock offset.
+    //
+    // So we should hold off on fixing this and clean it up as part of
+    // a timing cleanup that strengthens it in a number of other ways.
+    //
     if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1)
     {
         int64_t nMedian = vTimeOffsets.median();
