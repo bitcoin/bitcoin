@@ -41,9 +41,9 @@ qint64 WalletModel::getBalance() const
     return wallet->GetBalance();
 }
 
-void WalletModel::getBalance(qint64 &nTotal, qint64 &nWatchOnly) const
+qint64 WalletModel::getBalanceWatchOnly() const
 {
-    wallet->GetBalance(nTotal, nWatchOnly);
+    return wallet->GetBalanceWatchOnly();
 }
 
 qint64 WalletModel::getUnconfirmedBalance() const
@@ -91,9 +91,7 @@ void WalletModel::pollBalanceChanged()
 
 void WalletModel::checkBalanceChanged()
 {
-    qint64 newBalanceTotal=0, newBalanceWatchOnly=0;
-    getBalance(newBalanceTotal, newBalanceWatchOnly);
-
+    qint64 newBalanceTotal=getBalance(), newBalanceWatchOnly=getBalanceWatchOnly();
     qint64 newStake = getStake();
     qint64 newUnconfirmedBalance = getUnconfirmedBalance();
     qint64 newImmatureBalance = getImmatureBalance();

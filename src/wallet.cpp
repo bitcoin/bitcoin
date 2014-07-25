@@ -102,7 +102,7 @@ bool CWallet::AddCScript(const CScript& redeemScript)
     return CWalletDB(strWalletFile).WriteCScript(Hash160(redeemScript), redeemScript);
 }
 
-bool CWallet::AddWatchOnly(const CTxDestination &dest)
+bool CWallet::AddWatchOnly(const CScript &dest)
 {
     if (!CCryptoKeyStore::AddWatchOnly(dest))
         return false;
@@ -112,9 +112,8 @@ bool CWallet::AddWatchOnly(const CTxDestination &dest)
     return CWalletDB(strWalletFile).WriteWatchOnly(dest);
 }
 
-bool CWallet::LoadWatchOnly(const CTxDestination &dest)
+bool CWallet::LoadWatchOnly(const CScript &dest)
 {
-    printf("Loaded %s!\n", CBitcoinAddress(dest).ToString().c_str());
     return CCryptoKeyStore::AddWatchOnly(dest);
 }
 
@@ -621,17 +620,19 @@ int64 CWallet::GetDebit(const CTxIn &txin) const
 
 bool CWallet::IsChange(const CTxOut& txout) const
 {
-    CTxDestination address;
-
     // TODO: fix handling of 'change' outputs. The assumption is that any
-    // payment to a TX_PUBKEYHASH that is mine but isn't in the address book
+    // payment to a script that is ours, but isn't in the address book
     // is change. That assumption is likely to break when we implement multisignature
     // wallets that return change back into a multi-signature-protected address;
     // a better way of identifying which outputs are 'the send' and which are
     // 'the change' will need to be implemented (maybe extend CWalletTx to remember
     // which output, if any, was change).
-    if (ExtractDestination(txout.scriptPubKey, address) && ::IsMine(*this, address))
+    if (::IsMine(*this, txout.scriptPubKey))
     {
+        CTxDestination address;
+        if (!ExtractDestination(txout.scriptPubKey, address))
+            return true;
+
         LOCK(cs_wallet);
         if (!mapAddressBook.count(address))
             return true;
@@ -1034,26 +1035,27 @@ int64 CWallet::GetBalance() const
         {
             const CWalletTx* pcoin = &(*it).second;
             if (pcoin->IsTrusted())
-                nTotal += pcoin->GetAvailableCredit(false);
+                nTotal += pcoin->GetAvailableCredit();
         }
     }
 
     return nTotal;
 }
 
-void CWallet::GetBalance(int64 &nTotal, int64 &nWatchOnly) const
+int64 CWallet::GetBalanceWatchOnly() const
 {
+    int64 nTotal = 0;
     {
         LOCK(cs_wallet);
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            if (pcoin->IsTrusted()) {
-                nWatchOnly += pcoin->GetAvailableCredit(true);
-                nTotal += pcoin->GetAvailableCredit(false);
-            }
+            if (pcoin->IsTrusted())
+                nTotal += pcoin->GetAvailableCreditWatchOnly();
         }
     }
+
+    return nTotal;
 }
 
 int64 CWallet::GetUnconfirmedBalance() const

@@ -63,20 +63,23 @@ bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
     return false;
 }
 
-bool CBasicKeyStore::AddWatchOnly(const CTxDestination &dest)
+bool CBasicKeyStore::AddWatchOnly(const CScript &dest)
 {
     LOCK(cs_KeyStore);
-    CKeyID keyID;
-    CBitcoinAddress(dest).GetKeyID(keyID);
 
-    if (HaveKey(keyID))
-        return false;
+    CTxDestination address;
+    if (ExtractDestination(dest, address)) {
+        CKeyID keyID;
+        CBitcoinAddress(address).GetKeyID(keyID);
+        if (HaveKey(keyID))
+            return false;
+    }
 
     setWatchOnly.insert(dest);
     return true;
 }
 
-bool CBasicKeyStore::HaveWatchOnly(const CTxDestination &dest) const
+bool CBasicKeyStore::HaveWatchOnly(const CScript &dest) const
 {
     LOCK(cs_KeyStore);
     return setWatchOnly.count(dest) > 0;
@@ -145,8 +148,10 @@ bool CCryptoKeyStore::AddKey(const CKey& key)
     {
         LOCK(cs_KeyStore);
 
-        CTxDestination address = key.GetPubKey().GetID();
-        if (HaveWatchOnly(address))
+        CScript script;
+        script.SetDestination(key.GetPubKey().GetID());
+
+        if (HaveWatchOnly(script))
             return false;
 
         if (!IsCrypted())

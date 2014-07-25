@@ -123,10 +123,10 @@ public:
         return Write(std::make_pair(std::string("cscript"), hash), redeemScript, false);
     }
 
-    bool WriteWatchOnly(const CTxDestination &dest)
+    bool WriteWatchOnly(const CScript &dest)
     {
         nWalletDBUpdated++;
-        return Write(std::make_pair(std::string("watch"), CBitcoinAddress(dest).ToString()), '1');
+        return Write(std::make_pair(std::string("watchs"), dest), '1');
     }
 
     bool WriteBestBlock(const CBlockLocator& locator)

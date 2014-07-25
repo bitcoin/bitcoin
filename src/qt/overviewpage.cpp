@@ -179,9 +179,7 @@ void OverviewPage::setModel(WalletModel *model)
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
         // Keep up to date with wallet
-        qint64 nTotal=0, nWatchOnly=0;
-        model->getBalance(nTotal, nWatchOnly);
-        setBalance(nTotal, nWatchOnly, model->getStake(), model->getUnconfirmedBalance(), model->getImmatureBalance());
+        setBalance(model->getBalance(), model->getBalanceWatchOnly(), model->getStake(), model->getUnconfirmedBalance(), model->getImmatureBalance());
         connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64, qint64, qint64)));
 
         setNumTransactions(model->getNumTransactions());

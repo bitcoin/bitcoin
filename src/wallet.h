@@ -33,7 +33,6 @@ enum WalletFeature
 
     FEATURE_WALLETCRYPT = 40000, // wallet encryption
     FEATURE_COMPRPUBKEY = 60000, // compressed public keys
-
     FEATURE_LATEST = 60000
 };
 
@@ -150,9 +149,9 @@ public:
     bool LoadCScript(const CScript& redeemScript) { return CCryptoKeyStore::AddCScript(redeemScript); }
 
     // Adds a watch-only address to the store, and saves it to disk.
-    bool AddWatchOnly(const CTxDestination &dest);
+    bool AddWatchOnly(const CScript &dest);
     // Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
-    bool LoadWatchOnly(const CTxDestination &dest);
+    bool LoadWatchOnly(const CScript &dest);
 
     bool Unlock(const SecureString& strWalletPassphrase);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
@@ -185,7 +184,7 @@ public:
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
     int64 GetBalance() const;
-    void GetBalance(int64 &nTotal, int64 &nWatchOnly) const;
+    int64 GetBalanceWatchOnly() const;
     int64 GetUnconfirmedBalance() const;
     int64 GetImmatureBalance() const;
     int64 GetStake() const;
@@ -220,12 +219,19 @@ public:
     {
         return ::IsMine(*this, txout.scriptPubKey);
     }
-    int64 GetCredit(const CTxOut& txout, bool fWatchOnly=false) const
+    int64 GetCredit(const CTxOut& txout) const
     {
         if (!MoneyRange(txout.nValue))
             throw std::runtime_error("CWallet::GetCredit() : value out of range");
         isminetype ismine = IsMine(txout);
-        if (fWatchOnly && ismine != MINE_WATCH_ONLY)
+        return (ismine != MINE_NO ? txout.nValue : 0);
+    }
+    int64 GetCreditWatchOnly(const CTxOut& txout) const
+    {
+        if (!MoneyRange(txout.nValue))
+            throw std::runtime_error("CWallet::GetCreditWatchOnly() : value out of range");
+        isminetype ismine = IsMine(txout);
+        if (ismine != MINE_WATCH_ONLY)
             return 0;
         return (ismine != MINE_NO ? txout.nValue : 0);
     }
@@ -258,14 +264,23 @@ public:
         }
         return nDebit;
     }
-    int64 GetCredit(const CTransaction& tx, bool fWatchOnly=true) const
+    int64 GetCredit(const CTransaction& tx) const
     {
         int64 nCredit = 0;
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
         {
-            if (!fWatchOnly || (fWatchOnly && IsMine(txout) == MINE_WATCH_ONLY))
-                nCredit += GetCredit(txout);
-
+            nCredit += GetCredit(txout);
+            if (!MoneyRange(nCredit))
+                throw std::runtime_error("CWallet::GetCredit() : value out of range");
+        }
+        return nCredit;
+    }
+    int64 GetCreditWatchOnly(const CTransaction& tx) const
+    {
+        int64 nCredit = 0;
+        BOOST_FOREACH(const CTxOut& txout, tx.vout)
+        {
+            nCredit += GetCreditWatchOnly(txout);
             if (!MoneyRange(nCredit))
                 throw std::runtime_error("CWallet::GetCredit() : value out of range");
         }
@@ -601,7 +616,7 @@ public:
         return nDebitCached;
     }
 
-    int64 GetCredit(bool fWatchOnly, bool fUseCache=true) const
+    int64 GetCredit(bool fUseCache=true) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
         if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
@@ -609,17 +624,8 @@ public:
 
         // GetBalance can assume transactions in mapWallet won't change
         if (fUseCache) {
-            if (fWatchOnly && fCreditCached)
-                return nWatchOnlyCreditCached;
             if (fCreditCached)
                 return nCreditCached;
-        }
-
-        if (fWatchOnly) {
-            nWatchOnlyCreditCached = pwallet->GetCredit(*this, true);
-            fWatchOnlyCreditCached = true;
-
-            return nWatchOnlyCreditCached;
         }
 
         nCreditCached = pwallet->GetCredit(*this);
@@ -628,16 +634,13 @@ public:
         return nCreditCached;
     }
 
-    int64 GetAvailableCredit(bool fWatchOnly, bool fUseCache=true) const
+    int64 GetAvailableCredit(bool fUseCache=true) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
         if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
             return 0;
 
         if (fUseCache) {
-            if (fWatchOnly && fAvailableWatchOnlyCreditCached)
-                return nAvailableWatchOnlyCreditCached;
-
             if (fAvailableCreditCached)
                 return nAvailableCreditCached;
         }
@@ -648,19 +651,62 @@ public:
             if (!IsSpent(i))
             {
                 const CTxOut &txout = vout[i];
-                nCredit += pwallet->GetCredit(txout, fWatchOnly);
+                nCredit += pwallet->GetCredit(txout);
                 if (!MoneyRange(nCredit))
                     throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
             }
         }
 
-        if (fWatchOnly) {
-            nAvailableWatchOnlyCreditCached = nCredit;
-            fAvailableWatchOnlyCreditCached = true;
-        } else {
-            nAvailableCreditCached = nCredit;
-            fAvailableCreditCached = true;
+        nAvailableCreditCached = nCredit;
+        fAvailableCreditCached = true;
+
+        return nCredit;
+    }
+
+    int64 GetCreditWatchOnly(bool fUseCache=true) const
+    {
+        // Must wait until coinbase is safely deep enough in the chain before valuing it
+        if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
+            return 0;
+
+        // GetBalance can assume transactions in mapWallet won't change
+        if (fUseCache) {
+            if (fWatchOnlyCreditCached)
+                return nWatchOnlyCreditCached;
         }
+
+        nWatchOnlyCreditCached = pwallet->GetCreditWatchOnly(*this);
+        fWatchOnlyCreditCached = true;
+
+        return nWatchOnlyCreditCached;
+    }
+
+    int64 GetAvailableCreditWatchOnly(bool fUseCache=true) const
+    {
+        // Must wait until coinbase is safely deep enough in the chain before valuing it
+        if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
+            return 0;
+
+        if (fUseCache) {
+            if (fAvailableWatchOnlyCreditCached)
+                return nAvailableWatchOnlyCreditCached;
+        }
+
+        int64 nCredit = 0;
+        for (unsigned int i = 0; i < vout.size(); i++)
+        {
+            if (!IsSpent(i))
+            {
+                const CTxOut &txout = vout[i];
+                nCredit += pwallet->GetCreditWatchOnly(txout);
+                if (!MoneyRange(nCredit))
+                    throw std::runtime_error("CWalletTx::GetAvailableCreditWatchOnly() : value out of range");
+            }
+        }
+
+        nAvailableWatchOnlyCreditCached = nCredit;
+        fAvailableWatchOnlyCreditCached = true;
+
         return nCredit;
     }
 
