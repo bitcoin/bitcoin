@@ -15,11 +15,11 @@
 #include "optionsmodel.h"
 
 #include "main.h" // for MAX_SCRIPTCHECK_THREADS
+#include "netbase.h"
+#include "txdb.h" // for -dbcache defaults
 #ifdef ENABLE_WALLET
 #include "wallet.h" // for CWallet::minTxFee
 #endif
-#include "netbase.h"
-#include "txdb.h" // for -dbcache defaults
 
 #include <QDir>
 #include <QIntValidator>
