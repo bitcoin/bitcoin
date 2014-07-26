@@ -205,31 +205,6 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     // For generated transactions, determine maturity
     if(type == TransactionRecord::Generated)
     {
-/*
-        int64 nCredit = wtx.GetCredit(true);
-        if (nCredit == 0)
-        {
-            status.maturity = TransactionStatus::Immature;
-
-            if (wtx.IsInMainChain())
-            {
-                status.matures_in = wtx.GetBlocksToMaturity();
-
-                // Check if the block was requested by anyone
-                if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-                    status.maturity = TransactionStatus::MaturesWarning;
-            }
-            else
-            {
-                status.maturity = TransactionStatus::NotAccepted;
-            }
-        }
-        else
-        {
-            status.maturity = TransactionStatus::Mature;
-        }
-*/
-
         if (wtx.GetBlocksToMaturity() > 0)
         {
             status.maturity = TransactionStatus::Immature;
