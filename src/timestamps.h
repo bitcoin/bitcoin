@@ -9,5 +9,6 @@ static const unsigned int STAKECURVE_SWITCH_TIME = 1382227200; // Sun, 20 Oct 20
 static const unsigned int FEE_SWITCH_TIME = 1405814400; // Sun, 20 Jul 2014 00:00:00 GMT
 
 static const unsigned int VALIDATION_SWITCH_TIME = 1408492800; // Wed, 20 Aug 2014 00:00:00 GMT
+static const unsigned int SIG_SWITCH_TIME = 1411171200; // Sat, 20 Sep 2014 00:00:00 GMT
 
 #endif

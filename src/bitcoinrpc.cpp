@@ -248,7 +248,6 @@ static const CRPCCommand vRPCCommands[] =
     { "getsubsidy",             &getsubsidy,             true,   false },
     { "getmininginfo",          &getmininginfo,          true,   false },
     { "getnewaddress",          &getnewaddress,          true,   false },
-    { "getnewpubkey",           &getnewpubkey,           true,   false },
     { "getaccountaddress",      &getaccountaddress,      true,   false },
     { "setaccount",             &setaccount,             true,   false },
     { "getaccount",             &getaccount,             false,  false },
@@ -265,7 +264,6 @@ static const CRPCCommand vRPCCommands[] =
     { "walletlock",             &walletlock,             true,   false },
     { "encryptwallet",          &encryptwallet,          false,  false },
     { "validateaddress",        &validateaddress,        true,   false },
-    { "validatepubkey",         &validatepubkey,         true,   false },
     { "getbalance",             &getbalance,             false,  false },
     { "move",                   &movecmd,                false,  false },
     { "sendfrom",               &sendfrom,               false,  false },
@@ -292,6 +290,7 @@ static const CRPCCommand vRPCCommands[] =
     { "dumpwallet",             &dumpwallet,             true,   false },
     { "importwallet",           &importwallet,           false,  false },
     { "importprivkey",          &importprivkey,          false,  false },
+    { "importaddress",          &importaddress,          false,  true  },
     { "listunspent",            &listunspent,            false,  false },
     { "getrawtransaction",      &getrawtransaction,      false,  false },
     { "createrawtransaction",   &createrawtransaction,   false,  false },
@@ -668,7 +667,7 @@ private:
 void ThreadRPCServer(void* parg)
 {
     // Make this thread recognisable as the RPC listener
-    RenameThread("bitcoin-rpclist");
+    RenameThread("novacoin-rpclist");
 
     try
     {
@@ -968,7 +967,7 @@ static CCriticalSection cs_THREAD_RPCHANDLER;
 void ThreadRPCServer3(void* parg)
 {
     // Make this thread recognisable as the RPC handler
-    RenameThread("bitcoin-rpchand");
+    RenameThread("novacoin-rpchand");
 
     {
         LOCK(cs_THREAD_RPCHANDLER);
@@ -1229,6 +1228,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "signrawtransaction"     && n > 1) ConvertTo<Array>(params[1], true);
     if (strMethod == "signrawtransaction"     && n > 2) ConvertTo<Array>(params[2], true);
     if (strMethod == "keypoolrefill"          && n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "importaddress"          && n > 2) ConvertTo<bool>(params[2]);
 
     return params;
 }

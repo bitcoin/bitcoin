@@ -44,6 +44,8 @@ static const int64 MIN_TXOUT_AMOUNT = CENT/100;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+// Maximum number of script-checking threads allowed
+static const int MAX_SCRIPTCHECK_THREADS = 16;
 
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
@@ -87,8 +89,7 @@ extern int64 nTransactionFee;
 extern int64 nMinimumInputValue;
 extern bool fUseFastIndex;
 extern unsigned int nDerivationMethodIndex;
-
-extern bool fEnforceCanonical;
+extern int nScriptCheckThreads;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;
@@ -96,6 +97,7 @@ static const uint64 nMinDiskSpace = 52428800;
 class CReserveKey;
 class CTxDB;
 class CTxIndex;
+class CScriptCheck;
 
 void RegisterWallet(CWallet* pwalletIn);
 void UnregisterWallet(CWallet* pwalletIn);
@@ -110,6 +112,11 @@ CBlockIndex* FindBlockByHeight(int nHeight);
 bool ProcessMessages(CNode* pfrom);
 bool SendMessages(CNode* pto, bool fSendTrickle);
 bool LoadExternalBlockFile(FILE* fileIn);
+
+// Run an instance of the script checking thread
+void ThreadScriptCheck(void* parg);
+// Stop the script checking threads
+void ThreadScriptCheckQuit();
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake);
@@ -126,8 +133,7 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 void StakeMiner(CWallet *pwallet);
 void ResendWalletTransactions();
 
-
-
+bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 
 
 
@@ -693,12 +699,14 @@ public:
         @param[in] pindexBlock
         @param[in] fBlock	true if called from ConnectBlock
         @param[in] fMiner	true if called from CreateNewBlock
-        @param[in] fStrictPayToScriptHash	true if fully validating p2sh transactions
+        @param[in] fScriptChecks	enable scripts validation?
+        @param[in] flags	STRICT_FLAGS script validation flags
+        @param[in] pvChecks	NULL If pvChecks is not NULL, script checks are pushed onto it instead of being performed inline.
         @return Returns true if all checks succeed
      */
-    bool ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
-                       std::map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
-                       const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, bool fStrictPayToScriptHash=true);
+    bool ConnectInputs(CTxDB& txdb, MapPrevTx inputs, std::map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx, const CBlockIndex* pindexBlock, 
+                     bool fBlock, bool fMiner, bool fScriptChecks=true, 
+                     unsigned int flags=STRICT_FLAGS, std::vector<CScriptCheck> *pvChecks = NULL);
     bool ClientConnectInputs();
     bool CheckTransaction() const;
     bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
@@ -708,6 +716,33 @@ protected:
     const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
 };
 
+/** Closure representing one script verification
+ *  Note that this stores references to the spending transaction */
+class CScriptCheck
+{
+private:
+    CScript scriptPubKey;
+    const CTransaction *ptxTo;
+    unsigned int nIn;
+    unsigned int nFlags;
+    int nHashType;
+
+public:
+    CScriptCheck() {}
+    CScriptCheck(const CTransaction& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
+        scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
+        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), nHashType(nHashTypeIn) { }
+
+    bool operator()() const;
+
+    void swap(CScriptCheck &check) {
+        scriptPubKey.swap(check.scriptPubKey);
+        std::swap(ptxTo, check.ptxTo);
+        std::swap(nIn, check.nIn);
+        std::swap(nFlags, check.nFlags);
+        std::swap(nHashType, check.nHashType);
+    }
+};
 
 
 

@@ -74,6 +74,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
     obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
     obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
+    obj.push_back(Pair("unspendable",       ValueFromAmount(pwalletMain->GetWatchOnlyBalance())));
     obj.push_back(Pair("newmint",       ValueFromAmount(pwalletMain->GetNewMint())));
     obj.push_back(Pair("stake",         ValueFromAmount(pwalletMain->GetStake())));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
@@ -97,35 +98,6 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }
-
-
-Value getnewpubkey(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() > 1)
-        throw runtime_error(
-            "getnewpubkey [account]\n"
-            "Returns new public key for coinbase generation.");
-
-    // Parse the account first so we don't generate a key if there's an error
-    string strAccount;
-    if (params.size() > 0)
-        strAccount = AccountFromValue(params[0]);
-
-    if (!pwalletMain->IsLocked())
-        pwalletMain->TopUpKeyPool();
-
-    // Generate a new key that is added to wallet
-    CPubKey newKey;
-    if (!pwalletMain->GetKeyFromPool(newKey, false))
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-    CKeyID keyID = newKey.GetID();
-
-    pwalletMain->SetAddressBookName(keyID, strAccount);
-    vector<unsigned char> vchPubKey = newKey.Raw();
-
-    return HexStr(vchPubKey.begin(), vchPubKey.end());
-}
-
 
 Value getnewaddress(const Array& params, bool fHelp)
 {
@@ -509,7 +481,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 }
 
 
-int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinDepth)
+int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinDepth, const isminefilter& filter)
 {
     int64 nBalance = 0;
 
@@ -521,7 +493,7 @@ int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinD
             continue;
 
         int64 nGenerated, nReceived, nSent, nFee;
-        wtx.GetAccountAmounts(strAccount, nGenerated, nReceived, nSent, nFee);
+        wtx.GetAccountAmounts(strAccount, nGenerated, nReceived, nSent, nFee, filter);
 
         if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth)
             nBalance += nReceived;
@@ -534,10 +506,10 @@ int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinD
     return nBalance;
 }
 
-int64 GetAccountBalance(const string& strAccount, int nMinDepth)
+int64 GetAccountBalance(const string& strAccount, int nMinDepth, const isminefilter& filter)
 {
     CWalletDB walletdb(pwalletMain->strWalletFile);
-    return GetAccountBalance(walletdb, strAccount, nMinDepth);
+    return GetAccountBalance(walletdb, strAccount, nMinDepth, filter);
 }
 
 
@@ -545,9 +517,10 @@ Value getbalance(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
-            "getbalance [account] [minconf=1]\n"
+            "getbalance [account] [minconf=1] [watchonly=0]\n"
             "If [account] is not specified, returns the server's total available balance.\n"
-            "If [account] is specified, returns the balance in the account.");
+            "If [account] is specified, returns the balance in the account.\n"
+            "if [includeWatchonly] is specified, include balance in watchonly addresses (see 'importaddress').");
 
     if (params.size() == 0)
         return  ValueFromAmount(pwalletMain->GetBalance());
@@ -555,6 +528,10 @@ Value getbalance(const Array& params, bool fHelp)
     int nMinDepth = 1;
     if (params.size() > 1)
         nMinDepth = params[1].get_int();
+    isminefilter filter = MINE_SPENDABLE;
+    if(params.size() > 2)
+        if(params[2].get_bool())
+            filter = filter | MINE_WATCH_ONLY;
 
     if (params[0].get_str() == "*") {
         // Calculate total balance a different way from GetBalance()
@@ -573,7 +550,7 @@ Value getbalance(const Array& params, bool fHelp)
             string strSentAccount;
             list<pair<CTxDestination, int64> > listReceived;
             list<pair<CTxDestination, int64> > listSent;
-            wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
+            wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount, filter);
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
                 BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64)& r, listReceived)
@@ -589,7 +566,7 @@ Value getbalance(const Array& params, bool fHelp)
 
     string strAccount = AccountFromValue(params[0]);
 
-    int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
+    int64 nBalance = GetAccountBalance(strAccount, nMinDepth, filter);
 
     return ValueFromAmount(nBalance);
 }
@@ -680,7 +657,7 @@ Value sendfrom(const Array& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     // Check funds
-    int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
+    int64 nBalance = GetAccountBalance(strAccount, nMinDepth, MINE_SPENDABLE);
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -741,7 +718,7 @@ Value sendmany(const Array& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     // Check funds
-    int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
+    int64 nBalance = GetAccountBalance(strAccount, nMinDepth, MINE_SPENDABLE);
     if (totalAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -751,7 +728,8 @@ Value sendmany(const Array& params, bool fHelp)
     bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired);
     if (!fCreated)
     {
-        if (totalAmount + nFeeRequired > pwalletMain->GetBalance())
+        int64 nTotal = pwalletMain->GetBalance(), nWatchOnly = pwalletMain->GetWatchOnlyBalance();
+        if (totalAmount + nFeeRequired > nTotal - nWatchOnly)
             throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
         throw JSONRPCError(RPC_WALLET_ERROR, "Transaction creation failed");
     }
@@ -993,16 +971,17 @@ static void MaybePushAddress(Object & entry, const CTxDestination &dest)
         entry.push_back(Pair("address", addr.ToString()));
 }
 
-void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
+void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret, const isminefilter& filter)
 {
     int64 nGeneratedImmature, nGeneratedMature, nFee;
     string strSentAccount;
     list<pair<CTxDestination, int64> > listReceived;
     list<pair<CTxDestination, int64> > listSent;
 
-    wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
+    wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount, filter);
 
     bool fAllAccounts = (strAccount == string("*"));
+    bool involvesWatchonly = wtx.IsFromMe(MINE_WATCH_ONLY);
 
     // Generated blocks assigned to account ""
     if ((nGeneratedMature+nGeneratedImmature) != 0 && (fAllAccounts || strAccount == ""))
@@ -1031,6 +1010,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         {
             Object entry;
             entry.push_back(Pair("account", strSentAccount));
+            if(involvesWatchonly || (::IsMine(*pwalletMain, s.first) & MINE_WATCH_ONLY))
+                entry.push_back(Pair("involvesWatchonly", true));
             MaybePushAddress(entry, s.first);
 
             if (wtx.GetDepthInMainChain() < 0) {
@@ -1059,6 +1040,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             {
                 Object entry;
                 entry.push_back(Pair("account", account));
+                if(involvesWatchonly || (::IsMine(*pwalletMain, r.first) & MINE_WATCH_ONLY))
+                    entry.push_back(Pair("involvesWatchonly", true));
                 MaybePushAddress(entry, r.first);
                 if (wtx.IsCoinBase())
                 {
@@ -1114,6 +1097,11 @@ Value listtransactions(const Array& params, bool fHelp)
     if (params.size() > 2)
         nFrom = params[2].get_int();
 
+    isminefilter filter = MINE_SPENDABLE;
+    if(params.size() > 3)
+        if(params[3].get_bool())
+            filter = filter | MINE_WATCH_ONLY;
+
     if (nCount < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     if (nFrom < 0)
@@ -1129,7 +1117,7 @@ Value listtransactions(const Array& params, bool fHelp)
     {
         CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0)
-            ListTransactions(*pwtx, strAccount, 0, true, ret);
+            ListTransactions(*pwtx, strAccount, 0, true, ret, filter);
         CAccountingEntry *const pacentry = (*it).second.second;
         if (pacentry != 0)
             AcentryToJSON(*pacentry, strAccount, ret);
@@ -1166,6 +1154,12 @@ Value listaccounts(const Array& params, bool fHelp)
     if (params.size() > 0)
         nMinDepth = params[0].get_int();
 
+    isminefilter includeWatchonly = MINE_SPENDABLE;
+    if(params.size() > 1)
+        if(params[1].get_bool())
+            includeWatchonly = includeWatchonly | MINE_WATCH_ONLY;
+
+
     map<string, int64> mapAccountBalances;
     BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
         if (IsMine(*pwalletMain, entry.first)) // This address belongs to me
@@ -1179,7 +1173,7 @@ Value listaccounts(const Array& params, bool fHelp)
         string strSentAccount;
         list<pair<CTxDestination, int64> > listReceived;
         list<pair<CTxDestination, int64> > listSent;
-        wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
+        wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount, includeWatchonly);
         mapAccountBalances[strSentAccount] -= nFee;
         BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64)& s, listSent)
             mapAccountBalances[strSentAccount] -= s.second;
@@ -1215,6 +1209,7 @@ Value listsinceblock(const Array& params, bool fHelp)
 
     CBlockIndex *pindex = NULL;
     int target_confirms = 1;
+    isminefilter filter = MINE_SPENDABLE;
 
     if (params.size() > 0)
     {
@@ -1232,6 +1227,10 @@ Value listsinceblock(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
     }
 
+    if(params.size() > 2)
+        if(params[2].get_bool())
+            filter = filter | MINE_WATCH_ONLY;
+
     int depth = pindex ? (1 + nBestHeight - pindex->nHeight) : -1;
 
     Array transactions;
@@ -1241,7 +1240,7 @@ Value listsinceblock(const Array& params, bool fHelp)
         CWalletTx tx = (*it).second;
 
         if (depth == -1 || tx.GetDepthInMainChain() < depth)
-            ListTransactions(tx, "*", 0, true, transactions);
+            ListTransactions(tx, "*", 0, true, transactions, filter);
     }
 
     uint256 lastblock;
@@ -1279,6 +1278,11 @@ Value gettransaction(const Array& params, bool fHelp)
     uint256 hash;
     hash.SetHex(params[0].get_str());
 
+    isminefilter filter = MINE_SPENDABLE;
+    if(params.size() > 1)
+        if(params[1].get_bool())
+            filter = filter | MINE_WATCH_ONLY;
+
     Object entry;
 
     if (pwalletMain->mapWallet.count(hash))
@@ -1287,19 +1291,19 @@ Value gettransaction(const Array& params, bool fHelp)
 
         TxToJSON(wtx, 0, entry);
 
-        int64 nCredit = wtx.GetCredit();
-        int64 nDebit = wtx.GetDebit();
+        int64 nCredit = wtx.GetCredit(filter);
+        int64 nDebit = wtx.GetDebit(filter);
         int64 nNet = nCredit - nDebit;
-        int64 nFee = (wtx.IsFromMe() ? wtx.GetValueOut() - nDebit : 0);
+        int64 nFee = (wtx.IsFromMe(filter) ? wtx.GetValueOut() - nDebit : 0);
 
         entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
-        if (wtx.IsFromMe())
+        if (wtx.IsFromMe(filter))
             entry.push_back(Pair("fee", ValueFromAmount(nFee)));
 
         WalletTxToJSON(wtx, entry);
 
         Array details;
-        ListTransactions(pwalletMain->mapWallet[hash], "*", 0, false, details);
+        ListTransactions(pwalletMain->mapWallet[hash], "*", 0, false, details, filter);
         entry.push_back(Pair("details", details));
     }
     else
@@ -1377,7 +1381,7 @@ Value keypoolrefill(const Array& params, bool fHelp)
 void ThreadTopUpKeyPool(void* parg)
 {
     // Make this thread recognisable as the key-topping-up thread
-    RenameThread("bitcoin-key-top");
+    RenameThread("novacoin-key-top");
 
     pwalletMain->TopUpKeyPool();
 }
@@ -1385,7 +1389,7 @@ void ThreadTopUpKeyPool(void* parg)
 void ThreadCleanWalletPassphrase(void* parg)
 {
     // Make this thread recognisable as the wallet relocking thread
-    RenameThread("bitcoin-lock-wa");
+    RenameThread("novacoin-lock-wa");
 
     int64 nMyWakeTime = GetTimeMillis() + *((int64*)parg) * 1000;
 
@@ -1561,36 +1565,44 @@ Value encryptwallet(const Array& params, bool fHelp)
 
 class DescribeAddressVisitor : public boost::static_visitor<Object>
 {
+private:
+    isminetype mine;
 public:
-    Object operator()(const CNoDestination &dest) const { return Object(); }
+    DescribeAddressVisitor(isminetype mineIn) : mine(mineIn) {}
 
+    Object operator()(const CNoDestination &dest) const { return Object(); }
     Object operator()(const CKeyID &keyID) const {
         Object obj;
         CPubKey vchPubKey;
         pwalletMain->GetPubKey(keyID, vchPubKey);
         obj.push_back(Pair("isscript", false));
-        obj.push_back(Pair("pubkey", HexStr(vchPubKey.Raw())));
-        obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
+        if (mine == MINE_SPENDABLE) {
+            pwalletMain->GetPubKey(keyID, vchPubKey);
+            obj.push_back(Pair("pubkey", HexStr(vchPubKey.Raw())));
+            obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
+        }
         return obj;
     }
 
     Object operator()(const CScriptID &scriptID) const {
         Object obj;
         obj.push_back(Pair("isscript", true));
-        CScript subscript;
-        pwalletMain->GetCScript(scriptID, subscript);
-        std::vector<CTxDestination> addresses;
-        txnouttype whichType;
-        int nRequired;
-        ExtractDestinations(subscript, whichType, addresses, nRequired);
-        obj.push_back(Pair("script", GetTxnOutputType(whichType)));
-        obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
-        Array a;
-        BOOST_FOREACH(const CTxDestination& addr, addresses)
-            a.push_back(CBitcoinAddress(addr).ToString());
-        obj.push_back(Pair("addresses", a));
-        if (whichType == TX_MULTISIG)
-            obj.push_back(Pair("sigsrequired", nRequired));
+        if (mine == MINE_SPENDABLE) {
+            CScript subscript;
+            pwalletMain->GetCScript(scriptID, subscript);
+            std::vector<CTxDestination> addresses;
+            txnouttype whichType;
+            int nRequired;
+            ExtractDestinations(subscript, whichType, addresses, nRequired);
+            obj.push_back(Pair("script", GetTxnOutputType(whichType)));
+            obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
+            Array a;
+            BOOST_FOREACH(const CTxDestination& addr, addresses)
+                a.push_back(CBitcoinAddress(addr).ToString());
+            obj.push_back(Pair("addresses", a));
+            if (whichType == TX_MULTISIG)
+                obj.push_back(Pair("sigsrequired", nRequired));
+        }
         return obj;
     }
 };
@@ -1612,47 +1624,11 @@ Value validateaddress(const Array& params, bool fHelp)
         CTxDestination dest = address.Get();
         string currentAddress = address.ToString();
         ret.push_back(Pair("address", currentAddress));
-        bool fMine = IsMine(*pwalletMain, dest);
-        ret.push_back(Pair("ismine", fMine));
-        if (fMine) {
-            Object detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
-            ret.insert(ret.end(), detail.begin(), detail.end());
-        }
-        if (pwalletMain->mapAddressBook.count(dest))
-            ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest]));
-    }
-    return ret;
-}
-
-Value validatepubkey(const Array& params, bool fHelp)
-{
-    if (fHelp || !params.size() || params.size() > 2)
-        throw runtime_error(
-            "validatepubkey <novacoinpubkey>\n"
-            "Return information about <novacoinpubkey>.");
-
-    std::vector<unsigned char> vchPubKey = ParseHex(params[0].get_str());
-    CPubKey pubKey(vchPubKey);
-
-    bool isValid = pubKey.IsValid();
-    bool isCompressed = pubKey.IsCompressed();
-    CKeyID keyID = pubKey.GetID();
-
-    CBitcoinAddress address;
-    address.Set(keyID);
-
-    Object ret;
-    ret.push_back(Pair("isvalid", isValid));
-    if (isValid)
-    {
-        CTxDestination dest = address.Get();
-        string currentAddress = address.ToString();
-        ret.push_back(Pair("address", currentAddress));
-        bool fMine = IsMine(*pwalletMain, dest);
-        ret.push_back(Pair("ismine", fMine));
-        ret.push_back(Pair("iscompressed", isCompressed));
-        if (fMine) {
-            Object detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
+        isminetype mine = pwalletMain ? IsMine(*pwalletMain, dest) : MINE_NO;
+        ret.push_back(Pair("ismine", mine != MINE_NO));
+        if (mine != MINE_NO) {
+            ret.push_back(Pair("watchonly", mine == MINE_WATCH_ONLY));
+            Object detail = boost::apply_visitor(DescribeAddressVisitor(mine), dest);
             ret.insert(ret.end(), detail.begin(), detail.end());
         }
         if (pwalletMain->mapAddressBook.count(dest))

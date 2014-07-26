@@ -9,7 +9,6 @@
 #include <vector>
 
 #include <boost/foreach.hpp>
-#include <boost/variant.hpp>
 
 #include "keystore.h"
 #include "bignum.h"
@@ -17,6 +16,19 @@
 typedef std::vector<unsigned char> valtype;
 
 class CTransaction;
+
+static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
+
+/** IsMine() return codes */
+enum isminetype
+{
+    MINE_NO = 0,
+    MINE_WATCH_ONLY = 1,
+    MINE_SPENDABLE = 2,
+    MINE_ALL = MINE_WATCH_ONLY | MINE_SPENDABLE
+};
+
+typedef uint8_t isminefilter;
 
 /** Signature hash types/flags */
 enum
@@ -27,6 +39,40 @@ enum
     SIGHASH_ANYONECANPAY = 0x80,
 };
 
+/** Script verification flags */
+enum
+{
+    SCRIPT_VERIFY_NONE      = 0,
+    SCRIPT_VERIFY_P2SH      = (1U << 0), // evaluate P2SH (BIP16) subscripts
+    SCRIPT_VERIFY_STRICTENC = (1U << 1), // enforce strict conformance to DER and SEC2 for signatures and pubkeys
+    SCRIPT_VERIFY_LOW_S     = (1U << 2), // enforce low S values in signatures (depends on STRICTENC)
+    SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
+    SCRIPT_VERIFY_NULLDUMMY = (1U << 4), // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
+};
+
+// Strict verification:
+//
+// * force DER encoding;
+// * force low S;
+// * ensure that CHECKMULTISIG dummy argument is null.
+static const unsigned int STRICT_FORMAT_FLAGS = SCRIPT_VERIFY_STRICTENC | SCRIPT_VERIFY_LOW_S | SCRIPT_VERIFY_NULLDUMMY;
+
+// Mandatory script verification flags that all new blocks must comply with for
+// them to be valid. (but old blocks may not comply with) Currently just P2SH,
+// but in the future other flags may be added, such as a soft-fork to enforce
+// strict DER encoding.
+//
+// Failing one of these tests may trigger a DoS ban - see ConnectInputs() for
+// details.
+static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
+
+// Standard script verification flags that standard transactions will comply
+// with. However scripts violating these flags may still be present in valid
+// blocks and we must accept those blocks.
+static const unsigned int STRICT_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS | STRICT_FORMAT_FLAGS;
+
+// Soft verifications, no extended signature format checkings
+static const unsigned int SOFT_FLAGS = STRICT_FLAGS & ~STRICT_FORMAT_FLAGS;
 
 enum txnouttype
 {
@@ -38,20 +84,6 @@ enum txnouttype
     TX_MULTISIG,
     TX_NULL_DATA,
 };
-
-class CNoDestination {
-public:
-    friend bool operator==(const CNoDestination &a, const CNoDestination &b) { return true; }
-    friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
-};
-
-/** A txout script template with a specific destination. It is either:
- *  * CNoDestination: no destination set
- *  * CKeyID: TX_PUBKEYHASH destination
- *  * CScriptID: TX_SCRIPTHASH destination
- *  A CTxDestination is the internal data type encoded in a CBitcoinAddress
- */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID> CTxDestination;
 
 const char* GetTxnOutputType(txnouttype t);
 
@@ -585,24 +617,22 @@ public:
     }
 };
 
+bool IsCanonicalPubKey(const std::vector<unsigned char> &vchPubKey, unsigned int flags);
+bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig, unsigned int flags);
 
 
-
-
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned char> >& vSolutions);
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
-bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
-bool IsMine(const CKeyStore& keystore, const CTxDestination &dest);
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
+isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest);
 void ExtractAffectedKeys(const CKeyStore &keystore, const CScript& scriptPubKey, std::vector<CKeyID> &vKeys);
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
 bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
 bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
-                  bool fValidatePayToScriptHash, int nHashType);
-bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType);
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 
 // Given two sets of signatures for scriptPubKey, possibly with OP_0 placeholders,
 // combine them intelligently and return the result.
