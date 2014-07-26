@@ -15,13 +15,13 @@ This is experimental software.
 
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (https://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>
 これは実験的なソフトウェアです。
 
 MIT/X11 ソフトウェア ライセンスの下で配布されています。詳しくは添付の COPYING ファイルやhttp://www.opensource.org/licenses/mit-license.php を参照してください。
 
-この製品は OpenSSL Toolkit (http://www.openssl.org/) に用いられる  Eric Young (eay@cryptsoft.com)  が開発した暗号化ソフトウェアと Thomas Bernard が開発した UPnP ソフトウェアを含んでいます。</translation>
+この製品は OpenSSL Toolkit (https://www.openssl.org/) に用いられる  Eric Young (eay@cryptsoft.com)  が開発した暗号化ソフトウェアと Thomas Bernard が開発した UPnP ソフトウェアを含んでいます。</translation>
     </message>
     <message>
         <source>Copyright</source>

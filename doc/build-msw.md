@@ -14,7 +14,7 @@ Libraries you need to download separately and build:
 
 	name            default path               download
 	--------------------------------------------------------------------------------------------------------------------
-	OpenSSL         \openssl-1.0.1h-mgw        http://www.openssl.org/source/
+	OpenSSL         \openssl-1.0.1h-mgw        https://www.openssl.org/source/
 	Berkeley DB     \db-4.8.30.NC-mgw          http://www.oracle.com/technology/software/products/berkeley-db/index.html
 	Boost           \boost-1.50.0-mgw          http://www.boost.org/users/download/
 	miniupnpc       \miniupnpc-1.6-mgw         http://miniupnp.tuxfamily.org/files/

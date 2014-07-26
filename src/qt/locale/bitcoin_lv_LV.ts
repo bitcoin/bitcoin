@@ -15,13 +15,13 @@ This is experimental software.
 
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (https://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>
 Šī ir eksperimentālā programmatūra.
 
 Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datni COPYING vai http://www.opensource.org/licenses/mit-license.php.
 
-Šis produkts ietver programmatūru, ko izstrādājis OpenSSL Project izmantošanai OpenSSL Toolkit (http://www.openssl.org/) un šifrēšanas programmatūru no Eric Young (eay@cryptsoft.com) un UPnP programmatūru no Thomas Bernard.</translation>
+Šis produkts ietver programmatūru, ko izstrādājis OpenSSL Project izmantošanai OpenSSL Toolkit (https://www.openssl.org/) un šifrēšanas programmatūru no Eric Young (eay@cryptsoft.com) un UPnP programmatūru no Thomas Bernard.</translation>
     </message>
     <message>
         <source>Copyright</source>
