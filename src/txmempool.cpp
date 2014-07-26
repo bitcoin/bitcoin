@@ -299,7 +299,7 @@ public:
         size_t nPrevSize = 0;
         for (int i = 0; i < nBlocksToConfirm; i++)
             nPrevSize += history.at(i).PrioritySamples();
-        size_t index = min(nPrevSize + nBucketSize/2, sortedFeeSamples.size()-1);
+        size_t index = min(nPrevSize + nBucketSize/2, sortedPrioritySamples.size()-1);
         return sortedPrioritySamples[index];
     }
 
