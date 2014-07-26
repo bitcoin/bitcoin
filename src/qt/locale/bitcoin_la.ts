@@ -15,12 +15,12 @@ This is experimental software.
 
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (https://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>Hoc est experimentale programma.
 
 Distributum sub MIT/X11 licentia programmatum, vide comitantem plicam COPYING vel http://www.opensource.org/licenses/mit-license.php.
 
-Hoc productum continet programmata composita ab OpenSSL Project pro utendo in OpenSSL Toolkit (http://www.openssl.org/) et programmata cifrarum scripta ab Eric Young (eay@cryptsoft.com) et UPnP programmata scripta ab Thomas Bernard.</translation>
+Hoc productum continet programmata composita ab OpenSSL Project pro utendo in OpenSSL Toolkit (https://www.openssl.org/) et programmata cifrarum scripta ab Eric Young (eay@cryptsoft.com) et UPnP programmata scripta ab Thomas Bernard.</translation>
     </message>
     <message>
         <source>Copyright</source>
