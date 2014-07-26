@@ -43,7 +43,7 @@ qint64 WalletModel::getBalance() const
 
 qint64 WalletModel::getBalanceWatchOnly() const
 {
-    return wallet->GetBalanceWatchOnly();
+    return wallet->GetWatchOnlyBalance();
 }
 
 qint64 WalletModel::getUnconfirmedBalance() const
