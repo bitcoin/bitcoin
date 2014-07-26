@@ -1,7 +1,8 @@
 language: cpp
 compiler: gcc
 install:
-  - sudo apt-get install yasm libgmp-dev
+  - if [ "$BIGNUM" = "gmp" -o "$FIELD" = "gmp" ]; then sudo apt-get install -qq libgmp-dev; fi
+  - if [ "$FIELD" = "64bit_asm" ]; then sudo apt-get install -qq yasm; fi
 env:
   global:
     - FIELD=auto      BIGNUM=auto     ENDOMORPHISM=no  BUILD=check
