@@ -15,8 +15,8 @@ This is experimental software.
 
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>⏎ ⏎ این یک نرم‌افزار آزمایشی است⏎ ⏎ نرم افزار تحت مجوز MIT/X11 منتشر شده است. پروندهٔ COPYING یا نشانی http://www.opensource.org/licenses/mit-license.php. را ببینید⏎ ⏎ این محصول شامل نرم‌افزار  توسعه داده‌شده در پروژهٔ OpenSSL است. در این نرم‌افزار از OpenSSL Toolkit (http://www.openssl.org/) و نرم‌افزار رمزنگاری نوشته شده توسط اریک یانگ (eay@cryptsoft.com) و UPnP توسط توماس برنارد استفاده شده است.</translation>
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (https://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
+        <translation>⏎ ⏎ این یک نرم‌افزار آزمایشی است⏎ ⏎ نرم افزار تحت مجوز MIT/X11 منتشر شده است. پروندهٔ COPYING یا نشانی http://www.opensource.org/licenses/mit-license.php. را ببینید⏎ ⏎ این محصول شامل نرم‌افزار  توسعه داده‌شده در پروژهٔ OpenSSL است. در این نرم‌افزار از OpenSSL Toolkit (https://www.openssl.org/) و نرم‌افزار رمزنگاری نوشته شده توسط اریک یانگ (eay@cryptsoft.com) و UPnP توسط توماس برنارد استفاده شده است.</translation>
     </message>
     <message>
         <source>Copyright</source>

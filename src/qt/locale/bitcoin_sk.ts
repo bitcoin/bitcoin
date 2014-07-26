@@ -15,13 +15,13 @@ This is experimental software.
 
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (https://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>
 Toto je experimentálny softvér.
 
 Distribuovaný pod MIT/X11 softvérovou licenciou, viď sprevádzajúci súbor COPYING alebo http://www.opensource.org/licenses/mit-license.php.
 
-Tento výrobok obsahuje sofvér, ktorý vyvynul OpenSSL Project pre použitie v OpenSSL Toolkit (http://www.openssl.org/) a kryptografický softvér napísaný Ericom Youngom (eay@cryptsoft.com) a UPnP softvér napísaný Thomasom Bernardom.</translation>
+Tento výrobok obsahuje sofvér, ktorý vyvynul OpenSSL Project pre použitie v OpenSSL Toolkit (https://www.openssl.org/) a kryptografický softvér napísaný Ericom Youngom (eay@cryptsoft.com) a UPnP softvér napísaný Thomasom Bernardom.</translation>
     </message>
     <message>
         <source>Copyright</source>
