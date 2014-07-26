@@ -30,9 +30,7 @@ available via Homebrew or MacPorts.
 
 You will also need to install [Homebrew](http://brew.sh)
 or [MacPorts](https://www.macports.org/) in order to install library
-dependencies. It's largely a religious decision which to choose, but, as of
-December 2012, MacPorts is a little easier because you can just install the
-dependencies immediately - no other work required. If you're unsure, read
+dependencies. It's largely a religious decision which to choose. If you're unsure, read
 the instructions through first in order to assess what you want to do.
 Homebrew is a little more popular among those newer to OS X.
 
