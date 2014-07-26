@@ -15,13 +15,13 @@ This is experimental software.
 
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (https://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>
 პროგრამა ექსპერიმენტულია.
 
 ვრცელდება MIT/X11 ლიცენზიით, იხილე თანდართული ფაილი COPYING ან http://www.opensource.org/licenses/mit-license.php.
 
-პროდუქტი შეიცავს OpenSSL პროექტის ფარგლებში შემუშავებულ პროგრამულ უზრუნველყოფას OpenSSL Toolkit-ში გამოყენებისათვის (http://www.openssl.org/), კრიპტოგრაფიულ პროგრამას, ავტორი ერიქ იანგი (Eric Young, eay@cryptsoft.com) და UPnP-პროგრამას, ავტორი თომას ბერნარდი (Thomas Bernard).</translation>
+პროდუქტი შეიცავს OpenSSL პროექტის ფარგლებში შემუშავებულ პროგრამულ უზრუნველყოფას OpenSSL Toolkit-ში გამოყენებისათვის (https://www.openssl.org/), კრიპტოგრაფიულ პროგრამას, ავტორი ერიქ იანგი (Eric Young, eay@cryptsoft.com) და UPnP-პროგრამას, ავტორი თომას ბერნარდი (Thomas Bernard).</translation>
     </message>
     <message>
         <source>Copyright</source>

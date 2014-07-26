@@ -30,8 +30,14 @@ available via Homebrew or MacPorts.
 
 You will also need to install [Homebrew](http://brew.sh)
 or [MacPorts](https://www.macports.org/) in order to install library
+<<<<<<< HEAD
+dependencies. It's largely a religious decision which to choose. If you're unsure, read
+the instructions through first in order to assess what you want to do.
+Homebrew is a little more popular among those newer to OS X.
+=======
 dependencies. It's largely a religious decision which to choose, however, Homebrew
 is now used for building release versions.
+>>>>>>> 3955c3940eff83518c186facfec6f50545b5aab5
 
 The installation of the actual dependencies is covered in the Instructions
 sections below.
