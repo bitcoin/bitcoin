@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include <boost/foreach.hpp>
+#include <boost/unordered_map.hpp>
 
 /** pruned version of CTransaction: only retains metadata and unspent transaction outputs
  *
@@ -239,6 +240,19 @@ public:
     }
 };
 
+class CCoinsKeyHasher
+{
+private:
+    uint256 salt;
+
+public:
+    CCoinsKeyHasher();
+    uint64_t operator()(const uint256& key) const {
+        return key.GetHash(salt);
+    }
+};
+
+typedef boost::unordered_map<uint256, CCoins, CCoinsKeyHasher> CCoinsMap;
 
 struct CCoinsStats
 {
@@ -275,7 +289,7 @@ public:
     virtual bool SetBestBlock(const uint256 &hashBlock);
 
     // Do a bulk modification (multiple SetCoins + one SetBestBlock)
-    virtual bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock);
+    virtual bool BatchWrite(const CCoinsMap &mapCoins, const uint256 &hashBlock);
 
     // Calculate statistics about the unspent transaction output set
     virtual bool GetStats(CCoinsStats &stats);
@@ -299,7 +313,7 @@ public:
     uint256 GetBestBlock();
     bool SetBestBlock(const uint256 &hashBlock);
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock);
+    bool BatchWrite(const CCoinsMap &mapCoins, const uint256 &hashBlock);
     bool GetStats(CCoinsStats &stats);
 };
 
@@ -309,7 +323,7 @@ class CCoinsViewCache : public CCoinsViewBacked
 {
 protected:
     uint256 hashBlock;
-    std::map<uint256,CCoins> cacheCoins;
+    CCoinsMap cacheCoins;
 
 public:
     CCoinsViewCache(CCoinsView &baseIn, bool fDummy = false);
@@ -320,7 +334,7 @@ public:
     bool HaveCoins(const uint256 &txid);
     uint256 GetBestBlock();
     bool SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock);
+    bool BatchWrite(const CCoinsMap &mapCoins, const uint256 &hashBlock);
 
     // Return a modifiable reference to a CCoins. Check HaveCoins first.
     // Many methods explicitly require a CCoinsViewCache because of this method, to reduce
@@ -352,7 +366,7 @@ public:
     const CTxOut &GetOutputFor(const CTxIn& input);
 
 private:
-    std::map<uint256,CCoins>::iterator FetchCoins(const uint256 &txid);
+    CCoinsMap::iterator FetchCoins(const uint256 &txid);
 };
 
 #endif

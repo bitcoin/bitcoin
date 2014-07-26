@@ -2,15 +2,16 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/test/unit_test.hpp>
+#include "data/sighash.json.h"
+#include "main.h"
+#include "random.h"
+#include "serialize.h"
+#include "util.h"
+#include "version.h"
+
 #include <iostream>
 
-#include "main.h"
-#include "util.h"
-#include "serialize.h"
-#include "version.h"
-#include "data/sighash.json.h"
-
+#include <boost/test/unit_test.hpp>
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_writer_template.h"
@@ -28,7 +29,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
         printf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
         return 1;
     }
-    CTransaction txTmp(txTo);
+    CMutableTransaction txTmp(txTo);
 
     // In case concatenating two scripts ends up with two codeseparators,
     // or an extra one at the end, this prevents all those possible incompatibilities.
@@ -90,7 +91,7 @@ void static RandomScript(CScript &script) {
         script << oplist[insecure_rand() % (sizeof(oplist)/sizeof(oplist[0]))];
 }
 
-void static RandomTransaction(CTransaction &tx, bool fSingle) {
+void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
     tx.nVersion = insecure_rand();
     tx.vin.clear();
     tx.vout.clear();
@@ -118,7 +119,7 @@ BOOST_AUTO_TEST_SUITE(sighash_tests)
 BOOST_AUTO_TEST_CASE(sighash_test)
 {
     seed_insecure_rand(false);
-  
+
     #if defined(PRINT_SIGHASH_JSON)
     std::cout << "[\n";
     std::cout << "\t[\"raw_transaction, script, input_index, hashType, signature_hash (result)\"],\n";
@@ -130,7 +131,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
     #endif
     for (int i=0; i<nRandomTests; i++) {
         int nHashType = insecure_rand();
-        CTransaction txTo;
+        CMutableTransaction txTo;
         RandomTransaction(txTo, (nHashType & 0x1f) == SIGHASH_SINGLE);
         CScript scriptCode;
         RandomScript(scriptCode);
@@ -205,10 +206,9 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           BOOST_ERROR("Bad test, couldn't deserialize data: " << strTest);
           continue;
         }
-        
+
         sh = SignatureHash(scriptCode, tx, nIn, nHashType);
         BOOST_CHECK_MESSAGE(sh.GetHex() == sigHashHex, strTest);
     }
 }
 BOOST_AUTO_TEST_SUITE_END()
-

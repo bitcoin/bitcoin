@@ -11,6 +11,7 @@
 
 #include "core.h"
 #include "init.h"
+#include "main.h"
 #include "protocol.h"
 #include "util.h"
 
@@ -91,7 +92,9 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 
     widget->setFont(bitcoinAddressFont());
 #if QT_VERSION >= 0x040700
-    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
+    // We don't want translators to use own addresses in translations
+    // and this is the only place, where this address is supplied.
+    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. %1)").arg("1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L"));
 #endif
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
@@ -184,7 +187,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
 
     if (info.amount)
     {
-        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, info.amount));
+        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, info.amount, false, BitcoinUnits::separatorNever));
         paramCount++;
     }
 
@@ -210,7 +213,7 @@ bool isDust(const QString& address, qint64 amount)
     CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
     CScript script; script.SetDestination(dest);
     CTxOut txOut(amount, script);
-    return txOut.IsDust(CTransaction::minRelayTxFee);
+    return txOut.IsDust(::minRelayTxFee);
 }
 
 QString HtmlEscape(const QString& str, bool fMultiLine)

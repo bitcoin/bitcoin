@@ -7,6 +7,7 @@
 
 #include "db.h"
 #include "key.h"
+#include "keystore.h"
 
 #include <list>
 #include <stdint.h>
@@ -93,6 +94,8 @@ public:
 
     bool WriteCScript(const uint160& hash, const CScript& redeemScript);
 
+    bool WriteWatchOnly(const CScript &script);
+
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);
 
@@ -122,8 +125,8 @@ public:
 
     DBErrors ReorderTransactions(CWallet*);
     DBErrors LoadWallet(CWallet* pwallet);
-    DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash);
-    DBErrors ZapWalletTx(CWallet* pwallet);
+    DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx);
+    DBErrors ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
     static bool Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys);
     static bool Recover(CDBEnv& dbenv, std::string filename);
 };

@@ -31,8 +31,10 @@ BITCOIN_TESTS =\
   test/checkblock_tests.cpp \
   test/Checkpoints_tests.cpp \
   test/compress_tests.cpp \
+  test/crypto_tests.cpp \
   test/DoS_tests.cpp \
   test/getarg_tests.cpp \
+  test/hash_tests.cpp \
   test/key_tests.cpp \
   test/main_tests.cpp \
   test/miner_tests.cpp \
@@ -45,6 +47,7 @@ BITCOIN_TESTS =\
   test/script_tests.cpp \
   test/serialize_tests.cpp \
   test/sigopcount_tests.cpp \
+  test/skiplist_tests.cpp \
   test/test_bitcoin.cpp \
   test/transaction_tests.cpp \
   test/uint256_tests.cpp \
@@ -61,11 +64,16 @@ endif
 
 test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_bitcoin_CPPFLAGS = $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS)
-test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
+test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
 if ENABLE_WALLET
 test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
 endif
+
+if USE_LIBSECP256K1
+  test_test_bitcoin_LDADD += secp256k1/libsecp256k1.la
+endif
+
 test_test_bitcoin_LDADD += $(BDB_LIBS)
 
 nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)

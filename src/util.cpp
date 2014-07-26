@@ -5,10 +5,9 @@
 
 #include "util.h"
 
-#include "chainparams.h"
-#include "netbase.h"
+#include "chainparamsbase.h"
+#include "random.h"
 #include "sync.h"
-#include "ui_interface.h"
 #include "uint256.h"
 #include "version.h"
 
@@ -78,11 +77,12 @@
 // See also: http://stackoverflow.com/questions/10020179/compilation-fail-in-boost-librairies-program-options
 //           http://clang.debian.net/status.php?version=3.0&key=CANNOT_FIND_FUNCTION
 namespace boost {
+
     namespace program_options {
         std::string to_internal(const std::string&);
     }
-}
 
+} // namespace boost
 
 using namespace std;
 
@@ -95,8 +95,8 @@ bool fDaemon = false;
 bool fServer = false;
 string strMiscWarning;
 bool fLogTimestamps = false;
+bool fLogIPs = false;
 volatile bool fReopenDebugLog = false;
-CClientUIInterface uiInterface;
 
 // Init OpenSSL library multithreading support
 static CCriticalSection** ppmutexOpenSSL;
@@ -122,15 +122,17 @@ public:
         CRYPTO_set_locking_callback(locking_callback);
 
 #ifdef WIN32
-        // Seed random number generator with screen scrape and other hardware sources
+        // Seed OpenSSL PRNG with current contents of the screen
         RAND_screen();
 #endif
 
-        // Seed random number generator with performance counter
+        // Seed OpenSSL PRNG with performance counter
         RandAddSeed();
     }
     ~CInit()
     {
+        // Securely erase the memory used by the PRNG
+        RAND_cleanup();
         // Shutdown OpenSSL library multithreading support
         CRYPTO_set_locking_callback(NULL);
         for (int i = 0; i < CRYPTO_num_locks(); i++)
@@ -139,75 +141,6 @@ public:
     }
 }
 instance_of_cinit;
-
-
-
-
-
-
-
-
-void RandAddSeed()
-{
-    // Seed with CPU performance counter
-    int64_t nCounter = GetPerformanceCounter();
-    RAND_add(&nCounter, sizeof(nCounter), 1.5);
-    memset(&nCounter, 0, sizeof(nCounter));
-}
-
-void RandAddSeedPerfmon()
-{
-    RandAddSeed();
-
-    // This can take up to 2 seconds, so only do it every 10 minutes
-    static int64_t nLastPerfmon;
-    if (GetTime() < nLastPerfmon + 10 * 60)
-        return;
-    nLastPerfmon = GetTime();
-
-#ifdef WIN32
-    // Don't need this on Linux, OpenSSL automatically uses /dev/urandom
-    // Seed with the entire set of perfmon data
-    unsigned char pdata[250000];
-    memset(pdata, 0, sizeof(pdata));
-    unsigned long nSize = sizeof(pdata);
-    long ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, pdata, &nSize);
-    RegCloseKey(HKEY_PERFORMANCE_DATA);
-    if (ret == ERROR_SUCCESS)
-    {
-        RAND_add(pdata, nSize, nSize/100.0);
-        OPENSSL_cleanse(pdata, nSize);
-        LogPrint("rand", "RandAddSeed() %lu bytes\n", nSize);
-    }
-#endif
-}
-
-uint64_t GetRand(uint64_t nMax)
-{
-    if (nMax == 0)
-        return 0;
-
-    // The range of the random source must be a multiple of the modulus
-    // to give every possible output value an equal possibility
-    uint64_t nRange = (std::numeric_limits<uint64_t>::max() / nMax) * nMax;
-    uint64_t nRand = 0;
-    do
-        RAND_bytes((unsigned char*)&nRand, sizeof(nRand));
-    while (nRand >= nRange);
-    return (nRand % nMax);
-}
-
-int GetRandInt(int nMax)
-{
-    return GetRand(nMax);
-}
-
-uint256 GetRandHash()
-{
-    uint256 hash;
-    RAND_bytes((unsigned char*)&hash, sizeof(hash));
-    return hash;
-}
 
 // LogPrintf() has been broken a couple of times now
 // by well-meaning people adding mutexes in the most straightforward way.
@@ -272,7 +205,7 @@ int LogPrintStr(const std::string &str)
         // print to console
         ret = fwrite(str.data(), 1, str.size(), stdout);
     }
-    else if (fPrintToDebugLog)
+    else if (fPrintToDebugLog && AreBaseParamsConfigured())
     {
         static bool fStartedNewLine = true;
         boost::call_once(&DebugPrintInit, debugPrintInitFlag);
@@ -404,6 +337,11 @@ const signed char p_util_hexdigit[256] =
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, };
+
+signed char HexDigit(char c)
+{
+    return p_util_hexdigit[(unsigned char)c];
+}
 
 bool IsHex(const string& str)
 {
@@ -919,7 +857,7 @@ boost::filesystem::path GetDefaultDataDir()
 #endif
 }
 
-static boost::filesystem::path pathCached[CChainParams::MAX_NETWORK_TYPES+1];
+static boost::filesystem::path pathCached[CBaseChainParams::MAX_NETWORK_TYPES+1];
 static CCriticalSection csPathCached;
 
 const boost::filesystem::path &GetDataDir(bool fNetSpecific)
@@ -928,8 +866,8 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 
     LOCK(csPathCached);
 
-    int nNet = CChainParams::MAX_NETWORK_TYPES;
-    if (fNetSpecific) nNet = Params().NetworkID();
+    int nNet = CBaseChainParams::MAX_NETWORK_TYPES;
+    if (fNetSpecific) nNet = BaseParams().NetworkID();
 
     fs::path &path = pathCached[nNet];
 
@@ -948,7 +886,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
         path = GetDefaultDataDir();
     }
     if (fNetSpecific)
-        path /= Params().DataDir();
+        path /= BaseParams().DataDir();
 
     fs::create_directories(path);
 
@@ -957,7 +895,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 
 void ClearDatadirCache()
 {
-    std::fill(&pathCached[0], &pathCached[CChainParams::MAX_NETWORK_TYPES+1],
+    std::fill(&pathCached[0], &pathCached[CBaseChainParams::MAX_NETWORK_TYPES+1],
         boost::filesystem::path());
 }
 
@@ -1141,15 +1079,15 @@ void ShrinkDebugFile()
     if (file && boost::filesystem::file_size(pathLog) > 10 * 1000000)
     {
         // Restart the file with some of the end
-        char pch[200000];
-        fseek(file, -sizeof(pch), SEEK_END);
-        int nBytes = fread(pch, 1, sizeof(pch), file);
+        std::vector <char> vch(200000,0);
+        fseek(file, -vch.size(), SEEK_END);
+        int nBytes = fread(begin_ptr(vch), 1, vch.size(), file);
         fclose(file);
 
         file = fopen(pathLog.string().c_str(), "w");
         if (file)
         {
-            fwrite(pch, 1, nBytes, file);
+            fwrite(begin_ptr(vch), 1, nBytes, file);
             fclose(file);
         }
     }
@@ -1157,13 +1095,6 @@ void ShrinkDebugFile()
         fclose(file);
 }
 
-//
-// "Never go to sea with two chronometers; take one or three."
-// Our three time sources are:
-//  - System clock
-//  - Median of other nodes clocks
-//  - The user (asking the user to fix the system clock if the first two disagree)
-//
 static int64_t nMockTime = 0;  // For unit testing
 
 int64_t GetTime()
@@ -1176,96 +1107,6 @@ int64_t GetTime()
 void SetMockTime(int64_t nMockTimeIn)
 {
     nMockTime = nMockTimeIn;
-}
-
-static CCriticalSection cs_nTimeOffset;
-static int64_t nTimeOffset = 0;
-
-int64_t GetTimeOffset()
-{
-    LOCK(cs_nTimeOffset);
-    return nTimeOffset;
-}
-
-int64_t GetAdjustedTime()
-{
-    return GetTime() + GetTimeOffset();
-}
-
-void AddTimeData(const CNetAddr& ip, int64_t nTime)
-{
-    int64_t nOffsetSample = nTime - GetTime();
-
-    LOCK(cs_nTimeOffset);
-    // Ignore duplicates
-    static set<CNetAddr> setKnown;
-    if (!setKnown.insert(ip).second)
-        return;
-
-    // Add data
-    static CMedianFilter<int64_t> vTimeOffsets(200,0);
-    vTimeOffsets.input(nOffsetSample);
-    LogPrintf("Added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample/60);
-    if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1)
-    {
-        int64_t nMedian = vTimeOffsets.median();
-        std::vector<int64_t> vSorted = vTimeOffsets.sorted();
-        // Only let other nodes change our time by so much
-        if (abs64(nMedian) < 70 * 60)
-        {
-            nTimeOffset = nMedian;
-        }
-        else
-        {
-            nTimeOffset = 0;
-
-            static bool fDone;
-            if (!fDone)
-            {
-                // If nobody has a time different than ours but within 5 minutes of ours, give a warning
-                bool fMatch = false;
-                BOOST_FOREACH(int64_t nOffset, vSorted)
-                    if (nOffset != 0 && abs64(nOffset) < 5 * 60)
-                        fMatch = true;
-
-                if (!fMatch)
-                {
-                    fDone = true;
-                    string strMessage = _("Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin will not work properly.");
-                    strMiscWarning = strMessage;
-                    LogPrintf("*** %s\n", strMessage);
-                    uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
-                }
-            }
-        }
-        if (fDebug) {
-            BOOST_FOREACH(int64_t n, vSorted)
-                LogPrintf("%+d  ", n);
-            LogPrintf("|  ");
-        }
-        LogPrintf("nTimeOffset = %+d  (%+d minutes)\n", nTimeOffset, nTimeOffset/60);
-    }
-}
-
-uint32_t insecure_rand_Rz = 11;
-uint32_t insecure_rand_Rw = 11;
-void seed_insecure_rand(bool fDeterministic)
-{
-    //The seed values have some unlikely fixed points which we avoid.
-    if(fDeterministic)
-    {
-        insecure_rand_Rz = insecure_rand_Rw = 11;
-    } else {
-        uint32_t tmp;
-        do {
-            RAND_bytes((unsigned char*)&tmp, 4);
-        } while(tmp == 0 || tmp == 0x9068ffffU);
-        insecure_rand_Rz = tmp;
-        do {
-            RAND_bytes((unsigned char*)&tmp, 4);
-        } while(tmp == 0 || tmp == 0x464fffffU);
-        insecure_rand_Rw = tmp;
-    }
 }
 
 string FormatVersion(int nVersion)

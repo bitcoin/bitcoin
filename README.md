@@ -1,7 +1,7 @@
 Bitcoin Core integration/staging tree
 =====================================
 
-http://www.bitcoin.org
+https://www.bitcoin.org
 
 Copyright (c) 2009-2014 Bitcoin Core Developers
 
@@ -15,7 +15,7 @@ out collectively by the network. Bitcoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see http://www.bitcoin.org/en/download.
+the Bitcoin Core software, see https://www.bitcoin.org/en/download.
 
 License
 -------
@@ -76,11 +76,13 @@ Translations
 Changes to translations as well as new translations can be submitted to
 [Bitcoin Core's Transifex page](https://www.transifex.com/projects/p/bitcoin/).
 
-Periodically the translations are pulled from Transifex and merged into the git repository. See the
+Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
 
-**Important**: We do not accept translation changes as github pull request because the next
+**Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
+
+Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
 
 Development tips and tricks
 ---------------------------

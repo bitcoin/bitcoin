@@ -4,9 +4,8 @@
 
 #define BOOST_TEST_MODULE Bitcoin Test Suite
 
-
-
 #include "main.h"
+#include "random.h"
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
@@ -18,7 +17,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
-
+CClientUIInterface uiInterface;
 CWallet* pwalletMain;
 
 extern bool fPrintToConsole;
@@ -31,6 +30,7 @@ struct TestingSetup {
 
     TestingSetup() {
         fPrintToDebugLog = false; // don't want to write to debug.log file
+        SelectParams(CBaseChainParams::MAIN);
         noui_connect();
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
@@ -88,4 +88,3 @@ bool ShutdownRequested()
 {
   return false;
 }
-

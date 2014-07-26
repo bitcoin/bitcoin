@@ -128,8 +128,12 @@ public:
     qint64 getBalance(const CCoinControl *coinControl = NULL) const;
     qint64 getUnconfirmedBalance() const;
     qint64 getImmatureBalance() const;
+    qint64 getWatchBalance() const;
+    qint64 getWatchUnconfirmedBalance() const;
+    qint64 getWatchImmatureBalance() const;
     int getNumTransactions() const;
     EncryptionStatus getEncryptionStatus() const;
+    bool processingQueuedTransactions() { return fProcessingQueuedTransactions; }
 
     // Check address for validity
     bool validateAddress(const QString &address);
@@ -193,6 +197,7 @@ public:
 
 private:
     CWallet *wallet;
+    bool fProcessingQueuedTransactions;
 
     // Wallet has an options model for wallet-specific options
     // (transaction fee, for example)
@@ -206,6 +211,9 @@ private:
     qint64 cachedBalance;
     qint64 cachedUnconfirmedBalance;
     qint64 cachedImmatureBalance;
+    qint64 cachedWatchOnlyBalance;
+    qint64 cachedWatchUnconfBalance;
+    qint64 cachedWatchImmatureBalance;
     qint64 cachedNumTransactions;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
@@ -218,7 +226,8 @@ private:
 
 signals:
     // Signal that balance in wallet changed
-    void balanceChanged(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
+    void balanceChanged(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance,
+                        qint64 watchOnlyBalance, qint64 watchUnconfBalance, qint64 watchImmatureBalance);
 
     // Number of transactions in wallet changed
     void numTransactionsChanged(int count);
@@ -249,6 +258,8 @@ public slots:
     void updateAddressBook(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
+    /* Needed to update fProcessingQueuedTransactions through a QueuedConnection */
+    void setProcessingQueuedTransactions(bool value) { fProcessingQueuedTransactions = value; }
 };
 
 #endif // WALLETMODEL_H

@@ -9,6 +9,7 @@ define(_COPYRIGHT_YEAR, 2014)
 AC_INIT([Bitcoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@bitcoin.org],[bitcoin])
 AC_CONFIG_AUX_DIR([src/build-aux])
 AC_CONFIG_MACRO_DIR([src/m4])
+LT_INIT([disable-shared])
 AC_CANONICAL_HOST
 AH_TOP([#ifndef BITCOIN_CONFIG_H])
 AH_TOP([#define BITCOIN_CONFIG_H])
@@ -111,7 +112,7 @@ AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[spec
 
 
 AC_CONFIG_SRCDIR([src])
-AC_CONFIG_HEADERS([src/bitcoin-config.h])
+AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
 
 dnl Checks for programs.
 AC_PROG_CXX
@@ -192,9 +193,12 @@ case $host in
      AC_CHECK_LIB([iphlpapi],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([crypt32],      [main],, AC_MSG_ERROR(lib missing))
 
-     AX_CHECK_LINK_FLAG([[-static]],[LDFLAGS="$LDFLAGS -static"])
      AX_CHECK_LINK_FLAG([[-static-libgcc]],[LDFLAGS="$LDFLAGS -static-libgcc"])
      AX_CHECK_LINK_FLAG([[-static-libstdc++]],[LDFLAGS="$LDFLAGS -static-libstdc++"])
+
+     # -static is interpreted by libtool, where it has a different meaning.
+     # In libtool-speak, it's -all-static.
+     AX_CHECK_LINK_FLAG([[-static]],[LDFLAGS="$LDFLAGS -static"; LIBTOOL_LDFLAGS="$LIBTOOL_LDFLAGS -all-static"])
 
      AC_PATH_PROG([MAKENSIS], [makensis], none)
      if test x$MAKENSIS = xnone; then
@@ -253,6 +257,9 @@ case $host in
      fi
 
      CPPFLAGS="$CPPFLAGS -DMAC_OSX"
+     ;;
+   *linux*)
+     TARGET_OS=linux
      ;;
    *)
      ;;
@@ -368,7 +375,14 @@ if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"])
 fi
 
-AC_CHECK_HEADERS([stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h])
+AC_CHECK_HEADERS([endian.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h])
+AC_SEARCH_LIBS([getaddrinfo_a], [anl], [AC_DEFINE(HAVE_GETADDRINFO_A, 1, [Define this symbol if you have getaddrinfo_a])])
+AC_SEARCH_LIBS([inet_pton], [nsl resolv], [AC_DEFINE(HAVE_INET_PTON, 1, [Define this symbol if you have inet_pton])])
+
+AC_CHECK_DECLS([le32toh, le64toh, htole32, htole64, be32toh, be64toh, htobe32, htobe64],,,
+		[#if HAVE_ENDIAN_H
+                 #include <endian.h>
+                 #endif])
 
 dnl Check for MSG_NOSIGNAL
 AC_MSG_CHECKING(for MSG_NOSIGNAL)
@@ -377,6 +391,8 @@ AC_TRY_COMPILE([#include <sys/socket.h>],
  [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MSG_NOSIGNAL, 1,[Define this symbol if you have MSG_NOSIGNAL]) ],
  [ AC_MSG_RESULT(no)]
 )
+
+AC_SEARCH_LIBS([clock_gettime],[rt])
 
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
@@ -446,11 +462,8 @@ dnl after 1.56.
 dnl If neither is available, abort.
 dnl If sleep_for is used, boost_chrono becomes a requirement.
 if test x$ax_cv_boost_chrono = xyes; then
-dnl Allow passing extra needed dependency libraries for boost-chrono from static gitian build
-BOOST_CHRONO_LIB="$BOOST_CHRONO_LIB $BOOST_CHRONO_EXTRALIBS"
-
 TEMP_LIBS="$LIBS"
-LIBS="$LIBS $BOOST_LIBS $BOOST_CHRONO_LIB"
+LIBS="$BOOST_LIBS $BOOST_CHRONO_LIB $LIBS"
 TEMP_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
 AC_TRY_LINK([
@@ -472,7 +485,7 @@ fi
 
 if test x$boost_sleep != xyes; then
 TEMP_LIBS="$LIBS"
-LIBS="$LIBS $BOOST_LIBS"
+LIBS="$BOOST_LIBS $LIBS"
 TEMP_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
 AC_TRY_LINK([
@@ -512,7 +525,7 @@ BITCOIN_QT_INIT
 
 if test x$use_pkgconfig = xyes; then
 
-  if test x$PKG_CONFIG == x; then
+  if test x"$PKG_CONFIG" == "x"; then
     AC_MSG_ERROR(pkg-config not found.)
   fi
 
@@ -674,6 +687,7 @@ AM_CONDITIONAL([USE_LCOV],[test x$use_lcov == xyes])
 AM_CONDITIONAL([USE_COMPARISON_TOOL],[test x$use_comparison_tool != xno])
 AM_CONDITIONAL([USE_COMPARISON_TOOL_REORG_TESTS],[test x$use_comparison_tool_reorg_test != xno])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
+AM_CONDITIONAL([USE_LIBSECP256K1],[test x$use_libsecp256k1 = xyes])
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
 AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
@@ -689,6 +703,7 @@ AC_SUBST(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE)
 AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
 
 
+AC_SUBST(LIBTOOL_LDFLAGS)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
 AC_SUBST(INCLUDES)

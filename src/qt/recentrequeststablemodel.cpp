@@ -21,7 +21,9 @@ RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel 
         addNewRequest(request);
 
     /* These columns must match the indices in the ColumnIndex enumeration */
-    columns << tr("Date") << tr("Label") << tr("Message") << tr("Amount");
+    columns << tr("Date") << tr("Label") << tr("Message") << getAmountTitle();
+
+    connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 }
 
 RecentRequestsTableModel::~RecentRequestsTableModel()
@@ -77,9 +79,16 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
         case Amount:
             if (rec->recipient.amount == 0 && role == Qt::DisplayRole)
                 return tr("(no amount)");
+            else if (role == Qt::EditRole)
+                return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, BitcoinUnits::separatorNever);
             else
                 return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
         }
+    }
+    else if (role == Qt::TextAlignmentRole)
+    {
+        if (index.column() == Amount)
+            return (int)(Qt::AlignRight|Qt::AlignVCenter);
     }
     return QVariant();
 }
@@ -99,6 +108,24 @@ QVariant RecentRequestsTableModel::headerData(int section, Qt::Orientation orien
         }
     }
     return QVariant();
+}
+
+/** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
+void RecentRequestsTableModel::updateAmountColumnTitle()
+{
+    columns[Amount] = getAmountTitle();
+    emit headerDataChanged(Qt::Horizontal,Amount,Amount);
+}
+
+/** Gets title for amount column including current display unit if optionsModel reference available. */
+QString RecentRequestsTableModel::getAmountTitle()
+{
+    QString amountTitle = tr("Amount");
+    if (this->walletModel->getOptionsModel() != NULL)
+    {
+        amountTitle += " ("+BitcoinUnits::name(this->walletModel->getOptionsModel()->getDisplayUnit()) + ")";
+    }
+    return amountTitle;
 }
 
 QModelIndex RecentRequestsTableModel::index(int row, int column, const QModelIndex &parent) const
@@ -183,6 +210,11 @@ void RecentRequestsTableModel::sort(int column, Qt::SortOrder order)
 {
     qSort(list.begin(), list.end(), RecentRequestEntryLessThan(column, order));
     emit dataChanged(index(0, 0, QModelIndex()), index(list.size() - 1, NUMBER_OF_COLUMNS - 1, QModelIndex()));
+}
+
+void RecentRequestsTableModel::updateDisplayUnit()
+{
+    updateAmountColumnTitle();
 }
 
 bool RecentRequestEntryLessThan::operator()(RecentRequestEntry &left, RecentRequestEntry &right) const

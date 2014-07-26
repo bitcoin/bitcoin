@@ -80,9 +80,14 @@ CFeeRate::CFeeRate(int64_t nFeePaid, size_t nSize)
         nSatoshisPerK = 0;
 }
 
-int64_t CFeeRate::GetFee(size_t nSize)
+int64_t CFeeRate::GetFee(size_t nSize) const
 {
-    return nSatoshisPerK*nSize / 1000;
+    int64_t nFee = nSatoshisPerK*nSize / 1000;
+
+    if (nFee == 0 && nSatoshisPerK > 0)
+        nFee = nSatoshisPerK;
+
+    return nFee;
 }
 
 std::string CFeeRate::ToString() const
@@ -91,9 +96,32 @@ std::string CFeeRate::ToString() const
     return result;
 }
 
-uint256 CTransaction::GetHash() const
+CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
+CMutableTransaction::CMutableTransaction(const CTransaction& tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime) {}
+
+uint256 CMutableTransaction::GetHash() const
 {
     return SerializeHash(*this);
+}
+
+void CTransaction::UpdateHash() const
+{
+    *const_cast<uint256*>(&hash) = SerializeHash(*this);
+}
+
+CTransaction::CTransaction() : hash(0), nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { }
+
+CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime) {
+    UpdateHash();
+}
+
+CTransaction& CTransaction::operator=(const CTransaction &tx) {
+    *const_cast<int*>(&nVersion) = tx.nVersion;
+    *const_cast<std::vector<CTxIn>*>(&vin) = tx.vin;
+    *const_cast<std::vector<CTxOut>*>(&vout) = tx.vout;
+    *const_cast<unsigned int*>(&nLockTime) = tx.nLockTime;
+    *const_cast<uint256*>(&hash) = tx.hash;
+    return *this;
 }
 
 int64_t CTransaction::GetValueOut() const

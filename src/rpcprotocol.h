@@ -141,7 +141,11 @@ private:
 };
 
 std::string HTTPPost(const std::string& strMsg, const std::map<std::string,std::string>& mapRequestHeaders);
-std::string HTTPReply(int nStatus, const std::string& strMsg, bool keepalive);
+std::string HTTPError(int nStatus, bool keepalive,
+                      bool headerOnly = false);
+std::string HTTPReply(int nStatus, const std::string& strMsg, bool keepalive,
+                      bool headerOnly = false,
+                      const char *contentType = "application/json");
 bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
                          std::string& http_method, std::string& http_uri);
 int ReadHTTPStatus(std::basic_istream<char>& stream, int &proto);

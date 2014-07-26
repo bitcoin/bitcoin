@@ -20,6 +20,7 @@
 class CCoins;
 class CKeyStore;
 class CTransaction;
+struct CMutableTransaction;
 
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
 static const unsigned int MAX_OP_RETURN_RELAY = 40;      // bytes
@@ -192,6 +193,17 @@ enum
     SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
     SCRIPT_VERIFY_NULLDUMMY = (1U << 4), // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
 };
+
+/** IsMine() return codes */
+enum isminetype
+{
+    ISMINE_NO = 0,
+    ISMINE_WATCH_ONLY = 1,
+    ISMINE_SPENDABLE = 2,
+    ISMINE_ALL = ISMINE_WATCH_ONLY | ISMINE_SPENDABLE
+};
+/** used for bitflags of isminetype */
+typedef uint8_t isminefilter;
 
 // Mandatory script verification flags that all new blocks must comply with for
 // them to be valid. (but old blocks may not comply with) Currently just P2SH,
@@ -769,12 +781,12 @@ public:
     void Serialize(Stream &s, int nType, int nVersion) const {
         std::vector<unsigned char> compr;
         if (Compress(compr)) {
-            s << CFlatData(&compr[0], &compr[compr.size()]);
+            s << CFlatData(compr);
             return;
         }
         unsigned int nSize = script.size() + nSpecialScripts;
         s << VARINT(nSize);
-        s << CFlatData(&script[0], &script[script.size()]);
+        s << CFlatData(script);
     }
 
     template<typename Stream>
@@ -783,13 +795,13 @@ public:
         s >> VARINT(nSize);
         if (nSize < nSpecialScripts) {
             std::vector<unsigned char> vch(GetSpecialSize(nSize), 0x00);
-            s >> REF(CFlatData(&vch[0], &vch[vch.size()]));
+            s >> REF(CFlatData(vch));
             Decompress(nSize, vch);
             return;
         }
         nSize -= nSpecialScripts;
         script.resize(nSize);
-        s >> REF(CFlatData(&script[0], &script[script.size()]));
+        s >> REF(CFlatData(script));
     }
 };
 
@@ -800,13 +812,13 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned char> >& vSolutions);
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
-bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
-bool IsMine(const CKeyStore& keystore, const CTxDestination &dest);
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
+isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest);
 void ExtractAffectedKeys(const CKeyStore &keystore, const CScript& scriptPubKey, std::vector<CKeyID> &vKeys);
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
 bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
-bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
-bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
+bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
+bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 
 // Given two sets of signatures for scriptPubKey, possibly with OP_0 placeholders,

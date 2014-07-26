@@ -123,6 +123,8 @@ TransactionView::TransactionView(QWidget *parent) :
     view->setTabKeyNavigation(false);
     view->setContextMenuPolicy(Qt::CustomContextMenu);
 
+    view->installEventFilter(this);
+
     transactionView = view;
 
     // Actions
@@ -309,7 +311,7 @@ void TransactionView::exportClicked()
     writer.addColumn(tr("Type"), TransactionTableModel::Type, Qt::EditRole);
     writer.addColumn(tr("Label"), 0, TransactionTableModel::LabelRole);
     writer.addColumn(tr("Address"), 0, TransactionTableModel::AddressRole);
-    writer.addColumn(tr("Amount"), 0, TransactionTableModel::FormattedAmountRole);
+    writer.addColumn(BitcoinUnits::getAmountColumnTitle(model->getOptionsModel()->getDisplayUnit()), 0, TransactionTableModel::FormattedAmountRole);
     writer.addColumn(tr("ID"), 0, TransactionTableModel::TxIDRole);
 
     if(!writer.write()) {
@@ -479,4 +481,23 @@ void TransactionView::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
     columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
+}
+
+// Need to override default Ctrl+C action for amount as default behaviour is just to copy DisplayRole text
+bool TransactionView::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::KeyPress)
+    {
+        QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+        if (ke->key() == Qt::Key_C && ke->modifiers().testFlag(Qt::ControlModifier))
+        {
+            QModelIndex i = this->transactionView->currentIndex();
+            if (i.isValid() && i.column() == TransactionTableModel::Amount)
+            {
+                 GUIUtil::setClipboard(i.data(TransactionTableModel::FormattedAmountRole).toString());
+                 return true;
+            }
+        }
+    }
+    return QWidget::eventFilter(obj, event);
 }

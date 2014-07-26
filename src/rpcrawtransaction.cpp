@@ -99,8 +99,8 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
             if (chainActive.Contains(pindex))
             {
                 entry.push_back(Pair("confirmations", 1 + chainActive.Height() - pindex->nHeight));
-                entry.push_back(Pair("time", (int64_t)pindex->nTime));
-                entry.push_back(Pair("blocktime", (int64_t)pindex->nTime));
+                entry.push_back(Pair("time", pindex->GetBlockTime()));
+                entry.push_back(Pair("blocktime", pindex->GetBlockTime()));
             }
             else
                 entry.push_back(Pair("confirmations", 0));
@@ -304,6 +304,7 @@ Value listunspent(const Array& params, bool fHelp)
         }
         entry.push_back(Pair("amount",ValueFromAmount(nValue)));
         entry.push_back(Pair("confirmations",out.nDepth));
+        entry.push_back(Pair("spendable", out.fSpendable));
         results.push_back(entry);
     }
 
@@ -349,7 +350,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
     Array inputs = params[0].get_array();
     Object sendTo = params[1].get_obj();
 
-    CTransaction rawTx;
+    CMutableTransaction rawTx;
 
     BOOST_FOREACH(const Value& input, inputs)
     {
@@ -522,7 +523,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             "         \"txid\":\"id\",             (string, required) The transaction id\n"
             "         \"vout\":n,                  (numeric, required) The output number\n"
             "         \"scriptPubKey\": \"hex\",   (string, required) script key\n"
-            "         \"redeemScript\": \"hex\"    (string, required) redeem script\n"
+            "         \"redeemScript\": \"hex\"    (string, required for P2SH) redeem script\n"
             "       }\n"
             "       ,...\n"
             "    ]\n"
@@ -554,11 +555,11 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
     vector<unsigned char> txData(ParseHexV(params[0], "argument 1"));
     CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
-    vector<CTransaction> txVariants;
+    vector<CMutableTransaction> txVariants;
     while (!ssData.empty())
     {
         try {
-            CTransaction tx;
+            CMutableTransaction tx;
             ssData >> tx;
             txVariants.push_back(tx);
         }
@@ -572,7 +573,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the rawtx:
-    CTransaction mergedTx(txVariants[0]);
+    CMutableTransaction mergedTx(txVariants[0]);
     bool fComplete = true;
 
     // Fetch previous transactions (inputs):
@@ -713,7 +714,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
 
         // ... and merge in other signatures:
-        BOOST_FOREACH(const CTransaction& txv, txVariants)
+        BOOST_FOREACH(const CMutableTransaction& txv, txVariants)
         {
             txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
         }
@@ -770,7 +771,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     catch (std::exception &e) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
-    uint256 hashTx = tx.GetHash();
+    const uint256 &hashTx = tx.GetHash();
 
     CCoinsViewCache &view = *pcoinsTip;
     CCoins existingCoins;
@@ -780,7 +781,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
         // push to local node and sync with wallets
         CValidationState state;
         if (AcceptToMemoryPool(mempool, state, tx, false, NULL, !fOverrideFees))
-            SyncWithWallets(hashTx, tx, NULL);
+            SyncWithWallets(tx, NULL);
         else {
             if(state.IsInvalid())
                 throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
@@ -790,7 +791,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     } else if (fHaveChain) {
         throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in block chain");
     }
-    RelayTransaction(tx, hashTx);
+    RelayTransaction(tx);
 
     return hashTx.GetHex();
 }
