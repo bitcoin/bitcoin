@@ -648,7 +648,7 @@ public:
 
     int64 GetImmatureCredit(bool fUseCache=true) const
     {
-        if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0 && IsInMainChain())
+        if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
         {
             if (fUseCache && fImmatureCreditCached)
                 return nImmatureCreditCached;
@@ -662,7 +662,7 @@ public:
 
     int64 GetImmatureWatchOnlyCredit(bool fUseCache=true) const
     {
-        if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0 && IsInMainChain())
+        if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
         {
             if (fUseCache && fImmatureWatchCreditCached)
                 return nImmatureWatchCreditCached;
