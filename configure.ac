@@ -15,6 +15,10 @@ AC_PROG_INSTALL
 AC_PROG_SED
 PKG_PROG_PKG_CONFIG
 
+AC_PATH_TOOL(AR, ar)
+AC_PATH_TOOL(RANLIB, ranlib)
+AC_PATH_TOOL(STRIP, strip)
+
 AC_PROG_CC_C99
 if test x"$ac_cv_prog_cc_c99" == x"no"; then
   AC_MSG_ERROR([c99 compiler support required])
