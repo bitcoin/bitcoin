@@ -180,5 +180,7 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
 std::string NetworkErrorString(int err);
 /** Close socket and set hSocket to INVALID_SOCKET */
 bool CloseSocket(SOCKET& hSocket);
+/** Disable or enable blocking-mode for a socket */
+bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking);
 
 #endif
