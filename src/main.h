@@ -690,6 +690,11 @@ public:
         return (int64_t)nTime;
     }
 
+    bool CheckProof() const
+    {
+        return CheckProofOfWork(GetBlockHash(), nBits);
+    }
+
     uint256 GetBlockWork() const
     {
         return GetProofIncrement(nBits);

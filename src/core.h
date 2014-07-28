@@ -6,6 +6,7 @@
 #ifndef BITCOIN_CORE_H
 #define BITCOIN_CORE_H
 
+#include "pow.h"
 #include "script.h"
 #include "serialize.h"
 #include "uint256.h"
@@ -476,6 +477,11 @@ public:
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
+    }
+
+    bool CheckProof() const
+    {
+        return CheckProofOfWork(GetHash(), nBits);
     }
 };
 
