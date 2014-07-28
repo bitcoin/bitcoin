@@ -464,7 +464,7 @@ bool ProxyInit(Network net, const std::string& strArg, bool fIsDefault)
         CService addrProxy = CService(mapArgs[strArg], 9050);
 
         // try to set address as proxy
-        if (!SetProxy(net, addrProxy, fIsDefault))
+        if (!SetProxy(net, addrProxy))
             return InitError(strprintf(_("Invalid proxy address '%s' for: %s"), mapArgs[strArg], strArg));
         // special-case Tor, which needs to be set as reachable manually
         if (net == NET_TOR)
@@ -474,7 +474,7 @@ bool ProxyInit(Network net, const std::string& strArg, bool fIsDefault)
         return true;
     }
 
-    // prerequisites failed (no error for default proxy)
+    // prerequisites failed (no error for -proxy)
     return fIsDefault;
 }
 

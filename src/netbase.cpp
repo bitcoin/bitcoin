@@ -405,14 +405,13 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
     return true;
 }
 
-bool SetProxy(enum Network net, CService addrProxy, bool fIsDefault)
+bool SetProxy(enum Network net, CService addrProxy)
 {
     assert(net >= 0 && net < NET_MAX);
     if (!addrProxy.IsValid())
         return false;
     LOCK(cs_proxyInfos);
-    proxyInfo[net].addrProxy = addrProxy;
-    proxyInfo[net].fIsDefault = fIsDefault;
+    proxyInfo[net] = addrProxy;
     return true;
 }
 
@@ -420,7 +419,7 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut)
 {
     assert(net >= 0 && net < NET_MAX);
     LOCK(cs_proxyInfos);
-    if (!proxyInfo[net].addrProxy.IsValid())
+    if (!proxyInfo[net].IsValid())
         return false;
     proxyInfoOut = proxyInfo[net];
     return true;
@@ -429,14 +428,14 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut)
 bool HaveProxy(enum Network net)
 {
     LOCK(cs_proxyInfos);
-    return proxyInfo[net].addrProxy.IsValid();
+    return proxyInfo[net].IsValid();
 }
 
 bool IsProxy(const CNetAddr &addr)
 {
     LOCK(cs_proxyInfos);
     for (int i = 0; i < NET_MAX; i++) {
-        if (addr == (CNetAddr)proxyInfo[i].addrProxy)
+        if (addr == (CNetAddr)proxyInfo[i])
             return true;
     }
     return false;
@@ -452,7 +451,7 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
     SOCKET hSocket = INVALID_SOCKET;
 
     // first connect to proxy server
-    if (!ConnectSocketDirectly(proxy.addrProxy, hSocket, nTimeout))
+    if (!ConnectSocketDirectly(proxy, hSocket, nTimeout))
         return false;
     // do socks negotiation
     if (!Socks5(addrDest.ToStringIP(), addrDest.GetPort(), hSocket))
@@ -483,7 +482,7 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
     if (!GetProxy(NET_IPV4, proxy))
         return false;
     // first connect to proxy server
-    if (!ConnectSocketDirectly(proxy.addrProxy, hSocket, nTimeout))
+    if (!ConnectSocketDirectly(proxy, hSocket, nTimeout))
         return false;
     // do socks negotiation
     if (!Socks5(strDest, (unsigned short)port, hSocket))

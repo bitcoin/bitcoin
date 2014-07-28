@@ -407,11 +407,11 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("localaddresses", localAddresses));
 
     Object proxy;
-    proxy.push_back(Pair("proxy-default", proxyIpv4.addrProxy.IsValid() ? proxyIpv4.addrProxy.ToStringIPPort() : string()));
-    proxy.push_back(Pair("proxy-ipv6", proxyIpv6.addrProxy.IsValid() ? proxyIpv6.addrProxy.ToStringIPPort() : string()));
-    proxy.push_back(Pair("proxy-ipv6-from-default", proxyIpv6.fIsDefault));
-    proxy.push_back(Pair("proxy-onion", proxyTor.addrProxy.IsValid() ? proxyTor.addrProxy.ToStringIPPort() : string()));
-    proxy.push_back(Pair("proxy-onion-from-default", proxyTor.fIsDefault));
+    proxy.push_back(Pair("proxy-default", proxyIpv4.IsValid() ? proxyIpv4.ToStringIPPort() : string()));
+    proxy.push_back(Pair("proxy-ipv6", proxyIpv6.IsValid() ? proxyIpv6.ToStringIPPort() : string()));
+    proxy.push_back(Pair("proxy-ipv6-from-default", proxyIpv6 == proxyIpv4));
+    proxy.push_back(Pair("proxy-onion", proxyTor.IsValid() ? proxyTor.ToStringIPPort() : string()));
+    proxy.push_back(Pair("proxy-onion-from-default", proxyTor == proxyIpv4));
 
     ret.push_back(obj);
     ret.push_back(proxy);

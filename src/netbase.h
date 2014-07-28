@@ -161,14 +161,11 @@ class CService : public CNetAddr
             )
 };
 
-typedef struct proxyType {
-    CService addrProxy;
-    bool fIsDefault;
-} proxyType;
+typedef CService proxyType;
 
 enum Network ParseNetwork(std::string net);
 void SplitHostPort(std::string in, int &portOut, std::string &hostOut);
-bool SetProxy(enum Network net, CService addrProxy, bool fIsDefault);
+bool SetProxy(enum Network net, CService addrProxy);
 bool GetProxy(enum Network net, proxyType &proxyInfoOut);
 bool HaveProxy(enum Network net);
 bool IsProxy(const CNetAddr &addr);
