@@ -250,7 +250,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -permitbaremultisig    " + _("Relay non-P2SH multisig (default: 1)") + "\n";
     strUsage += "  -port=<port>           " + _("Listen for connections on <port> (default: 8333 or testnet: 18333)") + "\n";
     strUsage += "  -proxy=<ip:port>       " + _("Connect through SOCKS5 proxy") + "\n";
-    strUsage += "  -proxy6=<ip:port>      " + _("Use separate SOCKS5 proxy to reach peers via IPv6 (default: -proxy)") + "\n";
     strUsage += "  -seednode=<ip>         " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n";
     strUsage += "  -timeout=<n>           " + _("Specify connection timeout in milliseconds (default: 5000)") + "\n";
 #ifdef USE_UPNP
@@ -828,13 +827,13 @@ bool AppInit2(boost::thread_group& threadGroup)
     // check for presence of default proxy to reach peers via IPv4
     if (!ProxyInit(NET_IPV4, "-proxy", true))
         return false; // errors with default proxy lead to exit
-    // enable outgoing IPv6/Tor connections for default proxy (if no separate SOCKS5 proxy for IPv6/Tor will be used)
-    if (!ProxyInit(NET_IPV6, "-proxy6", false))
-        if (!ProxyInit(NET_IPV6, "-proxy", true))
-            return false;  // errors with default proxy lead to exit
+    // enable outgoing IPv6 connections for default proxy
+    if (!ProxyInit(NET_IPV6, "-proxy", true))
+        return false; // errors with default proxy lead to exit
+    // enable outgoing Tor connections for default proxy (if no separate SOCKS5 proxy for Tor will be used)
     if (!ProxyInit(NET_TOR, "-onion", false))
         if (!ProxyInit(NET_TOR, "-proxy", true))
-            return false;  // errors with default proxy lead to exit
+            return false; // errors with default proxy lead to exit
 
     // see Step 2: parameter interactions for more information about these
     fListen = GetBoolArg("-listen", DEFAULT_LISTEN);
