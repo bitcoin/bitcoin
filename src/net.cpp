@@ -47,19 +47,14 @@
 #endif
 #endif
 
-using namespace std;
 using namespace boost;
+using namespace std;
 
 namespace {
+
     const int MAX_OUTBOUND_CONNECTIONS = 8;
 
-    struct ListenSocket {
-        SOCKET socket;
-        bool whitelisted;
-
-        ListenSocket(SOCKET socket, bool whitelisted) : socket(socket), whitelisted(whitelisted) {}
-    };
-}
+} // anon namespace
 
 //
 // Global state variables
@@ -74,7 +69,7 @@ static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
 static CNode* pnodeSync = NULL;
 uint64_t nLocalHostNonce = 0;
-static std::vector<ListenSocket> vhListenSocket;
+static std::vector<CSocket> vhListenSocket;
 CAddrMan addrman;
 int nMaxConnections = 125;
 
@@ -532,8 +527,8 @@ void CNode::CloseSocketDisconnect()
     fDisconnect = true;
     if (hSocket != INVALID_SOCKET)
     {
-        LogPrint("net", "disconnecting peer=%d\n", id);
         CloseSocket(hSocket);
+        LogPrint("net", "disconnecting peer=%d\n", id);
     }
 
     // in case this fails, we'll empty the recv buffer when the CNode is deleted
@@ -875,9 +870,9 @@ void ThreadSocketHandler()
         SOCKET hSocketMax = 0;
         bool have_fds = false;
 
-        BOOST_FOREACH(const ListenSocket& hListenSocket, vhListenSocket) {
-            FD_SET(hListenSocket.socket, &fdsetRecv);
-            hSocketMax = max(hSocketMax, hListenSocket.socket);
+        BOOST_FOREACH(CSocket &hListenSocket, vhListenSocket) {
+            FD_SET(hListenSocket.Get(), &fdsetRecv);
+            hSocketMax = max(hSocketMax, hListenSocket.Get());
             have_fds = true;
         }
 
@@ -944,13 +939,13 @@ void ThreadSocketHandler()
         //
         // Accept new connections
         //
-        BOOST_FOREACH(const ListenSocket& hListenSocket, vhListenSocket)
+        BOOST_FOREACH(CSocket &hListenSocket, vhListenSocket)
         {
-            if (hListenSocket.socket != INVALID_SOCKET && FD_ISSET(hListenSocket.socket, &fdsetRecv))
+            if (hListenSocket.IsValid() && FD_ISSET(hListenSocket.Get(), &fdsetRecv))
             {
                 struct sockaddr_storage sockaddr;
                 socklen_t len = sizeof(sockaddr);
-                SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
+                SOCKET hSocket = accept(hListenSocket.Get(), (struct sockaddr*)&sockaddr, &len);
                 CAddress addr;
                 int nInbound = 0;
 
@@ -958,7 +953,7 @@ void ThreadSocketHandler()
                     if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr))
                         LogPrintf("Warning: Unknown socket family\n");
 
-                bool whitelisted = hListenSocket.whitelisted || CNode::IsWhitelistedRange(addr);
+                bool whitelisted = hListenSocket.IsWhitelisted() || CNode::IsWhitelistedRange(addr);
                 {
                     LOCK(cs_vNodes);
                     BOOST_FOREACH(CNode* pnode, vNodes)
@@ -978,8 +973,8 @@ void ThreadSocketHandler()
                 }
                 else if (CNode::IsBanned(addr) && !whitelisted)
                 {
-                    LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
                     CloseSocket(hSocket);
+                    LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
                 }
                 else
                 {
@@ -1624,8 +1619,9 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
         return false;
     }
 
-    SOCKET hListenSocket = socket(((struct sockaddr*)&sockaddr)->sa_family, SOCK_STREAM, IPPROTO_TCP);
-    if (hListenSocket == INVALID_SOCKET)
+    CSocket hListenSocket(false, fWhitelisted);
+    hListenSocket = socket(((struct sockaddr*)&sockaddr)->sa_family, SOCK_STREAM, IPPROTO_TCP);
+    if (!hListenSocket.IsValid())
     {
         strError = strprintf("Error: Couldn't open socket for incoming connections (socket returned error %s)", NetworkErrorString(WSAGetLastError()));
         LogPrintf("%s\n", strError);
@@ -1635,18 +1631,18 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
 #ifndef WIN32
 #ifdef SO_NOSIGPIPE
     // Different way of disabling SIGPIPE on BSD
-    setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
+    setsockopt(hListenSocket.Get(), SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
 #endif
     // Allow binding if the port is still in TIME_WAIT state after
     // the program was closed and restarted. Not an issue on windows!
-    setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
+    setsockopt(hListenSocket.Get(), SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
 #endif
 
 #ifdef WIN32
     // Set to non-blocking, incoming connections will also inherit this
-    if (ioctlsocket(hListenSocket, FIONBIO, (u_long*)&nOne) == SOCKET_ERROR)
+    if (ioctlsocket(hListenSocket.Get(), FIONBIO, (u_long*)&nOne) == SOCKET_ERROR)
 #else
-    if (fcntl(hListenSocket, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
+    if (fcntl(hListenSocket.Get(), F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
 #endif
     {
         strError = strprintf("Error: Couldn't set properties on socket for incoming connections (error %s)", NetworkErrorString(WSAGetLastError()));
@@ -1659,18 +1655,18 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
     if (addrBind.IsIPv6()) {
 #ifdef IPV6_V6ONLY
 #ifdef WIN32
-        setsockopt(hListenSocket, IPPROTO_IPV6, IPV6_V6ONLY, (const char*)&nOne, sizeof(int));
+        setsockopt(hListenSocket.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char*)&nOne, sizeof(int));
 #else
-        setsockopt(hListenSocket, IPPROTO_IPV6, IPV6_V6ONLY, (void*)&nOne, sizeof(int));
+        setsockopt(hListenSocket.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (void*)&nOne, sizeof(int));
 #endif
 #endif
 #ifdef WIN32
         int nProtLevel = PROTECTION_LEVEL_UNRESTRICTED;
-        setsockopt(hListenSocket, IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, (const char*)&nProtLevel, sizeof(int));
+        setsockopt(hListenSocket.Get(), IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, (const char*)&nProtLevel, sizeof(int));
 #endif
     }
 
-    if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
+    if (::bind(hListenSocket.Get(), (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
@@ -1678,21 +1674,21 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"), addrBind.ToString(), NetworkErrorString(nErr));
         LogPrintf("%s\n", strError);
-        CloseSocket(hListenSocket);
+        hListenSocket.Close();
         return false;
     }
     LogPrintf("Bound to %s\n", addrBind.ToString());
 
     // Listen for incoming connections
-    if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)
+    if (listen(hListenSocket.Get(), SOMAXCONN) == SOCKET_ERROR)
     {
         strError = strprintf(_("Error: Listening for incoming connections failed (listen returned error %s)"), NetworkErrorString(WSAGetLastError()));
         LogPrintf("%s\n", strError);
-        CloseSocket(hListenSocket);
+        hListenSocket.Close();
         return false;
     }
 
-    vhListenSocket.push_back(ListenSocket(hListenSocket, fWhitelisted));
+    vhListenSocket.push_back(hListenSocket);
 
     if (addrBind.IsRoutable() && fDiscover && !fWhitelisted)
         AddLocal(addrBind, LOCAL_BIND);
@@ -1819,10 +1815,9 @@ public:
         BOOST_FOREACH(CNode* pnode, vNodes)
             if (pnode->hSocket != INVALID_SOCKET)
                 CloseSocket(pnode->hSocket);
-        BOOST_FOREACH(ListenSocket& hListenSocket, vhListenSocket)
-            if (hListenSocket.socket != INVALID_SOCKET)
-                if (!CloseSocket(hListenSocket.socket))
-                    LogPrintf("CloseSocket(hListenSocket) failed with error %s\n", NetworkErrorString(WSAGetLastError()));
+        BOOST_FOREACH(CSocket &hListenSocket, vhListenSocket)
+            if (!hListenSocket.Close())
+                LogPrintf("hListenSocket.Close: Failed with error %s\n", NetworkErrorString(WSAGetLastError()));
 
         // clean up some globals (to help leak detection)
         BOOST_FOREACH(CNode *pnode, vNodes)
