@@ -13,6 +13,7 @@
 #include "chainparams.h"
 #include "core.h"
 #include "ui_interface.h"
+#include "zmqports.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -1876,6 +1877,9 @@ void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
         } else
             pnode->PushInventory(inv);
     }
+
+    if (fZMQPub)
+      ZMQPublishTransaction(tx);
 }
 
 void CNode::RecordBytesRecv(uint64_t bytes)
