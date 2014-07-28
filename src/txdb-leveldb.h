@@ -204,8 +204,6 @@ public:
     bool ReadModifierUpgradeTime(unsigned int& nUpgradeTime);
     bool WriteModifierUpgradeTime(const unsigned int& nUpgradeTime);
     bool LoadBlockIndex();
-private:
-    bool LoadBlockIndexGuts();
 };
 
 
