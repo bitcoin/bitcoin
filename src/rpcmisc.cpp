@@ -27,6 +27,19 @@ using namespace boost::assign;
 using namespace json_spirit;
 using namespace std;
 
+/**
+ * @note Do not add or change anything in the information returned by this
+ * method. `getinfo` exists for backwards-compatibilty only. It combines
+ * information from wildly different sources in the program, which is a mess,
+ * and is thus planned to be deprecated eventually.
+ *
+ * Based on the source of the information, new information should be added to:
+ * - `getblockchaininfo`,
+ * - `getnetworkinfo` or
+ * - `getwalletinfo`
+ *
+ * Or alternatively, create a specific query method for the information.
+ **/
 Value getinfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
