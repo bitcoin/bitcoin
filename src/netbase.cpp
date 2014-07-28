@@ -7,16 +7,16 @@
 #include "bitcoin-config.h"
 #endif
 
-#ifdef HAVE_GETADDRINFO_A
-#include <netdb.h>
-#endif
-
 #include "netbase.h"
 
 #include "hash.h"
 #include "sync.h"
 #include "uint256.h"
 #include "util.h"
+
+#ifdef HAVE_GETADDRINFO_A
+#include <netdb.h>
+#endif
 
 #ifndef WIN32
 #if HAVE_INET_PTON
@@ -331,22 +331,15 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
     SOCKET hSocket = socket(((struct sockaddr*)&sockaddr)->sa_family, SOCK_STREAM, IPPROTO_TCP);
     if (hSocket == INVALID_SOCKET)
         return false;
+
 #ifdef SO_NOSIGPIPE
     int set = 1;
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
 
-#ifdef WIN32
-    u_long fNonblock = 1;
-    if (ioctlsocket(hSocket, FIONBIO, &fNonblock) == SOCKET_ERROR)
-#else
-    int fFlags = fcntl(hSocket, F_GETFL, 0);
-    if (fcntl(hSocket, F_SETFL, fFlags | O_NONBLOCK) == -1)
-#endif
-    {
-        CloseSocket(hSocket);
-        return false;
-    }
+    // Set to non-blocking
+    if (!SetSocketNonBlocking(hSocket, true))
+        return error("ConnectSocketDirectly: Setting socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
 
     if (connect(hSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
     {
@@ -404,20 +397,10 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
         }
     }
 
-    // this isn't even strictly necessary
-    // CNode::ConnectNode immediately turns the socket back to non-blocking
-    // but we'll turn it back to blocking just in case
-#ifdef WIN32
-    fNonblock = 0;
-    if (ioctlsocket(hSocket, FIONBIO, &fNonblock) == SOCKET_ERROR)
-#else
-    fFlags = fcntl(hSocket, F_GETFL, 0);
-    if (fcntl(hSocket, F_SETFL, fFlags & ~O_NONBLOCK) == SOCKET_ERROR)
-#endif
-    {
-        CloseSocket(hSocket);
-        return false;
-    }
+    // This is required when using SOCKS5 proxy!
+    // CNode::ConnectNode turns the socket back to non-blocking.
+    if (!SetSocketNonBlocking(hSocket, false))
+        return error("ConnectSocketDirectly: Setting socket to blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
 
     hSocketRet = hSocket;
     return true;
@@ -1270,4 +1253,33 @@ bool CloseSocket(SOCKET& hSocket)
 #endif
     hSocket = INVALID_SOCKET;
     return ret != SOCKET_ERROR;
+}
+
+bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking)
+{
+    if (fNonBlocking) {
+#ifdef WIN32
+        u_long nOne = 1;
+        if (ioctlsocket(hSocket, FIONBIO, &nOne) == SOCKET_ERROR) {
+#else
+        int fFlags = fcntl(hSocket, F_GETFL, 0);
+        if (fcntl(hSocket, F_SETFL, fFlags | O_NONBLOCK) == SOCKET_ERROR) {
+#endif
+            CloseSocket(hSocket);
+            return false;
+        }
+    } else {
+#ifdef WIN32
+        u_long nZero = 0;
+        if (ioctlsocket(hSocket, FIONBIO, &nZero) == SOCKET_ERROR) {
+#else
+        int fFlags = fcntl(hSocket, F_GETFL, 0);
+        if (fcntl(hSocket, F_SETFL, fFlags & ~O_NONBLOCK) == SOCKET_ERROR) {
+#endif
+            CloseSocket(hSocket);
+            return false;
+        }
+    }
+
+    return true;
 }
