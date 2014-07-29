@@ -206,7 +206,7 @@ public:
             }
             if ((delta-1) >= (int)history.size())
                 delta = history.size(); // Last bucket is catch-all
-            entriesByConfirmations[delta-1].push_back(&entry);
+            entriesByConfirmations.at(delta-1).push_back(&entry);
         }
         for (size_t i = 0; i < entriesByConfirmations.size(); i++)
         {
@@ -319,16 +319,27 @@ public:
 
     void Read(CAutoFile& filein, const CFeeRate& minRelayFee)
     {
-        filein >> nBestSeenHeight;
+        int nFileBestSeenHeight;
+        filein >> nFileBestSeenHeight;
         size_t numEntries;
         filein >> numEntries;
-        history.clear();
+        if (numEntries <= 0 || numEntries > 10000)
+            throw runtime_error("Corrupt estimates file.  Must have between 1 and 10k entires.");
+
+        std::vector<CBlockAverage> fileHistory;
+        
         for (size_t i = 0; i < numEntries; i++)
         {
             CBlockAverage entry;
             entry.Read(filein, minRelayFee);
-            history.push_back(entry);
+            fileHistory.push_back(entry);
         }
+
+        //Now that we've processed the entire fee estimate data file and not
+        //thrown any errors, we can copy it to our history
+        nBestSeenHeight = nFileBestSeenHeight;
+        history = fileHistory;
+        assert(history.size() > 0);
     }
 };
 
