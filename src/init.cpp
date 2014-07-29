@@ -36,6 +36,7 @@ unsigned int nDerivationMethodIndex;
 unsigned int nMinerSleep;
 bool fUseFastIndex;
 bool fUseFastStakeMiner;
+bool fUseMemoryLog;
 enum Checkpoints::CPMode CheckpointsMode;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -267,6 +268,11 @@ std::string HelpMessage()
 #endif
 #endif
         "  -detachdb              " + _("Detach block and address databases. Increases shutdown time (default: 0)") + "\n" +
+
+#ifdef DB_LOG_IN_MEMORY
+        "  -memorylog              " + _("Use in-memory logging for block index database (default: 1)") + "\n" +
+#endif
+
         "  -paytxfee=<amt>        " + _("Fee per KB to add to transactions you send") + "\n" +
         "  -mininput=<amt>        " + str(boost::format(_("When creating transactions, ignore inputs with value less than this (default: %s)")) % FormatMoney(MIN_TXOUT_AMOUNT)) + "\n" +
 #ifdef QT_GUI
@@ -366,6 +372,7 @@ bool AppInit2()
 
     nNodeLifespan = GetArg("-addrlifespan", 7);
     fUseFastIndex = GetBoolArg("-fastindex", true);
+    fUseMemoryLog = GetBoolArg("-memorylog", true);
     nMinerSleep = GetArg("-minersleep", 500);
 
     CheckpointsMode = Checkpoints::STRICT;

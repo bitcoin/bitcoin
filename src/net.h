@@ -145,6 +145,9 @@ public:
     int64 nReleaseTime;
     int nStartingHeight;
     int nMisbehavior;
+    uint64 nSendBytes;
+    uint64 nRecvBytes;
+    bool fSyncNode;
 };
 
 
@@ -160,6 +163,8 @@ public:
     SOCKET hSocket;
     CDataStream vSend;
     CDataStream vRecv;
+    uint64 nSendBytes;
+    uint64 nRecvBytes;
     CCriticalSection cs_vSend;
     CCriticalSection cs_vRecv;
     int64 nLastSend;
@@ -197,6 +202,7 @@ public:
     CBlockIndex* pindexLastGetBlocksBegin;
     uint256 hashLastGetBlocksEnd;
     int nStartingHeight;
+    bool fStartSync;
 
     // flood relay
     std::vector<CAddress> vAddrToSend;
@@ -217,6 +223,8 @@ public:
         hSocket = hSocketIn;
         nLastSend = 0;
         nLastRecv = 0;
+        nSendBytes = 0;
+        nRecvBytes = 0;
         nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
         nHeaderStart = -1;
@@ -237,6 +245,7 @@ public:
         pindexLastGetBlocksBegin = 0;
         hashLastGetBlocksEnd = 0;
         nStartingHeight = -1;
+        fStartSync = false;
         fGetAddr = false;
         nMisbehavior = 0;
         hashCheckpointKnown = 0;

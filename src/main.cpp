@@ -2900,37 +2900,41 @@ bool LoadBlockIndex(bool fAllowNew)
         }
     }
 
-    string strPubKey = "";
-
-    // if checkpoint master key changed must reset sync-checkpoint
-    if (!txdb.ReadCheckpointPubKey(strPubKey) || strPubKey != CSyncCheckpoint::strMasterPubKey)
     {
-        // write checkpoint master key to db
-        txdb.TxnBegin();
-        if (!txdb.WriteCheckpointPubKey(CSyncCheckpoint::strMasterPubKey))
-            return error("LoadBlockIndex() : failed to write new checkpoint master key to db");
-        if (!txdb.TxnCommit())
-            return error("LoadBlockIndex() : failed to commit new checkpoint master key to db");
-        if ((!fTestNet) && !Checkpoints::ResetSyncCheckpoint())
-            return error("LoadBlockIndex() : failed to reset sync-checkpoint");
-    }
+        CTxDB txdb("r+");
+        string strPubKey = "";
+        if (!txdb.ReadCheckpointPubKey(strPubKey) || strPubKey != CSyncCheckpoint::strMasterPubKey)
+        {
+            // write checkpoint master key to db
+            txdb.TxnBegin();
+            if (!txdb.WriteCheckpointPubKey(CSyncCheckpoint::strMasterPubKey))
+                return error("LoadBlockIndex() : failed to write new checkpoint master key to db");
+            if (!txdb.TxnCommit())
+                return error("LoadBlockIndex() : failed to commit new checkpoint master key to db");
+            if ((!fTestNet) && !Checkpoints::ResetSyncCheckpoint())
+                return error("LoadBlockIndex() : failed to reset sync-checkpoint");
+        }
 
-    // upgrade time set to zero if blocktreedb initialized
-    if (txdb.ReadModifierUpgradeTime(nModifierUpgradeTime))
-    {
-        if (nModifierUpgradeTime)
-            printf(" Upgrade Info: blocktreedb upgrade detected at timestamp %d\n", nModifierUpgradeTime);
+        // upgrade time set to zero if blocktreedb initialized
+        if (txdb.ReadModifierUpgradeTime(nModifierUpgradeTime))
+        {
+            if (nModifierUpgradeTime)
+                printf(" Upgrade Info: blocktreedb upgrade detected at timestamp %d\n", nModifierUpgradeTime);
+            else
+                printf(" Upgrade Info: no blocktreedb upgrade detected.\n");
+        }
         else
-            printf(" Upgrade Info: no blocktreedb upgrade detected.\n");
-    }
-    else
-    {
-        nModifierUpgradeTime = GetTime();
-        printf(" Upgrade Info: upgrading blocktreedb at timestamp %u\n", nModifierUpgradeTime);
-        if (!txdb.WriteModifierUpgradeTime(nModifierUpgradeTime))
-            return error("LoadBlockIndex() : failed to write upgrade info");
-    }
+        {
+            nModifierUpgradeTime = GetTime();
+            printf(" Upgrade Info: upgrading blocktreedb at timestamp %u\n", nModifierUpgradeTime);
+            if (!txdb.WriteModifierUpgradeTime(nModifierUpgradeTime))
+                return error("LoadBlockIndex() : failed to write upgrade info");
+        }
 
+#ifndef USE_LEVELDB
+        txdb.Close();
+#endif
+    }
 
     return true;
 }
@@ -3979,6 +3983,12 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 pto->PushMessage("ping", nonce);
             else
                 pto->PushMessage("ping");
+        }
+
+        // Start block sync
+        if (pto->fStartSync) {
+            pto->fStartSync = false;
+            pto->PushGetBlocks(pindexBest, uint256(0));
         }
 
         // Resend wallet transactions that haven't gotten in a block yet
