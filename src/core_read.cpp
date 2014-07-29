@@ -4,12 +4,14 @@
 #include "core.h"
 #include "serialize.h"
 #include "script.h"
+#include "util.h"
 
 #include <boost/assign/list_of.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include "univalue/univalue.h"
 
 using namespace std;
 using namespace boost;
@@ -98,5 +100,28 @@ bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx)
     }
 
     return true;
+}
+
+uint256 ParseHashUV(const UniValue& v, const string& strName)
+{
+    string strHex;
+    if (v.isStr())
+        strHex = v.getValStr();
+    if (!IsHex(strHex)) // Note: IsHex("") is false
+        throw runtime_error(strName+" must be hexadecimal string (not '"+strHex+"')");
+
+    uint256 result;
+    result.SetHex(strHex);
+    return result;
+}
+
+vector<unsigned char> ParseHexUV(const UniValue& v, const string& strName)
+{
+    string strHex;
+    if (v.isStr())
+        strHex = v.getValStr();
+    if (!IsHex(strHex))
+        throw runtime_error(strName+" must be hexadecimal string (not '"+strHex+"')");
+    return ParseHex(strHex);
 }
 
