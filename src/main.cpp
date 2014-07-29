@@ -1386,10 +1386,8 @@ void Misbehaving(NodeId pnode, int howmuch)
 void static InvalidChainFound(CBlockIndex* pindexNew)
 {
     if (!pindexBestInvalid || pindexNew->nChainWork > pindexBestInvalid->nChainWork)
-    {
         pindexBestInvalid = pindexNew;
-        uiInterface.NotifyBlocksChanged();
-    }
+
     LogPrintf("InvalidChainFound: invalid block=%s  height=%d  log2_work=%.8g  date=%s\n",
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight,
       log(pindexNew->nChainWork.getdouble())/log(2.0), DateTimeStrFormat("%Y-%m-%d %H:%M:%S",
@@ -2175,7 +2173,6 @@ bool ActivateBestChain(CValidationState &state) {
                 boost::thread t(runCommand, strCmd); // thread runs free
             }
         }
-        uiInterface.NotifyBlocksChanged();
     } while(pindexMostWork != chainActive.Tip());
 
     return true;
