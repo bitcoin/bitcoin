@@ -519,7 +519,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (!GetBoolArg("-listen", true)) {
         // do not map ports or try to retrieve public IP when not listening (pointless)
         SoftSetBoolArg("-upnp", false);
-        SoftSetBoolArg("-discover", false);
+        // network discovery still needed to identify network (e.g. IPv4)
     }
 
     if (mapArgs.count("-externalip")) {
