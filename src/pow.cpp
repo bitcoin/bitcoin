@@ -180,6 +180,11 @@ bool CProof::CheckChallenge(const CBlockIndex* pindexPrev) const
     return nBits == GetNextChallenge(pindexPrev);
 }
 
+void CProof::ResetSolution()
+{
+    nNonce = 0;
+}
+
 uint256 CProof::GetProofIncrement() const
 {
     uint256 bnTarget;

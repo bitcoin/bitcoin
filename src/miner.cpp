@@ -309,7 +309,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         pblock->proof.UpdateTime(pindexPrev);
         pblock->proof.ResetChallenge(pindexPrev);
-        pblock->proof.nNonce = 0;
+        pblock->proof.ResetSolution();
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
         CBlockIndex indexDummy(*pblock);
@@ -429,7 +429,7 @@ void static BitcoinMiner(CWallet *pwallet)
             // Search
             //
             int64_t nStart = GetTime();
-            pblock->proof.nNonce = 0;
+            pblock->proof.ResetSolution();
             for (int i=0; i < 1000; i++) {
                 // Check if something found
                 if (pblock->proof.GenerateSolution(pblock))

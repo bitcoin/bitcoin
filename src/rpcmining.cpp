@@ -458,7 +458,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
     // Update nTime
     pblock->proof.UpdateTime(pindexPrev);
-    pblock->proof.nNonce = 0;
+    pblock->proof.ResetSolution();
 
     Array transactions;
     map<uint256, int64_t> setTxIndex;

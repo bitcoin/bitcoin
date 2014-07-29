@@ -24,6 +24,7 @@ public:
 
     CProof();
     bool CheckSolution(const uint256 hash) const;
+    void ResetSolution();
     void ResetChallenge(const CBlockIndex* pindexPrev);
     bool CheckChallenge(const CBlockIndex* pindexPrev) const;
     bool CheckMinChallenge(const CProof& checkpoint) const; 
