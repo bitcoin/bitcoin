@@ -2329,7 +2329,7 @@ bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex
         nHeight = pindexPrev->nHeight+1;
 
         // Check proof of work
-        if (block.proof.nBits != block.proof.GetNextChallenge(pindexPrev))
+        if (!block.proof.CheckChallenge(pindexPrev))
             return state.DoS(100, error("AcceptBlock() : incorrect proof of work"),
                              REJECT_INVALID, "bad-diffbits");
 

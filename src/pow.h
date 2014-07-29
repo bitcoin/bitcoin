@@ -19,6 +19,7 @@ bool CheckMinWork(unsigned int nBits, unsigned int nBase, int64_t deltaTime);
 
 class CProof
 {
+    unsigned int GetNextChallenge(const CBlockIndex* pindexLast) const;
 public:
     uint32_t nTime;
     uint32_t nBits;
@@ -26,6 +27,8 @@ public:
 
     CProof();
     bool CheckSolution(const uint256 hash) const;
+    void ResetChallenge(const CBlockIndex* pindexPrev);
+    bool CheckChallenge(const CBlockIndex* pindexPrev) const;
     void UpdateTime(const CBlockIndex* pindexPrev);
     uint256 GetProofIncrement() const;
     int64_t GetBlockTime() const;
@@ -42,7 +45,6 @@ public:
     }
 
     CProof(unsigned int nTime, unsigned int nBits, unsigned int nNonce);
-    unsigned int GetNextChallenge(const CBlockIndex* pindexLast) const;
 };
 
 #endif // BITCOIN_POW_H

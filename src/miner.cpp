@@ -308,7 +308,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         pblock->proof.UpdateTime(pindexPrev);
-        pblock->proof.nBits = pblock->proof.GetNextChallenge(pindexPrev);
+        pblock->proof.ResetChallenge(pindexPrev);
         pblock->proof.nNonce = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 

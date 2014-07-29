@@ -166,6 +166,16 @@ void CProof::UpdateTime(const CBlockIndex* pindexPrev)
         nBits = GetNextChallenge(pindexPrev);
 }
 
+void CProof::ResetChallenge(const CBlockIndex* pindexPrev)
+{
+    nBits = GetNextChallenge(pindexPrev);
+}
+
+bool CProof::CheckChallenge(const CBlockIndex* pindexPrev) const
+{
+    return nBits == GetNextChallenge(pindexPrev);
+}
+
 uint256 CProof::GetProofIncrement() const
 {
     uint256 bnTarget;
