@@ -52,6 +52,7 @@ Protocol and network code:
 - Add a way to limit deserialized string lengths and use it
 - Add a new checkpoint at block 295,000
 - Increase IsStandard() scriptSig length
+- Avoid querying DNS seeds, if we have open connections
 
 Wallet:
 - Check redeemScript size does not exceed 520 byte limit
