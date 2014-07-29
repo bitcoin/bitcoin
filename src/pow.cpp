@@ -124,12 +124,14 @@ bool CProof::CheckSolution(const uint256 hash) const
     return true;
 }
 
+// Check the work is more than the minimum a received block needs, without knowing its direct parent */
 //
 // true if nBits is greater than the minimum amount of work that could
-// possibly be required deltaTime after minimum work required was nBase
+// possibly be required deltaTime after minimum work required was checkpoint.nBits
 //
-bool CheckMinWork(unsigned int nBits, unsigned int nBase, int64_t deltaTime)
+bool CProof::CheckMinChallenge(const CProof& checkpoint) const
 {
+    int64_t deltaTime = GetBlockTime() - checkpoint.GetBlockTime();
     bool fOverflow = false;
     uint256 bnNewBlock;
     bnNewBlock.SetCompact(nBits, NULL, &fOverflow);
@@ -143,7 +145,7 @@ bool CheckMinWork(unsigned int nBits, unsigned int nBase, int64_t deltaTime)
         return bnNewBlock <= bnLimit;
 
     uint256 bnResult;
-    bnResult.SetCompact(nBase);
+    bnResult.SetCompact(checkpoint.nBits);
     while (deltaTime > 0 && bnResult < bnLimit)
     {
         // Maximum 400% adjustment...

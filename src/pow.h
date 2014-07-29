@@ -14,9 +14,6 @@ class CBlockIndex;
 class CBlockHeader;
 class uint256;
 
-/** Check the work is more than the minimum a received block needs, without knowing its direct parent */
-bool CheckMinWork(unsigned int nBits, unsigned int nBase, int64_t deltaTime);
-
 class CProof
 {
     unsigned int GetNextChallenge(const CBlockIndex* pindexLast) const;
@@ -29,6 +26,7 @@ public:
     bool CheckSolution(const uint256 hash) const;
     void ResetChallenge(const CBlockIndex* pindexPrev);
     bool CheckChallenge(const CBlockIndex* pindexPrev) const;
+    bool CheckMinChallenge(const CProof& checkpoint) const; 
     void UpdateTime(const CBlockIndex* pindexPrev);
     uint256 GetProofIncrement() const;
     int64_t GetBlockTime() const;
