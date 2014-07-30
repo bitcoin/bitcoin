@@ -26,7 +26,7 @@ extern bool fNameLookup;
 
 enum Network
 {
-    NET_UNROUTABLE,
+    NET_UNROUTABLE = 0,
     NET_IPV4,
     NET_IPV6,
     NET_TOR,
@@ -164,6 +164,7 @@ class CService : public CNetAddr
 typedef CService proxyType;
 
 enum Network ParseNetwork(std::string net);
+std::string GetNetworkName(enum Network net);
 void SplitHostPort(std::string in, int &portOut, std::string &hostOut);
 bool SetProxy(enum Network net, CService addrProxy);
 bool GetProxy(enum Network net, proxyType &proxyInfoOut);
