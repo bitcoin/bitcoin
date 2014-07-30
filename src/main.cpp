@@ -95,7 +95,9 @@ namespace {
     };
 
     CBlockIndex *pindexBestInvalid;
-    // may contain all CBlockIndex*'s that have validness >=BLOCK_VALID_TRANSACTIONS, and must contain those who aren't failed
+
+    // The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS or better that are at least
+    // as good as our current tip. Entries may be failed, though.
     set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid;
 
     CCriticalSection cs_LastBlockFile;
@@ -2097,6 +2099,15 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
                 return false;
             }
         } else {
+            // Delete all entries in setBlockIndexValid that are worse than our new current block.
+            // Note that we can't delete the current block itself, as we may need to return to it later in case a
+            // reorganization to a better block fails.
+            std::set<CBlockIndex*, CBlockIndexWorkComparator>::iterator it = setBlockIndexValid.begin();
+            while (setBlockIndexValid.value_comp()(*it, chainActive.Tip())) {
+                setBlockIndexValid.erase(it++);
+            }
+            // Either the current tip or a successor of it we're working towards is left in setBlockIndexValid.
+            assert(!setBlockIndexValid.empty());
             if (!pindexOldTip || chainActive.Tip()->nChainWork > pindexOldTip->nChainWork) {
                 // We're in a better position than we were. Return temporarily to release the lock.
                 break;
