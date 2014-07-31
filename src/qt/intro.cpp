@@ -182,7 +182,7 @@ void Intro::pickDataDirectory()
                 break;
             } catch(fs::filesystem_error &e) {
                 QMessageBox::critical(0, tr("Bitcoin"),
-                    tr("Error: Specified data directory \"%1\" can not be created.").arg(dataDir));
+                    tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
                 /* fall through, back to choosing screen */
             }
         }

@@ -1164,8 +1164,8 @@ Address: %4
     </message>
     <message>
         <location line="+1"/>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation type="unfinished">Error: Specified data directory &quot;%1&quot; can not be created.</translation>
+        <source>Error: Specified data directory &quot;%1&quot; cannot be created.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+24"/>
@@ -1501,7 +1501,7 @@ Address: %4
     </message>
     <message>
         <location line="+33"/>
-        <source>Watchonly:</source>
+        <source>Watch-only:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1599,17 +1599,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</translation>
-    </message>
-    <message>
-        <location line="+14"/>
-        <source>Payment request file can not be read! This can be caused by an invalid payment request file.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+62"/>
+        <location line="+84"/>
         <location line="+9"/>
         <location line="+32"/>
         <source>Payment request rejected</source>
@@ -1636,12 +1626,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+113"/>
-        <source>Payment request can not be parsed!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-366"/>
+        <location line="-253"/>
         <location line="+219"/>
         <location line="+34"/>
         <location line="+98"/>
@@ -1661,12 +1646,22 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+21"/>
+        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Payment request file handling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+105"/>
+        <location line="+1"/>
+        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+104"/>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1681,7 +1676,12 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+20"/>
+        <source>Payment request cannot be parsed!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Bad response from server %1</source>
         <translation type="unfinished"></translation>
     </message>
