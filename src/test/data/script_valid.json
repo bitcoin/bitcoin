@@ -10,6 +10,8 @@
 ["  1  2  ", "2 EQUALVERIFY 1 EQUAL"],
 
 ["1", ""],
+["0x02 0x01 0x00", "", "all bytes are significant, not only the last one"],
+["0x09 0x00000000 0x00000000 0x10", "", "equals zero when cast to Int64"],
 
 ["0x01 0x0b", "11 EQUAL", "push 1 byte"],
 ["0x02 0x417a", "'Az' EQUAL"],
@@ -64,6 +66,7 @@
 ["0", "IF RETURN ENDIF 1", "RETURN only works if executed"],
 
 ["1 1", "VERIFY"],
+["1 0x05 0x01 0x00 0x00 0x00 0x00", "VERIFY", "values >4 bytes can be cast to boolean"],
 
 ["10 0 11 TOALTSTACK DROP FROMALTSTACK", "ADD 21 EQUAL"],
 ["'gavin_was_here' TOALTSTACK 11 FROMALTSTACK", "'gavin_was_here' EQUALVERIFY 11 EQUAL"],
@@ -126,6 +129,7 @@
 ["-9223372036854775807", "SIZE 8 EQUAL"],
 ["'abcdefghijklmnopqrstuvwxyz'", "SIZE 26 EQUAL"],
 
+["42", "SIZE 1 EQUALVERIFY 42 EQUAL", "SIZE does not consume argument"],
 
 ["2 -2 ADD", "0 EQUAL"],
 ["2147483647 -2147483647 ADD", "0 EQUAL"],
