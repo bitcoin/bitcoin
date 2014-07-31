@@ -89,7 +89,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Watchonly:</string>
+                 <string>Watch-only:</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
