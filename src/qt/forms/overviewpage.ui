@@ -289,7 +289,7 @@
                  <cursorShape>IBeamCursor</cursorShape>
                 </property>
                 <property name="toolTip">
-                 <string>Your current balance in watchonly addresses</string>
+                 <string>Your current balance in watch-only addresses</string>
                 </property>
                 <property name="text">
                  <string>0 BTC</string>
@@ -314,7 +314,7 @@
                  <cursorShape>IBeamCursor</cursorShape>
                 </property>
                 <property name="toolTip">
-                 <string>Unconfirmed transactions to watchonly addresses</string>
+                 <string>Unconfirmed transactions to watch-only addresses</string>
                 </property>
                 <property name="text">
                  <string>0 BTC</string>
@@ -339,7 +339,7 @@
                  <cursorShape>IBeamCursor</cursorShape>
                 </property>
                 <property name="toolTip">
-                 <string>Mined balance in watchonly addresses that has not yet matured</string>
+                 <string>Mined balance in watch-only addresses that has not yet matured</string>
                 </property>
                 <property name="text">
                  <string>0 BTC</string>
@@ -383,7 +383,7 @@
                  <cursorShape>IBeamCursor</cursorShape>
                 </property>
                 <property name="toolTip">
-                 <string>Current total balance in watchonly addresses</string>
+                 <string>Current total balance in watch-only addresses</string>
                 </property>
                 <property name="text">
                  <string>0 BTC</string>
