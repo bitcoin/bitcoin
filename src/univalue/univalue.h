@@ -61,8 +61,6 @@ public:
     size_t count() const { return values.size(); }
 
     bool getBool() const { return isTrue(); }
-    bool getArray(std::vector<UniValue>& arr);
-    bool getObject(std::map<std::string,UniValue>& obj);
     bool checkObject(const std::map<std::string,UniValue::VType>& memberTypes);
     const UniValue& operator[](const std::string& key) const;
     const UniValue& operator[](unsigned int index) const;

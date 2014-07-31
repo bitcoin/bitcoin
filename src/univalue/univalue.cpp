@@ -147,28 +147,6 @@ bool UniValue::pushKVs(const UniValue& obj)
     return true;
 }
 
-bool UniValue::getArray(std::vector<UniValue>& arr)
-{
-    if (typ != VARR)
-        return false;
-
-    arr = values;
-    return true;
-}
-
-bool UniValue::getObject(std::map<std::string,UniValue>& obj)
-{
-    if (typ != VOBJ)
-        return false;
-
-    obj.clear();
-    for (unsigned int i = 0; i < keys.size(); i++) {
-        obj[keys[i]] = values[i];
-    }
-
-    return true;
-}
-
 int UniValue::findKey(const std::string& key) const
 {
     for (unsigned int i = 0; i < keys.size(); i++) {
