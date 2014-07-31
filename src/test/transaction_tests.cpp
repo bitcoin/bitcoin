@@ -9,6 +9,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "script.h"
+#include "core_io.h"
 
 #include <map>
 #include <string>
@@ -24,7 +25,6 @@ using namespace boost::algorithm;
 
 // In script_tests.cpp
 extern Array read_json(const std::string& jsondata);
-extern CScript ParseScript(string s);
 
 unsigned int ParseFlags(string strFlags){
     unsigned int flags = 0;
