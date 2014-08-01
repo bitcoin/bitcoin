@@ -1565,15 +1565,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-91"/>
-        <location line="+25"/>
-        <location line="+25"/>
-        <location line="+44"/>
-        <source>0 BTC</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+64"/>
+        <location line="+67"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Recent transactions&lt;/b&gt;</translation>
     </message>
