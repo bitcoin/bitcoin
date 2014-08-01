@@ -1,5 +1,7 @@
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <vector>
 #include "core_io.h"
 #include "core.h"
 #include "serialize.h"
