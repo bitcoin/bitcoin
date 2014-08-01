@@ -17,8 +17,6 @@ using namespace boost::assign;
 
 typedef vector<unsigned char> valtype;
 
-extern uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
-
 BOOST_AUTO_TEST_SUITE(multisig_tests)
 
 CScript
