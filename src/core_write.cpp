@@ -1,5 +1,4 @@
 
-#include <vector>
 #include "core_io.h"
 #include "univalue/univalue.h"
 #include "script.h"
