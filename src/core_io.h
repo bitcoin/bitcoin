@@ -1,7 +1,12 @@
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef __BITCOIN_CORE_IO_H__
 #define __BITCOIN_CORE_IO_H__
 
 #include <string>
+#include <vector>
 
 class uint256;
 class CScript;
