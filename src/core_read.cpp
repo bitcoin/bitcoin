@@ -1,5 +1,4 @@
 
-#include <vector>
 #include "core_io.h"
 #include "core.h"
 #include "serialize.h"
