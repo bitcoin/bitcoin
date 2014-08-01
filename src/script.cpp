@@ -1067,27 +1067,34 @@ public:
         // Serialie nLockTime
         ::Serialize(s, txTo.nLockTime, nType, nVersion);
     }
+
+    bool Validate() const {
+        
+        if (nIn >= txTo.vin.size()) {
+            LogPrintf("ERROR: CTransactionSignatureSerializer::Validate() : nIn=%d out of range\n", nIn);
+            return false;
+        }
+
+        // Check for invalid use of SIGHASH_SINGLE
+        if (fHashSingle) {
+            if (nIn >= txTo.vout.size()) {
+                LogPrintf("ERROR: CTransactionSignatureSerializer::Validate() : nOut=%d out of range\n", nIn);
+                return false;
+            }
+        }
+        return true;
+    }
 };
 
 } // anon namespace
 
 uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
-    if (nIn >= txTo.vin.size()) {
-        LogPrintf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
-        return 1;
-    }
-
-    // Check for invalid use of SIGHASH_SINGLE
-    if ((nHashType & 0x1f) == SIGHASH_SINGLE) {
-        if (nIn >= txTo.vout.size()) {
-            LogPrintf("ERROR: SignatureHash() : nOut=%d out of range\n", nIn);
-            return 1;
-        }
-    }
-
     // Wrapper to serialize only the necessary parts of the transaction being signed
     CTransactionSignatureSerializer txTmp(txTo, scriptCode, nIn, nHashType);
+
+    if (!txTmp.Validate())
+        return 1;
 
     // Serialize and hash
     CHashWriter ss(SER_GETHASH, 0);
