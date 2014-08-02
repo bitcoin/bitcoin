@@ -6,6 +6,7 @@
 #include "main.h"
 #include "random.h"
 #include "serialize.h"
+#include "script.h"
 #include "util.h"
 #include "version.h"
 
@@ -18,8 +19,6 @@
 
 using namespace json_spirit;
 extern Array read_json(const std::string& jsondata);
-
-extern uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 
 // Old script.cpp SignatureHash function
 uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
