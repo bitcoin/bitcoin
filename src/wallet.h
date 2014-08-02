@@ -461,6 +461,8 @@ public:
         fWatchCreditCached = false;
         fAvailableCreditCached = false;
         fAvailableWatchCreditCached = false;
+        fImmatureCreditCached = false;
+        fImmatureWatchCreditCached = false;
         fChangeCached = false;
         nDebitCached = 0;
         nWatchDebitCached = 0;
@@ -468,6 +470,8 @@ public:
         nWatchCreditCached = 0;
         nAvailableCreditCached = 0;
         nAvailableWatchCreditCached = 0;
+        nImmatureCreditCached = 0;
+        nImmatureWatchCreditCached = 0;
         nChangeCached = 0;
         nOrderPos = -1;
     }
