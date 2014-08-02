@@ -220,22 +220,23 @@ const CChainParams &Params() {
     return *pCurrentParams;
 }
 
-void SelectParams(CBaseChainParams::Network network) {
-    SelectBaseParams(network);
+CChainParams &Params(CBaseChainParams::Network network) {
     switch (network) {
         case CBaseChainParams::MAIN:
-            pCurrentParams = &mainParams;
-            break;
+            return mainParams;
         case CBaseChainParams::TESTNET:
-            pCurrentParams = &testNetParams;
-            break;
+            return testNetParams;
         case CBaseChainParams::REGTEST:
-            pCurrentParams = &regTestParams;
-            break;
+            return regTestParams;
         default:
             assert(false && "Unimplemented network");
-            return;
+            return mainParams;
     }
+}
+
+void SelectParams(CBaseChainParams::Network network) {
+    SelectBaseParams(network);
+    pCurrentParams = &Params(network);
 }
 
 bool SelectParamsFromCommandLine() {

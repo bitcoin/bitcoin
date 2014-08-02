@@ -10,6 +10,7 @@
 #include "optionsmodel.h"
 
 #include "base58.h"
+#include "chainparams.h"
 #include "ui_interface.h"
 #include "wallet.h"
 
@@ -199,8 +200,11 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             {
                 CBitcoinAddress address(r.address.toStdString());
 
-                SelectParams(CBaseChainParams::MAIN);
-                if (!address.IsValid())
+                if (address.IsValid(Params(CBaseChainParams::MAIN)))
+                {
+                    SelectParams(CBaseChainParams::MAIN);
+                }
+                else if (address.IsValid(Params(CBaseChainParams::TESTNET)))
                 {
                     SelectParams(CBaseChainParams::TESTNET);
                 }

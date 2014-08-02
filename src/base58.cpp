@@ -215,9 +215,13 @@ bool CBitcoinAddress::Set(const CTxDestination &dest) {
 }
 
 bool CBitcoinAddress::IsValid() const {
+    return IsValid(Params());
+}
+
+bool CBitcoinAddress::IsValid(const CChainParams &params) const {
     bool fCorrectSize = vchData.size() == 20;
-    bool fKnownVersion = vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
-                         vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS);
+    bool fKnownVersion = vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
+                         vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS);
     return fCorrectSize && fKnownVersion;
 }
 
