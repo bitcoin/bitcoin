@@ -1693,6 +1693,134 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint
     return true;
 }
 
+bool CWallet::MergeCoins(const int64& nAmount, const int64& nMaxValue, const int64& nOutputValue, list<uint256>& listMerged)
+{
+    int64 nBalance = GetBalance();
+
+    if (nAmount > nBalance)
+        return false;
+
+    listMerged.clear();
+    int64 nValueIn = 0;
+    set<pair<const CWalletTx*,unsigned int> > setCoins;
+
+    // Simple coins selection - no randomization
+    if (!SelectCoinsSimple(nAmount, GetTime(), 1, setCoins, nValueIn))
+        return false;
+
+    if (setCoins.empty())
+        return false;
+
+    CWalletTx wtxNew;
+    vector<const CWalletTx*> vwtxPrev;
+
+    // Reserve a new key pair from key pool
+    CReserveKey reservekey(this);
+    CPubKey vchPubKey = reservekey.GetReservedKey();
+
+    // Output script
+    CScript scriptOutput;
+    scriptOutput.SetDestination(vchPubKey.GetID());
+
+    // Insert output
+    wtxNew.vout.push_back(CTxOut(0, scriptOutput));
+
+    double dWeight = 0;
+
+    BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
+    {
+        int64 nCredit = pcoin.first->vout[pcoin.second].nValue;
+
+        // Ignore coin if credit is too high
+        if (nCredit >= nMaxValue)
+            continue;
+
+        // Ignore immature coins
+        if (pcoin.first->GetBlocksToMaturity() > 0)
+            continue;
+
+        // Add current coin to inputs list and add its credit to transaction output
+        wtxNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
+        wtxNew.vout[0].nValue += nCredit;
+        vwtxPrev.push_back(pcoin.first);
+
+        for (unsigned int i = 0; i < wtxNew.vin.size(); i++) {
+            const CWalletTx *txin = vwtxPrev[i];
+
+            // Sign scripts to get actual transaction size for fee calculation
+            if (!SignSignature(*this, *txin, wtxNew, i))
+                return false;
+        }
+
+        int64 nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK, PROTOCOL_VERSION);
+        dWeight += (double)nCredit * pcoin.first->GetDepthInMainChain();
+
+        double dFinalPriority = dWeight /= nBytes;
+        bool fAllowFree = CTransaction::AllowFree(dFinalPriority);
+
+        // Get actual transaction fee according to its size and priority
+        int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree, GMF_SEND, nBytes);
+
+        // Prepare transaction for commit if sum is enough ot its size is too big
+        if (nBytes >= MAX_BLOCK_SIZE_GEN/6 || (wtxNew.vout[0].nValue >= nOutputValue && wtxNew.vout.size() > 1))
+        {
+            wtxNew.vout[0].nValue -= nMinFee; // Set actual fee
+
+            for (unsigned int i = 0; i < wtxNew.vin.size(); i++) {
+                const CWalletTx *txin = vwtxPrev[i];
+
+                // Sign all scripts again
+                if (!SignSignature(*this, *txin, wtxNew, i))
+                    return false;
+            }
+
+            // Try to commit, return false on failure
+            if (!CommitTransaction(wtxNew, reservekey))
+                return false;
+
+            listMerged.push_back(wtxNew.GetHash()); // Add to hashes list
+
+            dWeight = 0;  // Reset all temporary values
+            vwtxPrev.clear();
+            wtxNew.SetNull();
+            wtxNew.vout.push_back(CTxOut(0, scriptOutput));
+        }
+    }
+
+    // Create transactions if there are some unhandled coins left
+    if (wtxNew.vout[0].nValue > 0) {
+        int64 nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK, PROTOCOL_VERSION);
+
+        double dFinalPriority = dWeight /= nBytes;
+        bool fAllowFree = CTransaction::AllowFree(dFinalPriority);
+
+        // Get actual transaction fee according to its size and priority
+        int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree, GMF_SEND, nBytes);
+
+        wtxNew.vout[0].nValue -= nMinFee; // Set actual fee
+
+        if (wtxNew.vout[0].nValue <= 0)
+            return false;
+
+        for (unsigned int i = 0; i < wtxNew.vin.size(); i++) {
+            const CWalletTx *txin = vwtxPrev[i];
+
+            // Sign all scripts again
+            if (!SignSignature(*this, *txin, wtxNew, i))
+                return false;
+        }
+
+        // Try to commit, return false on failure
+        if (!CommitTransaction(wtxNew, reservekey))
+            return false;
+
+        listMerged.push_back(wtxNew.GetHash()); // Add to hashes list
+    }
+
+    return true;
+}
+
+
 bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64 nSearchInterval, CTransaction& txNew, CKey& key)
 {
     // The following combine threshold is important to security

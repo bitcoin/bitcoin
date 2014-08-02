@@ -255,6 +255,53 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
     return ret;
 }
 
+Value mergecoins(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 3)
+        throw runtime_error(
+            "mergecoins <amount> <outputvalue> <maxvalue>\n"
+            "<amount> is resulting inputs sum\n"
+            "<outputvalue> is resulting value of inputs which will be created\n"
+            "<maxvalue> is maximum value of inputs which are used in join process\n"
+            "All values are real and and rounded to the nearest " + FormatMoney(MIN_TXOUT_AMOUNT)
+            + HelpRequiringPassphrase());
+
+    if (pwalletMain->IsLocked())
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+
+    // Amount
+    int64 nAmount = AmountFromValue(params[0]);
+
+    // Amount
+    int64 nOutputValue = AmountFromValue(params[1]);
+
+    // Amount
+    int64 nMaxValue = AmountFromValue(params[2]);
+
+    if (nAmount < MIN_TXOUT_AMOUNT)
+        throw JSONRPCError(-101, "Send amount too small");
+
+    if (nOutputValue < MIN_TXOUT_AMOUNT)
+        throw JSONRPCError(-101, "Output value too small");
+
+    if (nMaxValue < MIN_TXOUT_AMOUNT)
+        throw JSONRPCError(-101, "Max value too small");
+
+    if (nOutputValue < nMaxValue)
+        throw JSONRPCError(-101, "Output value is lower than max value");
+
+
+    list<uint256> listMerged;
+    if (!pwalletMain->MergeCoins(nAmount, nMaxValue, nOutputValue, listMerged))
+        return Value::null;
+
+    Array mergedHashes;
+    BOOST_FOREACH(const uint256 txHash, listMerged)
+        mergedHashes.push_back(txHash.GetHex());
+
+    return mergedHashes;
+}
+
 Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
