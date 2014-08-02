@@ -5,6 +5,8 @@
 #ifndef BITCOINAMOUNTFIELD_H
 #define BITCOINAMOUNTFIELD_H
 
+#include "amount.h"
+
 #include <QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -19,16 +21,16 @@ class BitcoinAmountField: public QWidget
 {
     Q_OBJECT
 
-    Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY valueChanged USER true)
+    Q_PROPERTY(Amount value READ value WRITE setValue NOTIFY valueChanged USER true)
 
 public:
     explicit BitcoinAmountField(QWidget *parent = 0);
 
-    qint64 value(bool *valid=0) const;
-    void setValue(qint64 value);
+    Amount value(bool *value=0) const;
+    void setValue(const Amount& value);
 
     /** Set single step in satoshis **/
-    void setSingleStep(qint64 step);
+    void setSingleStep(const Amount& step);
 
     /** Make read-only **/
     void setReadOnly(bool fReadOnly);

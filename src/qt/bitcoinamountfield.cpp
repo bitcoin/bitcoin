@@ -150,7 +150,7 @@ private:
      */
     qint64 parse(const QString &text, bool *valid_out=0) const
     {
-        qint64 val = 0;
+        Amount val = 0;
         bool valid = BitcoinUnits::parse(currentUnit, text, &val);
         if(valid)
         {
@@ -253,12 +253,12 @@ QWidget *BitcoinAmountField::setupTabChain(QWidget *prev)
     return unit;
 }
 
-qint64 BitcoinAmountField::value(bool *valid_out) const
+Amount BitcoinAmountField::value(bool *valid_out) const
 {
     return amount->value(valid_out);
 }
 
-void BitcoinAmountField::setValue(qint64 value)
+void BitcoinAmountField::setValue(const Amount& value)
 {
     amount->setValue(value);
 }
@@ -285,7 +285,7 @@ void BitcoinAmountField::setDisplayUnit(int newUnit)
     unit->setValue(newUnit);
 }
 
-void BitcoinAmountField::setSingleStep(qint64 step)
+void BitcoinAmountField::setSingleStep(const Amount& step)
 {
     amount->setSingleStep(step);
 }

@@ -184,12 +184,12 @@ bool CWalletDB::WriteAccountingEntry(const CAccountingEntry& acentry)
     return WriteAccountingEntry(++nAccountingEntryNumber, acentry);
 }
 
-int64_t CWalletDB::GetAccountCreditDebit(const string& strAccount)
+Amount CWalletDB::GetAccountCreditDebit(const string& strAccount)
 {
     list<CAccountingEntry> entries;
     ListAccountCreditDebit(strAccount, entries);
 
-    int64_t nCreditDebit = 0;
+    Amount nCreditDebit = 0;
     BOOST_FOREACH (const CAccountingEntry& entry, entries)
         nCreditDebit += entry.nCreditDebit;
 

@@ -54,11 +54,11 @@ WalletModel::~WalletModel()
     unsubscribeFromCoreSignals();
 }
 
-qint64 WalletModel::getBalance(const CCoinControl *coinControl) const
+Amount WalletModel::getBalance(const CCoinControl *coinControl) const
 {
     if (coinControl)
     {
-        qint64 nBalance = 0;
+        Amount nBalance = 0;
         std::vector<COutput> vCoins;
         wallet->AvailableCoins(vCoins, true, coinControl);
         BOOST_FOREACH(const COutput& out, vCoins)
@@ -71,27 +71,27 @@ qint64 WalletModel::getBalance(const CCoinControl *coinControl) const
     return wallet->GetBalance();
 }
 
-qint64 WalletModel::getUnconfirmedBalance() const
+Amount WalletModel::getUnconfirmedBalance() const
 {
     return wallet->GetUnconfirmedBalance();
 }
 
-qint64 WalletModel::getImmatureBalance() const
+Amount WalletModel::getImmatureBalance() const
 {
     return wallet->GetImmatureBalance();
 }
 
-qint64 WalletModel::getWatchBalance() const
+Amount WalletModel::getWatchBalance() const
 {
     return wallet->GetWatchOnlyBalance();
 }
 
-qint64 WalletModel::getWatchUnconfirmedBalance() const
+Amount WalletModel::getWatchUnconfirmedBalance() const
 {
     return wallet->GetUnconfirmedWatchOnlyBalance();
 }
 
-qint64 WalletModel::getWatchImmatureBalance() const
+Amount WalletModel::getWatchImmatureBalance() const
 {
     return wallet->GetImmatureWatchOnlyBalance();
 }
@@ -141,12 +141,12 @@ void WalletModel::pollBalanceChanged()
 
 void WalletModel::checkBalanceChanged()
 {
-    qint64 newBalance = getBalance();
-    qint64 newUnconfirmedBalance = getUnconfirmedBalance();
-    qint64 newImmatureBalance = getImmatureBalance();
-    qint64 newWatchOnlyBalance = getWatchBalance();
-    qint64 newWatchUnconfBalance = getWatchUnconfirmedBalance();
-    qint64 newWatchImmatureBalance = getWatchImmatureBalance();
+    Amount newBalance = getBalance();
+    Amount newUnconfirmedBalance = getUnconfirmedBalance();
+    Amount newImmatureBalance = getImmatureBalance();
+    Amount newWatchOnlyBalance = getWatchBalance();
+    Amount newWatchUnconfBalance = getWatchUnconfirmedBalance();
+    Amount newWatchImmatureBalance = getWatchImmatureBalance();
 
     if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance ||
         cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance)
@@ -193,9 +193,9 @@ bool WalletModel::validateAddress(const QString &address)
 
 WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl)
 {
-    qint64 total = 0;
+    Amount total = 0;
     QList<SendCoinsRecipient> recipients = transaction.getRecipients();
-    std::vector<std::pair<CScript, int64_t> > vecSend;
+    std::vector<std::pair<CScript, Amount> > vecSend;
 
     if(recipients.empty())
     {
@@ -210,7 +210,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     {
         if (rcp.paymentRequest.IsInitialized())
         {   // PaymentRequest...
-            int64_t subtotal = 0;
+            Amount subtotal = 0;
             const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
             for (int i = 0; i < details.outputs_size(); i++)
             {
@@ -219,7 +219,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
                 subtotal += out.amount();
                 const unsigned char* scriptStr = (const unsigned char*)out.script().data();
                 CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                vecSend.push_back(std::pair<CScript, int64_t>(scriptPubKey, out.amount()));
+                vecSend.push_back(std::pair<CScript, Amount>(scriptPubKey, out.amount()));
             }
             if (subtotal <= 0)
             {
@@ -242,7 +242,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
             CScript scriptPubKey;
             scriptPubKey.SetDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
-            vecSend.push_back(std::pair<CScript, int64_t>(scriptPubKey, rcp.amount));
+            vecSend.push_back(std::pair<CScript, Amount>(scriptPubKey, rcp.amount));
 
             total += rcp.amount;
         }
@@ -252,7 +252,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return DuplicateAddress;
     }
 
-    qint64 nBalance = getBalance(coinControl);
+    Amount nBalance = getBalance(coinControl);
 
     if(total > nBalance)
     {
@@ -263,7 +263,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         LOCK2(cs_main, wallet->cs_wallet);
 
         transaction.newPossibleKeyChange(wallet);
-        int64_t nFeeRequired = 0;
+        Amount nFeeRequired = 0;
         std::string strFailReason;
 
         CWalletTx *newTx = transaction.getTransaction();

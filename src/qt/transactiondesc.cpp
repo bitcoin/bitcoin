@@ -55,9 +55,9 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     strHTML += "<html><font face='verdana, arial, helvetica, sans-serif'>";
 
     int64_t nTime = wtx.GetTxTime();
-    int64_t nCredit = wtx.GetCredit(ISMINE_ALL);
-    int64_t nDebit = wtx.GetDebit(ISMINE_ALL);
-    int64_t nNet = nCredit - nDebit;
+    Amount nCredit = wtx.GetCredit(ISMINE_ALL);
+    Amount nDebit = wtx.GetDebit(ISMINE_ALL);
+    Amount nNet = nCredit - nDebit;
 
     strHTML += "<b>" + tr("Status") + ":</b> " + FormatTxStatus(wtx);
     int nRequests = wtx.GetRequestCount();
@@ -131,7 +131,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         //
         // Coinbase
         //
-        int64_t nUnmatured = 0;
+        Amount nUnmatured = 0;
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
             nUnmatured += wallet->GetCredit(txout, ISMINE_ALL);
         strHTML += "<b>" + tr("Credit") + ":</b> ";
@@ -205,13 +205,13 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
             if (fAllToMe)
             {
                 // Payment to self
-                int64_t nChange = wtx.GetChange();
-                int64_t nValue = nCredit - nChange;
+                Amount nChange = wtx.GetChange();
+                Amount nValue = nCredit - nChange;
                 strHTML += "<b>" + tr("Total debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nValue) + "<br>";
                 strHTML += "<b>" + tr("Total credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nValue) + "<br>";
             }
 
-            int64_t nTxFee = nDebit - wtx.GetValueOut();
+            Amount nTxFee = nDebit - wtx.GetValueOut();
             if (nTxFee > 0)
                 strHTML += "<b>" + tr("Transaction fee") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nTxFee) + "<br>";
         }
