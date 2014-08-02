@@ -92,7 +92,7 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
 }
 
 contains(USE_LEVELDB, 1) {
-    message(Building with LevelDB)
+    message(Building with LevelDB transaction index)
     DEFINES += USE_LEVELDB
 
     INCLUDEPATH += src/leveldb/include src/leveldb/helpers
@@ -116,7 +116,7 @@ contains(USE_LEVELDB, 1) {
     # Gross ugly hack that depends on qmake internals, unfortunately there is no other way to do it.
     QMAKE_CLEAN += $$PWD/src/leveldb/libleveldb.a; cd $$PWD/src/leveldb ; $(MAKE) clean
 } else {
-    message(Building without LevelDB)
+    message(Building with Berkeley DB transaction index)
     SOURCES += src/txdb-bdb.cpp
 }
 
@@ -442,4 +442,4 @@ contains(RELEASE, 1) {
     }
 }
 
-system($$QMAKE_LRELEASE -silent $$_PRO_FILE_)
+system($$QMAKE_LRELEASE -silent $$PWD/src/qt/locale/translations.pro)
