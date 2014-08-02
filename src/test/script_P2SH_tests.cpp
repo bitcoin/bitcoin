@@ -15,9 +15,6 @@
 
 using namespace std;
 
-// Test routines internal to script.cpp:
-extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
-
 // Helpers:
 static std::vector<unsigned char>
 Serialize(const CScript& s)
