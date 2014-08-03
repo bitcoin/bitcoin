@@ -107,7 +107,7 @@ DEFS += $(addprefix -I,$(CURDIR)/leveldb/include) -DUSE_LEVELDB
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 OBJS += obj/txdb-leveldb.o
 leveldb/libleveldb.a:
-cd leveldb; make; cd ..
+	cd leveldb; make; cd ..
 obj/txdb-leveldb.o: leveldb/libleveldb.lib
 else
 OBJS += obj/txdb-bdb.o
