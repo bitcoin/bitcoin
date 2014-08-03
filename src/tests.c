@@ -9,12 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "num_impl.h"
-#include "field_impl.h"
-#include "group_impl.h"
-#include "ecmult_impl.h"
-#include "ecdsa_impl.h"
 #include "util_impl.h"
+#include "secp256k1.c"
 
 #ifdef ENABLE_OPENSSL_TESTS
 #include "openssl/bn.h"
@@ -549,6 +545,105 @@ void run_ecdsa_sign_verify() {
     }
 }
 
+void test_ecdsa_end_to_end() {
+    unsigned char privkey[32];
+    unsigned char message[32];
+
+    // Generate a random key and message.
+    {
+        secp256k1_num_t msg, key;
+        secp256k1_num_init(&msg);
+        random_num_order_test(&msg);
+        secp256k1_num_init(&key);
+        random_num_order_test(&key);
+        secp256k1_num_get_bin(privkey, 32, &key);
+        secp256k1_num_get_bin(message, 32, &msg);
+        secp256k1_num_free(&msg);
+        secp256k1_num_free(&key);
+    }
+
+    // Construct and verify corresponding public key.
+    CHECK(secp256k1_ecdsa_seckey_verify(privkey) == 1);
+    char pubkey[65]; int pubkeylen = 65;
+    CHECK(secp256k1_ecdsa_pubkey_create(pubkey, &pubkeylen, privkey, secp256k1_rand32() % 2) == 1);
+    CHECK(secp256k1_ecdsa_pubkey_verify(pubkey, pubkeylen));
+
+    // Verify private key import and export.
+    unsigned char seckey[300]; int seckeylen = 300;
+    CHECK(secp256k1_ecdsa_privkey_export(privkey, seckey, &seckeylen, secp256k1_rand32() % 2) == 1);
+    unsigned char privkey2[32];
+    CHECK(secp256k1_ecdsa_privkey_import(privkey2, seckey, seckeylen) == 1);
+    CHECK(memcmp(privkey, privkey2, 32) == 0);
+
+    // Optionally tweak the keys using addition.
+    if (secp256k1_rand32() % 3 == 0) {
+        unsigned char rnd[32];
+        secp256k1_rand256_test(rnd);
+        int ret1 = secp256k1_ecdsa_privkey_tweak_add(privkey, rnd);
+        int ret2 = secp256k1_ecdsa_pubkey_tweak_add(pubkey, pubkeylen, rnd);
+        CHECK(ret1 == ret2);
+        if (ret1 == 0) return;
+        char pubkey2[65]; int pubkeylen2 = 65;
+        CHECK(secp256k1_ecdsa_pubkey_create(pubkey2, &pubkeylen2, privkey, pubkeylen == 33) == 1);
+        CHECK(memcmp(pubkey, pubkey2, pubkeylen) == 0);
+    }
+
+    // Optionally tweak the keys using multiplication.
+    if (secp256k1_rand32() % 3 == 0) {
+        unsigned char rnd[32];
+        secp256k1_rand256_test(rnd);
+        int ret1 = secp256k1_ecdsa_privkey_tweak_mul(privkey, rnd);
+        int ret2 = secp256k1_ecdsa_pubkey_tweak_mul(pubkey, pubkeylen, rnd);
+        CHECK(ret1 == ret2);
+        if (ret1 == 0) return;
+        char pubkey2[65]; int pubkeylen2 = 65;
+        CHECK(secp256k1_ecdsa_pubkey_create(pubkey2, &pubkeylen2, privkey, pubkeylen == 33) == 1);
+        CHECK(memcmp(pubkey, pubkey2, pubkeylen) == 0);
+    }
+
+    // Sign.
+    unsigned char signature[72]; unsigned int signaturelen = 72;
+    while(1) {
+        unsigned char rnd[32];
+        secp256k1_rand256_test(rnd);
+        if (secp256k1_ecdsa_sign(message, 32, signature, &signaturelen, privkey, rnd) == 1) {
+            break;
+        }
+    }
+    // Verify.
+    CHECK(secp256k1_ecdsa_verify(message, 32, signature, signaturelen, pubkey, pubkeylen) == 1);
+    // Destroy signature and verify again.
+    signature[signaturelen - 1 - secp256k1_rand32() % 20] += 1 + (secp256k1_rand32() % 255);
+    CHECK(secp256k1_ecdsa_verify(message, 32, signature, signaturelen, pubkey, pubkeylen) != 1);
+
+    // Compact sign.
+    unsigned char csignature[64]; unsigned int recid = 0;
+    while(1) {
+        unsigned char rnd[32];
+        secp256k1_rand256_test(rnd);
+        if (secp256k1_ecdsa_sign_compact(message, 32, csignature, privkey, rnd, &recid) == 1) {
+            break;
+        }
+    }
+    // Recover.
+    unsigned char recpubkey[65]; unsigned recpubkeylen = 0;
+    CHECK(secp256k1_ecdsa_recover_compact(message, 32, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) == 1);
+    CHECK(recpubkeylen == pubkeylen);
+    CHECK(memcmp(pubkey, recpubkey, pubkeylen) == 0);
+    // Destroy signature and verify again.
+    csignature[secp256k1_rand32() % 64] += 1 + (secp256k1_rand32() % 255);
+    CHECK(secp256k1_ecdsa_recover_compact(message, 32, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) != 1 ||
+          memcmp(pubkey, recpubkey, pubkeylen) != 0);
+    CHECK(recpubkeylen == pubkeylen);
+}
+
+void run_ecdsa_end_to_end() {
+    for (int i=0; i<64*count; i++) {
+        test_ecdsa_end_to_end();
+    }
+}
+
+
 #ifdef ENABLE_OPENSSL_TESTS
 EC_KEY *get_openssl_key(const secp256k1_num_t *key) {
     unsigned char privkey[300];
@@ -612,9 +707,7 @@ int main(int argc, char **argv) {
     printf("test count = %i\n", count);
 
     // initialize
-    secp256k1_fe_start();
-    secp256k1_ge_start();
-    secp256k1_ecmult_start();
+    secp256k1_start();
 
     // num tests
     run_num_smalltests();
@@ -634,13 +727,12 @@ int main(int argc, char **argv) {
 
     // ecdsa tests
     run_ecdsa_sign_verify();
+    run_ecdsa_end_to_end();
 #ifdef ENABLE_OPENSSL_TESTS
     run_ecdsa_openssl();
 #endif
 
     // shutdown
-    secp256k1_ecmult_stop();
-    secp256k1_ge_stop();
-    secp256k1_fe_stop();
+    secp256k1_stop();
     return 0;
 }
