@@ -152,8 +152,7 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
 
     CNodeCombinedStats *rec = static_cast<CNodeCombinedStats*>(index.internalPointer());
 
-    if(role == Qt::DisplayRole)
-    {
+    if (role == Qt::DisplayRole) {
         switch(index.column())
         {
         case Address:
@@ -163,7 +162,11 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
         case Ping:
             return GUIUtil::formatPingTime(rec->nodeStats.dPingTime);
         }
+    } else if (role == Qt::TextAlignmentRole) {
+        if (index.column() == Ping)
+            return (int)(Qt::AlignRight | Qt::AlignVCenter);
     }
+
     return QVariant();
 }
 
