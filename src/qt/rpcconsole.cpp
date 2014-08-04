@@ -10,6 +10,7 @@
 #include "peertablemodel.h"
 
 #include "main.h"
+#include "chainparams.h"
 #include "rpcserver.h"
 #include "rpcclient.h"
 #include "util.h"
@@ -200,12 +201,9 @@ RPCConsole::RPCConsole(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RPCConsole),
     clientModel(0),
-    historyPtr(0)
+    historyPtr(0),
+    cachedNodeid(-1)
 {
-    detailNodeStats = CNodeCombinedStats();
-    detailNodeStats.nodestats.nodeid = -1;
-    detailNodeStats.statestats.nMisbehavior = -1;
-
     ui->setupUi(this);
     GUIUtil::restoreWindowGeometry("nRPCConsoleWindow", this->size(), this);
 
@@ -233,6 +231,7 @@ RPCConsole::RPCConsole(QWidget *parent) :
     setTrafficGraphRange(INITIAL_TRAFFIC_GRAPH_MINS);
 
     ui->detailWidget->hide();
+    ui->peerHeading->setText(tr("Select a peer to view detailed information."));
 
     clear();
 }
@@ -303,11 +302,11 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->peerWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->peerWidget->setSelectionMode(QAbstractItemView::SingleSelection);
         ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->peerWidget, MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH);
+        ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
+        ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
 
-        // connect the peerWidget's selection model to our peerSelected() handler
-        QItemSelectionModel *peerSelectModel = ui->peerWidget->selectionModel();
-        connect(peerSelectModel, SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+        // connect the peerWidget selection model to our peerSelected() handler
+        connect(ui->peerWidget->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
              this, SLOT(peerSelected(const QItemSelection &, const QItemSelection &)));
         connect(model->getPeerTableModel(), SIGNAL(layoutChanged()), this, SLOT(peerLayoutChanged()));
 
@@ -473,10 +472,6 @@ void RPCConsole::on_tabWidget_currentChanged(int index)
     {
         ui->lineEdit->setFocus();
     }
-    else if(ui->tabWidget->widget(index) == ui->tab_peers)
-    {
-        initPeerTable();
-    }
 }
 
 void RPCConsole::on_openDebugLogfileButton_clicked()
@@ -525,30 +520,24 @@ void RPCConsole::peerSelected(const QItemSelection &selected, const QItemSelecti
 {
     Q_UNUSED(deselected);
 
-    if (selected.indexes().isEmpty())
+    if (!clientModel || selected.indexes().isEmpty())
         return;
 
-    // mark the cached banscore as unknown
-    detailNodeStats.statestats.nMisbehavior = -1;
-
     const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(selected.indexes().first().row());
-
     if (stats)
-    {
-        detailNodeStats.nodestats.nodeid = stats->nodestats.nodeid;
         updateNodeDetail(stats);
-        ui->detailWidget->show();
-        ui->detailWidget->setDisabled(false);
-    }
 }
 
 void RPCConsole::peerLayoutChanged()
 {
-    const CNodeCombinedStats *stats = NULL;
-    bool fUnselect = false, fReselect = false, fDisconnected = false;
+    if (!clientModel)
+        return;
 
-    if (detailNodeStats.nodestats.nodeid == -1)
-        // no node selected yet
+    const CNodeCombinedStats *stats = NULL;
+    bool fUnselect = false;
+    bool fReselect = false;
+
+    if (cachedNodeid == -1) // no node selected yet
         return;
 
     // find the currently selected row
@@ -561,14 +550,15 @@ void RPCConsole::peerLayoutChanged()
 
     // check if our detail node has a row in the table (it may not necessarily
     // be at selectedRow since its position can change after a layout change)
-    int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(detailNodeStats.nodestats.nodeid);
+    int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(cachedNodeid);
 
     if (detailNodeRow < 0)
     {
         // detail node dissapeared from table (node disconnected)
         fUnselect = true;
-        fDisconnected = true;
-        detailNodeStats.nodestats.nodeid = 0;
+        cachedNodeid = -1;
+        ui->detailWidget->hide();
+        ui->peerHeading->setText(tr("Select a peer to view detailed information."));
     }
     else
     {
@@ -596,91 +586,64 @@ void RPCConsole::peerLayoutChanged()
 
     if (stats)
         updateNodeDetail(stats);
-
-    if (fDisconnected)
-    {
-        ui->peerHeading->setText(QString(tr("Peer Disconnected")));
-        ui->detailWidget->setDisabled(true);
-        QDateTime dt = QDateTime::fromTime_t(detailNodeStats.nodestats.nLastSend);
-        if (detailNodeStats.nodestats.nLastSend)
-            ui->peerLastSend->setText(dt.toString("yyyy-MM-dd hh:mm:ss"));
-        dt.setTime_t(detailNodeStats.nodestats.nLastRecv);
-        if (detailNodeStats.nodestats.nLastRecv)
-            ui->peerLastRecv->setText(dt.toString("yyyy-MM-dd hh:mm:ss"));
-        dt.setTime_t(detailNodeStats.nodestats.nTimeConnected);
-        ui->peerConnTime->setText(dt.toString("yyyy-MM-dd hh:mm:ss"));
-    }
 }
 
-void RPCConsole::updateNodeDetail(const CNodeCombinedStats *combinedStats)
+void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
 {
-    CNodeStats stats = combinedStats->nodestats;
-
-    // keep a copy of timestamps, used to display dates upon disconnect
-    detailNodeStats.nodestats.nLastSend = stats.nLastSend;
-    detailNodeStats.nodestats.nLastRecv = stats.nLastRecv;
-    detailNodeStats.nodestats.nTimeConnected = stats.nTimeConnected;
+    // Update cached nodeid
+    cachedNodeid = stats->nodeStats.nodeid;
 
     // update the detail ui with latest node information
-    ui->peerHeading->setText(QString("<b>%1</b>").arg(tr("Node Detail")));
-    ui->peerAddr->setText(QString(stats.addrName.c_str()));
-    ui->peerServices->setText(GUIUtil::formatServicesStr(stats.nServices));
-    ui->peerLastSend->setText(stats.nLastSend ? GUIUtil::formatDurationStr(GetTime() - stats.nLastSend) : tr("never"));
-    ui->peerLastRecv->setText(stats.nLastRecv ? GUIUtil::formatDurationStr(GetTime() - stats.nLastRecv) : tr("never"));
-    ui->peerBytesSent->setText(FormatBytes(stats.nSendBytes));
-    ui->peerBytesRecv->setText(FormatBytes(stats.nRecvBytes));
-    ui->peerConnTime->setText(GUIUtil::formatDurationStr(GetTime() - stats.nTimeConnected));
-    ui->peerPingTime->setText(stats.dPingTime == 0 ? tr("N/A") : QString(tr("%1 secs")).arg(QString::number(stats.dPingTime, 'f', 3)));
-    ui->peerVersion->setText(QString("%1").arg(stats.nVersion));
-    ui->peerSubversion->setText(QString(stats.cleanSubVer.c_str()));
-    ui->peerDirection->setText(stats.fInbound ? tr("Inbound") : tr("Outbound"));
-    ui->peerHeight->setText(QString("%1").arg(stats.nStartingHeight));
-    ui->peerSyncNode->setText(stats.fSyncNode ? tr("Yes") : tr("No"));
+    QString peerAddrDetails(QString::fromStdString(stats->nodeStats.addrName));
+    if (!stats->nodeStats.addrLocal.empty())
+        peerAddrDetails += "<br />" + tr("via %1").arg(QString::fromStdString(stats->nodeStats.addrLocal));
+    ui->peerHeading->setText(peerAddrDetails);
+    ui->peerServices->setText(GUIUtil::formatServicesStr(stats->nodeStats.nServices));
+    ui->peerLastSend->setText(stats->nodeStats.nLastSend ? GUIUtil::formatDurationStr(GetTime() - stats->nodeStats.nLastSend) : tr("never"));
+    ui->peerLastRecv->setText(stats->nodeStats.nLastRecv ? GUIUtil::formatDurationStr(GetTime() - stats->nodeStats.nLastRecv) : tr("never"));
+    ui->peerBytesSent->setText(FormatBytes(stats->nodeStats.nSendBytes));
+    ui->peerBytesRecv->setText(FormatBytes(stats->nodeStats.nRecvBytes));
+    ui->peerConnTime->setText(GUIUtil::formatDurationStr(GetTime() - stats->nodeStats.nTimeConnected));
+    ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.dPingTime));
+    ui->peerVersion->setText(QString("%1").arg(stats->nodeStats.nVersion));
+    ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
+    ui->peerDirection->setText(stats->nodeStats.fInbound ? tr("Inbound") : tr("Outbound"));
+    ui->peerHeight->setText(QString("%1").arg(stats->nodeStats.nStartingHeight));
+    ui->peerSyncNode->setText(stats->nodeStats.fSyncNode ? tr("Yes") : tr("No"));
 
-    // if we can, display the peer's ban score
-    CNodeStateStats statestats = combinedStats->statestats;
-    if (statestats.nMisbehavior >= 0)
-    {
-        // we have a new nMisbehavor value - update the cache
-        detailNodeStats.statestats.nMisbehavior = statestats.nMisbehavior;
+    // This check fails for example if the lock was busy and
+    // nodeStateStats couldn't be fetched.
+    if (stats->fNodeStateStatsAvailable) {
+        // Ban score is init to 0
+        ui->peerBanScore->setText(QString("%1").arg(stats->nodeStateStats.nMisbehavior));
+
+        // Sync height is init to -1
+        if (stats->nodeStateStats.nSyncHeight > -1)
+            ui->peerSyncHeight->setText(QString("%1").arg(stats->nodeStateStats.nSyncHeight));
+        else
+            ui->peerSyncHeight->setText(tr("Unknown"));
+    } else {
+        ui->peerBanScore->setText(tr("Fetching..."));
+        ui->peerSyncHeight->setText(tr("Fetching..."));
     }
 
-    // pull the ban score from cache.  -1 means it hasn't been retrieved yet (lock busy).
-    if (detailNodeStats.statestats.nMisbehavior >= 0)
-        ui->peerBanScore->setText(QString("%1").arg(detailNodeStats.statestats.nMisbehavior));
-    else
-        ui->peerBanScore->setText(tr("Fetching..."));
+    ui->detailWidget->show();
 }
 
-void RPCConsole::initPeerTable()
-{
-    if (!clientModel)
-        return;
-
-    // peerWidget needs a resize in case the dialog has non-default geometry
-    columnResizingFixer->stretchColumnWidth(PeerTableModel::Address);
-
-    // start PeerTableModel auto refresh
-    clientModel->getPeerTableModel()->startAutoRefresh(1000);
-}
-
-// We override the virtual resizeEvent of the QWidget to adjust tables column
-// sizes as the tables width is proportional to the dialogs width.
 void RPCConsole::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
-
-    if (!clientModel)
-        return;
-
-    columnResizingFixer->stretchColumnWidth(PeerTableModel::Address);
 }
 
 void RPCConsole::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
 
-    initPeerTable();
+    if (!clientModel)
+        return;
+
+    // start PeerTableModel auto refresh
+    clientModel->getPeerTableModel()->startAutoRefresh();
 }
 
 void RPCConsole::hideEvent(QHideEvent *event)
