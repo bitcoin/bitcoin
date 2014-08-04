@@ -206,7 +206,7 @@ public:
             }
             if ((delta-1) >= (int)history.size())
                 delta = history.size(); // Last bucket is catch-all
-            entriesByConfirmations[delta-1].push_back(&entry);
+            entriesByConfirmations.at(delta-1).push_back(&entry);
         }
         for (size_t i = 0; i < entriesByConfirmations.size(); i++)
         {
@@ -225,6 +225,12 @@ public:
                 seenTxConfirm(feeRate, minRelayFee, dPriority, i);
             }
         }
+
+        //After new samples are added, we have to clear the sorted lists,
+        //so they'll be resorted the next time someone asks for an estimate
+        sortedFeeSamples.clear();
+        sortedPrioritySamples.clear();
+
         for (size_t i = 0; i < history.size(); i++) {
             if (history[i].FeeSamples() + history[i].PrioritySamples() > 0)
                 LogPrint("estimatefee", "estimates: for confirming within %d blocks based on %d/%d samples, fee=%s, prio=%g\n", 
@@ -232,8 +238,6 @@ public:
                          history[i].FeeSamples(), history[i].PrioritySamples(),
                          estimateFee(i+1).ToString(), estimatePriority(i+1));
         }
-        sortedFeeSamples.clear();
-        sortedPrioritySamples.clear();
     }
 
     // Can return CFeeRate(0) if we don't have any data for that many blocks back. nBlocksToConfirm is 1 based.
@@ -299,7 +303,7 @@ public:
         size_t nPrevSize = 0;
         for (int i = 0; i < nBlocksToConfirm; i++)
             nPrevSize += history.at(i).PrioritySamples();
-        size_t index = min(nPrevSize + nBucketSize/2, sortedFeeSamples.size()-1);
+        size_t index = min(nPrevSize + nBucketSize/2, sortedPrioritySamples.size()-1);
         return sortedPrioritySamples[index];
     }
 
@@ -315,16 +319,27 @@ public:
 
     void Read(CAutoFile& filein, const CFeeRate& minRelayFee)
     {
-        filein >> nBestSeenHeight;
+        int nFileBestSeenHeight;
+        filein >> nFileBestSeenHeight;
         size_t numEntries;
         filein >> numEntries;
-        history.clear();
+        if (numEntries <= 0 || numEntries > 10000)
+            throw runtime_error("Corrupt estimates file.  Must have between 1 and 10k entires.");
+
+        std::vector<CBlockAverage> fileHistory;
+        
         for (size_t i = 0; i < numEntries; i++)
         {
             CBlockAverage entry;
             entry.Read(filein, minRelayFee);
-            history.push_back(entry);
+            fileHistory.push_back(entry);
         }
+
+        //Now that we've processed the entire fee estimate data file and not
+        //thrown any errors, we can copy it to our history
+        nBestSeenHeight = nFileBestSeenHeight;
+        history = fileHistory;
+        assert(history.size() > 0);
     }
 };
 
