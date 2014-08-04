@@ -3628,7 +3628,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         pfrom->fSuccessfullyConnected = true;
 
-        LogPrintf("receive version message: %s: version %d, blocks=%d, us=%s, peer=%d\n", pfrom->cleanSubVer, pfrom->nVersion, pfrom->nStartingHeight, addrMe.ToString(), pfrom->id);
+        string remoteAddr;
+        if (fLogIPs)
+            remoteAddr = " from " + pfrom->addr.ToStringIP();
+
+        LogPrintf("receive version message%s: %s: version %d, blocks=%d, us=%s, peer=%d\n",
+                  remoteAddr, pfrom->cleanSubVer, pfrom->nVersion,
+                  pfrom->nStartingHeight, addrMe.ToString(), pfrom->id);
 
         AddTimeData(pfrom->addr, nTime);
     }
