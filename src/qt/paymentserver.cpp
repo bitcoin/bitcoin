@@ -90,7 +90,7 @@ static QList<QString> savedPaymentRequests;
 
 static void ReportInvalidCertificate(const QSslCertificate& cert)
 {
-    qWarning() << "ReportInvalidCertificate : Payment server found an invalid certificate: " << cert.subjectInfo(QSslCertificate::CommonName);
+    qDebug() << "ReportInvalidCertificate : Payment server found an invalid certificate: " << cert.subjectInfo(QSslCertificate::CommonName);
 }
 
 //
