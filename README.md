@@ -27,7 +27,7 @@ Development process
 -------------------
 
 Developers work in their own trees, then submit pull requests when they think
-their feature or bug fix is ready.
+that their feature or bug fix is ready.
 
 If it is a simple/trivial/non-controversial change, then one of the Bitcoin
 development team members simply pulls it.
