@@ -156,24 +156,6 @@ repackage gitian builds for release as stand-alone zip/tar/installer exe
 
 ###Next steps:
 
-* Code-sign Windows -setup.exe (in a Windows virtual machine using signtool)
- Note: only Gavin has the code-signing keys currently.
-
-* upload builds to SourceForge
-
-* create SHA256SUMS for builds, and PGP-sign it
-
-* update bitcoin.org version
-  make sure all OS download links go to the right versions
-  
-* update download sizes on bitcoin.org/_templates/download.html
-
-* update forum version
-
-* update wiki download links
-
-* update wiki changelog: [https://en.bitcoin.it/wiki/Changelog](https://en.bitcoin.it/wiki/Changelog)
-
 Commit your signature to gitian.sigs:
 
 	pushd gitian.sigs
@@ -186,18 +168,50 @@ Commit your signature to gitian.sigs:
 
 -------------------------------------------------------------------------
 
-### After 3 or more people have gitian-built, repackage gitian-signed zips:
+### After 3 or more people have gitian-built and their results match:
 
-- Upload gitian zips to SourceForge
+- Perform code-signing.
+
+    - Code-sign Windows -setup.exe (in a Windows virtual machine using signtool)
+
+    - Code-sign MacOSX .dmg
+
+  Note: only Gavin has the code-signing keys currently.
+
+- Create `SHA256SUMS.asc` for builds, and PGP-sign it. This is done manually.
+  Include all the files to be uploaded. The file has `sha256sum` format with a
+  simple header at the top:
+
+```
+Hash: SHA256
+
+0060f7d38b98113ab912d4c184000291d7f026eaf77ca5830deec15059678f54  bitcoin-x.y.z-linux.tar.gz
+...
+```
+
+- Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the bitcoin.org server
+
+- Update bitcoin.org version
+
+  - Make a pull request to add a file named `YYYY-MM-DD-vX.Y.Z.md` with the release notes
+  to https://github.com/bitcoin/bitcoin.org/tree/master/_releases
+   ([Example for 0.9.2.1](https://raw.githubusercontent.com/bitcoin/bitcoin.org/master/_releases/2014-06-19-v0.9.2.1.md)).
+
+  - After the pull request is merged, the website will automatically show the newest version, as well
+    as update the OS download links. Ping Saivann in case anything goes wrong
 
 - Announce the release:
-
-  - Add the release to bitcoin.org: https://github.com/bitcoin/bitcoin.org/tree/master/_releases
 
   - Release sticky on bitcointalk: https://bitcointalk.org/index.php?board=1.0
 
   - Bitcoin-development mailing list
 
-  - Optionally reddit /r/Bitcoin, ...
+  - Update title of #bitcoin on Freenode IRC
+
+  - Optionally reddit /r/Bitcoin, ... but this will usually sort out itself
+
+- Notify BlueMatt so that he can start building [https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin](the PPAs)
+
+- Add release notes for the new version to the directory `doc/release-notes` in git master
 
 - Celebrate 
