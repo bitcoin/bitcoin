@@ -247,7 +247,10 @@ private:
 
 public:
     CCoinsKeyHasher();
-    uint64_t operator()(const uint256& key) const {
+    // This *must* return size_t. With Boost 1.46 on 32-bit systems the
+    // unordered_map will behave unpredictably if the custom hasher returns a
+    // uint64_t, resulting in failures when syncing the chain (#4634).
+    size_t operator()(const uint256& key) const {
         return key.GetHash(salt);
     }
 };
