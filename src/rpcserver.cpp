@@ -862,7 +862,7 @@ static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
 
-        conn->stream() << HTTPReply(HTTP_OK, strReply, fRun) << std::flush;
+        conn->stream() << HTTPReplyHeader(HTTP_OK, fRun, strReply.size()) << strReply << std::flush;
     }
     catch (Object& objError)
     {

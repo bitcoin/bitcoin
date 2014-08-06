@@ -93,8 +93,7 @@ string HTTPError(int nStatus, bool keepalive, bool headersOnly)
                      headersOnly, "text/plain");
 }
 
-string HTTPReply(int nStatus, const string& strMsg, bool keepalive,
-                 bool headersOnly, const char *contentType)
+string HTTPReplyHeader(int nStatus, bool keepalive, size_t contentLength, const char *contentType)
 {
     return strprintf(
             "HTTP/1.1 %d %s\r\n"
@@ -103,17 +102,25 @@ string HTTPReply(int nStatus, const string& strMsg, bool keepalive,
             "Content-Length: %u\r\n"
             "Content-Type: %s\r\n"
             "Server: bitcoin-json-rpc/%s\r\n"
-            "\r\n"
-            "%s",
+            "\r\n",
         nStatus,
         httpStatusDescription(nStatus),
         rfc1123Time(),
         keepalive ? "keep-alive" : "close",
-        (headersOnly ? 0 : strMsg.size()),
+        contentLength,
         contentType,
-        FormatFullVersion(),
-        (headersOnly ? "" : strMsg.c_str())
-        );
+        FormatFullVersion());
+}
+
+string HTTPReply(int nStatus, const string& strMsg, bool keepalive,
+                 bool headersOnly, const char *contentType)
+{
+    if (headersOnly)
+    {
+        return HTTPReplyHeader(nStatus, keepalive, 0, contentType);
+    } else {
+        return HTTPReplyHeader(nStatus, keepalive, strMsg.size(), contentType) + strMsg;
+    }
 }
 
 bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
