@@ -46,23 +46,6 @@ namespace Foo {
 
 } // Foo
 ```
-Variable names begin with the type in lowercase, like nSomeVariable.
-Please don't put the first word of the variable name in lowercase like
-someVariable.
-
-Common types:
-
-    n       integer number: short, unsigned short, int, unsigned int, int64, uint64, sometimes char if used as a number
-    d       double, float
-    f       flag
-    hash    uint256
-    p       pointer or array, one p for each level of indirection
-    psz     pointer to null terminated string
-    str     string object
-    v       vector or similar list objects
-    map     map or multimap
-    set     set or multiset
-    bn      CBigNum
 
 Doxygen comments
 -----------------
