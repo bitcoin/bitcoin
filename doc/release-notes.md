@@ -61,6 +61,7 @@ Wallet:
 GUI:
 - fix 'opens in testnet mode when presented with a BIP-72 link with no fallback'
 - AvailableCoins: acquire cs_main mutex
+- Fix unicode character display on MacOSX
 
 Miscellaneous:
 - key.cpp: fail with a friendlier message on missing ssl EC support
