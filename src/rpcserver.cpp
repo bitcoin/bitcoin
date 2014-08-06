@@ -891,7 +891,7 @@ void ServiceConnection(AcceptedConnection *conn)
             break;
 
         // Read HTTP message headers and body
-        ReadHTTPMessage(conn->stream(), mapHeaders, strRequest, nProto);
+        ReadHTTPMessage(conn->stream(), mapHeaders, strRequest, nProto, MAX_SIZE);
 
         // HTTP Keep-Alive is false; close connection immediately
         if (mapHeaders["connection"] == "close")

@@ -201,14 +201,14 @@ int ReadHTTPHeaders(std::basic_istream<char>& stream, map<string, string>& mapHe
 
 int ReadHTTPMessage(std::basic_istream<char>& stream, map<string,
                     string>& mapHeadersRet, string& strMessageRet,
-                    int nProto)
+                    int nProto, size_t max_size)
 {
     mapHeadersRet.clear();
     strMessageRet = "";
 
     // Read header
     int nLen = ReadHTTPHeaders(stream, mapHeadersRet);
-    if (nLen < 0 || nLen > (int)MAX_SIZE)
+    if (nLen < 0 || (size_t)nLen > max_size)
         return HTTP_INTERNAL_SERVER_ERROR;
 
     // Read message
