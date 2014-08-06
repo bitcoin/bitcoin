@@ -106,6 +106,10 @@ namespace GUIUtil
       representation if needed. This assures that Qt can word-wrap long tooltip messages.
       Tooltips longer than the provided size threshold (in characters) are wrapped.
      */
+
+    // Replace invalid default fonts with known good ones
+    void SubstituteFonts();
+
     class ToolTipToRichTextFilter : public QObject
     {
         Q_OBJECT
