@@ -331,12 +331,7 @@
         <translation>Quit application</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Show information about Bitcoin</source>
-        <translation>Show information about Bitcoin</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+10"/>
         <location line="+2"/>
         <source>About &amp;Qt</source>
         <translation>About &amp;Qt</translation>
@@ -382,7 +377,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+329"/>
+        <location line="+168"/>
+        <location line="+5"/>
+        <source>Bitcoin Core client</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+156"/>
         <source>Importing blocks from disk...</source>
         <translation>Importing blocks from disk...</translation>
     </message>
@@ -447,7 +448,12 @@
         <translation>&amp;Receive</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+33"/>
+        <source>Show information about Bitcoin Core</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <location line="+2"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Show / Hide</translation>
@@ -539,14 +545,8 @@
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <location line="+164"/>
-        <location line="+5"/>
-        <source>Bitcoin client</source>
-        <translation>Bitcoin client</translation>
-    </message>
     <message numerus="yes">
-        <location line="+141"/>
+        <location line="+310"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation>
             <numerusform>%n active connection to Bitcoin network</numerusform>
@@ -1159,8 +1159,8 @@ Address: %4
     </message>
     <message>
         <location filename="../intro.cpp" line="+82"/>
-        <source>Bitcoin</source>
-        <translation type="unfinished">Bitcoin</translation>
+        <source>Bitcoin Core</source>
+        <translation type="unfinished">Bitcoin Core</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1681,18 +1681,18 @@ Address: %4
 <context>
     <name>PeerTableModel</name>
     <message>
-        <location filename="../peertablemodel.cpp" line="+117"/>
-        <source>Address</source>
-        <translation type="unfinished">Address</translation>
-    </message>
-    <message>
-        <location line="+0"/>
+        <location filename="../peertablemodel.cpp" line="+112"/>
         <source>User Agent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>Start Height</source>
+        <source>Address/Hostname</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Ping Time</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1743,6 +1743,16 @@ Address: %4
         <source>None</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location line="+5"/>
+        <source>N/A</source>
+        <translation type="unfinished">N/A</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1 ms</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1785,26 +1795,25 @@ Address: %4
         <location line="+23"/>
         <location line="+36"/>
         <location line="+23"/>
-        <location line="+448"/>
-        <location line="+21"/>
-        <location line="+13"/>
-        <location line="+20"/>
-        <location line="+14"/>
-        <location line="+7"/>
-        <location line="+14"/>
-        <location line="+21"/>
-        <location line="+14"/>
-        <location line="+14"/>
-        <location line="+14"/>
-        <location line="+28"/>
-        <location line="+7"/>
-        <location line="+7"/>
-        <location filename="../rpcconsole.cpp" line="+633"/>
+        <location line="+462"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
     <message>
-        <location line="-868"/>
+        <location line="-987"/>
         <source>Client version</source>
         <translation>Client version</translation>
     </message>
@@ -1879,82 +1888,84 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+39"/>
+        <location filename="../rpcconsole.cpp" line="+234"/>
+        <location line="+327"/>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+41"/>
-        <source>Version:</source>
+        <location line="+25"/>
+        <source>Direction</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>Last Receive:</source>
+        <location line="+23"/>
+        <source>Version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>User Agent:</source>
+        <location line="+23"/>
+        <source>User Agent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>Ping Time:</source>
+        <location line="+23"/>
+        <source>Services</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+20"/>
-        <source>Connection Time:</source>
+        <location line="+23"/>
+        <source>Sync Node</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
-        <source>Starting Height:</source>
+        <location line="+23"/>
+        <source>Starting Height</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>Bytes Sent:</source>
+        <location line="+23"/>
+        <source>Sync Height</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Bytes Received:</source>
+        <location line="+23"/>
+        <source>Ban Score</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>Ban Score:</source>
+        <location line="+23"/>
+        <source>Connection Time</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>Direction:</source>
+        <location line="+23"/>
+        <source>Last Send</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>Sync Node:</source>
+        <location line="+23"/>
+        <source>Last Receive</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>Last Send:</source>
+        <location line="+23"/>
+        <source>Bytes Sent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Services:</source>
+        <location line="+23"/>
+        <source>Bytes Received</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>IP Address/port:</source>
+        <location line="+23"/>
+        <source>Ping Time</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-631"/>
+        <location line="-761"/>
         <source>Last block time</source>
         <translation>Last block time</translation>
     </message>
@@ -1984,7 +1995,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-236"/>
+        <location filename="../rpcconsole.cpp" line="-165"/>
         <source>In:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2029,7 +2040,7 @@ Address: %4
         <translation>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</translation>
     </message>
     <message>
-        <location line="+138"/>
+        <location line="+134"/>
         <source>%1 B</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2049,13 +2060,8 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+93"/>
-        <source>Peer Disconnected</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>Node Detail</source>
+        <location line="+95"/>
+        <source>via %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2065,12 +2071,7 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>%1 secs</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>Inbound</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2090,7 +2091,13 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+12"/>
+        <source>Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location line="+1"/>
         <source>Fetching...</source>
         <translation type="unfinished"></translation>
     </message>
