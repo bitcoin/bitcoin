@@ -262,14 +262,87 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
         State(pfrom->GetId())->nLastBlockProcess = GetTimeMicros();
     }
 
+    if (strCommand == "version") {
+        if (!MsgVersion(pfrom, vRecv, nTimeReceived))
+            return false;
+
+    } else if (pfrom->nVersion == 0) {
+        // Must have a version message before anything else
+        Misbehaving(pfrom->GetId(), 1);
+        return false;
+
+    } else if (strCommand == "verack") {
+        if (!MsgVerack(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "addr") {
+        if (!MsgAddr(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "inv") {
+        if (!MsgInv(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "getdata") {
+        if (!MsgGetData(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "getblocks") {
+        if (!MsgGetBlocks(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "getheaders") {
+        if (!MsgGetHeaders(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "tx") {
+        if (!MsgTx(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "block" && !fImporting && !fReindex) { // Ignore blocks received while importing
+        if (!MsgBlock(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "getaddr") {
+        if (!MsgGetAddr(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "mempool") {
+        if (!MsgMempool(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "ping") {
+        if (!MsgPing(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "pong") {
+        if (!MsgPong(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "alert") {
+        if (!MsgAlert(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "filterload") {
+        if (!MsgFilterLoad(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "filteradd") {
+        if (!MsgFilterAdd(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "filterclear") {
+        if (!MsgFilterClear(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else if (strCommand == "reject") {
+        if (!MsgReject(pfrom, vRecv, nTimeReceived))
+            return false;
+    } else {
+        // Ignore unknown commands for extensibility
+        LogPrint("net", "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->id);
+    }
+
+    // Update the last seen time for this node's address
+    if (pfrom->fNetworkNode)
+        if (strCommand == "version" || strCommand == "addr" || strCommand == "inv" || strCommand == "getdata" || strCommand == "ping")
+            AddressCurrentlyConnected(pfrom->addr);
+
+    return true;
+}
 
 
-    if (strCommand == "version")
+
+bool MessageEngine::MsgVersion(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         // Each connection can only send one version message
         if (pfrom->nVersion != 0)
         {
-            pfrom->PushMessage("reject", strCommand, REJECT_DUPLICATE, string("Duplicate version message"));
+            pfrom->PushMessage("reject", (string)"version", REJECT_DUPLICATE, string("Duplicate version message"));
             Misbehaving(pfrom->GetId(), 1);
             return false;
         }
@@ -283,7 +356,7 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
         {
             // disconnect from peers older than this proto version
             LogPrintf("peer=%d using obsolete version %i; disconnecting\n", pfrom->id, pfrom->nVersion);
-            pfrom->PushMessage("reject", strCommand, REJECT_OBSOLETE,
+            pfrom->PushMessage("reject", (string)"version", REJECT_OBSOLETE,
                                strprintf("Version must be %d or greater", MIN_PEER_PROTO_VERSION));
             pfrom->fDisconnect = true;
             return false;
@@ -373,24 +446,17 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
                   remoteAddr);
 
         AddTimeData(pfrom->addr, nTime);
+        return true;
     }
 
-
-    else if (pfrom->nVersion == 0)
-    {
-        // Must have a version message before anything else
-        Misbehaving(pfrom->GetId(), 1);
-        return false;
-    }
-
-
-    else if (strCommand == "verack")
+bool MessageEngine::MsgVerack(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         pfrom->SetRecvVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
+        return true;
     }
 
 
-    else if (strCommand == "addr")
+bool MessageEngine::MsgAddr(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         vector<CAddress> vAddr;
         vRecv >> vAddr;
@@ -454,10 +520,11 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
             pfrom->fGetAddr = false;
         if (pfrom->fOneShot)
             pfrom->fDisconnect = true;
+        return true;
     }
 
 
-    else if (strCommand == "inv")
+bool MessageEngine::MsgInv(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         vector<CInv> vInv;
         vRecv >> vInv;
@@ -496,10 +563,12 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
             // Track requests for our stuff
             g_signals.Inventory(inv.hash);
         }
+
+        return true;
     }
 
 
-    else if (strCommand == "getdata")
+bool MessageEngine::MsgGetData(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         vector<CInv> vInv;
         vRecv >> vInv;
@@ -517,10 +586,11 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
 
         pfrom->vRecvGetData.insert(pfrom->vRecvGetData.end(), vInv.begin(), vInv.end());
         ProcessGetData(pfrom);
+        return true;
     }
 
 
-    else if (strCommand == "getblocks")
+bool MessageEngine::MsgGetBlocks(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         CBlockLocator locator;
         uint256 hashStop;
@@ -553,10 +623,11 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
                 break;
             }
         }
+        return true;
     }
 
 
-    else if (strCommand == "getheaders")
+bool MessageEngine::MsgGetHeaders(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         CBlockLocator locator;
         uint256 hashStop;
@@ -592,10 +663,11 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
                 break;
         }
         pfrom->PushMessage("headers", vHeaders);
+        return true;
     }
 
 
-    else if (strCommand == "tx")
+bool MessageEngine::MsgTx(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         vector<uint256> vWorkQueue;
         vector<uint256> vEraseQueue;
@@ -680,15 +752,16 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
             LogPrint("mempool", "%s from peer=%d %s was not accepted into the memory pool: %s\n", tx.GetHash().ToString(),
                 pfrom->id, pfrom->cleanSubVer,
                 state.GetRejectReason());
-            pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
+            pfrom->PushMessage("reject", (string)"tx", state.GetRejectCode(),
                                state.GetRejectReason(), inv.hash);
             if (nDoS > 0)
                 Misbehaving(pfrom->GetId(), nDoS);
         }
+        return true;
     }
 
 
-    else if (strCommand == "block" && !fImporting && !fReindex) // Ignore blocks received while importing
+bool MessageEngine::MsgBlock(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         CBlock block;
         vRecv >> block;
@@ -710,7 +783,7 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
         ProcessBlock(state, pfrom, &block);
         int nDoS;
         if (state.IsInvalid(nDoS)) {
-            pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
+            pfrom->PushMessage("reject", (string)"block", state.GetRejectCode(),
                                state.GetRejectReason(), inv.hash);
             if (nDoS > 0) {
                 LOCK(cs_main);
@@ -718,19 +791,21 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
             }
         }
 
+        return true;
     }
 
 
-    else if (strCommand == "getaddr")
+bool MessageEngine::MsgGetAddr(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         pfrom->vAddrToSend.clear();
         vector<CAddress> vAddr = addrman.GetAddr();
         BOOST_FOREACH(const CAddress &addr, vAddr)
             pfrom->PushAddress(addr);
+        return true;
     }
 
 
-    else if (strCommand == "mempool")
+bool MessageEngine::MsgMempool(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         LOCK2(cs_main, pfrom->cs_filter);
 
@@ -752,10 +827,11 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
         }
         if (vInv.size() > 0)
             pfrom->PushMessage("inv", vInv);
+        return true;
     }
 
 
-    else if (strCommand == "ping")
+bool MessageEngine::MsgPing(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         if (pfrom->nVersion > BIP0031_VERSION)
         {
@@ -774,10 +850,11 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
             // return very quickly.
             pfrom->PushMessage("pong", nonce);
         }
+        return true;
     }
 
 
-    else if (strCommand == "pong")
+bool MessageEngine::MsgPong(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         int64_t pingUsecEnd = nTimeReceived;
         uint64_t nonce = 0;
@@ -831,10 +908,11 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
         if (bPingFinished) {
             pfrom->nPingNonceSent = 0;
         }
+        return true;
     }
 
 
-    else if (strCommand == "alert")
+bool MessageEngine::MsgAlert(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         CAlert alert;
         vRecv >> alert;
@@ -862,10 +940,11 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
                 Misbehaving(pfrom->GetId(), 10);
             }
         }
+        return true;
     }
 
 
-    else if (strCommand == "filterload")
+bool MessageEngine::MsgFilterLoad(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         CBloomFilter filter;
         vRecv >> filter;
@@ -881,10 +960,11 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
             pfrom->pfilter->UpdateEmptyFull();
         }
         pfrom->fRelayTxes = true;
+        return true;
     }
 
 
-    else if (strCommand == "filteradd")
+bool MessageEngine::MsgFilterAdd(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         vector<unsigned char> vData;
         vRecv >> vData;
@@ -901,19 +981,21 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
             else
                 Misbehaving(pfrom->GetId(), 100);
         }
+        return true;
     }
 
 
-    else if (strCommand == "filterclear")
+bool MessageEngine::MsgFilterClear(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         LOCK(pfrom->cs_filter);
         delete pfrom->pfilter;
         pfrom->pfilter = new CBloomFilter();
         pfrom->fRelayTxes = true;
+        return true;
     }
 
 
-    else if (strCommand == "reject")
+bool MessageEngine::MsgReject(CNode* pfrom, CDataStream& vRecv, int64_t nTimeReceived)
     {
         if (fDebug)
         {
@@ -934,23 +1016,8 @@ bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream&
             if (s.size() > 111) s.erase(111, string::npos);
             LogPrint("net", "Reject %s\n", SanitizeString(s));
         }
+        return true;
     }
-
-    else
-    {
-        // Ignore unknown commands for extensibility
-        LogPrint("net", "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->id);
-    }
-
-
-    // Update the last seen time for this node's address
-    if (pfrom->fNetworkNode)
-        if (strCommand == "version" || strCommand == "addr" || strCommand == "inv" || strCommand == "getdata" || strCommand == "ping")
-            AddressCurrentlyConnected(pfrom->addr);
-
-
-    return true;
-}
 
 // requires LOCK(cs_vRecvMsg)
 bool MessageEngine::ProcessMessages(CNode* pfrom)
