@@ -9,8 +9,11 @@
 #include "addrman.h"
 #include "alert.h"
 #include "main.h"
+#include "procmsg.h"
 
 using namespace std;
+
+class MessageEngine msgeng;
 
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 
@@ -244,7 +247,7 @@ void static ProcessGetData(CNode* pfrom)
     }
 }
 
-bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
+bool MessageEngine::ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
 {
     RandAddSeedPerfmon();
     LogPrint("net", "received: %s (%u bytes) peer=%d\n", strCommand, vRecv.size(), pfrom->id);
@@ -950,7 +953,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 }
 
 // requires LOCK(cs_vRecvMsg)
-bool ProcessMessages(CNode* pfrom)
+bool MessageEngine::ProcessMessages(CNode* pfrom)
 {
     //if (fDebug)
     //    LogPrintf("ProcessMessages(%u messages)\n", pfrom->vRecvMsg.size());
@@ -1071,7 +1074,7 @@ bool ProcessMessages(CNode* pfrom)
 }
 
 
-bool SendMessages(CNode* pto, bool fSendTrickle)
+bool MessageEngine::SendMessages(CNode* pto, bool fSendTrickle)
 {
     {
         // Don't send anything until we get their version message

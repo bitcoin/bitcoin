@@ -96,6 +96,7 @@ BITCOIN_CORE_H = \
   net.h \
   noui.h \
   pow.h \
+  procmsg.h \
   protocol.h \
   random.h \
   rpcclient.h \

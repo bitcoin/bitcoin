@@ -17,6 +17,7 @@
 #include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "procmsg.h"
 
 #include <sstream>
 
@@ -290,6 +291,16 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
     stats.nMisbehavior = state->nMisbehavior;
     stats.nSyncHeight = state->pindexBestKnownBlock ? state->pindexBestKnownBlock->nHeight : -1;
     return true;
+}
+
+static bool SendMessages(CNode* pto, bool fSendTrickle)
+{
+    return msgeng.SendMessages(pto, fSendTrickle);
+}
+
+static bool ProcessMessages(CNode* pfrom)
+{
+    return msgeng.ProcessMessages(pfrom);
 }
 
 void RegisterNodeSignals(CNodeSignals& nodeSignals)
