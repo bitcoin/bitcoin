@@ -148,6 +148,7 @@ libbitcoin_server_a_SOURCES = \
   net.cpp \
   noui.cpp \
   pow.cpp \
+  procmsg.cpp \
   rpcblockchain.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
