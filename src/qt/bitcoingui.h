@@ -103,6 +103,7 @@ private:
     QAction *showHelpMessageAction;
 
     QSystemTrayIcon *trayIcon;
+    QMenu *trayIconMenu;
     Notificator *notificator;
     RPCConsole *rpcConsole;
 
