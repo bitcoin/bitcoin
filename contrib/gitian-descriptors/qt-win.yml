@@ -15,8 +15,8 @@ reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
 - "qt-everywhere-opensource-src-5.2.0.tar.gz"
-- "bitcoin-deps-win32-gitian-r13.zip"
-- "bitcoin-deps-win64-gitian-r13.zip"
+- "bitcoin-deps-win32-gitian-r14.zip"
+- "bitcoin-deps-win64-gitian-r14.zip"
 script: |
   # Defines
   export TZ=UTC
@@ -48,7 +48,7 @@ script: |
     #
     # Need mingw-compiled openssl from bitcoin-deps:
     cd $DEPSDIR
-    unzip $INDIR/bitcoin-deps-win${BITS}-gitian-r13.zip
+    unzip $INDIR/bitcoin-deps-win${BITS}-gitian-r14.zip
     #
     cd $BUILDDIR
     #
