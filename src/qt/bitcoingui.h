@@ -219,6 +219,7 @@ protected:
 private:
     OptionsModel *optionsModel;
     QMenu* menu;
+
     /** Shows context menu with Display Unit options by the mouse coordinates */
     void onDisplayUnitsClicked(const QPoint& point);
     /** Creates context menu, its actions, and wires up all the relevant signals for mouse events. */
