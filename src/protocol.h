@@ -32,7 +32,6 @@ class CMessageHeader
         CMessageHeader();
         CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn);
 
-        std::string GetCommand() const;
         bool IsValid() const;
 
         IMPLEMENT_SERIALIZE
@@ -58,6 +57,13 @@ class CMessageHeader
         char pchCommand[COMMAND_SIZE];
         unsigned int nMessageSize;
         unsigned int nChecksum;
+
+        unsigned int GetSize() const { return nMessageSize; }
+        unsigned int GetChecksum() const { return nChecksum; }
+        std::string GetCommand() const {
+            size_t cmdLen = strnlen(pchCommand, COMMAND_SIZE);
+            return std::string(pchCommand, cmdLen);
+        }
 };
 
 /** nServices flags */

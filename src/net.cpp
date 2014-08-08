@@ -693,7 +693,7 @@ int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
     }
 
     // reject messages larger than MAX_SIZE
-    if (hdr.nMessageSize > MAX_SIZE)
+    if (hdr.GetSize() > MAX_SIZE)
             return -1;
 
     // switch state to reading message data
@@ -704,12 +704,12 @@ int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
 
 int CNetMessage::readData(const char *pch, unsigned int nBytes)
 {
-    unsigned int nRemaining = hdr.nMessageSize - nDataPos;
+    unsigned int nRemaining = hdr.GetSize() - nDataPos;
     unsigned int nCopy = std::min(nRemaining, nBytes);
 
     if (vRecv.size() < nDataPos + nCopy) {
         // Allocate up to 256 KiB ahead, but never more than the total message size.
-        vRecv.resize(std::min(hdr.nMessageSize, nDataPos + nCopy + 256 * 1024));
+        vRecv.resize(std::min(hdr.GetSize(), nDataPos + nCopy + 256 * 1024));
     }
 
     memcpy(&vRecv[nDataPos], pch, nCopy);

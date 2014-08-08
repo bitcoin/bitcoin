@@ -4364,17 +4364,17 @@ bool ProcessMessages(CNode* pfrom)
         string strCommand = hdr.GetCommand();
 
         // Message size
-        unsigned int nMessageSize = hdr.nMessageSize;
+        unsigned int nMessageSize = hdr.GetSize();
 
         // Checksum
         CDataStream& vRecv = msg.vRecv;
         uint256 hash = Hash(vRecv.begin(), vRecv.begin() + nMessageSize);
         unsigned int nChecksum = 0;
         memcpy(&nChecksum, &hash, sizeof(nChecksum));
-        if (nChecksum != hdr.nChecksum)
+        if (nChecksum != hdr.GetChecksum())
         {
             LogPrintf("ProcessMessages(%s, %u bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
-               strCommand, nMessageSize, nChecksum, hdr.nChecksum);
+               strCommand, nMessageSize, nChecksum, hdr.GetChecksum());
             continue;
         }
 
