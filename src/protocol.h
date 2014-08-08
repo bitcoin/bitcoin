@@ -42,7 +42,7 @@ class CMessageHeader
              READWRITE(nChecksum);
             )
 
-    // TODO: make private (improves encapsulation)
+    // TODO: make protected (improves encapsulation)
     public:
         enum {
             COMMAND_SIZE=12,
@@ -141,9 +141,10 @@ class CInv
         bool IsKnownType() const;
         const char* GetCommand() const;
         std::string ToString() const;
+        int GetType() const { return type; }
+        uint256 GetHash() const { return hash; }
 
-    // TODO: make private (improves encapsulation)
-    public:
+    protected:
         int type;
         uint256 hash;
 };

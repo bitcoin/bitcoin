@@ -1996,7 +1996,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
                 InvalidBlockFound(pindexNew, state);
             return error("ConnectTip() : ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
-        mapBlockSource.erase(inv.hash);
+        mapBlockSource.erase(inv.GetHash());
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
         LogPrint("bench", "  - Connect total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
         assert(view.Flush());
@@ -3369,18 +3369,18 @@ string GetWarnings(string strFor)
 
 bool static AlreadyHave(const CInv& inv)
 {
-    switch (inv.type)
+    switch (inv.GetType())
     {
     case MSG_TX:
         {
             bool txInMap = false;
-            txInMap = mempool.exists(inv.hash);
-            return txInMap || mapOrphanTransactions.count(inv.hash) ||
-                pcoinsTip->HaveCoins(inv.hash);
+            txInMap = mempool.exists(inv.GetHash());
+            return txInMap || mapOrphanTransactions.count(inv.GetHash()) ||
+                pcoinsTip->HaveCoins(inv.GetHash());
         }
     case MSG_BLOCK:
-        return mapBlockIndex.count(inv.hash) ||
-               mapOrphanBlocks.count(inv.hash);
+        return mapBlockIndex.count(inv.GetHash()) ||
+               mapOrphanBlocks.count(inv.GetHash());
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -3405,10 +3405,10 @@ void static ProcessGetData(CNode* pfrom)
             boost::this_thread::interruption_point();
             it++;
 
-            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
+            if (inv.GetType() == MSG_BLOCK || inv.GetType() == MSG_FILTERED_BLOCK)
             {
                 bool send = false;
-                map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.hash);
+                map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.GetHash());
                 if (mi != mapBlockIndex.end())
                 {
                     // If the requested block is at a height below our last
@@ -3432,7 +3432,7 @@ void static ProcessGetData(CNode* pfrom)
                     CBlock block;
                     if (!ReadBlockFromDisk(block, (*mi).second))
                         assert(!"cannot load block from disk");
-                    if (inv.type == MSG_BLOCK)
+                    if (inv.GetType() == MSG_BLOCK)
                         pfrom->PushMessage("block", block);
                     else // MSG_FILTERED_BLOCK)
                     {
@@ -3457,7 +3457,7 @@ void static ProcessGetData(CNode* pfrom)
                     }
 
                     // Trigger them to send a getblocks request for the next batch of inventory
-                    if (inv.hash == pfrom->hashContinue)
+                    if (inv.GetHash() == pfrom->hashContinue)
                     {
                         // Bypass PushInventory, this must send even if redundant,
                         // and we want it right after the last block so they don't
@@ -3481,9 +3481,9 @@ void static ProcessGetData(CNode* pfrom)
                         pushed = true;
                     }
                 }
-                if (!pushed && inv.type == MSG_TX) {
+                if (!pushed && inv.GetType() == MSG_TX) {
                     CTransaction tx;
-                    if (mempool.lookup(inv.hash, tx)) {
+                    if (mempool.lookup(inv.GetHash(), tx)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << tx;
@@ -3497,9 +3497,9 @@ void static ProcessGetData(CNode* pfrom)
             }
 
             // Track requests for our stuff.
-            g_signals.Inventory(inv.hash);
+            g_signals.Inventory(inv.GetHash());
 
-            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
+            if (inv.GetType() == MSG_BLOCK || inv.GetType() == MSG_FILTERED_BLOCK)
                 break;
         }
     }
@@ -3821,20 +3821,20 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             if (!fAlreadyHave) {
                 if (!fImporting && !fReindex) {
-                    if (inv.type == MSG_BLOCK)
-                        AddBlockToQueue(pfrom->GetId(), inv.hash);
+                    if (inv.GetType() == MSG_BLOCK)
+                        AddBlockToQueue(pfrom->GetId(), inv.GetHash());
                     else
                         pfrom->AskFor(inv);
                 }
-            } else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
-                PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(inv.hash));
+            } else if (inv.GetType() == MSG_BLOCK && mapOrphanBlocks.count(inv.GetHash())) {
+                PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(inv.GetHash()));
             }
 
-            if (inv.type == MSG_BLOCK)
-                UpdateBlockAvailability(pfrom->GetId(), inv.hash);
+            if (inv.GetType() == MSG_BLOCK)
+                UpdateBlockAvailability(pfrom->GetId(), inv.GetHash());
 
             // Track requests for our stuff
-            g_signals.Inventory(inv.hash);
+            g_signals.Inventory(inv.GetHash());
         }
     }
 
@@ -3970,8 +3970,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             mempool.check(pcoinsTip);
             RelayTransaction(tx);
             mapAlreadyAskedFor.erase(inv);
-            vWorkQueue.push_back(inv.hash);
-            vEraseQueue.push_back(inv.hash);
+            vWorkQueue.push_back(inv.GetHash());
+            vEraseQueue.push_back(inv.GetHash());
 
 
             LogPrint("mempool", "AcceptToMemoryPool: peer=%d %s : accepted %s (poolsz %u)\n",
@@ -4037,7 +4037,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 pfrom->id, pfrom->cleanSubVer,
                 state.GetRejectReason());
             pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
-                               state.GetRejectReason(), inv.hash);
+                               state.GetRejectReason(), inv.GetHash());
             if (nDoS > 0)
                 Misbehaving(pfrom->GetId(), nDoS);
         }
@@ -4057,8 +4057,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         {
             LOCK(cs_main);
             // Remember who we got this block from.
-            mapBlockSource[inv.hash] = pfrom->GetId();
-            MarkBlockAsReceived(inv.hash, pfrom->GetId());
+            mapBlockSource[inv.GetHash()] = pfrom->GetId();
+            MarkBlockAsReceived(inv.GetHash(), pfrom->GetId());
         }
 
         CValidationState state;
@@ -4066,7 +4066,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         int nDoS;
         if (state.IsInvalid(nDoS)) {
             pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
-                               state.GetRejectReason(), inv.hash);
+                               state.GetRejectReason(), inv.GetHash());
             if (nDoS > 0) {
                 LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), nDoS);
@@ -4563,13 +4563,13 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     continue;
 
                 // trickle out tx inv to protect privacy
-                if (inv.type == MSG_TX && !fSendTrickle)
+                if (inv.GetType() == MSG_TX && !fSendTrickle)
                 {
                     // 1/4 of tx invs blast to all immediately
                     static uint256 hashSalt;
                     if (hashSalt == 0)
                         hashSalt = GetRandHash();
-                    uint256 hashRand = inv.hash ^ hashSalt;
+                    uint256 hashRand = inv.GetHash() ^ hashSalt;
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
                     bool fTrickleWait = ((hashRand & 3) != 0);
 
