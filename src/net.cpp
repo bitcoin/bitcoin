@@ -147,8 +147,8 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer)
     if (GetLocal(addr, paddrPeer))
     {
         ret = CAddress(addr);
-        ret.nServices = nLocalServices;
-        ret.nTime = GetAdjustedTime();
+        ret.SetServices(nLocalServices);
+        ret.SetTime(GetAdjustedTime());
     }
     return ret;
 }
@@ -479,7 +479,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
     /// debug print
     LogPrint("net", "trying connection %s lastseen=%.1fhrs\n",
         pszDest ? pszDest : addrConnect.ToString(),
-        pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+        pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.GetTime())/3600.0);
 
     // Connect
     SOCKET hSocket;
@@ -1237,7 +1237,7 @@ void ThreadDNSAddressSeed()
                 {
                     int nOneDay = 24*3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()));
-                    addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
+                    addr.SetTime(GetTime() - 3*nOneDay - GetRand(4*nOneDay)); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
                     found++;
                 }
@@ -1373,7 +1373,7 @@ void ThreadOpenConnections()
                 continue;
 
             // only consider very recently tried nodes after 30 failed attempts
-            if (nANow - addr.nLastTry < 600 && nTries < 30)
+            if (nANow - addr.GetLastTry() < 600 && nTries < 30)
                 continue;
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already

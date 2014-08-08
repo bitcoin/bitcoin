@@ -99,8 +99,14 @@ class CAddress : public CService
              READWRITE(*pip);
             )
 
-    // TODO: make private (improves encapsulation)
-    public:
+        uint64_t GetServices() const { return nServices; }
+        void SetServices(uint64_t mask) { nServices = mask; }
+        void AddServices(uint64_t mask) { nServices |= mask; }
+        unsigned int GetTime() const { return nTime; }
+        void SetTime(unsigned int nTime_) { nTime = nTime_; }
+        int64_t GetLastTry() const { return nLastTry; }
+
+    protected:
         uint64_t nServices;
 
         // disk and network only
