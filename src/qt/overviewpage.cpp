@@ -162,15 +162,16 @@ void OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 
     bool showWatchOnlyImmature = watchImmatureBalance != 0;
     bool showWatchOnly = (watchOnlyBalance != 0 || watchUnconfBalance != 0 || showWatchOnlyImmature);
 
-    // for symmetry reasons also show immature label when the watchonly one is shown
+    // for symmetry reasons also show immature label when the watch-only one is shown
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
     ui->labelImmatureText->setVisible(showImmature || showWatchOnlyImmature);
-    ui->labelWatchonly->setVisible(showWatchOnly);              // show Watchonly label
-    ui->lineWatchBalance->setVisible(showWatchOnly);            // show watchonly balance separator line
-    ui->labelWatchAvailable->setVisible(showWatchOnly);         // show watchonly available balance
-    ui->labelWatchImmature->setVisible(showWatchOnlyImmature);  // show watchonly immature balance
-    ui->labelWatchPending->setVisible(showWatchOnly);           // show watchonly pending balance
-    ui->labelWatchTotal->setVisible(showWatchOnly);             // show watchonly total balance
+    ui->labelSpendable->setVisible(showWatchOnly);              // show spendable label (only when watch-only is active)
+    ui->labelWatchonly->setVisible(showWatchOnly);              // show watch-only label
+    ui->lineWatchBalance->setVisible(showWatchOnly);            // show watch-only balance separator line
+    ui->labelWatchAvailable->setVisible(showWatchOnly);         // show watch-only available balance
+    ui->labelWatchImmature->setVisible(showWatchOnlyImmature);  // show watch-only immature balance
+    ui->labelWatchPending->setVisible(showWatchOnly);           // show watch-only pending balance
+    ui->labelWatchTotal->setVisible(showWatchOnly);             // show watch-only total balance
 }
 
 void OverviewPage::setClientModel(ClientModel *model)
