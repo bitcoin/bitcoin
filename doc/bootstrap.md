@@ -4,7 +4,7 @@ Normally the Bitcoin client will download the transaction and network informatio
 
 ### Requirements
 
-A fresh install of the Bitcoin client software.
+- A fresh install of the Bitcoin client software.
 
 ### Download the blockchain via Bittorent
 
