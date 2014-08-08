@@ -145,10 +145,8 @@ static bool ReadExtServiceFile(const string& filename)
         return false;
     }
 
-    CExtService srv;
-    if (!srv.parseValue(valSrv) ||
-        (valSrv.type() != array_type)) {
-        LogPrintf("Unable to parse value in %s\n", filename);
+    if (valSrv.type() != array_type) {
+        LogPrintf("Unable to parse array in %s\n", filename);
         return false;
     }
 
