@@ -16,6 +16,7 @@
 #include "version.h"
 
 #include <stdint.h>
+#include <string.h>
 #include <string>
 
 #define MESSAGE_START_SIZE 4
