@@ -16,7 +16,6 @@
 #include "version.h"
 
 #include <stdint.h>
-#include <string.h>
 #include <string>
 
 #define MESSAGE_START_SIZE 4
@@ -33,6 +32,7 @@ class CMessageHeader
         CMessageHeader();
         CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn);
 
+        std::string GetCommand() const;
         bool IsValid() const;
 
         IMPLEMENT_SERIALIZE
@@ -61,10 +61,6 @@ class CMessageHeader
 
         unsigned int GetSize() const { return nMessageSize; }
         unsigned int GetChecksum() const { return nChecksum; }
-        std::string GetCommand() const {
-            size_t cmdLen = strnlen(pchCommand, COMMAND_SIZE);
-            return std::string(pchCommand, cmdLen);
-        }
 };
 
 /** nServices flags */
