@@ -209,10 +209,7 @@ public:
             }
             return rec;
         }
-        else
-        {
-            return 0;
-        }
+        return 0;
     }
 
     QString describe(TransactionRecord *rec, int unit)
@@ -225,7 +222,7 @@ public:
                 return TransactionDesc::toHTML(wallet, mi->second, rec, unit);
             }
         }
-        return QString("");
+        return QString();
     }
 };
 
@@ -330,10 +327,7 @@ QString TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
     {
         return GUIUtil::dateTimeStr(wtx->time);
     }
-    else
-    {
-        return QString();
-    }
+    return QString();
 }
 
 /* Look up address in address book, if found return label (address)
@@ -345,11 +339,11 @@ QString TransactionTableModel::lookupAddress(const std::string &address, bool to
     QString description;
     if(!label.isEmpty())
     {
-        description += label + QString(" ");
+        description += label;
     }
     if(label.isEmpty() || tooltip)
     {
-        description += QString("(") + QString::fromStdString(address) + QString(")");
+        description += QString(" (") + QString::fromStdString(address) + QString(")");
     }
     return description;
 }
@@ -389,7 +383,6 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     default:
         return QIcon(":/icons/tx_inout");
     }
-    return QVariant();
 }
 
 QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const
@@ -641,10 +634,7 @@ QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex 
     {
         return createIndex(row, column, priv->index(row));
     }
-    else
-    {
-        return QModelIndex();
-    }
+    return QModelIndex();
 }
 
 void TransactionTableModel::updateDisplayUnit()
