@@ -161,6 +161,13 @@ int static secp256k1_num_cmp(const secp256k1_num_t *a, const secp256k1_num_t *b)
     return mpn_cmp(a->data, b->data, a->limbs);
 }
 
+int static secp256k1_num_eq(const secp256k1_num_t *a, const secp256k1_num_t *b) {
+    if (a->limbs > b->limbs) return 0;
+    if (a->limbs < b->limbs) return 0;
+    if ((a->neg && !secp256k1_num_is_zero(a)) != (b->neg && !secp256k1_num_is_zero(b))) return 0;
+    return mpn_cmp(a->data, b->data, a->limbs) == 0;
+}
+
 void static secp256k1_num_subadd(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b, int bneg) {
     if (!(b->neg ^ bneg ^ a->neg)) { // a and b have the same sign
         r->neg = a->neg;

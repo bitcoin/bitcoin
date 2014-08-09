@@ -45,6 +45,9 @@ void static secp256k1_num_mod_mul(secp256k1_num_t *r, const secp256k1_num_t *a, 
 /** Compare the absolute value of two numbers. */
 int  static secp256k1_num_cmp(const secp256k1_num_t *a, const secp256k1_num_t *b);
 
+/** Test whether two number are equal (including sign). */
+int  static secp256k1_num_eq(const secp256k1_num_t *a, const secp256k1_num_t *b);
+
 /** Add two (signed) numbers. */
 void static secp256k1_num_add(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b);
 

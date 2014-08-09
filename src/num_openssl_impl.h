@@ -54,7 +54,11 @@ void static secp256k1_num_mod_mul(secp256k1_num_t *r, const secp256k1_num_t *a, 
 }
 
 int static secp256k1_num_cmp(const secp256k1_num_t *a, const secp256k1_num_t *b) {
-    return BN_cmp(&a->bn, &b->bn);
+    return BN_ucmp(&a->bn, &b->bn);
+}
+
+int static secp256k1_num_eq(const secp256k1_num_t *a, const secp256k1_num_t *b) {
+    return BN_cmp(&a->bn, &b->bn) == 0;
 }
 
 void static secp256k1_num_add(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
