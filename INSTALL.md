@@ -1,4 +1,6 @@
-Building Bitcoin
+####Building Bitcoin
+
+----
 
 See doc/build-*.md for instructions on building bitcoind,
 the intended-for-services, no-graphical-interface, reference
