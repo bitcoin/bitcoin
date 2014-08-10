@@ -17,7 +17,6 @@
 #include <boost/filesystem/path.hpp>
 #include <db_cxx.h>
 
-class CAddrMan;
 struct CBlockLocator;
 class CDiskBlockIndex;
 class COutPoint;
