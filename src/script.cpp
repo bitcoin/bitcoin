@@ -5,24 +5,14 @@
 
 #include "script.h"
 
-#include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
-#include "crypto/sha2.h"
 #include "core.h"
-#include "hash.h"
-#include "key.h"
 #include "keystore.h"
 #include "random.h"
-#include "sync.h"
-#include "uint256.h"
-#include "util.h"
 
-#include <boost/foreach.hpp>
-#include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 
 using namespace std;
-using namespace boost;
 
 typedef vector<unsigned char> valtype;
 static const valtype vchFalse(0);
