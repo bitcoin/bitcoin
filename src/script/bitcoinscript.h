@@ -3,9 +3,6 @@
 
 #include <vector>
 
-class CScript;
-class CTransaction;
-
 /** Script verification flags */
 enum
 {
@@ -32,6 +29,6 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
                                                          SCRIPT_VERIFY_STRICTENC |
                                                          SCRIPT_VERIFY_NULLDUMMY;
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
+bool VerifyScript(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& scriptPubKey, const std::vector<unsigned char>& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 
 #endif

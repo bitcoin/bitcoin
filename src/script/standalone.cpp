@@ -1,4 +1,6 @@
 #include "script.h"
+#include "version.h"
+#include "core.h"
 
 using namespace std;
 
@@ -27,6 +29,7 @@ bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubK
     return true;
 }
 
+// From util.cpp
 int LogPrintStr(const string&)
 {
     return 0;
@@ -43,3 +46,13 @@ int64_t GetTime()
 }
 
 
+
+bool VerifyScript(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& scriptPubKey, const std::vector<unsigned char>& txTo, unsigned int nIn, unsigned int flags, int nHashType)
+{
+    CTransaction tx;
+    CDataStream stream(txTo, SER_NETWORK, PROTOCOL_VERSION);
+    stream >> tx;
+    return VerifyScript(CScript(scriptSig.begin(),    scriptSig.end()),
+                        CScript(scriptPubKey.begin(), scriptPubKey.end()),
+                        tx, nIn, flags, nHashType);
+}
