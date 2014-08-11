@@ -30,6 +30,7 @@ endif
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
+LIBBITCOIN_SCRIPT=libbitcoin_script.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
@@ -41,8 +42,10 @@ noinst_LIBRARIES = \
   libbitcoin_common.a \
   libbitcoin_cli.a \
   libbitcoin_util.a \
+  libbitcoin_script.a \
   univalue/libbitcoin_univalue.a \
   crypto/libbitcoin_crypto.a
+
 if ENABLE_WALLET
 BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
 noinst_LIBRARIES += libbitcoin_wallet.a
@@ -203,8 +206,14 @@ libbitcoin_common_a_SOURCES = \
   keystore.cpp \
   netbase.cpp \
   protocol.cpp \
-  script.cpp \
+  scriptutils.cpp \
   $(BITCOIN_CORE_H)
+
+# script: implements the scripting language
+libbitcoin_script_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libbitcoin_script_a_SOURCES = \
+  script/script.cpp
+
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
@@ -240,6 +249,7 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 bitcoind_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_SCRIPT) \
   $(LIBBITCOIN_UNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
@@ -268,6 +278,7 @@ bitcoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
 bitcoin_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_SCRIPT) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
   $(BOOST_LIBS) \
@@ -287,6 +298,7 @@ bitcoin_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
 bitcoin_tx_LDADD = \
   $(LIBBITCOIN_UNIVALUE) \
   $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_SCRIPT) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 

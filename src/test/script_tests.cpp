@@ -2,15 +2,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "script.h"
-
 #include "data/script_invalid.json.h"
 #include "data/script_valid.json.h"
 
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
-#include "script.h"
+#include "scriptutils.h"
 #include "core_io.h"
 
 #include <fstream>

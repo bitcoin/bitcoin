@@ -16,7 +16,7 @@
 
 #include "chainparams.h"
 #include "key.h"
-#include "script.h"
+#include "scriptutils.h"
 
 #include <string>
 #include <vector>

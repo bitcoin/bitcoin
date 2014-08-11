@@ -3,7 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "script.h"
+#include "scriptutils.h"
 
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
