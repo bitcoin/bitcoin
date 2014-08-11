@@ -27,6 +27,7 @@ src/m4/ltoptions.m4
 src/m4/ltsugar.m4
 src/m4/ltversion.m4
 src/m4/lt~obsolete.m4
+src/.libs
 
 src/univalue/gen
 
@@ -49,6 +50,8 @@ src/qt/test/moc*.cpp
 *.patch
 .bitcoin
 *.a
+*.la
+*.lo
 *.pb.cc
 *.pb.h
 

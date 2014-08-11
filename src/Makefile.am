@@ -46,6 +46,8 @@ noinst_LIBRARIES = \
   univalue/libbitcoin_univalue.a \
   crypto/libbitcoin_crypto.a
 
+lib_LTLIBRARIES = libbitcoinscript.la
+
 if ENABLE_WALLET
 BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
 noinst_LIBRARIES += libbitcoin_wallet.a
@@ -214,6 +216,24 @@ libbitcoin_script_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_script_a_SOURCES = \
   script/script.cpp
 
+libbitcoinscript_la_CPPFLAGS = $(BITCOIN_INCLUDES)
+libbitcoinscript_la_LDFLAGS = -version-info 0:0:0
+libbitcoinscript_la_LIBADD = \
+  $(BOOST_LIBS) \
+  $(CRYPTO_LIBS)
+libbitcoinscript_la_SOURCES = \
+  script/standalone.cpp \
+  script/script.cpp \
+  crypto/sha1.cpp \
+  crypto/sha2.cpp \
+  crypto/ripemd160.cpp \
+  crypto/common.h \
+  crypto/sha2.h \
+  crypto/sha1.h \
+  crypto/ripemd160.h \
+  allocators.cpp \
+  key.cpp \
+  random.cpp
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
