@@ -124,6 +124,10 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 
     SendCoinsRecipient rv;
     rv.address = uri.path();
+    // Trim any following forward slash which may have been added by the OS
+    if (rv.address.endsWith("/")) {
+        rv.address.truncate(rv.address.length() - 1);
+    }
     rv.amount = 0;
 
 #if QT_VERSION < 0x050000
