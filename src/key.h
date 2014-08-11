@@ -14,6 +14,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <boost/variant.hpp>
+
 // secp256k1:
 // const unsigned int PRIVATE_KEY_SIZE = 279;
 // const unsigned int PUBLIC_KEY_SIZE  = 65;
@@ -37,6 +39,20 @@ public:
     CScriptID() : uint160(0) { }
     CScriptID(const uint160 &in) : uint160(in) { }
 };
+
+class CNoDestination {
+public:
+    friend bool operator==(const CNoDestination &a, const CNoDestination &b) { return true; }
+    friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
+};
+
+/** A txout script template with a specific destination. It is either:
+ *  * CNoDestination: no destination set
+ *  * CKeyID: TX_PUBKEYHASH destination
+ *  * CScriptID: TX_SCRIPTHASH destination
+ *  A CTxDestination is the internal data type encoded in a CBitcoinAddress
+ */
+typedef boost::variant<CNoDestination, CKeyID, CScriptID> CTxDestination;
 
 /** An encapsulated public key. */
 class CPubKey {
