@@ -4,7 +4,6 @@
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="quit">res/icons/quit.png</file>
         <file alias="send">res/icons/send.png</file>
-        <file alias="toolbar">res/icons/toolbar.png</file>
         <file alias="connect_0">res/icons/connect0_16.png</file>
         <file alias="connect_1">res/icons/connect1_16.png</file>
         <file alias="connect_2">res/icons/connect2_16.png</file>
@@ -24,7 +23,6 @@
         <file alias="editcopy">res/icons/editcopy.png</file>
         <file alias="add">res/icons/add.png</file>
         <file alias="bitcoin_testnet">res/icons/bitcoin_testnet.png</file>
-        <file alias="toolbar_testnet">res/icons/toolbar_testnet.png</file>
         <file alias="edit">res/icons/edit.png</file>
         <file alias="history">res/icons/history.png</file>
         <file alias="overview">res/icons/overview.png</file>
