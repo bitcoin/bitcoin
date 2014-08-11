@@ -479,12 +479,12 @@ void BitcoinGUI::createTrayIcon(bool fIsTestnet)
     if (!fIsTestnet)
     {
         trayIcon->setToolTip(tr("Bitcoin Core client"));
-        trayIcon->setIcon(QIcon(":/icons/toolbar"));
+        trayIcon->setIcon(QIcon(":/icons/bitcoin"));
     }
     else
     {
         trayIcon->setToolTip(tr("Bitcoin Core client") + " " + tr("[testnet]"));
-        trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
+        trayIcon->setIcon(QIcon(":/icons/bitcoin_testnet"));
     }
 
     trayIcon->show();
