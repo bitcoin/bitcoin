@@ -56,8 +56,8 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry)
         if (tx.IsCoinBase())
             in.pushKV("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));
         else {
-            in.pushKV("txid", txin.prevout.hash.GetHex());
-            in.pushKV("vout", (int64_t)txin.prevout.n);
+            in.pushKV("txid", txin.prevout.Hash().GetHex());
+            in.pushKV("vout", (int64_t)txin.prevout.Index());
             UniValue o(UniValue::VOBJ);
             o.pushKV("asm", txin.scriptSig.ToString());
             o.pushKV("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));

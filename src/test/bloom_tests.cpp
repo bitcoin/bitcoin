@@ -154,8 +154,9 @@ BOOST_AUTO_TEST_CASE(bloom_match)
     COutPoint prevOutPoint(uint256("0x90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b"), 0);
     {
         vector<unsigned char> data(32 + sizeof(unsigned int));
-        memcpy(&data[0], prevOutPoint.hash.begin(), 32);
-        memcpy(&data[32], &prevOutPoint.n, sizeof(unsigned int));
+        memcpy(&data[0], prevOutPoint.Hash().begin(), 32);
+        uint32_t n = prevOutPoint.Index();
+        memcpy(&data[32], &n, sizeof(unsigned int));
         filter.insert(data);
     }
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match manually serialized COutPoint");

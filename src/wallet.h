@@ -784,10 +784,10 @@ public:
         BOOST_FOREACH(const CTxIn& txin, vin)
         {
             // Transactions not sent by us: not trusted
-            const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
+            const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.Hash());
             if (parent == NULL)
                 return false;
-            const CTxOut& parentOut = parent->vout[txin.prevout.n];
+            const CTxOut& parentOut = parent->vout[txin.prevout.Index()];
             if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
                 return false;
         }

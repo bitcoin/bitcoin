@@ -93,8 +93,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vin.resize(1);
     // NOTE: OP_NOP is used to force 20 SigOps for the CHECKMULTISIG
     tx.vin[0].scriptSig = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
-    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
-    tx.vin[0].prevout.n = 0;
+    tx.vin[0].prevout.Set(txFirst[0]->GetHash(), 0);
     tx.vout.resize(1);
     tx.vout[0].nValue = 5000000000LL;
     for (unsigned int i = 0; i < 1001; ++i)
@@ -102,7 +101,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         tx.vout[0].nValue -= 1000000;
         hash = tx.GetHash();
         mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
-        tx.vin[0].prevout.hash = hash;
+        tx.vin[0].prevout.Set(hash, 0);
     }
     BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
@@ -115,14 +114,14 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     for (unsigned int i = 0; i < 18; ++i)
         tx.vin[0].scriptSig << vchData << OP_DROP;
     tx.vin[0].scriptSig << OP_1;
-    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].prevout.Set(txFirst[0]->GetHash(), 0);
     tx.vout[0].nValue = 5000000000LL;
     for (unsigned int i = 0; i < 128; ++i)
     {
         tx.vout[0].nValue -= 10000000;
         hash = tx.GetHash();
         mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
-        tx.vin[0].prevout.hash = hash;
+        tx.vin[0].prevout.Set(hash, 0);
     }
     BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
@@ -137,15 +136,14 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // child with higher priority than parent
     tx.vin[0].scriptSig = CScript() << OP_1;
-    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vin[0].prevout.Set(txFirst[1]->GetHash(), 0);
     tx.vout[0].nValue = 4900000000LL;
     hash = tx.GetHash();
     mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
-    tx.vin[0].prevout.hash = hash;
+    tx.vin[0].prevout.Set(hash, 0);
     tx.vin.resize(2);
     tx.vin[1].scriptSig = CScript() << OP_1;
-    tx.vin[1].prevout.hash = txFirst[0]->GetHash();
-    tx.vin[1].prevout.n = 0;
+    tx.vin[1].prevout.Set(txFirst[0]->GetHash(), 0);
     tx.vout[0].nValue = 5900000000LL;
     hash = tx.GetHash();
     mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
@@ -165,15 +163,14 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     mempool.clear();
 
     // invalid (pre-p2sh) txn in mempool
-    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
-    tx.vin[0].prevout.n = 0;
+    tx.vin[0].prevout.Set(txFirst[0]->GetHash(), 0);
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vout[0].nValue = 4900000000LL;
     script = CScript() << OP_0;
     tx.vout[0].scriptPubKey.SetDestination(script.GetID());
     hash = tx.GetHash();
     mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
-    tx.vin[0].prevout.hash = hash;
+    tx.vin[0].prevout.Set(hash, 0);
     tx.vin[0].scriptSig = CScript() << (std::vector<unsigned char>)script;
     tx.vout[0].nValue -= 1000000;
     hash = tx.GetHash();
@@ -183,7 +180,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     mempool.clear();
 
     // double spend txn pair in mempool
-    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].prevout.Set(txFirst[0]->GetHash(), 0);
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vout[0].nValue = 4900000000LL;
     tx.vout[0].scriptPubKey = CScript() << OP_1;
@@ -210,7 +207,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     SetMockTime(chainActive.Tip()->GetMedianTimePast()+1);
 
     // height locked
-    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].prevout.Set(txFirst[0]->GetHash(), 0);
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vin[0].nSequence = 0;
     tx.vout[0].nValue = 4900000000LL;
@@ -222,8 +219,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // time locked
     tx2.vin.resize(1);
-    tx2.vin[0].prevout.hash = txFirst[1]->GetHash();
-    tx2.vin[0].prevout.n = 0;
+    tx2.vin[0].prevout.Set(txFirst[1]->GetHash(), 0);
     tx2.vin[0].scriptSig = CScript() << OP_1;
     tx2.vin[0].nSequence = 0;
     tx2.vout.resize(1);

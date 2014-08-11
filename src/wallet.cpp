@@ -653,8 +653,8 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
     // recomputed, also:
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
-        if (mapWallet.count(txin.prevout.hash))
-            mapWallet[txin.prevout.hash].MarkDirty();
+        if (mapWallet.count(txin.prevout.Hash()))
+            mapWallet[txin.prevout.Hash()].MarkDirty();
     }
 }
 
@@ -675,12 +675,12 @@ isminetype CWallet::IsMine(const CTxIn &txin) const
 {
     {
         LOCK(cs_wallet);
-        map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.hash);
+        map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.Hash());
         if (mi != mapWallet.end())
         {
             const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.vout.size())
-                return IsMine(prev.vout[txin.prevout.n]);
+            if (txin.prevout.Index() < prev.vout.size())
+                return IsMine(prev.vout[txin.prevout.Index()]);
         }
     }
     return ISMINE_NO;
@@ -690,13 +690,13 @@ int64_t CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 {
     {
         LOCK(cs_wallet);
-        map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.hash);
+        map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.Hash());
         if (mi != mapWallet.end())
         {
             const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.vout.size())
-                if (IsMine(prev.vout[txin.prevout.n]) & filter)
-                    return prev.vout[txin.prevout.n].nValue;
+            if (txin.prevout.Index() < prev.vout.size())
+                if (IsMine(prev.vout[txin.prevout.Index()]) & filter)
+                    return prev.vout[txin.prevout.Index()].nValue;
         }
     }
     return 0;
@@ -1501,7 +1501,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
             set<CWalletTx*> setCoins;
             BOOST_FOREACH(const CTxIn& txin, wtxNew.vin)
             {
-                CWalletTx &coin = mapWallet[txin.prevout.hash];
+                CWalletTx &coin = mapWallet[txin.prevout.Hash()];
                 coin.BindWallet(this);
                 NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
             }
@@ -1887,7 +1887,7 @@ set< set<CTxDestination> > CWallet::GetAddressGroupings()
                 CTxDestination address;
                 if(!IsMine(txin)) /* If this input isn't mine, ignore it */
                     continue;
-                if(!ExtractDestination(mapWallet[txin.prevout.hash].vout[txin.prevout.n].scriptPubKey, address))
+                if(!ExtractDestination(mapWallet[txin.prevout.Hash()].vout[txin.prevout.Index()].scriptPubKey, address))
                     continue;
                 grouping.insert(address);
                 any_mine = true;

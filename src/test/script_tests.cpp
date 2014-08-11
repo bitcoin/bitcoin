@@ -177,8 +177,7 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     CMutableTransaction txTo12;
     txTo12.vin.resize(1);
     txTo12.vout.resize(1);
-    txTo12.vin[0].prevout.n = 0;
-    txTo12.vin[0].prevout.hash = txFrom12.GetHash();
+    txTo12.vin[0].prevout.Set(txFrom12.GetHash(), 0);
     txTo12.vout[0].nValue = 1;
 
     CScript goodsig1 = sign_multisig(scriptPubKey12, key1, txTo12);
@@ -211,8 +210,7 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     CMutableTransaction txTo23;
     txTo23.vin.resize(1);
     txTo23.vout.resize(1);
-    txTo23.vin[0].prevout.n = 0;
-    txTo23.vin[0].prevout.hash = txFrom23.GetHash();
+    txTo23.vin[0].prevout.Set(txFrom23.GetHash(), 0);
     txTo23.vout[0].nValue = 1;
 
     std::vector<CKey> keys;
@@ -282,8 +280,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     CMutableTransaction txTo;
     txTo.vin.resize(1);
     txTo.vout.resize(1);
-    txTo.vin[0].prevout.n = 0;
-    txTo.vin[0].prevout.hash = txFrom.GetHash();
+    txTo.vin[0].prevout.Set(txFrom.GetHash(), 0);
     CScript& scriptSig = txTo.vin[0].scriptSig;
     txTo.vout[0].nValue = 1;
 

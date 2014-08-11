@@ -62,8 +62,8 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
         if (tx.IsCoinBase())
             in.push_back(Pair("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
         else {
-            in.push_back(Pair("txid", txin.prevout.hash.GetHex()));
-            in.push_back(Pair("vout", (int64_t)txin.prevout.n));
+            in.push_back(Pair("txid", txin.prevout.Hash().GetHex()));
+            in.push_back(Pair("vout", (int64_t)txin.prevout.Index()));
             Object o;
             o.push_back(Pair("asm", txin.scriptSig.ToString()));
             o.push_back(Pair("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
@@ -563,7 +563,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
         BOOST_FOREACH(const CTxIn& txin, mergedTx.vin) {
-            const uint256& prevHash = txin.prevout.hash;
+            const uint256& prevHash = txin.prevout.Hash();
             CCoins coins;
             view.GetCoins(prevHash, coins); // this is certainly allowed to fail
         }
@@ -670,11 +670,11 @@ Value signrawtransaction(const Array& params, bool fHelp)
     for (unsigned int i = 0; i < mergedTx.vin.size(); i++) {
         CTxIn& txin = mergedTx.vin[i];
         CCoins coins;
-        if (!view.GetCoins(txin.prevout.hash, coins) || !coins.IsAvailable(txin.prevout.n)) {
+        if (!view.GetCoins(txin.prevout.Hash(), coins) || !coins.IsAvailable(txin.prevout.Index())) {
             fComplete = false;
             continue;
         }
-        const CScript& prevPubKey = coins.vout[txin.prevout.n].scriptPubKey;
+        const CScript& prevPubKey = coins.vout[txin.prevout.Index()].scriptPubKey;
 
         txin.scriptSig.clear();
         // Only sign SIGHASH_SINGLE if there's a corresponding output:

@@ -64,8 +64,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     {
         txTo[i].vin.resize(1);
         txTo[i].vout.resize(1);
-        txTo[i].vin[0].prevout.n = i;
-        txTo[i].vin[0].prevout.hash = txFrom.GetHash();
+        txTo[i].vin[0].prevout.Set(txFrom.GetHash(), i);
         txTo[i].vout[0].nValue = 1;
     }
 
@@ -279,8 +278,7 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
     {
         txTo[i].vin.resize(1);
         txTo[i].vout.resize(1);
-        txTo[i].vin[0].prevout.n = i;
-        txTo[i].vin[0].prevout.hash = txFrom.GetHash();
+        txTo[i].vin[0].prevout.Set(txFrom.GetHash(), i);
         txTo[i].vout[0].nValue = 1;
     }
 

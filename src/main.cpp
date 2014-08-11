@@ -482,7 +482,7 @@ bool AddOrphanTx(const CTransaction& tx)
 
     mapOrphanTransactions[hash] = tx;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        mapOrphanTransactionsByPrev[txin.prevout.hash].insert(hash);
+        mapOrphanTransactionsByPrev[txin.prevout.Hash()].insert(hash);
 
     LogPrint("mempool", "stored orphan tx %s (mapsz %u)\n", hash.ToString(),
         mapOrphanTransactions.size());
@@ -496,9 +496,9 @@ void static EraseOrphanTx(uint256 hash)
     const CTransaction& tx = mapOrphanTransactions[hash];
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
-        mapOrphanTransactionsByPrev[txin.prevout.hash].erase(hash);
-        if (mapOrphanTransactionsByPrev[txin.prevout.hash].empty())
-            mapOrphanTransactionsByPrev.erase(txin.prevout.hash);
+        mapOrphanTransactionsByPrev[txin.prevout.Hash()].erase(hash);
+        if (mapOrphanTransactionsByPrev[txin.prevout.Hash()].empty())
+            mapOrphanTransactionsByPrev.erase(txin.prevout.Hash());
     }
     mapOrphanTransactions.erase(hash);
 }
@@ -931,7 +931,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // Note that this does not check for the presence of actual outputs (see the next check for that),
         // only helps filling in pfMissingInputs (to determine missing vs spent).
         BOOST_FOREACH(const CTxIn txin, tx.vin) {
-            if (!view.HaveCoins(txin.prevout.hash)) {
+            if (!view.HaveCoins(txin.prevout.Hash())) {
                 if (pfMissingInputs)
                     *pfMissingInputs = true;
                 return false;
@@ -1435,7 +1435,7 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
     // mark inputs spent
     if (!tx.IsCoinBase()) {
         BOOST_FOREACH(const CTxIn &txin, tx.vin) {
-            CCoins &coins = inputs.GetCoins(txin.prevout.hash);
+            CCoins &coins = inputs.GetCoins(txin.prevout.Hash());
             CTxInUndo undo;
             ret = coins.Spend(txin.prevout, undo);
             assert(ret);
@@ -1481,7 +1481,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
         for (unsigned int i = 0; i < tx.vin.size(); i++)
         {
             const COutPoint &prevout = tx.vin[i].prevout;
-            const CCoins &coins = inputs.GetCoins(prevout.hash);
+            const CCoins &coins = inputs.GetCoins(prevout.Hash());
 
             // If prev is coinbase, check that it's matured
             if (coins.IsCoinBase()) {
@@ -1492,8 +1492,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
             }
 
             // Check for negative or overflow input values
-            nValueIn += coins.vout[prevout.n].nValue;
-            if (!MoneyRange(coins.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+            nValueIn += coins.vout[prevout.Index()].nValue;
+            if (!MoneyRange(coins.vout[prevout.Index()].nValue) || !MoneyRange(nValueIn))
                 return state.DoS(100, error("CheckInputs() : txin values out of range"),
                                  REJECT_INVALID, "bad-txns-inputvalues-outofrange");
 
@@ -1523,7 +1523,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
         if (fScriptChecks) {
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
                 const COutPoint &prevout = tx.vin[i].prevout;
-                const CCoins &coins = inputs.GetCoins(prevout.hash);
+                const CCoins &coins = inputs.GetCoins(prevout.Hash());
 
                 // Verify signature
                 CScriptCheck check(coins, tx, i, flags, 0);
@@ -1614,7 +1614,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
                 const COutPoint &out = tx.vin[j].prevout;
                 const CTxInUndo &undo = txundo.vprevout[j];
                 CCoins coins;
-                view.GetCoins(out.hash, coins); // this can fail if the prevout was already entirely spent
+                view.GetCoins(out.Hash(), coins); // this can fail if the prevout was already entirely spent
                 if (undo.nHeight != 0) {
                     // undo data contains height: this is the last output of the prevout tx being spent
                     if (!coins.IsPruned())
@@ -1627,12 +1627,12 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
                     if (coins.IsPruned())
                         fClean = fClean && error("DisconnectBlock() : undo data adding output to missing transaction");
                 }
-                if (coins.IsAvailable(out.n))
+                if (coins.IsAvailable(out.Index()))
                     fClean = fClean && error("DisconnectBlock() : undo data overwriting existing output");
-                if (coins.vout.size() < out.n+1)
-                    coins.vout.resize(out.n+1);
-                coins.vout[out.n] = undo.txout;
-                if (!view.SetCoins(out.hash, coins))
+                if (coins.vout.size() < out.Index()+1)
+                    coins.vout.resize(out.Index()+1);
+                coins.vout[out.Index()] = undo.txout;
+                if (!view.SetCoins(out.Hash(), coins))
                     return error("DisconnectBlock() : cannot restore coin inputs");
             }
         }

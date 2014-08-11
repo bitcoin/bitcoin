@@ -21,15 +21,20 @@ inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MO
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
-public:
+protected:
     uint256 hash;
     unsigned int n;
 
+public:
     COutPoint() { SetNull(); }
-    COutPoint(uint256 hashIn, unsigned int nIn) { hash = hashIn; n = nIn; }
+    COutPoint(uint256 hashIn, unsigned int nIn) { Set(hashIn, nIn); }
     IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
     void SetNull() { hash = 0; n = (unsigned int) -1; }
     bool IsNull() const { return (hash == 0 && n == (unsigned int) -1); }
+
+    void Set(uint256 hashIn, unsigned int nIn) { hash = hashIn; n = nIn; }
+    uint256 Hash() const { return hash; }
+    unsigned int Index() const { return n; }
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
     {

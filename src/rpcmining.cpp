@@ -480,8 +480,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
         Array deps;
         BOOST_FOREACH (const CTxIn &in, tx.vin)
         {
-            if (setTxIndex.count(in.prevout.hash))
-                deps.push_back(setTxIndex[in.prevout.hash]);
+            if (setTxIndex.count(in.prevout.Hash()))
+                deps.push_back(setTxIndex[in.prevout.Hash()]);
         }
         entry.push_back(Pair("depends", deps));
 

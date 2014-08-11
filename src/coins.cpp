@@ -30,12 +30,12 @@ void CCoins::CalcMaskSize(unsigned int &nBytes, unsigned int &nNonzeroBytes) con
 }
 
 bool CCoins::Spend(const COutPoint &out, CTxInUndo &undo) {
-    if (out.n >= vout.size())
+    if (out.Index() >= vout.size())
         return false;
-    if (vout[out.n].IsNull())
+    if (vout[out.Index()].IsNull())
         return false;
-    undo = CTxInUndo(vout[out.n]);
-    vout[out.n].SetNull();
+    undo = CTxInUndo(vout[out.Index()]);
+    vout[out.Index()].SetNull();
     Cleanup();
     if (vout.size() == 0) {
         undo.nHeight = nHeight;
@@ -150,9 +150,9 @@ unsigned int CCoinsViewCache::GetCacheSize() {
 
 const CTxOut &CCoinsViewCache::GetOutputFor(const CTxIn& input)
 {
-    const CCoins &coins = GetCoins(input.prevout.hash);
-    assert(coins.IsAvailable(input.prevout.n));
-    return coins.vout[input.prevout.n];
+    const CCoins &coins = GetCoins(input.prevout.Hash());
+    assert(coins.IsAvailable(input.prevout.Index()));
+    return coins.vout[input.prevout.Index()];
 }
 
 int64_t CCoinsViewCache::GetValueIn(const CTransaction& tx)
@@ -173,15 +173,15 @@ bool CCoinsViewCache::HaveInputs(const CTransaction& tx)
         // first check whether information about the prevout hash is available
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
             const COutPoint &prevout = tx.vin[i].prevout;
-            if (!HaveCoins(prevout.hash))
+            if (!HaveCoins(prevout.Hash()))
                 return false;
         }
 
         // then check whether the actual outputs are available
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
             const COutPoint &prevout = tx.vin[i].prevout;
-            const CCoins &coins = GetCoins(prevout.hash);
-            if (!coins.IsAvailable(prevout.n))
+            const CCoins &coins = GetCoins(prevout.Hash());
+            if (!coins.IsAvailable(prevout.Index()))
                 return false;
         }
     }
@@ -195,10 +195,10 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight)
     double dResult = 0.0;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
-        const CCoins &coins = GetCoins(txin.prevout.hash);
-        if (!coins.IsAvailable(txin.prevout.n)) continue;
+        const CCoins &coins = GetCoins(txin.prevout.Hash());
+        if (!coins.IsAvailable(txin.prevout.Index())) continue;
         if (coins.nHeight < nHeight) {
-            dResult += coins.vout[txin.prevout.n].nValue * (nHeight-coins.nHeight);
+            dResult += coins.vout[txin.prevout.Index()].nValue * (nHeight-coins.nHeight);
         }
     }
     return tx.ComputePriority(dResult);
