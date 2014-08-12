@@ -75,23 +75,35 @@ CCoinsKeyHasher::CCoinsKeyHasher() : salt(GetRandHash()) {}
 
 CCoinsViewCache::CCoinsViewCache(CCoinsView &baseIn, bool fDummy) : CCoinsViewBacked(baseIn), hashBlock(0) { }
 
-CCoins *CCoinsViewCache::FetchCoins(const uint256 &txid) {
-    CCoinsMap::iterator it = cacheCoins.find(txid);
-    if (it != cacheCoins.end())
+const CCoins *CCoinsViewCache::FetchCoins(const uint256 &txid) {
+    CCoinsMap::const_iterator it;
+    // First look up the coins in the write cache
+    it = cacheWrite.find(txid);
+    if (it != cacheWrite.end())
     {
         stats.positive_hits++;
         return &it->second;
     }
+
+    // Otherwise look up the coins in the read cache
+    it = cacheRead.find(txid);
+    if (it != cacheRead.end())
+    {
+        stats.positive_hits++;
+        return &it->second;
+    }
+
+    // If everything missed, fall back to base
     CCoins tmp;
-    if (!base->GetCoins(txid,tmp))
+    if (!base->GetCoins(txid, tmp))
     {
         stats.negative_misses++;
         return 0;
     }
     stats.positive_misses++;
-    CCoinsMap::iterator ret = cacheCoins.insert(it, std::make_pair(txid, CCoins()));
-    tmp.swap(ret->second);
-    return &ret->second;
+    CCoinsMap::iterator itnew = cacheRead.insert(it, std::make_pair(txid, CCoins()));
+    tmp.swap(itnew->second);
+    return &itnew->second;
 }
 
 bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) {
@@ -110,13 +122,43 @@ const CCoins &CCoinsViewCache::GetCoins(const uint256 &txid) {
 }
 
 CCoins &CCoinsViewCache::ModifyCoins(const uint256 &txid) {
-    CCoins *pcoins = FetchCoins(txid);
-    assert(pcoins);
-    return *pcoins;
+    // If already in the write cache, return a direct reference
+    CCoinsMap::iterator itw = cacheWrite.find(txid);
+    if (itw != cacheWrite.end())
+    {
+        stats.positive_hits++;
+        return itw->second;
+    }
+
+    // If in the read cache, swap the entry to the write cache,
+    // evict it from the read cache
+    CCoinsMap::iterator itr = cacheRead.find(txid);
+    if (itr != cacheRead.end())
+    {
+        stats.positive_hits++;
+        itw = cacheWrite.insert(itw, std::make_pair(txid, CCoins()));
+        itw->second.swap(itr->second);
+        cacheRead.erase(itr);
+        return itw->second;
+    }
+
+    // If everything missed, fall back to base. Load the entry
+    // directly into the write cache. Croak if the coins do not
+    // exist.
+    stats.positive_misses++;
+    CCoins tmp;
+    bool have = base->GetCoins(txid, tmp);
+    assert(have);
+    itw = cacheWrite.insert(itw, std::make_pair(txid, CCoins()));
+    tmp.swap(itw->second);
+    return itw->second;
 }
 
 bool CCoinsViewCache::SetCoins(const uint256 &txid, const CCoins &coins) {
-    cacheCoins[txid] = coins;
+    // Evict from read cache (if present there), then write to write cache
+    // (overwriting anything already there)
+    cacheRead.erase(txid);
+    cacheWrite[txid] = coins;
     return true;
 }
 
@@ -141,24 +183,43 @@ bool CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
 }
 
 bool CCoinsViewCache::BatchWrite(const CCoinsMap &mapCoins, const uint256 &hashBlockIn) {
+    LogPrint("coinscache", "%p: BatchWrite before %i in read cache, %i in write cache\n", this, cacheRead.size(), cacheWrite.size());
     for (CCoinsMap::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
-        cacheCoins[it->first] = it->second;
+    {
+        cacheRead.erase(it->first);
+        cacheWrite[it->first] = it->second;
+    }
     hashBlock = hashBlockIn;
+    LogPrint("coinscache", "%p: BatchWrite after %i in read cache, %i in write cache\n", this, cacheRead.size(), cacheWrite.size());
     return true;
 }
 
-bool CCoinsViewCache::Flush() {
-    bool fOk = base->BatchWrite(cacheCoins, hashBlock);
-    if (fOk)
+bool CCoinsViewCache::Flush(unsigned int flags) {
+    LogPrint("coinscache", "%p: Flush before (%i) %i in read cache, %i in write cache\n", this, flags, cacheRead.size(), cacheWrite.size());
+    bool fOk = true;
+    if (flags & WRITE)
     {
-        stats.writes += cacheCoins.size();
-        cacheCoins.clear();
+        stats.writes += cacheWrite.size();
+        fOk = base->BatchWrite(cacheWrite, hashBlock);
+        // Flush write cache only if batch write succeeded, but always flush read cache
+        if (fOk)
+            cacheWrite.clear();
     }
+    if (flags & READ)
+    {
+        cacheRead.clear();
+    }
+    LogPrint("coinscache", "%p: Flush after %i in read cache, %i in write cache\n", this, cacheRead.size(), cacheWrite.size());
     return fOk;
 }
 
-unsigned int CCoinsViewCache::GetCacheSize() {
-    return cacheCoins.size();
+unsigned int CCoinsViewCache::GetCacheSize(unsigned int flags) {
+    unsigned int total = 0;
+    if (flags & WRITE)
+        total += cacheWrite.size();
+    if (flags & READ)
+        total += cacheRead.size();
+    return total;
 }
 
 const CTxOut &CCoinsViewCache::GetOutputFor(const CTxIn& input)

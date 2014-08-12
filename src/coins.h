@@ -336,9 +336,18 @@ class CCoinsViewCache : public CCoinsViewBacked
 {
 protected:
     uint256 hashBlock;
-    CCoinsMap cacheCoins;
     CCoinsCacheStats stats;
+    // Invariant: an entry should be in either the read cache or the write cache, or neither
+    CCoinsMap cacheRead;
+    CCoinsMap cacheWrite;
+
 public:
+    enum CacheFlags
+    {
+        READ = 1,
+        WRITE = 2,
+        READ_AND_WRITE = READ|WRITE
+    };
     CCoinsViewCache(CCoinsView &baseIn, bool fDummy = false);
 
     // Standard CCoinsView methods
@@ -357,10 +366,10 @@ public:
 
     // Push the modifications applied to this cache to its base.
     // Failure to call this method before destruction will cause the changes to be forgotten.
-    bool Flush();
+    bool Flush(unsigned int flags = READ_AND_WRITE);
 
     // Calculate the size of the cache (in number of transactions)
-    unsigned int GetCacheSize();
+    unsigned int GetCacheSize(unsigned int flags = READ_AND_WRITE);
 
     /** Amount of bitcoins coming in to a transaction
         Note that lightweight clients may not know anything besides the hash of previous transactions,
@@ -382,7 +391,7 @@ public:
     const CCoinsCacheStats &GetCacheStats() { return stats; }
 
 private:
-    CCoins *FetchCoins(const uint256 &txid);
+    const CCoins *FetchCoins(const uint256 &txid);
 };
 
 #endif
