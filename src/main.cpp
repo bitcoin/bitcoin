@@ -1866,17 +1866,23 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 // Update the on-disk chain state.
 bool static WriteChainState(CValidationState &state) {
     static int64_t nLastWrite = 0;
-    if (pcoinsTip->GetCacheSize() > nCoinCacheSize || (!IsInitialBlockDownload() && GetTimeMicros() > nLastWrite + CHAINSTATE_WRITE_PERIOD*1000000)) {
+    unsigned int flush_flags = 0;
+    if (pcoinsTip->GetCacheSize() > nCoinCacheSize)
+        flush_flags |= CCoinsViewCache::READ_AND_WRITE;
+    if (!IsInitialBlockDownload() && GetTimeMicros() > nLastWrite + CHAINSTATE_WRITE_PERIOD*1000000)
+        flush_flags |= CCoinsViewCache::WRITE;
+
+    if (flush_flags) {
         // Typical CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
         // an overestimation, as most will delete an existing entry or
         // overwrite one. Still, use a conservative safety factor of 2.
-        if (!CheckDiskSpace(100 * 2 * 2 * pcoinsTip->GetCacheSize()))
+        if (!CheckDiskSpace(100 * 2 * 2 * pcoinsTip->GetCacheSize(CCoinsViewCache::WRITE)))
             return state.Error("out of disk space");
         FlushBlockFile();
         pblocktree->Sync();
-        if (!pcoinsTip->Flush())
+        if (!pcoinsTip->Flush(flush_flags))
             return state.Abort(_("Failed to write to coin database"));
         nLastWrite = GetTimeMicros();
     }
