@@ -69,6 +69,7 @@ enum BindFlags {
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 CClientUIInterface uiInterface;
+const int OUTBOUND_CONNECTIONS_UPPER_LIMIT = 8;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -299,6 +300,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-forcednsseed", strprintf(_("Always query for peer addresses via DNS lookup (default: %u)"), 0));
     strUsage += HelpMessageOpt("-listen", _("Accept connections from outside (default: 1 if no -proxy or -connect)"));
     strUsage += HelpMessageOpt("-maxconnections=<n>", strprintf(_("Maintain at most <n> connections to peers (default: %u)"), 125));
+    strUsage += HelpMessageOpt("-maxoutbound=<n>", strprintf(_("Establish at most <n> _outbound_ connections to peers (default: %u)"), 8));
     strUsage += HelpMessageOpt("-maxreceivebuffer=<n>", strprintf(_("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"), 5000));
     strUsage += HelpMessageOpt("-maxsendbuffer=<n>", strprintf(_("Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"), 1000));
     strUsage += HelpMessageOpt("-onion=<ip:port>", strprintf(_("Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)"), "-proxy"));
@@ -676,6 +678,17 @@ bool AppInit2(boost::thread_group& threadGroup)
         return InitError(_("Not enough file descriptors available."));
     if (nFD - MIN_CORE_FILEDESCRIPTORS < nMaxConnections)
         nMaxConnections = nFD - MIN_CORE_FILEDESCRIPTORS;
+
+    // Change the default number of outbound connections.  Setting it to more
+    // than 8 is a bad idea. The number of peers that are able to accept
+    // incoming connections is about 8,000 ('servers'). The number of peers that
+    // are behind NAT is about 100,000. If every NATed peer has 8 outgoing
+    // connections then each server will have 100+8 connections in average.
+    // This is close to maximum of 125. Increasing '-maxoutbound' to e.g. 10 at
+    // each client will result in that Bitcoin users will have problems
+    // connecting to the Bitcoin network.
+    nMaxOutboundConnections = GetArg("-maxoutbound", 8);
+    nMaxOutboundConnections = std::max(std::min(OUTBOUND_CONNECTIONS_UPPER_LIMIT,std::min(nMaxOutboundConnections, nMaxConnections)),0);
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 

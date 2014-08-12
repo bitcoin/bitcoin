@@ -140,6 +140,7 @@ extern uint64_t nLocalServices;
 extern uint64_t nLocalHostNonce;
 extern CAddrMan addrman;
 extern int nMaxConnections;
+extern int nMaxOutboundConnections;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
