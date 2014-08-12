@@ -17,7 +17,7 @@
 
 #ifndef WIN32
 // for posix_fallocate
-#ifdef __linux_
+#ifdef __linux__
 
 #ifdef _POSIX_C_SOURCE
 #undef _POSIX_C_SOURCE
@@ -26,7 +26,7 @@
 #define _POSIX_C_SOURCE 200112L
 #include <sys/prctl.h>
 
-#endif
+#endif // __linux__
 
 #include <algorithm>
 #include <fcntl.h>
