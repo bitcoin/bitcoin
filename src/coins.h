@@ -326,10 +326,13 @@ class CCoinsViewCache : public CCoinsViewBacked
 {
 protected:
     uint256 hashBlock;
-    CCoinsMap cacheCoins;
+    // Invariant: an entry should be in either the read cache or the write cache, or neither
+    CCoinsMap cacheRead;
+    CCoinsMap cacheWrite;
 
 public:
     CCoinsViewCache(CCoinsView &baseIn, bool fDummy = false);
+    ~CCoinsViewCache();
 
     // Standard CCoinsView methods
     bool GetCoins(const uint256 &txid, CCoins &coins);
@@ -342,7 +345,8 @@ public:
     // Return a modifiable reference to a CCoins. Check HaveCoins first.
     // Many methods explicitly require a CCoinsViewCache because of this method, to reduce
     // copying.
-    CCoins &GetCoins(const uint256 &txid);
+    CCoins &ModifyCoins(const uint256 &txid);
+    const CCoins &GetCoins(const uint256 &txid);
 
     // Push the modifications applied to this cache to its base.
     // Failure to call this method before destruction will cause the changes to be forgotten.
@@ -369,7 +373,7 @@ public:
     const CTxOut &GetOutputFor(const CTxIn& input);
 
 private:
-    CCoinsMap::iterator FetchCoins(const uint256 &txid);
+    bool FetchCoins(const uint256 &txid, CCoinsMap::const_iterator &it);
 };
 
 #endif
