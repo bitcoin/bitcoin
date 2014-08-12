@@ -1,97 +1,98 @@
 ---
-name: "bitcoin"
+name: "bitcoin-win-0.10"
+enable_cache: true
 suites:
 - "precise"
 architectures:
 - "amd64"
-packages:
-- "mingw-w64"
-- "g++-mingw-w64"
+packages: 
+- "g++"
 - "git-core"
-- "unzip"
-- "nsis"
-- "faketime"
+- "pkg-config"
 - "autoconf2.13"
 - "libtool"
 - "automake"
-- "pkg-config"
+- "faketime"
 - "bsdmainutils"
-
+- "mingw-w64"
+- "g++-mingw-w64"
+- "nsis"
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
-files:
-- "qt-win32-5.2.0-gitian-r3.zip"
-- "qt-win64-5.2.0-gitian-r3.zip"
-- "boost-win32-1.55.0-gitian-r6.zip"
-- "boost-win64-1.55.0-gitian-r6.zip"
-- "bitcoin-deps-win32-gitian-r13.zip"
-- "bitcoin-deps-win64-gitian-r13.zip"
-- "protobuf-win32-2.5.0-gitian-r4.zip"
-- "protobuf-win64-2.5.0-gitian-r4.zip"
+files: []
 script: |
-  # Defines
-  export TZ=UTC
-  INDIR=$HOME/build
-  OPTFLAGS='-O2'
-  TEMPDIR="$HOME/tempdir"
-  NEEDDIST=1
-  # Qt: workaround for determinism in resource ordering
-  #  Qt5's rcc uses a QHash to store the files for the resource.
-  #  A security fix in QHash makes the ordering of keys to be different on every run
-  #  (https://qt.gitorious.org/qt/qtbase/commit/c01eaa438200edc9a3bbcd8ae1e8ded058bea268).
-  #  This is good in general but qrc shouldn't be doing a traversal over a randomized container.
-  #  The thorough solution would be to use QMap instead of QHash, but this requires patching Qt.
-  #  For now luckily there is a test mode that forces a fixed seed.
+  WRAP_DIR=$HOME/wrapped
+  HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
+  CONFIGFLAGS="--enable-upnp-default"
+  FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip"
+  FAKETIME_PROGS="date makensis"
+
   export QT_RCC_TEST=1
-  for BITS in 32 64; do # for architectures
-    #
-    STAGING=$HOME/staging${BITS}
-    BUILDDIR=$HOME/build${BITS}
-    BINDIR=$OUTDIR/$BITS
-    if [ "x$BITS" = "x32" ]; then
-      HOST=i686-w64-mingw32
-    else
-      HOST=x86_64-w64-mingw32
-    fi
-    export PATH=$STAGING/host/bin:$PATH
-    mkdir -p $STAGING $BUILDDIR $BINDIR
-    #
-    cd $STAGING
-    unzip $INDIR/qt-win${BITS}-5.2.0-gitian-r3.zip
-    unzip $INDIR/boost-win${BITS}-1.55.0-gitian-r6.zip
-    unzip $INDIR/bitcoin-deps-win${BITS}-gitian-r13.zip
-    unzip $INDIR/protobuf-win${BITS}-2.5.0-gitian-r4.zip
-    if [ "x$NEEDDIST" = "x1" ]; then
-      # Make source code archive which is architecture independent so it only needs to be done once
-      cd $HOME/build/bitcoin
-      ./autogen.sh
-      ./configure --bindir=$OUTDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}"
-      make dist
-      DISTNAME=`echo bitcoin-*.tar.gz`
-      NEEDDIST=0
-    fi
-    # Build platform-dependent executables from source archive
-    cd $BUILDDIR
-    mkdir -p distsrc
-    cd distsrc
-    tar --strip-components=1 -xf $HOME/build/bitcoin/$DISTNAME
-    ./configure --enable-upnp-default --bindir=$BINDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}"
-    export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-    export FAKETIME=$REFERENCE_DATETIME
-    make $MAKEOPTS
+  export GZIP="-9n"
+  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  export TZ="UTC"
+  export BUILD_DIR=`pwd`
+  mkdir -p ${WRAP_DIR}
+  if test -n "$GBUILD_CACHE_ENABLED"; then
+    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
+    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+    mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+  fi
+
+  # Create global faketime wrappers
+  for prog in ${FAKETIME_PROGS}; do
+    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
+    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
+    echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${prog}
+    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    chmod +x ${WRAP_DIR}/${prog}
+  done
+
+  # Create per-host faketime wrappers
+  for i in $HOSTS; do
+    for prog in ${FAKETIME_HOST_PROGS}; do
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+        chmod +x ${WRAP_DIR}/${i}-${prog}
+    done
+  done
+  export PATH=${WRAP_DIR}:${PATH}
+
+  cd bitcoin
+  BASEPREFIX=`pwd`/depends
+  # Build dependencies for each host
+  for i in $HOSTS; do
+    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
+  done
+
+  # Create the release tarball using (arbitrarily) the first host
+  ./autogen.sh
+  ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
+  make dist
+  DISTNAME=`echo bitcoin-*.tar.gz`
+
+  ORIGPATH="$PATH"
+  # Extract the release tarball into a dir for each host and build
+  for i in ${HOSTS}; do
+    export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
+    mkdir -p distsrc-${i}
+    cd distsrc-${i}
+    tar --strip-components=1 -xf ../$DISTNAME
+
+    ./configure --prefix=${BASEPREFIX}/${i} --bindir=${OUTDIR}/${i}/bin --includedir=${OUTDIR}/${i}/include --libdir=${OUTDIR}/${i}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
+    make ${MAKEOPTS}
     make deploy
     make install-strip
-    cp -f bitcoin-*setup*.exe $BINDIR/
-    unset LD_PRELOAD
-    unset FAKETIME
-  done # for BITS in
-
-  # sort distribution tar file and normalize user/group/mtime information for deterministic output
+    cp -f bitcoin-*setup*.exe $OUTDIR/
+    cd ..
+  done
   mkdir -p $OUTDIR/src
-  rm -rf $TEMPDIR
-  mkdir -p $TEMPDIR
-  cd $TEMPDIR
-  tar -xvf $HOME/build/bitcoin/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
-
+  mv $DISTNAME $OUTDIR/src
+  mv ${OUTDIR}/x86_64-* ${OUTDIR}/64
+  mv ${OUTDIR}/i686-* ${OUTDIR}/32
