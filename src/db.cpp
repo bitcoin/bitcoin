@@ -41,6 +41,7 @@ void CDBEnv::EnvShutdown()
 
     fDbEnvInit = false;
     int ret = pdbenv->close(0);
+	delete pdbenv;
 	pdbenv = NULL;
     if (ret != 0)
         LogPrintf("CDBEnv::EnvShutdown : Error %d shutting down database environment: %s\n", ret, DbEnv::strerror(ret));
