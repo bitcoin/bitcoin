@@ -79,6 +79,10 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     bool fNegative;
     bool fOverflow;
     uint256 bnTarget;
+	
+	if (supressCheckBlockWork)
+		return true;
+		
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range

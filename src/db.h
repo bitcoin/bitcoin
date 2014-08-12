@@ -38,7 +38,7 @@ private:
 
 public:
     mutable CCriticalSection cs_db;
-    DbEnv dbenv;
+    DbEnv * pdbenv;
     std::map<std::string, int> mapFileUseCount;
     std::map<std::string, Db*> mapDb;
 
@@ -76,7 +76,7 @@ public:
     DbTxn *TxnBegin(int flags=DB_TXN_WRITE_NOSYNC)
     {
         DbTxn* ptxn = NULL;
-        int ret = dbenv.txn_begin(NULL, &ptxn, flags);
+        int ret = pdbenv->txn_begin(NULL, &ptxn, flags);
         if (!ptxn || ret != 0)
             return NULL;
         return ptxn;

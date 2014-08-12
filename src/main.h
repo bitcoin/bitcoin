@@ -97,6 +97,7 @@ extern bool fTxIndex;
 extern bool fIsBareMultisigStd;
 extern unsigned int nCoinCacheSize;
 extern CFeeRate minRelayTxFee;
+extern bool supressCheckBlockWork;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
