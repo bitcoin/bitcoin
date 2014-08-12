@@ -99,7 +99,13 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
     return ret;
 }
 
-CCoins &CCoinsViewCache::GetCoins(const uint256 &txid) {
+const CCoins &CCoinsViewCache::GetCoins(const uint256 &txid) {
+    CCoinsMap::const_iterator it = FetchCoins(txid);
+    assert(it != cacheCoins.end());
+    return it->second;
+}
+
+CCoins &CCoinsViewCache::ModifyCoins(const uint256 &txid) {
     CCoinsMap::iterator it = FetchCoins(txid);
     assert(it != cacheCoins.end());
     return it->second;
