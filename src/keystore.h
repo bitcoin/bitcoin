@@ -8,20 +8,11 @@
 
 #include "key.h"
 #include "sync.h"
-#include "script.h"     // for CNoDestination
 
 #include <boost/signals2/signal.hpp>
 #include <boost/variant.hpp>
 
 class CScript;
-
-/** A txout script template with a specific destination. It is either:
- *  * CNoDestination: no destination set
- *  * CKeyID: TX_PUBKEYHASH destination
- *  * CScriptID: TX_SCRIPTHASH destination
- *  A CTxDestination is the internal data type encoded in a CBitcoinAddress
- */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID> CTxDestination;
 
 /** A virtual base class for key stores */
 class CKeyStore
