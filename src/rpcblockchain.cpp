@@ -452,6 +452,16 @@ Value getblockchaininfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getblockchaininfo", "")
         );
 
+    Object cache_info;
+    const CCoinsCacheStats &stats = pcoinsTip->GetCacheStats();
+    cache_info.push_back(Pair("positive_hits", stats.positive_hits));
+    cache_info.push_back(Pair("negative_hits", stats.negative_hits));
+    cache_info.push_back(Pair("positive_misses", stats.positive_misses));
+    cache_info.push_back(Pair("negative_misses", stats.negative_misses));
+    cache_info.push_back(Pair("writes", stats.writes));
+    cache_info.push_back(Pair("cache_size", (int64_t)pcoinsTip->GetCacheSize()));
+    cache_info.push_back(Pair("cache_limit", (int64_t)nCoinCacheSize));
+
     Object obj;
     obj.push_back(Pair("chain",                 Params().NetworkIDString()));
     obj.push_back(Pair("blocks",                (int)chainActive.Height()));
@@ -459,6 +469,8 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     obj.push_back(Pair("difficulty",            (double)GetDifficulty()));
     obj.push_back(Pair("verificationprogress",  Checkpoints::GuessVerificationProgress(chainActive.Tip())));
     obj.push_back(Pair("chainwork",             chainActive.Tip()->nChainWork.GetHex()));
+    obj.push_back(Pair("coinscache",            cache_info));
+
     return obj;
 }
 

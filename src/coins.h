@@ -320,6 +320,16 @@ public:
     bool GetStats(CCoinsStats &stats);
 };
 
+struct CCoinsCacheStats
+{
+    CCoinsCacheStats(): positive_hits(0), negative_hits(0), positive_misses(0), negative_misses(0), writes(0) {}
+    // Counters
+    uint64_t positive_hits;
+    uint64_t negative_hits;
+    uint64_t positive_misses;
+    uint64_t negative_misses;
+    uint64_t writes;
+};
 
 /** CCoinsView that adds a memory cache for transactions to another CCoinsView */
 class CCoinsViewCache : public CCoinsViewBacked
@@ -327,7 +337,7 @@ class CCoinsViewCache : public CCoinsViewBacked
 protected:
     uint256 hashBlock;
     CCoinsMap cacheCoins;
-
+    CCoinsCacheStats stats;
 public:
     CCoinsViewCache(CCoinsView &baseIn, bool fDummy = false);
 
@@ -367,6 +377,8 @@ public:
     double GetPriority(const CTransaction &tx, int nHeight);
 
     const CTxOut &GetOutputFor(const CTxIn& input);
+
+    const CCoinsCacheStats &GetCacheStats() { return stats; }
 
 private:
     CCoinsMap::iterator FetchCoins(const uint256 &txid);
