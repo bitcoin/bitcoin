@@ -75,18 +75,6 @@ CCoinsKeyHasher::CCoinsKeyHasher() : salt(GetRandHash()) {}
 
 CCoinsViewCache::CCoinsViewCache(CCoinsView &baseIn, bool fDummy) : CCoinsViewBacked(baseIn), hashBlock(0) { }
 
-bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) {
-    if (cacheCoins.count(txid)) {
-        coins = cacheCoins[txid];
-        return true;
-    }
-    if (base->GetCoins(txid, coins)) {
-        cacheCoins[txid] = coins;
-        return true;
-    }
-    return false;
-}
-
 CCoinsMap::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
     CCoinsMap::iterator it = cacheCoins.find(txid);
     if (it != cacheCoins.end())
@@ -97,6 +85,15 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
     CCoinsMap::iterator ret = cacheCoins.insert(it, std::make_pair(txid, CCoins()));
     tmp.swap(ret->second);
     return ret;
+}
+
+bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) {
+    CCoinsMap::iterator it = FetchCoins(txid);
+    if (it != cacheCoins.end()) {
+        coins = it->second;
+        return true;
+    }
+    return false;
 }
 
 const CCoins &CCoinsViewCache::GetCoins(const uint256 &txid) {
