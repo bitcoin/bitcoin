@@ -203,7 +203,19 @@ bool CCoinsViewCache::Flush(unsigned int flags) {
         fOk = base->BatchWrite(cacheWrite, hashBlock);
         // Flush write cache only if batch write succeeded, but always flush read cache
         if (fOk)
-            cacheWrite.clear();
+        {
+            // Move entries from write cache to read cache
+            // Possible optimization is to not do this if we're flushing the
+            // READ cache as well, but this functionality is not used at the moment
+            // so we don't optimize for it.
+            for (CCoinsMap::iterator it = cacheWrite.begin(); it != cacheWrite.end(); )
+            {
+                CCoinsMap::iterator itOld = it++;
+                std::pair<CCoinsMap::iterator,bool> itr = cacheRead.insert(std::make_pair(itOld->first, CCoins()));
+                itr.first->second.swap(itOld->second);
+                cacheWrite.erase(itOld);
+            }
+        }
     }
     if (flags & READ)
     {
