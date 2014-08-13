@@ -460,6 +460,8 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     cache_info.push_back(Pair("negative_misses", stats.negative_misses));
     cache_info.push_back(Pair("writes", stats.writes));
     cache_info.push_back(Pair("cache_size", (int64_t)pcoinsTip->GetCacheSize()));
+    cache_info.push_back(Pair("rcache_size", (int64_t)pcoinsTip->GetCacheSize(CCoinsViewCache::READ)));
+    cache_info.push_back(Pair("wcache_size", (int64_t)pcoinsTip->GetCacheSize(CCoinsViewCache::WRITE)));
     cache_info.push_back(Pair("cache_limit", (int64_t)nCoinCacheSize));
 
     Object obj;
