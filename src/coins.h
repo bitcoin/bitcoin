@@ -382,7 +382,7 @@ public:
     const CCoinsCacheStats &GetCacheStats() { return stats; }
 
 private:
-    CCoinsMap::iterator FetchCoins(const uint256 &txid);
+    CCoins *FetchCoins(const uint256 &txid);
 };
 
 #endif

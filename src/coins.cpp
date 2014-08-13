@@ -75,44 +75,44 @@ CCoinsKeyHasher::CCoinsKeyHasher() : salt(GetRandHash()) {}
 
 CCoinsViewCache::CCoinsViewCache(CCoinsView &baseIn, bool fDummy) : CCoinsViewBacked(baseIn), hashBlock(0) { }
 
-CCoinsMap::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
+CCoins *CCoinsViewCache::FetchCoins(const uint256 &txid) {
     CCoinsMap::iterator it = cacheCoins.find(txid);
     if (it != cacheCoins.end())
     {
         stats.positive_hits++;
-        return it;
+        return &it->second;
     }
     CCoins tmp;
     if (!base->GetCoins(txid,tmp))
     {
         stats.negative_misses++;
-        return cacheCoins.end();
+        return 0;
     }
     stats.positive_misses++;
     CCoinsMap::iterator ret = cacheCoins.insert(it, std::make_pair(txid, CCoins()));
     tmp.swap(ret->second);
-    return ret;
+    return &ret->second;
 }
 
 bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) {
-    CCoinsMap::iterator it = FetchCoins(txid);
-    if (it != cacheCoins.end()) {
-        coins = it->second;
+    const CCoins *pcoins = FetchCoins(txid);
+    if (pcoins) {
+        coins = *pcoins;
         return true;
     }
     return false;
 }
 
 const CCoins &CCoinsViewCache::GetCoins(const uint256 &txid) {
-    CCoinsMap::const_iterator it = FetchCoins(txid);
-    assert(it != cacheCoins.end());
-    return it->second;
+    const CCoins *pcoins = FetchCoins(txid);
+    assert(pcoins);
+    return *pcoins;
 }
 
 CCoins &CCoinsViewCache::ModifyCoins(const uint256 &txid) {
-    CCoinsMap::iterator it = FetchCoins(txid);
-    assert(it != cacheCoins.end());
-    return it->second;
+    CCoins *pcoins = FetchCoins(txid);
+    assert(pcoins);
+    return *pcoins;
 }
 
 bool CCoinsViewCache::SetCoins(const uint256 &txid, const CCoins &coins) {
@@ -121,12 +121,12 @@ bool CCoinsViewCache::SetCoins(const uint256 &txid, const CCoins &coins) {
 }
 
 bool CCoinsViewCache::HaveCoins(const uint256 &txid) {
-    CCoinsMap::iterator it = FetchCoins(txid);
+    const CCoins *pcoins = FetchCoins(txid);
     // We're using vtx.empty() instead of IsPruned here for performance reasons,
     // as we only care about the case where an transaction was replaced entirely
     // in a reorganization (which wipes vout entirely, as opposed to spending
     // which just cleans individual outputs).
-    return (it != cacheCoins.end() && !it->second.vout.empty());
+    return (pcoins && !pcoins->vout.empty());
 }
 
 uint256 CCoinsViewCache::GetBestBlock() {
@@ -151,7 +151,7 @@ bool CCoinsViewCache::Flush() {
     bool fOk = base->BatchWrite(cacheCoins, hashBlock);
     if (fOk)
     {
-        stats.writes += cacheWrite.size();
+        stats.writes += cacheCoins.size();
         cacheCoins.clear();
     }
     return fOk;
