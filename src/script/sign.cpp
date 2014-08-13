@@ -32,20 +32,6 @@ bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash, int n
     return true;
 }
 
-bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet)
-{
-    int nSigned = 0;
-    int nRequired = multisigdata.front()[0];
-    for (unsigned int i = 1; i < multisigdata.size()-1 && nSigned < nRequired; i++)
-    {
-        const valtype& pubkey = multisigdata[i];
-        CKeyID keyID = CPubKey(pubkey).GetID();
-        if (Sign1(keyID, keystore, hash, nHashType, scriptSigRet))
-            ++nSigned;
-    }
-    return nSigned==nRequired;
-}
-
 //
 // Sign scriptPubKey with private keys stored in keystore, given transaction hash and hash type.
 // Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed),
@@ -83,7 +69,16 @@ bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, CMuta
         return true;
     case TX_MULTISIG:
         scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
-        return (SignN(vSolutions, keystore, hash, nHashType, scriptSigRet));
+        int nSigned = 0;
+        int nRequired = vSolutions.front()[0];
+        for (unsigned int i = 1; i < vSolutions.size()-1 && nSigned < nRequired; i++)
+        {
+            const valtype& pubkey = vSolutions[i];
+            CKeyID keyID = CPubKey(pubkey).GetID();
+            if (Sign1(keyID, keystore, hash, nHashType, scriptSigRet))
+                ++nSigned;
+        }
+        return nSigned==nRequired;
     }
     return false;
 }
