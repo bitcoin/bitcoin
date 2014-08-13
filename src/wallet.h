@@ -164,6 +164,7 @@ public:
     }
 
     std::map<uint256, CWalletTx> mapWallet;
+    std::multimap<std::string, CAccountingEntry> mapAccountingEntries;
 
     int64_t nOrderPosNext;
     std::map<uint256, int> mapRequestCount;
@@ -238,7 +239,6 @@ public:
 
     typedef std::pair<CWalletTx*, CAccountingEntry*> TxPair;
     typedef std::multimap<int64_t, TxPair > TxItems;
-
     /** Get the wallet's activity log
         @return multimap of ordered transactions and accounting entries
         @warning Returned pointers are *only* valid within the scope of passed acentries
@@ -247,6 +247,7 @@ public:
 
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet=false);
+    void AddAccountingEntry(const CAccountingEntry& entry, bool fFromLoadWallet=false);
     void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate);
     void EraseFromWallet(const uint256 &hash);

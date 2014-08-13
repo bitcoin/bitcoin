@@ -681,6 +681,11 @@ void CWallet::EraseFromWallet(const uint256 &hash)
     return;
 }
 
+void CWallet::AddAccountingEntry(const CAccountingEntry& entry, bool fFromLoadWallet)
+{
+    AssertLockHeld(cs_wallet);
+    std::multimap<std::string, CAccountingEntry>::iterator it = mapAccountingEntries.insert(make_pair(entry.strAccount, entry));
+}
 
 isminetype CWallet::IsMine(const CTxIn &txin) const
 {
