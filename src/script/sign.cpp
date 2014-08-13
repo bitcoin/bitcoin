@@ -52,14 +52,17 @@ bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint2
 // unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
 // Returns false if scriptPubKey could not be completely satisfied.
 //
-bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType,
-                  CScript& scriptSigRet, txnouttype& whichTypeRet)
+bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType, CScript& scriptSigRet, txnouttype& whichTypeRet)
 {
     scriptSigRet.clear();
 
     vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, whichTypeRet, vSolutions))
         return false;
+
+    // Leave out the signature from the hash, since a signature can't sign itself.
+    // The checksig op will also drop the signatures from its hash.
+    uint256 hash = SignatureHash(scriptPubKey, txTo, nIn, nHashType);
 
     CKeyID keyID;
     switch (whichTypeRet)
@@ -96,12 +99,8 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
 
-    // Leave out the signature from the hash, since a signature can't sign itself.
-    // The checksig op will also drop the signatures from its hash.
-    uint256 hash = SignatureHash(fromPubKey, txTo, nIn, nHashType);
-
     txnouttype whichType;
-    if (!Solver(keystore, fromPubKey, hash, nHashType, txin.scriptSig, whichType))
+    if (!Solver(keystore, fromPubKey, txTo, nIn, nHashType, txin.scriptSig, whichType))
         return false;
 
     if (whichType == TX_SCRIPTHASH)
@@ -111,12 +110,9 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
         // and then the serialized subscript:
         CScript subscript = txin.scriptSig;
 
-        // Recompute txn hash using subscript in place of scriptPubKey:
-        uint256 hash2 = SignatureHash(subscript, txTo, nIn, nHashType);
-
         txnouttype subType;
         bool fSolved =
-            Solver(keystore, subscript, hash2, nHashType, txin.scriptSig, subType) && subType != TX_SCRIPTHASH;
+            Solver(keystore, subscript, txTo, nIn, nHashType, txin.scriptSig, subType) && subType != TX_SCRIPTHASH;
         // Append serialized subscript whether or not it is completely signed:
         txin.scriptSig << static_cast<valtype>(subscript);
         if (!fSolved) return false;
