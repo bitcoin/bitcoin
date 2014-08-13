@@ -512,12 +512,6 @@ if test x$boost_sleep != xyes; then
   AC_MSG_ERROR(No working boost sleep implementation found. If on ubuntu 13.10 with libboost1.54-all-dev remove libboost.1.54-all-dev and use libboost1.53-all-dev)
 fi
 
-AC_ARG_WITH([cli],
-  [AS_HELP_STRING([--with-cli],
-  [with CLI (default is yes)])],
-  [build_bitcoin_cli=$withval],
-  [build_bitcoin_cli=yes])
-
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
   [with daemon (default is yes)])],
@@ -563,10 +557,6 @@ BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 AC_MSG_CHECKING([whether to build bitcoind])
 AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
 AC_MSG_RESULT($build_bitcoind)
-
-AC_MSG_CHECKING([whether to build bitcoin-cli])
-AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_bitcoin_cli = xyes])
-AC_MSG_RESULT($build_bitcoin_cli)
 
 dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
 BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
