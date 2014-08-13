@@ -17,12 +17,8 @@ using namespace std;
 
 typedef vector<unsigned char> valtype;
 
-bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet)
+bool SignHash(const CKey& key, uint256 hash, int nHashType, CScript& scriptSigRet)
 {
-    CKey key;
-    if (!keystore.GetKey(address, key))
-        return false;
-
     vector<unsigned char> vchSig;
     if (!key.Sign(hash, vchSig))
         return false;
@@ -30,6 +26,17 @@ bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash, int n
     scriptSigRet << vchSig;
 
     return true;
+}
+
+bool Sign(const CKeyID& address, const CKeyStore& keystore, const CScript& scriptPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType, CScript& scriptSigRet)
+{
+    CKey key;
+    if (!keystore.GetKey(address, key))
+        return false;
+    // Leave out the signature from the hash, since a signature can't sign itself.
+    // The checksig op will also drop the signatures from its hash.
+    uint256 hash = SignatureHash(scriptPubKey, txTo, nIn, nHashType);
+    return SignHash(key, hash, nHashType, scriptSigRet);
 }
 
 //
@@ -42,10 +49,6 @@ bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, CMuta
 {
     scriptSigRet.clear();
 
-    // Leave out the signature from the hash, since a signature can't sign itself.
-    // The checksig op will also drop the signatures from its hash.
-    uint256 hash = SignatureHash(scriptPubKey, txTo, nIn, nHashType);
-
     CKeyID keyID;
     switch (whichType)
     {
@@ -55,10 +58,10 @@ bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, CMuta
         return false;
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
-        return Sign1(keyID, keystore, hash, nHashType, scriptSigRet);
+        return Sign(keyID, keystore, scriptPubKey, txTo, nIn, nHashType, scriptSigRet);
     case TX_PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
-        if (!Sign1(keyID, keystore, hash, nHashType, scriptSigRet))
+        if (!Sign(keyID, keystore, scriptPubKey, txTo, nIn, nHashType, scriptSigRet))
             return false;
         else
         {
@@ -68,6 +71,7 @@ bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, CMuta
         }
         return true;
     case TX_MULTISIG:
+        uint256 hash = SignatureHash(scriptPubKey, txTo, nIn, nHashType);
         scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
         int nSigned = 0;
         int nRequired = vSolutions.front()[0];
@@ -75,7 +79,9 @@ bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, CMuta
         {
             const valtype& pubkey = vSolutions[i];
             CKeyID keyID = CPubKey(pubkey).GetID();
-            if (Sign1(keyID, keystore, hash, nHashType, scriptSigRet))
+            CKey key;
+            if (keystore.GetKey(keyID, key) &&
+                SignHash(key, hash, nHashType, scriptSigRet))
                 ++nSigned;
         }
         return nSigned==nRequired;
