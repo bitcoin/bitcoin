@@ -76,39 +76,45 @@ CCoinsKeyHasher::CCoinsKeyHasher() : salt(GetRandHash()) {}
 CCoinsViewCache::CCoinsViewCache(CCoinsView &baseIn, bool fDummy) : CCoinsViewBacked(baseIn), hashBlock(0) { }
 
 const CCoins *CCoinsViewCache::FetchCoins(const uint256 &txid) {
-    CCoinsMap::const_iterator it;
     // First look up the coins in the write cache
-    it = cacheWrite.find(txid);
-    if (it != cacheWrite.end())
+    CCoinsMap::const_iterator itw = cacheWrite.find(txid);
+    if (itw != cacheWrite.end())
     {
         stats.positive_hits++;
-        return &it->second;
+        return &itw->second;
     }
 
     // Otherwise look up the coins in the read cache
-    it = cacheRead.find(txid);
-    if (it != cacheRead.end())
+    CCoinsBimap::left_iterator itr = cacheRead.left.find(txid);
+    if (itr != cacheRead.left.end())
     {
-        if(it->second.vout.empty()) // Match negative
+        // Update the MRU view
+        cacheRead.right.relocate(
+            cacheRead.right.end(),
+            cacheRead.project_right(itr)
+        );
+
+        if(itr->second.vout.empty()) // Match negative
         {
             stats.negative_hits++;
             return 0;
         }
 
         stats.positive_hits++;
-        return &it->second;
+        return &itr->second;
     }
 
-    // If everything missed, fall back to base
+    // If everything missed, fall back to base, and insert the result of our query
+    // into the read cache.
     CCoins tmp;
     if (!base->GetCoins(txid, tmp))
     {
         stats.negative_misses++;
-        cacheRead.insert(it, std::make_pair(txid, CCoins())); // Store negative match
+        cacheRead.left.insert(itr, std::make_pair(txid, CCoins())); // Store negative match
         return 0;
     }
     stats.positive_misses++;
-    CCoinsMap::iterator itnew = cacheRead.insert(it, std::make_pair(txid, CCoins()));
+    CCoinsBimap::left_iterator itnew = cacheRead.left.insert(itr, std::make_pair(txid, CCoins()));
     tmp.swap(itnew->second);
     return &itnew->second;
 }
@@ -139,14 +145,14 @@ CCoins &CCoinsViewCache::ModifyCoins(const uint256 &txid) {
 
     // If in the read cache, swap the entry to the write cache,
     // evict it from the read cache
-    CCoinsMap::iterator itr = cacheRead.find(txid);
-    if (itr != cacheRead.end())
+    CCoinsBimap::left_iterator itr = cacheRead.left.find(txid);
+    if (itr != cacheRead.left.end())
     {
         assert(!itr->second.vout.empty()); // No negative hits allowed here
         stats.positive_hits++;
         itw = cacheWrite.insert(itw, std::make_pair(txid, CCoins()));
         itw->second.swap(itr->second);
-        cacheRead.erase(itr);
+        cacheRead.left.erase(itr);
         return itw->second;
     }
 
@@ -165,7 +171,7 @@ CCoins &CCoinsViewCache::ModifyCoins(const uint256 &txid) {
 bool CCoinsViewCache::SetCoins(const uint256 &txid, const CCoins &coins) {
     // Evict from read cache (if present there), then write to write cache
     // (overwriting anything already there)
-    cacheRead.erase(txid);
+    cacheRead.left.erase(txid);
     cacheWrite[txid] = coins;
     return true;
 }
@@ -194,7 +200,7 @@ bool CCoinsViewCache::BatchWrite(const CCoinsMap &mapCoins, const uint256 &hashB
     LogPrint("coinscache", "%p: BatchWrite before %i in read cache, %i in write cache\n", this, cacheRead.size(), cacheWrite.size());
     for (CCoinsMap::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
     {
-        cacheRead.erase(it->first);
+        cacheRead.left.erase(it->first);
         cacheWrite[it->first] = it->second;
     }
     hashBlock = hashBlockIn;
@@ -219,7 +225,7 @@ bool CCoinsViewCache::Flush(unsigned int flags) {
             for (CCoinsMap::iterator it = cacheWrite.begin(); it != cacheWrite.end(); )
             {
                 CCoinsMap::iterator itOld = it++;
-                std::pair<CCoinsMap::iterator,bool> itr = cacheRead.insert(std::make_pair(itOld->first, CCoins()));
+                std::pair<CCoinsBimap::left_iterator,bool> itr = cacheRead.left.insert(std::make_pair(itOld->first, CCoins()));
                 itr.first->second.swap(itOld->second);
                 cacheWrite.erase(itOld);
             }
@@ -296,4 +302,21 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight)
         }
     }
     return tx.ComputePriority(dResult);
+}
+
+void CCoinsViewCache::Cleanup(size_t max_entries)
+{
+    size_t cache_size = GetCacheSize();
+    if (cache_size <= max_entries)
+        return;
+    size_t excess = cache_size - max_entries;
+    LogPrint("coinscache", "%p: Cleanup before %i in read cache, %i in write cache, removing %i excess records\n", this, cacheRead.size(), cacheWrite.size(), excess);
+    CCoinsBimap::right_iterator it = cacheRead.right.begin();
+    while (excess > 0 && it != cacheRead.right.end())
+    {
+        CCoinsBimap::right_iterator itOld = it++;
+        cacheRead.right.erase(itOld);
+        excess--;
+    }
+    LogPrint("coinscache", "%p: Cleanup after %i in read cache, %i in write cache\n", this, cacheRead.size(), cacheWrite.size());
 }

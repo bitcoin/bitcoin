@@ -15,6 +15,10 @@
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 
+#include <boost/bimap.hpp>
+#include <boost/bimap/list_of.hpp>
+#include <boost/bimap/unordered_set_of.hpp>
+
 /** pruned version of CTransaction: only retains metadata and unspent transaction outputs
  *
  * Serialized format:
@@ -257,6 +261,11 @@ public:
 
 typedef boost::unordered_map<uint256, CCoins, CCoinsKeyHasher> CCoinsMap;
 
+typedef boost::bimaps::bimap<
+    boost::bimaps::unordered_set_of<uint256, CCoinsKeyHasher>,
+    boost::bimaps::list_of<CCoins>
+    > CCoinsBimap;
+
 struct CCoinsStats
 {
     int nHeight;
@@ -338,7 +347,7 @@ protected:
     uint256 hashBlock;
     CCoinsCacheStats stats;
     // Invariant: an entry should be in either the read cache or the write cache, or neither
-    CCoinsMap cacheRead;
+    CCoinsBimap cacheRead;
     CCoinsMap cacheWrite;
 
 public:
@@ -364,9 +373,18 @@ public:
     CCoins &ModifyCoins(const uint256 &txid);
     const CCoins &GetCoins(const uint256 &txid);
 
-    // Push the modifications applied to this cache to its base.
-    // Failure to call this method before destruction will cause the changes to be forgotten.
+    // Flush the cache. Depending on the provided flags it does either or both
+    // - Flush the write cache: Push the modifications applied to this cache to its base.
+    // - Flush the read cache: Remove all entries in one go.
+    // @note Failure to call this method before destruction will cause the changes to be forgotten.
+    // @note Call this only when no references to CCoins are held.
     bool Flush(unsigned int flags = READ_AND_WRITE);
+
+    // Partial flush of the cache. Removes Least Recently Used records from the
+    // read cache as long as the total size of the cache exceeds the provided
+    // maximum size. This does not touch the write cache.
+    // @note Call this only when no references to CCoins are held.
+    void Cleanup(size_t max_entries);
 
     // Calculate the size of the cache (in number of transactions)
     unsigned int GetCacheSize(unsigned int flags = READ_AND_WRITE);
