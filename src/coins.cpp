@@ -89,6 +89,12 @@ const CCoins *CCoinsViewCache::FetchCoins(const uint256 &txid) {
     it = cacheRead.find(txid);
     if (it != cacheRead.end())
     {
+        if(it->second.vout.empty()) // Match negative
+        {
+            stats.negative_hits++;
+            return 0;
+        }
+
         stats.positive_hits++;
         return &it->second;
     }
@@ -98,6 +104,7 @@ const CCoins *CCoinsViewCache::FetchCoins(const uint256 &txid) {
     if (!base->GetCoins(txid, tmp))
     {
         stats.negative_misses++;
+        cacheRead.insert(it, std::make_pair(txid, CCoins())); // Store negative match
         return 0;
     }
     stats.positive_misses++;
@@ -135,6 +142,7 @@ CCoins &CCoinsViewCache::ModifyCoins(const uint256 &txid) {
     CCoinsMap::iterator itr = cacheRead.find(txid);
     if (itr != cacheRead.end())
     {
+        assert(!itr->second.vout.empty()); // No negative hits allowed here
         stats.positive_hits++;
         itw = cacheWrite.insert(itw, std::make_pair(txid, CCoins()));
         itw->second.swap(itr->second);
