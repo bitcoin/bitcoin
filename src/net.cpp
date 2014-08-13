@@ -404,7 +404,7 @@ bool GetMyExternalIP(CNetAddr& ipRet)
                     addrConnect = addrIP;
             }
 
-            pszGet = "GET /simple/ HTTP/1.1\r\n"
+            pszGet = "GET / HTTP/1.1\r\n"
                      "Host: www.icanhazip.com\r\n"
                      "User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)\r\n"
                      "Connection: close\r\n"
