@@ -1866,13 +1866,12 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 // Update the on-disk chain state.
 bool static WriteChainState(CValidationState &state) {
     static int64_t nLastWrite = 0;
-    unsigned int flush_flags = 0;
-    if (pcoinsTip->GetCacheSize() > nCoinCacheSize)
-        flush_flags |= CCoinsViewCache::READ_AND_WRITE;
-    if (!IsInitialBlockDownload() && GetTimeMicros() > nLastWrite + CHAINSTATE_WRITE_PERIOD*1000000)
-        flush_flags |= CCoinsViewCache::WRITE;
-
-    if (flush_flags) {
+    // If the write cache becomes larger than half the total allowed cache
+    // size, or the last write is longer ago than a specified time (and not in
+    // initial block download), it's time for a flush to disk
+    if (pcoinsTip->GetCacheSize(CCoinsViewCache::WRITE) > nCoinCacheSize/2 ||
+        (!IsInitialBlockDownload() && GetTimeMicros() > nLastWrite + CHAINSTATE_WRITE_PERIOD*1000000LL))
+    {
         // Typical CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
@@ -1882,10 +1881,12 @@ bool static WriteChainState(CValidationState &state) {
             return state.Error("out of disk space");
         FlushBlockFile();
         pblocktree->Sync();
-        if (!pcoinsTip->Flush(flush_flags))
+        if (!pcoinsTip->Flush(CCoinsViewCache::WRITE))
             return state.Abort(_("Failed to write to coin database"));
         nLastWrite = GetTimeMicros();
     }
+    // Remove excess items from read cache
+    pcoinsTip->Cleanup(nCoinCacheSize);
     return true;
 }
 
@@ -3069,6 +3070,16 @@ bool CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
             } else
                 nGoodTransactions += block.vtx.size();
         }
+        // Allow pcoinsTip to retain some entries, as they may come in useful
+        // during synchronization when the node is running, but don't use so
+        // much memory that the checking process terminates too soon because
+        // the total maximum cache size is exceeded.
+        // Flushing pcoinsTip entirely would have no effect on the verification
+        // itself as all coins that are accessed by DisconnectBlock are updated
+        // so also in coins' write cache.
+        // There is no use in calling coins->Cleanup() -- it will only have
+        // write cache entries
+        pcoinsTip->Cleanup(nCoinCacheSize/2);
     }
     if (pindexFailure)
         return error("VerifyDB() : *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", chainActive.Height() - pindexFailure->nHeight + 1, nGoodTransactions);
