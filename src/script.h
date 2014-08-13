@@ -15,7 +15,6 @@
 #include <vector>
 
 #include <boost/foreach.hpp>
-#include <boost/variant.hpp>
 
 class CCoins;
 class CKeyStore;
@@ -234,20 +233,6 @@ enum txnouttype
     TX_MULTISIG,
     TX_NULL_DATA,
 };
-
-class CNoDestination {
-public:
-    friend bool operator==(const CNoDestination &a, const CNoDestination &b) { return true; }
-    friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
-};
-
-/** A txout script template with a specific destination. It is either:
- *  * CNoDestination: no destination set
- *  * CKeyID: TX_PUBKEYHASH destination
- *  * CScriptID: TX_SCRIPTHASH destination
- *  A CTxDestination is the internal data type encoded in a CBitcoinAddress
- */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID> CTxDestination;
 
 const char* GetTxnOutputType(txnouttype t);
 
