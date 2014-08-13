@@ -52,23 +52,20 @@ bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint2
 // unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
 // Returns false if scriptPubKey could not be completely satisfied.
 //
-bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType, CScript& scriptSigRet, txnouttype& whichTypeRet)
+bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType, CScript& scriptSigRet, const txnouttype& whichType, const vector<valtype> vSolutions)
 {
     scriptSigRet.clear();
-
-    vector<valtype> vSolutions;
-    if (!Solver(scriptPubKey, whichTypeRet, vSolutions))
-        return false;
 
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
     uint256 hash = SignatureHash(scriptPubKey, txTo, nIn, nHashType);
 
     CKeyID keyID;
-    switch (whichTypeRet)
+    switch (whichType)
     {
     case TX_NONSTANDARD:
     case TX_NULL_DATA:
+    case TX_SCRIPTHASH:
         return false;
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
@@ -84,9 +81,6 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, CMutableTran
             scriptSigRet << vch;
         }
         return true;
-    case TX_SCRIPTHASH:
-        return keystore.GetCScript(uint160(vSolutions[0]), scriptSigRet);
-
     case TX_MULTISIG:
         scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
         return (SignN(vSolutions, keystore, hash, nHashType, scriptSigRet));
@@ -100,26 +94,31 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
     CTxIn& txin = txTo.vin[nIn];
 
     txnouttype whichType;
-    if (!Solver(keystore, fromPubKey, txTo, nIn, nHashType, txin.scriptSig, whichType))
+    vector<valtype> vSolutions;
+    if (!Solver(fromPubKey, whichType, vSolutions))
         return false;
 
+    bool fSolved;
     if (whichType == TX_SCRIPTHASH)
     {
-        // Solver returns the subscript that need to be evaluated;
-        // the final scriptSig is the signatures from that
-        // and then the serialized subscript:
-        CScript subscript = txin.scriptSig;
+        // The keystore contains the subscript that needs to be evaluated
+        CScript subscript;
+        if (!keystore.GetCScript(uint160(vSolutions[0]), subscript))
+            return false;
 
         txnouttype subType;
-        bool fSolved =
-            Solver(keystore, subscript, txTo, nIn, nHashType, txin.scriptSig, subType) && subType != TX_SCRIPTHASH;
-        // Append serialized subscript whether or not it is completely signed:
+        vSolutions.clear();
+        fSolved = Solver(subscript, subType, vSolutions);
+        fSolved = fSolved && SignSignature(keystore, subscript, txTo, nIn, nHashType, txin.scriptSig, subType, vSolutions);
+        // The final scriptSig are the signatures from the subscript and then
+        // the serialized subscript whether or not it is completely signed:
         txin.scriptSig << static_cast<valtype>(subscript);
-        if (!fSolved) return false;
+    } else {
+         fSolved = SignSignature(keystore, fromPubKey, txTo, nIn, nHashType, txin.scriptSig, whichType, vSolutions);
     }
 
     // Test solution
-    return VerifyScript(txin.scriptSig, fromPubKey, txTo, nIn, STANDARD_SCRIPT_VERIFY_FLAGS, 0);
+    return fSolved && VerifyScript(txin.scriptSig, fromPubKey, txTo, nIn, STANDARD_SCRIPT_VERIFY_FLAGS, 0);
 }
 
 bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
