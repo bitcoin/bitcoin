@@ -47,12 +47,25 @@ int64_t GetTime()
 
 
 
-bool VerifyScript(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& scriptPubKey, const std::vector<unsigned char>& txTo, unsigned int nIn, unsigned int flags, int nHashType)
+bool VerifyScript(const unsigned char *scriptPubKey, const unsigned int scriptPubKeyLen,
+                             const unsigned char *txTo,         const unsigned int txToLen,
+                             const unsigned int nIn, const unsigned int flags)
 {
-    CTransaction tx;
-    CDataStream stream(txTo, SER_NETWORK, PROTOCOL_VERSION);
-    stream >> tx;
-    return VerifyScript(CScript(scriptSig.begin(),    scriptSig.end()),
-                        CScript(scriptPubKey.begin(), scriptPubKey.end()),
-                        tx, nIn, flags, nHashType);
+    try {
+        if (!scriptPubKey || !txTo)
+            return false;
+
+        CTransaction tx;
+        CDataStream stream(std::vector<unsigned char>(txTo, txTo + txToLen), SER_NETWORK, PROTOCOL_VERSION);
+        stream >> tx;
+
+        if (nIn >= tx.vin.size())
+            return false;
+
+        return VerifyScript(tx.vin[nIn].scriptSig,
+                            CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen),
+                            tx, nIn, flags, 0);
+    } catch (std::exception &e) {
+        return false; // Error deserializing
+    }
 }
