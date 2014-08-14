@@ -15,7 +15,7 @@
 #include "core.h"
 #include "net.h"
 #include "pow.h"
-#include "script.h"
+#include "scriptutils.h"
 #include "sync.h"
 #include "txmempool.h"
 #include "uint256.h"
