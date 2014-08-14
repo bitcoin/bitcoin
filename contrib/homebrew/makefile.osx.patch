@@ -1,0 +1,48 @@
+diff --git a/src/makefile.osx b/src/makefile.osx
+index bef0ef3..07ef8d3 100644
+--- a/src/makefile.osx
++++ b/src/makefile.osx
+@@ -7,17 +7,21 @@
+ # Originally by Laszlo Hanyecz (solar@heliacal.net)
+ 
+ CXX=llvm-g++
+-DEPSDIR=/opt/local
++DEPSDIR=/usr/local
++DB4DIR=/usr/local/opt/berkeley-db4
++OPENSSLDIR=/usr/local/opt/openssl
+ 
+ INCLUDEPATHS= \
+  -I"$(CURDIR)" \
+- -I"$(CURDIR)"/obj \
++ -I"$(CURDIR)/obj" \
+  -I"$(DEPSDIR)/include" \
+- -I"$(DEPSDIR)/include/db48"
++ -I"$(DB4DIR)/include" \
++ -I"$(OPENSSLDIR)/include"
+ 
+ LIBPATHS= \
+  -L"$(DEPSDIR)/lib" \
+- -L"$(DEPSDIR)/lib/db48"
++ -L"$(DB4DIR)/lib" \
++ -L"$(OPENSSLDIR)/lib"
+ 
+ USE_UPNP:=1
+ USE_IPV6:=1
+@@ -31,14 +35,14 @@ ifdef STATIC
+ TESTLIBS += \
+  $(DEPSDIR)/lib/libboost_unit_test_framework-mt.a
+ LIBS += \
+- $(DEPSDIR)/lib/db48/libdb_cxx-4.8.a \
++ $(DB4DIR)/lib/libdb_cxx-4.8.a \
+  $(DEPSDIR)/lib/libboost_system-mt.a \
+  $(DEPSDIR)/lib/libboost_filesystem-mt.a \
+  $(DEPSDIR)/lib/libboost_program_options-mt.a \
+  $(DEPSDIR)/lib/libboost_thread-mt.a \
+  $(DEPSDIR)/lib/libboost_chrono-mt.a \
+- $(DEPSDIR)/lib/libssl.a \
+- $(DEPSDIR)/lib/libcrypto.a \
++ $(OPENSSLDIR)/lib/libssl.a \
++ $(OPENSSLDIR)/lib/libcrypto.a \
+  -lz
+ else
+ TESTLIBS += \
