@@ -9,7 +9,7 @@
 #include "data/sig_noncanonical.json.h"
 #include "data/sig_canonical.json.h"
 #include "random.h"
-#include "script.h"
+#include "scriptutils.h"
 #include "util.h"
 
 #include <boost/foreach.hpp>
