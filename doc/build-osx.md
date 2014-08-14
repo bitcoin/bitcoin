@@ -83,7 +83,7 @@ You can invoke the Homebrew OpenSSL at build-time by exercising the following li
 * -L/usr/local/opt/openssl/lib
 * -I/usr/local/opt/openssl/include
 
-But you don't need to do this if you use the patch provided for Homebrew in /contrib/homebrew/makefile.osx.patch - It is automatically done for you in that case. Exercise the patch with "patch -p1 /contrib/homebrew/makefile.osx.patch".
+But you don't need to do this if you use the patch provided for Homebrew in /contrib/homebrew/makefile.osx.patch - It is automatically done for you in that case. Exercise the patch with "patch -p1 -i /contrib/homebrew/makefile.osx.patch".
 
 ### Building `bitcoind`
 
