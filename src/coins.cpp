@@ -78,10 +78,17 @@ CCoinsViewCache::CCoinsViewCache(CCoinsView &baseIn, bool fDummy) : CCoinsViewBa
 CCoinsMap::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
     CCoinsMap::iterator it = cacheCoins.find(txid);
     if (it != cacheCoins.end())
+    {
+        stats.positive_hits++;
         return it;
+    }
     CCoins tmp;
     if (!base->GetCoins(txid,tmp))
+    {
+        stats.negative_misses++;
         return cacheCoins.end();
+    }
+    stats.positive_misses++;
     CCoinsMap::iterator ret = cacheCoins.insert(it, std::make_pair(txid, CCoins()));
     tmp.swap(ret->second);
     return ret;
@@ -143,7 +150,10 @@ bool CCoinsViewCache::BatchWrite(const CCoinsMap &mapCoins, const uint256 &hashB
 bool CCoinsViewCache::Flush() {
     bool fOk = base->BatchWrite(cacheCoins, hashBlock);
     if (fOk)
+    {
+        stats.writes += cacheWrite.size();
         cacheCoins.clear();
+    }
     return fOk;
 }
 
