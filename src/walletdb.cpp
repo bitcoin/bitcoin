@@ -644,6 +644,8 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     if (wss.fAnyUnordered)
         result = ReorderTransactions(pwallet);
 
+    pwallet->InitMapOrderedTxItems();
+
     return result;
 }
 

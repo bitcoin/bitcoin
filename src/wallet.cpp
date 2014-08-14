@@ -478,31 +478,6 @@ int64_t CWallet::IncOrderPosNext(CWalletDB *pwalletdb)
     return nRet;
 }
 
-CWallet::TxItems CWallet::OrderedTxItems(std::list<CAccountingEntry>& acentries, std::string strAccount)
-{
-    AssertLockHeld(cs_wallet); // mapWallet
-    CWalletDB walletdb(strWalletFile);
-
-    // First: get all CWalletTx and CAccountingEntry into a sorted-by-order multimap.
-    TxItems txOrdered;
-
-    // Note: maintaining indices in the database of (account,time) --> txid and (account, time) --> acentry
-    // would make this much faster for applications that do this a lot.
-    for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-    {
-        CWalletTx* wtx = &((*it).second);
-        txOrdered.insert(make_pair(wtx->nOrderPos, TxPair(wtx, (CAccountingEntry*)0)));
-    }
-    acentries.clear();
-    walletdb.ListAccountCreditDebit(strAccount, acentries);
-    BOOST_FOREACH(CAccountingEntry& entry, acentries)
-    {
-        txOrdered.insert(make_pair(entry.nOrderPos, TxPair((CWalletTx*)0, &entry)));
-    }
-
-    return txOrdered;
-}
-
 void CWallet::MarkDirty()
 {
     {
@@ -545,9 +520,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
                     {
                         // Tolerate times up to the last timestamp in the wallet not more than 5 minutes into the future
                         int64_t latestTolerated = latestNow + 300;
-                        std::list<CAccountingEntry> acentries;
-                        TxItems txOrdered = OrderedTxItems(acentries);
-                        for (TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+                        for (TxItems::reverse_iterator it = mapOrderedTxItems.rbegin(); it != mapOrderedTxItems.rend(); ++it)
                         {
                             CWalletTx *const pwtx = (*it).second.first;
                             if (pwtx == &wtx)
@@ -581,6 +554,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
                              wtxIn.hashBlock.ToString());
             }
             AddToSpends(hash);
+            AddToOrderedTxItems(&wtx);
         }
 
         bool fUpdated = false;
@@ -685,6 +659,27 @@ void CWallet::AddAccountingEntry(const CAccountingEntry& entry, bool fFromLoadWa
 {
     AssertLockHeld(cs_wallet);
     std::multimap<std::string, CAccountingEntry>::iterator it = mapAccountingEntries.insert(make_pair(entry.strAccount, entry));
+    if (!fFromLoadWallet)
+        AddToOrderedTxItems(&it->second);
+}
+
+void CWallet::InitMapOrderedTxItems()
+{
+    mapOrderedTxItems.clear();
+    for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        AddToOrderedTxItems(&it->second);
+    for (std::multimap<std::string, CAccountingEntry>::iterator it = mapAccountingEntries.begin(); it != mapAccountingEntries.end(); ++it)
+        AddToOrderedTxItems(&it->second);
+}
+
+void CWallet::AddToOrderedTxItems(CWalletTx* wtx)
+{
+    mapOrderedTxItems.insert(make_pair(wtx->nOrderPos, TxPair(wtx, (CAccountingEntry*)0)));
+}
+
+void CWallet::AddToOrderedTxItems(CAccountingEntry* entry)
+{
+    mapOrderedTxItems.insert(make_pair(entry->nOrderPos, TxPair((CWalletTx*)0, entry)));
 }
 
 isminetype CWallet::IsMine(const CTxIn &txin) const

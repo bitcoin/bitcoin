@@ -1195,6 +1195,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                         copyTo->WriteToDisk();
                     }
                 }
+                pwalletMain->InitMapOrderedTxItems();
             }
         }
     } // (!fDisableWallet)
