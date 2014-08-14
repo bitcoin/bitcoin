@@ -73,17 +73,17 @@ Instructions: Homebrew
 
 Note: After you have installed the dependencies, you should check that the Homebrew installed version of OpenSSL is the one available for compilation. You can check this by typing
 
-        openssl version
+    /usr/local/cellar/openssl/*/bin/openssl version
 
-into Terminal. You should see OpenSSL 1.0.1h 5 Jun 2014.
+into Terminal. You should see OpenSSL 1.0.1i 6 Aug 2014.
 
-If not, you can ensure that the Homebrew OpenSSL is correctly linked by running
+You can invoke the Homebrew OpenSSL at build-time by exercising the following lines:
 
-        brew link openssl --force
+* OPENSSLDIR=/usr/local/opt/openssl
+* -L/usr/local/opt/openssl/lib
+* -I/usr/local/opt/openssl/include
 
-Rerunning "openssl version" should now return the correct version. If it
-doesn't, make sure `/usr/local/bin` comes before `/usr/bin` in your
-PATH. 
+But you don't need to do this if you use the patch provided for Homebrew in /contrib/homebrew/makefile.osx.patch - It is automatically done for you in that case. Exercise the patch with "patch -p1 /contrib/homebrew/makefile.osx.patch".
 
 ### Building `bitcoind`
 
