@@ -4,7 +4,7 @@
 
 #include "crypter.h"
 
-#include "script.h"
+#include "scriptutils.h"
 #include "util.h"
 
 #include <string>
