@@ -92,6 +92,9 @@ public:
 
     /** Show progress e.g. for verifychain */
     boost::signals2::signal<void (const std::string &title, int nProgress)> ShowProgress;
+
+    /** New block has been accepted */
+    boost::signals2::signal<void (const uint256& hash)> NotifyBlockTip;
 };
 
 extern CClientUIInterface uiInterface;
