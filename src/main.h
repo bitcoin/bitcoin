@@ -95,6 +95,10 @@ static const unsigned int DATABASE_WRITE_INTERVAL = 3600;
 static const unsigned int MAX_REJECT_MESSAGE_LENGTH = 111;
 /** Minimum amount of blocks to keep unpruned, needed to afford deep reorganizations. */
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
+/** Start autopruning after this height. */
+static const signed int AUTOPRUNE_AFTER_HEIGHT = 100000;
+/** Minimum amount of bytes needed for block files. */
+static const unsigned int MIN_BLOCK_FILES_SIZE = 300 * 1024 * 1024;
 
 /** "reject" message codes */
 static const unsigned char REJECT_MALFORMED = 0x01;
@@ -129,7 +133,7 @@ extern bool fTxIndex;
 extern bool fIsBareMultisigStd;
 extern unsigned int nCoinCacheSize;
 extern CFeeRate minRelayTxFee;
-extern bool fPruned;
+extern uintmax_t nPrune;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;

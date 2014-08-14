@@ -258,7 +258,10 @@ std::string HelpMessage(HelpMessageMode mode)
 #ifndef WIN32
     strUsage += "  -pid=<file>            " + strprintf(_("Specify pid file (default: %s)"), "bitcoind.pid") + "\n";
 #endif
-    strUsage += "  -pruned                " + _("Run in a pruned state") + "\n";
+    strUsage += "  -prune=<n>             " + _("Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex.") + "\n";
+    strUsage += "                         " + _("Warning: Reverting this setting requires re-downloading the entire blockchain!") + "\n";
+    strUsage += "                         " + _("(default: 0 = disable pruning blocks,") + "\n";
+    strUsage += "                         " + strprintf(_(">%u = max size in MiB to use for block files"), MIN_BLOCK_FILES_SIZE / 1024 / 1024) + "\n";
     strUsage += "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + " " + _("on startup") + "\n";
 #if !defined(WIN32)
     strUsage += "  -sysperms              " + _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)") + "\n";
@@ -639,15 +642,15 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (nFD - MIN_CORE_FILEDESCRIPTORS < nMaxConnections)
         nMaxConnections = nFD - MIN_CORE_FILEDESCRIPTORS;
 
-    if (GetBoolArg("-pruned", false)) {
+    if (GetArg("-prune", 0)) {
         if (GetBoolArg("-txindex", false))
-            return InitError(_("Pruned mode is incompatible with -txindex."));
+            return InitError(_("Prune mode is incompatible with -txindex."));
 #ifdef ENABLE_WALLET
         if (!GetBoolArg("-disablewallet", false)) {
             if (SoftSetBoolArg("-disablewallet", true))
-                LogPrintf("AppInit2 : parameter interaction: -pruned=1 -> setting -disablewallet=1\n");
+                LogPrintf("%s : parameter interaction: -prune -> setting -disablewallet=1\n", __func__);
             else
-                return InitError(_("Can't run with a wallet in pruned mode."));
+                return InitError(_("Can't run with a wallet in prune mode."));
         }
 #endif
     }
@@ -687,7 +690,15 @@ bool AppInit2(boost::thread_group& threadGroup)
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
 
     fServer = GetBoolArg("-server", false);
-    fPruned = GetBoolArg("-pruned", false);
+    nPrune = GetArg("-prune", 0) * 1024 * 1024;
+    if (nPrune) {
+        if (nPrune >= MIN_BLOCK_FILES_SIZE)
+            LogPrintf("Autoprune configured to use less than %uMiB on disk for block files.\n", nPrune / 1024 / 1024);
+        else {
+            nPrune = ~0;
+            LogPrintf("Autoprune configured below the minimum of %uMiB. Setting at the maximum possible of %uMiB, to avoid pruning too much. Please, check your configuration.\n", MIN_BLOCK_FILES_SIZE / 1024 / 1024, nPrune / 1024 / 1024);
+        }
+    }
 #ifdef ENABLE_WALLET
     bool fDisableWallet = GetBoolArg("-disablewallet", false);
 #endif
@@ -1291,7 +1302,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("mapAddressBook.size() = %u\n",  pwalletMain ? pwalletMain->mapAddressBook.size() : 0);
 #endif
 
-    if (fPruned) {
+    if (nPrune) {
         LogPrintf("Unsetting NODE_NETWORK on prune mode\n");
         nLocalServices &= ~NODE_NETWORK;
     }
