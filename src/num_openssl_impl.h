@@ -21,6 +21,10 @@ void static secp256k1_num_free(secp256k1_num_t *r) {
     BN_free(&r->bn);
 }
 
+void static secp256k1_num_clear(secp256k1_num_t *r) {
+    BN_clear(&r->bn);
+}
+
 void static secp256k1_num_copy(secp256k1_num_t *r, const secp256k1_num_t *a) {
     BN_copy(&r->bn, &a->bn);
 }

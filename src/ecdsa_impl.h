@@ -186,7 +186,10 @@ int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_
     secp256k1_num_mod(&n, &c->order);
     secp256k1_num_mod_inverse(&sig->s, nonce, &c->order);
     secp256k1_num_mod_mul(&sig->s, &sig->s, &n, &c->order);
+    secp256k1_num_clear(&n);
     secp256k1_num_free(&n);
+    secp256k1_gej_clear(&rp);
+    secp256k1_ge_clear(&r);
     if (secp256k1_num_is_zero(&sig->s))
         return 0;
     if (secp256k1_num_cmp(&sig->s, &c->half_order) > 0) {
