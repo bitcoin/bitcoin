@@ -112,6 +112,12 @@ if test "x$want_boost" = "xyes"; then
         ;;
     esac
 
+    dnl some arches may advertise a cpu type that doesn't line up with their
+    dnl prefix's cpu type. For example, uname may report armv7l while libs are
+    dnl installed to /usr/lib/arm-linux-gnueabihf. Try getting the compiler's
+    dnl value for an extra chance of finding the correct path.
+    libsubdirs="lib/`$CXX -dumpmachine 2>/dev/null` $libsubdirs"
+
     dnl first we check the system location for boost libraries
     dnl this location ist chosen if boost libraries are installed with the --layout=system option
     dnl or if you install boost with RPM
