@@ -72,7 +72,7 @@ packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(qt_pack
 native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages) $(qt_native_packages_)
 all_packages = $(packages) $(native_packages)
 
-meta_depends = Makefile builders/default.mk hosts/default.mk hosts/$(host_os).mk builders/$(build_os).mk
+meta_depends = Makefile funcs.mk builders/default.mk hosts/default.mk hosts/$(host_os).mk builders/$(build_os).mk
 
 $(host_arch)_$(host_os)_native_toolchain?=$($(host_os)_native_toolchain)
 
