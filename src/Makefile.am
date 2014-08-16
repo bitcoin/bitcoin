@@ -55,11 +55,7 @@ if BUILD_BITCOIND
   bin_PROGRAMS += bitcoind
 endif
 
-if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += bitcoin-cli
-endif
-
-bin_PROGRAMS += bitcoin-tx
+bin_PROGRAMS += bitcoin-cli bitcoin-tx
 
 .PHONY: FORCE
 # bitcoin core #
