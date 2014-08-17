@@ -15,14 +15,14 @@ static const char *escapes[256];
 
 static void initJsonEscape()
 {
-    escapes['"'] = "\\\"";
-    escapes['\\'] = "\\\\";
-    escapes['/'] = "\\/";
-    escapes['\b'] = "\\b";
-    escapes['\f'] = "\\f";
-    escapes['\n'] = "\\n";
-    escapes['\r'] = "\\r";
-    escapes['\t'] = "\\t";
+    escapes[static_cast<unsigned char>('"')] = "\\\"";
+    escapes[static_cast<unsigned char>('\\')] = "\\\\";
+    escapes[static_cast<unsigned char>('/')] = "\\/";
+    escapes[static_cast<unsigned char>('\b')] = "\\b";
+    escapes[static_cast<unsigned char>('\f')] = "\\f";
+    escapes[static_cast<unsigned char>('\n')] = "\\n";
+    escapes[static_cast<unsigned char>('\r')] = "\\r";
+    escapes[static_cast<unsigned char>('\t')] = "\\t";
 
     initEscapes = true;
 }
