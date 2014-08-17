@@ -86,7 +86,6 @@ std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
             if (!arrived_high && it_r == it_high)
                 arrived_high = true;
         }
-        assert(carry == 0);
         pbegin++;
     }
     // Skip leading zeroes in base58 result.
