@@ -72,14 +72,19 @@ std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
     }
     // Allocate enough space in big-endian base58 representation.
     std::vector<unsigned char> b58((pend - pbegin) * 138 / 100 + 1); // log(256) / log(58), rounded up.
+    std::vector<unsigned char>::reverse_iterator it_r, it_high;
     // Process the bytes.
-    while (pbegin != pend) {
+    for (it_high = b58.rbegin(); pbegin != pend; it_high = it_r) {
         int carry = *pbegin;
+        bool arrived_high = false;
         // Apply "b58 = b58 * 256 + ch".
-        for (std::vector<unsigned char>::reverse_iterator it = b58.rbegin(); it != b58.rend(); it++) {
-            carry += 256 * (*it);
-            *it = carry % 58;
+        for (it_r = b58.rbegin(); !arrived_high || carry; it_r++) {
+            carry += 256 * (*it_r);
+            *it_r = carry % 58;
             carry /= 58;
+
+            if (!arrived_high && it_r == it_high)
+                arrived_high = true;
         }
         assert(carry == 0);
         pbegin++;
