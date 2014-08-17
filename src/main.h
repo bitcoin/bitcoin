@@ -23,6 +23,7 @@
 #include <exception>
 #include <map>
 #include <set>
+#include <list>
 #include <stdint.h>
 #include <string>
 #include <utility>
@@ -99,6 +100,14 @@ extern bool fIsBareMultisigStd;
 extern unsigned int nCoinCacheSize;
 extern CFeeRate minRelayTxFee;
 
+struct COrphanBlock {
+    uint256 hashBlock;
+    uint256 hashPrev;
+    std::vector<unsigned char> vchBlock;
+};
+extern std::map<uint256, COrphanBlock*> mapOrphanBlocks;
+extern std::map<uint256, CTransaction> mapOrphanTransactions;
+
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
 
@@ -147,10 +156,6 @@ bool LoadBlockIndex();
 void UnloadBlockIndex();
 /** Print the loaded block tree */
 void PrintBlockTree();
-/** Process protocol messages received from a given node */
-bool ProcessMessages(CNode* pfrom);
-/** Send queued protocol messages to be sent to a give node */
-bool SendMessages(CNode* pto, bool fSendTrickle);
 /** Run an instance of the script checking thread */
 void ThreadScriptCheck();
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
@@ -188,9 +193,74 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
 
 
+struct CMainSignals {
+    // Notifies listeners of updated transaction data (transaction, and optionally the block it is found in.
+    boost::signals2::signal<void (const CTransaction &, const CBlock *)> SyncTransaction;
+    // Notifies listeners of an erased transaction (currently disabled, requires transaction replacement).
+    boost::signals2::signal<void (const uint256 &)> EraseTransaction;
+    // Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible).
+    boost::signals2::signal<void (const uint256 &)> UpdatedTransaction;
+    // Notifies listeners of a new active block chain.
+    boost::signals2::signal<void (const CBlockLocator &)> SetBestChain;
+    // Notifies listeners about an inventory item being seen on the network.
+    boost::signals2::signal<void (const uint256 &)> Inventory;
+    // Tells listeners to broadcast their data.
+    boost::signals2::signal<void ()> Broadcast;
+};
+
+// Blocks that are in flight, and that are in the queue to be downloaded.
+// Protected by cs_main.
+struct QueuedBlock {
+    uint256 hash;
+    int64_t nTime;  // Time of "getdata" request in microseconds.
+    int nQueuedBefore;  // Number of blocks in flight at the time of request.
+};
+
 struct CNodeStateStats {
     int nMisbehavior;
     int nSyncHeight;
+};
+
+struct CBlockReject {
+    unsigned char chRejectCode;
+    std::string strRejectReason;
+    uint256 hashBlock;
+};
+
+// Maintain validation-specific state about nodes, protected by cs_main, instead
+// by CNode's own locks. This simplifies asynchronous operation, where
+// processing of incoming data is done after the ProcessMessage call returns,
+// and we're no longer holding the node's locks.
+struct CNodeState {
+    // Accumulated misbehaviour score for this peer.
+    int nMisbehavior;
+    // Whether this peer should be disconnected and banned (unless whitelisted).
+    bool fShouldBan;
+    // String name of this peer (debugging/logging purposes).
+    std::string name;
+    // List of asynchronously-determined block rejections to notify this peer about.
+    std::vector<CBlockReject> rejects;
+    // The best known block we know this peer has announced.
+    CBlockIndex *pindexBestKnownBlock;
+    // The hash of the last unknown block this peer has announced.
+    uint256 hashLastUnknownBlock;
+    std::list<QueuedBlock> vBlocksInFlight;
+    int nBlocksInFlight;
+    std::list<uint256> vBlocksToDownload;
+    int nBlocksToDownload;
+    int64_t nLastBlockReceive;
+    int64_t nLastBlockProcess;
+
+    CNodeState() {
+        nMisbehavior = 0;
+        fShouldBan = false;
+        pindexBestKnownBlock = NULL;
+        hashLastUnknownBlock = uint256(0);
+        nBlocksToDownload = 0;
+        nBlocksInFlight = 0;
+        nLastBlockReceive = 0;
+        nLastBlockProcess = 0;
+    }
 };
 
 struct CDiskBlockPos
