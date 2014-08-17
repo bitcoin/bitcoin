@@ -75,6 +75,7 @@ if USE_LIBSECP256K1
 endif
 
 test_test_bitcoin_LDADD += $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS)
+test_test_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
 
 nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
 
