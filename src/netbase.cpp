@@ -47,8 +47,18 @@ enum Network ParseNetwork(std::string net) {
     boost::to_lower(net);
     if (net == "ipv4") return NET_IPV4;
     if (net == "ipv6") return NET_IPV6;
-    if (net == "tor")  return NET_TOR;
+    if (net == "tor" || net == "onion")  return NET_TOR;
     return NET_UNROUTABLE;
+}
+
+std::string GetNetworkName(enum Network net) {
+    switch(net)
+    {
+    case NET_IPV4: return "ipv4";
+    case NET_IPV6: return "ipv6";
+    case NET_TOR: return "onion";
+    default: return "";
+    }
 }
 
 void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
