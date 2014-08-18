@@ -810,7 +810,7 @@ QString formatDurationStr(int secs)
     return strList.join(" ");
 }
 
-QString formatServicesStr(uint64_t mask)
+QString formatServicesStr(quint64 mask)
 {
     QStringList strList;
 

@@ -180,7 +180,7 @@ namespace GUIUtil
     QString formatDurationStr(int secs);
 
     /* Format CNodeStats.nServices bitmask into a user-readable string */
-    QString formatServicesStr(uint64_t mask);
+    QString formatServicesStr(quint64 mask);
 
     /* Format a CNodeCombinedStats.dPingTime into a user-readable string or display N/A, if 0*/
     QString formatPingTime(double dPingTime);
