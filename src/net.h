@@ -442,12 +442,15 @@ public:
         }
     }
 
-    void PushInventory(const CInv& inv)
+    bool PushInventory(const CInv& inv)
     {
         {
             LOCK(cs_inventory);
-            if (!setInventoryKnown.count(inv))
+            if (!setInventoryKnown.count(inv)) {
                 vInventoryToSend.push_back(inv);
+                return true;
+            } else
+                return false;
         }
     }
 
