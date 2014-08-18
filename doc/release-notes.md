@@ -44,21 +44,26 @@ of minutes on a typical machine).
 =======================
 
 RPC:
-
-Command-line options:
-
-Block-chain handling and storage:
+- Avoid a segfault on getblock if it can't read a block from disk
+- Add paranoid return value checks in base58
 
 Protocol and network code:
+- Don't poll showmyip.com, it doesn't exist anymore
+- Add a way to limit deserialized string lengths and use it
+- Add a new checkpoint at block 295,000
+- Increase IsStandard() scriptSig length
 
 Wallet:
-
-Build system:
+- Check redeemScript size does not exceed 520 byte limit
+- Ignore (and warn about) too-long redeemScripts while loading wallet
 
 GUI:
+- fix 'opens in testnet mode when presented with a BIP-72 link with no fallback'
+- AvailableCoins: acquire cs_main mutex
 
 Miscellaneous:
-
+- key.cpp: fail with a friendlier message on missing ssl EC support
+- Remove bignum dependency for scripts
 
 Credits
 --------
