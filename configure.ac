@@ -444,6 +444,18 @@ AC_SUBST(LEVELDB_CPPFLAGS)
 AC_SUBST(LIBLEVELDB)
 AC_SUBST(LIBMEMENV)
 
+LIBBASE58_CPPFLAGS=
+LIBBASE58=
+AM_CONDITIONAL([EMBEDDED_LIBBASE58],[true])
+if false; then
+	AC_CONFIG_SUBDIRS([src/libbase58])
+fi
+custom_subdirs="$custom_subdirs src/libbase58"
+custom_subdir_libbase58_args="--disable-shared --disable-tool"
+custom_subdir_libbase58_forceargs="CFLAGS=\"$CFLAGS -fPIC\""
+AC_SUBST(LIBBASE58_CPPFLAGS)
+AC_SUBST(LIBBASE58)
+
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
     BITCOIN_FIND_BDB48
@@ -794,6 +806,18 @@ AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist])
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/build-tests.sh],[chmod +x qa/pull-tester/build-tests.sh])
 AC_OUTPUT
+if test "$no_recursion" != yes; then
+	orig_subdirs="$subdirs"
+	orig_ac_configure_args="$ac_configure_args"
+	for custom_subdir in $custom_subdirs; do
+		subdirs="$custom_subdir"
+		custom_subdir_base=$(basename "$custom_subdir")
+		eval 'ac_configure_args="$custom_subdir_'"$custom_subdir_base"'_args $orig_ac_configure_args $custom_subdir_'"$custom_subdir_base"'_forceargs"'
+		_AC_OUTPUT_SUBDIRS
+	done
+	subdirs="$orig_subdirs"
+	ac_configure_args="$orig_ac_configure_args"
+fi
 
 dnl Taken from https://wiki.debian.org/RpathIssue
 case $host in

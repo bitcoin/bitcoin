@@ -20,8 +20,16 @@ $(LIBLEVELDB) $(LIBMEMENV):
           OPT="$(CXXFLAGS) $(CPPFLAGS)"
 endif
 
+if EMBEDDED_LIBBASE58
+LIBBASE58_CPPFLAGS += -I$(srcdir)/libbase58
+LIBBASE58 += $(builddir)/libbase58/libbase58.la
+
+$(LIBBASE58):
+	@echo "Building libbase58 ..." && $(MAKE) -C $(@D) $(@F)
+endif
+
 BITCOIN_CONFIG_INCLUDES=-I$(builddir)/config
-BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(LIBBASE58_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
 if USE_LIBSECP256K1
 BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
@@ -29,7 +37,7 @@ endif
 
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
-LIBBITCOIN_COMMON=libbitcoin_common.a
+LIBBITCOIN_COMMON=libbitcoin_common.a $(LIBBASE58)
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
@@ -306,14 +314,15 @@ bitcoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 bitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
 
-CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
+CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a libbase58/libbase58.a *.gcda *.gcno
 
 DISTCLEANFILES = obj/build.h
 
-EXTRA_DIST = leveldb secp256k1
+EXTRA_DIST = leveldb libbase58 secp256k1
 
 clean-local:
 	-$(MAKE) -C leveldb clean
+	-$(MAKE) -C libbase58 clean
 	-$(MAKE) -C secp256k1 clean 2>/dev/null
 	rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
