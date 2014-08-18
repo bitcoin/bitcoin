@@ -150,7 +150,7 @@ AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
 PKG_PROG_PKG_CONFIG
 
-# Enable debug 
+# Enable debug
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
                     [use debug compiler flags and macros (default is no)])],
@@ -161,11 +161,11 @@ if test "x$enable_debug" = xyes; then
     if test "x$GCC" = xyes; then
         CFLAGS="-g3 -O0 -DDEBUG"
     fi
-    
+
     if test "x$GXX" = xyes; then
         CXXFLAGS="-g3 -O0 -DDEBUG"
     fi
-fi 
+fi
 
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
@@ -743,10 +743,10 @@ fi
 AC_MSG_CHECKING([whether to build ZMQ support])
 if test "x$use_zmq" == "xyes"; then
   AC_MSG_RESULT([yes])
-  PKG_CHECK_MODULES([ZMQ],[libzmq],
+  PKG_CHECK_MODULES([ZMQ],[libzmq >= 2.1],
     [AC_DEFINE([ENABLE_ZMQ],[1],[Define to 1 to enable ZMQ functions])],
     [AC_DEFINE([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
-     AC_MSG_WARN([libzmq not found, disabling])
+     AC_MSG_WARN([libzmq >= 2.1 not found, disabling])
      use_zmq=no])
 else
   AC_MSG_RESULT([no, --disable-zmq used])
