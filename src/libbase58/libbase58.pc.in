@@ -1,0 +1,9 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: @PACKAGE_NAME@
+Description: Library for Bitcoin's base58 encoding.
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lbase58
