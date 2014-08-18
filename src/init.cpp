@@ -454,6 +454,30 @@ bool InitSanityCheck(void)
     return true;
 }
 
+/** Initialize proxy servers
+ *  Check proxies and (if they are valid) set them to be used by the client
+ */
+bool ProxyInit(Network net, const std::string& strArg, bool fIsDefault)
+{
+    // if network is not limited and -no{proxy/proxy6/onion} was NOT specified
+    if (!IsLimited(net) && (GetArg(strArg, "0") != "0")) {
+        CService addrProxy = CService(mapArgs[strArg], 9050);
+
+        // try to set address as proxy
+        if (!SetProxy(net, addrProxy))
+            return InitError(strprintf(_("Invalid proxy address '%s' for: %s"), mapArgs[strArg], strArg));
+        // special-case Tor, which needs to be set as reachable manually
+        if (net == NET_TOR)
+            SetReachable(NET_TOR);
+
+        // everything ok
+        return true;
+    }
+
+    // prerequisites failed (no error for -proxy)
+    return fIsDefault;
+}
+
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
  */
@@ -803,34 +827,16 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     }
 
-    CService addrProxy;
-    bool fProxy = false;
-    if (mapArgs.count("-proxy")) {
-        addrProxy = CService(mapArgs["-proxy"], 9050);
-        if (!addrProxy.IsValid())
-            return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"]));
-
-        if (!IsLimited(NET_IPV4))
-            SetProxy(NET_IPV4, addrProxy);
-        if (!IsLimited(NET_IPV6))
-            SetProxy(NET_IPV6, addrProxy);
-        SetNameProxy(addrProxy);
-        fProxy = true;
-    }
-
-    // -onion can override normal proxy, -noonion disables tor entirely
-    if (!(mapArgs.count("-onion") && mapArgs["-onion"] == "0") &&
-        (fProxy || mapArgs.count("-onion"))) {
-        CService addrOnion;
-        if (!mapArgs.count("-onion"))
-            addrOnion = addrProxy;
-        else
-            addrOnion = CService(mapArgs["-onion"], 9050);
-        if (!addrOnion.IsValid())
-            return InitError(strprintf(_("Invalid -onion address: '%s'"), mapArgs["-onion"]));
-        SetProxy(NET_TOR, addrOnion);
-        SetReachable(NET_TOR);
-    }
+    // check for presence of default proxy to reach peers via IPv4
+    if (!ProxyInit(NET_IPV4, "-proxy", true))
+        return false; // errors with default proxy lead to exit
+    // enable outgoing IPv6 connections for default proxy
+    if (!ProxyInit(NET_IPV6, "-proxy", true))
+        return false; // errors with default proxy lead to exit
+    // enable outgoing Tor connections for default proxy (if no separate SOCKS5 proxy for Tor will be used)
+    if (!ProxyInit(NET_TOR, "-onion", false))
+        if (!ProxyInit(NET_TOR, "-proxy", true))
+            return false; // errors with default proxy lead to exit
 
     // see Step 2: parameter interactions for more information about these
     fListen = GetBoolArg("-listen", DEFAULT_LISTEN);

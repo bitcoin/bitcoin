@@ -345,36 +345,53 @@ Value getnetworkinfo(const Array& params, bool fHelp)
             "getnetworkinfo\n"
             "Returns an object containing various state info regarding P2P networking.\n"
             "\nResult:\n"
-            "{\n"
-            "  \"version\": xxxxx,           (numeric) the server version\n"
-            "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
-            "  \"localservices\": \"xxxxxxxxxxxxxxxx\",   (string) the services we offer to the network\n"
-            "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
-            "  \"connections\": xxxxx,       (numeric) the number of connections\n"
-            "  \"proxy\": \"host:port\",     (string, optional) the proxy used by the server\n"
-            "  \"relayfee\": x.xxxx,         (numeric) minimum relay fee for non-free transactions in btc/kb\n"
-            "  \"localaddresses\": [,        (array) list of local addresses\n"
-            "    \"address\": \"xxxx\",      (string) network address\n"
-            "    \"port\": xxx,              (numeric) network port\n"
-            "    \"score\": xxx              (numeric) relative score\n"
-            "  ]\n"
+            "[\n"
+            "  {\n"
+            "    \"version\": xxxxx,                        (numeric) the server version\n"
+            "    \"protocolversion\": xxxxx,                (numeric) the protocol version\n"
+            "    \"localservices\": \"xxxxxxxxxxxxxxxx\",   (string) the services we offer to the network\n"
+            "    \"timeoffset\": xxxxx,                     (numeric) the time offset\n"
+            "    \"connections\": xxxxx                     (numeric) the number of connections\n"
+            "    \"relayfee\": x.xxxx,                      (numeric) minimum relay fee for non-free transactions in btc/kb\n"
+            "    \"localaddresses\": [                      (array) list of local addresses\n"
+            "    {\n"
+            "      \"address\": \"xxxx\",                   (string) network address\n"
+            "      \"port\": xxx,                           (numeric) network port\n"
+            "      \"score\": xxx                           (numeric) relative score\n"
+            "    }\n"
+            "    ,...\n"
+            "    ]\n"
+            "  },\n"
+            "  {\n"
+            "    \"proxy-default\": \"host:port\",          (string, optional) the default socks5 proxy used by the server\n"
+            "    \"proxy-ipv6\": \"host:port\",             (string, optional) the socks5 proxy for reaching peers via ipv6\n"
+            "    \"proxy-ipv6-from-default\": true|false,   (boolean) is this proxy derived from default socks5 proxy server\n"
+            "    \"proxy-onion\": \"host:port\",            (string, optional) the socks5 proxy for reaching peers via tor hidden services\n"
+            "    \"proxy-onion-from-default\": true|false   (boolean) is this proxy derived from default socks5 proxy server\n"
+            "  }\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getnetworkinfo", "")
             + HelpExampleRpc("getnetworkinfo", "")
         );
 
-    proxyType proxy;
-    GetProxy(NET_IPV4, proxy);
+    // collect current proxy settings
+    proxyType proxyIpv4;
+    GetProxy(NET_IPV4, proxyIpv4);
+    proxyType proxyIpv6;
+    GetProxy(NET_IPV6, proxyIpv6);
+    proxyType proxyTor;
+    GetProxy(NET_TOR, proxyTor);
+
+    Array ret;
 
     Object obj;
-    obj.push_back(Pair("version",       (int)CLIENT_VERSION));
-    obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
-    obj.push_back(Pair("localservices",       strprintf("%016x", nLocalServices)));
-    obj.push_back(Pair("timeoffset",    GetTimeOffset()));
-    obj.push_back(Pair("connections",   (int)vNodes.size()));
-    obj.push_back(Pair("proxy",         (proxy.IsValid() ? proxy.ToStringIPPort() : string())));
-    obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    obj.push_back(Pair("version", CLIENT_VERSION));
+    obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
+    obj.push_back(Pair("localservices", strprintf("%016x", nLocalServices)));
+    obj.push_back(Pair("timeoffset", GetTimeOffset()));
+    obj.push_back(Pair("connections", (int)vNodes.size()));
+    obj.push_back(Pair("relayfee", ValueFromAmount(::minRelayTxFee.GetFeePerK())));
     Array localAddresses;
     {
         LOCK(cs_mapLocalHost);
@@ -388,5 +405,16 @@ Value getnetworkinfo(const Array& params, bool fHelp)
         }
     }
     obj.push_back(Pair("localaddresses", localAddresses));
-    return obj;
+
+    Object proxy;
+    proxy.push_back(Pair("proxy-default", proxyIpv4.IsValid() ? proxyIpv4.ToStringIPPort() : string()));
+    proxy.push_back(Pair("proxy-ipv6", proxyIpv6.IsValid() ? proxyIpv6.ToStringIPPort() : string()));
+    proxy.push_back(Pair("proxy-ipv6-from-default", proxyIpv6 == proxyIpv4));
+    proxy.push_back(Pair("proxy-onion", proxyTor.IsValid() ? proxyTor.ToStringIPPort() : string()));
+    proxy.push_back(Pair("proxy-onion-from-default", proxyTor == proxyIpv4));
+
+    ret.push_back(obj);
+    ret.push_back(proxy);
+
+    return ret;
 }
