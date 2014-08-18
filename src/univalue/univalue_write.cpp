@@ -5,33 +5,14 @@
 #include <ctype.h>
 #include <stdio.h>
 #include "univalue.h"
+#include "univalue_escapes.h"
 
 // TODO: Using UTF8
 
 using namespace std;
 
-static bool initEscapes;
-static const char *escapes[256];
-
-static void initJsonEscape()
-{
-    escapes['"'] = "\\\"";
-    escapes['\\'] = "\\\\";
-    escapes['/'] = "\\/";
-    escapes['\b'] = "\\b";
-    escapes['\f'] = "\\f";
-    escapes['\n'] = "\\n";
-    escapes['\r'] = "\\r";
-    escapes['\t'] = "\\t";
-
-    initEscapes = true;
-}
-
 static string json_escape(const string& inS)
 {
-    if (!initEscapes)
-        initJsonEscape();
-
     string outS;
     outS.reserve(inS.size() * 2);
 
