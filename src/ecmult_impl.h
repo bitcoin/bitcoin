@@ -53,9 +53,9 @@ void static secp256k1_ecmult_table_precomp_ge(secp256k1_ge_t *pre, const secp256
 /** The following two macro retrieves a particular odd multiple from a table
  *  of precomputed multiples. */
 #define ECMULT_TABLE_GET(r,pre,n,w,neg) do { \
-    assert(((n) & 1) == 1); \
-    assert((n) >= -((1 << ((w)-1)) - 1)); \
-    assert((n) <=  ((1 << ((w)-1)) - 1)); \
+    VERIFY_CHECK(((n) & 1) == 1); \
+    VERIFY_CHECK((n) >= -((1 << ((w)-1)) - 1)); \
+    VERIFY_CHECK((n) <=  ((1 << ((w)-1)) - 1)); \
     if ((n) > 0) \
         *(r) = (pre)[((n)-1)/2]; \
     else \
@@ -117,7 +117,7 @@ static void secp256k1_ecmult_start(void) {
             tj[pos++] = gj;
         }
     }
-    assert(pos == 960);
+    VERIFY_CHECK(pos == 960);
     tj[pos] = fn;
     secp256k1_ge_t t[961]; secp256k1_ge_set_all_gej(961, t, tj);
     pos = 0;
@@ -131,7 +131,7 @@ static void secp256k1_ecmult_start(void) {
                 ret->prec[j][k][i] = raw[k];
         }
     }
-    assert(pos == 960);
+    VERIFY_CHECK(pos == 960);
     secp256k1_ge_neg(&ret->fin, &t[pos]);
 }
 

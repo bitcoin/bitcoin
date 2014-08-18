@@ -11,6 +11,7 @@
 #include <openssl/bn.h>
 #include <openssl/crypto.h>
 
+#include "util.h"
 #include "num.h"
 
 void static secp256k1_num_init(secp256k1_num_t *r) {
@@ -31,7 +32,7 @@ void static secp256k1_num_copy(secp256k1_num_t *r, const secp256k1_num_t *a) {
 
 void static secp256k1_num_get_bin(unsigned char *r, unsigned int rlen, const secp256k1_num_t *a) {
     unsigned int size = BN_num_bytes(&a->bn);
-    assert(size <= rlen);
+    VERIFY_CHECK(size <= rlen);
     memset(r,0,rlen);
     BN_bn2bin(&a->bn, r + rlen - size);
 }
@@ -133,7 +134,7 @@ void static secp256k1_num_set_hex(secp256k1_num_t *r, const char *a, int alen) {
 void static secp256k1_num_get_hex(char *r, int rlen, const secp256k1_num_t *a) {
     char *str = BN_bn2hex(&a->bn);
     int len = strlen(str);
-    assert(rlen >= len);
+    VERIFY_CHECK(rlen >= len);
     for (int i=0; i<rlen-len; i++)
         r[i] = '0';
     memcpy(r+rlen-len, str, len);

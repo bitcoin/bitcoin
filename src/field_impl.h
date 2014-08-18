@@ -9,6 +9,8 @@
 #include "libsecp256k1-config.h"
 #endif
 
+#include "util.h"
+
 #if defined(USE_FIELD_GMP)
 #include "field_gmp_impl.h"
 #elif defined(USE_FIELD_10X26)
@@ -218,7 +220,7 @@ void static secp256k1_fe_inv_all(size_t len, secp256k1_fe_t r[len], const secp25
     if (len < 1)
         return;
 
-    assert((r + len <= a) || (a + len <= r));
+    VERIFY_CHECK((r + len <= a) || (a + len <= r));
 
     r[0] = a[0];
 
@@ -242,7 +244,7 @@ void static secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t r[len], const se
     if (len < 1)
         return;
 
-    assert((r + len <= a) || (a + len <= r));
+    VERIFY_CHECK((r + len <= a) || (a + len <= r));
 
     r[0] = a[0];
 
