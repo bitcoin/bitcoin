@@ -44,7 +44,7 @@ static bool validNumStr(const string& s)
 
 bool UniValue::setNumStr(const string& val_)
 {
-    if (!validNumStr(val))
+    if (!validNumStr(val_))
         return false;
 
     clear();
