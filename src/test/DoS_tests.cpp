@@ -14,6 +14,7 @@
 #include "pow.h"
 #include "script.h"
 #include "serialize.h"
+#include "chainparams.h"
 
 #include <stdint.h>
 
@@ -126,6 +127,9 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits)
         (1296207707,453179945)(1302624061,453036989)(1309640330,437004818)
         (1313172719,436789733);
 
+	CBaseChainParams::Network prevParams = Params().NetworkID();
+	SelectParams(CBaseChainParams::MAIN);
+	
     // Make sure CheckNBits considers every combination of block-chain-lock-in-points
     // "sane":
     BOOST_FOREACH(const BlockData::value_type& i, chainData)
@@ -147,6 +151,8 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits)
 
     // ... but OK if enough time passed for difficulty to adjust downward:
     BOOST_CHECK(CheckNBits(firstcheck.second, lastcheck.first+60*60*24*365*4, lastcheck.second, lastcheck.first));
+	
+	SelectParams(prevParams);
 }
 
 CTransaction RandomOrphan()

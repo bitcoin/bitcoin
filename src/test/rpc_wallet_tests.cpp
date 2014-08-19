@@ -7,6 +7,7 @@
 
 #include "base58.h"
 #include "wallet.h"
+#include "chainparams.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -65,6 +66,9 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     // Test RPC calls for various wallet statistics
     Value r;
 
+	CBaseChainParams::Network prevParams = Params().NetworkID();
+	SelectParams(CBaseChainParams::MAIN);
+	
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     CPubKey demoPubkey = pwalletMain->GenerateNewKey();
@@ -173,6 +177,8 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
 	Array arr = retValue.get_array();
 	BOOST_CHECK(arr.size() > 0);
 	BOOST_CHECK(CBitcoinAddress(arr[0].get_str()).Get() == demoAddress.Get());
+	
+	SelectParams(prevParams);
 
 }
 

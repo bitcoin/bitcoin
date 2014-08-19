@@ -12,6 +12,7 @@
 #include "script.h"
 #include "uint256.h"
 #include "util.h"
+#include "chainparams.h"
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
@@ -126,7 +127,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
     std::vector<unsigned char> result;
     CBitcoinSecret secret;
     CBitcoinAddress addr;
-
+	CBaseChainParams::Network prevParams = Params().NetworkID();
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
@@ -141,6 +142,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
         const Object &metadata = test[2].get_obj();
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
         bool isTestnet = find_value(metadata, "isTestnet").get_bool();
+		
         if (isTestnet)
             SelectParams(CBaseChainParams::TESTNET);
         else
@@ -175,7 +177,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
             BOOST_CHECK_MESSAGE(!secret.IsValid(), "IsValid pubkey as privkey:" + strTest);
         }
     }
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(prevParams);
 }
 
 // Goal: check that generated keys match test vectors
@@ -183,6 +185,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
 {
     Array tests = read_json(std::string(json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
     std::vector<unsigned char> result;
+	CBaseChainParams::Network prevParams = Params().NetworkID();
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
@@ -197,6 +200,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
         const Object &metadata = test[2].get_obj();
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
         bool isTestnet = find_value(metadata, "isTestnet").get_bool();
+		
         if (isTestnet)
             SelectParams(CBaseChainParams::TESTNET);
         else
@@ -243,7 +247,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
     CTxDestination nodest = CNoDestination();
     BOOST_CHECK(!dummyAddr.Set(nodest));
 
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(prevParams);
 }
 
 // Goal: check that base58 parsing code is robust against a variety of corrupted data
