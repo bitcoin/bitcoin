@@ -849,11 +849,10 @@ static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
     if (!HTTPAuthorized(mapHeaders))
     {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", conn->peer_address_to_string());
-        /* Deter brute-forcing short passwords.
+        /* Deter brute-forcing
            If this results in a DoS the user really
            shouldn't have their RPC port exposed. */
-        if (mapArgs["-rpcpassword"].size() < 20)
-            MilliSleep(250);
+        MilliSleep(250);
 
         conn->stream() << HTTPError(HTTP_UNAUTHORIZED, false) << std::flush;
         return false;
