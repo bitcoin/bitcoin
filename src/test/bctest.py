@@ -9,12 +9,20 @@ import sys
 
 def bctest(testDir, testObj):
 	execargs = testObj['exec']
+
+	stdinCfg = None
+	inputData = None
+	if "input" in testObj:
+		filename = testDir + "/" + testObj['input']
+		inputData = open(filename).read()
+		stdinCfg = subprocess.PIPE
+
 	outputFn = testObj['output_cmp']
 	outputData = open(testDir + "/" + outputFn).read()
 
-	proc = subprocess.Popen(execargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	proc = subprocess.Popen(execargs, stdin=stdinCfg, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	try:
-		outs = proc.communicate()
+		outs = proc.communicate(input=inputData)
 	except OSError:
 		print("OSError, Failed to execute " + execargs[0])
 		sys.exit(1)
