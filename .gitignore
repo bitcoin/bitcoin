@@ -43,6 +43,7 @@ src/qt/test/moc*.cpp
 *.bak
 *.rej
 *.orig
+*.pyc
 *.o
 *.o-*
 *.patch

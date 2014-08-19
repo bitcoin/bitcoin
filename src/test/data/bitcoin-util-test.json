@@ -1,0 +1,9 @@
+[
+  { "exec": ["./bitcoin-tx", "-create"],
+    "output_cmp": "blanktx.hex"
+  },
+  { "exec": ["./bitcoin-tx", "-"],
+    "input": "blanktx.hex",
+    "output_cmp": "blanktx.hex"
+  }
+]
