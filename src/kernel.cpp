@@ -392,7 +392,7 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned 
 // Scan given coins set for kernel solution
 bool ScanForStakeKernelHash(CoinsSet &setCoins, MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime)
 {
-    uint256 hashProofOfStake = 0, targetProofOfStake = 0;
+    uint256 hashProofOfStake = 0;
 
     for(CoinsSet::const_iterator pcoin = setCoins.begin(); pcoin != setCoins.end(); pcoin++)
     {
@@ -436,7 +436,7 @@ bool ScanForStakeKernelHash(CoinsSet &setCoins, MetaMap &mapMeta, KernelSearchSe
         {
             nTimeTx = settings.nTime - n;
             CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64)pcoin->first->nTime, (int64)nTimeTx) / COIN / (24 * 60 * 60);
-            targetProofOfStake = (bnCoinDayWeight * bnTargetPerCoinDay).getuint256();
+            CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
 
             // Build kernel
             CDataStream ss(SER_GETHASH, 0);
@@ -446,7 +446,7 @@ bool ScanForStakeKernelHash(CoinsSet &setCoins, MetaMap &mapMeta, KernelSearchSe
             // Calculate kernel hash
             hashProofOfStake = Hash(ss.begin(), ss.end());
 
-            if (bnCoinDayWeight * bnTargetPerCoinDay >= CBigNum(hashProofOfStake))
+            if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
             {
                 if (fDebug)
                     printf("nStakeModifier=0x%016"PRI64x", nBlockTime=%u nTxOffset=%u nTxPrevTime=%u nVout=%u nTimeTx=%u hashProofOfStake=%s Success=true\n",

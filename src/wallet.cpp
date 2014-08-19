@@ -1639,7 +1639,7 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint
     static uint256 hashPrevBlock;
 
     // Cache outputs unless best block or wallet transaction set changed
-    if (!fCoinsDataActual)
+    if (!fCoinsDataActual || setCoins.size() == 0)
     {
         int64 nValueIn = 0;
         if (!SelectCoinsSimple(nBalance - nReserveBalance, GetAdjustedTime(), nCoinbaseMaturity * 10, setCoins, nValueIn))
@@ -1843,7 +1843,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     {
         LOCK2(cs_main, cs_wallet);
         // Cache outputs unless best block or wallet transaction set changed
-        if (!fCoinsDataActual)
+        if (!fCoinsDataActual || setCoins.size() == 0)
         {
             setCoins.clear();
             mapMeta.clear();
