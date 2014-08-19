@@ -63,10 +63,10 @@ BOOST_AUTO_TEST_SUITE(key_tests)
 BOOST_AUTO_TEST_CASE(key_test1)
 {
     CBitcoinSecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
-	
-	CBaseChainParams::Network prevParams = Params().NetworkID();
-	SelectParams(CBaseChainParams::MAIN);
-	
+
+    CBaseChainParams::Network prevParams = Params().NetworkID();
+    SelectParams(CBaseChainParams::MAIN);
+
     BOOST_CHECK( bsecret1.SetString (strSecret1));
     BOOST_CHECK( bsecret2.SetString (strSecret2));
     BOOST_CHECK( bsecret1C.SetString(strSecret1C));
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
         BOOST_CHECK(rkey1C == pubkey1C);
         BOOST_CHECK(rkey2C == pubkey2C);
     }
-	SelectParams(prevParams);
+    SelectParams(prevParams);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

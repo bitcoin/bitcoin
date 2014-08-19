@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
     std::vector<unsigned char> result;
     CBitcoinSecret secret;
     CBitcoinAddress addr;
-	CBaseChainParams::Network prevParams = Params().NetworkID();
+    CBaseChainParams::Network prevParams = Params().NetworkID();
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
         const Object &metadata = test[2].get_obj();
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
         bool isTestnet = find_value(metadata, "isTestnet").get_bool();
-		
+
         if (isTestnet)
             SelectParams(CBaseChainParams::TESTNET);
         else
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
 {
     Array tests = read_json(std::string(json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
     std::vector<unsigned char> result;
-	CBaseChainParams::Network prevParams = Params().NetworkID();
+    CBaseChainParams::Network prevParams = Params().NetworkID();
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
         const Object &metadata = test[2].get_obj();
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
         bool isTestnet = find_value(metadata, "isTestnet").get_bool();
-		
+
         if (isTestnet)
             SelectParams(CBaseChainParams::TESTNET);
         else

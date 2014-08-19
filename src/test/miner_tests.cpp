@@ -34,12 +34,12 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         pblock->nVersion = 1;
         pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
-		CMutableTransaction txCoinbase(pblock->vtx[0]);
+        CMutableTransaction txCoinbase(pblock->vtx[0]);
         txCoinbase.vin[0].scriptSig = CScript();
         txCoinbase.vin[0].scriptSig.push_back(i);
         txCoinbase.vin[0].scriptSig.push_back(chainActive.Height());
         txCoinbase.vout[0].scriptPubKey = CScript();
-        pblock->vtx[0] = CTransaction(txCoinbase);		
+        pblock->vtx[0] = CTransaction(txCoinbase);
         if (txFirst.size() < 2)
             txFirst.push_back(new CTransaction(pblock->vtx[0]));
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     chainActive.Tip()->nHeight--;
     SetMockTime(0);
-	mempool.clear();
+    mempool.clear();
 
     BOOST_FOREACH(CTransaction *tx, txFirst)
         delete tx;

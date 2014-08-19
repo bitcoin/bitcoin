@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(rpc_rawparams)
 {
     // Test raw transaction API argument handling
     Value r;
-	
+
     BOOST_CHECK_THROW(CallRPC("getrawtransaction"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("getrawtransaction not_hex"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("getrawtransaction a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed not_int"), runtime_error);
@@ -100,11 +100,11 @@ BOOST_AUTO_TEST_CASE(rpc_rawsign)
       "[{\"txid\":\"b4cc287e58f87cdae59417329f710f3ecd75a4ee1d2872b7248f50977c8493f3\","
       "\"vout\":1,\"scriptPubKey\":\"a914b10c9df5f7edf436c697f02f1efdba4cf399615187\","
       "\"redeemScript\":\"512103debedc17b3df2badbcdd86d5feb4562b86fe182e5998abd8bcd4f122c6155b1b21027e940bb73ab8732bfdf7f9216ecefca5b94d6df834e77e108f68e66f126044c052ae\"}]";
-	  
-	CBaseChainParams::Network prevParams = Params().NetworkID();
-	SelectParams(CBaseChainParams::MAIN);
+  
+    CBaseChainParams::Network prevParams = Params().NetworkID();
+    SelectParams(CBaseChainParams::MAIN);
 
-	
+
     r = CallRPC(string("createrawtransaction ")+prevout+" "+
       "{\"3HqAe9LtNBjnsfM4CyYaWTnvCaUYT7v4oZ\":11}");
     string notsigned = r.get_str();
@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(rpc_rawsign)
     BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool() == false);
     r = CallRPC(string("signrawtransaction ")+notsigned+" "+prevout+" "+"["+privkey1+","+privkey2+"]");
     BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool() == true);
-	
-	SelectParams(prevParams);
+
+    SelectParams(prevParams);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)

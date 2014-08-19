@@ -103,12 +103,12 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
     // after Params().TargetSpacing()*2 time between blocks:
     if (Params().AllowMinDifficultyBlocks() && nTime > Params().TargetSpacing()*2)
         return bnLimit.GetCompact();
-	
-	// uint256 cannot multiply 0xfff...ff by 4, it overflows and returns a lower number
-	// so for RegTest at minimum difficulty, we must skip this
-	if (Params().NetworkID()==CBaseChainParams::REGTEST)
-		return bnLimit.GetCompact();
-		
+
+    // uint256 cannot multiply 0xfff...ff by 4, it overflows and returns a lower number
+    // so for RegTest at minimum difficulty, we must skip this
+    if (Params().NetworkID()==CBaseChainParams::REGTEST)
+        return bnLimit.GetCompact();
+
     uint256 bnResult;
     bnResult.SetCompact(nBase);
     while (nTime > 0 && bnResult < bnLimit)

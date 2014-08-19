@@ -13,9 +13,9 @@ BOOST_AUTO_TEST_SUITE(main_tests)
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
     uint64_t nSum = 0;
-	CBaseChainParams::Network prevParams = Params().NetworkID();
-	SelectParams(CBaseChainParams::MAIN);
-	
+    CBaseChainParams::Network prevParams = Params().NetworkID();
+    SelectParams(CBaseChainParams::MAIN);
+
     for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
         uint64_t nSubsidy = GetBlockValue(nHeight, 0);
         BOOST_CHECK(nSubsidy <= 50 * COIN);
@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
         BOOST_CHECK(MoneyRange(nSum));
     }
     BOOST_CHECK(nSum == 2099999997690000ULL);
-	
-	SelectParams(prevParams);
+
+    SelectParams(prevParams);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

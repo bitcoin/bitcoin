@@ -80,12 +80,12 @@
 
 struct ReadAlerts
 {
-	CBaseChainParams::Network prevParams;
+    CBaseChainParams::Network prevParams;
     ReadAlerts()
     {
-		prevParams = Params().NetworkID();
-		SelectParams(CBaseChainParams::MAIN);
-		
+        prevParams = Params().NetworkID();
+        SelectParams(CBaseChainParams::MAIN);
+
         std::vector<unsigned char> vch(alert_tests::alertTests, alert_tests::alertTests + sizeof(alert_tests::alertTests));
         CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
         try {
@@ -99,8 +99,8 @@ struct ReadAlerts
         catch (std::exception) { }
     }
     ~ReadAlerts() { 
-		SelectParams(prevParams);
-	}
+    SelectParams(prevParams);
+    }
 
     static std::vector<std::string> read_lines(boost::filesystem::path filepath)
     {
@@ -122,10 +122,8 @@ BOOST_FIXTURE_TEST_SUITE(Alert_tests, ReadAlerts)
 
 BOOST_AUTO_TEST_CASE(AlertApplies)
 {
-	
-	
-    SetMockTime(11);
 
+    SetMockTime(11);
 
     BOOST_FOREACH(const CAlert& alert, alerts)
     {
@@ -160,8 +158,7 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
     BOOST_CHECK(!alerts[2].AppliesTo(1, "/Satoshi:0.3.0/"));
 
     SetMockTime(0);
-	
-	
+
 }
 
 
