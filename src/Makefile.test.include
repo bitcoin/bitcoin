@@ -1,7 +1,14 @@
-TESTS += test/test_bitcoin
+TESTS += test/test_bitcoin test/bitcoin-util-test.py
 bin_PROGRAMS += test/test_bitcoin
 TEST_SRCDIR = test
 TEST_BINARY=test/test_bitcoin$(EXEEXT)
+
+
+EXTRA_DIST += \
+	test/bctest.py \
+	test/bitcoin-util-test.py \
+	test/data/bitcoin-util-test.json \
+	test/data/blanktx.hex
 
 JSON_TEST_FILES = \
   test/data/script_valid.json \
