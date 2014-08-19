@@ -28,6 +28,8 @@ src/m4/ltsugar.m4
 src/m4/ltversion.m4
 src/m4/lt~obsolete.m4
 
+src/univalue/gen
+
 src/qt/*.moc
 src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
