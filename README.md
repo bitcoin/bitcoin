@@ -8,11 +8,9 @@ Copyright (c) 2009-2014 Bitcoin Core Developers
 What is Bitcoin?
 ----------------
 
-Bitcoin is an experimental new digital currency that enables instant payments to
+Bitcoin is a new experimental digital currency that enables instant payments to
 anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
+with no central authority; where transaction management and issuance of money is performed collectively by its network. The name of the open source software which enables the use of this currency is Bitcoin Core.
 
 For more information, as well as an immediately useable, binary version of
 the Bitcoin Core software, see https://www.bitcoin.org/en/download.
