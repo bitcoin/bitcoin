@@ -65,13 +65,11 @@ public:
     IMPLEMENT_SERIALIZE;
 
     template <typename Stream, typename Operation>
-    inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        size_t nSerSize = 0;
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(vData);
         READWRITE(nHashFuncs);
         READWRITE(nTweak);
         READWRITE(nFlags);
-        return nSerSize;
     }
 
     void insert(const std::vector<unsigned char>& vKey);

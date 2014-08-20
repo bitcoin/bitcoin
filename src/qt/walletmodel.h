@@ -62,9 +62,8 @@ public:
     IMPLEMENT_SERIALIZE;
 
     template <typename Stream, typename Operation>
-    inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        size_t nSerSize = 0;
-        bool fRead = boost::is_same<Operation, CSerActionUnserialize>();
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        bool fRead = ser_action.ForRead();
 
         SendCoinsRecipient* pthis = const_cast<SendCoinsRecipient*>(this);
 
@@ -94,8 +93,6 @@ public:
                 pthis->paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size()));
             pthis->authenticatedMerchant = QString::fromStdString(sAuthenticatedMerchant);
         }
-
-        return nSerSize;
     }
 };
 

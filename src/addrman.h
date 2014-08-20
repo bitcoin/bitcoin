@@ -49,14 +49,11 @@ public:
     IMPLEMENT_SERIALIZE;
 
     template <typename Stream, typename Operation>
-    inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        size_t nSerSize = 0;
-        CAddress* pthis = (CAddress*)(this);
-        READWRITE(*pthis);
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(*(CAddress*)this);
         READWRITE(source);
         READWRITE(nLastSuccess);
         READWRITE(nAttempts);
-        return nSerSize;
     }
 
     void Init()
