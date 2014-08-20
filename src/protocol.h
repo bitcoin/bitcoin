@@ -38,13 +38,11 @@ class CMessageHeader
         IMPLEMENT_SERIALIZE;
 
         template <typename Stream, typename Operation>
-        inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-            size_t nSerSize = 0;
+        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
             READWRITE(FLATDATA(pchMessageStart));
             READWRITE(FLATDATA(pchCommand));
             READWRITE(nMessageSize);
             READWRITE(nChecksum);
-            return nSerSize;
         }
 
     // TODO: make private (improves encapsulation)
@@ -90,12 +88,10 @@ class CAddress : public CService
         IMPLEMENT_SERIALIZE;
 
         template <typename Stream, typename Operation>
-        inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-            size_t nSerSize = 0;
-            bool fRead = boost::is_same<Operation, CSerActionUnserialize>();
+        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+            bool fRead = ser_action.ForRead();
 
             CAddress* pthis = const_cast<CAddress*>(this);
-            CService* pip = (CService*)pthis;
             if (fRead)
                 pthis->Init();
             if (nType & SER_DISK)
@@ -104,9 +100,7 @@ class CAddress : public CService
                 (nVersion >= CADDR_TIME_VERSION && !(nType & SER_GETHASH)))
             READWRITE(nTime);
             READWRITE(nServices);
-            READWRITE(*pip);
-
-            return nSerSize;
+            READWRITE(*(CService*)this);
         }
 
     // TODO: make private (improves encapsulation)
@@ -131,11 +125,9 @@ class CInv
         IMPLEMENT_SERIALIZE;
 
         template <typename Stream, typename Operation>
-        inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-            size_t nSerSize = 0;
+        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
             READWRITE(type);
             READWRITE(hash);
-            return nSerSize;
         }
 
         friend bool operator<(const CInv& a, const CInv& b);

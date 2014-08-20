@@ -91,10 +91,8 @@ class CNetAddr
         IMPLEMENT_SERIALIZE;
 
         template <typename Stream, typename Operation>
-        inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-            size_t nSerSize = 0;
+        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
             READWRITE(FLATDATA(ip));
-            return nSerSize;
         }
 };
 
@@ -155,16 +153,13 @@ class CService : public CNetAddr
         IMPLEMENT_SERIALIZE;
 
         template <typename Stream, typename Operation>
-        inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-            bool fRead = boost::is_same<Operation, CSerActionUnserialize>();
-            size_t nSerSize = 0;
-            CService* pthis = const_cast<CService*>(this);
+        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+            bool fRead = ser_action.ForRead();
             READWRITE(FLATDATA(ip));
             unsigned short portN = htons(port);
             READWRITE(portN);
             if (fRead)
-                 pthis->port = ntohs(portN);
-            return nSerSize;
+                 port = ntohs(portN);
         }
 };
 
