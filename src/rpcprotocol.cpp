@@ -18,7 +18,7 @@
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/shared_ptr.hpp>
-#include "json/json_spirit_writer_template.h"
+#include "json_spirit_wrapper.h"
 
 using namespace std;
 using namespace boost;
@@ -257,14 +257,14 @@ string JSONRPCRequest(const string& strMethod, const Array& params, const Value&
     request.push_back(Pair("method", strMethod));
     request.push_back(Pair("params", params));
     request.push_back(Pair("id", id));
-    return write_string(Value(request), false) + "\n";
+    return request.write() + "\n";
 }
 
 Object JSONRPCReplyObj(const Value& result, const Value& error, const Value& id)
 {
     Object reply;
-    if (error.type() != null_type)
-        reply.push_back(Pair("result", Value::null));
+    if (!error.isNull())
+        reply.push_back(Pair("result", NullUniValue));
     else
         reply.push_back(Pair("result", result));
     reply.push_back(Pair("error", error));
@@ -275,7 +275,7 @@ Object JSONRPCReplyObj(const Value& result, const Value& error, const Value& id)
 string JSONRPCReply(const Value& result, const Value& error, const Value& id)
 {
     Object reply = JSONRPCReplyObj(result, error, id);
-    return write_string(Value(reply), false) + "\n";
+    return reply.write() + "\n";
 }
 
 Object JSONRPCError(int code, const string& message)

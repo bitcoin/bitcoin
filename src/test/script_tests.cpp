@@ -26,9 +26,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_writer_template.h"
+#include "json_spirit_wrapper.h"
 
 using namespace std;
 using namespace json_spirit;
@@ -41,7 +39,7 @@ read_json(const std::string& jsondata)
 {
     Value v;
 
-    if (!read_string(jsondata, v) || v.type() != array_type)
+    if (!v.read(jsondata) || !v.isArray())
     {
         BOOST_ERROR("Parse error.");
         return Array();
@@ -60,10 +58,9 @@ BOOST_AUTO_TEST_CASE(script_valid)
     // scripts.
     Array tests = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
 
-    BOOST_FOREACH(Value& tv, tests)
-    {
-        Array test = tv.get_array();
-        string strTest = write_string(tv, false);
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        Array test = tests[idx];
+        string strTest = test.write();
         if (test.size() < 2) // Allow size > 2; extra stuff ignored (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
@@ -84,10 +81,9 @@ BOOST_AUTO_TEST_CASE(script_invalid)
     // Scripts that should evaluate as invalid
     Array tests = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
 
-    BOOST_FOREACH(Value& tv, tests)
-    {
-        Array test = tv.get_array();
-        string strTest = write_string(tv, false);
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        Array test = tests[idx];
+        string strTest = test.write();
         if (test.size() < 2) // Allow size > 2; extra stuff ignored (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);

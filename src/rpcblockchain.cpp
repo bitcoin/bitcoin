@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#include "json/json_spirit_value.h"
+#include "json_spirit_wrapper.h"
 
 using namespace json_spirit;
 using namespace std;
@@ -186,7 +186,13 @@ Value getrawmempool(const Array& params, bool fHelp)
                 if (mempool.exists(txin.prevout.hash))
                     setDepends.insert(txin.prevout.hash.ToString());
             }
-            Array depends(setDepends.begin(), setDepends.end());
+
+            UniValue depends;
+            BOOST_FOREACH(const string& dep, setDepends)
+            {
+                depends.push_back(dep);
+            }
+
             info.push_back(Pair("depends", depends));
             o.push_back(Pair(hash.ToString(), info));
         }
@@ -380,14 +386,14 @@ Value gettxout(const Array& params, bool fHelp)
         LOCK(mempool.cs);
         CCoinsViewMemPool view(*pcoinsTip, mempool);
         if (!view.GetCoins(hash, coins))
-            return Value::null;
+            return NullUniValue;
         mempool.pruneSpent(hash, coins); // TODO: this should be done by the CCoinsViewMemPool
     } else {
         if (!pcoinsTip->GetCoins(hash, coins))
-            return Value::null;
+            return NullUniValue;
     }
     if (n<0 || (unsigned int)n>=coins.vout.size() || coins.vout[n].IsNull())
-        return Value::null;
+        return NullUniValue;
 
     std::map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
     CBlockIndex *pindex = it->second;

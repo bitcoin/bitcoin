@@ -14,7 +14,7 @@
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
-#include "json/json_spirit_writer_template.h"
+#include "json_spirit_wrapper.h"
 #include <openssl/ecdsa.h>
 
 using namespace std;
@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(script_canon)
 {
     Array tests = read_json(std::string(json_tests::sig_canonical, json_tests::sig_canonical + sizeof(json_tests::sig_canonical)));
 
-    BOOST_FOREACH(Value &tv, tests) {
-        string test = tv.get_str();
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        string test = tests[idx].getValStr();
         if (IsHex(test)) {
             std::vector<unsigned char> sig = ParseHex(test);
             BOOST_CHECK_MESSAGE(IsCanonicalSignature(sig, SCRIPT_VERIFY_STRICTENC), test);
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(script_noncanon)
 {
     Array tests = read_json(std::string(json_tests::sig_noncanonical, json_tests::sig_noncanonical + sizeof(json_tests::sig_noncanonical)));
 
-    BOOST_FOREACH(Value &tv, tests) {
-        string test = tv.get_str();
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        string test = tests[idx].getValStr();
         if (IsHex(test)) {
             std::vector<unsigned char> sig = ParseHex(test);
             BOOST_CHECK_MESSAGE(!IsCanonicalSignature(sig, SCRIPT_VERIFY_STRICTENC), test);
