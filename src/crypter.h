@@ -44,13 +44,18 @@ public:
     std::vector<unsigned char> vchOtherDerivationParameters;
 
     IMPLEMENT_SERIALIZE
-    (
-        READWRITE(vchCryptedKey);
-        READWRITE(vchSalt);
-        READWRITE(nDerivationMethod);
-        READWRITE(nDeriveIterations);
-        READWRITE(vchOtherDerivationParameters);
-    )
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+        READWRITE(thisPtr->vchCryptedKey);
+        READWRITE(thisPtr->vchSalt);
+        READWRITE(thisPtr->nDerivationMethod);
+        READWRITE(thisPtr->nDeriveIterations);
+        READWRITE(thisPtr->vchOtherDerivationParameters);
+        return nSerSize;
+    }
+
     CMasterKey()
     {
         // 25000 rounds is just under 0.1 seconds on a 1.86 GHz Pentium M

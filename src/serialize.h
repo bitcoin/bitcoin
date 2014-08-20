@@ -22,6 +22,7 @@
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/type_traits/is_fundamental.hpp>
+#include <boost/typeof/typeof.hpp>
 
 class CAutoFile;
 class CDataStream;
@@ -35,6 +36,14 @@ template<typename T>
 inline T& REF(const T& val)
 {
     return const_cast<T&>(val);
+}
+
+// Used to acquire a const pointer "this" and generate a const
+// serialization operation from a template
+template<typename T>
+inline T MAKE_CONST(T val)
+{
+    return const_cast<const T>(val);
 }
 
 /** Get begin pointer of vector (non-const version).
@@ -79,48 +88,27 @@ enum
     SER_GETHASH         = (1 << 2),
 };
 
-#define IMPLEMENT_SERIALIZE(statements)    \
-    unsigned int GetSerializeSize(int nType, int nVersion) const  \
-    {                                           \
-        CSerActionGetSerializeSize ser_action;  \
-        const bool fGetSize = true;             \
-        const bool fWrite = false;              \
-        const bool fRead = false;               \
-        unsigned int nSerSize = 0;              \
-        ser_streamplaceholder s;                \
-        assert(fGetSize||fWrite||fRead); /* suppress warning */ \
-        s.nType = nType;                        \
-        s.nVersion = nVersion;                  \
-        {statements}                            \
-        return nSerSize;                        \
-    }                                           \
-    template<typename Stream>                   \
-    void Serialize(Stream& s, int nType, int nVersion) const  \
-    {                                           \
-        CSerActionSerialize ser_action;         \
-        const bool fGetSize = false;            \
-        const bool fWrite = true;               \
-        const bool fRead = false;               \
-        unsigned int nSerSize = 0;              \
-        assert(fGetSize||fWrite||fRead); /* suppress warning */ \
-        {statements}                            \
-    }                                           \
-    template<typename Stream>                   \
-    void Unserialize(Stream& s, int nType, int nVersion)  \
-    {                                           \
-        CSerActionUnserialize ser_action;       \
-        const bool fGetSize = false;            \
-        const bool fWrite = false;              \
-        const bool fRead = true;                \
-        unsigned int nSerSize = 0;              \
-        assert(fGetSize||fWrite||fRead); /* suppress warning */ \
-        {statements}                            \
-    }
-
 #define READWRITE(obj)      (nSerSize += ::SerReadWrite(s, (obj), nType, nVersion, ser_action))
 
-
-
+/* Implement three methods for serializable objects. These are actually wrappers over
+ * "SerializationOp" template, which implements the body of each class' serialization
+ * code. Adding "IMPLEMENT_SERIALIZE" in the body of the class causes these wrappers to be
+ * added as members. */
+#define IMPLEMENT_SERIALIZE                                                                         \
+    size_t GetSerializeSize(int nType, int nVersion) const {                                        \
+        ser_streamplaceholder s;                                                                    \
+        s.nType = nType;                                                                            \
+        s.nVersion = nVersion;                                                                      \
+        return SerializationOp(MAKE_CONST(this), s, CSerActionGetSerializeSize(), nType, nVersion); \
+    }                                                                                               \
+    template<typename Stream>                                                                       \
+    void Serialize(Stream& s, int nType, int nVersion) const {                                      \
+        SerializationOp(MAKE_CONST(this), s, CSerActionSerialize(), nType, nVersion);               \
+    }                                                                                               \
+    template<typename Stream>                                                                       \
+    void Unserialize(Stream& s, int nType, int nVersion) {                                          \
+        SerializationOp(this, s, CSerActionUnserialize(), nType, nVersion);                         \
+    }
 
 
 

@@ -30,7 +30,16 @@ public:
 
     COutPoint() { SetNull(); }
     COutPoint(uint256 hashIn, uint32_t nIn) { hash = hashIn; n = nIn; }
-    IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
+
+    IMPLEMENT_SERIALIZE
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+        READWRITE(FLATDATA(*thisPtr));
+        return nSerSize;
+    }
+
     void SetNull() { hash = 0; n = (uint32_t) -1; }
     bool IsNull() const { return (hash == 0 && n == (uint32_t) -1); }
 
@@ -85,11 +94,15 @@ public:
     CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<uint32_t>::max());
 
     IMPLEMENT_SERIALIZE
-    (
-        READWRITE(prevout);
-        READWRITE(scriptSig);
-        READWRITE(nSequence);
-    )
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+        READWRITE(thisPtr->prevout);
+        READWRITE(thisPtr->scriptSig);
+        READWRITE(thisPtr->nSequence);
+        return nSerSize;
+    }
 
     bool IsFinal() const
     {
@@ -136,7 +149,14 @@ public:
     friend bool operator>=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK >= b.nSatoshisPerK; }
     std::string ToString() const;
 
-    IMPLEMENT_SERIALIZE( READWRITE(nSatoshisPerK); )
+    IMPLEMENT_SERIALIZE
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+        READWRITE(thisPtr->nSatoshisPerK);
+        return nSerSize;
+    }
 };
 
 
@@ -157,10 +177,14 @@ public:
     CTxOut(int64_t nValueIn, CScript scriptPubKeyIn);
 
     IMPLEMENT_SERIALIZE
-    (
-        READWRITE(nValue);
-        READWRITE(scriptPubKey);
-    )
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+        READWRITE(thisPtr->nValue);
+        READWRITE(thisPtr->scriptPubKey);
+        return nSerSize;
+    }
 
     void SetNull()
     {
@@ -237,15 +261,23 @@ public:
 
     CTransaction& operator=(const CTransaction& tx);
 
-    IMPLEMENT_SERIALIZE(
-        READWRITE(*const_cast<int32_t*>(&this->nVersion));
-        nVersion = this->nVersion;
-        READWRITE(*const_cast<std::vector<CTxIn>*>(&vin));
-        READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
-        READWRITE(*const_cast<uint32_t*>(&nLockTime));
+    IMPLEMENT_SERIALIZE
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+        bool fRead = boost::is_same<Operation, CSerActionUnserialize>();
+
+        READWRITE(*const_cast<int32_t*>(&thisPtr->nVersion));
+        nVersion = thisPtr->nVersion;
+        READWRITE(*const_cast<std::vector<CTxIn>*>(&thisPtr->vin));
+        READWRITE(*const_cast<std::vector<CTxOut>*>(&thisPtr->vout));
+        READWRITE(*const_cast<uint32_t*>(&thisPtr->nLockTime));
         if (fRead)
-            UpdateHash();
-    )
+            thisPtr->UpdateHash();
+
+        return nSerSize;
+    }
 
     bool IsNull() const {
         return vin.empty() && vout.empty();
@@ -292,13 +324,20 @@ struct CMutableTransaction
     CMutableTransaction();
     CMutableTransaction(const CTransaction& tx);
 
-    IMPLEMENT_SERIALIZE(
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
-        READWRITE(vin);
-        READWRITE(vout);
-        READWRITE(nLockTime);
-    )
+    IMPLEMENT_SERIALIZE
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+
+        READWRITE(thisPtr->nVersion);
+        nVersion = thisPtr->nVersion;
+        READWRITE(thisPtr->vin);
+        READWRITE(thisPtr->vout);
+        READWRITE(thisPtr->nLockTime);
+
+        return nSerSize;
+    }
 
     /** Compute the hash of this CMutableTransaction. This is computed on the
      * fly, as opposed to GetHash() in CTransaction, which uses a cached result.
@@ -318,18 +357,24 @@ public:
 
     CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
 
-    IMPLEMENT_SERIALIZE(({
+    IMPLEMENT_SERIALIZE
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        bool fRead = boost::is_same<Operation, CSerActionUnserialize>();
+        size_t nSerSize = 0;
         if (!fRead) {
-            uint64_t nVal = CompressAmount(txout.nValue);
+            uint64_t nVal = CompressAmount(thisPtr->txout.nValue);
             READWRITE(VARINT(nVal));
         } else {
             uint64_t nVal = 0;
             READWRITE(VARINT(nVal));
-            txout.nValue = DecompressAmount(nVal);
+            thisPtr->txout.nValue = DecompressAmount(nVal);
         }
-        CScriptCompressor cscript(REF(txout.scriptPubKey));
+        CScriptCompressor cscript(REF(thisPtr->txout.scriptPubKey));
         READWRITE(cscript);
-    });)
+        return nSerSize;
+    }
 };
 
 /** Undo information for a CTxIn
@@ -382,9 +427,14 @@ public:
     // undo information for all txins
     std::vector<CTxInUndo> vprevout;
 
-    IMPLEMENT_SERIALIZE(
-        READWRITE(vprevout);
-    )
+    IMPLEMENT_SERIALIZE
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+        READWRITE(thisPtr->vprevout);
+        return nSerSize;
+    }
 };
 
 
@@ -413,15 +463,21 @@ public:
     }
 
     IMPLEMENT_SERIALIZE
-    (
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
-        READWRITE(hashPrevBlock);
-        READWRITE(hashMerkleRoot);
-        READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
-    )
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+
+        READWRITE(thisPtr->nVersion);
+        nVersion = thisPtr->nVersion;
+        READWRITE(thisPtr->hashPrevBlock);
+        READWRITE(thisPtr->hashMerkleRoot);
+        READWRITE(thisPtr->nTime);
+        READWRITE(thisPtr->nBits);
+        READWRITE(thisPtr->nNonce);
+
+        return nSerSize;
+    }
 
     void SetNull()
     {
@@ -468,10 +524,16 @@ public:
     }
 
     IMPLEMENT_SERIALIZE
-    (
-        READWRITE(*(CBlockHeader*)this);
-        READWRITE(vtx);
-    )
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+
+        READWRITE(*(CBlockHeader*)thisPtr);
+        READWRITE(thisPtr->vtx);
+
+        return nSerSize;
+    }
 
     void SetNull()
     {
@@ -516,11 +578,17 @@ struct CBlockLocator
     }
 
     IMPLEMENT_SERIALIZE
-    (
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+
         if (!(nType & SER_GETHASH))
             READWRITE(nVersion);
-        READWRITE(vHave);
-    )
+        READWRITE(thisPtr->vHave);
+
+        return nSerSize;
+    }
 
     void SetNull()
     {

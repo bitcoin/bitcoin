@@ -36,12 +36,16 @@ class CMessageHeader
         bool IsValid() const;
 
         IMPLEMENT_SERIALIZE
-            (
-             READWRITE(FLATDATA(pchMessageStart));
-             READWRITE(FLATDATA(pchCommand));
-             READWRITE(nMessageSize);
-             READWRITE(nChecksum);
-            )
+
+        template <typename T, typename Stream, typename Operation>
+        inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+            size_t nSerSize = 0;
+            READWRITE(FLATDATA(thisPtr->pchMessageStart));
+            READWRITE(FLATDATA(thisPtr->pchCommand));
+            READWRITE(thisPtr->nMessageSize);
+            READWRITE(thisPtr->nChecksum);
+            return nSerSize;
+        }
 
     // TODO: make private (improves encapsulation)
     public:
@@ -84,19 +88,26 @@ class CAddress : public CService
         void Init();
 
         IMPLEMENT_SERIALIZE
-            (
-             CAddress* pthis = const_cast<CAddress*>(this);
-             CService* pip = (CService*)pthis;
-             if (fRead)
-                 pthis->Init();
-             if (nType & SER_DISK)
-                 READWRITE(nVersion);
-             if ((nType & SER_DISK) ||
-                 (nVersion >= CADDR_TIME_VERSION && !(nType & SER_GETHASH)))
-                 READWRITE(nTime);
-             READWRITE(nServices);
-             READWRITE(*pip);
-            )
+
+        template <typename T, typename Stream, typename Operation>
+        inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+            size_t nSerSize = 0;
+            bool fRead = boost::is_same<Operation, CSerActionUnserialize>();
+
+            CAddress* pthis = const_cast<CAddress*>(thisPtr);
+            CService* pip = (CService*)pthis;
+            if (fRead)
+                pthis->Init();
+            if (nType & SER_DISK)
+                READWRITE(nVersion);
+            if ((nType & SER_DISK) ||
+                (nVersion >= CADDR_TIME_VERSION && !(nType & SER_GETHASH)))
+            READWRITE(thisPtr->nTime);
+            READWRITE(thisPtr->nServices);
+            READWRITE(*pip);
+
+            return nSerSize;
+        }
 
     // TODO: make private (improves encapsulation)
     public:
@@ -118,10 +129,14 @@ class CInv
         CInv(const std::string& strType, const uint256& hashIn);
 
         IMPLEMENT_SERIALIZE
-        (
-            READWRITE(type);
-            READWRITE(hash);
-        )
+
+        template <typename T, typename Stream, typename Operation>
+        inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+            size_t nSerSize = 0;
+            READWRITE(thisPtr->type);
+            READWRITE(thisPtr->hash);
+            return nSerSize;
+        }
 
         friend bool operator<(const CInv& a, const CInv& b);
 
