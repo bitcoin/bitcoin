@@ -46,16 +46,16 @@ private:
 
 public:
 
-    IMPLEMENT_SERIALIZE
+    IMPLEMENT_SERIALIZE;
 
-    template <typename T, typename Stream, typename Operation>
-    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+    template <typename Stream, typename Operation>
+    inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         size_t nSerSize = 0;
-        CAddress* pthis = (CAddress*)(thisPtr);
+        CAddress* pthis = (CAddress*)(this);
         READWRITE(*pthis);
-        READWRITE(thisPtr->source);
-        READWRITE(thisPtr->nLastSuccess);
-        READWRITE(thisPtr->nAttempts);
+        READWRITE(source);
+        READWRITE(nLastSuccess);
+        READWRITE(nAttempts);
         return nSerSize;
     }
 

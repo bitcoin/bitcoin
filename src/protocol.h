@@ -35,15 +35,15 @@ class CMessageHeader
         std::string GetCommand() const;
         bool IsValid() const;
 
-        IMPLEMENT_SERIALIZE
+        IMPLEMENT_SERIALIZE;
 
-        template <typename T, typename Stream, typename Operation>
-        inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        template <typename Stream, typename Operation>
+        inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
             size_t nSerSize = 0;
-            READWRITE(FLATDATA(thisPtr->pchMessageStart));
-            READWRITE(FLATDATA(thisPtr->pchCommand));
-            READWRITE(thisPtr->nMessageSize);
-            READWRITE(thisPtr->nChecksum);
+            READWRITE(FLATDATA(pchMessageStart));
+            READWRITE(FLATDATA(pchCommand));
+            READWRITE(nMessageSize);
+            READWRITE(nChecksum);
             return nSerSize;
         }
 
@@ -87,14 +87,14 @@ class CAddress : public CService
 
         void Init();
 
-        IMPLEMENT_SERIALIZE
+        IMPLEMENT_SERIALIZE;
 
-        template <typename T, typename Stream, typename Operation>
-        inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        template <typename Stream, typename Operation>
+        inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
             size_t nSerSize = 0;
             bool fRead = boost::is_same<Operation, CSerActionUnserialize>();
 
-            CAddress* pthis = const_cast<CAddress*>(thisPtr);
+            CAddress* pthis = const_cast<CAddress*>(this);
             CService* pip = (CService*)pthis;
             if (fRead)
                 pthis->Init();
@@ -102,8 +102,8 @@ class CAddress : public CService
                 READWRITE(nVersion);
             if ((nType & SER_DISK) ||
                 (nVersion >= CADDR_TIME_VERSION && !(nType & SER_GETHASH)))
-            READWRITE(thisPtr->nTime);
-            READWRITE(thisPtr->nServices);
+            READWRITE(nTime);
+            READWRITE(nServices);
             READWRITE(*pip);
 
             return nSerSize;
@@ -128,13 +128,13 @@ class CInv
         CInv(int typeIn, const uint256& hashIn);
         CInv(const std::string& strType, const uint256& hashIn);
 
-        IMPLEMENT_SERIALIZE
+        IMPLEMENT_SERIALIZE;
 
-        template <typename T, typename Stream, typename Operation>
-        inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        template <typename Stream, typename Operation>
+        inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
             size_t nSerSize = 0;
-            READWRITE(thisPtr->type);
-            READWRITE(thisPtr->hash);
+            READWRITE(type);
+            READWRITE(hash);
             return nSerSize;
         }
 
