@@ -36,31 +36,6 @@ BOOST_AUTO_TEST_CASE(util_criticalsection)
     } while(0);
 }
 
-BOOST_AUTO_TEST_CASE(util_MedianFilter)
-{
-    CMedianFilter<int> filter(5, 15);
-
-    BOOST_CHECK_EQUAL(filter.median(), 15);
-
-    filter.input(20); // [15 20]
-    BOOST_CHECK_EQUAL(filter.median(), 17);
-
-    filter.input(30); // [15 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 20);
-
-    filter.input(3); // [3 15 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 17);
-
-    filter.input(7); // [3 7 15 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 15);
-
-    filter.input(18); // [3 7 18 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 18);
-
-    filter.input(0); // [0 3 7 18 30]
-    BOOST_CHECK_EQUAL(filter.median(), 7);
-}
-
 static const unsigned char ParseHex_expected[65] = {
     0x04, 0x67, 0x8a, 0xfd, 0xb0, 0xfe, 0x55, 0x48, 0x27, 0x19, 0x67, 0xf1, 0xa6, 0x71, 0x30, 0xb7,
     0x10, 0x5c, 0xd6, 0xa8, 0x28, 0xe0, 0x39, 0x09, 0xa6, 0x79, 0x62, 0xe0, 0xea, 0x1f, 0x61, 0xde,
