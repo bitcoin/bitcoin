@@ -98,8 +98,6 @@ class CAddress : public CService
              READWRITE(*pip);
             )
 
-        void print() const;
-
     // TODO: make private (improves encapsulation)
     public:
         uint64_t nServices;
@@ -130,7 +128,6 @@ class CInv
         bool IsKnownType() const;
         const char* GetCommand() const;
         std::string ToString() const;
-        void print() const;
 
     // TODO: make private (improves encapsulation)
     public:

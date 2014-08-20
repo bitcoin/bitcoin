@@ -144,9 +144,3 @@ std::string CInv::ToString() const
 {
     return strprintf("%s %s", GetCommand(), hash.ToString());
 }
-
-void CInv::print() const
-{
-    LogPrintf("CInv(%s)\n", ToString());
-}
-
