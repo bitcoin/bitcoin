@@ -63,12 +63,16 @@ public:
     CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) {}
 
     IMPLEMENT_SERIALIZE
-    (
-        READWRITE(vData);
-        READWRITE(nHashFuncs);
-        READWRITE(nTweak);
-        READWRITE(nFlags);
-    )
+
+    template <typename T, typename Stream, typename Operation>
+    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+        size_t nSerSize = 0;
+        READWRITE(thisPtr->vData);
+        READWRITE(thisPtr->nHashFuncs);
+        READWRITE(thisPtr->nTweak);
+        READWRITE(thisPtr->nFlags);
+        return nSerSize;
+    }
 
     void insert(const std::vector<unsigned char>& vKey);
     void insert(const COutPoint& outpoint);
