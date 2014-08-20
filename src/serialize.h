@@ -97,8 +97,6 @@ enum
 #define IMPLEMENT_SERIALIZE                                                                         \
     size_t GetSerializeSize(int nType, int nVersion) const {                                        \
         ser_streamplaceholder s;                                                                    \
-        s.nType = nType;                                                                            \
-        s.nVersion = nVersion;                                                                      \
         return SerializationOp(MAKE_CONST(this), s, CSerActionGetSerializeSize(), nType, nVersion); \
     }                                                                                               \
     template<typename Stream>                                                                       \
@@ -835,13 +833,7 @@ inline unsigned int SerReadWrite(Stream& s, T& obj, int nType, int nVersion, CSe
     return 0;
 }
 
-struct ser_streamplaceholder
-{
-    int nType;
-    int nVersion;
-};
-
-
+struct ser_streamplaceholder { };
 
 
 
