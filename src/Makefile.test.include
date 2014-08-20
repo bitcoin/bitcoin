@@ -8,7 +8,12 @@ EXTRA_DIST += \
 	test/bctest.py \
 	test/bitcoin-util-test.py \
 	test/data/bitcoin-util-test.json \
-	test/data/blanktx.hex
+	test/data/blanktx.hex \
+	test/data/tt-delin1-out.hex \
+	test/data/tt-delout1-out.hex \
+	test/data/tt-locktime317000-out.hex \
+	test/data/tx394b54bb.hex \
+	test/data/txcreate1.hex
 
 JSON_TEST_FILES = \
   test/data/script_valid.json \
