@@ -42,14 +42,6 @@ public:
     COrphan(const CTransaction* ptxIn) : ptx(ptxIn), feeRate(0), dPriority(0)
     {
     }
-
-    void print() const
-    {
-        LogPrintf("COrphan(hash=%s, dPriority=%.1f, fee=%s)\n",
-                  ptx->GetHash().ToString(), dPriority, feeRate.ToString());
-        BOOST_FOREACH(uint256 hash, setDependsOn)
-            LogPrintf("   setDependsOn %s\n", hash.ToString());
-    }
 };
 
 uint64_t nLastBlockTx = 0;
