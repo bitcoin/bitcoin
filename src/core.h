@@ -6,7 +6,8 @@
 #ifndef BITCOIN_CORE_H
 #define BITCOIN_CORE_H
 
-#include "scriptutils.h"
+#include "script/compressor.h"
+#include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
 
