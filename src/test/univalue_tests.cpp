@@ -28,37 +28,37 @@ BOOST_AUTO_TEST_CASE(univalue_constructor)
 
     UniValue numTest;
     BOOST_CHECK(numTest.setNumStr("82"));
-    BOOST_CHECK_EQUAL(numTest.isNum(), true);
+    BOOST_CHECK(numTest.isNum());
     BOOST_CHECK_EQUAL(numTest.getValStr(), "82");
 
     uint64_t vu64 = 82;
     UniValue v4(vu64);
-    BOOST_CHECK_EQUAL(v4.isNum(), true);
+    BOOST_CHECK(v4.isNum());
     BOOST_CHECK_EQUAL(v4.getValStr(), "82");
 
     int64_t vi64 = -82;
     UniValue v5(vi64);
-    BOOST_CHECK_EQUAL(v5.isNum(), true);
+    BOOST_CHECK(v5.isNum());
     BOOST_CHECK_EQUAL(v5.getValStr(), "-82");
 
     int vi = -688;
     UniValue v6(vi);
-    BOOST_CHECK_EQUAL(v6.isNum(), true);
+    BOOST_CHECK(v6.isNum());
     BOOST_CHECK_EQUAL(v6.getValStr(), "-688");
 
     double vd = -7.21;
     UniValue v7(vd);
-    BOOST_CHECK_EQUAL(v7.isNum(), true);
+    BOOST_CHECK(v7.isNum());
     BOOST_CHECK_EQUAL(v7.getValStr(), "-7.21");
 
     string vs("yawn");
     UniValue v8(vs);
-    BOOST_CHECK_EQUAL(v8.isStr(), true);
+    BOOST_CHECK(v8.isStr());
     BOOST_CHECK_EQUAL(v8.getValStr(), "yawn");
 
     const char *vcs = "zappa";
     UniValue v9(vcs);
-    BOOST_CHECK_EQUAL(v9.isStr(), true);
+    BOOST_CHECK(v9.isStr());
     BOOST_CHECK_EQUAL(v9.getValStr(), "zappa");
 }
 
@@ -66,41 +66,41 @@ BOOST_AUTO_TEST_CASE(univalue_set)
 {
     UniValue v(UniValue::VSTR, "foo");
     v.clear();
-    BOOST_CHECK_EQUAL(v.isNull(), true);
+    BOOST_CHECK(v.isNull());
     BOOST_CHECK_EQUAL(v.getValStr(), "");
 
     BOOST_CHECK(v.setObject());
-    BOOST_CHECK_EQUAL(v.isObject(), true);
+    BOOST_CHECK(v.isObject());
     BOOST_CHECK_EQUAL(v.count(), 0);
     BOOST_CHECK_EQUAL(v.getType(), UniValue::VOBJ);
-    BOOST_CHECK_EQUAL(v.empty(), true);
+    BOOST_CHECK(v.empty());
 
     BOOST_CHECK(v.setArray());
-    BOOST_CHECK_EQUAL(v.isArray(), true);
+    BOOST_CHECK(v.isArray());
     BOOST_CHECK_EQUAL(v.count(), 0);
 
     BOOST_CHECK(v.setStr("zum"));
-    BOOST_CHECK_EQUAL(v.isStr(), true);
+    BOOST_CHECK(v.isStr());
     BOOST_CHECK_EQUAL(v.getValStr(), "zum");
 
     BOOST_CHECK(v.setFloat(-1.01));
-    BOOST_CHECK_EQUAL(v.isNum(), true);
+    BOOST_CHECK(v.isNum());
     BOOST_CHECK_EQUAL(v.getValStr(), "-1.01");
 
     BOOST_CHECK(v.setInt((int)1023));
-    BOOST_CHECK_EQUAL(v.isNum(), true);
+    BOOST_CHECK(v.isNum());
     BOOST_CHECK_EQUAL(v.getValStr(), "1023");
 
     BOOST_CHECK(v.setInt((int64_t)-1023LL));
-    BOOST_CHECK_EQUAL(v.isNum(), true);
+    BOOST_CHECK(v.isNum());
     BOOST_CHECK_EQUAL(v.getValStr(), "-1023");
 
     BOOST_CHECK(v.setInt((uint64_t)1023ULL));
-    BOOST_CHECK_EQUAL(v.isNum(), true);
+    BOOST_CHECK(v.isNum());
     BOOST_CHECK_EQUAL(v.getValStr(), "1023");
 
     BOOST_CHECK(v.setNumStr("-688"));
-    BOOST_CHECK_EQUAL(v.isNum(), true);
+    BOOST_CHECK(v.isNum());
     BOOST_CHECK_EQUAL(v.getValStr(), "-688");
 
     BOOST_CHECK(v.setBool(false));
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(univalue_set)
     BOOST_CHECK(!v.setNumStr("zombocom"));
 
     BOOST_CHECK(v.setNull());
-    BOOST_CHECK_EQUAL(v.isNull(), true);
+    BOOST_CHECK(v.isNull());
 }
 
 BOOST_AUTO_TEST_CASE(univalue_array)
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(univalue_array)
     BOOST_CHECK_EQUAL(arr[999].getValStr(), "");
 
     arr.clear();
-    BOOST_CHECK_EQUAL(arr.empty(), true);
+    BOOST_CHECK(arr.empty());
     BOOST_CHECK_EQUAL(arr.count(), 0);
 }
 
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(univalue_object)
     BOOST_CHECK(!obj.checkObject(objTypes));
 
     obj.clear();
-    BOOST_CHECK_EQUAL(obj.empty(), true);
+    BOOST_CHECK(obj.empty());
     BOOST_CHECK_EQUAL(obj.count(), 0);
 }
 
