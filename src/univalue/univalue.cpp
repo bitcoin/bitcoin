@@ -9,7 +9,7 @@
 
 using namespace std;
 
-static const UniValue nullValue;
+const UniValue NullUniValue;
 
 void UniValue::clear()
 {
@@ -44,7 +44,7 @@ static bool validNumStr(const string& s)
 
 bool UniValue::setNumStr(const string& val_)
 {
-    if (!validNumStr(val))
+    if (!validNumStr(val_))
         return false;
 
     clear();
@@ -175,11 +175,11 @@ bool UniValue::checkObject(const std::map<std::string,UniValue::VType>& t)
 const UniValue& UniValue::operator[](const std::string& key) const
 {
     if (typ != VOBJ)
-        return nullValue;
+        return NullUniValue;
 
     int index = findKey(key);
     if (index < 0)
-        return nullValue;
+        return NullUniValue;
 
     return values[index];
 }
@@ -187,9 +187,9 @@ const UniValue& UniValue::operator[](const std::string& key) const
 const UniValue& UniValue::operator[](unsigned int index) const
 {
     if (typ != VOBJ && typ != VARR)
-        return nullValue;
+        return NullUniValue;
     if (index >= values.size())
-        return nullValue;
+        return NullUniValue;
 
     return values[index];
 }

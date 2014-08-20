@@ -23,7 +23,7 @@
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/shared_ptr.hpp>
-#include "json/json_spirit_writer_template.h"
+#include "json_spirit_wrapper.h"
 
 using namespace boost;
 using namespace boost::asio;
@@ -53,30 +53,30 @@ void RPCTypeCheck(const Array& params,
             break;
 
         const Value& v = params[i];
-        if (!((v.type() == t) || (fAllowNull && (v.type() == null_type))))
+        if (!((v.type() == t) || (fAllowNull && (v.isNull()))))
         {
             string err = strprintf("Expected type %s, got %s",
-                                   Value_type_name[t], Value_type_name[v.type()]);
+                                   uvTypeName(t), uvTypeName(v.type()));
             throw JSONRPCError(RPC_TYPE_ERROR, err);
         }
         i++;
     }
 }
 
-void RPCTypeCheck(const Object& o,
-                  const map<string, Value_type>& typesExpected,
+void RPCTypeCheckObj(const UniValue& o,
+                  const map<string, UniValue::VType>& typesExpected,
                   bool fAllowNull)
 {
     BOOST_FOREACH(const PAIRTYPE(string, Value_type)& t, typesExpected)
     {
         const Value& v = find_value(o, t.first);
-        if (!fAllowNull && v.type() == null_type)
+        if (!fAllowNull && v.isNull())
             throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first));
 
-        if (!((v.type() == t.second) || (fAllowNull && (v.type() == null_type))))
+        if (!((v.type() == t.second) || (fAllowNull && (v.isNull()))))
         {
             string err = strprintf("Expected type %s for %s, got %s",
-                                   Value_type_name[t.second], t.first, Value_type_name[v.type()]);
+                                   uvTypeName(t.second), t.first, uvTypeName(v.type()));
             throw JSONRPCError(RPC_TYPE_ERROR, err);
         }
     }
@@ -101,7 +101,7 @@ Value ValueFromAmount(int64_t amount)
 uint256 ParseHashV(const Value& v, string strName)
 {
     string strHex;
-    if (v.type() == str_type)
+    if (v.isStr())
         strHex = v.get_str();
     if (!IsHex(strHex)) // Note: IsHex("") is false
         throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
@@ -116,7 +116,7 @@ uint256 ParseHashO(const Object& o, string strKey)
 vector<unsigned char> ParseHexV(const Value& v, string strName)
 {
     string strHex;
-    if (v.type() == str_type)
+    if (v.isStr())
         strHex = v.get_str();
     if (!IsHex(strHex))
         throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
@@ -373,7 +373,7 @@ void ErrorReply(std::ostream& stream, const Object& objError, const Value& id)
     int code = find_value(objError, "code").get_int();
     if (code == RPC_INVALID_REQUEST) nStatus = HTTP_BAD_REQUEST;
     else if (code == RPC_METHOD_NOT_FOUND) nStatus = HTTP_NOT_FOUND;
-    string strReply = JSONRPCReply(Value::null, objError, id);
+    string strReply = JSONRPCReply(NullUniValue, objError, id);
     stream << HTTPReply(nStatus, strReply, false) << std::flush;
 }
 
@@ -766,14 +766,14 @@ public:
     string strMethod;
     Array params;
 
-    JSONRequest() { id = Value::null; }
+    JSONRequest() { id = NullUniValue; }
     void parse(const Value& valRequest);
 };
 
 void JSONRequest::parse(const Value& valRequest)
 {
     // Parse request
-    if (valRequest.type() != obj_type)
+    if (!valRequest.isObject())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
     const Object& request = valRequest.get_obj();
 
@@ -782,9 +782,9 @@ void JSONRequest::parse(const Value& valRequest)
 
     // Parse method
     Value valMethod = find_value(request, "method");
-    if (valMethod.type() == null_type)
+    if (valMethod.isNull())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Missing method");
-    if (valMethod.type() != str_type)
+    if (!valMethod.isStr())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
     strMethod = valMethod.get_str();
     if (strMethod != "getblocktemplate")
@@ -792,9 +792,9 @@ void JSONRequest::parse(const Value& valRequest)
 
     // Parse params
     Value valParams = find_value(request, "params");
-    if (valParams.type() == array_type)
+    if (valParams.isArray())
         params = valParams.get_array();
-    else if (valParams.type() == null_type)
+    else if (valParams.isNull())
         params = Array();
     else
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array");
@@ -810,15 +810,15 @@ static Object JSONRPCExecOne(const Value& req)
         jreq.parse(req);
 
         Value result = tableRPC.execute(jreq.strMethod, jreq.params);
-        rpc_result = JSONRPCReplyObj(result, Value::null, jreq.id);
+        rpc_result = JSONRPCReplyObj(result, NullUniValue, jreq.id);
     }
     catch (Object& objError)
     {
-        rpc_result = JSONRPCReplyObj(Value::null, objError, jreq.id);
+        rpc_result = JSONRPCReplyObj(NullUniValue, objError, jreq.id);
     }
     catch (std::exception& e)
     {
-        rpc_result = JSONRPCReplyObj(Value::null,
+        rpc_result = JSONRPCReplyObj(NullUniValue,
                                      JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
     }
 
@@ -831,7 +831,7 @@ static string JSONRPCExecBatch(const Array& vReq)
     for (unsigned int reqIdx = 0; reqIdx < vReq.size(); reqIdx++)
         ret.push_back(JSONRPCExecOne(vReq[reqIdx]));
 
-    return write_string(Value(ret), false) + "\n";
+    return ret.write() + "\n";
 }
 
 static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
@@ -863,22 +863,22 @@ static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
     {
         // Parse request
         Value valRequest;
-        if (!read_string(strRequest, valRequest))
+        if (!valRequest.read(strRequest))
             throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
 
         string strReply;
 
         // singleton request
-        if (valRequest.type() == obj_type) {
+        if (valRequest.isObject()) {
             jreq.parse(valRequest);
 
             Value result = tableRPC.execute(jreq.strMethod, jreq.params);
 
             // Send reply
-            strReply = JSONRPCReply(result, Value::null, jreq.id);
+            strReply = JSONRPCReply(result, NullUniValue, jreq.id);
 
         // array of requests
-        } else if (valRequest.type() == array_type)
+        } else if (valRequest.isArray())
             strReply = JSONRPCExecBatch(valRequest.get_array());
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");

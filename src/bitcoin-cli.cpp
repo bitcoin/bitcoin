@@ -137,7 +137,7 @@ Object CallRPC(const string& strMethod, const Array& params)
 
     // Parse reply
     Value valReply;
-    if (!read_string(strReply, valReply))
+    if (!valReply.read(strReply))
         throw runtime_error("couldn't parse reply from server");
     const Object& reply = valReply.get_obj();
     if (reply.empty())
@@ -173,19 +173,19 @@ int CommandLineRPC(int argc, char *argv[])
         const Value& result = find_value(reply, "result");
         const Value& error  = find_value(reply, "error");
 
-        if (error.type() != null_type) {
+        if (!error.isNull()) {
             // Error
-            strPrint = "error: " + write_string(error, false);
-            int code = find_value(error.get_obj(), "code").get_int();
+            strPrint = "error: " + error.write();
+            int code = error["code"].get_int();
             nRet = abs(code);
         } else {
             // Result
-            if (result.type() == null_type)
+            if (result.isNull())
                 strPrint = "";
-            else if (result.type() == str_type)
+            else if (result.isStr())
                 strPrint = result.get_str();
             else
-                strPrint = write_string(result, true);
+                strPrint = result.write(2);
         }
     }
     catch (boost::thread_interrupted) {
