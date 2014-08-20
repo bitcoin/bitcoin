@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bignum.h"
-#include "scriptutils.h"
+#include "script/script.h"
 #include <boost/test/unit_test.hpp>
 #include <limits.h>
 #include <stdint.h>
