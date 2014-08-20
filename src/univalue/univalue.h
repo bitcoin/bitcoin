@@ -58,7 +58,7 @@ public:
     std::string getValStr() const { return val; }
     bool empty() const { return (values.size() == 0); }
 
-    size_t count() const { return values.size(); }
+    size_t size() const { return values.size(); }
 
     bool getBool() const { return isTrue(); }
     bool checkObject(const std::map<std::string,UniValue::VType>& memberTypes);
