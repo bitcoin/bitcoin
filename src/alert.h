@@ -46,26 +46,26 @@ public:
     std::string strStatusBar;
     std::string strReserved;
 
-    IMPLEMENT_SERIALIZE
+    IMPLEMENT_SERIALIZE;
 
-    template <typename T, typename Stream, typename Operation>
-    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+    template <typename Stream, typename Operation>
+    inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         size_t nSerSize = 0;
-        READWRITE(thisPtr->nVersion);
-        nVersion = thisPtr->nVersion;
-        READWRITE(thisPtr->nRelayUntil);
-        READWRITE(thisPtr->nExpiration);
-        READWRITE(thisPtr->nID);
-        READWRITE(thisPtr->nCancel);
-        READWRITE(thisPtr->setCancel);
-        READWRITE(thisPtr->nMinVer);
-        READWRITE(thisPtr->nMaxVer);
-        READWRITE(thisPtr->setSubVer);
-        READWRITE(thisPtr->nPriority);
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(nRelayUntil);
+        READWRITE(nExpiration);
+        READWRITE(nID);
+        READWRITE(nCancel);
+        READWRITE(setCancel);
+        READWRITE(nMinVer);
+        READWRITE(nMaxVer);
+        READWRITE(setSubVer);
+        READWRITE(nPriority);
 
-        READWRITE(LIMITED_STRING(thisPtr->strComment, 65536));
-        READWRITE(LIMITED_STRING(thisPtr->strStatusBar, 256));
-        READWRITE(LIMITED_STRING(thisPtr->strReserved, 256));
+        READWRITE(LIMITED_STRING(strComment, 65536));
+        READWRITE(LIMITED_STRING(strStatusBar, 256));
+        READWRITE(LIMITED_STRING(strReserved, 256));
         return nSerSize;
     }
 
@@ -86,13 +86,13 @@ public:
         SetNull();
     }
 
-    IMPLEMENT_SERIALIZE
+    IMPLEMENT_SERIALIZE;
 
-    template <typename T, typename Stream, typename Operation>
-    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+    template <typename Stream, typename Operation>
+    inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         size_t nSerSize = 0;
-        READWRITE(thisPtr->vchMsg);
-        READWRITE(thisPtr->vchSig);
+        READWRITE(vchMsg);
+        READWRITE(vchSig);
         return nSerSize;
     }
 
