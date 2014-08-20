@@ -8,6 +8,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
+#include "script/script.h"
 #include "scriptutils.h"
 #include "core_io.h"
 
