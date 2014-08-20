@@ -9,7 +9,7 @@
 #include "data/base58_keys_valid.json.h"
 
 #include "key.h"
-#include "script.h"
+#include "scriptutils.h"
 #include "uint256.h"
 #include "util.h"
 

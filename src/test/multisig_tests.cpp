@@ -5,7 +5,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
-#include "script.h"
+#include "scriptutils.h"
 #include "uint256.h"
 
 #include <boost/assign/std/vector.hpp>

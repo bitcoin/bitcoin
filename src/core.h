@@ -6,7 +6,7 @@
 #ifndef BITCOIN_CORE_H
 #define BITCOIN_CORE_H
 
-#include "script.h"
+#include "scriptutils.h"
 #include "serialize.h"
 #include "uint256.h"
 
@@ -214,7 +214,9 @@ class CTransaction
 private:
     /** Memory only. */
     const uint256 hash;
-    void UpdateHash() const;
+    void UpdateHash() const {
+        *const_cast<uint256*>(&hash) = SerializeHash(*this);
+    }
 
 public:
     static const int CURRENT_VERSION=1;
@@ -230,7 +232,8 @@ public:
     const unsigned int nLockTime;
 
     /** Construct a CTransaction that qualifies as IsNull() */
-    CTransaction();
+    CTransaction()
+         : hash(0), nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { };
 
     /** Convert a CMutableTransaction into a CTransaction. */
     CTransaction(const CMutableTransaction &tx);
