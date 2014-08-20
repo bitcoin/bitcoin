@@ -20,8 +20,7 @@
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
+#include "json_spirit_wrapper.h"
 
 using namespace json_spirit;
 using namespace std;
@@ -204,7 +203,7 @@ Value validateaddress(const Array& params, bool fHelp)
         if (mine != ISMINE_NO) {
             ret.push_back(Pair("iswatchonly", (mine & ISMINE_WATCH_ONLY) ? true: false));
             Object detail = boost::apply_visitor(DescribeAddressVisitor(mine), dest);
-            ret.insert(ret.end(), detail.begin(), detail.end());
+            ret.pushKVs(detail);
         }
         if (pwalletMain && pwalletMain->mapAddressBook.count(dest))
             ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest].name));

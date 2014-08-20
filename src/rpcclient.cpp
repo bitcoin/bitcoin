@@ -135,7 +135,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
         // parse string as JSON, insert bool/number/object/etc. value
         else {
             Value jVal;
-            if (!read_string(strVal, jVal))
+            if (!jVal.read(strVal))
                 throw runtime_error(string("Error parsing JSON:")+strVal);
             params.push_back(jVal);
         }

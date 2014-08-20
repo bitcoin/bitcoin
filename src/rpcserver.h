@@ -15,9 +15,8 @@
 #include <stdint.h>
 #include <string>
 
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_writer_template.h"
+#include <boost/function.hpp>
+#include "json_spirit_wrapper.h"
 
 class CRPCCommand;
 
@@ -73,12 +72,13 @@ bool RPCIsInWarmup(std::string *statusOut);
  */
 void RPCTypeCheck(const json_spirit::Array& params,
                   const std::list<json_spirit::Value_type>& typesExpected, bool fAllowNull=false);
-/**
- * Check for expected keys/value types in an Object.
- * Use like: RPCTypeCheck(object, boost::assign::map_list_of("name", str_type)("value", int_type));
- */
-void RPCTypeCheck(const json_spirit::Object& o,
-                  const std::map<std::string, json_spirit::Value_type>& typesExpected, bool fAllowNull=false);
+
+/*
+  Check for expected keys/value types in an Object.
+  Use like: RPCTypeCheckObj(object, boost::assign::map_list_of("name", str_type)("value", int_type));
+*/
+void RPCTypeCheckObj(const UniValue& o,
+                  const std::map<std::string, UniValue::VType>& typesExpected, bool fAllowNull=false);
 
 /**
  * Run func nSeconds from now. Uses boost deadline timers.

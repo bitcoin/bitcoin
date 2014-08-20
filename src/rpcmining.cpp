@@ -24,8 +24,7 @@
 
 #include <boost/assign/list_of.hpp>
 
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
+#include "json_spirit_wrapper.h"
 
 using namespace json_spirit;
 using namespace std;
@@ -216,7 +215,7 @@ Value setgenerate(const Array& params, bool fHelp)
     mapArgs ["-genproclimit"] = itostr(nGenProcLimit);
     GenerateBitcoins(fGenerate, pwalletMain, nGenProcLimit);
 
-    return Value::null;
+    return NullUniValue;
 }
 #endif
 
@@ -382,14 +381,14 @@ Value getblocktemplate(const Array& params, bool fHelp)
     LOCK(cs_main);
 
     std::string strMode = "template";
-    Value lpval = Value::null;
+    Value lpval = NullUniValue;
     if (params.size() > 0)
     {
         const Object& oparam = params[0].get_obj();
         const Value& modeval = find_value(oparam, "mode");
-        if (modeval.type() == str_type)
+        if (modeval.isStr())
             strMode = modeval.get_str();
-        else if (modeval.type() == null_type)
+        else if (modeval.isNull())
         {
             /* Do nothing */
         }
@@ -439,14 +438,14 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
     static unsigned int nTransactionsUpdatedLast;
 
-    if (lpval.type() != null_type)
+    if (!lpval.isNull())
     {
         // Wait to respond until either the best block changes, OR a minute has passed and there are more transactions
         uint256 hashWatchedChain;
         boost::system_time checktxtime;
         unsigned int nTransactionsUpdatedLastLP;
 
-        if (lpval.type() == str_type)
+        if (lpval.isStr())
         {
             // Format: <hashBestChain><nTransactionsUpdatedLast>
             std::string lpstr = lpval.get_str();
@@ -686,7 +685,7 @@ Value estimatefee(const Array& params, bool fHelp)
             + HelpExampleCli("estimatefee", "6")
             );
 
-    RPCTypeCheck(params, boost::assign::list_of(int_type));
+    RPCTypeCheck(params, boost::assign::list_of(UniValue::VNUM));
 
     int nBlocks = params[0].get_int();
     if (nBlocks < 1)
@@ -718,7 +717,7 @@ Value estimatepriority(const Array& params, bool fHelp)
             + HelpExampleCli("estimatepriority", "6")
             );
 
-    RPCTypeCheck(params, boost::assign::list_of(int_type));
+    RPCTypeCheck(params, boost::assign::list_of(UniValue::VNUM));
 
     int nBlocks = params[0].get_int();
     if (nBlocks < 1)
