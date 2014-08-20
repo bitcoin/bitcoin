@@ -17,9 +17,7 @@
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_writer_template.h"
+#include "json_spirit_wrapper.h"
 
 using namespace json_spirit;
 extern Array read_json(const std::string& jsondata);
@@ -30,10 +28,9 @@ BOOST_FIXTURE_TEST_SUITE(base58_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
 {
     Array tests = read_json(std::string(json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
-    BOOST_FOREACH(Value& tv, tests)
-    {
-        Array test = tv.get_array();
-        std::string strTest = write_string(tv, false);
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        Array test = tests[idx];
+        std::string strTest = test.write();
         if (test.size() < 2) // Allow for extra stuff (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
@@ -53,10 +50,9 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     Array tests = read_json(std::string(json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
     std::vector<unsigned char> result;
 
-    BOOST_FOREACH(Value& tv, tests)
-    {
-        Array test = tv.get_array();
-        std::string strTest = write_string(tv, false);
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        Array test = tests[idx];
+        std::string strTest = test.write();
         if (test.size() < 2) // Allow for extra stuff (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
@@ -130,10 +126,9 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
     CBitcoinAddress addr;
     SelectParams(CBaseChainParams::MAIN);
 
-    BOOST_FOREACH(Value& tv, tests)
-    {
-        Array test = tv.get_array();
-        std::string strTest = write_string(tv, false);
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        Array test = tests[idx];
+        std::string strTest = test.write();
         if (test.size() < 3) // Allow for extra stuff (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
@@ -185,10 +180,10 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
 {
     Array tests = read_json(std::string(json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
     std::vector<unsigned char> result;
-    BOOST_FOREACH(Value& tv, tests)
-    {
-        Array test = tv.get_array();
-        std::string strTest = write_string(tv, false);
+
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        Array test = tests[idx];
+        std::string strTest = test.write();
         if (test.size() < 3) // Allow for extra stuff (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
@@ -256,10 +251,9 @@ BOOST_AUTO_TEST_CASE(base58_keys_invalid)
     CBitcoinSecret secret;
     CBitcoinAddress addr;
 
-    BOOST_FOREACH(Value& tv, tests)
-    {
-        Array test = tv.get_array();
-        std::string strTest = write_string(tv, false);
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        Array test = tests[idx];
+        std::string strTest = test.write();
         if (test.size() < 1) // Allow for extra stuff (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);

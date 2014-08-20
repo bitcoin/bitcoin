@@ -22,7 +22,8 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/assign/list_of.hpp>
-#include "json/json_spirit_writer_template.h"
+
+#include "json_spirit_wrapper.h"
 
 using namespace std;
 using namespace json_spirit;
@@ -90,14 +91,21 @@ BOOST_AUTO_TEST_CASE(tx_valid)
     // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
     Array tests = read_json(std::string(json_tests::tx_valid, json_tests::tx_valid + sizeof(json_tests::tx_valid)));
 
+<<<<<<< HEAD
     ScriptError err;
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
         string strTest = write_string(tv, false);
         if (test[0].type() == array_type)
+=======
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        Array test = tests[idx];
+        string strTest = test.write();
+        if (test[0].isArray())
+>>>>>>> Convert tree to using univalue. Eliminate all json_spirit uses.
         {
-            if (test.size() != 3 || test[1].type() != str_type || test[2].type() != str_type)
+            if (test.size() != 3 || !test[1].isStr() || !test[2].isStr())
             {
                 BOOST_ERROR("Bad test: " << strTest);
                 continue;
@@ -106,9 +114,9 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             map<COutPoint, CScript> mapprevOutScriptPubKeys;
             Array inputs = test[0].get_array();
             bool fValid = true;
-            BOOST_FOREACH(Value& input, inputs)
-            {
-                if (input.type() != array_type)
+	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
+	        const Value& input = inputs[inpIdx];
+                if (!input.isArray())
                 {
                     fValid = false;
                     break;
@@ -166,14 +174,21 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
     // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
     Array tests = read_json(std::string(json_tests::tx_invalid, json_tests::tx_invalid + sizeof(json_tests::tx_invalid)));
 
+<<<<<<< HEAD
     ScriptError err;
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
         string strTest = write_string(tv, false);
         if (test[0].type() == array_type)
+=======
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        Array test = tests[idx];
+        string strTest = test.write();
+        if (test[0].isArray())
+>>>>>>> Convert tree to using univalue. Eliminate all json_spirit uses.
         {
-            if (test.size() != 3 || test[1].type() != str_type || test[2].type() != str_type)
+            if (test.size() != 3 || !test[1].isStr() || !test[2].isStr())
             {
                 BOOST_ERROR("Bad test: " << strTest);
                 continue;
@@ -182,9 +197,9 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             map<COutPoint, CScript> mapprevOutScriptPubKeys;
             Array inputs = test[0].get_array();
             bool fValid = true;
-            BOOST_FOREACH(Value& input, inputs)
-            {
-                if (input.type() != array_type)
+	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
+	        const Value& input = inputs[inpIdx];
+                if (!input.isArray())
                 {
                     fValid = false;
                     break;
