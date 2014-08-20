@@ -33,12 +33,6 @@ bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64& nStakeModifier);
 // Sets hashProofOfStake on success return
 bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned int nTxPrevOffset, const CTransaction& txPrev, const COutPoint& prevout, unsigned int nTimeTx, uint256& hashProofOfStake, uint256& targetProofOfStake, bool fPrintProofOfStake=false);
 
-// Preloaded coins set
-typedef set<pair<const CWalletTx*,unsigned int> > CoinsSet;
-
-// Preloaded coins metadata (block header and stake modifier)
-typedef map<uint256, pair<CTxIndex, pair<CBlock, uint64> > > MetaMap;
-
 // Coins scanning options
 typedef struct KernelSearchSettings {
     unsigned int nBits;           // Packed difficulty
@@ -48,8 +42,14 @@ typedef struct KernelSearchSettings {
     unsigned int nSearchInterval; // Number of seconds allowed to go into the past
 } KernelSearchSettings;
 
+typedef set<pair<const CWalletTx*,unsigned int> > CoinsSet;
+
+// Preloaded coins metadata
+// txid => ((txindex, (tx, vout.n)), (block, modifier))
+typedef map<uint256, pair<pair<CTxIndex, pair<const CWalletTx*,unsigned int> >, pair<CBlock, uint64> > > MetaMap;
+
 // Scan given coins set for kernel solution
-bool ScanForStakeKernelHash(CoinsSet &setCoins, MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime);
+bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime);
 
 // Check kernel hash target and coinstake signature
 // Sets hashProofOfStake on success return

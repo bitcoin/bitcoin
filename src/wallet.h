@@ -80,6 +80,9 @@ private:
     // the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
     int nWalletMaxVersion;
 
+    // selected coins metadata
+    map<uint256, pair<pair<CTxIndex, pair<const CWalletTx*,unsigned int> >, pair<CBlock, uint64> > > mapMeta;
+
 public:
     mutable CCriticalSection cs_wallet;
 

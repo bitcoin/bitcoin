@@ -390,27 +390,22 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned 
 }
 
 // Scan given coins set for kernel solution
-bool ScanForStakeKernelHash(CoinsSet &setCoins, MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime)
+bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime)
 {
     uint256 hashProofOfStake = 0;
 
-    for(CoinsSet::const_iterator pcoin = setCoins.begin(); pcoin != setCoins.end(); pcoin++)
+    // txid => ((txindex, (tx, vout.n)), (block, modifier))
+    for(MetaMap::const_iterator meta_item = mapMeta.begin(); meta_item != mapMeta.end(); meta_item++)
     {
         if (!fCoinsDataActual)
             break;
 
-        MetaMap::const_iterator mi = mapMeta.find(pcoin->first->GetHash());
-        if (mi == mapMeta.end())
-        {
-            if (fDebug)
-                printf("Unable to find %s in mapMeta, stopping\n", pcoin->first->GetHash().GetHex().c_str());
-            fCoinsDataActual = false;
-            break;
-        }
+        CTxIndex txindex = (*meta_item).second.first.first;
+        CBlock block = (*meta_item).second.second.first;
+        uint64 nStakeModifier = (*meta_item).second.second.second;
 
-        CTxIndex txindex = (*mi).second.first;
-        CBlock block = (*mi).second.second.first;
-        uint64 nStakeModifier = (*mi).second.second.second;
+        // Get coin
+        CoinsSet::value_type pcoin = meta_item->second.first.second;
 
         static int nMaxStakeSearchInterval = 60;
 
@@ -427,7 +422,7 @@ bool ScanForStakeKernelHash(CoinsSet &setCoins, MetaMap &mapMeta, KernelSearchSe
         nBlockTime = block.nTime;
         CBigNum bnTargetPerCoinDay;
         bnTargetPerCoinDay.SetCompact(settings.nBits);
-        int64 nValueIn = pcoin->first->vout[pcoin->second].nValue;
+        int64 nValueIn = pcoin.first->vout[pcoin.second].nValue;
 
         // Search backward in time from the given timestamp 
         // Search nSearchInterval seconds back up to nMaxStakeSearchInterval
@@ -435,13 +430,13 @@ bool ScanForStakeKernelHash(CoinsSet &setCoins, MetaMap &mapMeta, KernelSearchSe
         for (unsigned int n=0; n<nCurrentSearchInterval && fCoinsDataActual && !fShutdown; n++)
         {
             nTimeTx = settings.nTime - n;
-            CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64)pcoin->first->nTime, (int64)nTimeTx) / COIN / (24 * 60 * 60);
+            CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64)pcoin.first->nTime, (int64)nTimeTx) / COIN / (24 * 60 * 60);
             CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
 
             // Build kernel
             CDataStream ss(SER_GETHASH, 0);
             ss << nStakeModifier;
-            ss << nBlockTime << nTxOffset << pcoin->first->nTime << pcoin->second << nTimeTx;
+            ss << nBlockTime << nTxOffset << pcoin.first->nTime << pcoin.second << nTimeTx;
 
             // Calculate kernel hash
             hashProofOfStake = Hash(ss.begin(), ss.end());
@@ -450,15 +445,15 @@ bool ScanForStakeKernelHash(CoinsSet &setCoins, MetaMap &mapMeta, KernelSearchSe
             {
                 if (fDebug)
                     printf("nStakeModifier=0x%016"PRI64x", nBlockTime=%u nTxOffset=%u nTxPrevTime=%u nVout=%u nTimeTx=%u hashProofOfStake=%s Success=true\n",
-                        nStakeModifier, nBlockTime, nTxOffset, pcoin->first->nTime, pcoin->second, nTimeTx, hashProofOfStake.GetHex().c_str());
+                        nStakeModifier, nBlockTime, nTxOffset, pcoin.first->nTime, pcoin.second, nTimeTx, hashProofOfStake.GetHex().c_str());
 
-                kernelcoin = *pcoin;
+                kernelcoin = pcoin;
                 return true;
             }
 
             if (fDebug)
                 printf("nStakeModifier=0x%016"PRI64x", nBlockTime=%u nTxOffset=%u nTxPrevTime=%u nTxNumber=%u nTimeTx=%u hashProofOfStake=%s Success=false\n",
-                    nStakeModifier, nBlockTime, nTxOffset, pcoin->first->nTime, pcoin->second, nTimeTx, hashProofOfStake.GetHex().c_str());
+                    nStakeModifier, nBlockTime, nTxOffset, pcoin.first->nTime, pcoin.second, nTimeTx, hashProofOfStake.GetHex().c_str());
         }
     }
 

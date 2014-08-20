@@ -1620,40 +1620,15 @@ void CWallet::GetStakeWeightFromValue(const int64& nTime, const int64& nValue, u
 // NovaCoin: get current stake weight
 bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint64& nMaxWeight, uint64& nWeight)
 {
-    // Choose coins to use
-    int64 nBalance = GetBalance();
-    int64 nReserveBalance = 0;
-
-    if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
-    {
-        error("GetStakeWeight : invalid reserve balance amount");
-        return false;
-    }
-
-    if (nBalance <= nReserveBalance)
+    if (mapMeta.size() == 0 || !fCoinsDataActual)
         return false;
 
-    vector<const CWalletTx*> vwtxPrev;
-
-    static set<pair<const CWalletTx*,unsigned int> > setCoins;
-    static uint256 hashPrevBlock;
-
-    // Cache outputs unless best block or wallet transaction set changed
-    if (!fCoinsDataActual || setCoins.size() == 0)
+    // txid => ((txindex, (tx, vout.n)), (block, modifier))
+    for(MetaMap::const_iterator meta_item = mapMeta.begin(); meta_item != mapMeta.end(); meta_item++)
     {
-        int64 nValueIn = 0;
-        if (!SelectCoinsSimple(nBalance - nReserveBalance, GetAdjustedTime(), nCoinbaseMaturity * 10, setCoins, nValueIn))
-            return false;
+        // Get coin
+        CoinsSet::value_type pcoin = meta_item->second.first.second;
 
-        if (setCoins.empty())
-            return false;
-
-        fCoinsDataActual = true;
-    }
-
-    CTxDB txdb("r");
-    BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
-    {
         int64 nTimeWeight = GetWeight((int64)pcoin.first->nTime, (int64)GetTime());
         CBigNum bnCoinDayWeight = CBigNum(pcoin.first->vout[pcoin.second].nValue) * nTimeWeight / COIN / (24 * 60 * 60);
 
@@ -1836,19 +1811,15 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 
     vector<const CWalletTx*> vwtxPrev;
 
-    static CoinsSet setCoins;
-    static MetaMap mapMeta;
-
     CTxDB txdb("r");
     {
         LOCK2(cs_main, cs_wallet);
         // Cache outputs unless best block or wallet transaction set changed
-        if (!fCoinsDataActual || setCoins.size() == 0)
+        if (!fCoinsDataActual)
         {
-            setCoins.clear();
             mapMeta.clear();
-
             int64 nValueIn = 0;
+            CoinsSet setCoins;
             if (!SelectCoinsSimple(nBalance - nReserveBalance, txNew.nTime, nCoinbaseMaturity * 10, setCoins, nValueIn))
                 return false;
 
@@ -1869,12 +1840,12 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                         continue;
 
                     uint64 nStakeModifier = 0;
-
                     if (!GetKernelStakeModifier(block.GetHash(), nStakeModifier))
-                        return false;
+                        continue;
 
                     // Add meta record
-                    mapMeta[pcoin->first->GetHash()] = make_pair(txindex, make_pair(block, nStakeModifier));
+                    // txid => ((txindex, (tx, vout.n)), (block, modifier))
+                    mapMeta[pcoin->first->GetHash()] = make_pair(make_pair(txindex, *pcoin), make_pair(block, nStakeModifier));
 
                     if (fDebug)
                         printf("Load coin: %s\n", pcoin->first->GetHash().GetHex().c_str());
@@ -1895,14 +1866,14 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     settings.nBits = nBits;
     settings.nTime = txNew.nTime;
     settings.nOffset = 0;
-    settings.nLimit = setCoins.size();
+    settings.nLimit = mapMeta.size();
     settings.nSearchInterval = nSearchInterval;
 
     unsigned int nTimeTx, nBlockTime;
     COutPoint prevoutStake;
     CoinsSet::value_type kernelcoin;
 
-    if (ScanForStakeKernelHash(setCoins, mapMeta, settings, kernelcoin, nTimeTx, nBlockTime))
+    if (ScanForStakeKernelHash(mapMeta, settings, kernelcoin, nTimeTx, nBlockTime))
     {
         // Found a kernel
         if (fDebug && GetBoolArg("-printcoinstake"))
@@ -1970,14 +1941,18 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     if (nCredit == 0 || nCredit > nBalance - nReserveBalance)
         return false;
 
-    for(CoinsSet::const_iterator pcoin = setCoins.begin(); pcoin != setCoins.end(); pcoin++)
+    // txid => ((txindex, (tx, vout.n)), (block, modifier))
+    for(MetaMap::const_iterator meta_item = mapMeta.begin(); meta_item != mapMeta.end(); meta_item++)
     {
+        // Get coin
+        CoinsSet::value_type pcoin = meta_item->second.first.second;
+
         // Attempt to add more inputs
         // Only add coins of the same key/address as kernel
-        if (txNew.vout.size() == 2 && ((pcoin->first->vout[pcoin->second].scriptPubKey == scriptPubKeyKernel || pcoin->first->vout[pcoin->second].scriptPubKey == txNew.vout[1].scriptPubKey))
-            && pcoin->first->GetHash() != txNew.vin[0].prevout.hash)
+        if (txNew.vout.size() == 2 && ((pcoin.first->vout[pcoin.second].scriptPubKey == scriptPubKeyKernel || pcoin.first->vout[pcoin.second].scriptPubKey == txNew.vout[1].scriptPubKey))
+            && pcoin.first->GetHash() != txNew.vin[0].prevout.hash)
         {
-            int64 nTimeWeight = GetWeight((int64)pcoin->first->nTime, (int64)txNew.nTime);
+            int64 nTimeWeight = GetWeight((int64)pcoin.first->nTime, (int64)txNew.nTime);
 
             // Stop adding more inputs if already too many inputs
             if (txNew.vin.size() >= 100)
@@ -1986,18 +1961,18 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             if (nCredit > nCombineThreshold)
                 break;
             // Stop adding inputs if reached reserve limit
-            if (nCredit + pcoin->first->vout[pcoin->second].nValue > nBalance - nReserveBalance)
+            if (nCredit + pcoin.first->vout[pcoin.second].nValue > nBalance - nReserveBalance)
                 break;
             // Do not add additional significant input
-            if (pcoin->first->vout[pcoin->second].nValue > nCombineThreshold)
+            if (pcoin.first->vout[pcoin.second].nValue > nCombineThreshold)
                 continue;
             // Do not add input that is still too young
             if (nTimeWeight < nStakeMaxAge)
                 continue;
 
-            txNew.vin.push_back(CTxIn(pcoin->first->GetHash(), pcoin->second));
-            nCredit += pcoin->first->vout[pcoin->second].nValue;
-            vwtxPrev.push_back(pcoin->first);
+            txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
+            nCredit += pcoin.first->vout[pcoin.second].nValue;
+            vwtxPrev.push_back(pcoin.first);
         }
     }
 
