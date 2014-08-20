@@ -43,16 +43,16 @@ public:
     // such as the various parameters to scrypt
     std::vector<unsigned char> vchOtherDerivationParameters;
 
-    IMPLEMENT_SERIALIZE
+    IMPLEMENT_SERIALIZE;
 
-    template <typename T, typename Stream, typename Operation>
-    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+    template <typename Stream, typename Operation>
+    inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         size_t nSerSize = 0;
-        READWRITE(thisPtr->vchCryptedKey);
-        READWRITE(thisPtr->vchSalt);
-        READWRITE(thisPtr->nDerivationMethod);
-        READWRITE(thisPtr->nDeriveIterations);
-        READWRITE(thisPtr->vchOtherDerivationParameters);
+        READWRITE(vchCryptedKey);
+        READWRITE(vchSalt);
+        READWRITE(nDerivationMethod);
+        READWRITE(nDeriveIterations);
+        READWRITE(vchOtherDerivationParameters);
         return nSerSize;
     }
 

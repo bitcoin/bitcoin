@@ -59,14 +59,14 @@ public:
     static const int CURRENT_VERSION = 1;
     int nVersion;
 
-    IMPLEMENT_SERIALIZE
+    IMPLEMENT_SERIALIZE;
 
-    template <typename T, typename Stream, typename Operation>
-    inline static size_t SerializationOp(T thisPtr, Stream& s, Operation ser_action, int nType, int nVersion) {
+    template <typename Stream, typename Operation>
+    inline size_t SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         size_t nSerSize = 0;
         bool fRead = boost::is_same<Operation, CSerActionUnserialize>();
 
-        SendCoinsRecipient* pthis = const_cast<SendCoinsRecipient*>(thisPtr);
+        SendCoinsRecipient* pthis = const_cast<SendCoinsRecipient*>(this);
 
         std::string sAddress = pthis->address.toStdString();
         std::string sLabel = pthis->label.toStdString();
@@ -80,7 +80,7 @@ public:
         nVersion = pthis->nVersion;
         READWRITE(sAddress);
         READWRITE(sLabel);
-        READWRITE(thisPtr->amount);
+        READWRITE(amount);
         READWRITE(sMessage);
         READWRITE(sPaymentRequest);
         READWRITE(sAuthenticatedMerchant);
