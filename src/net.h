@@ -16,7 +16,7 @@
 #include "random.h"
 #include "sync.h"
 #include "uint256.h"
-#include "util.h"
+#include "utilstrencodings.h"
 
 #include <deque>
 #include <stdint.h>
@@ -25,6 +25,7 @@
 #include <arpa/inet.h>
 #endif
 
+#include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
 

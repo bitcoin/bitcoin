@@ -4,6 +4,7 @@
 
 #include "base58.h"
 #include "util.h"
+#include "utilmoneystr.h"
 #include "core.h"
 #include "main.h"         // for MAX_BLOCK_SIZE
 #include "keystore.h"
