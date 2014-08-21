@@ -49,11 +49,11 @@ fi
 # Initialize source branches.
 git checkout -q "$BRANCH"
 if git fetch -q "$HOST":"$REPO" "+refs/pull/$PULL/*:refs/heads/pull/$PULL/*"; then
-  if ! git log -1q "refs/heads/pull/$PULL/head" >/dev/null 2>&1; then
+  if ! git log -q -1 "refs/heads/pull/$PULL/head" >/dev/null 2>&1; then
     echo "ERROR: Cannot find head of pull request #$PULL on $HOST:$REPO." >&2
     exit 3
   fi
-  if ! git log -1q "refs/heads/pull/$PULL/merge" >/dev/null 2>&1; then
+  if ! git log -q -1 "refs/heads/pull/$PULL/merge" >/dev/null 2>&1; then
     echo "ERROR: Cannot find merge of pull request #$PULL on $HOST:$REPO." >&2
     exit 3
   fi
