@@ -8,6 +8,7 @@
 #include "sync.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
 
@@ -33,6 +34,11 @@ int64_t GetTimeOffset()
 int64_t GetAdjustedTime()
 {
     return GetTime() + GetTimeOffset();
+}
+
+static int64_t abs64(int64_t n)
+{
+    return (n >= 0 ? n : -n);
 }
 
 void AddTimeData(const CNetAddr& ip, int64_t nTime)

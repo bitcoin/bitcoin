@@ -9,6 +9,7 @@
 #include "pow.h"
 #include "uint256.h"
 
+#include <boost/thread.hpp>
 #include <stdint.h>
 
 using namespace std;
