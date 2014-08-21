@@ -170,8 +170,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     {
         CMutableTransaction tx;
         tx.vin.resize(1);
-        tx.vin[0].prevout.n = 0;
-        tx.vin[0].prevout.hash = GetRandHash();
+        tx.vin[0].prevout.Set(GetRandHash(), 0);
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
@@ -187,8 +186,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 
         CMutableTransaction tx;
         tx.vin.resize(1);
-        tx.vin[0].prevout.n = 0;
-        tx.vin[0].prevout.hash = txPrev.GetHash();
+        tx.vin[0].prevout.Set(txPrev.GetHash(), 0);
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
@@ -209,8 +207,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin.resize(500);
         for (unsigned int j = 0; j < tx.vin.size(); j++)
         {
-            tx.vin[j].prevout.n = j;
-            tx.vin[j].prevout.hash = txPrev.GetHash();
+            tx.vin[j].prevout.Set(txPrev.GetHash(), j);
         }
         SignSignature(keystore, txPrev, tx, 0);
         // Re-use same signature for other inputs

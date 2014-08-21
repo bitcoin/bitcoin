@@ -371,8 +371,8 @@ void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
     std::map<COutPoint, CInPoint>::iterator it = mapNextTx.lower_bound(COutPoint(hashTx, 0));
 
     // iterate over all COutPoints in mapNextTx whose hash equals the provided hashTx
-    while (it != mapNextTx.end() && it->first.hash == hashTx) {
-        coins.Spend(it->first.n); // and remove those outputs from coins
+    while (it != mapNextTx.end() && it->first.Hash() == hashTx) {
+        coins.Spend(it->first.Index()); // and remove those outputs from coins
         it++;
     }
 }
@@ -500,13 +500,13 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
         const CTransaction& tx = it->second.GetTx();
         BOOST_FOREACH(const CTxIn &txin, tx.vin) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
-            std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
+            std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.Hash());
             if (it2 != mapTx.end()) {
                 const CTransaction& tx2 = it2->second.GetTx();
-                assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
+                assert(tx2.vout.size() > txin.prevout.Index() && !tx2.vout[txin.prevout.Index()].IsNull());
             } else {
-                CCoins &coins = pcoins->GetCoins(txin.prevout.hash);
-                assert(coins.IsAvailable(txin.prevout.n));
+                CCoins &coins = pcoins->GetCoins(txin.prevout.Hash());
+                assert(coins.IsAvailable(txin.prevout.Index()));
             }
             // Check whether its inputs are marked in mapNextTx.
             std::map<COutPoint, CInPoint>::const_iterator it3 = mapNextTx.find(txin.prevout);

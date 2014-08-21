@@ -138,12 +138,12 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
             {
                 // Read prev transaction
-                if (!view.HaveCoins(txin.prevout.hash))
+                if (!view.HaveCoins(txin.prevout.Hash()))
                 {
                     // This should never happen; all transactions in the memory
                     // pool should connect to either transactions in the chain
                     // or other transactions in the memory pool.
-                    if (!mempool.mapTx.count(txin.prevout.hash))
+                    if (!mempool.mapTx.count(txin.prevout.Hash()))
                     {
                         LogPrintf("ERROR: mempool transaction missing input\n");
                         if (fDebug) assert("mempool transaction missing input" == 0);
@@ -160,14 +160,14 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                         vOrphan.push_back(COrphan(&tx));
                         porphan = &vOrphan.back();
                     }
-                    mapDependers[txin.prevout.hash].push_back(porphan);
-                    porphan->setDependsOn.insert(txin.prevout.hash);
-                    nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
+                    mapDependers[txin.prevout.Hash()].push_back(porphan);
+                    porphan->setDependsOn.insert(txin.prevout.Hash());
+                    nTotalIn += mempool.mapTx[txin.prevout.Hash()].GetTx().vout[txin.prevout.Index()].nValue;
                     continue;
                 }
-                const CCoins &coins = view.GetCoins(txin.prevout.hash);
+                const CCoins &coins = view.GetCoins(txin.prevout.Hash());
 
-                int64_t nValueIn = coins.vout[txin.prevout.n].nValue;
+                int64_t nValueIn = coins.vout[txin.prevout.Index()].nValue;
                 nTotalIn += nValueIn;
 
                 int nConf = pindexPrev->nHeight - coins.nHeight + 1;

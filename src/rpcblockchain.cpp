@@ -183,8 +183,8 @@ Value getrawmempool(const Array& params, bool fHelp)
             set<string> setDepends;
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
             {
-                if (mempool.exists(txin.prevout.hash))
-                    setDepends.insert(txin.prevout.hash.ToString());
+                if (mempool.exists(txin.prevout.Hash()))
+                    setDepends.insert(txin.prevout.Hash().ToString());
             }
             Array depends(setDepends.begin(), setDepends.end());
             info.push_back(Pair("depends", depends));
