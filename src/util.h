@@ -156,8 +156,6 @@ boost::filesystem::path GetTempPath();
 void ShrinkDebugFile();
 int64_t GetTime();
 void SetMockTime(int64_t nMockTimeIn);
-std::string FormatFullVersion();
-std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
 void runCommand(std::string strCommand);
 
 inline std::string i64tostr(int64_t n)
