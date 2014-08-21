@@ -4,8 +4,11 @@
 
 #include "util.h"
 
+#include "core.h"
 #include "random.h"
 #include "sync.h"
+#include "utilstrencodings.h"
+#include "utilmoneystr.h"
 
 #include <stdint.h>
 #include <vector>

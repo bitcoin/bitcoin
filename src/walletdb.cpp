@@ -9,10 +9,13 @@
 #include "protocol.h"
 #include "serialize.h"
 #include "sync.h"
+#include "utiltime.h"
+#include "util.h"
 #include "wallet.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
+#include <boost/thread.hpp>
 
 using namespace std;
 using namespace boost;

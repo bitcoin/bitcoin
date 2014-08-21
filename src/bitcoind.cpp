@@ -12,6 +12,7 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 
 /* Introduction text for doxygen: */
 

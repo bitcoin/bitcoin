@@ -13,6 +13,7 @@
 #include "main.h"
 #include "net.h"
 #include "ui_interface.h"
+#include "util.h"
 
 #include <stdint.h>
 

@@ -11,8 +11,9 @@
 #include "guiutil.h"
 
 #include "init.h"
-#include "util.h"
 #include "version.h"
+
+#include <stdio.h>
 
 #include <QLabel>
 #include <QRegExp>
