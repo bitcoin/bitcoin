@@ -61,16 +61,8 @@ public:
     int64_t nTime;
     CPubKey vchPubKey;
 
-    CKeyPool()
-    {
-        nTime = GetTime();
-    }
-
-    CKeyPool(const CPubKey& vchPubKeyIn)
-    {
-        nTime = GetTime();
-        vchPubKey = vchPubKeyIn;
-    }
+    CKeyPool();
+    CKeyPool(const CPubKey& vchPubKeyIn);
 
     IMPLEMENT_SERIALIZE
     (
@@ -840,11 +832,7 @@ public:
     //// todo: add something to note what created it (user, getnewaddress, change)
     ////   maybe should have a map<string, string> property map
 
-    CWalletKey(int64_t nExpires=0)
-    {
-        nTimeCreated = (nExpires ? GetTime() : 0);
-        nTimeExpires = nExpires;
-    }
+    CWalletKey(int64_t nExpires=0);
 
     IMPLEMENT_SERIALIZE
     (
