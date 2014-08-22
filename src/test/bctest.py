@@ -17,8 +17,11 @@ def bctest(testDir, testObj):
 		inputData = open(filename).read()
 		stdinCfg = subprocess.PIPE
 
-	outputFn = testObj['output_cmp']
-	outputData = open(testDir + "/" + outputFn).read()
+	outputFn = None
+	outputData = None
+	if "output_cmp" in testObj:
+		outputFn = testObj['output_cmp']
+		outputData = open(testDir + "/" + outputFn).read()
 
 	proc = subprocess.Popen(execargs, stdin=stdinCfg, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	try:
@@ -27,8 +30,15 @@ def bctest(testDir, testObj):
 		print("OSError, Failed to execute " + execargs[0])
 		sys.exit(1)
 
-	if outs[0] != outputData:
+	if outputData and (outs[0] != outputData):
 		print("Output data mismatch for " + outputFn)
+		sys.exit(1)
+
+	wantRC = 0
+	if "return_code" in testObj:
+		wantRC = testObj['return_code']
+	if proc.returncode != wantRC:
+		print("Return code mismatch for " + outputFn)
 		sys.exit(1)
 
 def bctester(testDir, input_basename):
