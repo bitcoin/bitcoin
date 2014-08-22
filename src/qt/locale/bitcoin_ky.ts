@@ -1391,7 +1391,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation type="unfinished"/>
+        <translation>Маалымат</translation>
     </message>
     <message>
         <source>Debug window</source>

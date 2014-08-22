@@ -2233,7 +2233,7 @@ Address: %4
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>ID</translation>
     </message>
     <message>
         <source>Merchant</source>

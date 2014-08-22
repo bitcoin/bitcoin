@@ -2655,7 +2655,7 @@ Adres: %4
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation>Konut satırı ve JSON-RPC komutlarını kabul et</translation>
+        <translation>Komut satırı ve JSON-RPC komutlarını kabul et</translation>
     </message>
     <message>
         <source>Bitcoin Core RPC client version</source>

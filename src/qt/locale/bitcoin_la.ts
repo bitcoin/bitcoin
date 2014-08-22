@@ -962,7 +962,7 @@ Inscriptio: %4
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Error</translation>
     </message>
     <message>
         <source>GB of free space available</source>

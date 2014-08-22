@@ -1391,7 +1391,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation type="unfinished"/>
+        <translation>Gwybodaeth</translation>
     </message>
     <message>
         <source>Debug window</source>
@@ -2127,7 +2127,7 @@ Address: %4
     </message>
     <message>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -2544,7 +2544,7 @@ Address: %4
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Anfon arian</translation>
     </message>
 </context>
 <context>

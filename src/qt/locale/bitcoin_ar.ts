@@ -3,11 +3,11 @@
     <name>AboutDialog</name>
     <message>
         <source>About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>عن جوهر البيت كوين</translation>
     </message>
     <message>
         <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;جوهر البيت كوين&lt;/b&gt; إصدار</translation>
     </message>
     <message>
         <source>
@@ -24,7 +24,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>مطوري جوهر البيت كوين</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
@@ -268,7 +268,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>جهاز</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
@@ -424,7 +424,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>جوهر البيت كوين</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -488,7 +488,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>%1 and %2</source>
-        <translation type="unfinished"/>
+        <translation>1% و 2%</translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
@@ -586,7 +586,7 @@ Address: %4
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>افضلية :</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -598,11 +598,11 @@ Address: %4
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>بعد الرسوم :</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>تعديل :</translation>
     </message>
     <message>
         <source>(un)select all</source>
@@ -722,11 +722,11 @@ Address: %4
     </message>
     <message>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>أدنى</translation>
     </message>
     <message>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>الأدنى</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -794,7 +794,7 @@ Address: %4
     </message>
     <message>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(تغير)</translation>
     </message>
 </context>
 <context>
@@ -883,7 +883,7 @@ Address: %4
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>جوهر البيت كوين</translation>
     </message>
     <message>
         <source>version</source>
@@ -1376,7 +1376,7 @@ Address: %4
     </message>
     <message>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>صورة PNG (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1633,7 +1633,7 @@ Address: %4
     </message>
     <message>
         <source>Payment information</source>
-        <translation type="unfinished"/>
+        <translation>معلومات الدفع</translation>
     </message>
     <message>
         <source>URI</source>
@@ -1715,7 +1715,7 @@ Address: %4
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
+        <translation>الرصيد غير كافي!</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1767,7 +1767,7 @@ Address: %4
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>مسح كل حقول النموذج المطلوبة</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2123,11 +2123,11 @@ Address: %4
     <name>SplashScreen</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>جوهر البيت كوين</translation>
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>مطوري جوهر البيت كوين</translation>
     </message>
     <message>
         <source>[testnet]</source>

@@ -2127,7 +2127,7 @@ Address: %4
     </message>
     <message>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -2544,7 +2544,7 @@ Address: %4
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Bidali txanponak</translation>
     </message>
 </context>
 <context>

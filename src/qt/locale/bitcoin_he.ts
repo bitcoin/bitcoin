@@ -449,7 +449,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>פתח ביטקוין: URI או בקשת תשלום</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -574,7 +574,7 @@ Address: %4
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Control Address Selection</source>
-        <translation type="unfinished"/>
+        <translation>בחירת כתובת שליטת מטבעות</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -598,7 +598,7 @@ Address: %4
     </message>
     <message>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>פלט נמוך:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -662,11 +662,11 @@ Address: %4
     </message>
     <message>
         <source>Lock unspent</source>
-        <translation type="unfinished"/>
+        <translation>נעל יתרה</translation>
     </message>
     <message>
         <source>Unlock unspent</source>
-        <translation type="unfinished"/>
+        <translation>פתח יתרה</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -690,7 +690,7 @@ Address: %4
     </message>
     <message>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>העתק פלט נמוך</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -734,7 +734,7 @@ Address: %4
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(1% נעול)</translation>
     </message>
     <message>
         <source>none</source>
@@ -782,11 +782,11 @@ Address: %4
     </message>
     <message>
         <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation type="unfinished"/>
+        <translation>סכומים נמוכים מ 0.546 כפול מינימום סכום ההעברה מופיעים כאבק</translation>
     </message>
     <message>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>התווית הופכת אדומה, אם השינוי קטן מ1%.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -981,7 +981,7 @@ Address: %4
     </message>
     <message>
         <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
+        <translation>פתח בקשת תשלום מ-URI או קובץ</translation>
     </message>
     <message>
         <source>URI:</source>
@@ -1172,7 +1172,7 @@ Address: %4
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"/>
+        <translation>הצג תכונות שליטת מטבע או לא.</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1586,7 +1586,7 @@ Address: %4
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation type="unfinished"/>
+        <translation>הצג בקשות נבחרות (דומה ללחיצה כפולה על רשומה)</translation>
     </message>
     <message>
         <source>Show</source>
@@ -1594,7 +1594,7 @@ Address: %4
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
-        <translation type="unfinished"/>
+        <translation>הסר הרשומות הנבחרות מהרשימה</translation>
     </message>
     <message>
         <source>Remove</source>
@@ -1743,7 +1743,7 @@ Address: %4
     </message>
     <message>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>פלט נמוך:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -1823,7 +1823,7 @@ Address: %4
     </message>
     <message>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>העתק פלט נמוך</translation>
     </message>
     <message>
         <source>Copy change</source>

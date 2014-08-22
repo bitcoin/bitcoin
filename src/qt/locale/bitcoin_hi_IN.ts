@@ -958,7 +958,7 @@ Address: %4
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>भूल</translation>
     </message>
     <message>
         <source>GB of free space available</source>
@@ -1396,7 +1396,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation type="unfinished"/>
+        <translation>जानकारी</translation>
     </message>
     <message>
         <source>Debug window</source>
@@ -2132,7 +2132,7 @@ Address: %4
     </message>
     <message>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[टेस्टनेट]</translation>
     </message>
 </context>
 <context>
@@ -2234,7 +2234,7 @@ Address: %4
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>ID</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -2549,7 +2549,7 @@ Address: %4
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>सिक्के भेजें|</translation>
     </message>
 </context>
 <context>
