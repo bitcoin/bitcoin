@@ -20,11 +20,13 @@ $(sort $(foreach dep,$(2),$(2) $(call int_get_all_dependencies,$(1),$($(dep)_dep
 endef
 
 define fetch_file
-(test -f $(SOURCES_PATH)/$(3) || \
-  ( mkdir -p $$($(1)_extract_dir) && $(build_DOWNLOAD) "$$($(1)_extract_dir)/$(3).temp" "$(2)" && \
-    echo "$(4)  $$($(1)_extract_dir)/$(3).temp" > $$($(1)_extract_dir)/.$(3).hash && \
-    $(build_SHA256SUM) -c $$($(1)_extract_dir)/.$(3).hash && \
-    mv $$($(1)_extract_dir)/$(3).temp $(SOURCES_PATH)/$(3) ))
+(test -f $(SOURCES_PATH)/$(4) || \
+  ( mkdir -p $$($(1)_extract_dir) && \
+  ( $(build_DOWNLOAD) "$$($(1)_extract_dir)/$(3).temp" "$(2)/$(3)" || \
+    $(build_DOWNLOAD) "$$($(1)_extract_dir)/$(3).temp" "$(FALLBACK_DOWNLOAD_PATH)/$(3)" ) && \
+    echo "$(5)  $$($(1)_extract_dir)/$(4).temp" > $$($(1)_extract_dir)/.$(4).hash && \
+    $(build_SHA256SUM) -c $$($(1)_extract_dir)/.$(4).hash && \
+    mv $$($(1)_extract_dir)/$(4).temp $(SOURCES_PATH)/$(4) ))
 endef
 
 define int_get_build_recipe_hash
@@ -65,7 +67,7 @@ $(1)_download_path_fixed=$(subst :,\:,$$($(1)_download_path))
 
 
 #default commands
-$(1)_fetch_cmds ?= $(call fetch_file,$(1),$(subst \:,:,$$($(1)_download_path_fixed)/$$($(1)_download_file)),$($(1)_file_name),$($(1)_sha256_hash))
+$(1)_fetch_cmds ?= $(call fetch_file,$(1),$(subst \:,:,$$($(1)_download_path_fixed)),$$($(1)_download_file),$($(1)_file_name),$($(1)_sha256_hash))
 $(1)_extract_cmds ?= mkdir -p $$($(1)_extract_dir) && echo "$$($(1)_sha256_hash)  $$($(1)_source)" > $$($(1)_extract_dir)/.$$($(1)_file_name).hash &&  $(build_SHA256SUM) -c $$($(1)_extract_dir)/.$$($(1)_file_name).hash && tar --strip-components=1 -xf $$($(1)_source)
 $(1)_preprocess_cmds ?=
 $(1)_build_cmds ?=
