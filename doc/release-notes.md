@@ -2,8 +2,8 @@ Bitcoin Core version 0.9.3 is now available from:
 
   https://bitcoin.org/bin/0.9.3/
 
-This is a new minor version release, bringing only bug fixes. Upgrading to this
-release is recommended.
+This is a new minor version release, bringing only bug fixes and updated
+translations. Upgrading to this release is recommended.
 
 Please report bugs using the issue tracker at github:
 
@@ -89,3 +89,5 @@ Thanks to everyone who contributed to this release:
 - Trevin Hofmann
 - Wladimir J. van der Laan
 - Zak Wilcox
+
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
