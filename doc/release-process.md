@@ -43,7 +43,7 @@ Release Process
 
  Fetch and build inputs: (first time, or when dependency versions change)
 
-	wget 'http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.tar.gz' -O miniupnpc-1.9.tar.gz
+	wget 'http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20140701.tar.gz' -O miniupnpc-1.9.20140701.tar.gz
 	wget 'https://www.openssl.org/source/openssl-1.0.1i.tar.gz'
 	wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
 	wget 'http://zlib.net/zlib-1.2.8.tar.gz'
@@ -89,16 +89,16 @@ Release Process
 
  The expected SHA256 hashes of the intermediate inputs are:
 
-    46710f673467e367738d8806e45b4cb5931aaeea61f4b6b55a68eea56d5006c5  bitcoin-deps-linux32-gitian-r6.zip
-    f03be39fb26670243d3a659e64d18e19d03dec5c11e9912011107768390b5268  bitcoin-deps-linux64-gitian-r6.zip
+    b66e8374031adf8d5309c046615fe4f561c3a7e3c1f6885675c13083db0c4d3b  bitcoin-deps-linux32-gitian-r8.zip
+    ec83deb4e81bea5ac1fb5e3f1b88cd02ca665306f0c2290ef4f19b974525005e  bitcoin-deps-linux64-gitian-r8.zip
     f29b7d9577417333fb56e023c2977f5726a7c297f320b175a4108cf7cd4c2d29  boost-linux32-1.55.0-gitian-r1.zip
     88232451c4104f7eb16e469ac6474fd1231bd485687253f7b2bdf46c0781d535  boost-linux64-1.55.0-gitian-r1.zip
     57e57dbdadc818cd270e7e00500a5e1085b3bcbdef69a885f0fb7573a8d987e1  qt-linux32-4.6.4-gitian-r1.tar.gz
     60eb4b9c5779580b7d66529efa5b2836ba1a70edde2a0f3f696d647906a826be  qt-linux64-4.6.4-gitian-r1.tar.gz
     60dc2d3b61e9c7d5dbe2f90d5955772ad748a47918ff2d8b74e8db9b1b91c909  boost-win32-1.55.0-gitian-r6.zip
     f65fcaf346bc7b73bc8db3a8614f4f6bee2f61fcbe495e9881133a7c2612a167  boost-win64-1.55.0-gitian-r6.zip
-    70de248cd0dd7e7476194129e818402e974ca9c5751cbf591644dc9f332d3b59  bitcoin-deps-win32-gitian-r13.zip
-    9eace4c76f639f4f3580a478eee4f50246e1bbb5ccdcf37a158261a5a3fa3e65  bitcoin-deps-win64-gitian-r13.zip
+    9c2572b021b3b50dc9441f2e96d672ac1da4cb6c9f88a1711aa0234882f353cf  bitcoin-deps-win32-gitian-r15.zip
+    94e9f6d861140d9130a15830eba40eba4c8c830440506ac7cc0d1e3217293c25  bitcoin-deps-win64-gitian-r15.zip
     963e3e5e85879010a91143c90a711a5d1d5aba992e38672cdf7b54e42c56b2f1  qt-win32-5.2.0-gitian-r3.zip
     751c579830d173ef3e6f194e83d18b92ebef6df03289db13ab77a52b6bc86ef0  qt-win64-5.2.0-gitian-r3.zip
     e2e403e1a08869c7eed4d4293bce13d51ec6a63592918b90ae215a0eceb44cb4  protobuf-win32-2.5.0-gitian-r4.zip
@@ -149,75 +149,62 @@ repackage gitian builds for release as stand-alone zip/tar/installer exe
 
 ###Next steps:
 
-* Code-sign Windows -setup.exe (in a Windows virtual machine using signtool)
- Note: only Gavin has the code-signing keys currently.
-
-* upload builds to SourceForge
-
-* create SHA256SUMS for builds, and PGP-sign it
-
-* update bitcoin.org version
-  make sure all OS download links go to the right versions
-  
-* update download sizes on bitcoin.org/_templates/download.html
-
-* update forum version
-
-* update wiki download links
-
-* update wiki changelog: [https://en.bitcoin.it/wiki/Changelog](https://en.bitcoin.it/wiki/Changelog)
-
 Commit your signature to gitian.sigs:
 
 	pushd gitian.sigs
-	git add ${VERSION}/${SIGNER}
+	git add ${VERSION}-linux/${SIGNER}
 	git add ${VERSION}-win/${SIGNER}
+	git add ${VERSION}-osx/${SIGNER}
 	git commit -a
 	git push  # Assuming you can push to the gitian.sigs tree
 	popd
 
 -------------------------------------------------------------------------
 
-### After 3 or more people have gitian-built, repackage gitian-signed zips:
+### After 3 or more people have gitian-built and their results match:
 
-From a directory containing bitcoin source, gitian.sigs and gitian zips
+- Perform code-signing.
 
-	export VERSION=(new version, e.g. 0.8.0)
-	mkdir bitcoin-${VERSION}-linux-gitian
-	pushd bitcoin-${VERSION}-linux-gitian
-	unzip ../bitcoin-${VERSION}-linux-gitian.zip
-	mkdir gitian
-	cp ../bitcoin/contrib/gitian-downloader/*.pgp ./gitian/
-	for signer in $(ls ../gitian.sigs/${VERSION}/); do
-	 cp ../gitian.sigs/${VERSION}/${signer}/bitcoin-build.assert ./gitian/${signer}-build.assert
-	 cp ../gitian.sigs/${VERSION}/${signer}/bitcoin-build.assert.sig ./gitian/${signer}-build.assert.sig
-	done
-	zip -r bitcoin-${VERSION}-linux-gitian.zip *
-	cp bitcoin-${VERSION}-linux-gitian.zip ../
-	popd
-	mkdir bitcoin-${VERSION}-win-gitian
-	pushd bitcoin-${VERSION}-win-gitian
-	unzip ../bitcoin-${VERSION}-win-gitian.zip
-	mkdir gitian
-	cp ../bitcoin/contrib/gitian-downloader/*.pgp ./gitian/
-	for signer in $(ls ../gitian.sigs/${VERSION}-win/); do
-	 cp ../gitian.sigs/${VERSION}-win/${signer}/bitcoin-build.assert ./gitian/${signer}-build.assert
-	 cp ../gitian.sigs/${VERSION}-win/${signer}/bitcoin-build.assert.sig ./gitian/${signer}-build.assert.sig
-	done
-	zip -r bitcoin-${VERSION}-win-gitian.zip *
-	cp bitcoin-${VERSION}-win-gitian.zip ../
-	popd
+    - Code-sign Windows -setup.exe (in a Windows virtual machine using signtool)
 
-- Upload gitian zips to SourceForge
+    - Code-sign MacOSX .dmg
+
+  Note: only Gavin has the code-signing keys currently.
+
+- Create `SHA256SUMS.asc` for builds, and PGP-sign it. This is done manually.
+  Include all the files to be uploaded. The file has `sha256sum` format with a
+  simple header at the top:
+
+```
+Hash: SHA256
+
+0060f7d38b98113ab912d4c184000291d7f026eaf77ca5830deec15059678f54  bitcoin-x.y.z-linux.tar.gz
+...
+```
+
+- Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the bitcoin.org server
+
+- Update bitcoin.org version
+
+  - Make a pull request to add a file named `YYYY-MM-DD-vX.Y.Z.md` with the release notes
+  to https://github.com/bitcoin/bitcoin.org/tree/master/_releases
+   ([Example for 0.9.2.1](https://raw.githubusercontent.com/bitcoin/bitcoin.org/master/_releases/2014-06-19-v0.9.2.1.md)).
+
+  - After the pull request is merged, the website will automatically show the newest version, as well
+    as update the OS download links. Ping Saivann in case anything goes wrong
 
 - Announce the release:
-
-  - Add the release to bitcoin.org: https://github.com/bitcoin/bitcoin.org/tree/master/_releases
 
   - Release sticky on bitcointalk: https://bitcointalk.org/index.php?board=1.0
 
   - Bitcoin-development mailing list
 
-  - Optionally reddit /r/Bitcoin, ...
+  - Update title of #bitcoin on Freenode IRC
+
+  - Optionally reddit /r/Bitcoin, ... but this will usually sort out itself
+
+- Notify BlueMatt so that he can start building [https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin](the PPAs)
+
+- Add release notes for the new version to the directory `doc/release-notes` in git master
 
 - Celebrate 

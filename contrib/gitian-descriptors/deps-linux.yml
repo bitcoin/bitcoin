@@ -17,7 +17,7 @@ reference_datetime: "2013-06-01 00:00:00"
 remotes: []
 files:
 - "openssl-1.0.1i.tar.gz"
-- "miniupnpc-1.9.tar.gz"
+- "miniupnpc-1.9.20140701.tar.gz"
 - "qrencode-3.4.3.tar.bz2"
 - "protobuf-2.5.0.tar.bz2"
 - "db-4.8.30.NC.tar.gz"
@@ -31,7 +31,7 @@ script: |
   export LIBRARY_PATH="$STAGING/lib"
   # Integrity Check
   echo "3c179f46ca77069a6a0bac70212a9b3b838b2f66129cb52d568837fc79d8fcc7  openssl-1.0.1i.tar.gz"  | sha256sum -c
-  echo "2923e453e880bb949e3d4da9f83dd3cb6f08946d35de0b864d0339cf70934464  miniupnpc-1.9.tar.gz"   | sha256sum -c
+  echo "26f3985bad7768b8483b793448ae49414cdc4451d0ec83e7c1944367e15f9f07  miniupnpc-1.9.20140701.tar.gz"   | sha256sum -c
   echo "dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98  qrencode-3.4.3.tar.bz2" | sha256sum -c
   echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
   echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"    | sha256sum -c
@@ -46,8 +46,8 @@ script: |
   make install_sw
   cd ..
   #
-  tar xzfm miniupnpc-1.9.tar.gz
-  cd miniupnpc-1.9
+  tar xzfm miniupnpc-1.9.20140701.tar.gz
+  cd miniupnpc-1.9.20140701
   #   miniupnpc is always built with -fPIC
   INSTALLPREFIX=$STAGING make $MAKEOPTS install
   rm -f $STAGING/lib/libminiupnpc.so* # no way to skip shared lib build
@@ -95,4 +95,4 @@ script: |
   done
   #
   cd $STAGING
-  find include lib bin host | sort | zip -X@ $OUTDIR/bitcoin-deps-linux${GBUILD_BITS}-gitian-r7.zip
+  find include lib bin host | sort | zip -X@ $OUTDIR/bitcoin-deps-linux${GBUILD_BITS}-gitian-r8.zip
