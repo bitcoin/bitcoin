@@ -376,7 +376,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>و ارسال</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
@@ -2232,7 +2232,7 @@ Address: %4
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>شناسه کاربری</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -2562,15 +2562,16 @@ Address: %4
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>گرفتن نسخه پیشتیبان از Wallet</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"/>
+        <translation>داده های Wallet  
+(*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation>عملیات گرفتن نسخه پیشتیبان انجام نشد</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>

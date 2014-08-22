@@ -376,7 +376,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Пошаљи</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
@@ -2559,7 +2559,7 @@ Address: %4
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Backup новчаника</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>

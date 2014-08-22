@@ -516,7 +516,7 @@ Platinama pagal MIT/X11 licenciją, kurią rasite faile COPYING arba http://www.
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Įspėjimas</translation>
     </message>
     <message>
         <source>Information</source>
@@ -1462,7 +1462,7 @@ Adresas: %4</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>Viso:</translation>
     </message>
     <message>
         <source>In:</source>
@@ -2031,7 +2031,7 @@ Adresas: %4</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>Registruoti praneši&amp;mą</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
@@ -2566,15 +2566,15 @@ Adresas: %4</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Backup piniginę</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"/>
+        <translation>Piniginės duomenys (*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation>Nepavyko padaryti atsarginės kopijos</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
@@ -3203,7 +3203,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Įspėjimas</translation>
     </message>
     <message>
         <source>Warning: This version is obsolete, upgrade required!</source>

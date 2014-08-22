@@ -92,7 +92,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Обрати</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -108,7 +108,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Це ваша нова Bitcoin адреса для отримування платежів. Рекомендовано використовувати нову адресу для кожної транзакції.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -120,7 +120,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Експортувати список адрес</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -325,15 +325,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Адреси для &amp;відправлення...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Адреси для &amp;отримання...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>Відкрити &amp;URI</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -453,7 +453,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Параметри командного рядка</translation>
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
@@ -481,31 +481,31 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform>%n годин</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform>%n днів</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform>%n тижнів</numerusform></translation>
     </message>
     <message>
         <source>%1 and %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 та %2</translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform>%n років</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation type="unfinished"/>
+        <translation>%1 позаду</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished"/>
+        <translation>Останній отриманий блок було згенеровано %1 тому.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
@@ -579,7 +579,7 @@ Address: %4
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Кількість:</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -591,11 +591,11 @@ Address: %4
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Пріорітет:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Комісія:</translation>
     </message>
     <message>
         <source>Low Output:</source>
@@ -603,11 +603,11 @@ Address: %4
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Після комісії</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Решта:</translation>
     </message>
     <message>
         <source>(un)select all</source>
@@ -671,23 +671,23 @@ Address: %4
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати кількість</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати комісію</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати після комісії</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати байти</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати пріорітет</translation>
     </message>
     <message>
         <source>Copy low output</source>
@@ -695,43 +695,43 @@ Address: %4
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати решту</translation>
     </message>
     <message>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>найвищий</translation>
     </message>
     <message>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>вищий</translation>
     </message>
     <message>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>високий</translation>
     </message>
     <message>
         <source>medium-high</source>
-        <translation type="unfinished"/>
+        <translation>вище за середній</translation>
     </message>
     <message>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>середній</translation>
     </message>
     <message>
         <source>low-medium</source>
-        <translation type="unfinished"/>
+        <translation>нижче за середній</translation>
     </message>
     <message>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>низький</translation>
     </message>
     <message>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>нижчий</translation>
     </message>
     <message>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>найнижчий</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -747,15 +747,15 @@ Address: %4
     </message>
     <message>
         <source>yes</source>
-        <translation type="unfinished"/>
+        <translation>так</translation>
     </message>
     <message>
         <source>no</source>
-        <translation type="unfinished"/>
+        <translation>ні</translation>
     </message>
     <message>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation type="unfinished"/>
+        <translation>Ця позначка буде червоною, якщо розмір транзакції вищий за 1000 байт.</translation>
     </message>
     <message>
         <source>This means a fee of at least %1 per kB is required.</source>
@@ -771,11 +771,11 @@ Address: %4
     </message>
     <message>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
+        <translation>Ця позначка буде червоною, якщо пріорітет транзакції нижчий за «середній»&quot;.</translation>
     </message>
     <message>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Ця позначка буде червоною, якщо будь хто з отримувачів отримає менше ніж %1.</translation>
     </message>
     <message>
         <source>This means a fee of at least %1 is required.</source>
@@ -861,7 +861,7 @@ Address: %4
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
+        <translation>Буде створена новий каталог даних.</translation>
     </message>
     <message>
         <source>name</source>
@@ -869,15 +869,15 @@ Address: %4
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Каталог вже існує. Додайте %1, якщо ви мали намір створити там новий каталог.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation type="unfinished"/>
+        <translation>Шлях вже існує і не є каталогом.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Тут неможливо створити каталог даних.</translation>
     </message>
 </context>
 <context>
@@ -924,7 +924,7 @@ Address: %4
     </message>
     <message>
         <source>Choose data directory on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Обрати каталог даних під час запуску (типово: 0)</translation>
     </message>
 </context>
 <context>
@@ -935,23 +935,23 @@ Address: %4
     </message>
     <message>
         <source>Welcome to Bitcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Ласкаво просимо в Bitcoin Core.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>Оскільки це перший запуск програми, ви можете обрати де Bitcoin Core буде зберігати дані.</translation>
     </message>
     <message>
         <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Core завантажить та збереже копію ланцюга Bitcoin блоків. Щонайменше %1Gb даних буде збережено в цьому каталозі. Гаманець теж буде збережено в цьому каталозі.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation type="unfinished"/>
+        <translation>Використовувати типовий каталог даних</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation type="unfinished"/>
+        <translation>Використовувати свій каталог даних:</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -971,14 +971,14 @@ Address: %4
     </message>
     <message>
         <source>(of %1GB needed)</source>
-        <translation type="unfinished"/>
+        <translation>(з %1Gb, що потрібно)</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
-        <translation type="unfinished"/>
+        <translation>Відкрити URI</translation>
     </message>
     <message>
         <source>Open payment request from URI or file</source>
@@ -986,7 +986,7 @@ Address: %4
     </message>
     <message>
         <source>URI:</source>
-        <translation type="unfinished"/>
+        <translation>URI:</translation>
     </message>
     <message>
         <source>Select payment request file</source>
@@ -1404,7 +1404,7 @@ Address: %4
     </message>
     <message>
         <source>Debug window</source>
-        <translation type="unfinished"/>
+        <translation>Вікно зневадження</translation>
     </message>
     <message>
         <source>General</source>
@@ -1464,7 +1464,7 @@ Address: %4
     </message>
     <message>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>всього:</translation>
     </message>
     <message>
         <source>In:</source>
@@ -1520,11 +1520,11 @@ Address: %4
     </message>
     <message>
         <source>%1 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 х</translation>
     </message>
     <message>
         <source>%1 h</source>
-        <translation type="unfinished"/>
+        <translation>%1 г</translation>
     </message>
     <message>
         <source>%1 h %2 m</source>
@@ -1607,7 +1607,7 @@ Address: %4
     </message>
     <message>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>Скопіювати повідомлення</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1622,11 +1622,11 @@ Address: %4
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished"/>
+        <translation>Скопіювати URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>Скопіювати адресу</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
@@ -1642,7 +1642,7 @@ Address: %4
     </message>
     <message>
         <source>URI</source>
-        <translation type="unfinished"/>
+        <translation>URI</translation>
     </message>
     <message>
         <source>Address</source>
@@ -1724,7 +1724,7 @@ Address: %4
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Кількість:</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -1736,11 +1736,11 @@ Address: %4
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Пріорітет:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Комісія:</translation>
     </message>
     <message>
         <source>Low Output:</source>
@@ -1748,11 +1748,11 @@ Address: %4
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Після комісії</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Решта:</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
@@ -1800,7 +1800,7 @@ Address: %4
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати кількість</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1808,19 +1808,19 @@ Address: %4
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати комісію</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати після комісії</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати байти</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати пріорітет</translation>
     </message>
     <message>
         <source>Copy low output</source>
@@ -1828,7 +1828,7 @@ Address: %4
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Копіювати решту</translation>
     </message>
     <message>
         <source>Total Amount %1 (= %2)</source>

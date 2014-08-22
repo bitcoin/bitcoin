@@ -40,7 +40,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <name>AddressBookPage</name>
     <message>
         <source>Double-click to edit address or label</source>
-        <translation>지갑 주소나 제목을 수정하려면 더블클릭하세요.</translation>
+        <translation>지갑 주소나 이름을 수정하려면 더블클릭하세요.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -104,7 +104,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>이것이 비트코인 금액을 보내는 주소이다. 항상 코인을 보내기전에 잔고와 받는 주소를 확인하시오</translation>
+        <translation>비트코인을 받는 계좌 주소입니다. 코인을 보내기 전에 잔고와 받는 주소를 항상 확인하세요.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
@@ -170,7 +170,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>새로운 암호를 지갑에 입력. 8자보다 많은 단어를 입력하거나 10 자보다 많은 여러 종류를 암호에 사용하세요.</translation>
+        <translation>새로운 암호를 입력합니다. 8개 혹은 그 이상의 단어를 입력하거나 10 자보다 많은 불규칙한 문자를 암호에 사용하세요.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -178,7 +178,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>이 작업은 지갑을 열기위해 사용자의 지갑의  암호가 필요합니다.</translation>
+        <translation>이 작업을 실행하려면 사용자 지갑의 암호가 필요합니다.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -186,7 +186,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>이 작업은 지갑을 해독하기 위해 사용자의 지갑 암호가 필요합니다.</translation>
+        <translation>이 작업은 지갑을 해독하기 위해 사용자 지갑의 암호가 필요합니다.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -206,7 +206,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>경고: 만약 당신의 지갑을 암호화 하고 비밀번호를 잃어 버릴 경우, 당신의 모든 비트코인들을 잃어버릴 수 있습니다!</translation>
+        <translation>경고: 만약 암호화된 지갑의 비밀번호를 잃어버릴 경우, 모든 비트코인들을 잃어버릴 수 있습니다!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -214,7 +214,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"/>
+        <translation>중요: 본인 지갑파일에서 만든 예전 백업들은 새로 생성한 암화화된 지갑 파일로 교체됩니다. 보안상 이유로 이전에 암호화 하지 않은 지갑 파일 백업은 사용할 수 없게 되니 빠른 시일 내로 새로 암화화된 지갑을 사용하시기 바랍니다.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -226,7 +226,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>암호화 처리 과정을 끝내기 위해 비트코인을 닫겠습니다. 지갑 암호화는 컴퓨터로의 멀웨어 감염으로 인한 비트코인 도난을 완전히 막아주지 못함을 기억하십시오.</translation>
+        <translation>암호화 처리 과정을 끝내기 위해 비트코인을 종료합니다. 지갑 암호화는 컴퓨터로의 멀웨어 감염으로 인한 비트코인 도난을 완전히 방지할 수 없음을 기억하세요.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -242,7 +242,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation>지갑 열기를 실패하였습니다.</translation>
+        <translation>지갑을 열지 못했습니다.</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
@@ -254,7 +254,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>지갑 비밀번호가 성공적으로 변경되었습니다</translation>
+        <translation>지갑 비밀번호가 성공적으로 변경되었습니다.</translation>
     </message>
 </context>
 <context>
@@ -277,7 +277,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>지갑의 일반적 개요를 보여 줍니다.</translation>
+        <translation>지갑의 일반적 개요를 보여줍니다.</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -333,7 +333,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation>URI&amp;열기</translation>
+        <translation>URI&amp;열기...</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -401,7 +401,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>지갑 주소가 자신 소유의 것인지 증명하기 위해 비트코인 주소에 서명할 수 있습니다.</translation>
+        <translation>지갑 주소가 본인 소유인지 증명하기 위해 비트코인 주소에 서명할 수 있습니다.</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
@@ -429,7 +429,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>비트코인코어</translation>
+        <translation>비트코인 코어</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -457,11 +457,11 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished"/>
+        <translation>사용할 수 있는 비트코인 명령어 옵션 목록을 가져오기 위해 Bitcoin-Qt 도움말 메시지를 표시합니다.</translation>
     </message>
     <message>
         <source>Bitcoin client</source>
-        <translation>비트코인 고객</translation>
+        <translation>비트코인 클라이언트</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -469,7 +469,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>No block source available...</source>
-        <translation>사용 가능한 블락 소스가 없습니다...</translation>
+        <translation>사용 가능한 블록이 없습니다...</translation>
     </message>
     <message>
         <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
@@ -477,7 +477,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation>%1 블락의 거래 기록들이 처리됨.</translation>
+        <translation>%1 블록의 거래 기록들이 처리됨.</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -509,7 +509,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>이것 후의 거래들은 아직 보이지 않을 것입니다.</translation>
+        <translation>이 후의 거래들은 아직 보이지 않을 것입니다.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -529,7 +529,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>따라잡기...</translation>
+        <translation>블록 따라잡기...</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -537,7 +537,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>거래 들어오는 중</translation>
+        <translation>들어오고 있는 거래</translation>
     </message>
     <message>
         <source>Date: %1
@@ -561,7 +561,7 @@ Address: %4
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>치명적인 오류가 있습니다. 비트코인을 더이상 안전하게 진행할 수 없어 빠져나갑니다.</translation>
+        <translation>치명적인 오류가 있습니다. 비트코인을 더이상 안전하게 진행할 수 없어 곧 종료합니다.</translation>
     </message>
 </context>
 <context>
@@ -575,7 +575,7 @@ Address: %4
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Control Address Selection</source>
-        <translation>코인컨트롤 주소 선택</translation>
+        <translation>코인 컨트롤 주소 선택</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -583,15 +583,15 @@ Address: %4
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Bytes:</translation>
+        <translation>바이트:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>거래량</translation>
+        <translation>거래량:</translation>
     </message>
     <message>
         <source>Priority:</source>
-        <translation>우선도:</translation>
+        <translation>우선순위:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -599,7 +599,7 @@ Address: %4
     </message>
     <message>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>소액 출금 여부:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -643,7 +643,7 @@ Address: %4
     </message>
     <message>
         <source>Priority</source>
-        <translation>우선도</translation>
+        <translation>우선순위</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -659,7 +659,7 @@ Address: %4
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>송금 ID 복사</translation>
+        <translation>거래 아이디 복사</translation>
     </message>
     <message>
         <source>Lock unspent</source>
@@ -699,39 +699,39 @@ Address: %4
     </message>
     <message>
         <source>highest</source>
-        <translation>최상</translation>
+        <translation>아주 높음</translation>
     </message>
     <message>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>보다 높음</translation>
     </message>
     <message>
         <source>high</source>
-        <translation>상</translation>
+        <translation>높음</translation>
     </message>
     <message>
         <source>medium-high</source>
-        <translation>중상</translation>
+        <translation>약간 높음</translation>
     </message>
     <message>
         <source>medium</source>
-        <translation>중</translation>
+        <translation>보통</translation>
     </message>
     <message>
         <source>low-medium</source>
-        <translation>중하</translation>
+        <translation>약간 낮음</translation>
     </message>
     <message>
         <source>low</source>
-        <translation>하</translation>
+        <translation>낮음</translation>
     </message>
     <message>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>보다 낮음</translation>
     </message>
     <message>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>아주 낮음</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -1057,7 +1057,7 @@ Address: %4
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
-        <translation type="unfinished"/>
+        <translation>명령어 라인 옵션을 활성화해서 옵션을 우회하시오</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1228,7 +1228,7 @@ Address: %4
     </message>
     <message>
         <source>Available:</source>
-        <translation>유용한</translation>
+        <translation>사용 가능</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -1236,7 +1236,7 @@ Address: %4
     </message>
     <message>
         <source>Pending:</source>
-        <translation>미정</translation>
+        <translation>미확정</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -1264,7 +1264,7 @@ Address: %4
     </message>
     <message>
         <source>out of sync</source>
-        <translation>오래됨</translation>
+        <translation>동기화 필요</translation>
     </message>
 </context>
 <context>
@@ -1299,7 +1299,7 @@ Address: %4
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation type="unfinished"/>
+        <translation>대금 청구서의 URL이 올바르지 않습니다: %1</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1307,11 +1307,11 @@ Address: %4
     </message>
     <message>
         <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
-        <translation type="unfinished"/>
+        <translation>지불 요청 파일이 읽혀지지 않거나 처리되지 않습니다! 이것은 지불요청 파일이 인식되지 않는 현상이 발생됩니다.</translation>
     </message>
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation type="unfinished"/>
+        <translation>임의로 변경한 결제 스크립트 기반의 대금 청구서 양식은 검증되기 전까지는 지원되지 않습니다.</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1323,7 +1323,7 @@ Address: %4
     </message>
     <message>
         <source>Payment request can not be parsed or processed!</source>
-        <translation type="unfinished"/>
+        <translation>지불 요청이 처리나 분석이 되지 않습니다</translation>
     </message>
     <message>
         <source>Bad response from server %1</source>
@@ -1468,11 +1468,11 @@ Address: %4
     </message>
     <message>
         <source>In:</source>
-        <translation type="unfinished"/>
+        <translation>In:</translation>
     </message>
     <message>
         <source>Out:</source>
-        <translation type="unfinished"/>
+        <translation>Out:</translation>
     </message>
     <message>
         <source>Build date</source>
@@ -1559,7 +1559,7 @@ Address: %4
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished"/>
+        <translation>임의의 라벨이 새로운 받기 주소와 결합</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -1744,7 +1744,7 @@ Address: %4
     </message>
     <message>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>소액 출금 여부:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -2210,7 +2210,7 @@ Address: %4
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n개 블럭 후에 코인 숙성이 완료됩니다.</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2697,7 +2697,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
+        <translation>선택된 주소로 고정하며 항상 리슨(Listen)합니다. IPv6 프로토콜인 경우  [host]:port 방식의 명령어 표기법을 사용합니다.</translation>
     </message>
     <message>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
@@ -2705,7 +2705,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>회귀(regression) 테스트 모드를 입력합니다. 이 모드는 어떤 블럭이 즉시 해결될 수 있도록 특정한 블럭체인을 사용하는 것이며 회귀 테스트 도구와 앱 개발의 목적으로 의도된 것입니다.</translation>
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
@@ -2851,7 +2851,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation type="unfinished"/>
+        <translation>지갑 불러오기를 하지마시오 또한 지갑 RPC 연결을 차단하십시오</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -3039,7 +3039,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation type="unfinished"/>
+        <translation>경고: -debugnet 옵션은 더이상 지원하지 않습니다. -debug=net의 형태로 사용하세요.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -3059,7 +3059,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation type="unfinished"/>
+        <translation>출력 오류 정보(기본값:0, 임의의 공급 카테고리)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>

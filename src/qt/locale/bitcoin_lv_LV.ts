@@ -72,7 +72,7 @@ Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datn
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -2564,7 +2564,7 @@ Adrese: %4
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -2809,7 +2809,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Block creation options:</source>
-        <translation type="unfinished"/>
+        <translation>Bloka izveidošanas iestatījumi:</translation>
     </message>
     <message>
         <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>

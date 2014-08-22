@@ -132,7 +132,7 @@ Produk ini termasuk software yang dibangun oleh Proyek OpenSSL untuk Toolkit Ope
     </message>
     <message>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Ada kesalahan di dalam menyimpan susunan alamat ke %1.</translation>
     </message>
 </context>
 <context>
@@ -1053,7 +1053,7 @@ Alamat: %4
     </message>
     <message>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>Transaksi URLs pihak ketiga</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1197,15 +1197,15 @@ Alamat: %4
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Restart klien diperlukan untuk mengaktifkan perubahan.</translation>
     </message>
     <message>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>Klien akan dimatikan, apakah anda hendak melanjutkan?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>Perubahan ini akan memerlukan restart klien</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1358,7 +1358,7 @@ Alamat: %4
     </message>
     <message>
         <source>Bitcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>Inti Bitcoin belum keluar dengan sempurna...</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -1923,7 +1923,7 @@ Alamat: %4
     </message>
     <message>
         <source>This is a normal payment.</source>
-        <translation type="unfinished"/>
+        <translation>Ini adalah pembayaran normal</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1939,7 +1939,7 @@ Alamat: %4
     </message>
     <message>
         <source>Remove this entry</source>
-        <translation type="unfinished"/>
+        <translation>Hapus masukan ini</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -2073,7 +2073,7 @@ Alamat: %4
     </message>
     <message>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation type="unfinished"/>
+        <translation>Tekan &quot;Tandatangan Pesan&quot; untuk menghasilan tanda tangan</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -2659,7 +2659,7 @@ Alamat: %4
     </message>
     <message>
         <source>Bitcoin Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>Versi klien RPC Inti Bitcoin </translation>
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
@@ -2850,7 +2850,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation type="unfinished"/>
+        <translation>Jangan memuat dompet dan menonaktifkan panggilan dompet RPC</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -2918,7 +2918,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Failed to write to coin database</source>
-        <translation type="unfinished"/>
+        <translation>Gagal menuliskan ke dalam database koin</translation>
     </message>
     <message>
         <source>Failed to write transaction index</source>
@@ -2926,7 +2926,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Failed to write undo data</source>
-        <translation type="unfinished"/>
+        <translation>Gagal menulis ulang data</translation>
     </message>
     <message>
         <source>Fee per kB to add to transactions you send</source>
@@ -3034,7 +3034,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>Opsi dompet:</translation>
     </message>
     <message>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
@@ -3118,7 +3118,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>RPC server options:</source>
-        <translation type="unfinished"/>
+        <translation>Opsi server RPC:</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>

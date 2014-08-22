@@ -3,11 +3,11 @@
     <name>AboutDialog</name>
     <message>
         <source>About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>A Bitcoin Core-ról</translation>
     </message>
     <message>
         <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; verzió</translation>
     </message>
     <message>
         <source>
@@ -28,11 +28,11 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>A Bitcoin Core fejlesztői</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1-bit)</translation>
     </message>
 </context>
 <context>
@@ -47,7 +47,7 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Új</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -55,11 +55,11 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Másolás</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Bezárás</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -67,7 +67,7 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"/>
+        <translation>Kiválasztott cím törlése a listából</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -83,31 +83,31 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Válaszd ki a címet, ahová küldesz</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Válaszd ki a címet, amivel fogadsz</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kiválaszt</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>Küldési címek</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Fogadó címek</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Ezekkel a Bitcoin-címekkel küldhetsz kifizetéseket. Mindig ellenőrizd a fogadó címet és a fizetendő összeget, mielőtt elküldöd.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Ezekkel a címekkel fogadhatsz bitcoint. Ajánlott minden tranzakciónál egy új fogadó címet használni.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -119,7 +119,7 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Címjegyzék exportálása</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -127,7 +127,7 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Az exportálás sikertelen volt</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1.</source>
@@ -217,7 +217,7 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished"/>
+        <translation>Vigyázat: a Caps Lock be van kapcsolva!</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -272,7 +272,7 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>Csomópont</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
@@ -324,15 +324,15 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Küldési címek...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Fogadó címek...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;URI azonosító megnyitása...</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -392,7 +392,7 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation type="unfinished"/>
+        <translation>Főablakot mutat/elrejt</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -432,31 +432,31 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished"/>
+        <translation>Kifizetési kérelem (QR-kódot és &quot;bitcoin:&quot; azonosítót (URI-t) hoz létre)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>&amp;A Bitcoin Core-ról</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>A használt küldési címek és címkék mutatása</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>A használt fogadó címek és címkék megtekintése</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>&quot;bitcoin:&quot; URI azonosító vagy fizetési kérelem megnyitása</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Paran&amp;cssor kapcsolók</translation>
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished"/>
+        <translation>A Bitcoin Core súgóüzenet megjelenítése a Bitcoin lehetséges parancssori kapcsolóival.</translation>
     </message>
     <message>
         <source>Bitcoin client</source>
@@ -492,11 +492,11 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
     </message>
     <message>
         <source>%1 and %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 és %2</translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform>%n év</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -560,7 +560,7 @@ Cím: %4
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"/>
+        <translation>Végzetes hiba történt. A Bitcoin működése nem biztonságos és hamarosan leáll.</translation>
     </message>
 </context>
 <context>
@@ -574,15 +574,15 @@ Cím: %4
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Control Address Selection</source>
-        <translation type="unfinished"/>
+        <translation>Ellenőrző cím kiválasztása</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Mennyiség:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Bájtok:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -590,11 +590,11 @@ Cím: %4
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Prioritás:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Díjak:</translation>
     </message>
     <message>
         <source>Low Output:</source>
@@ -602,23 +602,23 @@ Cím: %4
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Utólagos díj:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Visszajáró:</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation type="unfinished"/>
+        <translation>mindent kiválaszt/elvet</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation type="unfinished"/>
+        <translation>Fa nézet</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation type="unfinished"/>
+        <translation>Lista nézet</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -634,7 +634,7 @@ Cím: %4
     </message>
     <message>
         <source>Confirmations</source>
-        <translation type="unfinished"/>
+        <translation>Megerősítések</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -642,7 +642,7 @@ Cím: %4
     </message>
     <message>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>Prioritás</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -662,31 +662,31 @@ Cím: %4
     </message>
     <message>
         <source>Lock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Megmaradt zárolása</translation>
     </message>
     <message>
         <source>Unlock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Zárolás feloldása</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Mennyiség másolása</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Díj másolása</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Utólagos díj másolása</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Byte-ok másolása </translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Prioritás másolása</translation>
     </message>
     <message>
         <source>Copy low output</source>
@@ -694,51 +694,51 @@ Cím: %4
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Visszajáró másolása</translation>
     </message>
     <message>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>legmagasabb</translation>
     </message>
     <message>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>magasabb</translation>
     </message>
     <message>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>magas</translation>
     </message>
     <message>
         <source>medium-high</source>
-        <translation type="unfinished"/>
+        <translation>közepesen-magas</translation>
     </message>
     <message>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>közepes</translation>
     </message>
     <message>
         <source>low-medium</source>
-        <translation type="unfinished"/>
+        <translation>alacsony-közepes</translation>
     </message>
     <message>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>alacsony</translation>
     </message>
     <message>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>alacsonyabb</translation>
     </message>
     <message>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>legalacsonyabb</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 zárolva)</translation>
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>semmi</translation>
     </message>
     <message>
         <source>Dust</source>
@@ -746,35 +746,35 @@ Cím: %4
     </message>
     <message>
         <source>yes</source>
-        <translation type="unfinished"/>
+        <translation>igen</translation>
     </message>
     <message>
         <source>no</source>
-        <translation type="unfinished"/>
+        <translation>nem</translation>
     </message>
     <message>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation type="unfinished"/>
+        <translation>Ez a címke piros lesz, ha tranzakció mérete nagyobb 1000 byte-nál.</translation>
     </message>
     <message>
         <source>This means a fee of at least %1 per kB is required.</source>
-        <translation type="unfinished"/>
+        <translation>Legalább %1 díj szüksége kB-onként.</translation>
     </message>
     <message>
         <source>Can vary +/- 1 byte per input.</source>
-        <translation type="unfinished"/>
+        <translation>Bemenetenként +/- 1 byte-al változhat.</translation>
     </message>
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation type="unfinished"/>
+        <translation>Nagyobb prioritású tranzakciók nagyobb valószínűséggel kerülnek be egy blokkba.</translation>
     </message>
     <message>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
+        <translation>Ez a címke piros lesz, ha a prioritás közepesnél alacsonyabb.</translation>
     </message>
     <message>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Ez a címke piros lesz, ha valamelyik elfogadó kevesebbet kap mint %1.</translation>
     </message>
     <message>
         <source>This means a fee of at least %1 is required.</source>
@@ -794,11 +794,11 @@ Cím: %4
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished"/>
+        <translation>visszajáró %1-ből (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(visszajáró)</translation>
     </message>
 </context>
 <context>
@@ -813,11 +813,11 @@ Cím: %4
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>Ehhez a listaelemhez rendelt címke </translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"/>
+        <translation>Ehhez a címlistaelemhez rendelt cím. Csak a küldő címek módosíthatók.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -860,7 +860,7 @@ Cím: %4
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
+        <translation>Új adatkönyvtár lesz létrehozva.</translation>
     </message>
     <message>
         <source>name</source>
@@ -872,11 +872,11 @@ Cím: %4
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation type="unfinished"/>
+        <translation>Az elérési út létezik, de nem egy könyvtáré.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Adatkönyvtár nem hozható itt létre.</translation>
     </message>
 </context>
 <context>
@@ -916,7 +916,7 @@ Cím: %4
     </message>
     <message>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
+        <translation>SLL gyökér-igazolások megadása fizetési kérelmekhez (alapértelmezett: -system-)</translation>
     </message>
     <message>
         <source>Show splash screen on startup (default: 1)</source>
@@ -924,18 +924,18 @@ Cím: %4
     </message>
     <message>
         <source>Choose data directory on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Adatkönyvtár kiválasztása induláskor (alapbeállítás: 0)</translation>
     </message>
 </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
-        <translation type="unfinished"/>
+        <translation>Üdvözlünk</translation>
     </message>
     <message>
         <source>Welcome to Bitcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Üdvözlünk a Bitcoin Core-ban.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
@@ -967,30 +967,30 @@ Cím: %4
     </message>
     <message>
         <source>GB of free space available</source>
-        <translation type="unfinished"/>
+        <translation>GB hely érhető el</translation>
     </message>
     <message>
         <source>(of %1GB needed)</source>
-        <translation type="unfinished"/>
+        <translation>( ebből %1GB szükséges)</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
-        <translation type="unfinished"/>
+        <translation>URI megnyitása</translation>
     </message>
     <message>
         <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
+        <translation>Fizetési kérelem megnyitása URI azonosítóból vagy fájlból</translation>
     </message>
     <message>
         <source>URI:</source>
-        <translation type="unfinished"/>
+        <translation>URI:</translation>
     </message>
     <message>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>Fizetési kérelmi fájl kiválasztása</translation>
     </message>
     <message>
         <source>Select payment request file to open</source>
@@ -1029,7 +1029,7 @@ Cím: %4
     </message>
     <message>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>MB</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1037,7 +1037,7 @@ Cím: %4
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>SOCKS proxyn keresztüli csatlakozás a Bitcoin hálózatához.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
@@ -1189,7 +1189,7 @@ Cím: %4
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>semmi</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1228,7 +1228,7 @@ Cím: %4
     </message>
     <message>
         <source>Available:</source>
-        <translation type="unfinished"/>
+        <translation>Elérhető:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -1236,7 +1236,7 @@ Cím: %4
     </message>
     <message>
         <source>Pending:</source>
-        <translation type="unfinished"/>
+        <translation>Küldés:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -1369,11 +1369,11 @@ Cím: %4
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kép mentése</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kép másolása</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1381,7 +1381,7 @@ Cím: %4
     </message>
     <message>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>PNG kép (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1404,7 +1404,7 @@ Cím: %4
     </message>
     <message>
         <source>Debug window</source>
-        <translation type="unfinished"/>
+        <translation>Debug ablak</translation>
     </message>
     <message>
         <source>General</source>
@@ -1456,7 +1456,7 @@ Cím: %4
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Hálózati forgalom</translation>
     </message>
     <message>
         <source>&amp;Clear</source>
@@ -1464,15 +1464,15 @@ Cím: %4
     </message>
     <message>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>Összesen:</translation>
     </message>
     <message>
         <source>In:</source>
-        <translation type="unfinished"/>
+        <translation>Be:</translation>
     </message>
     <message>
         <source>Out:</source>
-        <translation type="unfinished"/>
+        <translation>Ki:</translation>
     </message>
     <message>
         <source>Build date</source>
@@ -1504,19 +1504,19 @@ Cím: %4
     </message>
     <message>
         <source>%1 B</source>
-        <translation type="unfinished"/>
+        <translation>%1 B</translation>
     </message>
     <message>
         <source>%1 KB</source>
-        <translation type="unfinished"/>
+        <translation>%1 KB</translation>
     </message>
     <message>
         <source>%1 MB</source>
-        <translation type="unfinished"/>
+        <translation>%1 MB</translation>
     </message>
     <message>
         <source>%1 GB</source>
-        <translation type="unfinished"/>
+        <translation>%1 GB</translation>
     </message>
     <message>
         <source>%1 m</source>
@@ -1575,7 +1575,7 @@ Cím: %4
     </message>
     <message>
         <source>Clear</source>
-        <translation type="unfinished"/>
+        <translation>Törlés</translation>
     </message>
     <message>
         <source>Requested payments history</source>
@@ -1591,7 +1591,7 @@ Cím: %4
     </message>
     <message>
         <source>Show</source>
-        <translation type="unfinished"/>
+        <translation>Mutat</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
@@ -1599,7 +1599,7 @@ Cím: %4
     </message>
     <message>
         <source>Remove</source>
-        <translation type="unfinished"/>
+        <translation>Eltávolítás</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -1607,7 +1607,7 @@ Cím: %4
     </message>
     <message>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>Üzenet másolása</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1630,7 +1630,7 @@ Cím: %4
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kép mentése</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -1642,7 +1642,7 @@ Cím: %4
     </message>
     <message>
         <source>URI</source>
-        <translation type="unfinished"/>
+        <translation>URI:</translation>
     </message>
     <message>
         <source>Address</source>
@@ -1712,7 +1712,7 @@ Cím: %4
     </message>
     <message>
         <source>Inputs...</source>
-        <translation type="unfinished"/>
+        <translation>Bemenetek...</translation>
     </message>
     <message>
         <source>automatically selected</source>
@@ -1724,11 +1724,11 @@ Cím: %4
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Mennyiség:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Bájtok:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -1736,11 +1736,11 @@ Cím: %4
     </message>
     <message>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Prioritás:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Díjak:</translation>
     </message>
     <message>
         <source>Low Output:</source>
@@ -1748,11 +1748,11 @@ Cím: %4
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Utólagos díj:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Visszajáró:</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
@@ -1800,7 +1800,7 @@ Cím: %4
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Mennyiség másolása</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1808,19 +1808,19 @@ Cím: %4
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Díj másolása</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Utólagos díj másolása</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Byte-ok másolása </translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Prioritás másolása</translation>
     </message>
     <message>
         <source>Copy low output</source>
@@ -1828,7 +1828,7 @@ Cím: %4
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Visszajáró másolása</translation>
     </message>
     <message>
         <source>Total Amount %1 (= %2)</source>
@@ -1836,7 +1836,7 @@ Cím: %4
     </message>
     <message>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>vagy</translation>
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
@@ -1968,14 +1968,14 @@ Cím: %4
     </message>
     <message>
         <source>Memo:</source>
-        <translation type="unfinished"/>
+        <translation>Jegyzet:</translation>
     </message>
 </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
         <source>Bitcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>A Bitcoin Core leáll...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -1986,7 +1986,7 @@ Cím: %4
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation type="unfinished"/>
+        <translation>Aláírások - üzenet aláírása/ellenőrzése</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
@@ -2094,7 +2094,7 @@ Cím: %4
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished"/>
+        <translation>A megadott cím privát kulcsa nem található.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
@@ -2133,7 +2133,7 @@ Cím: %4
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>A Bitcoin Core fejlesztői</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -2144,7 +2144,7 @@ Cím: %4
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
-        <translation type="unfinished"/>
+        <translation>KB/s</translation>
     </message>
 </context>
 <context>
@@ -2183,7 +2183,7 @@ Cím: %4
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Forrás</translation>
     </message>
     <message>
         <source>Generated</source>
@@ -2341,7 +2341,7 @@ Cím: %4
     </message>
     <message>
         <source>Offline</source>
-        <translation type="unfinished"/>
+        <translation>Offline</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -2488,7 +2488,7 @@ Cím: %4
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Az exportálás sikertelen volt</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
@@ -2883,7 +2883,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Error: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>Hiba: kevés a hely a lemezen!</translation>
     </message>
     <message>
         <source>Error: Wallet locked, unable to create transaction!</source>
@@ -2947,7 +2947,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Csomópontok keresése a tartománynévrendszeren keresztül (alapérték: 1, kivéve -connect paraméternél)</translation>
     </message>
     <message>
         <source>Force safe mode (default: 0)</source>
@@ -2967,7 +2967,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Importing...</source>
-        <translation type="unfinished"/>
+        <translation>Importálás</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -3111,7 +3111,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation type="unfinished"/>
+        <translation>Csak a &lt;net&gt; hálózat csomópontjaihoz kapcsolódjon (IPv4, IPv6 vagy Tor)</translation>
     </message>
     <message>
         <source>Print block on startup, if found in block index</source>

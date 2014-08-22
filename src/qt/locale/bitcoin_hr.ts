@@ -1459,7 +1459,7 @@ Adresa:%4
     </message>
     <message>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>Ukupno:</translation>
     </message>
     <message>
         <source>In:</source>
@@ -2563,7 +2563,7 @@ Adresa:%4
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Backup novčanika</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
@@ -2571,7 +2571,7 @@ Adresa:%4
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation>Backup nije uspio</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>

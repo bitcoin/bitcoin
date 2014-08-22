@@ -384,7 +384,7 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Envía</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
@@ -1467,7 +1467,7 @@ Dirección: %4</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>Total:</translation>
     </message>
     <message>
         <source>In:</source>
@@ -2571,15 +2571,15 @@ Dirección: %4</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Respaldar billetera</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"/>
+        <translation>Datos de billetera (*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation>Ha fallado el respaldo</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>

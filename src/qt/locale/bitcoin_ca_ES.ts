@@ -2127,7 +2127,7 @@ Address: %4
     </message>
     <message>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
