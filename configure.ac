@@ -606,7 +606,7 @@ else
     AC_MSG_RESULT($use_upnp_default)
     AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
     if test x$TARGET_OS = xwindows; then
-      CPPFLAGS="$CPPFLAGS -DSTATICLIB"
+      CPPFLAGS="$CPPFLAGS -DMINIUPNP_STATICLIB"
     fi
   else
     AC_MSG_RESULT(no)
