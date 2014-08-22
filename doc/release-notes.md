@@ -75,3 +75,17 @@ Credits
 
 Thanks to everyone who contributed to this release:
 
+- Andrew Poelstra
+- Cory Fields
+- Jeff Garzik
+- Johnathan Corgan
+- Julian Haight
+- Michael Ford
+- Pavel Vasin
+- Peter Todd
+- Pieter Wuille
+- Rose Toomey
+- Ruben Dario Ponticelli
+- Trevin Hofmann
+- Wladimir J. van der Laan
+- Zak Wilcox
