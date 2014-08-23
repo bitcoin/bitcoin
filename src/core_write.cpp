@@ -4,7 +4,8 @@
 
 #include "core_io.h"
 #include "univalue/univalue.h"
-#include "scriptutils.h"
+#include "script/script.h"
+#include "script/standard.h"
 #include "core.h"
 #include "serialize.h"
 #include "util.h"
