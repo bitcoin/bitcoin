@@ -131,7 +131,6 @@ public:
     qint64 getWatchBalance() const;
     qint64 getWatchUnconfirmedBalance() const;
     qint64 getWatchImmatureBalance() const;
-    int getNumTransactions() const;
     EncryptionStatus getEncryptionStatus() const;
     bool processingQueuedTransactions() { return fProcessingQueuedTransactions; }
 
@@ -214,7 +213,6 @@ private:
     qint64 cachedWatchOnlyBalance;
     qint64 cachedWatchUnconfBalance;
     qint64 cachedWatchImmatureBalance;
-    qint64 cachedNumTransactions;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 
@@ -228,9 +226,6 @@ signals:
     // Signal that balance in wallet changed
     void balanceChanged(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance,
                         qint64 watchOnlyBalance, qint64 watchUnconfBalance, qint64 watchImmatureBalance);
-
-    // Number of transactions in wallet changed
-    void numTransactionsChanged(int count);
 
     // Encryption status of wallet changed
     void encryptionStatusChanged(int status);
