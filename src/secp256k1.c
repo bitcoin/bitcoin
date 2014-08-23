@@ -68,6 +68,9 @@ int secp256k1_ecdsa_sign(const unsigned char *message, int messagelen, unsigned 
         secp256k1_ecdsa_sig_serialize(signature, signaturelen, &sig);
     }
     secp256k1_ecdsa_sig_free(&sig);
+    secp256k1_num_clear(&msg);
+    secp256k1_num_clear(&non);
+    secp256k1_num_clear(&sec);
     secp256k1_num_free(&msg);
     secp256k1_num_free(&non);
     secp256k1_num_free(&sec);
@@ -94,6 +97,9 @@ int secp256k1_ecdsa_sign_compact(const unsigned char *message, int messagelen, u
         secp256k1_num_get_bin(sig64 + 32, 32, &sig.s);
     }
     secp256k1_ecdsa_sig_free(&sig);
+    secp256k1_num_clear(&msg);
+    secp256k1_num_clear(&non);
+    secp256k1_num_clear(&sec);
     secp256k1_num_free(&msg);
     secp256k1_num_free(&non);
     secp256k1_num_free(&sec);
@@ -126,6 +132,7 @@ int secp256k1_ecdsa_seckey_verify(const unsigned char *seckey) {
     secp256k1_num_set_bin(&sec, seckey, 32);
     int ret = !secp256k1_num_is_zero(&sec) &&
               (secp256k1_num_cmp(&sec, &secp256k1_ge_consts->order) < 0);
+    secp256k1_num_clear(&sec);
     secp256k1_num_free(&sec);
     return ret;
 }
@@ -141,6 +148,8 @@ int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const u
     secp256k1_num_set_bin(&sec, seckey, 32);
     secp256k1_gej_t pj;
     secp256k1_ecmult_gen(&pj, &sec);
+    secp256k1_num_clear(&sec);
+    secp256k1_num_free(&sec);
     secp256k1_ge_t p;
     secp256k1_ge_set_gej(&p, &pj);
     secp256k1_ecdsa_pubkey_serialize(&p, pubkey, pubkeylen, compressed);
@@ -173,6 +182,8 @@ int secp256k1_ecdsa_privkey_tweak_add(unsigned char *seckey, const unsigned char
     }
     if (ret)
         secp256k1_num_get_bin(seckey, 32, &sec);
+    secp256k1_num_clear(&sec);
+    secp256k1_num_clear(&term);
     secp256k1_num_free(&sec);
     secp256k1_num_free(&term);
     return ret;

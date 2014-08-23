@@ -50,6 +50,11 @@ void static inline secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
         r->n[i] = 0;
 }
 
+void static inline secp256k1_fe_clear(secp256k1_fe_t *r) {
+    for (int i=0; i<FIELD_LIMBS+1; i++)
+        r->n[i] = 0;
+}
+
 int static inline secp256k1_fe_is_zero(const secp256k1_fe_t *a) {
     int ret = 1;
     for (int i=0; i<FIELD_LIMBS+1; i++)

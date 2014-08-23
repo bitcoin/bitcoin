@@ -190,13 +190,17 @@ void static secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_num_t *gn) 
     secp256k1_num_copy(&n, gn);
     const secp256k1_ecmult_consts_t *c = secp256k1_ecmult_consts;
     secp256k1_gej_set_infinity(r);
+    secp256k1_ge_t add;
+    int bits;
     for (int j=0; j<64; j++) {
-        secp256k1_ge_t add;
-        int bits = secp256k1_num_shift(&n, 4);
+        bits = secp256k1_num_shift(&n, 4);
         for (int k=0; k<sizeof(secp256k1_ge_t); k++)
             ((unsigned char*)(&add))[k] = c->prec[j][k][bits];
         secp256k1_gej_add_ge(r, r, &add);
     }
+    bits = 0;
+    secp256k1_ge_clear(&add);
+    secp256k1_num_clear(&n);
     secp256k1_num_free(&n);
     secp256k1_gej_add_ge(r, r, &c->fin);
 }

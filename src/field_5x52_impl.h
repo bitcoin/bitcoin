@@ -124,6 +124,16 @@ int static inline secp256k1_fe_is_odd(const secp256k1_fe_t *a) {
     return a->n[0] & 1;
 }
 
+void static inline secp256k1_fe_clear(secp256k1_fe_t *a) {
+#ifdef VERIFY
+    a->magnitude = 0;
+    a->normalized = 0;
+#endif
+    for (int i=0; i<5; i++) {
+        a->n[i] = 0;
+    }
+}
+
 // TODO: not constant time!
 int static inline secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
 #ifdef VERIFY
