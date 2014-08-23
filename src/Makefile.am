@@ -100,6 +100,7 @@ BITCOIN_CORE_H = \
   rpcserver.h \
   script/interpreter.h \
   script/script.h \
+  script/standard.h \
   scriptutils.h \
   serialize.h \
   sync.h \
@@ -210,6 +211,7 @@ libbitcoin_common_a_SOURCES = \
   protocol.cpp \
   script/interpreter.cpp \
   script/script.cpp \
+  script/standard.cpp \
   scriptutils.cpp \
   $(BITCOIN_CORE_H)
 
