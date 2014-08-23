@@ -8,6 +8,8 @@
 #include "guiutil.h"
 #include "optionsmodel.h"
 
+#include <boost/foreach.hpp>
+
 RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel *parent) :
     walletModel(parent)
 {
