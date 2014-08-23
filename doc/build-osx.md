@@ -71,8 +71,6 @@ Instructions: Homebrew
 
         brew install autoconf automake libtool boost miniupnpc openssl pkg-config protobuf qt
 
-Make sure `/usr/local/bin` comes before `/usr/bin` in your PATH. 
-
 #### Installing berkeley-db4 using Homebrew
 
 The homebrew package for berkeley-db4 has been broken for some time.  It will install without Java though.
