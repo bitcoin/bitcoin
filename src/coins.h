@@ -15,6 +15,10 @@
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 
+#include <boost/bimap.hpp>
+#include <boost/bimap/list_of.hpp>
+#include <boost/bimap/unordered_set_of.hpp>
+
 /** pruned version of CTransaction: only retains metadata and unspent transaction outputs
  *
  * Serialized format:
@@ -257,6 +261,11 @@ public:
 
 typedef boost::unordered_map<uint256, CCoins, CCoinsKeyHasher> CCoinsMap;
 
+typedef boost::bimaps::bimap<
+    boost::bimaps::unordered_set_of<uint256, CCoinsKeyHasher>,
+    boost::bimaps::list_of<CCoins>
+    > CCoinsBimap;
+
 struct CCoinsStats
 {
     int nHeight;
@@ -320,15 +329,34 @@ public:
     bool GetStats(CCoinsStats &stats);
 };
 
+struct CCoinsCacheStats
+{
+    CCoinsCacheStats(): positive_hits(0), negative_hits(0), positive_misses(0), negative_misses(0), writes(0) {}
+    // Counters
+    uint64_t positive_hits;
+    uint64_t negative_hits;
+    uint64_t positive_misses;
+    uint64_t negative_misses;
+    uint64_t writes;
+};
 
 /** CCoinsView that adds a memory cache for transactions to another CCoinsView */
 class CCoinsViewCache : public CCoinsViewBacked
 {
 protected:
     uint256 hashBlock;
-    CCoinsMap cacheCoins;
+    CCoinsCacheStats stats;
+    // Invariant: an entry should be in either the read cache or the write cache, or neither
+    CCoinsBimap cacheRead;
+    CCoinsMap cacheWrite;
 
 public:
+    enum CacheFlags
+    {
+        READ = 1,
+        WRITE = 2,
+        READ_AND_WRITE = READ|WRITE
+    };
     CCoinsViewCache(CCoinsView &baseIn, bool fDummy = false);
 
     // Standard CCoinsView methods
@@ -342,14 +370,24 @@ public:
     // Return a modifiable reference to a CCoins. Check HaveCoins first.
     // Many methods explicitly require a CCoinsViewCache because of this method, to reduce
     // copying.
-    CCoins &GetCoins(const uint256 &txid);
+    CCoins &ModifyCoins(const uint256 &txid);
+    const CCoins &GetCoins(const uint256 &txid);
 
-    // Push the modifications applied to this cache to its base.
-    // Failure to call this method before destruction will cause the changes to be forgotten.
-    bool Flush();
+    // Flush the cache. Depending on the provided flags it does either or both
+    // - Flush the write cache: Push the modifications applied to this cache to its base.
+    // - Flush the read cache: Remove all entries in one go.
+    // @note Failure to call this method before destruction will cause the changes to be forgotten.
+    // @note Call this only when no references to CCoins are held.
+    bool Flush(unsigned int flags = READ_AND_WRITE);
+
+    // Partial flush of the cache. Removes Least Recently Used records from the
+    // read cache as long as the total size of the cache exceeds the provided
+    // maximum size. This does not touch the write cache.
+    // @note Call this only when no references to CCoins are held.
+    void Cleanup(size_t max_entries);
 
     // Calculate the size of the cache (in number of transactions)
-    unsigned int GetCacheSize();
+    unsigned int GetCacheSize(unsigned int flags = READ_AND_WRITE);
 
     /** Amount of bitcoins coming in to a transaction
         Note that lightweight clients may not know anything besides the hash of previous transactions,
@@ -368,8 +406,10 @@ public:
 
     const CTxOut &GetOutputFor(const CTxIn& input);
 
+    const CCoinsCacheStats &GetCacheStats() { return stats; }
+
 private:
-    CCoinsMap::iterator FetchCoins(const uint256 &txid);
+    const CCoins *FetchCoins(const uint256 &txid);
 };
 
 #endif

@@ -1444,7 +1444,7 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
     // mark inputs spent
     if (!tx.IsCoinBase()) {
         BOOST_FOREACH(const CTxIn &txin, tx.vin) {
-            CCoins &coins = inputs.GetCoins(txin.prevout.hash);
+            CCoins &coins = inputs.ModifyCoins(txin.prevout.hash);
             CTxInUndo undo;
             ret = coins.Spend(txin.prevout, undo);
             assert(ret);
@@ -1599,7 +1599,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
         // have outputs available even in the block itself, so we handle that case
         // specially with outsEmpty.
         CCoins outsEmpty;
-        CCoins &outs = view.HaveCoins(hash) ? view.GetCoins(hash) : outsEmpty;
+        CCoins &outs = view.HaveCoins(hash) ? view.ModifyCoins(hash) : outsEmpty;
         outs.ClearUnspendable();
 
         CCoins outsBlock = CCoins(tx, pindex->nHeight);
@@ -1875,20 +1875,27 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 // Update the on-disk chain state.
 bool static WriteChainState(CValidationState &state) {
     static int64_t nLastWrite = 0;
-    if (pcoinsTip->GetCacheSize() > nCoinCacheSize || (!IsInitialBlockDownload() && GetTimeMicros() > nLastWrite + 600*1000000)) {
+    // If the write cache becomes larger than half the total allowed cache
+    // size, or the last write is longer ago than a specified time (and not in
+    // initial block download), it's time for a flush to disk
+    if (pcoinsTip->GetCacheSize(CCoinsViewCache::WRITE) > nCoinCacheSize/2 ||
+        (!IsInitialBlockDownload() && GetTimeMicros() > nLastWrite + CHAINSTATE_WRITE_PERIOD*1000000LL))
+    {
         // Typical CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
         // an overestimation, as most will delete an existing entry or
         // overwrite one. Still, use a conservative safety factor of 2.
-        if (!CheckDiskSpace(100 * 2 * 2 * pcoinsTip->GetCacheSize()))
+        if (!CheckDiskSpace(100 * 2 * 2 * pcoinsTip->GetCacheSize(CCoinsViewCache::WRITE)))
             return state.Error("out of disk space");
         FlushBlockFile();
         pblocktree->Sync();
-        if (!pcoinsTip->Flush())
+        if (!pcoinsTip->Flush(CCoinsViewCache::WRITE))
             return state.Abort(_("Failed to write to coin database"));
         nLastWrite = GetTimeMicros();
     }
+    // Remove excess items from read cache
+    pcoinsTip->Cleanup(nCoinCacheSize);
     return true;
 }
 
@@ -3072,6 +3079,16 @@ bool CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
             } else
                 nGoodTransactions += block.vtx.size();
         }
+        // Allow pcoinsTip to retain some entries, as they may come in useful
+        // during synchronization when the node is running, but don't use so
+        // much memory that the checking process terminates too soon because
+        // the total maximum cache size is exceeded.
+        // Flushing pcoinsTip entirely would have no effect on the verification
+        // itself as all coins that are accessed by DisconnectBlock are updated
+        // so also in coins' write cache.
+        // There is no use in calling coins->Cleanup() -- it will only have
+        // write cache entries
+        pcoinsTip->Cleanup(nCoinCacheSize/2);
     }
     if (pindexFailure)
         return error("VerifyDB() : *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", chainActive.Height() - pindexFailure->nHeight + 1, nGoodTransactions);
