@@ -54,12 +54,15 @@ bool CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
     return db.WriteBatch(batch);
 }
 
-bool CCoinsViewDB::BatchWrite(const CCoinsMap &mapCoins, const uint256 &hashBlock) {
+bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
     LogPrint("coindb", "Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
 
     CLevelDBBatch batch;
-    for (CCoinsMap::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
+    for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
         BatchWriteCoins(batch, it->first, it->second);
+        CCoinsMap::iterator itOld = it++;
+        mapCoins.erase(itOld);
+    }
     if (hashBlock != uint256(0))
         BatchWriteHashBestChain(batch, hashBlock);
 
