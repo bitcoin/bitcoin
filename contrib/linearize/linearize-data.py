@@ -58,10 +58,11 @@ def calc_hash_str(blk_hdr):
 	hash_str = hash.encode('hex')
 	return hash_str
 
-def get_blk_year(blk_hdr):
+def get_blk_dt(blk_hdr):
 	members = struct.unpack("<I", blk_hdr[68:68+4])
 	dt = datetime.datetime.fromtimestamp(members[0])
-	return dt.year
+	dt_ym = datetime.datetime(dt.year, dt.month, 1)
+	return dt_ym
 
 def get_block_hashes(settings):
 	blkindex = []
@@ -88,14 +89,14 @@ def copydata(settings, blkindex, blkset):
 	outF = None
 	blkCount = 0
 
-	lastYear = 0
-	splitYear = False
+	lastDate = datetime.datetime(2000, 1, 1)
+	timestampSplit = False
 	fileOutput = True
 	maxOutSz = settings['max_out_sz']
 	if 'output' in settings:
 		fileOutput = False
-	if settings['split_year'] != 0:
-		splitYear = True
+	if settings['split_timestamp'] != 0:
+		timestampSplit = True
 
 	while True:
 		if not inF:
@@ -137,11 +138,11 @@ def copydata(settings, blkindex, blkset):
 			outFn = outFn + 1
 			outsz = 0
 
-		if splitYear:
-			blkYear = get_blk_year(blk_hdr)
-			if blkYear > lastYear:
-				print("New year " + str(blkYear) + " @ " + hash_str)
-				lastYear = blkYear
+		if timestampSplit:
+			blkDate = get_blk_dt(blk_hdr)
+			if blkDate > lastDate:
+				print("New month " + blkDate.strftime("%Y-%m") + " @ " + hash_str)
+				lastDate = blkDate
 				if outF:
 					outF.close()
 					outF = None
@@ -190,13 +191,13 @@ if __name__ == '__main__':
 		settings['input'] = 'input'
 	if 'hashlist' not in settings:
 		settings['hashlist'] = 'hashlist.txt'
-	if 'split_year' not in settings:
-		settings['split_year'] = 0
+	if 'split_timestamp' not in settings:
+		settings['split_timestamp'] = 0
 	if 'max_out_sz' not in settings:
 		settings['max_out_sz'] = 1000L * 1000 * 1000
 
 	settings['max_out_sz'] = long(settings['max_out_sz'])
-	settings['split_year'] = int(settings['split_year'])
+	settings['split_timestamp'] = int(settings['split_timestamp'])
 	settings['netmagic'] = settings['netmagic'].decode('hex')
 
 	if 'output_file' not in settings and 'output' not in settings:
