@@ -58,13 +58,14 @@ public:
         genesis.hashPrevBlock = 0;
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
         genesis.nVersion = 1;
-        genesis.nTime    = 1408638282;
+        genesis.nTime    = 1408905730;
         genesis.nBits    = 0x1d00ffff;
-        genesis.nNonce   = 2324206466;
+        genesis.nNonce   = 915586608;
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x000000005fd263415ed590e85d8a00ecf4ac709534bb6e8b4f64f71a63a0163a"));
-        assert(genesis.hashMerkleRoot == uint256("0x870cfca6680c451f7aa42832fa1b8aea250c7daac458a2c29c7b078764852257"));
+
+        assert(hashGenesisBlock == uint256("0x000000000b16489260f249f148e2e2630dddb76def1d39b8261a495decb287e0"));
+        assert(genesis.hashMerkleRoot == uint256("0x5722856487077b9cc2a258c4aa7d0c25ea8a1bfa3228a47a1f450c68a6fc0c87"));
 
         // vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be"));
         // vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me"));
@@ -130,7 +131,7 @@ public:
         genesis.nTime = 1405338325;
         genesis.nNonce = 1678912305;
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x000000005f94b67f20bf3cad62cf7cf74fd7f2878574d3e81015d38ffacd7b6e"));
+        //assert(hashGenesisBlock == uint256("0x000000005f94b67f20bf3cad62cf7cf74fd7f2878574d3e81015d38ffacd7b6e"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -166,7 +167,7 @@ public:
         hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 19444;
         strDataDir = "regtest";
-        assert(hashGenesisBlock == uint256("0xa57fc7d7498960ab46a4fa3948bf2c6d2ddb824399d644fb4b7d24fab35250a0"));
+        assert(hashGenesisBlock == uint256("0xda44d82ead2a55f68c3725599112c3c9aaa27ed69ea4e8016dedfdcf34d4f4c4"));
 
         vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
     }
