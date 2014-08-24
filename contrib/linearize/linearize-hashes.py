@@ -1,7 +1,6 @@
 #!/usr/bin/python
 #
-# linearize.py:  Construct a linear, no-fork, best version of the blockchain.
-#
+# linearize-hashes.py:  List blocks in a linear, no-fork version of the chain.
 #
 # Copyright (c) 2013 The Bitcoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
@@ -14,9 +13,6 @@ import re
 import base64
 import httplib
 import sys
-
-ERR_SLEEP = 15
-MAX_NONCE = 1000000L
 
 settings = {}
 
@@ -62,34 +58,18 @@ class BitcoinRPC:
 	def getblockhash(self, index):
 		return self.rpc('getblockhash', [index])
 
-def getblock(rpc, settings, n):
-	hash = rpc.getblockhash(n)
-	hexdata = rpc.getblock(hash, False)
-	data = hexdata.decode('hex')
-
-	return data
-
-def get_blocks(settings):
+def get_block_hashes(settings):
 	rpc = BitcoinRPC(settings['host'], settings['port'],
 			 settings['rpcuser'], settings['rpcpassword'])
 
-	outf = open(settings['output'], 'ab')
-
 	for height in xrange(settings['min_height'], settings['max_height']+1):
-		data = getblock(rpc, settings, height)
+		hash = rpc.getblockhash(height)
 
-		outhdr = settings['netmagic']
-		outhdr += struct.pack("<i", len(data))
-
-		outf.write(outhdr)
-		outf.write(data)
-
-		if (height % 1000) == 0:
-			sys.stdout.write("Wrote block " + str(height) + "\n")
+		print(hash)
 
 if __name__ == '__main__':
 	if len(sys.argv) != 2:
-		print "Usage: linearize.py CONFIG-FILE"
+		print "Usage: linearize-hashes.py CONFIG-FILE"
 		sys.exit(1)
 
 	f = open(sys.argv[1])
@@ -106,10 +86,6 @@ if __name__ == '__main__':
 		settings[m.group(1)] = m.group(2)
 	f.close()
 
-	if 'netmagic' not in settings:
-		settings['netmagic'] = 'f9beb4d9'
-	if 'output' not in settings:
-		settings['output'] = 'bootstrap.dat'
 	if 'host' not in settings:
 		settings['host'] = '127.0.0.1'
 	if 'port' not in settings:
@@ -117,16 +93,14 @@ if __name__ == '__main__':
 	if 'min_height' not in settings:
 		settings['min_height'] = 0
 	if 'max_height' not in settings:
-		settings['max_height'] = 279000
+		settings['max_height'] = 313000
 	if 'rpcuser' not in settings or 'rpcpassword' not in settings:
 		print "Missing username and/or password in cfg file"
 		sys.exit(1)
 
-	settings['netmagic'] = settings['netmagic'].decode('hex')
 	settings['port'] = int(settings['port'])
 	settings['min_height'] = int(settings['min_height'])
 	settings['max_height'] = int(settings['max_height'])
 
-	get_blocks(settings)
-
+	get_block_hashes(settings)
 
