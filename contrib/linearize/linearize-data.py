@@ -125,6 +125,12 @@ def copydata(settings, blkindex, blkset):
 			print("Skipping unknown block " + hash_str)
 			continue
 
+		if blkindex[blkCount] != hash_str:
+			print("Out of order block.")
+			print("Expected " + blkindex[blkCount])
+			print("Got " + hash_str)
+			sys.exit(1)
+
 		if not fileOutput and ((outsz + inLen) > maxOutSz):
 			outF.close()
 			outF = None
