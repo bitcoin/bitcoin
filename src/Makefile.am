@@ -80,6 +80,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   crypter.h \
   db.h \
+  extservices.h \
   hash.h \
   init.h \
   key.h \
@@ -138,6 +139,7 @@ libbitcoin_server_a_SOURCES = \
   alert.cpp \
   bloom.cpp \
   checkpoints.cpp \
+  extservices.cpp \
   init.cpp \
   leveldbwrapper.cpp \
   main.cpp \

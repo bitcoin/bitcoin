@@ -19,6 +19,7 @@
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "extservices.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
@@ -241,6 +242,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -dns                   " + _("Allow DNS lookups for -addnode, -seednode and -connect") + " " + _("(default: 1)") + "\n";
     strUsage += "  -dnsseed               " + _("Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)") + "\n";
     strUsage += "  -externalip=<ip>       " + _("Specify your own public address") + "\n";
+    strUsage += "  -extservices=<file>    " + _("Specify JSON file containing array of external/extended service descriptions") + "\n";
     strUsage += "  -forcednsseed          " + _("Always query for peer addresses via DNS lookup (default: 0)") + "\n";
     strUsage += "  -listen                " + _("Accept connections from outside (default: 1 if no -proxy or -connect)") + "\n";
     strUsage += "  -maxconnections=<n>    " + _("Maintain at most <n> connections to peers (default: 125)") + "\n";
@@ -1043,6 +1045,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     // Allowed to fail as this file IS missing on first startup.
     if (est_filein)
         mempool.ReadFeeEstimates(est_filein);
+
+    if (!ReadExtServices())
+        return false;
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET

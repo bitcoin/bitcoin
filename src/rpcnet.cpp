@@ -11,6 +11,7 @@
 #include "sync.h"
 #include "timedata.h"
 #include "util.h"
+#include "extservices.h"
 
 #include <boost/foreach.hpp>
 #include "json/json_spirit_value.h"
@@ -394,6 +395,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("version",       (int)CLIENT_VERSION));
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
     obj.push_back(Pair("localservices",       strprintf("%016x", nLocalServices)));
+    obj.push_back(Pair("extservices",   ListExtServices()));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("networks",      GetNetworksInfo()));

@@ -17,6 +17,7 @@
 #include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "extservices.h"
 
 #include <sstream>
 
@@ -3661,6 +3662,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == "verack")
     {
         pfrom->SetRecvVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
+    }
+
+
+    else if ((strCommand == "getextsrv") && (nLocalServices & NODE_EXT_SERVICES))
+    {
+        vector<CExtService> vSrv;
+        GetExtServicesVec(vSrv);
+        pfrom->PushMessage("extservices", vSrv);
     }
 
 
