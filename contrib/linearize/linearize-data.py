@@ -14,8 +14,7 @@ import base64
 import httplib
 import sys
 import hashlib
-
-MAX_OUT_SZ = 128 * 1024 * 1024
+import datetime
 
 settings = {}
 
@@ -41,9 +40,7 @@ def wordreverse(in_buf):
 	out_words.reverse()
 	return ''.join(out_words)
 
-def calc_hdr_hash(rawblock):
-	blk_hdr = rawblock[:80]
-
+def calc_hdr_hash(blk_hdr):
 	hash1 = hashlib.sha256()
 	hash1.update(blk_hdr)
 	hash1_o = hash1.digest()
@@ -54,12 +51,17 @@ def calc_hdr_hash(rawblock):
 
 	return hash2_o
 
-def calc_hash_str(rawblock):
-	hash = calc_hdr_hash(rawblock)
+def calc_hash_str(blk_hdr):
+	hash = calc_hdr_hash(blk_hdr)
 	hash = bufreverse(hash)
 	hash = wordreverse(hash)
 	hash_str = hash.encode('hex')
 	return hash_str
+
+def get_blk_year(blk_hdr):
+	members = struct.unpack("<I", blk_hdr[68:68+4])
+	dt = datetime.datetime.fromtimestamp(members[0])
+	return dt.year
 
 def get_block_hashes(settings):
 	blkindex = []
@@ -86,9 +88,14 @@ def copydata(settings, blkindex, blkset):
 	outF = None
 	blkCount = 0
 
+	lastYear = 0
+	splitYear = False
 	fileOutput = True
+	maxOutSz = settings['max_out_sz']
 	if 'output' in settings:
 		fileOutput = False
+	if settings['split_year'] != 0:
+		splitYear = True
 
 	while True:
 		if not inF:
@@ -111,17 +118,30 @@ def copydata(settings, blkindex, blkset):
 		su = struct.unpack("<I", inLenLE)
 		inLen = su[0]
 		rawblock = inF.read(inLen)
+		blk_hdr = rawblock[:80]
 
-		hash_str = calc_hash_str(rawblock)
+		hash_str = calc_hash_str(blk_hdr)
 		if not hash_str in blkset:
 			print("Skipping unknown block " + hash_str)
 			continue
 
-		if not fileOutput and ((outsz + inLen) > MAX_OUT_SZ):
+		if not fileOutput and ((outsz + inLen) > maxOutSz):
 			outF.close()
 			outF = None
 			outFn = outFn + 1
 			outsz = 0
+
+		if splitYear:
+			blkYear = get_blk_year(blk_hdr)
+			if blkYear > lastYear:
+				print("New year " + str(blkYear) + " @ " + hash_str)
+				lastYear = blkYear
+				if outF:
+					outF.close()
+					outF = None
+					outFn = outFn + 1
+					outsz = 0
+
 		if not outF:
 			if fileOutput:
 				fname = settings['output_file']
@@ -164,7 +184,13 @@ if __name__ == '__main__':
 		settings['input'] = 'input'
 	if 'hashlist' not in settings:
 		settings['hashlist'] = 'hashlist.txt'
+	if 'split_year' not in settings:
+		settings['split_year'] = 0
+	if 'max_out_sz' not in settings:
+		settings['max_out_sz'] = 1000L * 1000 * 1000
 
+	settings['max_out_sz'] = long(settings['max_out_sz'])
+	settings['split_year'] = int(settings['split_year'])
 	settings['netmagic'] = settings['netmagic'].decode('hex')
 
 	if 'output_file' not in settings and 'output' not in settings:
